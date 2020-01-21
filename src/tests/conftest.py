@@ -16,6 +16,9 @@ def pytest_configure(config):
         # of the regular project sources. Otherwise, the project needs to have
         # knowledge of the test framework.
         override = override_settings(
+            INSTALLED_APPS=settings.INSTALLED_APPS + [
+                'tests.test_djangorestframework_dso',
+            ],
             CSRF_COOKIE_SECURE=False,
             SESSION_COOKIE_SECURE=False,
             PASSWORD_HASHERS=["django.contrib.auth.hashers.MD5PasswordHasher"],
