@@ -54,8 +54,6 @@ if DEBUG:
     ]
     MIDDLEWARE.insert(0, 'debug_toolbar.middleware.DebugToolbarMiddleware')
 
-CORS_ORIGIN_ALLOW_ALL = True
-
 ROOT_URLCONF = 'dso_api.urls'
 
 TEMPLATES = [
@@ -89,9 +87,12 @@ WSGI_APPLICATION = 'dso_api.wsgi.application'
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['*'])
 
 DATABASES = {
-    'default': env.db_url("DATABASE_URL", default="postgres://dso_api:insecure@database/dso_api"),
+    'default': env.db_url(
+        "DATABASE_URL",
+        default="postgres://dso_api:insecure@database/dso_api",
+        engine="django.contrib.gis.db.backends.postgis"
+    )
 }
-DATABASES['default']['ENGINE'] = 'django.contrib.gis.db.backends.postgis'
 
 locals().update(env.email_url(default='smtp://'))
 
@@ -142,6 +143,8 @@ LOGGING = {
 
 
 # -- Third party app settings
+
+CORS_ORIGIN_ALLOW_ALL = True
 
 REST_FRAMEWORK = dict(
     PAGE_SIZE=20,
