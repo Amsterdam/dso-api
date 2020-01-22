@@ -1,8 +1,9 @@
 FROM amsterdam/python:3.8-buster AS builder
 MAINTAINER datapunt@amsterdam.nl
 
-COPY requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
+COPY requirements* ./
+ARG PIP_REQUIREMENTS=requirements.txt
+RUN pip install --no-cache-dir -r $PIP_REQUIREMENTS
 
 # Start runtime image,
 FROM amsterdam/python:3.8-slim-buster

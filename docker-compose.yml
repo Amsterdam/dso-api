@@ -1,4 +1,4 @@
-version: "3.0"
+version: "3.7"
 services:
   database:
     image: amsterdam/postgres11
@@ -12,7 +12,10 @@ services:
       - "~/.ssh/datapunt.key:/root/.ssh/datapunt.key"
       - .:/host
   web:
-    build: src/
+    build:
+      context: src/
+      args:
+        PIP_REQUIREMENTS: requirements_dev.txt
     ports:
       - "8000:8000"
     links:
@@ -25,6 +28,7 @@ services:
       UWSGI_STATIC_MAP: "/dso_api/static=/static"
       SECRET_KEY: insecure
       DATABASE_URL: "postgres://dso_api:insecure@database/dso_api"
+      DJANGO_DEBUG: 1
     volumes:
       - ./src:/app
     command: uwsgi --py-auto-reload=1
