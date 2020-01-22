@@ -1,7 +1,7 @@
 import click
 
 from schematools.schema.utils import schema_def_from_path, fetch_schema
-from .ingest import create_table, create_rows, fetch_rows
+from .ingest import create_tables, create_rows, fetch_rows, delete_tables
 
 import django
 from django.conf import settings
@@ -26,11 +26,16 @@ def ingest():
     pass
 
 
+@schema.group()
+def delete():
+    pass
+
+
 @ingest.command()
 @click.argument("schema_path")
-def table(schema_path):
+def dataset(schema_path):
     dataset = fetch_schema(schema_def_from_path(schema_path))
-    create_table(dataset)
+    create_tables(dataset)
     # set_grants(schema, connection)
 
 
@@ -44,3 +49,10 @@ def records(schema_path, ndjson_path):
     with open(ndjson_path) as fh:
         data = list(fetch_rows(fh, srid))
     create_rows(dataset, data)
+
+
+@delete.command()
+@click.argument("schema_path")
+def _dataset(schema_path):
+    dataset = fetch_schema(schema_def_from_path(schema_path))
+    delete_tables(dataset)

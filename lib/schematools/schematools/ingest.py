@@ -12,12 +12,19 @@ def fetch_rows(fh, srid):
         yield row
 
 
-def create_table(dataset):
+def create_tables(dataset, tables=None):
 
     for model in fetch_models_from_schema(dataset):
         with connection.schema_editor() as schema_editor:
-            schema_editor.delete_model(model)
             schema_editor.create_model(model)
+
+
+def delete_tables(dataset, tables=None):
+
+    for model in fetch_models_from_schema(dataset):
+        with connection.schema_editor() as schema_editor:
+            # XXX Not sure if the works with relation, maybe need to revert to raw sql + cascade
+            schema_editor.delete_model(model)
 
 
 def create_rows(dataset, data):
