@@ -3,7 +3,7 @@ services:
   database:
     image: amsterdam/postgres11
     ports:
-      - "5432:5432"
+      - "5415:5432"
     environment:
       POSTGRES_DB: dso_api
       POSTGRES_USER: dso_api
@@ -24,7 +24,7 @@ services:
       UWSGI_MASTER: 1
       UWSGI_STATIC_MAP: "/dso_api/static=/static"
       SECRET_KEY: insecure
-      DATABASE_URL: "postgres://dso_api:insecure@database:5432/dso_api"
+      DATABASE_URL: "postgres://dso_api:insecure@database/dso_api"
     volumes:
       - ./src:/app
     command: uwsgi --py-auto-reload=1
