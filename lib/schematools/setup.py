@@ -26,6 +26,7 @@ setup(
     install_requires=[
         "Django",
         "django-postgres-unlimited-varchar",
+        "environ",
         "requests",
         "jsonschema",
         "click",
@@ -34,6 +35,7 @@ setup(
         "ndjson",
         "shapely",
     ],
+    extras_require={"tests": ["pytest"]},
     entry_points="""
         [console_scripts]
         schema=schematools.cli:schema
