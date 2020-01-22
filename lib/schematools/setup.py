@@ -26,6 +26,8 @@ setup(
     install_requires=[
         "Django",
         "django-postgres-unlimited-varchar",
+        "requests",
+        "jsonschema",
         "click",
         "dj_database_url",
         "psycopg2",
