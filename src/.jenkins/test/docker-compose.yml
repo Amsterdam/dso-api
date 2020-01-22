@@ -1,23 +1,14 @@
-version: "3.7"
+version: "3.0"
 services:
   database:
     image: amsterdam/postgres11
-    ports:
-      - "5415:5432"
     environment:
       POSTGRES_DB: dso_api
       POSTGRES_USER: dso_api
       POSTGRES_PASSWORD: insecure
-    volumes:
-      - "~/.ssh/datapunt.key:/root/.ssh/datapunt.key"
-      - .:/host
-  web:
-    build:
-      context: src/
-      args:
-        PIP_REQUIREMENTS: requirements_dev.txt
-    ports:
-      - "8000:8000"
+
+  test:
+    build: ../..
     links:
       - database
     environment:
@@ -28,7 +19,5 @@ services:
       UWSGI_STATIC_MAP: "/dso_api/static=/static"
       SECRET_KEY: insecure
       DATABASE_URL: "postgres://dso_api:insecure@database/dso_api"
-      DJANGO_DEBUG: 1
-    volumes:
-      - ./src:/app
-    command: uwsgi --py-auto-reload=1
+    command: >
+      bash -c ".jenkins/test/test.sh"

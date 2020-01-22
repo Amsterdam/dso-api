@@ -89,7 +89,7 @@ ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['*'])
 DATABASES = {
     'default': env.db_url(
         "DATABASE_URL",
-        default="postgres://dso_api:insecure@database/dso_api",
+        default="postgres://dso_api:insecure@localhost:5415/dso_api",
         engine="django.contrib.gis.db.backends.postgis"
     )
 }
@@ -145,6 +145,14 @@ LOGGING = {
 # -- Third party app settings
 
 CORS_ORIGIN_ALLOW_ALL = True
+
+HEALTH_CHECKS = {
+    'app': lambda request: True,
+    'database': 'django_healthchecks.contrib.check_database',
+    # 'cache': 'django_healthchecks.contrib.check_cache_default',
+    # 'ip': 'django_healthchecks.contrib.check_remote_addr',
+}
+HEALTH_CHECKS_ERROR_CODE = 503
 
 REST_FRAMEWORK = dict(
     PAGE_SIZE=20,
