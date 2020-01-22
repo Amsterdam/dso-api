@@ -48,7 +48,7 @@ oslo.config==7.0.0        # via python-keystoneclient
 oslo.i18n==3.25.1         # via oslo.config, oslo.utils, python-keystoneclient
 oslo.serialization==2.29.2  # via python-keystoneclient
 oslo.utils==3.42.1        # via oslo.serialization, python-keystoneclient
-packaging==20.0           # via pytest, pytest-sugar
+packaging==20.0           # via pytest
 pbr==5.4.4                # via debtcollector, keystoneauth1, os-service-types, oslo.i18n, oslo.serialization, oslo.utils, python-keystoneclient, stevedore
 pluggy==0.13.1            # via pytest
 psycopg2-binary==2.8.4
@@ -59,7 +59,6 @@ pyparsing==2.4.6          # via oslo.utils, packaging
 pyrsistent==0.15.7        # via jsonschema
 pytest-cov==2.8.1
 pytest-django==3.8.0
-pytest-sugar==0.9.2
 pytest==5.3.4
 python-keystoneclient==3.22.0  # via datapunt-objectstore
 python-swiftclient==3.8.1  # via datapunt-objectstore
@@ -72,7 +71,6 @@ simplejson==3.17.0        # via django-rest-swagger
 six==1.14.0               # via debtcollector, django-healthchecks, djangorestframework-csv, jsonschema, keystoneauth1, oslo.config, oslo.i18n, oslo.serialization, oslo.utils, packaging, pyrsistent, python-keystoneclient, python-swiftclient, stevedore
 sqlparse==0.3.0           # via django
 stevedore==1.31.0         # via keystoneauth1, oslo.config, python-keystoneclient
-termcolor==1.1.0          # via pytest-sugar
 unicodecsv==0.14.1        # via djangorestframework-csv
 uritemplate==3.0.1        # via coreapi
 urllib3==1.25.7           # via requests, sentry-sdk
