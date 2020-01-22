@@ -1,50 +1,50 @@
-from django.db import models
-from django_postgres_unlimited_varchar import UnlimitedCharField
+import ndjson
+from shapely.geometry import shape
+from django.db import connection
+
+from .models import fetch_models_from_schema
 
 
-JSON_TYPE_TO_DJANGO = {
-    "string": (UnlimitedCharField, {}),
-    "integer": (models.IntegerField, {}),
-    "number": (models.FloatField, {}),
-    "boolean": (models.BooleanField, {}),
-    "https://schemas.data.amsterdam.nl/schema@v1.1.0#/definitions/id": (
-        models.IntegerField,
-        {},
-    ),
-    "https://schemas.data.amsterdam.nl/schema@v1.1.0#/definitions/schema": (
-        UnlimitedCharField,
-        {},
-    ),
-    "https://geojson.org/schema/Geometry.json": (UnlimitedCharField, {}),
-    "https://geojson.org/schema/Point.json": (UnlimitedCharField, {}),
-}
+def fetch_rows(fh, srid):
+    data = ndjson.load(fh)
+    for row in data:
+        row["geometry"] = f"SRID={srid};{shape(row['geometry']).wkt}"
+        yield row
 
 
-def fetch_models_from_schema(dataset):
-    result = []
-    for table in dataset.tables:
-        fields = {}
-        for field in table.fields:
-            kls, kw = JSON_TYPE_TO_DJANGO[field.type]
-            if field.is_primary:
-                kw["primary_key"] = True
-            fields[field.name] = kls(**kw)
-        model_name = f"{dataset.id.capitalize()}{table.id.capitalize()}"
+def create_tables(dataset, tables=()):
 
-        meta_cls = type(
-            "Meta",
-            (object,),
-            {
-                "managed": False,
-                "db_table": f"{dataset.id}_{table.id}",
-                "app_label": dataset.id,
-            },
+    for table, model in zip(dataset.tables, fetch_models_from_schema(dataset)):
+        with connection.schema_editor() as schema_editor:
+            if not tables or table.id in set(tables):
+                schema_editor.create_model(model)
+
+
+def delete_tables(dataset, tables=()):
+
+    for table, model in zip(dataset.tables, fetch_models_from_schema(dataset)):
+        with connection.schema_editor() as schema_editor:
+            # XXX Not sure if the works with relation, maybe need to revert to raw sql + cascade
+            if not tables or table.id in set(tables):
+                schema_editor.delete_model(model)
+
+
+def create_rows(dataset, data):
+    model_lookup = {
+        model._meta.db_table: model for model in fetch_models_from_schema(dataset)
+    }
+    for row in data:
+        dataset_name, table_name = row["schema"].split("/")[-2:]
+        field_names = set(
+            dataset.get_table_by_id(table_name)["schema"]["properties"].keys()
         )
-        model_cls = type(
-            model_name,
-            (models.Model,),
-            {**fields, "__module__": "dynapi.models", "Meta": meta_cls},
+        db_table = f"{dataset_name}_{table_name}"
+        model_lookup[db_table].objects.create(
+            **{k.lower(): v for k, v in row.items() if k in field_names}
         )
-        result.append(model_cls)
 
-    return result
+
+def set_grants(dataset):
+    cursor = connection.cursor()
+    # for table in dataset.tables:
+    # cursor.execute(f"GRANT SELECT ON {dataset.id}_{table.id} TO PUBLIC")

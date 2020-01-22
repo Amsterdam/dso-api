@@ -1,7 +1,7 @@
 import click
 
 from schematools.schema.utils import schema_def_from_path, fetch_schema
-from .ingest import create_tables, create_rows, fetch_rows, delete_tables
+from .db import create_tables, create_rows, fetch_rows, delete_tables
 
 import django
 from django.conf import settings
@@ -22,7 +22,7 @@ def schema():
 
 
 @schema.group()
-def ingest():
+def create():
     pass
 
 
@@ -31,19 +31,20 @@ def delete():
     pass
 
 
-@ingest.command()
+@create.command()
 @click.argument("schema_path")
-def dataset(schema_path):
+@click.option("--table", "-t", multiple=True, help="Specify subset of the tables")
+def dataset(schema_path, table):
     dataset = fetch_schema(schema_def_from_path(schema_path))
     create_tables(dataset)
     # set_grants(schema, connection)
 
 
-@ingest.command()
+@create.command()
 @click.argument("schema_path")
 @click.argument("ndjson_path")
 def records(schema_path, ndjson_path):
-    # Add batching for rows.
+    # XXX Add batching for rows (streaming)
     dataset = fetch_schema(schema_def_from_path(schema_path))
     srid = dataset["crs"].split(":")[-1]
     with open(ndjson_path) as fh:
@@ -51,8 +52,9 @@ def records(schema_path, ndjson_path):
     create_rows(dataset, data)
 
 
-@delete.command()
+@delete.command("dataset")
 @click.argument("schema_path")
-def _dataset(schema_path):
+@click.option("--table", "-t", multiple=True, help="Specify subset of the tables")
+def _dataset(schema_path, table):
     dataset = fetch_schema(schema_def_from_path(schema_path))
     delete_tables(dataset)
