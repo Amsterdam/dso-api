@@ -149,8 +149,8 @@ CORS_ORIGIN_ALLOW_ALL = True
 HEALTH_CHECKS = {
     'app': lambda request: True,
     'database': 'django_healthchecks.contrib.check_database',
-    #'cache': 'django_healthchecks.contrib.check_cache_default',
-    #'ip': 'django_healthchecks.contrib.check_remote_addr',
+    # 'cache': 'django_healthchecks.contrib.check_cache_default',
+    # 'ip': 'django_healthchecks.contrib.check_remote_addr',
 }
 HEALTH_CHECKS_ERROR_CODE = 503
 
