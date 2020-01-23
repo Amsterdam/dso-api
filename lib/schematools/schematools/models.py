@@ -1,4 +1,4 @@
-from django.db import models
+from django.contrib.gis.db import models
 from django_postgres_unlimited_varchar import UnlimitedCharField
 
 
@@ -15,8 +15,8 @@ JSON_TYPE_TO_DJANGO = {
         UnlimitedCharField,
         {},
     ),
-    "https://geojson.org/schema/Geometry.json": (UnlimitedCharField, {}),
-    "https://geojson.org/schema/Point.json": (UnlimitedCharField, {}),
+    "https://geojson.org/schema/Geometry.json": (models.PolygonField, {}),
+    "https://geojson.org/schema/Point.json": (models.PointField, {}),
 }
 
 

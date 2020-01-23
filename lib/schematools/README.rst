@@ -23,3 +23,9 @@ From the command-line, the modules can be invoke with::
  - schema create dataset <path-to-schema> [-t <tablename>]
  - schema create records <path-to-schema> <path-to-ndjson>
  - schema delete dataset <path-to-schema> [-t <tablename>]
+
+Example
+-------
+
+A small example has been added that shows how the dynamic Django model generation from an
+amsterdam schema can be used in Django REST framework.

@@ -1,4 +1,5 @@
 import click
+from environs import Env
 
 from schematools.schema.utils import schema_def_from_path, fetch_schema
 from .db import create_tables, create_rows, fetch_rows, delete_tables
@@ -7,8 +8,9 @@ import django
 from django.conf import settings
 import dj_database_url
 
-DATABASE_URL = "postgresql://postgres:postgres@localhost:5435/postgres"
-# DATABASE_URL = os.getenv("DATABASE_URL")
+env = Env()
+
+DATABASE_URL = env("DATABASE_URL")
 
 settings.configure(
     DEBUG=True, DATABASES={"default": dj_database_url.parse(DATABASE_URL)}

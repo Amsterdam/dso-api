@@ -26,7 +26,7 @@ setup(
     install_requires=[
         "Django",
         "django-postgres-unlimited-varchar",
-        "environ",
+        "environs",
         "requests",
         "jsonschema",
         "click",
