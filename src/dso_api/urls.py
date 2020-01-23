@@ -3,7 +3,7 @@ from django.urls import include, path
 import django_healthchecks.urls
 
 urlpatterns = [
-    path('health/', include(django_healthchecks.urls)),
+    path('status/health/', include(django_healthchecks.urls)),
 ]
 
 
