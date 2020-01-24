@@ -114,3 +114,5 @@ ENV/
 /afval_*.zip
 /afval_*.backup
 
+# Testdata
+/data

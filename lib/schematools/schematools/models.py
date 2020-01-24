@@ -15,8 +15,14 @@ JSON_TYPE_TO_DJANGO = {
         UnlimitedCharField,
         {},
     ),
-    "https://geojson.org/schema/Geometry.json": (models.PolygonField, {}),
-    "https://geojson.org/schema/Point.json": (models.PointField, {}),
+    "https://geojson.org/schema/Geometry.json": (
+        models.MultiPolygonField,
+        {"srid": 28992, "geography": False},
+    ),
+    "https://geojson.org/schema/Point.json": (
+        models.PointField,
+        {"srid": 28992, "geography": False},
+    ),
 }
 
 

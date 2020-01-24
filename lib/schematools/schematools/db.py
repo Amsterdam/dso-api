@@ -1,5 +1,7 @@
 import ndjson
 from shapely.geometry import shape
+from shapely.geometry.multipolygon import MultiPolygon
+from shapely.geometry.polygon import Polygon
 from django.db import connection
 
 from .models import fetch_models_from_schema
@@ -8,7 +10,10 @@ from .models import fetch_models_from_schema
 def fetch_rows(fh, srid):
     data = ndjson.load(fh)
     for row in data:
-        row["geometry"] = f"SRID={srid};{shape(row['geometry']).wkt}"
+        s = shape(row["geometry"])
+        if isinstance(s, Polygon):
+            s = MultiPolygon([s])
+        row["geometry"] = f"SRID={srid};{s.wkt}"
         yield row
 
 
