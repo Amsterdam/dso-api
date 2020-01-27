@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import re
 from typing import List, Type, Tuple, Dict, Any
+from string_utils import slugify
 
 from django.contrib.gis.db import models
 from django.db.models.base import ModelBase
@@ -12,6 +14,10 @@ from schematools.schema.types import (
 )
 
 
+# Could be used to check fieldnames
+ALLOWED_ID_PATTERN = re.compile(r"[a-zA-Z][ \w\d]*")
+
+
 def field_model_factory(
     field_model,
     value_getter: Callable[[DatasetSchema], Dict[str, Any]] = None,
@@ -20,12 +26,14 @@ def field_model_factory(
     def fetch_field_model(
         field: DatasetFieldSchema, dataset: DatasetSchema,
     ) -> Tuple[Type[models.Model], Dict[str, Any]]:
-        inner_kwargs = kwargs.copy()
-        inner_kwargs["primary_key"] = field.is_primary
-        inner_kwargs["null"] = not field.required
+        nonlocal kwargs
+        kwargs["primary_key"] = field.is_primary
+        kwargs["null"] = not field.required
+        if field.is_relation:
+            pass
         if value_getter:
-            inner_kwargs = {**inner_kwargs, **value_getter(dataset)}
-        return (field_model, inner_kwargs)
+            kwargs = {**kwargs, **value_getter(dataset)}
+        return (field_model, kwargs)
 
     return fetch_field_model
 
@@ -100,7 +108,7 @@ def model_factory(
     fields = {}
     for field in table.fields:
         kls, kw = JSON_TYPE_TO_DJANGO[field.type](field, dataset)
-        fields[field.name] = kls(**kw)
+        fields[slugify(field.name, sign="_")] = kls(**kw)
 
     model_name = f"{table.id.capitalize()}"
 

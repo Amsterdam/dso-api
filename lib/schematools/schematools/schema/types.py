@@ -118,6 +118,10 @@ class DatasetFieldSchema(DatasetType):
     def is_primary(self) -> bool:
         return self.name == "id" and self.type.endswith("/definitions/id")
 
+    @property
+    def is_relation(self) -> bool:
+        return "relation" in self
+
 
 class DatasetRow(DatasetType):
     """ An actual instance of data """

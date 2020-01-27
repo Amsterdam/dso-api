@@ -27,6 +27,7 @@ setup(
         "Django",
         "django-postgres-unlimited-varchar",
         "django-environ",
+        "python-string-utils",
         "requests",
         "jsonschema",
         "click",
