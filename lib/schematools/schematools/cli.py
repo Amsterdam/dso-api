@@ -1,21 +1,18 @@
 import click
-from environs import Env
+import django
+import environ
+from django.conf import settings
 
 from .schema.types import DatasetSchema
-from .db import create_tables, create_rows, fetch_rows, delete_tables
-
-import django
-from django.conf import settings
-import dj_database_url
-
-env = Env()
-
-DATABASE_URL = env("DATABASE_URL")
 
 settings.configure(
-    DEBUG=True, DATABASES={"default": dj_database_url.parse(DATABASE_URL)}
+    DATABASES={"default": environ.Env().db_url("DATABASE_URL")},
+    DEBUG=True,
 )
 django.setup()
+
+# Late import because Django must be configured first
+from .db import create_rows, create_tables, delete_tables, fetch_rows  # noqa
 
 
 @click.group()

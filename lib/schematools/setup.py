@@ -26,11 +26,10 @@ setup(
     install_requires=[
         "Django",
         "django-postgres-unlimited-varchar",
-        "environs",
+        "django-environ",
         "requests",
         "jsonschema",
         "click",
-        "dj_database_url",
         "psycopg2",
         "ndjson",
         "shapely",
