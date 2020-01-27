@@ -1,6 +1,7 @@
 import pytest
 from django.conf import settings
 from django.test.utils import override_settings
+from pytest_django.plugin import _blocking_manager
 from rest_framework.test import APIRequestFactory
 
 
@@ -23,4 +24,9 @@ def pytest_configure(config):
             SESSION_COOKIE_SECURE=False,
             PASSWORD_HASHERS=["django.contrib.auth.hashers.MD5PasswordHasher"],
         )
-        override.enable()
+
+        # Normally, the django-db-blocker fixture needs to be used for this,
+        # but in our case, the application needs to access DynamicAPIApp.ready()
+        # need to access the database.
+        with _blocking_manager.unblock():
+            override.enable()
