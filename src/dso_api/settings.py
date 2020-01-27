@@ -50,6 +50,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'dso_api.dynamic_api.middleware.WaitOnReloadMiddleware',
 ]
 
 if DEBUG:

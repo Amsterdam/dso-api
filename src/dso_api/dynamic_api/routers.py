@@ -30,8 +30,6 @@ class DynamicRouter(routers.SimpleRouter):
         # Note that the models get recreated too. This works as expected,
         # since each model creation flushes the AppConfig caches.
 
-        # TODO: add lock
-
         # Clear the LRU-cache
         serializer_factory.cache_clear()
 
