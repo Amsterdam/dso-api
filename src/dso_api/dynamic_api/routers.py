@@ -34,12 +34,12 @@ class DynamicRouter(routers.SimpleRouter):
             for model in dataset.create_models():
                 models.append(model)
                 viewset = viewset_factory(model)
-                basename = f"{dataset.name}-{model._table_id}"
+                basename = f"{dataset.name}-{model.get_table_id()}"
 
                 logger.debug("Creating model for %s", basename)
 
                 tmp_router.register(
-                    prefix=f'{dataset.name}/{model._table_id}',
+                    prefix=f'{dataset.name}/{model.get_table_id()}',
                     viewset=viewset,
                     basename=basename
                 )

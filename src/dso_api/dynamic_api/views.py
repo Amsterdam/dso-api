@@ -1,6 +1,7 @@
 from typing import Type
 
 from django.http import JsonResponse
+from django.urls import reverse
 from rest_framework import viewsets
 from schematools.models import DynamicModel
 
@@ -16,7 +17,14 @@ def reload_patterns(request):
 
     return JsonResponse({
         'models': [
-            f"{model._dataset_id}/{model._table_id}" for model in new_models
+            {
+                'schema': model._meta.app_label,
+                'table': model._meta.model_name,
+                'url': request.build_absolute_uri(
+                    reverse(f"dynamic_api:{model.get_dataset_id()}-{model.get_table_id()}-list")
+                )
+            }
+            for model in new_models
         ]
     })
 

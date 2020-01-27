@@ -4,7 +4,6 @@ from typing import List, Type
 
 from django.contrib.gis.db import models
 from django.db.models.base import ModelBase
-from django.utils.decorators import classproperty
 from django_postgres_unlimited_varchar import UnlimitedCharField
 from schematools.schema.types import DatasetTableSchema, DatasetSchema
 
@@ -41,19 +40,22 @@ class DynamicModel(models.Model):
     class Meta:
         abstract = True
 
-    @classproperty
-    def _dataset(self) -> DatasetSchema:
+    # These classmethods could have been a 'classproperty',
+    # but this ensures the names don't conflict with fields from the schema.
+
+    @classmethod
+    def get_dataset(cls) -> DatasetSchema:
         """Give access to the original dataset that this model is a part of."""
-        return self._table_schema._parent_schema
+        return cls._table_schema._parent_schema
 
-    @classproperty
-    def _dataset_id(self) -> str:
-        return self._dataset.id
+    @classmethod
+    def get_dataset_id(cls) -> str:
+        return cls._table_schema._parent_schema.id
 
-    @classproperty
-    def _table_id(self) -> str:
+    @classmethod
+    def get_table_id(cls) -> str:
         """Give access to the table name"""
-        return self._table_schema.id
+        return cls._table_schema.id
 
 
 def schema_models_factory(dataset: DatasetSchema, tables=None) -> List[Type[DynamicModel]]:
@@ -75,7 +77,7 @@ def model_factory(table: DatasetTableSchema) -> Type[DynamicModel]:
             kw["primary_key"] = True
         fields[field.name] = kls(**kw)
 
-    model_name = f"{app_label.capitalize()}{table.id.capitalize()}"
+    model_name = f"{table.id.capitalize()}"
 
     meta_cls = type("Meta", (), {
         "managed": False,
