@@ -1,5 +1,9 @@
-import logging
+from __future__ import annotations
 
+import logging
+from typing import Dict, TYPE_CHECKING
+
+from django.urls import reverse
 from rest_framework import routers
 
 from dso_api.datasets.models import Dataset
@@ -8,12 +12,15 @@ from dso_api.dynamic_api.views import viewset_factory
 
 logger = logging.getLogger(__name__)
 
+if TYPE_CHECKING:
+    from schematools.models import DynamicModel
+
 
 class DynamicRouter(routers.SimpleRouter):
     def __init__(self):
         super().__init__(trailing_slash=True)
 
-    def reload(self):
+    def reload(self) -> Dict[DynamicModel, str]:
         """Regenerate all viewsets for this router."""
         # Should avoid early and cyclic imports
         from . import urls
@@ -54,4 +61,7 @@ class DynamicRouter(routers.SimpleRouter):
         # Refresh URLConf in urls.py
         urls.refresh(self.urls)
 
-        return models
+        return {
+            model: reverse(f"dynamic_api:{model.get_dataset_id()}-{model.get_table_id()}-list")
+            for model in models
+        }
