@@ -1,32 +1,55 @@
 from __future__ import annotations
 
-from typing import List, Type
+from typing import List, Type, Tuple, Dict, Any
 
 from django.contrib.gis.db import models
 from django.db.models.base import ModelBase
 from django_postgres_unlimited_varchar import UnlimitedCharField
-from schematools.schema.types import DatasetTableSchema, DatasetSchema
+from schematools.schema.types import (
+    DatasetTableSchema,
+    DatasetSchema,
+    DatasetFieldSchema,
+)
+
+
+def field_model_factory(
+    field_model,
+    value_getter: Callable[[DatasetSchema], Dict[str, Any]] = None,
+    **kwargs,
+) -> Callable:
+    def fetch_field_model(
+        field: DatasetFieldSchema, dataset: DatasetSchema,
+    ) -> Tuple[Type[models.Model], Dict[str, Any]]:
+        inner_kwargs = kwargs.copy()
+        inner_kwargs["primary_key"] = field.is_primary
+        inner_kwargs["null"] = not field.required
+        if value_getter:
+            inner_kwargs = {**inner_kwargs, **value_getter(dataset)}
+        return (field_model, inner_kwargs)
+
+    return fetch_field_model
+
+
+def fetch_crs(dataset: DatasetSchema) -> Dict[str, Any]:
+    return {"srid": int(dataset.data["crs"].split("EPSG:")[1])}
+
 
 JSON_TYPE_TO_DJANGO = {
-    "string": (UnlimitedCharField, {}),
-    "integer": (models.IntegerField, {}),
-    "number": (models.FloatField, {}),
-    "boolean": (models.BooleanField, {}),
-    "https://schemas.data.amsterdam.nl/schema@v1.1.0#/definitions/id": (
-        models.IntegerField,
-        {},
+    "string": field_model_factory(UnlimitedCharField),
+    "integer": field_model_factory(models.IntegerField),
+    "number": field_model_factory(models.FloatField),
+    "boolean": field_model_factory(models.BooleanField),
+    "https://schemas.data.amsterdam.nl/schema@v1.1.0#/definitions/id": field_model_factory(
+        models.IntegerField
     ),
-    "https://schemas.data.amsterdam.nl/schema@v1.1.0#/definitions/schema": (
-        UnlimitedCharField,
-        {},
+    "https://schemas.data.amsterdam.nl/schema@v1.1.0#/definitions/schema": field_model_factory(
+        UnlimitedCharField
     ),
-    "https://geojson.org/schema/Geometry.json": (
-        models.MultiPolygonField,
-        {"srid": 28992, "geography": False},
+    "https://geojson.org/schema/Geometry.json": field_model_factory(
+        models.MultiPolygonField, value_getter=fetch_crs, srid=28992, geography=False
     ),
-    "https://geojson.org/schema/Point.json": (
-        models.PointField,
-        {"srid": 28992, "geography": False},
+    "https://geojson.org/schema/Point.json": field_model_factory(
+        models.PointField, value_getter=fetch_crs, srid=28992, geography=False
     ),
 }
 
@@ -58,36 +81,46 @@ class DynamicModel(models.Model):
         return cls._table_schema.id
 
 
-def schema_models_factory(dataset: DatasetSchema, tables=None) -> List[Type[DynamicModel]]:
+def schema_models_factory(
+    dataset: DatasetSchema, tables=None
+) -> List[Type[DynamicModel]]:
     """Generate Django models from the data of the schema."""
     return [
-        model_factory(table)
+        model_factory(dataset, table)
         for table in dataset.tables
         if tables is None or table.id in tables
     ]
 
 
-def model_factory(table: DatasetTableSchema) -> Type[DynamicModel]:
+def model_factory(
+    dataset: DatasetSchema, table: DatasetTableSchema
+) -> Type[DynamicModel]:
     """Generate a Django model class from a JSON Schema definition."""
     app_label = table._parent_schema.id
     fields = {}
     for field in table.fields:
-        kls, kw = JSON_TYPE_TO_DJANGO[field.type]
-        if field.is_primary:
-            kw["primary_key"] = True
+        kls, kw = JSON_TYPE_TO_DJANGO[field.type](field, dataset)
         fields[field.name] = kls(**kw)
 
     model_name = f"{table.id.capitalize()}"
 
-    meta_cls = type("Meta", (), {
-        "managed": False,
-        "db_table": f"{app_label}_{table.id}",
-        "app_label": app_label,
-    })
+    meta_cls = type(
+        "Meta",
+        (),
+        {
+            "managed": False,
+            "db_table": f"{app_label}_{table.id}",
+            "app_label": app_label,
+        },
+    )
 
-    return ModelBase(model_name, (DynamicModel,), {
-        **fields,
-        "_table_schema": table,
-        "__module__": f"schematools.schema.{app_label}.models",
-        "Meta": meta_cls
-    })
+    return ModelBase(
+        model_name,
+        (DynamicModel,),
+        {
+            **fields,
+            "_table_schema": table,
+            "__module__": f"schematools.schema.{app_label}.models",
+            "Meta": meta_cls,
+        },
+    )

@@ -15,7 +15,7 @@ SUPPORTED_REFS = {
     "https://schemas.data.amsterdam.nl/schema@v1.1.0#/definitions/dataset",
     "https://schemas.data.amsterdam.nl/schema@v1.1.0#/definitions/year",
     "https://schemas.data.amsterdam.nl/schema@v1.1.0#/definitions/uri",
-    "https://schemas.data.amsterdam.nl/schema@v1.1.0#/definitions/schema"
+    "https://schemas.data.amsterdam.nl/schema@v1.1.0#/definitions/schema",
 }
 
 
@@ -28,7 +28,7 @@ class SchemaType(UserDict):
     def type(self) -> str:
         return self["type"]
 
-    def json(self) -> dict:
+    def json(self) -> str:
         return json.dumps(self.data)
 
 
@@ -76,18 +76,19 @@ class DatasetTableSchema(SchemaType):
 
     @property
     def fields(self):
+        required = set(self["schema"]["required"])
         for name, spec in self["schema"]["properties"].items():
-            if '$ref' in spec:
-                ref = spec.pop('$ref')
+            if "$ref" in spec:
+                ref = spec.pop("$ref")
                 if ref not in SUPPORTED_REFS:
                     raise jsonschema.exceptions.ValidationError(f"Unknown: {ref}")
 
                 # typedef = self.resolve(spec.pop('$ref'))
                 # assert False, typedef
                 spec = spec.copy()
-                spec['type'] = ref
+                spec["type"] = ref
 
-            yield DatasetFieldSchema(name=name, **spec)
+            yield DatasetFieldSchema(name=name, required=name in required, **spec)
 
     def validate(self, row: dict):
         """Validate a record against the schema."""
@@ -103,14 +104,18 @@ class DatasetFieldSchema(DatasetType):
 
     @property
     def name(self) -> str:
-        return self['name']
+        return self["name"]
+
+    @property
+    def required(self) -> bool:
+        return self["required"]
 
     @property
     def type(self) -> str:
-        return self['type']
+        return self["type"]
 
     @property
-    def is_primary(self):
+    def is_primary(self) -> bool:
         return self.name == "id" and self.type.endswith("/definitions/id")
 
 
