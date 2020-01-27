@@ -32,11 +32,16 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.staticfiles',
     'django.contrib.gis',
+    'django.contrib.postgres',
     'corsheaders',
     'django_filters',
     'rest_framework',
     'rest_framework_gis',
     'rest_framework_swagger',
+
+    # Own apps
+    'dso_api.datasets',
+    'dso_api.dynamic_api',
 ]
 
 MIDDLEWARE = [
@@ -161,7 +166,7 @@ REST_FRAMEWORK = dict(
     UNAUTHENTICATED_USER={},
     UNAUTHENTICATED_TOKEN={},
 
-    DEFAULT_PAGINATION_CLASS='djangorestframework_dso.pagination.DSOPageNumberPagination',
+    DEFAULT_PAGINATION_CLASS='rest_framework_dso.pagination.DSOPageNumberPagination',
 
     DEFAULT_AUTHENTICATION_CLASSES=[
         # 'rest_framework.authentication.BasicAuthentication',

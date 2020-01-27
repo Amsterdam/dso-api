@@ -17,7 +17,7 @@ def pytest_configure(config):
         # knowledge of the test framework.
         override = override_settings(
             INSTALLED_APPS=settings.INSTALLED_APPS + [
-                'tests.test_djangorestframework_dso',
+                'tests.test_rest_framework_dso',
             ],
             CSRF_COOKIE_SECURE=False,
             SESSION_COOKIE_SECURE=False,

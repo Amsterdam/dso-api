@@ -4,7 +4,7 @@ from django.db import models
 from rest_framework import serializers
 from rest_framework.exceptions import ParseError
 
-from djangorestframework_dso.fields import AbstractEmbeddedField
+from rest_framework_dso.fields import AbstractEmbeddedField
 
 EmbeddedFieldDict = Dict[str, AbstractEmbeddedField]
 

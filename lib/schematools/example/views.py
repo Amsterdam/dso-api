@@ -1,18 +1,16 @@
 import os
-from rest_framework import viewsets
-from rest_framework import serializers
-from schematools.schema.utils import schema_defs_from_url, fetch_schema
-from schematools.db import fetch_models_from_schema
 
+from rest_framework import serializers, viewsets
+from schematools.db import schema_models_factory
+from schematools.schema.utils import schema_defs_from_url
 
 SCHEMA_URL = os.getenv("SCHEMA_URL")
 
 
 def fetch_viewsets():
     result = {}
-    for schema_name, schema_def in schema_defs_from_url(SCHEMA_URL).items():
-        dataset = fetch_schema(schema_def)
-        for model_cls in fetch_models_from_schema(dataset):
+    for schema_name, dataset in schema_defs_from_url(SCHEMA_URL).items():
+        for model_cls in schema_models_factory(dataset):
 
             meta_serializer_cls = type(
                 "Meta", (object,), {"model": model_cls, "fields": "__all__"}

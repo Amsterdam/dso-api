@@ -1,6 +1,12 @@
-from django.contrib.gis.db import models
-from django_postgres_unlimited_varchar import UnlimitedCharField
+from __future__ import annotations
 
+from typing import List, Type
+
+from django.contrib.gis.db import models
+from django.db.models.base import ModelBase
+from django.utils.decorators import classproperty
+from django_postgres_unlimited_varchar import UnlimitedCharField
+from schematools.schema.types import DatasetTableSchema, DatasetSchema
 
 JSON_TYPE_TO_DJANGO = {
     "string": (UnlimitedCharField, {}),
@@ -26,31 +32,60 @@ JSON_TYPE_TO_DJANGO = {
 }
 
 
-def fetch_models_from_schema(dataset):
-    result = []
-    for table in dataset.tables:
-        fields = {}
-        for field in table.fields:
-            kls, kw = JSON_TYPE_TO_DJANGO[field.type]
-            if field.is_primary:
-                kw["primary_key"] = True
-            fields[field.name] = kls(**kw)
-        model_name = f"{dataset.id.capitalize()}{table.id.capitalize()}"
+class DynamicModel(models.Model):
+    """Base class to tag and detect dynamically generated models."""
 
-        meta_cls = type(
-            "Meta",
-            (object,),
-            {
-                "managed": False,
-                "db_table": f"{dataset.id}_{table.id}",
-                "app_label": dataset.id,
-            },
-        )
-        model_cls = type(
-            model_name,
-            (models.Model,),
-            {**fields, "__module__": "dynapi.models", "Meta": meta_cls},
-        )
-        result.append(model_cls)
+    #: Overwritten by subclasses / factory
+    _table_schema: DatasetTableSchema = None
 
-    return result
+    class Meta:
+        abstract = True
+
+    @classproperty
+    def _dataset(self) -> DatasetSchema:
+        """Give access to the original dataset that this model is a part of."""
+        return self._table_schema._parent_schema
+
+    @classproperty
+    def _dataset_id(self) -> str:
+        return self._dataset.id
+
+    @classproperty
+    def _table_id(self) -> str:
+        """Give access to the table name"""
+        return self._table_schema.id
+
+
+def schema_models_factory(dataset: DatasetSchema, tables=None) -> List[Type[DynamicModel]]:
+    """Generate Django models from the data of the schema."""
+    return [
+        model_factory(table)
+        for table in dataset.tables
+        if tables is None or table.id in tables
+    ]
+
+
+def model_factory(table: DatasetTableSchema) -> Type[DynamicModel]:
+    """Generate a Django model class from a JSON Schema definition."""
+    app_label = table._parent_schema.id
+    fields = {}
+    for field in table.fields:
+        kls, kw = JSON_TYPE_TO_DJANGO[field.type]
+        if field.is_primary:
+            kw["primary_key"] = True
+        fields[field.name] = kls(**kw)
+
+    model_name = f"{app_label.capitalize()}{table.id.capitalize()}"
+
+    meta_cls = type("Meta", (), {
+        "managed": False,
+        "db_table": f"{app_label}_{table.id}",
+        "app_label": app_label,
+    })
+
+    return ModelBase(model_name, (DynamicModel,), {
+        **fields,
+        "_table_schema": table,
+        "__module__": f"schematools.schema.{app_label}.models",
+        "Meta": meta_cls
+    })

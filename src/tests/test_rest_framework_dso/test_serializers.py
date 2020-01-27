@@ -1,9 +1,9 @@
 import pytest
 from rest_framework.request import Request
 
-from djangorestframework_dso.fields import EmbeddedField
-from djangorestframework_dso.serializers import DSOSerializer
-from djangorestframework_dso.pagination import DSOPageNumberPagination
+from rest_framework_dso.fields import EmbeddedField
+from rest_framework_dso.serializers import DSOSerializer
+from rest_framework_dso.pagination import DSOPageNumberPagination
 from .models import Category, Movie
 
 

@@ -1,10 +1,13 @@
+from __future__ import annotations
+
 import ndjson
+from schematools.schema.types import DatasetSchema
 from shapely.geometry import shape
 from shapely.geometry.multipolygon import MultiPolygon
 from shapely.geometry.polygon import Polygon
 from django.db import connection
 
-from .models import fetch_models_from_schema
+from .models import schema_models_factory
 
 
 def fetch_rows(fh, srid):
@@ -17,29 +20,25 @@ def fetch_rows(fh, srid):
         yield row
 
 
-def create_tables(dataset, tables=()):
-
-    for table, model in zip(dataset.tables, fetch_models_from_schema(dataset)):
-        with connection.schema_editor() as schema_editor:
-            if not tables or table.id in set(tables):
-                schema_editor.create_model(model)
+def create_tables(dataset: DatasetSchema, tables=None):
+    with connection.schema_editor() as schema_editor:
+        for model in schema_models_factory(dataset, tables=tables):
+            schema_editor.create_model(model)
 
 
-def delete_tables(dataset, tables=()):
-
-    for table, model in zip(dataset.tables, fetch_models_from_schema(dataset)):
-        with connection.schema_editor() as schema_editor:
+def delete_tables(dataset: DatasetSchema, tables=None):
+    with connection.schema_editor() as schema_editor:
+        for model in schema_models_factory(dataset, tables=tables):
             # XXX Not sure if the works with relation, maybe need to revert to raw sql + cascade
-            if not tables or table.id in set(tables):
-                schema_editor.delete_model(model)
+            schema_editor.delete_model(model)
 
 
 def create_rows(dataset, data):
     model_lookup = {
-        model._meta.db_table: model for model in fetch_models_from_schema(dataset)
+        model._meta.db_table: model for model in schema_models_factory(dataset)
     }
     for row in data:
-        dataset_name, table_name = row["schema"].split("/")[-2:]
+        dataset_name, table_name = row["schema"].rsplit("/", 2)[-2:]
         field_names = set(
             dataset.get_table_by_id(table_name)["schema"]["properties"].keys()
         )

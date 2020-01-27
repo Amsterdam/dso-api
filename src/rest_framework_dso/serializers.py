@@ -5,7 +5,7 @@ from rest_framework import serializers
 from rest_framework.fields import empty
 from rest_framework.utils.serializer_helpers import ReturnDict, ReturnList
 
-from djangorestframework_dso.utils import EmbeddedHelper
+from rest_framework_dso.utils import EmbeddedHelper
 
 
 class _SideloadMixin:
