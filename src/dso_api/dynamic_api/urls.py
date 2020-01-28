@@ -19,6 +19,7 @@ def get_patterns(router_urls):
 app_name = 'dynamic_api'
 
 router = DynamicRouter()
+router.initialize()
 
 urlpatterns = get_patterns(router.urls)
 
