@@ -45,12 +45,14 @@ class DatasetSchema(SchemaType):
     def from_file(cls, filename: str):
         """Open an Amsterdam schema from a file."""
         with open(filename) as fh:
-            return cls(json.load(fh))
+            return cls.from_dict(json.load(fh))
 
     @classmethod
     def from_dict(cls, obj: dict):
         """ Parses given dict and validates the given schema """
-        # XXX validation not added yet
+        if obj.get('type') != 'dataset' or not isinstance(obj.get('tables'), list):
+            raise ValueError("Invalid Amsterdam Schema file")
+
         return cls(obj)
 
     @property
@@ -73,6 +75,9 @@ class DatasetTableSchema(SchemaType):
     def __init__(self, *args, _parent_schema=None, **kwargs):
         super().__init__(*args, **kwargs)
         self._parent_schema = _parent_schema
+
+        if not self["schema"].get("$schema", '').startswith("http://json-schema.org/"):
+            raise ValueError("Invalid Amsterdam schema table data")
 
     @property
     def fields(self):
