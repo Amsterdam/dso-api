@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-from typing import List, Type, Tuple, Dict, Any
+from typing import List, Type, Tuple, Dict, Any, Callable
 from string_utils import slugify
 
 from django.contrib.gis.db import models
@@ -31,18 +31,19 @@ def field_model_factory(
     def fetch_field_model(
         field: DatasetFieldSchema, dataset: DatasetSchema,
     ) -> Tuple[Type[models.Model], Dict[str, Any]]:
-        nonlocal kwargs
+        kw = kwargs.copy()
         final_field_model = field_model
         args = []
-        kwargs["primary_key"] = field.is_primary
-        kwargs["null"] = not field.required
+        kw["primary_key"] = field.is_primary
+        kw["null"] = not field.required
         relation = field.relation
         if relation is not None:
             final_field_model = models.ForeignKey
             args = [_make_related_classname(relation), models.SET_NULL]
+            kw["db_column"] = f"{slugify(field.name, sign='_')}"
         if value_getter:
-            kwargs = {**kwargs, **value_getter(dataset)}
-        return (final_field_model, args, kwargs)
+            kw = {**kw, **value_getter(dataset)}
+        return (final_field_model, args, kw)
 
     return fetch_field_model
 

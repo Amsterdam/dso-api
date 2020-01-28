@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 import ndjson
+import environ
 from schematools.schema.types import DatasetSchema
+
+from schematools.schema.utils import schema_defs_from_url
 from shapely.geometry import shape
 from shapely.geometry.multipolygon import MultiPolygon
 from shapely.geometry.polygon import Polygon
@@ -22,6 +25,9 @@ def fetch_rows(fh, srid):
 
 
 def create_tables(dataset: DatasetSchema, tables=None):
+    # preload all schemas, could be needed for references.
+    for schema in schema_defs_from_url(environ.Env()("SCHEMA_URL")).values():
+        schema_models_factory(schema)
     with connection.schema_editor() as schema_editor:
         for model in schema_models_factory(dataset, tables=tables):
             schema_editor.create_model(model)
@@ -50,6 +56,7 @@ def create_rows(dataset, data):
 
 
 def set_grants(dataset):
-    cursor = connection.cursor()
+    pass
+    # cursor = connection.cursor()
     # for table in dataset.tables:
     # cursor.execute(f"GRANT SELECT ON {dataset.id}_{table.id} TO PUBLIC")
