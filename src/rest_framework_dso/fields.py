@@ -8,7 +8,9 @@ from rest_framework.serializers import Serializer
 class AbstractEmbeddedField:
     """A 'virtual' field that contains the configuration of an embedded field."""
 
-    def __init__(self, serializer_class: Type[Serializer], *, to_field=None, source=None):
+    def __init__(
+        self, serializer_class: Type[Serializer], *, to_field=None, source=None
+    ):
         self.serializer_class = serializer_class
         self.to_field = to_field
         self.source = source
@@ -20,7 +22,9 @@ class AbstractEmbeddedField:
         from .serializers import _SideloadMixin
 
         if not issubclass(owner, _SideloadMixin):
-            raise TypeError(f"{owner} does not extend from DSO serializer classes") from None
+            raise TypeError(
+                f"{owner} does not extend from DSO serializer classes"
+            ) from None
 
         self.parent_serializer = owner
         self.field_name = name
@@ -28,7 +32,7 @@ class AbstractEmbeddedField:
         # Also register this field in the Meta.embedded,
         # which makes it easier to collect embedded relations
         meta = self.parent_serializer.Meta
-        if not hasattr(meta, 'embedded_fields'):
+        if not hasattr(meta, "embedded_fields"):
             meta.embedded_fields = []
         meta.embedded_fields.append(name)
 

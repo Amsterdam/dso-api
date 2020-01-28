@@ -10,7 +10,7 @@ class DSOPageNumberPagination(pagination.PageNumberPagination):
     """
 
     #: The field name for the results envelope
-    results_field = 'results'
+    results_field = "results"
 
     def __init__(self, results_field=None):
         if results_field:
@@ -30,29 +30,27 @@ class DSOPageNumberPagination(pagination.PageNumberPagination):
 
         # As Python 3.6 preserves dict ordering, no longer using OrderedDict.
         _links = {
-            'self': {'href': self_link},
-            'next': {'href': next_link},
-            'previous': {'href': prev_link},
+            "self": {"href": self_link},
+            "next": {"href": next_link},
+            "previous": {"href": prev_link},
         }
 
         if isinstance(data, dict):
             # Used DSOListSerializer, already received multiple lists
             return {
-                '_links': _links,
-                'count': self.page.paginator.count,
-                'page_size': self.page_size,
-                '_embedded': data,
+                "_links": _links,
+                "count": self.page.paginator.count,
+                "page_size": self.page_size,
+                "_embedded": data,
             }
         else:
             # Regular list serializer, wrap in HAL fields.
             return {
-                '_links': _links,
-                'count': self.page.paginator.count,
-                'page_size': self.page_size,
-                '_embedded': {
-                    self.results_field: data,
-                }
+                "_links": _links,
+                "count": self.page.paginator.count,
+                "page_size": self.page_size,
+                "_embedded": {self.results_field: data,},
             }
 
     def get_results(self, data):
-        return data['_embedded'][self.results_field]
+        return data["_embedded"][self.results_field]

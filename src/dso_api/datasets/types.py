@@ -1,9 +1,9 @@
 """Python types for the Amsterdam Schema JSON file contents."""
 from __future__ import annotations
 
-from collections import UserDict
 import json
 import typing
+from collections import UserDict
 
 import jsonschema
 
@@ -54,7 +54,7 @@ class DatasetSchema(SchemaType):
     @classmethod
     def from_dict(cls, obj: dict):
         """ Parses given dict and validates the given schema """
-        if obj.get('type') != 'dataset' or not isinstance(obj.get('tables'), list):
+        if obj.get("type") != "dataset" or not isinstance(obj.get("tables"), list):
             raise ValueError("Invalid Amsterdam Schema file")
 
         return cls(obj)
@@ -83,7 +83,7 @@ class DatasetTableSchema(SchemaType):
         if self.get("type") != "table":
             raise ValueError("Invalid Amsterdam schema table data")
 
-        if not self["schema"].get("$schema", '').startswith("http://json-schema.org/"):
+        if not self["schema"].get("$schema", "").startswith("http://json-schema.org/"):
             raise ValueError("Invalid JSON-schema contents of table")
 
     @property

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Dict, List, Type, TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict, List, Type
 
 from django.db import connection
 from django.urls import NoReverseMatch, reverse
@@ -38,7 +38,7 @@ class DynamicRouter(routers.SimpleRouter):
             dataset_name = dataset.schema.id  # not dataset.name!
 
             for model in dataset.create_models():
-                url_prefix = f'{dataset_name}/{model.get_table_id()}'
+                url_prefix = f"{dataset_name}/{model.get_table_id()}"
                 logger.debug("Created model for %s", url_prefix)
 
                 if dataset.enable_api:
@@ -47,14 +47,14 @@ class DynamicRouter(routers.SimpleRouter):
                     tmp_router.register(
                         prefix=url_prefix,
                         viewset=viewset,
-                        basename=f"{dataset_name}-{model.get_table_id()}"
+                        basename=f"{dataset_name}-{model.get_table_id()}",
                     )
 
         # Atomically copy the new viewset registrations
         self.registry = tmp_router.registry
 
         # invalidate the urls cache
-        if hasattr(self, '_urls'):
+        if hasattr(self, "_urls"):
             del self._urls
 
         return models
@@ -77,7 +77,9 @@ class DynamicRouter(routers.SimpleRouter):
         # Return which models + urls were generated
         result = {}
         for model in models:
-            viewname = f"dynamic_api:{model.get_dataset_id()}-{model.get_table_id()}-list"
+            viewname = (
+                f"dynamic_api:{model.get_dataset_id()}-{model.get_table_id()}-list"
+            )
             try:
                 url = reverse(viewname)
             except NoReverseMatch as e:

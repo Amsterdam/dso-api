@@ -5,7 +5,7 @@ class Category(models.Model):
     name = models.CharField(max_length=100)
 
     class Meta:
-        app_label = 'test_rest_framework_dso'
+        app_label = "test_rest_framework_dso"
 
 
 class Movie(models.Model):
@@ -13,5 +13,5 @@ class Movie(models.Model):
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
 
     class Meta:
-        app_label = 'test_rest_framework_dso'
-        ordering = ('name',)
+        app_label = "test_rest_framework_dso"
+        ordering = ("name",)

@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Dict
 
 import requests
+
 from dso_api.datasets import types
 
 
@@ -18,7 +19,9 @@ def schema_defs_from_url(schemas_url) -> Dict[str, types.DatasetSchema]:
         response.raise_for_status()
         response_data = response.json()
         if not isinstance(response_data, list):
-            raise ValueError(f"Unexpected response at {schemas_url}, not a directory listing")
+            raise ValueError(
+                f"Unexpected response at {schemas_url}, not a directory listing"
+            )
 
         for schema_dir_info in response_data:
 
@@ -28,15 +31,21 @@ def schema_defs_from_url(schemas_url) -> Dict[str, types.DatasetSchema]:
             response.raise_for_status()
             response_data = response.json()
             if not isinstance(response_data, list):
-                raise ValueError(f"Unexpected response at {schemas_url}, not a directory listing")
+                raise ValueError(
+                    f"Unexpected response at {schemas_url}, not a directory listing"
+                )
 
             for schema_file_info in response_data:
                 # Fetch each schema from the folder
                 schema_name = schema_file_info["name"]
-                response = connection.get(f"{schemas_url}{schema_dir_name}/{schema_name}")
+                response = connection.get(
+                    f"{schemas_url}{schema_dir_name}/{schema_name}"
+                )
                 response.raise_for_status()
 
-                schema_lookup[schema_name] = types.DatasetSchema.from_dict(response.json())
+                schema_lookup[schema_name] = types.DatasetSchema.from_dict(
+                    response.json()
+                )
 
     return schema_lookup
 

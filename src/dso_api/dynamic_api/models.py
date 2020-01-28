@@ -1,18 +1,14 @@
 from __future__ import annotations
 
 import re
-from typing import List, Type, Tuple, Dict, Any, Callable
-from string_utils import slugify
+from typing import Any, Callable, Dict, List, Tuple, Type
 
 from django.contrib.gis.db import models
 from django.db.models.base import ModelBase
 from django_postgres_unlimited_varchar import UnlimitedCharField
-from dso_api.datasets.types import (
-    DatasetTableSchema,
-    DatasetSchema,
-    DatasetFieldSchema,
-)
+from string_utils import slugify
 
+from dso_api.datasets.types import DatasetFieldSchema, DatasetSchema, DatasetTableSchema
 
 # Could be used to check fieldnames
 ALLOWED_ID_PATTERN = re.compile(r"[a-zA-Z][ \w\d]*")

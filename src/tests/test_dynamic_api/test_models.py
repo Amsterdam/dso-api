@@ -1,6 +1,7 @@
-from dso_api.dynamic_api.models import model_factory
-from dso_api.datasets.types import DatasetSchema
 from pathlib import Path
+
+from dso_api.datasets.types import DatasetSchema
+from dso_api.dynamic_api.models import model_factory
 
 HERE = Path(__file__).parent
 

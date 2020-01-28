@@ -26,7 +26,9 @@ class EmbeddedHelper:
             if field_name not in allowed_names:
                 available = ", ".join(sorted(allowed_names))
                 if not available:
-                    raise ParseError(f"Sideloading is not supported for this endpoint") from None
+                    raise ParseError(
+                        f"Sideloading is not supported for this endpoint"
+                    ) from None
                 else:
                     raise ParseError(
                         f"Sideloading is not supported for field '{field_name}', "
@@ -62,9 +64,12 @@ class EmbeddedHelper:
             related_model = embedded_field.related_model
             data = fetched_per_model[related_model]
 
-            embedded_serializer = embedded_field.get_serializer(parent=self.parent_serializer)
+            embedded_serializer = embedded_field.get_serializer(
+                parent=self.parent_serializer
+            )
             _embedded[name] = [
-                embedded_serializer.to_representation(data[id]) for id in ids_per_relation[name]
+                embedded_serializer.to_representation(data[id])
+                for id in ids_per_relation[name]
             ]
 
         return _embedded
@@ -83,6 +88,8 @@ class EmbeddedHelper:
                 continue
 
             value = embedded_field.related_model.objects.get(pk=id_value)
-            embedded_serializer = embedded_field.get_serializer(parent=self.parent_serializer)
+            embedded_serializer = embedded_field.get_serializer(
+                parent=self.parent_serializer
+            )
             ret[name] = embedded_serializer.to_representation(value)
         return ret

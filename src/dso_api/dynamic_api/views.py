@@ -2,9 +2,10 @@ from typing import Type
 
 from django.http import JsonResponse
 from rest_framework import viewsets
-from dso_api.dynamic_api.models import DynamicModel
 
+from dso_api.dynamic_api.models import DynamicModel
 from rest_framework_dso.pagination import DSOPageNumberPagination
+
 from . import serializers
 from .locking import ReadLockMixin
 
@@ -15,20 +16,23 @@ def reload_patterns(request):
 
     new_models = router.reload()
 
-    return JsonResponse({
-        'models': [
-            {
-                'schema': model._meta.app_label,
-                'table': model._meta.model_name,
-                'url': request.build_absolute_uri(url)
-            }
-            for model, url in new_models.items()
-        ]
-    })
+    return JsonResponse(
+        {
+            "models": [
+                {
+                    "schema": model._meta.app_label,
+                    "table": model._meta.model_name,
+                    "url": request.build_absolute_uri(url),
+                }
+                for model, url in new_models.items()
+            ]
+        }
+    )
 
 
 class DynamicApiViewSet(ReadLockMixin, viewsets.ReadOnlyModelViewSet):
     """Viewset for an API, that is """
+
     pagination_class = DSOPageNumberPagination
 
     #: Define the model class to use (e.g. in .as_view() call / subclass)
@@ -44,8 +48,4 @@ class DynamicApiViewSet(ReadLockMixin, viewsets.ReadOnlyModelViewSet):
 
 def viewset_factory(model: Type[DynamicModel]) -> Type[DynamicApiViewSet]:
     """Generate the viewset for a schema."""
-    return type(
-        f"{model.__name__}ViewSet", (DynamicApiViewSet,), {
-            'model': model,
-        }
-    )
+    return type(f"{model.__name__}ViewSet", (DynamicApiViewSet,), {"model": model,})

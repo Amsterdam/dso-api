@@ -11,12 +11,12 @@ from . import views
 def get_patterns(router_urls):
     """Generate the actual URL patterns for this file."""
     return [
-        path('reload/', views.reload_patterns),
-        path('', include(router_urls)),
+        path("reload/", views.reload_patterns),
+        path("", include(router_urls)),
     ]
 
 
-app_name = 'dynamic_api'
+app_name = "dynamic_api"
 
 router = DynamicRouter()
 router.initialize()

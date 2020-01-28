@@ -3,14 +3,14 @@ from __future__ import annotations
 from functools import lru_cache
 from typing import Type
 
-from dso_api.dynamic_api.models import DynamicModel
 from dso_api.datasets.types import DatasetTableSchema
-
+from dso_api.dynamic_api.models import DynamicModel
 from rest_framework_dso.serializers import DSOSerializer
 
 
 class DynamicSerializer(DSOSerializer):
     """Base class for all generic serializers of this package."""
+
     table_schema: DatasetTableSchema = None
 
 

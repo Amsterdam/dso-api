@@ -6,8 +6,8 @@ from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from rest_framework import permissions
 
-import dso_api.dynamic_api.urls
 import dso_api.datasets.urls
+import dso_api.dynamic_api.urls
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -24,13 +24,15 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
-    path('status/health/', include(django_healthchecks.urls)),
+    path("status/health/", include(django_healthchecks.urls)),
     path("datasets/", include(dso_api.datasets.urls)),
-    path('v1/', include(dso_api.dynamic_api.urls)),
-    path('v1/', schema_view.with_ui('swagger', cache_timeout=0)),
-    re_path(r'^v1/openapi(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0)),
-
-    path('', RedirectView.as_view(url='/v1/'), name='root-redirect'),
+    path("v1/", include(dso_api.dynamic_api.urls)),
+    path("v1/", schema_view.with_ui("swagger", cache_timeout=0)),
+    re_path(
+        r"^v1/openapi(?P<format>\.json|\.yaml)$",
+        schema_view.without_ui(cache_timeout=0),
+    ),
+    path("", RedirectView.as_view(url="/v1/"), name="root-redirect"),
 ]
 
 if "debug_toolbar" in settings.INSTALLED_APPS:

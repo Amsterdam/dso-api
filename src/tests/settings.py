@@ -5,7 +5,7 @@ from dso_api.settings import *
 # knowledge of the test framework.
 
 INSTALLED_APPS += [
-    'tests.test_rest_framework_dso',
+    "tests.test_rest_framework_dso",
 ]
 
 CSRF_COOKIE_SECURE = False

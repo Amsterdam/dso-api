@@ -23,8 +23,7 @@ class Command(BaseCommand):
 
             self.stdout.write(f"* Importing {name}")
             dataset = Dataset.objects.create(
-                name=schema.id,
-                schema_data=schema.json_data()
+                name=schema.id, schema_data=schema.json_data()
             )
             datasets.append(dataset)
 

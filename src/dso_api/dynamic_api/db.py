@@ -1,6 +1,6 @@
 from django.db import connection
-from dso_api.datasets.types import DatasetSchema
 
+from dso_api.datasets.types import DatasetSchema
 from dso_api.dynamic_api.models import schema_models_factory
 
 

@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 def in_write_thread() -> bool:
     """Tell whether the current thread/request is a write thread."""
     # Checking whether it's not in a read-lock, so management commands also work this way.
-    return not getattr(reload_lock_status, 'in_read', False)
+    return not getattr(reload_lock_status, "in_read", False)
 
 
 def lock_for_writing(func):
@@ -62,14 +62,19 @@ class ReadLockMixin:
             except LookupError:
                 # Using handle_exception() directly instead of raising the error,
                 # as the super().dispatch() is the point where DRF exceptions are handled.
-                response = self.handle_exception(NotFound("API endpoint no longer exists"))
+                response = self.handle_exception(
+                    NotFound("API endpoint no longer exists")
+                )
                 self.headers = {}
                 self.finalize_response(request, response, *args, **kwargs)
                 return response
             else:
                 # Detected that reload updated the model
                 if new_model is not self.model:
-                    logger.debug("Resuming request with updated model %s", request.get_full_path())
+                    logger.debug(
+                        "Resuming request with updated model %s",
+                        request.get_full_path(),
+                    )
                     self.model = new_model
 
             return super().dispatch(request, *args, **kwargs)

@@ -6,8 +6,8 @@ from django.db import models
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 
-from dso_api.dynamic_api.models import DynamicModel, schema_models_factory
 from dso_api.datasets.types import DatasetSchema
+from dso_api.dynamic_api.models import DynamicModel, schema_models_factory
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +18,7 @@ class Dataset(models.Model):
     Each model holds the contents of an "Amsterdam Schema",
     that contains multiple tables.
     """
+
     name = models.CharField(_("Name"), unique=True, max_length=50)
     ordering = models.IntegerField(_("Ordering"), default=1)
     enable_api = models.BooleanField(default=True)
@@ -25,7 +26,7 @@ class Dataset(models.Model):
     schema_data = JSONField(_("Amsterdam Schema Contents"))
 
     class Meta:
-        ordering = ('ordering', 'name')
+        ordering = ("ordering", "name")
         verbose_name = _("Dataset")
         verbose_name_plural = _("Datasets")
 
@@ -35,7 +36,10 @@ class Dataset(models.Model):
     def save(self, *args, **kwargs):
         # Make sure the schema_data field is properly filled with an actual dict.
         if self.schema_data and not isinstance(self.schema_data, dict):
-            logger.debug("Invalid data in Dataset.schema_data, expected dict: %r", self.schema_data)
+            logger.debug(
+                "Invalid data in Dataset.schema_data, expected dict: %r",
+                self.schema_data,
+            )
             raise RuntimeError("Invalid data in Dataset.schema_data")
 
         super().save(*args, **kwargs)
