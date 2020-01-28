@@ -31,6 +31,9 @@ class SchemaType(UserDict):
     def json(self) -> str:
         return json.dumps(self.data)
 
+    def json_data(self) -> dict:
+        return self.data
+
 
 class DatasetType(UserDict):
     pass
