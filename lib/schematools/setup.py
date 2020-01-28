@@ -31,7 +31,7 @@ setup(
         "requests",
         "jsonschema",
         "click",
-        "psycopg2",
+        "psycopg2-binary",
         "ndjson",
         "shapely",
     ],
