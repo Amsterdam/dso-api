@@ -5,11 +5,10 @@ from rest_framework import viewsets
 from schematools.models import DynamicModel
 
 from rest_framework_dso.pagination import DSOPageNumberPagination
-from .middleware import pause_reader_threads
 from . import serializers
+from .locking import ReadLockMixin
 
 
-@pause_reader_threads
 def reload_patterns(request):
     """A view that reloads the current patterns."""
     from .urls import router
@@ -28,7 +27,7 @@ def reload_patterns(request):
     })
 
 
-class DynamicApiViewSet(viewsets.ReadOnlyModelViewSet):
+class DynamicApiViewSet(ReadLockMixin, viewsets.ReadOnlyModelViewSet):
     """Viewset for an API, that is """
     pagination_class = DSOPageNumberPagination
 
