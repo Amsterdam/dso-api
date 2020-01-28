@@ -22,7 +22,7 @@ def serializer_factory(model: Type[DynamicModel]) -> Type[DynamicSerializer]:
     new_meta_attrs = {"model": model, "fields": fields}
 
     # Generate serializer class
-    serializer_name = f"{model.__class__.__name__}Serializer"
+    serializer_name = f"{model.__name__}Serializer"
     new_attrs = {
         "table_schema": model._table_schema,
         "__module__": "various_small_datasets.gen_api.serializers",
