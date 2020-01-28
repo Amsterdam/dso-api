@@ -54,16 +54,22 @@ class ReadLockMixin:
         with self.read_lock:
             # Final edge case: ensure that the model is really the latest version.
             # If a write-lock completed, the model might have been replaced.
-            # In fact, the whole view is replaced but this should be
+            # In fact, the whole view is replaced but this should be a problem.
+            opts = self.model._meta
             try:
-                opts = self.model._meta
-                new_model = apps.get_model(opts.app_label, opts.model_name)
-                if new_model is not self.model:
-                    logger.debug("Resuming request with updated model %s", request.get_full_path())
-                    self.model = new_model
+                # Can't use apps.get_model() as dynamic apps have no AppConfig.
+                new_model = apps.all_models[opts.app_label][opts.model_name]
             except LookupError:
                 # Using handle_exception() directly instead of raising the error,
                 # as the super().dispatch() is the point where DRF exceptions are handled.
-                return self.handle_exception(NotFound("API endpoint no longer exists"))
+                response = self.handle_exception(NotFound("API endpoint no longer exists"))
+                self.headers = {}
+                self.finalize_response(request, response, *args, **kwargs)
+                return response
+            else:
+                # Detected that reload updated the model
+                if new_model is not self.model:
+                    logger.debug("Resuming request with updated model %s", request.get_full_path())
+                    self.model = new_model
 
             return super().dispatch(request, *args, **kwargs)
