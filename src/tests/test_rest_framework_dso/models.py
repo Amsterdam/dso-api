@@ -14,5 +14,4 @@ class Movie(models.Model):
 
     class Meta:
         app_label = 'test_rest_framework_dso'
-
-
+        ordering = ('name',)
