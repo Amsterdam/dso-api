@@ -15,6 +15,8 @@ DEBUG = env.bool('DJANGO_DEBUG', True)
 STATIC_URL = '/dso-api/static/'
 STATIC_ROOT = '/static/'
 
+DATAPUNT_API_URL = env.str('DATAPUNT_API_URL', 'https://api.data.amsterdam.nl/')
+
 # -- Security
 
 # SECURITY WARNING: keep the secret key used in production secret!
@@ -35,9 +37,9 @@ INSTALLED_APPS = [
     'django.contrib.postgres',
     'corsheaders',
     'django_filters',
+    'drf_yasg',
     'rest_framework',
     'rest_framework_gis',
-    'rest_framework_swagger',
 
     # Own apps
     'dso_api.datasets',
@@ -183,40 +185,13 @@ REST_FRAMEWORK = dict(
     COERCE_DECIMAL_TO_STRING=True,
 )
 
-SWAG_PATH = env.str(
-    "SWAG_PATH", default='127.0.0.1:8000/docs' if DEBUG else 'acc.api.data.amsterdam.nl/docs'
-)
-
 SWAGGER_SETTINGS = {
-    'exclude_namespaces': [],
-    'api_version': '0.1',
-    'api_path': '/',
-
-    'enabled_methods': [
-        'get',
-    ],
-
-    'api_key': '',
     'USE_SESSION_AUTH': False,
-    'VALIDATOR_URL': None,
-
-    'is_authenticated': False,
-    'is_superuser': False,
-
-    'unauthenticated_user': 'django.contrib.auth.models.AnonymousUser',
-    'permission_denied_handler': None,
-    'resource_access_handler': None,
-
-    'protocol': 'https' if not DEBUG else '',
-    'base_path': SWAG_PATH,
-
-    'info': {
-        'contact': 'datapunt@amsterdam.nl',
-        'description': 'This is the generic DSO-compatible API server.',
-        'license': 'Not known yet',
-        'termsOfServiceUrl': 'https://data.amsterdam.nl/terms/',
-        'title': 'Tellus',
-    },
-
-    'doc_expansion': 'list',
+    'SECURITY_DEFINITIONS': {
+        'oauth2': {
+            'type': 'oauth2',
+            'authorizationUrl': f"{DATAPUNT_API_URL}oauth2/authorize",
+            'flow': 'implicit',
+        }
+    }
 }
