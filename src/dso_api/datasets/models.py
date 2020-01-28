@@ -29,6 +29,9 @@ class Dataset(models.Model):
         verbose_name = _("Dataset")
         verbose_name_plural = _("Datasets")
 
+    def __str__(self):
+        return self.name
+
     def save(self, *args, **kwargs):
         # Make sure the schema_data field is properly filled with an actual dict.
         if self.schema_data and not isinstance(self.schema_data, dict):
