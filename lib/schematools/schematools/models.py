@@ -18,6 +18,11 @@ from schematools.schema.types import (
 ALLOWED_ID_PATTERN = re.compile(r"[a-zA-Z][ \w\d]*")
 
 
+def _make_related_classname(relation_urn):
+    dataset_name, table_name = relation_urn.split(":")
+    return f"{dataset_name}.{table_name.capitalize()}"
+
+
 def field_model_factory(
     field_model,
     value_getter: Callable[[DatasetSchema], Dict[str, Any]] = None,
@@ -27,13 +32,17 @@ def field_model_factory(
         field: DatasetFieldSchema, dataset: DatasetSchema,
     ) -> Tuple[Type[models.Model], Dict[str, Any]]:
         nonlocal kwargs
+        final_field_model = field_model
+        args = []
         kwargs["primary_key"] = field.is_primary
         kwargs["null"] = not field.required
-        if field.is_relation:
-            pass
+        relation = field.relation
+        if relation is not None:
+            final_field_model = models.ForeignKey
+            args = [_make_related_classname(relation), models.SET_NULL]
         if value_getter:
             kwargs = {**kwargs, **value_getter(dataset)}
-        return (field_model, kwargs)
+        return (final_field_model, args, kwargs)
 
     return fetch_field_model
 
@@ -107,8 +116,8 @@ def model_factory(
     app_label = table._parent_schema.id
     fields = {}
     for field in table.fields:
-        kls, kw = JSON_TYPE_TO_DJANGO[field.type](field, dataset)
-        fields[slugify(field.name, sign="_")] = kls(**kw)
+        kls, args, kwargs = JSON_TYPE_TO_DJANGO[field.type](field, dataset)
+        fields[slugify(field.name, sign="_")] = kls(*args, **kwargs)
 
     model_name = f"{table.id.capitalize()}"
 

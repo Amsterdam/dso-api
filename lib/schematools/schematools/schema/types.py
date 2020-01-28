@@ -119,8 +119,8 @@ class DatasetFieldSchema(DatasetType):
         return self.name == "id" and self.type.endswith("/definitions/id")
 
     @property
-    def is_relation(self) -> bool:
-        return "relation" in self
+    def relation(self) -> typing.Optional[str]:
+        return self.get("relation")
 
 
 class DatasetRow(DatasetType):
