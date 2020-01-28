@@ -18,7 +18,7 @@ class DynamicSerializer(DSOSerializer):
 def serializer_factory(model: Type[DynamicModel]) -> Type[DynamicSerializer]:
     """Generate the DRF serializer class for a specific dataset model."""
     # Generate serializer "Meta" attribute
-    fields = ["_links", "_display"] + [x.name for x in model._meta.get_fields()]
+    fields = ["_links"] + [x.name for x in model._meta.get_fields()]
     new_meta_attrs = {"model": model, "fields": fields}
 
     # Generate serializer class
