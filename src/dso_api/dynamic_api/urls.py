@@ -29,16 +29,11 @@ def refresh_urls(router_instance):
     if router_instance is not router:
         raise RuntimeError("Reloading causes duplicate router instances.")
 
-    # Reload the global top-level module
-    urlconf_name = get_urlconf() or settings.ROOT_URLCONF
-    urlconf_module = sys.modules.get(urlconf_name)
-    if urlconf_module is None:
-        # No need to replace URLs while starting up
-        return
-
     # Replace URLpatterns in this file
     global urlpatterns
     urlpatterns = get_patterns(router.urls)
 
-    reload(urlconf_module)
+    # Reload the global top-level module
+    #urlconf_name = get_urlconf() or settings.ROOT_URLCONF
+    #reload(sys.modules[urlconf_name])
     clear_url_caches()
