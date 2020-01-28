@@ -1,3 +1,4 @@
+import logging
 from typing import List, Type
 
 from django.contrib.postgres.fields import JSONField
@@ -7,6 +8,8 @@ from django.utils.translation import gettext_lazy as _
 
 from schematools.models import DynamicModel, schema_models_factory
 from schematools.schema.types import DatasetSchema
+
+logger = logging.getLogger(__name__)
 
 
 class Dataset(models.Model):
@@ -26,9 +29,22 @@ class Dataset(models.Model):
         verbose_name = _("Dataset")
         verbose_name_plural = _("Datasets")
 
+    def save(self, *args, **kwargs):
+        # Make sure the schema_data field is properly filled with an actual dict.
+        if self.schema_data and not isinstance(self.schema_data, dict):
+            logger.debug("Invalid data in Dataset.schema_data, expected dict: %r", self.schema_data)
+            raise RuntimeError("Invalid data in Dataset.schema_data")
+
+        super().save(*args, **kwargs)
+
+    save.alters_data = True
+
     @cached_property
     def schema(self) -> DatasetSchema:
         """Provide access to the schema data"""
+        if not self.schema_data:
+            raise RuntimeError("Dataset.schema_data is empty")
+
         return DatasetSchema.from_dict(self.schema_data)
 
     def create_models(self) -> List[Type[DynamicModel]]:
