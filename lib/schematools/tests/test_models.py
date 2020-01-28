@@ -12,4 +12,3 @@ def test_models():
     meta = model_cls._meta
     assert len(meta.get_fields()) == len(table["schema"]["properties"])
     assert meta.app_label == dataset.id
-    breakpoint()
