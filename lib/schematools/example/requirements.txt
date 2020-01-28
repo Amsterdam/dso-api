@@ -1,2 +1,0 @@
-django-restframework
-dj_database_url

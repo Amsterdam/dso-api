@@ -3,8 +3,8 @@ from __future__ import annotations
 from functools import lru_cache
 from typing import Type
 
-from schematools.models import DynamicModel
-from schematools.schema.types import DatasetTableSchema
+from dso_api.dynamic_api.models import DynamicModel
+from dso_api.datasets.types import DatasetTableSchema
 
 from rest_framework_dso.serializers import DSOSerializer
 

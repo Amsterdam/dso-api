@@ -1,10 +1,10 @@
 from django.conf import settings
 from django.core.management import BaseCommand, CommandError
-from django.db import transaction, DatabaseError
-from schematools.db import create_tables
-from schematools.schema.utils import schema_defs_from_url
+from django.db import DatabaseError, transaction
 
 from dso_api.datasets.models import Dataset
+from dso_api.datasets.utils import schema_defs_from_url
+from dso_api.dynamic_api.db import create_tables
 
 
 class Command(BaseCommand):

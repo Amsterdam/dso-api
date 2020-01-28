@@ -7,7 +7,7 @@ from string_utils import slugify
 from django.contrib.gis.db import models
 from django.db.models.base import ModelBase
 from django_postgres_unlimited_varchar import UnlimitedCharField
-from schematools.schema.types import (
+from dso_api.datasets.types import (
     DatasetTableSchema,
     DatasetSchema,
     DatasetFieldSchema,
@@ -114,7 +114,7 @@ def model_factory(table: DatasetTableSchema) -> Type[DynamicModel]:
     """Generate a Django model class from a JSON Schema definition."""
     dataset = table._parent_schema
     app_label = dataset.id
-    module_name =  f"schematools.schema.{app_label}.models"
+    module_name = f"dso_api.dynamic_api.{app_label}.models"
     model_name = f"{table.id.capitalize()}"
 
     # Generate fields

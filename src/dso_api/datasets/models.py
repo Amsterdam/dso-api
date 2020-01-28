@@ -6,8 +6,8 @@ from django.db import models
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 
-from schematools.models import DynamicModel, schema_models_factory
-from schematools.schema.types import DatasetSchema
+from dso_api.dynamic_api.models import DynamicModel, schema_models_factory
+from dso_api.datasets.types import DatasetSchema
 
 logger = logging.getLogger(__name__)
 

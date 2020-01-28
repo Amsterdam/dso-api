@@ -1,15 +1,18 @@
-datapunt-objectstore == 2019.4.8
 Django == 3.0.2
 django-environ == 0.4.5
 django-cors-headers == 3.2.1
 django-filter == 2.2.0
 django-healthchecks == 1.4.2
+django-postgres-unlimited-varchar == 1.1.0
 djangorestframework == 3.11.0
 djangorestframework-gis == 0.15
 drf-amsterdam == 0.3.2
 drf-yasg == 1.17.0
+jsonschema == 3.2.0
 psycopg2-binary == 2.8.4
+python-string-utils == 0.6.0
 readerwriterlock == 1.0.6
+requests == 2.22.0
 sentry-sdk == 0.14.0
 
 # Testing

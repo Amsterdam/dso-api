@@ -1,10 +1,8 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
-
-from schematools.schema.types import DatasetSchema
-from schematools.db import create_tables
-
 from dso_api.datasets.models import Dataset
+from dso_api.datasets.types import DatasetSchema
+from dso_api.dynamic_api.db import create_tables
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 
 class SchemaUploadView(APIView):

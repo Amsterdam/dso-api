@@ -1,7 +1,7 @@
 from django.core.management import BaseCommand
-from schematools.db import create_tables
 
 from dso_api.datasets.models import Dataset
+from dso_api.dynamic_api.db import create_tables
 
 
 class Command(BaseCommand):

@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Dict
 
 import requests
-from . import types
+from dso_api.datasets import types
 
 
 def schema_defs_from_url(schemas_url) -> Dict[str, types.DatasetSchema]:
