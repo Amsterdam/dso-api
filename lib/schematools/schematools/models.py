@@ -104,24 +104,26 @@ def schema_models_factory(
 ) -> List[Type[DynamicModel]]:
     """Generate Django models from the data of the schema."""
     return [
-        model_factory(dataset, table)
+        model_factory(table)
         for table in dataset.tables
         if tables is None or table.id in tables
     ]
 
 
-def model_factory(
-    dataset: DatasetSchema, table: DatasetTableSchema
-) -> Type[DynamicModel]:
+def model_factory(table: DatasetTableSchema) -> Type[DynamicModel]:
     """Generate a Django model class from a JSON Schema definition."""
-    app_label = table._parent_schema.id
+    dataset = table._parent_schema
+    app_label = dataset.id
+    module_name =  f"schematools.schema.{app_label}.models"
+    model_name = f"{table.id.capitalize()}"
+
+    # Generate fields
     fields = {}
     for field in table.fields:
         kls, args, kwargs = JSON_TYPE_TO_DJANGO[field.type](field, dataset)
         fields[slugify(field.name, sign="_")] = kls(*args, **kwargs)
 
-    model_name = f"{table.id.capitalize()}"
-
+    # Generate Meta part
     meta_cls = type(
         "Meta",
         (),
@@ -129,16 +131,18 @@ def model_factory(
             "managed": False,
             "db_table": f"{app_label}_{table.id}",
             "app_label": app_label,
+            "verbose_name": table.id,
         },
     )
 
+    # Generate the model
     return ModelBase(
         model_name,
         (DynamicModel,),
         {
             **fields,
             "_table_schema": table,
-            "__module__": f"schematools.schema.{app_label}.models",
+            "__module__": module_name,
             "Meta": meta_cls,
         },
     )
