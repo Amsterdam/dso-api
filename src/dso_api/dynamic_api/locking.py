@@ -30,6 +30,10 @@ def lock_for_writing(func):
 
     @wraps(func)
     def _locking_decorator(*args, **kwargs):
+        skip_lock = kwargs.pop('_skip_lock', False)
+        if skip_lock:
+            return func(*args, **kwargs)
+
         logger.debug("Requesting lock to reload models, views, router and URLs")
         with reload_lock.gen_wlock():
             logger.debug("Acquired write lock to perform reload")

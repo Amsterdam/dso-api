@@ -5,8 +5,12 @@ class DynamicAPIApp(AppConfig):
     name = 'dso_api.dynamic_api'
 
     def ready(self):
-        # Tell the router to reload, and initialize the missing URL patterns
-        # now that we're ready to read the model data.
+        from django.db import connection
+        from dso_api.datasets.models import Dataset
         from dso_api.dynamic_api.urls import router
 
-        router.reload()
+        # Only start the reload when the project already migrated the base tables:
+        if Dataset._meta.db_table in connection.introspection.table_names():
+            # Tell the router to reload, and initialize the missing URL patterns
+            # now that we're ready to read the model data.
+            router.reload(_skip_lock=True)
