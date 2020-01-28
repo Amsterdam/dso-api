@@ -25,7 +25,7 @@ schema_view = get_schema_view(
 urlpatterns = [
     path('status/health/', include(django_healthchecks.urls)),
     path('v1/', include(dso_api.dynamic_api.urls)),
-    path('v1/', schema_view.with_ui('swagger', cache_timeout=None)),
+    path('v1/', schema_view.with_ui('swagger', cache_timeout=0)),
     re_path(r'^v1/openapi(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0)),
 
     path('', RedirectView.as_view(url='/v1/'), name='root-redirect'),

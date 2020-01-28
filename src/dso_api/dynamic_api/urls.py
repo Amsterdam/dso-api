@@ -1,9 +1,10 @@
-import sys
-from importlib import reload
+from importlib import import_module, reload
 
-from django.urls import clear_url_caches, include, path, get_urlconf
+from django.conf import settings
+from django.urls import clear_url_caches, get_urlconf, include, path
 
 from dso_api.dynamic_api.routers import DynamicRouter
+
 from . import views
 
 
@@ -24,7 +25,6 @@ urlpatterns = get_patterns(router.urls)
 
 def refresh_urls(router_instance):
     """Refresh the URL patterns in this file, and reload the URLConf."""
-    from django.conf import settings
 
     if router_instance is not router:
         raise RuntimeError("Reloading causes duplicate router instances.")
@@ -34,6 +34,8 @@ def refresh_urls(router_instance):
     urlpatterns = get_patterns(router.urls)
 
     # Reload the global top-level module
-    #urlconf_name = get_urlconf() or settings.ROOT_URLCONF
-    #reload(sys.modules[urlconf_name])
+    urlconf_name = get_urlconf() or settings.ROOT_URLCONF
+    reload(import_module(urlconf_name))
+
+    # Clear the Django lru caches
     clear_url_caches()
