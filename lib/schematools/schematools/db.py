@@ -11,6 +11,7 @@ from .models import schema_models_factory
 
 
 def fetch_rows(fh, srid):
+    """ Need to convert Polygon to MultiPolygon, some inputs have mixed geo types """
     data = ndjson.load(fh)
     for row in data:
         s = shape(row["geometry"])
