@@ -79,8 +79,11 @@ class DatasetTableSchema(SchemaType):
         super().__init__(*args, **kwargs)
         self._parent_schema = _parent_schema
 
-        if not self["schema"].get("$schema", '').startswith("http://json-schema.org/"):
+        if self.get("type") != "table":
             raise ValueError("Invalid Amsterdam schema table data")
+
+        if not self["schema"].get("$schema", '').startswith("http://json-schema.org/"):
+            raise ValueError("Invalid JSON-schema contents of table")
 
     @property
     def fields(self):
