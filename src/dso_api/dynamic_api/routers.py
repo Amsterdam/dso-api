@@ -29,8 +29,10 @@ class DynamicRouter(routers.SimpleRouter):
         # Generate new viewsets for everything
         models = []
         for dataset in Dataset.objects.all():
+            dataset_name = dataset.schema.id  # not dataset.name!
+
             for model in dataset.create_models():
-                url_prefix = f'{dataset.name}/{model.get_table_id()}'
+                url_prefix = f'{dataset_name}/{model.get_table_id()}'
                 logger.debug("Created model for %s", url_prefix)
 
                 if dataset.enable_api:
@@ -39,7 +41,7 @@ class DynamicRouter(routers.SimpleRouter):
                     tmp_router.register(
                         prefix=url_prefix,
                         viewset=viewset,
-                        basename=f"{dataset.name}-{model.get_table_id()}"
+                        basename=f"{dataset_name}-{model.get_table_id()}"
                     )
 
         # Atomically copy the new viewset registrations
