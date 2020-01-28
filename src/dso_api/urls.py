@@ -1,6 +1,7 @@
 import django_healthchecks.urls
 from django.conf import settings
 from django.urls import include, path, re_path
+from django.views.generic import RedirectView
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from rest_framework import permissions
@@ -16,7 +17,7 @@ schema_view = get_schema_view(
         contact=openapi.Contact(email="datapunt@amsterdam.nl"),
         license=openapi.License(name="CC0 1.0 Universal"),
     ),
-    url="{}handelsregister/".format(settings.DATAPUNT_API_URL),
+    url=f"{settings.DATAPUNT_API_URL}v1/",
     public=True,
     permission_classes=(permissions.AllowAny,),
 )
@@ -24,9 +25,10 @@ schema_view = get_schema_view(
 urlpatterns = [
     path('status/health/', include(django_healthchecks.urls)),
     path('v1/', include(dso_api.dynamic_api.urls)),
+    path('v1/', schema_view.with_ui('swagger', cache_timeout=None)),
+    re_path(r'^v1/openapi(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0)),
 
-    re_path(r'^openapi(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0)),
-    path('', schema_view.with_ui('swagger', cache_timeout=None)),
+    path('', RedirectView.as_view(url='/v1/'), name='root-redirect'),
 ]
 
 if 'debug_toolbar' in settings.INSTALLED_APPS:
