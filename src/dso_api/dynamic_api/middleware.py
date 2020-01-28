@@ -33,10 +33,10 @@ class WaitOnReloadMiddleware:
         if self.is_write_thread(request):
             # Make sure the /reload/ is not waiting for a read lock.
             # This waits until there are no readers active.
-            with reload_lock.gen_wlock():
-                return self.get_response(request)
+            return self.get_response(request)
         else:
             # This blocks accessing the view while a reload() is happening.
             # This avoids reading partially regenerated models/serializers.
             with reload_lock.gen_rlock():
+                request._has_read_lock = True
                 return self.get_response(request)
