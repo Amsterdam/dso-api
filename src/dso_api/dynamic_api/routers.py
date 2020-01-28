@@ -1,10 +1,9 @@
 from __future__ import annotations
 
 import logging
-from typing import Dict, TYPE_CHECKING
+from typing import Dict, List, Type, TYPE_CHECKING
 
-from django.db.models import signals
-from django.urls import reverse
+from django.urls import NoReverseMatch, reverse
 from rest_framework import routers
 
 from dso_api.datasets.models import Dataset
@@ -23,35 +22,25 @@ class DynamicRouter(routers.SimpleRouter):
     def __init__(self):
         super().__init__(trailing_slash=True)
 
-    @lock_for_writing
-    def reload(self) -> Dict[DynamicModel, str]:
-        """Regenerate all viewsets for this router."""
-        # Should avoid early and cyclic imports
-        from . import urls
-
+    def initialize(self) -> List[Type[DynamicModel]]:
+        """Initialize all dynamic routes on startup."""
         tmp_router = routers.SimpleRouter()
-
-        # Note that the models get recreated too. This works as expected,
-        # since each model creation flushes the AppConfig caches.
-
-        # Clear the LRU-cache
-        serializer_factory.cache_clear()
 
         # Generate new viewsets for everything
         models = []
         for dataset in Dataset.objects.all():
             for model in dataset.create_models():
-                models.append(model)
-                viewset = viewset_factory(model)
-                basename = f"{dataset.name}-{model.get_table_id()}"
+                url_prefix = f'{dataset.name}/{model.get_table_id()}'
+                logger.debug("Created model for %s", url_prefix)
 
-                logger.debug("Creating model for %s", basename)
-
-                tmp_router.register(
-                    prefix=f'{dataset.name}/{model.get_table_id()}',
-                    viewset=viewset,
-                    basename=basename
-                )
+                if dataset.enable_api:
+                    models.append(model)
+                    viewset = viewset_factory(model)
+                    tmp_router.register(
+                        prefix=url_prefix,
+                        viewset=viewset,
+                        basename=f"{dataset.name}-{model.get_table_id()}"
+                    )
 
         # Atomically copy the new viewset registrations
         self.registry = tmp_router.registry
@@ -60,10 +49,34 @@ class DynamicRouter(routers.SimpleRouter):
         if hasattr(self, '_urls'):
             del self._urls
 
-        # Refresh URLConf in urls.py
-        urls.refresh(self.urls)
+        return models
 
-        return {
-            model: reverse(f"dynamic_api:{model.get_dataset_id()}-{model.get_table_id()}-list")
-            for model in models
-        }
+    @lock_for_writing
+    def reload(self) -> Dict[Type[DynamicModel], str]:
+        """Regenerate all viewsets for this router."""
+        from . import urls  # avoid cyclic imports
+
+        # Clear the LRU-cache
+        serializer_factory.cache_clear()
+
+        # Note that the models get recreated too. This works as expected,
+        # since each model creation flushes the App registry caches.
+        models = self.initialize()
+
+        # Refresh URLConf in urls.py
+        urls.refresh_urls(self)
+
+        # Return which models + urls were generated
+        result = {}
+        for model in models:
+            viewname = f"dynamic_api:{model.get_dataset_id()}-{model.get_table_id()}-list"
+            try:
+                url = reverse(viewname)
+            except NoReverseMatch as e:
+                raise RuntimeError(
+                    "URLConf reloading failed, unable to resolve %s", viewname
+                ) from e
+
+            result[model] = url
+
+        return result

@@ -13,4 +13,4 @@ class DynamicAPIApp(AppConfig):
         if Dataset._meta.db_table in connection.introspection.table_names():
             # Tell the router to reload, and initialize the missing URL patterns
             # now that we're ready to read the model data.
-            router.reload(_skip_lock=True)
+            router.initialize()
