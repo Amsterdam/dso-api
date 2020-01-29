@@ -5,6 +5,7 @@ install:
 .PHONY: sync
 sync:
 	pip-sync requirements.txt requirements_dev.txt
+	pre-commit install
 
 .PHONY: requirements
 requirements: requirements.in

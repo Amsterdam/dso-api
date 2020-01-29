@@ -7,6 +7,7 @@ pur == 5.3.0
 
 # Useful extra developer packages:
 pytest-sugar == 0.9.2
+pre-commit == 2.0.0
 
 # Debugging
 django-debug-toolbar == 2.1
