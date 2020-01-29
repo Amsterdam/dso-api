@@ -3,7 +3,7 @@ from typing import Type
 from django.http import JsonResponse
 from rest_framework import viewsets
 
-from dso_api.dynamic_api.models import DynamicModel
+from dso_api.lib.schematools.models import DynamicModel
 from rest_framework_dso.pagination import DSOPageNumberPagination
 
 from . import serializers

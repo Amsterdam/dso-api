@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 reload_counter = 0
 
 if TYPE_CHECKING:
-    from dso_api.dynamic_api.models import DynamicModel
+    from dso_api.lib.schematools.models import DynamicModel
 
 
 class DynamicRouter(routers.SimpleRouter):

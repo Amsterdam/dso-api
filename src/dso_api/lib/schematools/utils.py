@@ -4,7 +4,7 @@ from typing import Dict
 
 import requests
 
-from dso_api.datasets import types
+from dso_api.lib.schematools import types
 
 
 def schema_defs_from_url(schemas_url) -> Dict[str, types.DatasetSchema]:

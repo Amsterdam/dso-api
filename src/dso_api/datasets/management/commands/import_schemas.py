@@ -3,8 +3,8 @@ from django.core.management import BaseCommand, CommandError
 from django.db import DatabaseError, transaction
 
 from dso_api.datasets.models import Dataset
-from dso_api.datasets.utils import schema_defs_from_url
 from dso_api.dynamic_api.db import create_tables
+from dso_api.lib.schematools.utils import schema_defs_from_url
 
 
 class Command(BaseCommand):

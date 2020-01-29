@@ -8,7 +8,7 @@ from django.db.models.base import ModelBase
 from django_postgres_unlimited_varchar import UnlimitedCharField
 from string_utils import slugify
 
-from dso_api.datasets.types import DatasetFieldSchema, DatasetSchema, DatasetTableSchema
+from .types import DatasetFieldSchema, DatasetSchema, DatasetTableSchema
 
 # Could be used to check fieldnames
 ALLOWED_ID_PATTERN = re.compile(r"[a-zA-Z][ \w\d]*")
@@ -125,7 +125,7 @@ def model_factory(table: DatasetTableSchema) -> Type[DynamicModel]:
         (),
         {
             "managed": False,
-            "db_table": f"{app_label}_{table.id}",
+            "db_table": get_db_table_name(table),
             "app_label": app_label,
             "verbose_name": table.id,
         },
@@ -142,3 +142,10 @@ def model_factory(table: DatasetTableSchema) -> Type[DynamicModel]:
             "Meta": meta_cls,
         },
     )
+
+
+def get_db_table_name(table: DatasetTableSchema) -> str:
+    """Generate the table name for a database schema."""
+    dataset = table._parent_schema
+    app_label = dataset.id
+    return f"{app_label}_{table.id}"
