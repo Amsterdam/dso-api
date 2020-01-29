@@ -48,4 +48,4 @@ class DynamicApiViewSet(ReadLockMixin, viewsets.ReadOnlyModelViewSet):
 
 def viewset_factory(model: Type[DynamicModel]) -> Type[DynamicApiViewSet]:
     """Generate the viewset for a schema."""
-    return type(f"{model.__name__}ViewSet", (DynamicApiViewSet,), {"model": model,})
+    return type(f"{model.__name__}ViewSet", (DynamicApiViewSet,), {"model": model})

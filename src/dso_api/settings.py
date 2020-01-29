@@ -114,7 +114,7 @@ LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
     "formatters": {
-        "console": {"format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",},
+        "console": {"format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"},
     },
     "handlers": {
         "console": {
@@ -123,13 +123,13 @@ LOGGING = {
             "formatter": "console",
         },
     },
-    "root": {"level": "INFO", "handlers": ["console"],},
+    "root": {"level": "INFO", "handlers": ["console"]},
     "loggers": {
         # 'django.db.backends': {
         #     'level': 'DEBUG',
         #     'handlers': ['console'],
         # },
-        "dso_api": {"handlers": ["console"], "level": "DEBUG", "propagate": False,},
+        "dso_api": {"handlers": ["console"], "level": "DEBUG", "propagate": False},
     },
 }
 
