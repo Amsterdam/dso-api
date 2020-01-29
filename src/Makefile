@@ -28,3 +28,7 @@ retest:
 .PHONY: coverage
 coverage:
 	py.test --reuse-db --nomigrations --cov --cov-report=term-missing
+
+.PHONY: flake8
+flake8:
+	flake8 .

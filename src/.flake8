@@ -8,7 +8,9 @@ ignore=
   # Allow lambdas:
   E731,
   # line break before binary operator (incompatible with black):
-  W503
+  W503,
+  # Allow raise Exception()
+  R102,
 exclude=.git,
         .cfg,
         .ini,
@@ -20,6 +22,7 @@ exclude=.git,
         scripts,
         */settings_commons.py
         */import/*
+format = ${cyan}%(path)s${reset}:${yellow_bold}%(row)d${reset}:${green_bold}%(col)d${reset}: ${red_bold}%(code)s${reset} %(text)s
 max-complexity=6
 max-line-length = 99
 statistics=True

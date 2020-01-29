@@ -26,6 +26,10 @@ drf-amsterdam==0.3.2
 drf-extensions==0.5.0     # via drf-amsterdam
 drf-yasg==1.17.0
 entrypoints==0.3          # via flake8
+flake8-blind-except==0.1.1
+flake8-colors==0.1.6
+flake8-debugger==3.2.1
+flake8-raise==0.0.5
 flake8==3.7.9
 idna==2.8                 # via requests
 inflection==0.3.1         # via drf-yasg
@@ -39,7 +43,7 @@ packaging==20.0           # via drf-yasg, pytest
 pluggy==0.13.1            # via pytest
 psycopg2-binary==2.8.4
 py==1.8.1                 # via pytest
-pycodestyle==2.5.0        # via flake8
+pycodestyle==2.5.0        # via flake8, flake8-debugger
 pyflakes==2.1.1           # via flake8
 pyparsing==2.4.6          # via packaging
 pyrsistent==0.15.7        # via jsonschema

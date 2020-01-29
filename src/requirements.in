@@ -17,6 +17,10 @@ sentry-sdk == 0.14.0
 
 # Testing
 flake8 == 3.7.9
+flake8-blind-except == 0.1.1
+flake8-colors == 0.1.6
+flake8-debugger == 3.2.1
+flake8-raise == 0.0.5
 pytest == 5.3.4
 pytest-django == 3.8.0
 pytest-cov == 2.8.1
