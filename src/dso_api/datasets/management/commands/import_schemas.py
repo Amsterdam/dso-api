@@ -11,7 +11,7 @@ class Command(BaseCommand):
     help = "Import all known Amsterdam schema files."
     requires_system_checks = False
 
-    def handle(self, *args, **options):
+    def handle(self, *args, **options):  # noqa: C901
         errors = 0
         self.stdout.write(f"Loading schema from {settings.SCHEMA_URL}")
         datasets = []
