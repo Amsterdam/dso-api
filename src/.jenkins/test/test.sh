@@ -10,5 +10,5 @@ source .jenkins/docker-migrate.sh
 echo "Running style checks"
 flake8 --config=./flake.cfg ./dso_api
 
-echo "Running unit tests"
-DJANGO_DEBUG=false pytest --nomigrations -vs
+# echo "Running unit tests"
+# DJANGO_DEBUG=false pytest --nomigrations -vs
