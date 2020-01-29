@@ -52,7 +52,7 @@ node {
             build job: 'Subtask_Openstack_Playbook',
                 parameters: [
                     [$class: 'StringParameterValue', name: 'INVENTORY', value: 'acceptance'],
-                    [$class: 'StringParameterValue', name: 'PLAYBOOK', value: 'deploy-dataservices.yml'],
+                    [$class: 'StringParameterValue', name: 'PLAYBOOK', value: 'deploy-dso-api.yml'],
                 ]
         }
     }
@@ -76,7 +76,7 @@ node {
             build job: 'Subtask_Openstack_Playbook',
             parameters: [
                 [$class: 'StringParameterValue', name: 'INVENTORY', value: 'production'],
-                [$class: 'StringParameterValue', name: 'PLAYBOOK', value: 'deploy-dataservices.yml'],
+                [$class: 'StringParameterValue', name: 'PLAYBOOK', value: 'deploy-dso-api.yml'],
             ]
         }
     }
