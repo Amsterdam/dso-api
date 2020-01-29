@@ -1,6 +1,7 @@
 """Reference implementation for DSO-compliant API's in Python with Django-Rest-Framework.
 
-DSO = Digitaal Stelsel Omgevingswet, a Dutch standard for API's for the government in The Netherlands:
+DSO = Digitaal Stelsel Omgevingswet.
+This is a Dutch standard for API's for the government in The Netherlands:
 https://aandeslagmetdeomgevingswet.nl/digitaal-stelsel/aansluiten/standaarden/api-en-uri-strategie/
 
 Implemented:

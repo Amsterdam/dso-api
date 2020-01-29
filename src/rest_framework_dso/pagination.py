@@ -49,7 +49,7 @@ class DSOPageNumberPagination(pagination.PageNumberPagination):
                 "_links": _links,
                 "count": self.page.paginator.count,
                 "page_size": self.page_size,
-                "_embedded": {self.results_field: data,},
+                "_embedded": {self.results_field: data},
             }
 
     def get_results(self, data):

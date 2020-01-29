@@ -1,5 +1,14 @@
 [flake8]
-ignore=E501,E225,E261,W391,E241,E203,W292,W391,E501
+ignore=
+  # Black leaves commas after combining lines
+  #E231,
+  # Allow import * (for settings)
+  F403,
+  F405,
+  # Allow lambdas:
+  E731,
+  # line break before binary operator (incompatible with black):
+  W503
 exclude=.git,
         .cfg,
         .ini,
@@ -12,6 +21,6 @@ exclude=.git,
         */settings_commons.py
         */import/*
 max-complexity=6
-max-line-length = 119
+max-line-length = 99
 statistics=True
 jobs=1
