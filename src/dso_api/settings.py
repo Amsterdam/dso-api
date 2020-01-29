@@ -12,7 +12,7 @@ BASE_DIR = str(environ.Path(__file__) - 2)
 DEBUG = env.bool("DJANGO_DEBUG", True)
 
 # Paths
-STATIC_URL = "/dso-api/static/"
+STATIC_URL = "/v1/static/"
 STATIC_ROOT = "/static/"
 
 DATAPUNT_API_URL = env.str("DATAPUNT_API_URL", "https://api.data.amsterdam.nl/")
