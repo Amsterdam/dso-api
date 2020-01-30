@@ -21,6 +21,12 @@ SUPPORTED_REFS = {
 
 
 class SchemaType(UserDict):
+    def __repr__(self):
+        return f"{self.__class__.__name__}({self.data!r})"
+
+    def __missing__(self, key):
+        raise KeyError(f"No field named '{key}' exists in {self!r}")
+
     @property
     def id(self) -> str:
         return self["id"]
@@ -37,7 +43,11 @@ class SchemaType(UserDict):
 
 
 class DatasetType(UserDict):
-    pass
+    def __repr__(self):
+        return f"{self.__class__.__name__}({self.data!r})"
+
+    def __missing__(self, key):
+        raise KeyError(f"No field named '{key}' exists in {self!r}")
 
 
 class DatasetSchema(SchemaType):
@@ -90,17 +100,9 @@ class DatasetTableSchema(SchemaType):
     def fields(self):
         required = set(self["schema"]["required"])
         for name, spec in self["schema"]["properties"].items():
-            if "$ref" in spec:
-                ref = spec.pop("$ref")
-                if ref not in SUPPORTED_REFS:
-                    raise jsonschema.exceptions.ValidationError(f"Unknown: {ref}")
-
-                # typedef = self.resolve(spec.pop('$ref'))
-                # assert False, typedef
-                spec = spec.copy()
-                spec["type"] = ref
-
-            yield DatasetFieldSchema(name=name, required=name in required, **spec)
+            yield DatasetFieldSchema(
+                _name=name, _parent_table=self, _required=(name in required), **spec
+            )
 
     def validate(self, row: dict):
         """Validate a record against the schema."""
@@ -114,17 +116,28 @@ class DatasetTableSchema(SchemaType):
 class DatasetFieldSchema(DatasetType):
     """ A single field (column) in a table """
 
+    def __init__(self, *args, _name=None, _parent_table=None, _required=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._name = _name
+        self._parent_table = _parent_table
+        self._required = _required
+
     @property
     def name(self) -> str:
-        return self["name"]
+        return self._name
 
     @property
     def required(self) -> bool:
-        return self["required"]
+        return self._required
 
     @property
     def type(self) -> str:
-        return self["type"]
+        value = self.get("type")
+        if not value:
+            value = self.get("$ref")
+            if not value:
+                raise RuntimeError(f"No 'type' or '$ref' found in {self!r}")
+        return value
 
     @property
     def is_primary(self) -> bool:
