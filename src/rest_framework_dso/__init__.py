@@ -6,8 +6,9 @@ https://aandeslagmetdeomgevingswet.nl/digitaal-stelsel/aansluiten/standaarden/ap
 
 Implemented:
 
-* HAL ?expand=field.subfield  -> gives ``_embedded`` field in response.
 * HAL links {"_links": {"self": {"href": ..., "title": ...}}}
+* HAL ``?expand=field1,field2`` -> gives ``_embedded`` field in response.
+* The ``?expand=true`` option to expand all fields
 * No envelope for single-object / detail views.
 
 Via other packages:
@@ -16,7 +17,7 @@ Via other packages:
 
 Not implemented:
 
-* ?fields=field1,field1
+* ?fields=field1.subfield
 * ?sorteer=-field  (ordering)
 * ?zoek=urgent (search queries, including ``*`` and ``?`` wildcards for single words)
 * GeoJSON support.

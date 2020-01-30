@@ -21,7 +21,8 @@ class DSOPageNumberPagination(pagination.PageNumberPagination):
         return response.Response(data)
 
     def _get_paginated_data(self, data) -> dict:
-        self_link = self.request.build_absolute_uri()
+        # Avoid adding ?expand=.. and other parameters in the 'self' url.
+        self_link = self.request.build_absolute_uri(self.request.path)
         if self_link.endswith(".api"):
             self_link = self_link[:-4]
 

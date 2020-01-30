@@ -1,4 +1,4 @@
-from typing import Dict, Iterable
+from typing import Dict, Iterable, Union
 
 from django.db import models
 from rest_framework import serializers
@@ -10,18 +10,25 @@ EmbeddedFieldDict = Dict[str, AbstractEmbeddedField]
 
 
 class EmbeddedHelper:
-    def __init__(self, parent_serializer: serializers.ModelSerializer, expand: list):
+    def __init__(
+        self, parent_serializer: serializers.ModelSerializer, expand: Union[list, bool]
+    ):
         """Find all serializers that are configured for the sideloading feature.
 
         This returns a dictionary with the all serializer classes.
         The dictionary only contains the items for which sideloading is requested.
         """
         self.parent_serializer = parent_serializer
-        self.embedded_fields = self._get_embedded_fields(expand)
+        self.embedded_fields = self._get_embedded_fields(expand) if expand else {}
 
-    def _get_embedded_fields(self, expand: list):
+    def _get_embedded_fields(self, expand: Union[list, bool]):
         allowed_names = getattr(self.parent_serializer.Meta, "embedded_fields", [])
         embedded_fields = {}
+
+        # ?expand=true should expand all names
+        if expand is True:
+            expand = allowed_names
+
         for field_name in expand:
             if field_name not in allowed_names:
                 available = ", ".join(sorted(allowed_names))

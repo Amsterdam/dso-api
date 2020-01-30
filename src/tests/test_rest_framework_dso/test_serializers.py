@@ -8,16 +8,6 @@ from rest_framework_dso.serializers import DSOSerializer
 from .models import Category, Movie
 
 
-@pytest.fixture
-def category() -> Category:
-    return Category.objects.create(name="bar")
-
-
-@pytest.fixture
-def movie(category) -> Movie:
-    return Movie.objects.create(name="foo123", category=category)
-
-
 class CategorySerializer(DSOSerializer):
     class Meta:
         model = Category

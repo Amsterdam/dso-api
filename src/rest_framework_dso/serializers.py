@@ -1,4 +1,4 @@
-from typing import Optional, cast
+from typing import Union, cast
 
 from django.db import models
 from rest_framework import serializers
@@ -16,13 +16,20 @@ class _SideloadMixin:
         super().__init__(*args, **kwargs)
         self.fields_to_expand = fields_to_expand
 
-    def get_fields_to_expand(self) -> Optional[list]:
+    def get_fields_to_expand(self) -> Union[list, bool]:
         if self.fields_to_expand is not empty:
             return cast(list, self.fields_to_expand)
 
         # Initialize from request
         expand = self.context["request"].GET.get(self.expand_param)
-        return expand.split(",") if expand else None
+        if expand == "true":
+            # ?expand=true should export all fields
+            return True
+        elif expand:
+            # otherwise, parse as a list of fields to expand.
+            return expand.split(",")
+        else:
+            return False
 
 
 class _LinksField(serializers.HyperlinkedIdentityField):
