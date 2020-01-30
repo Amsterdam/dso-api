@@ -32,7 +32,7 @@ def test_list_dynamic_view(api_client, api_rf, router, bommen_dataset):
         },
         "count": 0,
         "page_size": 20,
-        "_embedded": {"results": []},
+        "_embedded": {"bommen": []},
     }
 
 

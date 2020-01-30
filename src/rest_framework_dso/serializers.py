@@ -86,12 +86,14 @@ class DSOListSerializer(_SideloadMixin, serializers.ListSerializer):
             # See if any HAL-style sideloading was requested
 
             expand = self.get_fields_to_expand()
+            embeds = {}
             if expand and items:
                 embed_helper = EmbeddedHelper(self.child, expand=expand)
                 embeds = embed_helper.get_list_embedded(iterable)
                 if embeds:
                     # Provide the _embedded section, that DSO..Paginator classes wrap.
                     return {self.results_field: items, **embeds}
+            return {self.results_field: items, **embeds}
 
         return items
 

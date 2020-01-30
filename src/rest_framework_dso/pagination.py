@@ -1,4 +1,8 @@
+from __future__ import annotations
+
 from rest_framework import pagination, response
+from rest_framework.serializers import ListSerializer
+from rest_framework.utils.serializer_helpers import ReturnList
 
 
 class DSOPageNumberPagination(pagination.PageNumberPagination):
@@ -10,7 +14,7 @@ class DSOPageNumberPagination(pagination.PageNumberPagination):
     """
 
     #: The field name for the results envelope
-    results_field = "results"
+    results_field = None
 
     def __init__(self, results_field=None):
         if results_field:
@@ -20,7 +24,7 @@ class DSOPageNumberPagination(pagination.PageNumberPagination):
         data = self._get_paginated_data(data)
         return response.Response(data)
 
-    def _get_paginated_data(self, data) -> dict:
+    def _get_paginated_data(self, data: ReturnList) -> dict:
         # Avoid adding ?expand=.. and other parameters in the 'self' url.
         self_link = self.request.build_absolute_uri(self.request.path)
         if self_link.endswith(".api"):
@@ -46,11 +50,16 @@ class DSOPageNumberPagination(pagination.PageNumberPagination):
             }
         else:
             # Regular list serializer, wrap in HAL fields.
+            serializer = data.serializer
+            if isinstance(data.serializer, ListSerializer):
+                serializer = serializer.child
+
+            results_field = self.results_field or serializer.Meta.model._meta.model_name
             return {
                 "_links": _links,
                 "count": self.page.paginator.count,
                 "page_size": self.page_size,
-                "_embedded": {self.results_field: data},
+                "_embedded": {results_field: data},
             }
 
     def get_results(self, data):
