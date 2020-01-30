@@ -1,13 +1,12 @@
 from typing import List, Optional
 
 from django.conf import settings
-from django.core.management import BaseCommand, CommandError
-from django.db import DatabaseError, transaction
+from django.core.management import BaseCommand
 
 from dso_api.datasets.models import Dataset
-from dso_api.dynamic_api.db import create_tables
 from dso_api.lib.schematools.types import DatasetSchema
 from dso_api.lib.schematools.utils import schema_defs_from_url
+from .create_tables import create_tables
 
 
 class Command(BaseCommand):
@@ -20,7 +19,7 @@ class Command(BaseCommand):
         if not datasets:
             self.stdout.write(f"No new datasets imported")
         else:
-            self.create_tables(datasets)
+            create_tables(self, datasets)
 
     def import_schemas(self, schema_url) -> List[Dataset]:
         """Import all schema definitions from an URL"""
@@ -53,19 +52,3 @@ class Command(BaseCommand):
                 return dataset
 
         return None
-
-    def create_tables(self, datasets: List[Dataset]):
-        """Create tables for all updated datasets"""
-        errors = 0
-        self.stdout.write(f"Creating tables")
-        for dataset in datasets:
-            try:
-                self.stdout.write(f"* Creating {dataset.name}")
-                with transaction.atomic():
-                    create_tables(dataset.schema)
-            except (DatabaseError, ValueError) as e:
-                self.stderr.write(f"  Tables not created: {e}")
-                errors += 1
-
-        if errors:
-            raise CommandError("Not all datasets imported successfully")

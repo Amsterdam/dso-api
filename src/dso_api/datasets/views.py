@@ -2,7 +2,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from dso_api.datasets.models import Dataset
-from dso_api.dynamic_api.db import create_tables
+from dso_api.lib.schematools.db import create_tables
 from dso_api.lib.schematools.types import DatasetSchema
 
 
