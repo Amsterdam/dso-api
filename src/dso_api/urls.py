@@ -4,7 +4,7 @@ from django.urls import include, path, re_path
 from django.views.generic import RedirectView
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
-from rest_framework import permissions
+from rest_framework import exceptions, permissions
 
 import dso_api.datasets.urls
 import dso_api.dynamic_api.urls
@@ -44,6 +44,10 @@ urlpatterns = [
     ),
     path("", RedirectView.as_view(url="/v1/"), name="root-redirect"),
 ]
+
+handler400 = exceptions.bad_request
+handler500 = exceptions.server_error
+
 
 if "debug_toolbar" in settings.INSTALLED_APPS:
     import debug_toolbar

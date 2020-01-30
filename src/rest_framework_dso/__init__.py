@@ -25,4 +25,20 @@ Not implemented:
 Extra recommendations:
 
 * Use base64-encoded UUID's (=22 characters).
+
+Mandatory settings:
+
+REST_FRAMEWORK = dict(
+    DEFAULT_PAGINATION_CLASS="rest_framework_dso.pagination.DSOPageNumberPagination",
+    DEFAULT_PARSER_CLASSES=[
+        "rest_framework_dso.parsers.HALJSONParser",
+        "rest_framework.parsers.JSONParser",
+        "rest_framework.parsers.FormParser",
+        "rest_framework.parsers.MultiPartParser",
+    ],
+    DEFAULT_RENDERER_CLASSES=[
+        "rest_framework_dso.renderers.HALJSONRenderer",
+        "rest_framework.renderers.BrowsableAPIRenderer",  # <-- optional
+    ],
+)
 """

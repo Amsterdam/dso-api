@@ -151,18 +151,19 @@ REST_FRAMEWORK = dict(
     MAX_PAGINATE_BY=20,
     UNAUTHENTICATED_USER={},
     UNAUTHENTICATED_TOKEN={},
-    DEFAULT_PAGINATION_CLASS="rest_framework_dso.pagination.DSOPageNumberPagination",
     DEFAULT_AUTHENTICATION_CLASSES=[
         # 'rest_framework.authentication.BasicAuthentication',
         # 'rest_framework.authentication.SessionAuthentication',
     ],
+    DEFAULT_PAGINATION_CLASS="rest_framework_dso.pagination.DSOPageNumberPagination",
     DEFAULT_RENDERER_CLASSES=[
-        "rest_framework.renderers.JSONRenderer",
-        "rest_framework.renderers.BrowsableAPIRenderer",
+        "rest_framework_dso.renderers.HALJSONRenderer",
+        "dso_api.lib.renderers.PatchedBrowsableAPIRenderer",
     ],
     DEFAULT_FILTER_BACKENDS=[
         "django_filters.rest_framework.backends.DjangoFilterBackend",
     ],
+    EXCEPTION_HANDLER="rest_framework_dso.views.exception_handler",
     COERCE_DECIMAL_TO_STRING=True,
 )
 
