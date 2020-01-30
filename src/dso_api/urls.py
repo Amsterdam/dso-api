@@ -13,7 +13,17 @@ schema_view = get_schema_view(
     openapi.Info(
         title="DSO-API",
         default_version="v1",
-        description="This is the generic DSO-compatible API server.",
+        description=(
+            "This is the generic [DSO-compatible](https://aandeslagmetdeomgevingswet.nl/digitaal-stelsel/aansluiten/standaarden/api-en-uri-strategie/) API server.\n"  # noqa E501
+            "\n"
+            "The following features are supported:\n"
+            "* HAL-JSON based links, pagination and response structure.\n"
+            "* Use `?expand=name1,name2` to sideload specific relations.\n"
+            "* Use `?expand=true` to sideload all relations.\n"
+            "\n"
+            "The models in this server are generated from the Amsterdam Schema files.\n"
+            "These are located at: https://github.com/Amsterdam/schemas"
+        ),
         terms_of_service="https://data.amsterdam.nl/",
         contact=openapi.Contact(email="datapunt@amsterdam.nl"),
         license=openapi.License(name="CC0 1.0 Universal"),
