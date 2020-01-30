@@ -50,7 +50,7 @@ def test_serializer_many(movie):
         many=True, instance=[movie], fields_to_expand=["category"]
     )
     assert serializer.data == {
-        "results": [{"name": "foo123", "category_id": movie.category_id}],
+        "movie": [{"name": "foo123", "category_id": movie.category_id}],
         "category": [{"name": "bar"}],
     }
 
@@ -78,7 +78,7 @@ def test_pagination_many(api_rf, movie):
         "count": 1,
         "page_size": 20,
         "_embedded": {
-            "results": [{"name": "foo123", "category_id": movie.category_id}],
+            "movie": [{"name": "foo123", "category_id": movie.category_id}],
             "category": [{"name": "bar"}],
         },
     }

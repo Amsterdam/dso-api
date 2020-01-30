@@ -47,12 +47,14 @@ class DSOListSerializer(_SideloadMixin, serializers.ListSerializer):
     """
 
     #: The field name for the results envelope
-    results_field = "results"
+    results_field = None
 
     def __init__(self, *args, results_field=None, **kwargs):
         super().__init__(*args, **kwargs)
         if results_field:
             self.results_field = results_field
+        elif not self.results_field:
+            self.results_field = self.child.Meta.model._meta.model_name
 
     @property
     def data(self):
@@ -136,6 +138,10 @@ class DSOSerializer(_SideloadMixin, serializers.HyperlinkedModelSerializer):
         list_serializer_class = getattr(
             meta, "list_serializer_class", DSOListSerializer
         )
+
+        # results field uses model_name if possiblee.
+        list_kwargs["results_field"] = getattr(meta, "many_results_field", None)
+
         return list_serializer_class(*args, **list_kwargs)
 
     def to_representation(self, instance):
