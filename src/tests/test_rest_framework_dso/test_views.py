@@ -5,6 +5,7 @@ from rest_framework.exceptions import ErrorDetail
 
 from rest_framework_dso.fields import EmbeddedField
 from rest_framework_dso.serializers import DSOSerializer
+
 from .models import Category, Movie
 
 

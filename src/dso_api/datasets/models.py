@@ -10,8 +10,8 @@ from django.utils.translation import gettext_lazy as _
 
 from dso_api.lib.schematools.models import (
     DynamicModel,
-    schema_models_factory,
     get_db_table_name,
+    schema_models_factory,
 )
 from dso_api.lib.schematools.types import DatasetSchema, DatasetTableSchema
 
