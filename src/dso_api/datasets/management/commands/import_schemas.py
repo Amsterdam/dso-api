@@ -31,7 +31,7 @@ class Command(BaseCommand):
             self.stdout.write(f"* Processing {name}")
             dataset = self.import_schema(name, schema)
             if dataset is not None:
-                datasets.append(datasets)
+                datasets.append(dataset)
 
         return datasets
 
