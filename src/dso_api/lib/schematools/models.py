@@ -73,9 +73,16 @@ class DynamicModel(models.Model):
 
     #: Overwritten by subclasses / factory
     _table_schema: DatasetTableSchema = None
+    _display_field = None
 
     class Meta:
         abstract = True
+
+    def __str__(self):
+        if self._display_field:
+            return getattr(self, self._display_field)
+        else:
+            return f"(no title: {self._meta.object_name} #{self.pk})"
 
     # These classmethods could have been a 'classproperty',
     # but this ensures the names don't conflict with fields from the schema.
@@ -115,9 +122,13 @@ def model_factory(table: DatasetTableSchema) -> Type[DynamicModel]:
 
     # Generate fields
     fields = {}
+    display_field = None
     for field in table.fields:
         kls, args, kwargs = JSON_TYPE_TO_DJANGO[field.type](field, dataset)
         fields[slugify(field.name, sign="_")] = kls(*args, **kwargs)
+
+        if not display_field and is_possible_display_field(field):
+            display_field = field.name
 
     # Generate Meta part
     meta_cls = type(
@@ -138,9 +149,21 @@ def model_factory(table: DatasetTableSchema) -> Type[DynamicModel]:
         {
             **fields,
             "_table_schema": table,
+            "_display_field": "",
             "__module__": module_name,
             "Meta": meta_cls,
         },
+    )
+
+
+def is_possible_display_field(field: DatasetFieldSchema) -> bool:
+    """See whether the field is a possible candidate as display field"""
+    # TODO: the schema needs to provide a display field!
+    return (
+        field.type == "string"
+        and "$ref" not in field
+        and " " not in field.name
+        and not field.name.endswith("_id")
     )
 
 

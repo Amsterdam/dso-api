@@ -11,6 +11,7 @@ from django.utils.translation import gettext_lazy as _
 from dso_api.lib.schematools.models import (
     DynamicModel,
     get_db_table_name,
+    is_possible_display_field,
     schema_models_factory,
 )
 from dso_api.lib.schematools.types import DatasetSchema, DatasetTableSchema
@@ -166,13 +167,7 @@ class DatasetTable(models.Model):
                 break
 
             # Take the first string field as display name.
-            if (
-                not display_field
-                and field.type == "string"
-                and "$ref" not in field
-                and " " not in field.name
-                and not field.name.endswith("_id")
-            ):
+            if not display_field and is_possible_display_field(field):
                 display_field = field.name
 
             if display_field and geometry_field:
