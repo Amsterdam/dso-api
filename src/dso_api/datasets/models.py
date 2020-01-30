@@ -42,9 +42,12 @@ class Dataset(models.Model):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # The check makes sure that deferred fields are not checked for changes.
+        # The check makes sure that deferred fields are not checked for changes,
+        # nor that creating the model
         self._old_schema_data = (
-            self.schema_data if "schema_data" in self.__dict__ else None
+            self.schema_data
+            if "schema_data" in self.__dict__ and not self._state.adding
+            else None
         )
 
     def save(self, *args, **kwargs):
@@ -58,7 +61,9 @@ class Dataset(models.Model):
                 )
                 raise RuntimeError("Invalid data in Dataset.schema_data")
 
-        if self.schema_data_changed():
+        if self.schema_data_changed() and (self.schema_data or not self._state.adding):
+            self.__dict__.pop("schema", None)  # clear cached property
+            # The extra "and" above avoids the transaction savepoint for an empty dataset.
             # Ensure both changes are saved together
             with transaction.atomic():
                 super().save(*args, **kwargs)
@@ -74,7 +79,8 @@ class Dataset(models.Model):
         """
         if not self.schema_data:
             # no schema stored -> no tables
-            self.tables.all().delete()
+            if self._old_schema_data:
+                self.tables.all().delete()
             return
 
         new_definitions = {t.id: t for t in self.schema.tables}

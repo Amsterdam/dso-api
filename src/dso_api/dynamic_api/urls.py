@@ -2,6 +2,7 @@ from django.urls import include, path
 
 from dso_api.dynamic_api.routers import DynamicRouter
 from dso_api.lib.urls import reload_urlconf
+
 from . import views
 
 
