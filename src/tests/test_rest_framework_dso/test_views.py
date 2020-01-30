@@ -1,6 +1,7 @@
 import pytest
 from django.urls import path
 from rest_framework import generics
+from rest_framework.exceptions import ErrorDetail
 
 from rest_framework_dso.fields import EmbeddedField
 from rest_framework_dso.serializers import DSOSerializer
@@ -51,6 +52,30 @@ def test_detail_expand_true(api_client, movie, expand):
         "name": "foo123",
         "category_id": movie.category_id,
         "_embedded": {"category": {"name": "bar"}},
+    }
+
+
+@pytest.mark.django_db
+def test_detail_expand_unknown_field(api_client, movie):
+    """Prove that ?expand=true and ?expand=category both work for the detail view.
+
+    This also tests the parameter expansion within the view logic.
+    """
+    response = api_client.get(f"/v1/movies/{movie.pk}", data={"expand": "foobar"})
+    assert response.status_code == 400, response.data
+    assert response.data == {
+        "detail": ErrorDetail(
+            "Eager loading is not supported for field 'foobar', "
+            "available options are: category",
+            code="parse_error",
+        )
+    }
+
+    assert response.json() == {
+        "detail": (
+            "Eager loading is not supported for field 'foobar', "
+            "available options are: category"
+        ),
     }
 
 

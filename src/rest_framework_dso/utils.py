@@ -34,11 +34,11 @@ class EmbeddedHelper:
                 available = ", ".join(sorted(allowed_names))
                 if not available:
                     raise ParseError(
-                        f"Sideloading is not supported for this endpoint"
+                        f"Eager loading is not supported for this endpoint"
                     ) from None
                 else:
                     raise ParseError(
-                        f"Sideloading is not supported for field '{field_name}', "
+                        f"Eager loading is not supported for field '{field_name}', "
                         f"available options are: {available}"
                     ) from None
 
