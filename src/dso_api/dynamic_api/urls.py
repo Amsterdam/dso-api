@@ -1,10 +1,7 @@
-from importlib import import_module, reload
-
-from django.conf import settings
-from django.urls import clear_url_caches, get_urlconf, include, path
+from django.urls import include, path
 
 from dso_api.dynamic_api.routers import DynamicRouter
-
+from dso_api.lib.urls import reload_urlconf
 from . import views
 
 
@@ -34,9 +31,5 @@ def refresh_urls(router_instance):
     global urlpatterns
     urlpatterns = get_patterns(router.urls)
 
-    # Reload the global top-level module
-    urlconf_name = get_urlconf() or settings.ROOT_URLCONF
-    reload(import_module(urlconf_name))
-
-    # Clear the Django lru caches
-    clear_url_caches()
+    # Reload the global URLs to make this visible
+    reload_urlconf()
