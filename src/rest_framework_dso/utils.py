@@ -21,7 +21,7 @@ class EmbeddedHelper:
         self.parent_serializer = parent_serializer
         self.embedded_fields = self._get_embedded_fields(expand) if expand else {}
 
-    def _get_embedded_fields(self, expand: Union[list, bool]):
+    def _get_embedded_fields(self, expand: Union[list, bool]):  # noqa: C901
         allowed_names = getattr(self.parent_serializer.Meta, "embedded_fields", [])
         embedded_fields = {}
 
@@ -42,7 +42,16 @@ class EmbeddedHelper:
                         f"available options are: {available}"
                     ) from None
 
-            embedded_fields[field_name] = getattr(self.parent_serializer, field_name)
+            # Get the field, and
+            try:
+                embedded_fields[field_name] = getattr(
+                    self.parent_serializer, field_name
+                )
+            except AttributeError:
+                raise RuntimeError(
+                    f"{self.parent_serializer.__class__.__name__}.{field_name}"
+                    f" does not reffer to an embedded field."
+                ) from None
 
         return embedded_fields
 
