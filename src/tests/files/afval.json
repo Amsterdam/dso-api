@@ -41,6 +41,28 @@
                     }
                 }
             }
+        },
+        {
+            "id": "clusters",
+            "type": "table",
+            "schema": {
+                "$schema": "http://json-schema.org/draft-07/schema#",
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["id", "schema"],
+                "properties": {
+                    "id": {
+                        "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.0#/definitions/id"
+                    },
+                    "schema": {
+                        "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.0#/definitions/schema"
+                    },
+                    "status": {
+                        "type": "string",
+                        "description": "Status"
+                    }
+                }
+            }
         }
     ]
 }

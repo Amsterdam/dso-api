@@ -126,8 +126,15 @@ def model_factory(table: DatasetTableSchema) -> Type[DynamicModel]:
     fields = {}
     display_field = None
     for field in table.fields:
+        # Generate field object
         kls, args, kwargs = JSON_TYPE_TO_DJANGO[field.type](field, dataset)
-        fields[slugify(field.name, sign="_")] = kls(*args, **kwargs)
+        model_field = kls(*args, **kwargs)
+
+        # Generate name, fix if needed.
+        field_name = slugify(field.name, sign="_")
+        if isinstance(model_field, models.ForeignKey) and field_name.endswith("_id"):
+            field_name = field_name[:-3]
+        fields[field_name] = model_field
 
         if not display_field and is_possible_display_field(field):
             display_field = field.name

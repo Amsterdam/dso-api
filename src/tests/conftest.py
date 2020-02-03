@@ -1,5 +1,5 @@
 import json
-import os
+from pathlib import Path
 
 import pytest
 from django.db import connection
@@ -7,7 +7,10 @@ from rest_framework.test import APIClient, APIRequestFactory
 
 from dso_api.datasets.models import Dataset
 from dso_api.lib.schematools.db import create_tables
+from dso_api.lib.schematools.types import DatasetSchema
 from tests.test_rest_framework_dso.models import Category, Movie
+
+HERE = Path(__file__).parent
 
 
 @pytest.fixture()
@@ -43,24 +46,47 @@ def router():
 
 
 @pytest.fixture()
-def filled_router(router, bommen_dataset):
+def filled_router(router, afval_dataset, bommen_dataset):
     # Prove that the router URLs are extended on adding a model
     router.reload()
     assert len(router.urls) > 0
 
     # Make sure the tables are created too
-    if "bommen_bommen" not in connection.introspection.table_names():
+    table_names = connection.introspection.table_names()
+    if "afval_containers" not in table_names:
+        create_tables(afval_dataset.schema)
+    if "bommen_bommen" not in table_names:
         create_tables(bommen_dataset.schema)
 
     return router
 
 
 @pytest.fixture()
+def afval_schema_json() -> dict:
+    path = HERE / "files/afval.json"
+    return json.loads(path.read_text())
+
+
+@pytest.fixture()
+def afval_schema(afval_schema_json) -> DatasetSchema:
+    return DatasetSchema.from_dict(afval_schema_json)
+
+
+@pytest.fixture()
+def afval_dataset(afval_schema_json) -> Dataset:
+    return Dataset.objects.create(name="afval", schema_data=afval_schema_json)
+
+
+@pytest.fixture()
 def bommen_schema_json() -> dict:
     """Fixture to return the schema json for """
-    filename = os.path.join(os.path.dirname(__file__), "files/bommen.json")
-    with open(filename) as fh:
-        return json.loads(fh.read())
+    path = HERE / "files/bommen.json"
+    return json.loads(path.read_text())
+
+
+@pytest.fixture()
+def bommen_schema(bommen_schema_json) -> DatasetSchema:
+    return DatasetSchema.from_dict(bommen_schema_json)
 
 
 @pytest.fixture()

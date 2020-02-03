@@ -92,6 +92,8 @@ class EmbeddedHelper:
             # Note: this currently assumes a detail view only references other models once:
             id_value = embedded_field.get_related_id(instance)
             if id_value is None:
+                # Unclear in HAL-JSON: should the requested embed be mentioned or not?
+                ret[name] = None
                 continue
 
             value = embedded_field.related_model.objects.get(pk=id_value)

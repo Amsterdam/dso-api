@@ -3,8 +3,11 @@ from __future__ import annotations
 from functools import lru_cache
 from typing import Type
 
+from django.db import models
+
 from dso_api.lib.schematools.models import DynamicModel
 from dso_api.lib.schematools.types import DatasetTableSchema
+from rest_framework_dso.fields import EmbeddedField
 from rest_framework_dso.serializers import DSOSerializer
 
 
@@ -44,15 +47,23 @@ def get_view_name(model: Type[DynamicModel], suffix: str):
 @lru_cache()
 def serializer_factory(model: Type[DynamicModel]) -> Type[DynamicSerializer]:
     """Generate the DRF serializer class for a specific dataset model."""
-    # Generate serializer "Meta" attribute
-    fields = ["_links"] + [x.name for x in model._meta.get_fields()]
-    new_meta_attrs = {"model": model, "fields": fields}
-
-    # Generate serializer class
+    fields = ["_links"]
     serializer_name = f"{model.__name__}Serializer"
     new_attrs = {
         "table_schema": model._table_schema,
         "__module__": "various_small_datasets.gen_api.serializers",
-        "Meta": type("Meta", (), new_meta_attrs),
     }
+
+    # Parse fields for serializer
+    for model_field in model._meta.get_fields():
+        if isinstance(model_field, models.ForeignKey):
+            new_attrs[model_field.name] = EmbeddedField(
+                serializer_class=serializer_factory(model_field.related_model),
+            )
+            fields.append(model_field.attname)
+
+        fields.append(model_field.name)
+
+    # Generate Meta section and serializer class
+    new_attrs["Meta"] = type("Meta", (), {"model": model, "fields": fields})
     return type(serializer_name, (DynamicSerializer,), new_attrs)

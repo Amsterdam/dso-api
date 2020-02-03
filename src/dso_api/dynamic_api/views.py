@@ -48,4 +48,9 @@ class DynamicApiViewSet(ReadLockMixin, viewsets.ReadOnlyModelViewSet):
 
 def viewset_factory(model: Type[DynamicModel]) -> Type[DynamicApiViewSet]:
     """Generate the viewset for a schema."""
-    return type(f"{model.__name__}ViewSet", (DynamicApiViewSet,), {"model": model})
+    embedded = sorted(f.name for f in model._meta.get_fields() if f.is_relation)
+    attrs = {"model": model}
+    if embedded:
+        embedded_text = "\n • ".join(embedded)
+        attrs["__doc__"] = f"The following fields can be expanded:\n • {embedded_text}"
+    return type(f"{model.__name__}ViewSet", (DynamicApiViewSet,), attrs)

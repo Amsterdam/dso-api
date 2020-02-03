@@ -45,7 +45,7 @@ class AbstractEmbeddedField:
         raise NotImplementedError()
 
     def get_serializer(self, parent: Serializer) -> Serializer:
-        """Build the serializer object that can generate an embedded result."""
+        """Build the EmbeddedFieldserializer object that can generate an embedded result."""
         embedded_serializer = self.serializer_class()
         embedded_serializer.bind(field_name=self.field_name, parent=parent)
         return embedded_serializer
@@ -65,7 +65,9 @@ class EmbeddedField(AbstractEmbeddedField):
 
     def get_related_ids(self, instances) -> list:
         """Find the object IDs of the instances."""
-        return [getattr(instance, self.attname) for instance in instances]
+        return list(
+            filter(None, [getattr(instance, self.attname) for instance in instances])
+        )
 
     @cached_property
     def attname(self):
