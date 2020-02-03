@@ -27,7 +27,7 @@ class TestDynamicSerializer:
     ):
         """Prove that the serializer factory properly generates the embedded fields.
 
-        This checks the
+        This checks whether the factory generates the proper FK/embedded fields.
         """
         afval_container = afval_container_model.objects.create(
             id=2,
