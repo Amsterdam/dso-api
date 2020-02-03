@@ -76,11 +76,7 @@ class TestDynamicSerializer:
         """
         ContainerSerializer = serializer_factory(afval_container_model)
         afval_container = afval_container_model.objects.create(
-            id=2,
-            cluster=afval_cluster,
-            serienummer="serie123",
-            eigenaar_naam="datapunt",
-            datum_creatie=date(2020, 2, 3),
+            id=2, cluster=afval_cluster
         )
 
         # Prove that expands work on object-detail level
@@ -100,9 +96,9 @@ class TestDynamicSerializer:
             "schema": "",
             "cluster_id": 1,
             "cluster": "http://testserver/v1/afvalwegingen/clusters/1/",
-            "serienummer": "serie123",
-            "datum_creatie": "2020-02-03",
-            "eigenaar_naam": "datapunt",
+            "serienummer": None,
+            "datum_creatie": None,
+            "eigenaar_naam": None,
             "_embedded": {
                 "cluster": {
                     "_links": {
@@ -126,11 +122,7 @@ class TestDynamicSerializer:
         """
         ContainerSerializer = serializer_factory(afval_container_model)
         container_without_cluster = afval_container_model.objects.create(
-            id=3,
-            cluster=None,
-            serienummer="serie123",
-            eigenaar_naam="datapunt",
-            datum_creatie=date(2020, 2, 3),
+            id=3, cluster=None,
         )
         container_serializer = ContainerSerializer(
             container_without_cluster,
@@ -148,9 +140,9 @@ class TestDynamicSerializer:
             "schema": "",
             "cluster_id": None,
             "cluster": None,
-            "serienummer": "serie123",
-            "datum_creatie": "2020-02-03",
-            "eigenaar_naam": "datapunt",
+            "serienummer": None,
+            "datum_creatie": None,
+            "eigenaar_naam": None,
             "_embedded": {"cluster": None},
         }
 
@@ -162,11 +154,7 @@ class TestDynamicSerializer:
         """
         ContainerSerializer = serializer_factory(afval_container_model)
         container_invalid_cluster = afval_container_model.objects.create(
-            id=4,
-            cluster_id=99,
-            serienummer="serie123",
-            eigenaar_naam="datapunt",
-            datum_creatie=date(2020, 2, 3),
+            id=4, cluster_id=99,
         )
         container_serializer = ContainerSerializer(
             container_invalid_cluster,
@@ -184,8 +172,8 @@ class TestDynamicSerializer:
             "schema": "",
             "cluster_id": 99,
             "cluster": "http://testserver/v1/afvalwegingen/clusters/99/",
-            "serienummer": "serie123",
-            "datum_creatie": "2020-02-03",
-            "eigenaar_naam": "datapunt",
+            "serienummer": None,
+            "datum_creatie": None,
+            "eigenaar_naam": None,
             "_embedded": {"cluster": None},
         }
