@@ -20,26 +20,28 @@ def _make_related_classname(relation_urn):
 
 
 def field_model_factory(
-    field_model,
+    field_cls: Type[models.Field],
     value_getter: Callable[[DatasetSchema], Dict[str, Any]] = None,
     **kwargs,
 ) -> Callable:
+    """Generate the field for a JSON-Schema property"""
+
     def fetch_field_model(
         field: DatasetFieldSchema, dataset: DatasetSchema,
-    ) -> Tuple[Type[models.Model], Dict[str, Any]]:
+    ) -> Tuple[Type[models.Field], List[Any], Dict[str, Any]]:
         kw = kwargs.copy()
-        final_field_model = field_model
+        final_field_cls = field_cls
         args = []
         kw["primary_key"] = field.is_primary
         kw["null"] = not field.required
         relation = field.relation
         if relation is not None:
-            final_field_model = models.ForeignKey
+            final_field_cls = models.ForeignKey
             args = [_make_related_classname(relation), models.SET_NULL]
             kw["db_column"] = f"{slugify(field.name, sign='_')}"
         if value_getter:
             kw = {**kw, **value_getter(dataset)}
-        return (final_field_model, args, kw)
+        return (final_field_cls, args, kw)
 
     return fetch_field_model
 
