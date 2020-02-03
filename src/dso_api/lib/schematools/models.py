@@ -39,6 +39,7 @@ def field_model_factory(
             final_field_cls = models.ForeignKey
             args = [_make_related_classname(relation), models.SET_NULL]
             kw["db_column"] = f"{slugify(field.name, sign='_')}"
+            kw["db_constraint"] = False  # don't expect relations to exist.
         if value_getter:
             kw = {**kw, **value_getter(dataset)}
         return (final_field_cls, args, kw)

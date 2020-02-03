@@ -105,7 +105,14 @@ class EmbeddedHelper:
                 ret[name] = None
                 continue
 
-            value = embedded_field.related_model.objects.get(pk=id_value)
+            related_model = embedded_field.related_model
+            try:
+                value = related_model.objects.get(pk=id_value)
+            except related_model.DoesNotExist:
+                # Unclear in HAL-JSON: should the requested embed be mentioned or not?
+                ret[name] = None
+                continue
+
             embedded_serializer = embedded_field.get_serializer(
                 parent=self.parent_serializer
             )

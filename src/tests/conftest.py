@@ -3,6 +3,7 @@ from pathlib import Path
 
 import pytest
 from django.db import connection
+from rest_framework.request import Request
 from rest_framework.test import APIClient, APIRequestFactory
 
 from dso_api.datasets.models import Dataset
@@ -17,6 +18,12 @@ HERE = Path(__file__).parent
 def api_rf() -> APIRequestFactory:
     """Request factory for APIView classes"""
     return APIRequestFactory()
+
+
+@pytest.fixture()
+def api_request(api_rf) -> Request:
+    """Return a very basic Request object that's good enough as serializer context."""
+    return api_rf.get("/v1/dummy/")
 
 
 @pytest.fixture()
@@ -75,6 +82,18 @@ def afval_schema(afval_schema_json) -> DatasetSchema:
 @pytest.fixture()
 def afval_dataset(afval_schema_json) -> Dataset:
     return Dataset.objects.create(name="afval", schema_data=afval_schema_json)
+
+
+@pytest.fixture()
+def afval_cluster_model(filled_router):
+    # Using filled_router so all urls can be generated too.
+    return filled_router.all_models["afvalwegingen"]["clusters"]
+
+
+@pytest.fixture()
+def afval_container_model(filled_router):
+    # Using filled_router so all urls can be generated too.
+    return filled_router.all_models["afvalwegingen"]["containers"]
 
 
 @pytest.fixture()
