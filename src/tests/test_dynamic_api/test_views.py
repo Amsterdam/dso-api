@@ -50,13 +50,18 @@ def test_list_dynamic_view_unregister(api_client, api_rf, filled_router):
     url = reverse("dynamic_api:bommen-bommen-list")
     viewset = filled_router.registry[0][1]
 
-    # Prove that unloading the model also removes the API
+    # Normal requests give a 200
+    response = api_client.get(url)
+    assert response.status_code == 200
+
+    # Prove that unloading the model also removes the API from urls.py
     filled_router.clear_urls()
     response = api_client.get(url)
     assert response.status_code == 404
 
     # Prove that if any requests to the viewset were still pending,
-    # they also return a 404 now.
+    # they also return a 404 now. This means they passed the URL resolving,
+    # but were paused during the read-lock.
     request = api_rf.get(url)
     view = viewset.as_view({"get": "list"})
     response = view(request)
