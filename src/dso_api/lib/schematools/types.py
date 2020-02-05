@@ -147,6 +147,10 @@ class DatasetFieldSchema(DatasetType):
     def relation(self) -> typing.Optional[str]:
         return self.get("relation")
 
+    @property
+    def format(self) -> typing.Optional[str]:
+        return self.get("format")
+
 
 class DatasetRow(DatasetType):
     """ An actual instance of data """

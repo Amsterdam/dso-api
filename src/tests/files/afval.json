@@ -38,6 +38,11 @@
                         "type": "string",
                         "format": "date",
                         "description": "Datum aangemaakt"
+                    },
+                    "datum leegmaken": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "Datum leeggemaakt"
                     }
                 }
             }

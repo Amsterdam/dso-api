@@ -1,3 +1,5 @@
+from django.contrib.gis.db import models
+from django_postgres_unlimited_varchar import UnlimitedCharField
 from dso_api.lib.schematools.models import model_factory, schema_models_factory
 
 
@@ -7,6 +9,11 @@ def test_model_factory_fields(afval_schema):
     model_cls = model_factory(table)
     meta = model_cls._meta
     assert len(meta.get_fields()) == len(table["schema"]["properties"])
+    assert meta.get_field("id").primary_key
+    assert isinstance(meta.get_field("cluster_id"), models.ForeignKey)
+    assert isinstance(meta.get_field("eigenaar_naam"), UnlimitedCharField)
+    assert isinstance(meta.get_field("datum_creatie"), models.DateField)
+    assert isinstance(meta.get_field("datum_leegmaken"), models.DateTimeField)
     assert meta.app_label == afval_schema.id
 
 

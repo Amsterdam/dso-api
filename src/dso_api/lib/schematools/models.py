@@ -13,10 +13,68 @@ from .types import DatasetFieldSchema, DatasetSchema, DatasetTableSchema
 # Could be used to check fieldnames
 ALLOWED_ID_PATTERN = re.compile(r"[a-zA-Z][ \w\d]*")
 
+DATE_MODELS_LOOKUP = {"date": models.DateField, "date-time": models.DateTimeField}
 
-def _make_related_classname(relation_urn):
-    dataset_name, table_name = relation_urn.split(":")
-    return f"{dataset_name}.{table_name.capitalize()}"
+
+TypeAndSignature = Tuple[Type[models.Field], List[Any], Dict[str, Any]]
+
+
+class FieldMaker:
+    def __init__(
+        self,
+        field_cls: Type[models.Field],
+        value_getter: Callable[[DatasetSchema], Dict[str, Any]] = None,
+        **kwargs,
+    ):
+        self.field_cls = field_cls
+        self.value_getter = value_getter
+        self.kwargs = kwargs
+        self.modifiers = [
+            getattr(self, an) for an in dir(self) if an.startswith("handle_")
+        ]
+
+    def _make_related_classname(self, relation_urn):
+        dataset_name, table_name = relation_urn.split(":")
+        return f"{dataset_name}.{table_name.capitalize()}"
+
+    def handle_basic(
+        self, field: DatasetFieldSchema, field_cls, *args, **kwargs
+    ) -> TypeAndSignature:
+        kwargs["primary_key"] = field.is_primary
+        kwargs["null"] = not field.required
+        return field_cls, args, kwargs
+
+    def handle_relation(
+        self, field: DatasetFieldSchema, field_cls, *args, **kwargs
+    ) -> TypeAndSignature:
+        relation = field.relation
+
+        if relation is not None:
+            field_cls = models.ForeignKey
+            args = [self._make_related_classname(relation), models.SET_NULL]
+            kwargs["db_column"] = f"{slugify(field.name, sign='_')}"
+            kwargs["db_constraint"] = False  # don't expect relations to exist.
+        return field_cls, args, kwargs
+
+    def handle_date(
+        self, field: DatasetFieldSchema, field_cls, *args, **kwargs
+    ) -> TypeAndSignature:
+        format_ = field.format
+        if format_ is not None:
+            field_cls = DATE_MODELS_LOOKUP[format_]
+        return field_cls, args, kwargs
+
+    def __call__(
+        self, field: DatasetFieldSchema, dataset: DatasetSchema
+    ) -> TypeAndSignature:
+        field_cls = self.field_cls
+        kwargs = self.kwargs
+        args = []
+
+        for modifier in self.modifiers:
+            field_cls, args, kwargs = modifier(field, field_cls, *args, **kwargs)
+
+        return field_cls, args, kwargs
 
 
 def field_model_factory(
@@ -26,25 +84,7 @@ def field_model_factory(
 ) -> Callable:
     """Generate the field for a JSON-Schema property"""
 
-    def fetch_field_model(
-        field: DatasetFieldSchema, dataset: DatasetSchema,
-    ) -> Tuple[Type[models.Field], List[Any], Dict[str, Any]]:
-        kw = kwargs.copy()
-        final_field_cls = field_cls
-        args = []
-        kw["primary_key"] = field.is_primary
-        kw["null"] = not field.required
-        relation = field.relation
-        if relation is not None:
-            final_field_cls = models.ForeignKey
-            args = [_make_related_classname(relation), models.SET_NULL]
-            kw["db_column"] = f"{slugify(field.name, sign='_')}"
-            kw["db_constraint"] = False  # don't expect relations to exist.
-        if value_getter:
-            kw = {**kw, **value_getter(dataset)}
-        return (final_field_cls, args, kw)
-
-    return fetch_field_model
+    return FieldMaker(field_cls, value_getter, **kwargs)
 
 
 def fetch_crs(dataset: DatasetSchema) -> Dict[str, Any]:
