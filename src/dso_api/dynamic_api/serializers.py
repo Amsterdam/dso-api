@@ -48,10 +48,10 @@ def get_view_name(model: Type[DynamicModel], suffix: str):
 def serializer_factory(model: Type[DynamicModel]) -> Type[DynamicSerializer]:
     """Generate the DRF serializer class for a specific dataset model."""
     fields = ["_links"]
-    serializer_name = f"{model.__name__}Serializer"
+    serializer_name = f"{model.get_dataset_id()}{model.__name__}Serializer"
     new_attrs = {
         "table_schema": model._table_schema,
-        "__module__": "various_small_datasets.gen_api.serializers",
+        "__module__": f"dso_api.dynamic_api.serializers.{model.get_dataset_id()}",
     }
 
     # Parse fields for serializer
