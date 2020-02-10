@@ -19,7 +19,10 @@ def afval_cluster(afval_cluster_model):
 
 @pytest.mark.django_db
 class TestDynamicSerializer:
-    """All tests for the serializer_factory() logic and embedding"""
+    """All tests for the serializer_factory() logic and embedding.
+
+    Note that updating afval.json means the test output here should be updated too.
+    """
 
     @staticmethod
     def test_basic_factory_logic(
@@ -65,6 +68,7 @@ class TestDynamicSerializer:
             "cluster": "http://testserver/v1/afvalwegingen/clusters/1/",
             "serienummer": "serie123",
             "datum_creatie": "2020-02-03",
+            "datum_leegmaken": None,
             "eigenaar_naam": "datapunt",
         }
 
@@ -98,6 +102,7 @@ class TestDynamicSerializer:
             "cluster": "http://testserver/v1/afvalwegingen/clusters/1/",
             "serienummer": None,
             "datum_creatie": None,
+            "datum_leegmaken": None,
             "eigenaar_naam": None,
             "_embedded": {
                 "cluster": {
@@ -142,6 +147,7 @@ class TestDynamicSerializer:
             "cluster": None,
             "serienummer": None,
             "datum_creatie": None,
+            "datum_leegmaken": None,
             "eigenaar_naam": None,
             "_embedded": {"cluster": None},
         }
@@ -174,6 +180,7 @@ class TestDynamicSerializer:
             "cluster": "http://testserver/v1/afvalwegingen/clusters/99/",
             "serienummer": None,
             "datum_creatie": None,
+            "datum_leegmaken": None,
             "eigenaar_naam": None,
             "_embedded": {"cluster": None},
         }
