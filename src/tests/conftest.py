@@ -8,7 +8,7 @@ from rest_framework.test import APIClient, APIRequestFactory
 
 from dso_api.datasets.models import Dataset
 from dso_api.lib.schematools.db import create_tables
-from dso_api.lib.schematools.types import DatasetSchema
+from amsterdam_schema.types import DatasetSchema
 from tests.test_rest_framework_dso.models import Category, Movie
 
 HERE = Path(__file__).parent

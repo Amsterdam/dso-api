@@ -14,7 +14,7 @@ from dso_api.lib.schematools.models import (
     is_possible_display_field,
     schema_models_factory,
 )
-from dso_api.lib.schematools.types import DatasetSchema, DatasetTableSchema
+from amsterdam_schema.types import DatasetSchema, DatasetTableSchema
 
 logger = logging.getLogger(__name__)
 

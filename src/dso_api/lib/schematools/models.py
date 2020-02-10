@@ -8,7 +8,7 @@ from django.db.models.base import ModelBase
 from django_postgres_unlimited_varchar import UnlimitedCharField
 from string_utils import slugify
 
-from .types import DatasetFieldSchema, DatasetSchema, DatasetTableSchema
+from amsterdam_schema.types import DatasetFieldSchema, DatasetSchema, DatasetTableSchema
 
 # Could be used to check fieldnames
 ALLOWED_ID_PATTERN = re.compile(r"[a-zA-Z][ \w\d]*")

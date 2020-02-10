@@ -4,6 +4,7 @@
 #
 #    pip-compile --output-file=requirements.txt requirements.in
 #
+amsterdam-schema==0.1.1
 asgiref==3.2.3            # via django
 attrs==19.3.0             # via jsonschema, pytest
 certifi==2019.11.28       # via requests, sentry-sdk
@@ -17,13 +18,13 @@ django-environ==0.4.5
 django-filter==2.2.0
 django-healthchecks==1.4.2
 django-postgres-unlimited-varchar==1.1.0
-django==3.0.2
+django==3.0.3
 djangorestframework-csv==2.1.0  # via drf-amsterdam
 djangorestframework-gis==0.15
 djangorestframework-xml==1.4.0  # via drf-amsterdam
 djangorestframework==3.11.0
 drf-amsterdam==0.3.2
-drf-extensions==0.5.0     # via drf-amsterdam
+drf-extensions==0.6.0     # via drf-amsterdam
 drf-yasg==1.17.0
 entrypoints==0.3          # via flake8
 flake8-blind-except==0.1.1
@@ -34,12 +35,12 @@ flake8==3.7.9
 idna==2.8                 # via requests
 inflection==0.3.1         # via drf-yasg
 itypes==1.1.0             # via coreapi
-jinja2==2.10.3            # via coreschema
+jinja2==2.11.1            # via coreschema
 jsonschema==3.2.0
 markupsafe==1.1.1         # via jinja2
 mccabe==0.6.1             # via flake8
-more-itertools==8.1.0     # via pytest
-packaging==20.0           # via drf-yasg, pytest
+more-itertools==8.2.0     # via pytest
+packaging==20.1           # via drf-yasg, pytest
 pluggy==0.13.1            # via pytest
 psycopg2-binary==2.8.4
 py==1.8.1                 # via pytest
@@ -49,19 +50,19 @@ pyparsing==2.4.6          # via packaging
 pyrsistent==0.15.7        # via jsonschema
 pytest-cov==2.8.1
 pytest-django==3.8.0
-pytest==5.3.4
+pytest==5.3.5
 python-string-utils==0.6.0
 pytz==2019.3              # via django
 readerwriterlock==1.0.6
 requests==2.22.0
-ruamel.yaml==0.16.6       # via drf-yasg
-sentry-sdk==0.14.0
+ruamel.yaml==0.16.7       # via drf-yasg
+sentry-sdk==0.14.1
 six==1.14.0               # via django-healthchecks, djangorestframework-csv, drf-yasg, jsonschema, packaging, pyrsistent
 sqlparse==0.3.0           # via django
 typing-extensions==3.7.4.1  # via readerwriterlock
 unicodecsv==0.14.1        # via djangorestframework-csv
 uritemplate==3.0.1        # via coreapi, drf-yasg
-urllib3==1.25.7           # via requests, sentry-sdk
+urllib3==1.25.8           # via requests, sentry-sdk
 wcwidth==0.1.8            # via pytest
 
 # The following packages are considered to be unsafe in a requirements file:

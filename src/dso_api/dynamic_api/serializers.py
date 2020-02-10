@@ -6,7 +6,7 @@ from typing import Type
 from django.db import models
 
 from dso_api.lib.schematools.models import DynamicModel
-from dso_api.lib.schematools.types import DatasetTableSchema
+from amsterdam_schema.types import DatasetTableSchema
 from rest_framework_dso.fields import EmbeddedField
 from rest_framework_dso.serializers import DSOSerializer
 
