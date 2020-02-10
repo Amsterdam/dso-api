@@ -1,7 +1,9 @@
 [flake8]
 ignore=
+  # Black may add spaces in slice[func(v) : end] syntax
+  E203,
   # Black leaves commas after combining lines
-  #E231,
+  E231,
   # Allow import * (for settings)
   F403,
   F405,
