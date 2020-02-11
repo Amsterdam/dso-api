@@ -112,7 +112,7 @@ class TestDynamicSerializer:
                             "title": "(no title: Clusters #1)",
                         }
                     },
-                    "id": 1,
+                    "id": "1",
                     "schema": "",
                     "status": "open",
                 }
