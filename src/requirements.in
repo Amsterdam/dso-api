@@ -6,6 +6,7 @@ django-healthchecks == 1.4.2
 django-postgres-unlimited-varchar == 1.1.0
 djangorestframework == 3.11.0
 djangorestframework-gis == 0.15
+amsterdam-schema == 0.1.2
 drf-amsterdam == 0.3.2
 drf-yasg == 1.17.0
 jsonschema == 3.2.0
@@ -14,7 +15,6 @@ python-string-utils == 0.6.0
 readerwriterlock == 1.0.6
 requests == 2.22.0
 sentry-sdk == 0.14.1
-amsterdam-schema == 0.1.2
 
 # Testing
 flake8 == 3.7.9

@@ -4,7 +4,7 @@
 #
 #    pip-compile --output-file=requirements.txt requirements.in
 #
-amsterdam-schema==0.1.1
+amsterdam-schema==0.1.2
 asgiref==3.2.3            # via django
 attrs==19.3.0             # via jsonschema, pytest
 certifi==2019.11.28       # via requests, sentry-sdk
