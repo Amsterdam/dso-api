@@ -5,7 +5,7 @@ from django.core.management import BaseCommand
 
 from dso_api.datasets.models import Dataset
 from amsterdam_schema.types import DatasetSchema
-from dso_api.lib.schematools.utils import schema_defs_from_url
+from amsterdam_schema.utils import schema_defs_from_url
 
 from .create_tables import create_tables
 
