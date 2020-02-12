@@ -1,7 +1,7 @@
 from typing import Iterable
 
 from django.core.management import BaseCommand, CommandError
-from django.db import DatabaseError, connection, transaction
+from django.db import DatabaseError, connection, connections, router, transaction
 
 from dso_api.datasets.models import Dataset
 from dso_api.lib.schematools.models import schema_models_factory
@@ -29,6 +29,9 @@ def create_tables(command: BaseCommand, datasets: Iterable[Dataset]):
     # Create all tables
     with connection.schema_editor() as schema_editor:
         for model in models:
+            # Only create tables if migration is allowed
+            if not router.allow_migrate_model(model._meta.app_label, model) or not model._meta.can_migrate(connection):
+                continue
             try:
                 command.stdout.write(f"* Creating table {model._meta.db_table}")
                 with transaction.atomic():
