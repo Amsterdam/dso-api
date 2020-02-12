@@ -10,6 +10,7 @@ def get_patterns(router_urls):
     """Generate the actual URL patterns for this file."""
     return [
         path("reload/", views.reload_patterns),
+        path("wfs/<dataset_name>/", views.DatasetWFSView.as_view()),
         path("", include(router_urls)),
     ]
 

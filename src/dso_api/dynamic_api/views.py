@@ -1,9 +1,12 @@
-from typing import Type
+from typing import List, Type
 
-from django.http import JsonResponse
-from rest_framework import viewsets
+from django.contrib.gis.db.models import GeometryField
+from django.http import Http404, JsonResponse
 
 from dso_api.lib.schematools.models import DynamicModel
+from gisserver.features import FeatureType, ServiceDescription
+from gisserver.views import WFSView
+from rest_framework import viewsets
 from rest_framework_dso.pagination import DSOPageNumberPagination
 
 from . import serializers
@@ -54,3 +57,47 @@ def viewset_factory(model: Type[DynamicModel]) -> Type[DynamicApiViewSet]:
         embedded_text = "\n • ".join(embedded)
         attrs["__doc__"] = f"The following fields can be expanded:\n • {embedded_text}"
     return type(f"{model.__name__}ViewSet", (DynamicApiViewSet,), attrs)
+
+
+class DatasetWFSView(WFSView):
+    """A WFS view for a single dataset.
+
+    This view does not need a factory-logic as we don't need named-integration
+    in the URLConf. Instead, we can resolve the 'dataset' via the URL kwargs.
+    """
+
+    def setup(self, request, *args, **kwargs):
+        """Initial setup logic before request handling:
+
+        Resolve the current model or return a 404 instead.
+        """
+        super().setup(request, *args, **kwargs)
+        from .urls import router
+
+        dataset_name = self.kwargs["dataset_name"]
+        try:
+            self.models = router.all_models[dataset_name]
+        except KeyError:
+            raise Http404("Invalid dataset") from None
+
+    def get_service_description(self, service: str) -> ServiceDescription:
+        dataset_name = self.kwargs["dataset_name"]
+        return ServiceDescription(
+            title=dataset_name.title(),
+            keywords=["wfs", "amsterdam", "datapunt"],
+            provider_name="Gemeente Amsterdam",
+            provider_site="https://data.amsterdam.nl/",
+            contact_person="Onderzoek, Informatie en Statistiek",
+        )
+
+    def get_feature_types(self) -> List[FeatureType]:
+        """Generate map feature layers for all models that have geometry data."""
+        return [
+            # TODO: Extend FeatureType with extra meta data
+            FeatureType(model=model)
+            for name, model in self.models.items()
+            if self._has_geometry_field(model)
+        ]
+
+    def _has_geometry_field(self, model):
+        return any(isinstance(f, GeometryField) for f in model._meta.get_fields())
