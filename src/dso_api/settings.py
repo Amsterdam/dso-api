@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     "drf_yasg",
     "rest_framework",
     "rest_framework_gis",
+    "gisserver",
     # Own apps
     "dso_api.datasets",
     "dso_api.dynamic_api",
