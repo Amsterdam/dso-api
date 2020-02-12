@@ -69,6 +69,7 @@ class TestDynamicSerializer:
             "serienummer": "serie123",
             "datum_creatie": "2020-02-03",
             "datum_leegmaken": None,
+            "geometry": None,
             "eigenaar_naam": "datapunt",
         }
 
@@ -103,6 +104,7 @@ class TestDynamicSerializer:
             "serienummer": None,
             "datum_creatie": None,
             "datum_leegmaken": None,
+            "geometry": None,
             "eigenaar_naam": None,
             "_embedded": {
                 "cluster": {
@@ -148,6 +150,7 @@ class TestDynamicSerializer:
             "serienummer": None,
             "datum_creatie": None,
             "datum_leegmaken": None,
+            "geometry": None,
             "eigenaar_naam": None,
             "_embedded": {"cluster": None},
         }
@@ -181,6 +184,7 @@ class TestDynamicSerializer:
             "serienummer": None,
             "datum_creatie": None,
             "datum_leegmaken": None,
+            "geometry": None,
             "eigenaar_naam": None,
             "_embedded": {"cluster": None},
         }

@@ -14,6 +14,9 @@ def test_model_factory_fields(afval_schema):
     assert isinstance(meta.get_field("eigenaar_naam"), UnlimitedCharField)
     assert isinstance(meta.get_field("datum_creatie"), models.DateField)
     assert isinstance(meta.get_field("datum_leegmaken"), models.DateTimeField)
+    geo_field = meta.get_field("geometry")
+    assert geo_field.srid == 28992
+    assert geo_field.db_index
     assert meta.app_label == afval_schema.id
 
     table_with_id_as_string = afval_schema.tables[1]

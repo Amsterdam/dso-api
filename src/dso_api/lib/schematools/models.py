@@ -38,14 +38,26 @@ class FieldMaker:
         return f"{dataset_name}.{table_name.capitalize()}"
 
     def handle_basic(
-        self, field: DatasetFieldSchema, field_cls, *args, **kwargs
+        self,
+        dataset: DatasetSchema,
+        field: DatasetFieldSchema,
+        field_cls,
+        *args,
+        **kwargs,
     ) -> TypeAndSignature:
         kwargs["primary_key"] = field.is_primary
         kwargs["null"] = not field.required
+        if self.value_getter:
+            kwargs = {**kwargs, **self.value_getter(dataset)}
         return field_cls, args, kwargs
 
     def handle_relation(
-        self, field: DatasetFieldSchema, field_cls, *args, **kwargs
+        self,
+        dataset: DatasetSchema,
+        field: DatasetFieldSchema,
+        field_cls,
+        *args,
+        **kwargs,
     ) -> TypeAndSignature:
         relation = field.relation
 
@@ -57,7 +69,12 @@ class FieldMaker:
         return field_cls, args, kwargs
 
     def handle_date(
-        self, field: DatasetFieldSchema, field_cls, *args, **kwargs
+        self,
+        dataset: DatasetSchema,
+        field: DatasetFieldSchema,
+        field_cls,
+        *args,
+        **kwargs,
     ) -> TypeAndSignature:
         format_ = field.format
         if format_ is not None:
@@ -72,7 +89,9 @@ class FieldMaker:
         args = []
 
         for modifier in self.modifiers:
-            field_cls, args, kwargs = modifier(field, field_cls, *args, **kwargs)
+            field_cls, args, kwargs = modifier(
+                dataset, field, field_cls, *args, **kwargs
+            )
 
         return field_cls, args, kwargs
 
@@ -103,10 +122,18 @@ JSON_TYPE_TO_DJANGO = {
         UnlimitedCharField
     ),
     "https://geojson.org/schema/Geometry.json": field_model_factory(
-        models.MultiPolygonField, value_getter=fetch_crs, srid=28992, geography=False
+        models.MultiPolygonField,
+        value_getter=fetch_crs,
+        srid=28992,
+        geography=False,
+        db_index=True,
     ),
     "https://geojson.org/schema/Point.json": field_model_factory(
-        models.PointField, value_getter=fetch_crs, srid=28992, geography=False
+        models.PointField,
+        value_getter=fetch_crs,
+        srid=28992,
+        geography=False,
+        db_index=True,
     ),
 }
 
