@@ -24,6 +24,10 @@ Part of that means that the API follows the HAL-JSON style.
 
     cd src
     python manage.py migrate
+    
+# Import schema
+
+    python manage.py import_schemas
 
 # Run the server
 
