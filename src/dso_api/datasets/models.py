@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 from typing import List, Type
 
+from django.conf import settings
 from django.contrib.postgres.fields import JSONField
 from django.db import models, transaction
 from django.utils.functional import cached_property
@@ -156,6 +157,10 @@ class DatasetTable(models.Model):
 
         (The table spec contains a JSON-schema for all fields).
         """
+        enable_geosearch = True
+        if dataset.name in settings.AMSTERDAM_SCHEMA['geosearch_disabled_datasets']:
+            enable_geosearch = False
+
         display_field = None
         geometry_field = None
         for field in table.fields:
@@ -179,4 +184,5 @@ class DatasetTable(models.Model):
             db_table=get_db_table_name(table),
             display_field=display_field,
             geometry_field=geometry_field,
+            enable_geosearch=enable_geosearch
         )
