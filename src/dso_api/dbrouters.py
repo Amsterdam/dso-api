@@ -3,14 +3,15 @@ class ExternDatabaseRouter:
     A router to control all database operations on models in the
     apps that have data in other databases like bag
     """
-    route_app_labels = {'bag'}
+
+    route_app_labels = {"bag"}
 
     def db_for_read(self, model, **hints):
         """
         Attempts to read bag go to bag_v11.
         """
         if model._meta.app_label in self.route_app_labels:
-            return 'bag_v11'
+            return "bag_v11"
         return None
 
     def db_for_write(self, model, **hints):
