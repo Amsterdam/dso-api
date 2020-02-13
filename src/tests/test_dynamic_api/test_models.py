@@ -8,7 +8,14 @@ def test_model_factory_fields(afval_schema):
     table = afval_schema.tables[0]
     model_cls = model_factory(table)
     meta = model_cls._meta
-    assert len(meta.get_fields()) == len(table["schema"]["properties"])
+    assert set(f.name for f in meta.get_fields()) == {
+        "id",
+        "cluster",
+        "serienummer",
+        "eigenaar_naam",
+        "datum_creatie",
+        "datum_leegmaken",
+    }
     assert meta.get_field("id").primary_key
     assert isinstance(meta.get_field("cluster_id"), models.ForeignKey)
     assert isinstance(meta.get_field("eigenaar_naam"), UnlimitedCharField)

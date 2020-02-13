@@ -7,6 +7,7 @@ from django.db import models
 
 from dso_api.lib.schematools.models import DynamicModel
 from amsterdam_schema.types import DatasetTableSchema
+from rest_framework import serializers
 from rest_framework_dso.fields import EmbeddedField
 from rest_framework_dso.serializers import DSOSerializer
 
@@ -14,7 +15,15 @@ from rest_framework_dso.serializers import DSOSerializer
 class DynamicSerializer(DSOSerializer):
     """Base class for all generic serializers of this package."""
 
+    schema = serializers.SerializerMethodField()
+
     table_schema: DatasetTableSchema = None
+
+    def get_schema(self, instance):
+        """The schema field is exposed with every record"""
+        name = instance.get_dataset_id()
+        table = instance.get_table_id()
+        return f"https://schemas.data.amsterdam.nl/datasets/{name}/{name}#{table}"
 
     def build_url_field(self, field_name, model_class):
         """Make sure the generated URLs point to our dynamic models"""
@@ -47,7 +56,7 @@ def get_view_name(model: Type[DynamicModel], suffix: str):
 @lru_cache()
 def serializer_factory(model: Type[DynamicModel]) -> Type[DynamicSerializer]:
     """Generate the DRF serializer class for a specific dataset model."""
-    fields = ["_links"]
+    fields = ["_links", "schema"]
     serializer_name = f"{model.get_dataset_id()}{model.__name__}Serializer"
     new_attrs = {
         "table_schema": model._table_schema,

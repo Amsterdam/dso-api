@@ -63,7 +63,7 @@ class TestDynamicSerializer:
                 }
             },
             "id": 2,
-            "schema": "",
+            "schema": "https://schemas.data.amsterdam.nl/datasets/afvalwegingen/afvalwegingen#containers",  # noqa: E501
             "cluster_id": 1,
             "cluster": "http://testserver/v1/afvalwegingen/clusters/1/",
             "serienummer": "serie123",
@@ -97,7 +97,7 @@ class TestDynamicSerializer:
                 }
             },
             "id": 2,
-            "schema": "",
+            "schema": "https://schemas.data.amsterdam.nl/datasets/afvalwegingen/afvalwegingen#containers",  # noqa: E501
             "cluster_id": 1,
             "cluster": "http://testserver/v1/afvalwegingen/clusters/1/",
             "serienummer": None,
@@ -113,7 +113,7 @@ class TestDynamicSerializer:
                         }
                     },
                     "id": "1",
-                    "schema": "",
+                    "schema": "https://schemas.data.amsterdam.nl/datasets/afvalwegingen/afvalwegingen#clusters",  # noqa: E501
                     "status": "open",
                 }
             },
@@ -142,7 +142,7 @@ class TestDynamicSerializer:
                 }
             },
             "id": 3,
-            "schema": "",
+            "schema": "https://schemas.data.amsterdam.nl/datasets/afvalwegingen/afvalwegingen#containers",  # noqa: E501
             "cluster_id": None,
             "cluster": None,
             "serienummer": None,
@@ -175,7 +175,7 @@ class TestDynamicSerializer:
                 }
             },
             "id": 4,
-            "schema": "",
+            "schema": "https://schemas.data.amsterdam.nl/datasets/afvalwegingen/afvalwegingen#containers",  # noqa: E501
             "cluster_id": 99,
             "cluster": "http://testserver/v1/afvalwegingen/clusters/99/",
             "serienummer": None,
