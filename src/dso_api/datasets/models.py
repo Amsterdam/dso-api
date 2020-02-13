@@ -173,7 +173,7 @@ class DatasetTable(models.Model):
             # Take the first geojson field as geometry field
             if not geometry_field and field.type.startswith(GEOJSON_PREFIX):
                 geometry_field = field.name
-                match = re.search(r"schema\/(?P<schema>\w+)\.", field.type)
+                match = re.search(r"schema\/(?P<schema>\w+)\.json", field.type)
                 if match is not None:
                     geometry_field_type = match.group("schema")
                 break
