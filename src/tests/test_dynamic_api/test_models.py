@@ -15,6 +15,7 @@ def test_model_factory_fields(afval_schema):
         "eigenaar_naam",
         "datum_creatie",
         "datum_leegmaken",
+        "geometry",
     }
     assert meta.get_field("id").primary_key
     assert isinstance(meta.get_field("cluster_id"), models.ForeignKey)
