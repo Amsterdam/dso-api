@@ -1,4 +1,4 @@
-class BagV11Router:
+class ExternDatabaseRouter:
     """
     A router to control all database operations on models in the
     apps that have data in other databases like bag

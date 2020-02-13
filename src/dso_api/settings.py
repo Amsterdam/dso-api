@@ -107,7 +107,7 @@ DATABASES = {
     )
 }
 
-DATABASE_ROUTERS = ['dso_api.dbrouters.BagV11Router']
+DATABASE_ROUTERS = ['dso_api.dbrouters.ExternDatabaseRouter']
 
 locals().update(env.email_url(default="smtp://"))
 
