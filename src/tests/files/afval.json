@@ -21,7 +21,7 @@
           "schema": {
             "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.0#/definitions/schema"
           },
-          "cluster id": {
+          "cluster": {
             "type": "string",
             "relation": "afvalwegingen:clusters",
             "description": "Cluster-ID"
