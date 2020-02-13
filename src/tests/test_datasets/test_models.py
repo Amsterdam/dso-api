@@ -29,6 +29,21 @@ def test_save_schema_tables_add(bommen_schema_json):
     table = dataset.tables.get()
     assert table.name == "bommen"
     assert table.db_table == "bommen_bommen"
+    assert table.enable_geosearch is True
+
+
+@pytest.mark.django_db
+def test_save_schema_tables_with_disabled_geosearch(settings, bommen_schema_json):
+    """Prove that the dataset table models are created with geosearch disabled
+    if dataset.name in settings.AMSTERDAM_SCHEMA['geosearch_disabled_datasets]."""
+    settings.AMSTERDAM_SCHEMA['geosearch_disabled_datasets'] = ['testing']
+    dataset = Dataset(name="testing", schema_data=bommen_schema_json)
+    dataset.save()
+    assert dataset.tables.count() == 1, dataset.tables.all()
+    table = dataset.tables.get()
+    assert table.name == "bommen"
+    assert table.db_table == "bommen_bommen"
+    assert table.enable_geosearch is False
 
 
 @pytest.mark.django_db

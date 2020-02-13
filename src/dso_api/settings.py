@@ -140,6 +140,12 @@ LOGGING = {
     },
 }
 
+# -- Amsterdam Schema Settings
+AMSTERDAM_SCHEMA = {
+    'geosearch_disabled_datasets': [
+        'bag'
+    ]
+}
 
 # -- Third party app settings
 
