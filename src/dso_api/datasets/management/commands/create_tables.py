@@ -14,7 +14,9 @@ class Command(BaseCommand):
         create_tables(self, Dataset.objects.all(), True)
 
 
-def create_tables(command: BaseCommand, datasets: Iterable[Dataset], force_non_managed=False):
+def create_tables(
+    command: BaseCommand, datasets: Iterable[Dataset], force_non_managed=False
+):
     """Create tables for all updated datasets.
     This is a separate function to allow easy reuse.
     """
@@ -30,8 +32,11 @@ def create_tables(command: BaseCommand, datasets: Iterable[Dataset], force_non_m
     with connection.schema_editor() as schema_editor:
         for model in models:
             # Only create tables if migration is allowed
-            if not router.allow_migrate_model(model._meta.app_label,
-                                              model) or force_non_managed or not model._meta.can_migrate(connection):
+            if (
+                not router.allow_migrate_model(model._meta.app_label, model)
+                or force_non_managed
+                or not model._meta.can_migrate(connection)
+            ):
                 continue
             try:
                 command.stdout.write(f"* Creating table {model._meta.db_table}")
