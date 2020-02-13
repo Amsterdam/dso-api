@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import logging
 from typing import List, Type
 
@@ -17,7 +18,10 @@ from dso_api.lib.schematools.models import (
 )
 from amsterdam_schema.types import DatasetSchema, DatasetTableSchema
 
+
 logger = logging.getLogger(__name__)
+
+GEOJSON_PREFIX = "https://geojson.org/schema/"
 
 
 class Dataset(models.Model):
@@ -137,6 +141,7 @@ class DatasetTable(models.Model):
     db_table = models.CharField(max_length=100, unique=True)
     display_field = models.CharField(max_length=50, null=True, blank=True)
     geometry_field = models.CharField(max_length=50, null=True, blank=True)
+    geometry_field_type = models.CharField(max_length=50, null=True, blank=True)
 
     class Meta:
         ordering = ("name",)
@@ -163,12 +168,14 @@ class DatasetTable(models.Model):
 
         display_field = None
         geometry_field = None
+        geometry_field_type = None
         for field in table.fields:
             # Take the first geojson field as geometry field
-            if not geometry_field and field.type.startswith(
-                "https://geojson.org/schema/"
-            ):
+            if not geometry_field and field.type.startswith(GEOJSON_PREFIX):
                 geometry_field = field.name
+                match = re.search(r"schema\/(?P<schema>\w+)\.", field.type)
+                if match is not None:
+                    geometry_field_type = match.group("schema")
                 break
 
             # Take the first string field as display name.
@@ -184,5 +191,6 @@ class DatasetTable(models.Model):
             db_table=get_db_table_name(table),
             display_field=display_field,
             geometry_field=geometry_field,
+            geometry_field_type=geometry_field_type,
             enable_geosearch=enable_geosearch,
         )
