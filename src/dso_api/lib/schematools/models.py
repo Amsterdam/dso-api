@@ -52,7 +52,8 @@ class FieldMaker:
         if relation is not None:
             field_cls = models.ForeignKey
             args = [self._make_related_classname(relation), models.SET_NULL]
-            kwargs["db_column"] = f"{slugify(field.name, sign='_')}"
+            # In schema foeign keys should be specified without _id, but the db_column should be with _id
+            kwargs["db_column"] = f"{slugify(field.name, sign='_')}_id"
             kwargs["db_constraint"] = False  # don't expect relations to exist.
         return field_cls, args, kwargs
 
@@ -167,14 +168,14 @@ def model_factory(table: DatasetTableSchema) -> Type[DynamicModel]:
     fields = {}
     display_field = None
     for field in table.fields:
+        if field.type == "https://schemas.data.amsterdam.nl/schema@v1.1.0#/definitions/schema":  # skip schema field for now
+            continue
         # Generate field object
         kls, args, kwargs = JSON_TYPE_TO_DJANGO[field.type](field, dataset)
         model_field = kls(*args, **kwargs)
 
         # Generate name, fix if needed.
         field_name = slugify(field.name, sign="_")
-        if isinstance(model_field, models.ForeignKey) and field_name.endswith("_id"):
-            field_name = field_name[:-3]
         fields[field_name] = model_field
 
         if not display_field and is_possible_display_field(field):

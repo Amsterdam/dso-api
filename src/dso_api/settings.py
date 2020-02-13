@@ -99,8 +99,15 @@ DATABASES = {
         "DATABASE_URL",
         default="postgres://dso_api:insecure@localhost:5415/dso_api",
         engine="django.contrib.gis.db.backends.postgis",
+    ),
+    "bag_v11": env.db_url(
+        "BAG_V11_DATABASE_URL",
+        default="postgres://bag_v11_read:insecure@localhost:5434/bag_v11",
+        engine="django.contrib.gis.db.backends.postgis",
     )
 }
+
+DATABASE_ROUTERS = ['dso_api.dbrouters.ExternDatabaseRouter']
 
 locals().update(env.email_url(default="smtp://"))
 
