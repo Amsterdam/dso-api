@@ -8,6 +8,14 @@ INSTALLED_APPS += [
     "tests.test_rest_framework_dso",
 ]
 
+DATABASES = {
+    "default": env.db_url(
+        "DATABASE_URL",
+        default="postgres://dso_api:insecure@localhost:5415/dso_api",
+        engine="django.contrib.gis.db.backends.postgis",
+    ),
+}
+
 CSRF_COOKIE_SECURE = False
 SESSION_COOKIE_SECURE = False
 
