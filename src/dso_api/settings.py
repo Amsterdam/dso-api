@@ -104,10 +104,10 @@ DATABASES = {
         "BAG_V11_DATABASE_URL",
         default="postgres://bag_v11_read:insecure@localhost:5434/bag_v11",
         engine="django.contrib.gis.db.backends.postgis",
-    )
+    ),
 }
 
-DATABASE_ROUTERS = ['dso_api.dbrouters.ExternDatabaseRouter']
+DATABASE_ROUTERS = ["dso_api.dbrouters.ExternDatabaseRouter"]
 
 locals().update(env.email_url(default="smtp://"))
 
@@ -138,13 +138,6 @@ LOGGING = {
         # },
         "dso_api": {"handlers": ["console"], "level": "DEBUG", "propagate": False},
     },
-}
-
-# -- Amsterdam Schema Settings
-AMSTERDAM_SCHEMA = {
-    'geosearch_disabled_datasets': [
-        'bag'
-    ]
 }
 
 # -- Third party app settings
@@ -190,3 +183,7 @@ SWAGGER_SETTINGS = {
         }
     },
 }
+
+# -- Local app settings
+
+AMSTERDAM_SCHEMA = {"geosearch_disabled_datasets": ["bag"]}

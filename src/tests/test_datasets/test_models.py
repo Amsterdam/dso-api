@@ -36,7 +36,7 @@ def test_save_schema_tables_add(bommen_schema_json):
 def test_save_schema_tables_with_disabled_geosearch(settings, bommen_schema_json):
     """Prove that the dataset table models are created with geosearch disabled
     if dataset.name in settings.AMSTERDAM_SCHEMA['geosearch_disabled_datasets]."""
-    settings.AMSTERDAM_SCHEMA['geosearch_disabled_datasets'] = ['testing']
+    settings.AMSTERDAM_SCHEMA["geosearch_disabled_datasets"] = ["testing"]
     dataset = Dataset(name="testing", schema_data=bommen_schema_json)
     dataset.save()
     assert dataset.tables.count() == 1, dataset.tables.all()
