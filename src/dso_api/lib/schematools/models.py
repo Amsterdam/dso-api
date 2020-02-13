@@ -7,6 +7,7 @@ from django.contrib.gis.db import models
 from django.db.models.base import ModelBase
 from django_postgres_unlimited_varchar import UnlimitedCharField
 from string_utils import slugify
+from gisserver.types import CRS
 
 from amsterdam_schema.types import DatasetFieldSchema, DatasetSchema, DatasetTableSchema
 
@@ -14,6 +15,8 @@ from amsterdam_schema.types import DatasetFieldSchema, DatasetSchema, DatasetTab
 ALLOWED_ID_PATTERN = re.compile(r"[a-zA-Z][ \w\d]*")
 
 DATE_MODELS_LOOKUP = {"date": models.DateField, "date-time": models.DateTimeField}
+
+RD_NEW = 28992
 
 
 TypeAndSignature = Tuple[Type[models.Field], List[Any], Dict[str, Any]]
@@ -107,7 +110,7 @@ def field_model_factory(
 
 
 def fetch_crs(dataset: DatasetSchema) -> Dict[str, Any]:
-    return {"srid": int(dataset.data["crs"].split("EPSG:")[1])}
+    return {"srid": CRS.from_string(dataset.data["crs"]).srid}
 
 
 JSON_TYPE_TO_DJANGO = {
@@ -124,14 +127,14 @@ JSON_TYPE_TO_DJANGO = {
     "https://geojson.org/schema/Geometry.json": field_model_factory(
         models.MultiPolygonField,
         value_getter=fetch_crs,
-        srid=28992,
+        srid=RD_NEW,
         geography=False,
         db_index=True,
     ),
     "https://geojson.org/schema/Point.json": field_model_factory(
         models.PointField,
         value_getter=fetch_crs,
-        srid=28992,
+        srid=RD_NEW,
         geography=False,
         db_index=True,
     ),
