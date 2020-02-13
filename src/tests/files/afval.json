@@ -43,6 +43,10 @@
             "type": "string",
             "format": "date-time",
             "description": "Datum leeggemaakt"
+          },
+          "geometry": {
+            "$ref": "https://geojson.org/schema/Point.json",
+            "description": "Geometrie"
           }
         }
       }

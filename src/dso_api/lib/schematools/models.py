@@ -7,6 +7,7 @@ from django.contrib.gis.db import models
 from django.db.models.base import ModelBase
 from django_postgres_unlimited_varchar import UnlimitedCharField
 from string_utils import slugify
+from gisserver.types import CRS
 
 from amsterdam_schema.types import DatasetFieldSchema, DatasetSchema, DatasetTableSchema
 
@@ -14,6 +15,8 @@ from amsterdam_schema.types import DatasetFieldSchema, DatasetSchema, DatasetTab
 ALLOWED_ID_PATTERN = re.compile(r"[a-zA-Z][ \w\d]*")
 
 DATE_MODELS_LOOKUP = {"date": models.DateField, "date-time": models.DateTimeField}
+
+RD_NEW = 28992
 
 
 TypeAndSignature = Tuple[Type[models.Field], List[Any], Dict[str, Any]]
@@ -38,14 +41,26 @@ class FieldMaker:
         return f"{dataset_name}.{table_name.capitalize()}"
 
     def handle_basic(
-        self, field: DatasetFieldSchema, field_cls, *args, **kwargs
+        self,
+        dataset: DatasetSchema,
+        field: DatasetFieldSchema,
+        field_cls,
+        *args,
+        **kwargs,
     ) -> TypeAndSignature:
         kwargs["primary_key"] = field.is_primary
         kwargs["null"] = not field.required
+        if self.value_getter:
+            kwargs = {**kwargs, **self.value_getter(dataset)}
         return field_cls, args, kwargs
 
     def handle_relation(
-        self, field: DatasetFieldSchema, field_cls, *args, **kwargs
+        self,
+        dataset: DatasetSchema,
+        field: DatasetFieldSchema,
+        field_cls,
+        *args,
+        **kwargs,
     ) -> TypeAndSignature:
         relation = field.relation
 
@@ -59,7 +74,12 @@ class FieldMaker:
         return field_cls, args, kwargs
 
     def handle_date(
-        self, field: DatasetFieldSchema, field_cls, *args, **kwargs
+        self,
+        dataset: DatasetSchema,
+        field: DatasetFieldSchema,
+        field_cls,
+        *args,
+        **kwargs,
     ) -> TypeAndSignature:
         format_ = field.format
         if format_ is not None:
@@ -74,7 +94,9 @@ class FieldMaker:
         args = []
 
         for modifier in self.modifiers:
-            field_cls, args, kwargs = modifier(field, field_cls, *args, **kwargs)
+            field_cls, args, kwargs = modifier(
+                dataset, field, field_cls, *args, **kwargs
+            )
 
         return field_cls, args, kwargs
 
@@ -90,7 +112,7 @@ def field_model_factory(
 
 
 def fetch_crs(dataset: DatasetSchema) -> Dict[str, Any]:
-    return {"srid": int(dataset.data["crs"].split("EPSG:")[1])}
+    return {"srid": CRS.from_string(dataset.data["crs"]).srid}
 
 
 JSON_TYPE_TO_DJANGO = {
@@ -105,10 +127,18 @@ JSON_TYPE_TO_DJANGO = {
         UnlimitedCharField
     ),
     "https://geojson.org/schema/Geometry.json": field_model_factory(
-        models.MultiPolygonField, value_getter=fetch_crs, srid=28992, geography=False
+        models.MultiPolygonField,
+        value_getter=fetch_crs,
+        srid=RD_NEW,
+        geography=False,
+        db_index=True,
     ),
     "https://geojson.org/schema/Point.json": field_model_factory(
-        models.PointField, value_getter=fetch_crs, srid=28992, geography=False
+        models.PointField,
+        value_getter=fetch_crs,
+        srid=RD_NEW,
+        geography=False,
+        db_index=True,
     ),
 }
 
