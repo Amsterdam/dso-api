@@ -9,13 +9,14 @@ from dso_api.lib.schematools.models import schema_models_factory
 
 class Command(BaseCommand):
     help = "Create the tables based on the uploaded Amsterdam schema's."
+    requires_system_checks = False  # don't test URLs (which create models)
 
     def handle(self, *args, **options):
-        create_tables(self, Dataset.objects.all(), True)
+        create_tables(self, Dataset.objects.all(), allow_unmanaged=True)
 
 
 def create_tables(
-    command: BaseCommand, datasets: Iterable[Dataset], force_non_managed=False
+    command: BaseCommand, datasets: Iterable[Dataset], allow_unmanaged=False
 ):
     """Create tables for all updated datasets.
     This is a separate function to allow easy reuse.
@@ -32,12 +33,23 @@ def create_tables(
     with connection.schema_editor() as schema_editor:
         for model in models:
             # Only create tables if migration is allowed
-            if (
-                not router.allow_migrate_model(model._meta.app_label, model)
-                or force_non_managed
-                or not model._meta.can_migrate(connection)
-            ):
+            # - router allows it (not some external database)
+            # - model is managed (not by default)
+            # - user overrides this (e.g. developer)
+            db_table_name = model._meta.db_table
+            router_allows = router.allow_migrate_model(model._meta.app_label, model)
+            if not router_allows:
+                command.stdout.write(
+                    f"  Skipping externally managed table: {db_table_name}"
+                )
                 continue
+
+            if not allow_unmanaged and not model._meta.can_migrate(connection):
+                command.stderr.write(
+                    f"  Skipping non-managed model: {model._meta.db_table}"
+                )
+                continue
+
             try:
                 command.stdout.write(f"* Creating table {model._meta.db_table}")
                 with transaction.atomic():

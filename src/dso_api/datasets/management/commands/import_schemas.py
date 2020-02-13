@@ -20,7 +20,7 @@ class Command(BaseCommand):
         if not datasets:
             self.stdout.write(f"No new datasets imported")
         else:
-            create_tables(self, datasets)
+            create_tables(self, datasets, allow_unmanaged=True)
 
     def import_schemas(self, schema_url) -> List[Dataset]:
         """Import all schema definitions from an URL"""
