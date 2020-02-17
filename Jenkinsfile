@@ -35,7 +35,7 @@ node {
     stage("Build API image") {
         tryStep "build", {
             docker.withRegistry("${DOCKER_REGISTRY_HOST}",'docker_registry_auth') {
-            def image = docker.build(API_CONTAINER, "--pull ./src")
+            def image = docker.build("${API_CONTAINER]", "--pull ./src")
             image.push()
             }
         }
@@ -44,7 +44,7 @@ node {
     stage('Push API acceptance image') {
         tryStep "image tagging", {
             docker.withRegistry("${DOCKER_REGISTRY_HOST}",'docker_registry_auth') {
-            def image = docker.image(API_CONTAINER)
+            def image = docker.image("${API_CONTAINER}")
             image.pull()
             image.push("acceptance")
             }
@@ -69,7 +69,7 @@ node {
     stage('Push production images') {
         tryStep "Tag public api image", {
             docker.withRegistry("${DOCKER_REGISTRY_HOST}",'docker_registry_auth') {
-            def image = docker.image(API_CONTAINER)
+            def image = docker.image("${API_CONTAINER}")
             image.pull()
             image.push("production")
             image.push("latest")
