@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 from typing import Any, Callable, Dict, List, Tuple, Type
+from urllib.parse import urlparse
 
 from django.contrib.gis.db import models
 from django.db.models.base import ModelBase
@@ -13,6 +14,8 @@ from amsterdam_schema.types import DatasetFieldSchema, DatasetSchema, DatasetTab
 
 # Could be used to check fieldnames
 ALLOWED_ID_PATTERN = re.compile(r"[a-zA-Z][ \w\d]*")
+
+SCHEMA_DEFS_URL = "https://schemas.data.amsterdam.nl/schema"
 
 DATE_MODELS_LOOKUP = {"date": models.DateField, "date-time": models.DateTimeField}
 
@@ -120,18 +123,8 @@ JSON_TYPE_TO_DJANGO = {
     "integer": field_model_factory(models.IntegerField),
     "number": field_model_factory(models.FloatField),
     "boolean": field_model_factory(models.BooleanField),
-    "https://schemas.data.amsterdam.nl/schema@v1.1.0#/definitions/id": field_model_factory(
-        models.IntegerField
-    ),
-    "https://schemas.data.amsterdam.nl/schema@v1.1.1#/definitions/id": field_model_factory(
-        models.IntegerField
-    ),
-    "https://schemas.data.amsterdam.nl/schema@v1.1.0#/definitions/schema": field_model_factory(
-        UnlimitedCharField
-    ),
-    "https://schemas.data.amsterdam.nl/schema@v1.1.1#/definitions/schema": field_model_factory(
-        UnlimitedCharField
-    ),
+    "/definitions/id": field_model_factory(models.IntegerField),
+    "/definitions/schema": field_model_factory(UnlimitedCharField),
     "https://geojson.org/schema/Geometry.json": field_model_factory(
         models.MultiPolygonField,
         value_getter=fetch_crs,
@@ -205,11 +198,15 @@ def model_factory(table: DatasetTableSchema) -> Type[DynamicModel]:
     fields = {}
     display_field = None
     for field in table.fields:
+        type_ = field.type
         # skip schema field for now
-        if field.type.endswith("definitions/schema"):
+        if type_.endswith("definitions/schema"):
             continue
+        # reduce amsterdam schema refs to their fragment
+        if type_.startswith(SCHEMA_DEFS_URL):
+            type_ = urlparse(type_).fragment
         # Generate field object
-        kls, args, kwargs = JSON_TYPE_TO_DJANGO[field.type](field, dataset)
+        kls, args, kwargs = JSON_TYPE_TO_DJANGO[type_](field, dataset)
         model_field = kls(*args, **kwargs)
 
         # Generate name, fix if needed.
