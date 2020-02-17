@@ -1,7 +1,5 @@
 #!groovy
 
-String API_CONTAINER = "${DOCKER_REGISTRY_HOST}/datapunt/dataservices/dso-api:${env.BUILD_NUMBER}"
-
 def tryStep(String message, Closure block, Closure tearDown = null) {
     try {
         block()
@@ -35,29 +33,39 @@ node {
     stage("Build API image") {
         tryStep "build", {
             docker.withRegistry("${DOCKER_REGISTRY_HOST}",'docker_registry_auth') {
-            def image = docker.build("${API_CONTAINER}", "--pull ./src")
+            def image = docker.build("datapunt/dataservices/dso-api:${env.BUILD_NUMBER}", "src")
             image.push()
             }
         }
     }
+}
 
-    stage('Push API acceptance image') {
-        tryStep "image tagging", {
-            docker.withRegistry("${DOCKER_REGISTRY_HOST}",'docker_registry_auth') {
-            def image = docker.image("${API_CONTAINER}")
-            image.pull()
-            image.push("acceptance")
+
+String BRANCH = "${env.BRANCH_NAME}"
+
+if (BRANCH == "master") {
+
+    node {
+        stage('Push acceptance image') {
+            tryStep "image tagging", {
+                docker.withRegistry("${DOCKER_REGISTRY_HOST}",'docker_registry_auth') {
+                    def image = docker.image("datapunt/dataservices/dso-api:${env.BUILD_NUMBER}")
+                    image.pull()
+                    image.push("acceptance")
+                }
             }
         }
     }
 
-    stage("Deploy to ACC") {
-        tryStep "deployment", {
-            build job: 'Subtask_Openstack_Playbook',
+    node {
+        stage("Deploy to ACC") {
+            tryStep "deployment", {
+                build job: 'Subtask_Openstack_Playbook',
                 parameters: [
                     [$class: 'StringParameterValue', name: 'INVENTORY', value: 'acceptance'],
                     [$class: 'StringParameterValue', name: 'PLAYBOOK', value: 'deploy-dso-api.yml'],
                 ]
+            }
         }
     }
 
@@ -66,24 +74,28 @@ node {
         input "Deploy to Production?"
     }
 
-    stage('Push production images') {
-        tryStep "Tag public api image", {
-            docker.withRegistry("${DOCKER_REGISTRY_HOST}",'docker_registry_auth') {
-            def image = docker.image("${API_CONTAINER}")
-            image.pull()
-            image.push("production")
-            image.push("latest")
+    node {
+        stage('Push production image') {
+            tryStep "image tagging", {
+                docker.withRegistry("${DOCKER_REGISTRY_HOST}",'docker_registry_auth') {
+                    def image = docker.image("dataservices/dso-api:${env.BUILD_NUMBER}")
+                    image.pull()
+                    image.push("production")
+                    image.push("latest")
+                }
             }
         }
     }
 
-    stage("Deploy") {
-        tryStep "deployment", {
-            build job: 'Subtask_Openstack_Playbook',
-            parameters: [
-                [$class: 'StringParameterValue', name: 'INVENTORY', value: 'production'],
-                [$class: 'StringParameterValue', name: 'PLAYBOOK', value: 'deploy-dso-api.yml'],
-            ]
+    node {
+        stage("Deploy") {
+            tryStep "deployment", {
+                build job: 'Subtask_Openstack_Playbook',
+                parameters: [
+                    [$class: 'StringParameterValue', name: 'INVENTORY', value: 'production'],
+                    [$class: 'StringParameterValue', name: 'PLAYBOOK', value: 'deploy-dso-api.yml'],
+                ]
+            }
         }
     }
 
