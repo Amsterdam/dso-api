@@ -1,6 +1,6 @@
 #!groovy
 
-String API_CONTAINER = "repo.data.amsterdam.nl/datapunt/dataservices/dso-api:${env.BUILD_NUMBER}"
+String API_CONTAINER = "${DOCKER_REGISTRY_HOST}/datapunt/dataservices/dso-api:${env.BUILD_NUMBER}"
 
 def tryStep(String message, Closure block, Closure tearDown = null) {
     try {
@@ -34,16 +34,20 @@ node {
     // The rebuilding likely reuses the build cache from docker-compose.
     stage("Build API image") {
         tryStep "build", {
+            docker.withRegistry("${DOCKER_REGISTRY_HOST}",'docker_registry_auth') {
             def image = docker.build(API_CONTAINER, "--pull ./src")
             image.push()
+            }
         }
     }
 
     stage('Push API acceptance image') {
         tryStep "image tagging", {
+            docker.withRegistry("${DOCKER_REGISTRY_HOST}",'docker_registry_auth') {
             def image = docker.image(API_CONTAINER)
             image.pull()
             image.push("acceptance")
+            }
         }
     }
 
@@ -64,10 +68,12 @@ node {
 
     stage('Push production images') {
         tryStep "Tag public api image", {
+            docker.withRegistry("${DOCKER_REGISTRY_HOST}",'docker_registry_auth') {
             def image = docker.image(API_CONTAINER)
             image.pull()
             image.push("production")
             image.push("latest")
+            }
         }
     }
 
