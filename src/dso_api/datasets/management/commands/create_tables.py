@@ -1,3 +1,4 @@
+import re
 from typing import Iterable
 
 from django.core.management import BaseCommand, CommandError
@@ -15,9 +16,9 @@ class Command(BaseCommand):
         create_tables(self, Dataset.objects.all(), allow_unmanaged=True)
 
 
-def create_tables(
+def create_tables(  # noqa:C901
     command: BaseCommand, datasets: Iterable[Dataset], allow_unmanaged=False
-):
+):  # noqa:C901
     """Create tables for all updated datasets.
     This is a separate function to allow easy reuse.
     """
@@ -56,7 +57,8 @@ def create_tables(
                     schema_editor.create_model(model)
             except (DatabaseError, ValueError) as e:
                 command.stderr.write(f"  Tables not created: {e}")
-                errors += 1
+                if not re.search(r'relation "[^"]+" already exists', str(e)):
+                    errors += 1
 
     if errors:
         raise CommandError("Not all tables could be created")

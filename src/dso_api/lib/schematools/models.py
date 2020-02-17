@@ -123,7 +123,13 @@ JSON_TYPE_TO_DJANGO = {
     "https://schemas.data.amsterdam.nl/schema@v1.1.0#/definitions/id": field_model_factory(
         models.IntegerField
     ),
+    "https://schemas.data.amsterdam.nl/schema@v1.1.1#/definitions/id": field_model_factory(
+        models.IntegerField
+    ),
     "https://schemas.data.amsterdam.nl/schema@v1.1.0#/definitions/schema": field_model_factory(
+        UnlimitedCharField
+    ),
+    "https://schemas.data.amsterdam.nl/schema@v1.1.1#/definitions/schema": field_model_factory(
         UnlimitedCharField
     ),
     "https://geojson.org/schema/Geometry.json": field_model_factory(
@@ -200,10 +206,7 @@ def model_factory(table: DatasetTableSchema) -> Type[DynamicModel]:
     display_field = None
     for field in table.fields:
         # skip schema field for now
-        if (
-            field.type
-            == "https://schemas.data.amsterdam.nl/schema@v1.1.0#/definitions/schema"
-        ):
+        if field.type.endswith("definitions/schema"):
             continue
         # Generate field object
         kls, args, kwargs = JSON_TYPE_TO_DJANGO[field.type](field, dataset)
