@@ -35,7 +35,7 @@ node {
     stage("Build API image") {
         tryStep "build", {
             docker.withRegistry("${DOCKER_REGISTRY_HOST}",'docker_registry_auth') {
-            def image = docker.build("${API_CONTAINER]", "--pull ./src")
+            def image = docker.build("${API_CONTAINER}", "--pull ./src")
             image.push()
             }
         }
