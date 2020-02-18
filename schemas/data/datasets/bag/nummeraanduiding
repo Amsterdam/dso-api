@@ -1,0 +1,39 @@
+{
+    "id": "bag",
+    "type": "dataset",
+    "title": "BAG",
+    "version": "0.0.1",
+    "crs": "EPSG:28992",
+    "tables": [
+        {
+            "id": "nummeraanduiding",
+            "type": "table",
+            "schema": {
+                "$schema": "http://json-schema.org/draft-07/schema#",
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["id", "schema"],
+                "properties": {
+                    "id": {
+                        "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.0#/definitions/id"
+                    },
+                    "schema": {
+                        "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.0#/definitions/schema"
+                    },
+                    "huisnummer": {
+                        "type": "string"
+                    },
+                    "huisletter": {
+                        "type": "integer"
+                    },
+                    "huisnummertoevoeging": {
+                        "type": "string"
+                    },
+                    "postcode": {
+                        "type": "string"
+                    }
+                }
+            }
+        }
+    ]
+}
