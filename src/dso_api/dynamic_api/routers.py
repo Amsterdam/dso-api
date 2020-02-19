@@ -45,20 +45,28 @@ class DynamicRouter(routers.SimpleRouter):
             new_models = {}
 
             for model in dataset.create_models():
-                url_prefix = f"{dataset_name}/{model.get_table_id()}"
-                logger.debug("Created model for %s", url_prefix)
+                logger.debug("Created model %s.%s", dataset_name, model.__name__)
 
                 if dataset.enable_api:
                     new_models[model._meta.model_name] = model
-                    viewset = viewset_factory(model)
-                    tmp_router.register(
-                        prefix=url_prefix,
-                        viewset=viewset,
-                        basename=f"{dataset_name}-{model.get_table_id()}",
-                    )
 
             self.all_models[dataset_name] = new_models
             generated_models.extend(new_models.values())
+
+        # Generate views now that all models have been created.
+        # This makes sure the 'to' field is resolved to an actual model class.
+        for app_label, models_by_name in self.all_models.items():
+            for model in models_by_name.values():
+                dataset_name = model.get_dataset_id()
+                url_prefix = f"{dataset_name}/{model.get_table_id()}"
+                logger.debug("Created viewset %s", url_prefix)
+
+                viewset = viewset_factory(model)
+                tmp_router.register(
+                    prefix=url_prefix,
+                    viewset=viewset,
+                    basename=f"{dataset_name}-{model.get_table_id()}",
+                )
 
         # Atomically copy the new viewset registrations
         self.registry = tmp_router.registry
