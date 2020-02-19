@@ -24,7 +24,6 @@ class DynamicRouter(routers.SimpleRouter):
     def __init__(self):
         super().__init__(trailing_slash=True)
         self.all_models = {}
-        self.dynamic_apps = []
 
     def initialize(self):
         """Initialize all dynamic routes on startup."""
@@ -59,7 +58,6 @@ class DynamicRouter(routers.SimpleRouter):
                     )
 
             self.all_models[dataset_name] = new_models
-            self.dynamic_apps.append(dataset_name)
             generated_models.extend(new_models.values())
 
         # Atomically copy the new viewset registrations
@@ -76,12 +74,11 @@ class DynamicRouter(routers.SimpleRouter):
         """Regenerate all viewsets for this router."""
         from . import urls  # avoid cyclic imports
 
-        old_dynamic_apps = self.dynamic_apps.copy()
+        old_dynamic_apps = set(self.all_models.keys())
 
         # Clear caches
         serializer_factory.cache_clear()
         self.all_models.clear()
-        self.dynamic_apps.clear()
 
         # Note that the models get recreated too. This works as expected,
         # since each model creation flushes the App registry caches.
@@ -113,10 +110,9 @@ class DynamicRouter(routers.SimpleRouter):
         """Internal function for tests, restore the internal registry."""
         from . import urls  # avoid cyclic imports
 
-        old_dynamic_apps = self.dynamic_apps.copy()
+        old_dynamic_apps = set(self.all_models.keys())
         self.registry = []
         self.all_models = {}
-        self.dynamic_apps = []
         self._prune_app_registry(old_dynamic_apps)
 
         # invalidate the urls cache
@@ -129,7 +125,7 @@ class DynamicRouter(routers.SimpleRouter):
         # Refresh URLConf in urls.py
         urls.refresh_urls(self)
 
-    def _prune_app_registry(self, old_dynamic_apps):
+    def _prune_app_registry(self, old_dynamic_apps: set):
         """Clear models from the Django App registry cache if they are no longer used."""
-        for removed_app in set(old_dynamic_apps).difference(self.dynamic_apps):
+        for removed_app in old_dynamic_apps - set(self.all_models.keys()):
             del apps.all_models[removed_app]
