@@ -14,7 +14,8 @@ def clear_caches():
 
 @pytest.fixture()
 def afval_cluster(afval_cluster_model):
-    return afval_cluster_model.objects.create(id=1, status="open")
+    # Using a 'dot' in the ID on purpose, to test viewset regexp handling.
+    return afval_cluster_model.objects.create(id="123.456", status="open")
 
 
 @pytest.mark.django_db
@@ -64,8 +65,8 @@ class TestDynamicSerializer:
             },
             "id": 2,
             "schema": "https://schemas.data.amsterdam.nl/datasets/afvalwegingen/afvalwegingen#containers",  # noqa: E501
-            "cluster_id": 1,
-            "cluster": "http://testserver/v1/afvalwegingen/clusters/1/",
+            "cluster_id": "123.456",
+            "cluster": "http://testserver/v1/afvalwegingen/clusters/123.456/",
             "serienummer": "serie123",
             "datum_creatie": "2020-02-03",
             "datum_leegmaken": None,
@@ -99,8 +100,8 @@ class TestDynamicSerializer:
             },
             "id": 2,
             "schema": "https://schemas.data.amsterdam.nl/datasets/afvalwegingen/afvalwegingen#containers",  # noqa: E501
-            "cluster_id": 1,
-            "cluster": "http://testserver/v1/afvalwegingen/clusters/1/",
+            "cluster_id": "123.456",
+            "cluster": "http://testserver/v1/afvalwegingen/clusters/123.456/",
             "serienummer": None,
             "datum_creatie": None,
             "datum_leegmaken": None,
@@ -110,11 +111,11 @@ class TestDynamicSerializer:
                 "cluster": {
                     "_links": {
                         "self": {
-                            "href": "http://testserver/v1/afvalwegingen/clusters/1/",
-                            "title": "(no title: Clusters #1)",
+                            "href": "http://testserver/v1/afvalwegingen/clusters/123.456/",
+                            "title": "(no title: Clusters #123.456)",
                         }
                     },
-                    "id": "1",
+                    "id": "123.456",
                     "schema": "https://schemas.data.amsterdam.nl/datasets/afvalwegingen/afvalwegingen#clusters",  # noqa: E501
                     "status": "open",
                 }

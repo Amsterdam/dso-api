@@ -45,6 +45,10 @@ class DynamicApiViewSet(ReadLockMixin, viewsets.ReadOnlyModelViewSet):
 
     pagination_class = DSOPageNumberPagination
 
+    #: Make sure composed keys like (112740.024|487843.078) are allowed.
+    #: The DefaultRouter won't allow '.' in URLs because it's used as format-type.
+    lookup_value_regex = r"[^/]+"
+
     #: Define the model class to use (e.g. in .as_view() call / subclass)
     model: Type[DynamicModel] = None
 

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from functools import lru_cache
 from typing import Type
 
@@ -12,8 +13,28 @@ from rest_framework_dso.fields import EmbeddedField
 from rest_framework_dso.serializers import DSOSerializer
 
 
+class _DynamicLinksField(DSOSerializer.serializer_url_field):
+    def to_representation(self, value: DynamicModel):
+        """Before generating the URL, check whether the "PK" value is valid.
+        This avoids more obscure error messages when the string.
+        """
+        pk = value.pk
+        if pk and not isinstance(pk, int):
+            viewset = self.root.context.get("view")
+            if viewset is not None:  # testing serializer without view
+                lookup = getattr(viewset, "lookup_value_regex", "[^/.]+")
+                if not re.fullmatch(lookup, value.pk):
+                    raise RuntimeError(
+                        "Unsupported URL characters in "
+                        f"{value.get_dataset_id()}/{value.get_table_id()} id='{value.pk}' "
+                    )
+        return super().to_representation(value)
+
+
 class DynamicSerializer(DSOSerializer):
     """Base class for all generic serializers of this package."""
+
+    serializer_url_field = _DynamicLinksField
 
     schema = serializers.SerializerMethodField()
 
