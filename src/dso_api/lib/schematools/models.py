@@ -225,6 +225,7 @@ def model_factory(table: DatasetTableSchema) -> Type[DynamicModel]:
             "db_table": get_db_table_name(table),
             "app_label": app_label,
             "verbose_name": table.id.title(),
+            "ordering": ("id",),
         },
     )
 
