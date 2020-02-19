@@ -16,6 +16,7 @@
           "id",
           "schema"
         ],
+        "display": "kenmerk",
         "properties": {
           "id": {
             "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.0#/definitions/id",
