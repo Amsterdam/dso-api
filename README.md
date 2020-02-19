@@ -77,3 +77,23 @@ in a file with the name datapunt.key (chmod 600):
 To import the bag database do the following :
 
     docker-compose exec bag_v11_database update-db.sh  bag_v11 <username>
+    
+# Using a local version for schema import
+
+For testing it is convenient to have local server for schema importing.
+
+In the docker-compose there is a nginx server **schemas** that will serve this purpose.
+It will read the config from **_schemas/conf/default.conf_** and datasets from **_schemas/data/datasets_**
+
+It can be started with :
+
+    docker-compose up -d schemas
+
+Point to this server as schema server with :
+
+    export SCHEMA_URL=http://localhost:8080/datasets
+
+Then it will import the schemafiles in **_schemas/data/datasets_** with :
+
+    python manage.py import_schemas
+

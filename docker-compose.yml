@@ -43,3 +43,11 @@ services:
     volumes:
       - ./src:/app
     command: uwsgi --py-auto-reload=1
+  schemas:
+    image: nginx
+    ports:
+      - "8080:80"
+    volumes:
+      - "./schemas/data/datasets:/usr/share/nginx/html/datasets"
+      - "./schemas/conf/default.conf:/etc/nginx/conf.d/default.conf"
+
