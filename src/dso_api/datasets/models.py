@@ -166,7 +166,8 @@ class DatasetTable(models.Model):
         if dataset.name in settings.AMSTERDAM_SCHEMA["geosearch_disabled_datasets"]:
             enable_geosearch = False
 
-        display_field = None
+        # XXX For now, be OK with missing "display", is mandatory in aschema v1.1.1
+        display_field = table["schema"].get("display")
         geometry_field = None
         geometry_field_type = None
         for field in table.fields:
