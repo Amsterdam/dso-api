@@ -1,9 +1,11 @@
 import pytest
 from django.urls import path
 from rest_framework import generics
+from rest_framework.exceptions import ValidationError, ErrorDetail
 
 from rest_framework_dso.fields import EmbeddedField
 from rest_framework_dso.serializers import DSOSerializer
+from rest_framework_dso.views import get_invalid_params
 from .models import Category, Movie
 
 
@@ -95,3 +97,53 @@ def test_list_expand_true(api_client, movie, expand):
         },
     }
     assert response["Content-Type"] == "application/hal+json"
+
+
+class TestExceptionHandler:
+    """Prove that the exception handler works as expected"""
+
+    @staticmethod
+    def test_simple_validation_error():
+        """Prove that the API generates the proper "invalid-params" section
+        for the application/problem+json response.
+        """
+        exception = ValidationError(
+            {"date_field": [ErrorDetail("Enter a valid date/time.", code="invalid")]}
+        )
+        result = get_invalid_params(exception, exception.detail)
+        assert result == [
+            {
+                "type": "urn:apiexception:invalid:invalid",
+                "name": "date_field",
+                "reason": "Enter a valid date/time.",
+            }
+        ]
+
+    @staticmethod
+    def test_complex_validation_error():
+        """Prove that the API can handle the complex DRF exception trees."""
+        exception = ValidationError(
+            {
+                "persons": [
+                    {
+                        "email": [
+                            ErrorDetail("Already used", code="unique"),
+                            ErrorDetail("Invalid domain", code="invalid"),
+                        ]
+                    }
+                ]
+            }
+        )
+        result = get_invalid_params(exception, exception.detail)
+        assert result == [
+            {
+                "type": "urn:apiexception:invalid:unique",
+                "name": "persons[0].email",
+                "reason": "Already used",
+            },
+            {
+                "type": "urn:apiexception:invalid:invalid",
+                "name": "persons[0].email",
+                "reason": "Invalid domain",
+            },
+        ]
