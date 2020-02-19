@@ -26,6 +26,8 @@ TypeAndSignature = Tuple[Type[models.Field], List[Any], Dict[str, Any]]
 
 
 class FieldMaker:
+    """Generate the field for a JSON-Schema property"""
+
     def __init__(
         self,
         field_cls: Type[models.Field],
@@ -104,35 +106,25 @@ class FieldMaker:
         return field_cls, args, kwargs
 
 
-def field_model_factory(
-    field_cls: Type[models.Field],
-    value_getter: Callable[[DatasetSchema], Dict[str, Any]] = None,
-    **kwargs,
-) -> Callable:
-    """Generate the field for a JSON-Schema property"""
-
-    return FieldMaker(field_cls, value_getter, **kwargs)
-
-
 def fetch_crs(dataset: DatasetSchema) -> Dict[str, Any]:
     return {"srid": CRS.from_string(dataset.data["crs"]).srid}
 
 
 JSON_TYPE_TO_DJANGO = {
-    "string": field_model_factory(UnlimitedCharField),
-    "integer": field_model_factory(models.IntegerField),
-    "number": field_model_factory(models.FloatField),
-    "boolean": field_model_factory(models.BooleanField),
-    "/definitions/id": field_model_factory(models.IntegerField),
-    "/definitions/schema": field_model_factory(UnlimitedCharField),
-    "https://geojson.org/schema/Geometry.json": field_model_factory(
+    "string": FieldMaker(UnlimitedCharField),
+    "integer": FieldMaker(models.IntegerField),
+    "number": FieldMaker(models.FloatField),
+    "boolean": FieldMaker(models.BooleanField),
+    "/definitions/id": FieldMaker(models.IntegerField),
+    "/definitions/schema": FieldMaker(UnlimitedCharField),
+    "https://geojson.org/schema/Geometry.json": FieldMaker(
         models.MultiPolygonField,
         value_getter=fetch_crs,
         srid=RD_NEW,
         geography=False,
         db_index=True,
     ),
-    "https://geojson.org/schema/Point.json": field_model_factory(
+    "https://geojson.org/schema/Point.json": FieldMaker(
         models.PointField,
         value_getter=fetch_crs,
         srid=RD_NEW,
