@@ -1,10 +1,13 @@
-from typing import Union, cast
+from typing import List, Union, cast, Optional
 
 from django.db import models
+from django.utils.functional import cached_property
 from rest_framework import serializers
 from rest_framework.fields import empty
 from rest_framework.utils.serializer_helpers import ReturnDict, ReturnList
+from rest_framework_gis.fields import GeometryField
 
+from rest_framework_dso.crs import CRS
 from rest_framework_dso.utils import EmbeddedHelper
 
 
@@ -103,7 +106,10 @@ class DSOSerializer(_SideloadMixin, serializers.HyperlinkedModelSerializer):
 
     This supports the following extra's:
     - self-url is generated in a ``_links`` section.
-    - embedded relations are returned in an ``_embedded`` section.
+    - Embedded relations are returned in an ``_embedded`` section.
+    - Geometry values are converted into a single coordinate reference system
+      (using ``request.accept_crs``)
+    - ``request.response_content_crs`` is filled with the used CRS value.
 
     To use the embedding feature, include an ``EmbeddedField`` field in the class::
 
@@ -153,7 +159,30 @@ class DSOSerializer(_SideloadMixin, serializers.HyperlinkedModelSerializer):
 
         return list_serializer_class(*args, **list_kwargs)
 
+    @cached_property
+    def _geometry_fields(self) -> List[GeometryField]:
+        # Allow classes to exclude fields (e.g. a "point_wgs84" field shouldn't be used.)
+        exclude_crs_fields = getattr(self.Meta, "exclude_crs_fields", ())
+        return [
+            field
+            for name, field in self.fields.items()
+            if isinstance(field, GeometryField)
+            and field.field_name not in exclude_crs_fields
+        ]
+
     def to_representation(self, instance):
+        """Check whether the geofields need to be transformed."""
+        if self._geometry_fields:
+            request = self.context["request"]
+            accept_crs: CRS = request.accept_crs  # Mandatory for DSO!
+            if accept_crs is not None:
+                self._apply_crs(instance, accept_crs)
+                request.response_content_crs = accept_crs
+            else:
+                # Write back the used content CRS to include in the response.
+                if request.response_content_crs is None:
+                    request.response_content_crs = self._get_crs(instance)
+
         ret = super().to_representation(instance)
 
         # See if any HAL-style sideloading was requested
@@ -164,3 +193,21 @@ class DSOSerializer(_SideloadMixin, serializers.HyperlinkedModelSerializer):
                 ret[self.expand_field] = embed_helper.get_embedded(instance)
 
         return ret
+
+    def _apply_crs(self, instance, accept_crs: CRS):
+        """Make sure all geofields use the same CRS."""
+        for field in self._geometry_fields:
+            geo_value = getattr(instance, field.source)
+            if geo_value is not None:
+                accept_crs.apply_to(geo_value)
+
+    def _get_crs(self, instance) -> Optional[CRS]:
+        """Find the used CRS in the geometry field(s)."""
+        for field in self._geometry_fields:
+            geo_value = getattr(instance, field.source)
+            if geo_value is not None:
+                # NOTE: if the same object uses multiple geometries
+                # with a different SRID's, this ignores such case.
+                return CRS.from_srid(geo_value.srid)
+
+        return None

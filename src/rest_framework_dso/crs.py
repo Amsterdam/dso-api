@@ -1,6 +1,11 @@
+"""Expose common projections for Dutch GIS systems
+
+NOTE: the CRS class should be imported when publishing this as a separate library.
+"""
 from gisserver.types import CRS, WGS84
 
 __all__ = [
+    "CRS",
     "WGS84",
     "RD_NEW",
     "WEB_MERCATOR",
