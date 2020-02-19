@@ -6,10 +6,10 @@ from django.http import Http404, JsonResponse
 from gisserver.features import FeatureType, ServiceDescription
 from gisserver.views import WFSView
 from rest_framework import viewsets
-
+from rest_framework_dso import crs
 from rest_framework_dso.pagination import DSOPageNumberPagination
+from rest_framework_dso.views import DSOViewMixin
 
-from dso_api.lib import crs
 from dso_api.lib.schematools.models import DynamicModel
 from . import serializers
 from .locking import ReadLockMixin
@@ -35,7 +35,7 @@ def reload_patterns(request):
     )
 
 
-class DynamicApiViewSet(ReadLockMixin, viewsets.ReadOnlyModelViewSet):
+class DynamicApiViewSet(ReadLockMixin, DSOViewMixin, viewsets.ReadOnlyModelViewSet):
     """Viewset for an API, that is """
 
     pagination_class = DSOPageNumberPagination

@@ -9,7 +9,7 @@ from django.db.models.base import ModelBase
 from django_postgres_unlimited_varchar import UnlimitedCharField
 from string_utils import slugify
 
-from dso_api.lib.crs import RD_NEW
+from rest_framework_dso.crs import RD_NEW
 from gisserver.types import CRS
 
 from amsterdam_schema.types import DatasetFieldSchema, DatasetSchema, DatasetTableSchema

@@ -1,15 +1,19 @@
 import json
+from datetime import date
 from pathlib import Path
 
 import pytest
 from django.db import connection
+from django.utils.timezone import now
 from rest_framework.request import Request
 from rest_framework.test import APIClient, APIRequestFactory
+from django.contrib.gis.geos import GEOSGeometry, Point
 
 from dso_api.datasets.models import Dataset
 from dso_api.lib.schematools.db import create_tables
 from amsterdam_schema.types import DatasetSchema
-from tests.test_rest_framework_dso.models import Category, Movie
+from rest_framework_dso.crs import RD_NEW
+from tests.test_rest_framework_dso.models import Category, Movie, Location
 
 HERE = Path(__file__).parent
 
@@ -23,7 +27,10 @@ def api_rf() -> APIRequestFactory:
 @pytest.fixture()
 def api_request(api_rf) -> Request:
     """Return a very basic Request object that's good enough as serializer context."""
-    return api_rf.get("/v1/dummy/")
+    request = api_rf.get("/v1/dummy/")
+    request.accept_crs = None  # for DSOSerializer, expects to be used with DSOViewMixin
+    request.response_content_crs = None
+    return request
 
 
 @pytest.fixture()
@@ -97,6 +104,18 @@ def afval_container_model(filled_router):
 
 
 @pytest.fixture()
+def afval_container(afval_container_model):
+    return afval_container_model.objects.create(
+        id=1,
+        serienummer="foobar-123",
+        eigenaar_naam="Dataservices",
+        datum_creatie=date.today(),
+        datum_leegmaken=now(),
+        geometry=Point(10, 10),  # no SRID on purpose, should use django model field.
+    )
+
+
+@pytest.fixture()
 def bommen_schema_json() -> dict:
     """Fixture to return the schema json for """
     path = HERE / "files/bommen.json"
@@ -123,3 +142,9 @@ def category() -> Category:
 def movie(category) -> Movie:
     """A dummy model to test our API with"""
     return Movie.objects.create(name="foo123", category=category)
+
+
+@pytest.fixture
+def location() -> Location:
+    """A dummy model to test our API with"""
+    return Location.objects.create(geometry=GEOSGeometry("Point(10 10)", srid=RD_NEW))

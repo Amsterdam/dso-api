@@ -2,6 +2,7 @@ import pytest
 from django.db import connection
 from django.urls import reverse
 
+from rest_framework_dso.crs import CRS, RD_NEW
 from dso_api.lib.schematools.db import create_tables
 
 
@@ -66,3 +67,48 @@ def test_list_dynamic_view_unregister(api_client, api_rf, filled_router):
     view = viewset.as_view({"get": "list"})
     response = view(request)
     assert response.status_code == 404, response.data
+
+
+@pytest.mark.django_db
+class TestDSOViewMixin:
+    """Prove that the DSO view mixin logic is used within the dynamic API."""
+
+    def test_not_supported_crs(self, api_client, filled_router):
+        """Prove that invalid CRS leads to a 406 status """
+        url = reverse("dynamic_api:afvalwegingen-containers-list")
+        response = api_client.get(url, HTTP_ACCEPT_CRS="EPSG:2000")
+        assert response.status_code == 406, response.data
+
+    def test_bogus_crs(self, api_client, filled_router):
+        """Prove that invalid CRS leads to a 406 status """
+        url = reverse("dynamic_api:afvalwegingen-containers-list")
+        response = api_client.get(url, HTTP_ACCEPT_CRS="nonsense")
+        assert response.status_code == 406, response.data
+
+    def test_response_has_crs_from_accept_crs(self, api_client, filled_router):
+        """Prove that response has a CRS header taken from the Accept-Crs header """
+        url = reverse("dynamic_api:afvalwegingen-containers-list")
+        response = api_client.get(url, HTTP_ACCEPT_CRS="EPSG:4258")
+        assert response.status_code == 200, response.data
+        assert response.has_header("Content-Crs"), dict(response.items())
+        assert CRS.from_string("EPSG:4258") == CRS.from_string(response["Content-Crs"])
+
+    def test_response_has_crs_from_accept_crs_empty_data(
+        self, api_client, filled_router
+    ):
+        """Prove that response has a CRS header taken from the Accept-Crs header """
+        url = reverse("dynamic_api:afvalwegingen-containers-list")
+        response = api_client.get(url, HTTP_ACCEPT_CRS="EPSG:4258")
+        assert response.status_code == 200, response.data
+        assert response.has_header("Content-Crs"), dict(response.items())
+        assert CRS.from_string("EPSG:4258") == CRS.from_string(response["Content-Crs"])
+
+    def test_response_has_crs_from_content(
+        self, api_client, filled_router, afval_container
+    ):
+        """Prove that response has a CRS header taken from the Accept-Crs header """
+        url = reverse("dynamic_api:afvalwegingen-containers-list")
+        response = api_client.get(url)
+        assert response.status_code == 200, response.data
+        assert response.has_header("Content-Crs"), dict(response.items())
+        assert RD_NEW == CRS.from_string(response["Content-Crs"])

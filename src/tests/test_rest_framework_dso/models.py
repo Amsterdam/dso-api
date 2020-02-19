@@ -1,4 +1,7 @@
 from django.db import models
+from django.contrib.gis.db import models as gis_models
+
+from rest_framework_dso.crs import RD_NEW
 
 
 class Category(models.Model):
@@ -15,3 +18,10 @@ class Movie(models.Model):
     class Meta:
         app_label = "test_rest_framework_dso"
         ordering = ("name",)
+
+
+class Location(models.Model):
+    geometry = gis_models.PointField(srid=RD_NEW.srid)
+
+    class Meta:
+        app_label = "test_rest_framework_dso"
