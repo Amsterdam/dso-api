@@ -22,7 +22,7 @@ DATE_MODELS_LOOKUP = {"date": models.DateField, "date-time": models.DateTimeFiel
 RD_NEW = 28992
 
 
-TypeAndSignature = Tuple[Type[models.Field], List[Any], Dict[str, Any]]
+TypeAndSignature = Tuple[Type[models.Field], tuple, Dict[str, Any]]
 
 
 class FieldMaker:
