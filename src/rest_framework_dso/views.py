@@ -62,6 +62,8 @@ def get_invalid_params(
             full_name = f"{field_name}[{i}]" if isinstance(error, dict) else field_name
             result.extend(get_invalid_params(exc, error, field_name=full_name))
     elif isinstance(detail, ErrorDetail):
+        if field_name is None:
+            field_name = detail.code
         # flattened is now RFC7807 mandates it
         result.append(
             {

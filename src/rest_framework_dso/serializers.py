@@ -1,8 +1,10 @@
+from collections import OrderedDict
 from typing import List, Union, cast, Optional
 
 from django.db import models
 from django.utils.functional import cached_property
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 from rest_framework.fields import empty
 from rest_framework.utils.serializer_helpers import ReturnDict, ReturnList
 from rest_framework_gis.fields import GeometryField
@@ -127,6 +129,8 @@ class DSOSerializer(_SideloadMixin, serializers.HyperlinkedModelSerializer):
     url_field_name = "_links"
     serializer_url_field = _LinksField
 
+    fields_param = "fields"  # so ?fields=.. gives a result
+
     @classmethod
     def many_init(cls, *args, **kwargs):
         """The initialization for many=True.
@@ -159,6 +163,14 @@ class DSOSerializer(_SideloadMixin, serializers.HyperlinkedModelSerializer):
 
         return list_serializer_class(*args, **list_kwargs)
 
+    def get_fields_to_display(self):
+        request = self.context.get("request")
+        if request is not None:
+            fields = request.GET.get(self.fields_param)
+            if fields:
+                return fields.split(",")
+        return None
+
     @cached_property
     def _geometry_fields(self) -> List[GeometryField]:
         # Allow classes to exclude fields (e.g. a "point_wgs84" field shouldn't be used.)
@@ -184,6 +196,25 @@ class DSOSerializer(_SideloadMixin, serializers.HyperlinkedModelSerializer):
                     request.response_content_crs = self._get_crs(instance)
 
         ret = super().to_representation(instance)
+
+        display_fields = self.get_fields_to_display()
+        if display_fields is not None:
+            if not (set(display_fields) <= set(ret.keys())):
+                # Some of `display_fields` are not in result.
+                invalid_fields = [
+                    field_name for field_name in display_fields if field_name not in ret
+                ]
+                raise ValidationError(
+                    "'{}' is not one of available options".format(
+                        ", ".join(invalid_fields)
+                    ),
+                    code="fields",
+                )
+            display_fields.append("_links")
+            # Limit result to requested fields only
+            ret = OrderedDict(
+                [(key, value) for key, value in ret.items() if key in display_fields]
+            )
 
         # See if any HAL-style sideloading was requested
         if not hasattr(self, "parent") or self.root is self:
