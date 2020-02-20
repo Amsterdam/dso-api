@@ -1,7 +1,9 @@
+from collections import OrderedDict
 from typing import Union, cast
 
 from django.db import models
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 from rest_framework.fields import empty
 from rest_framework.utils.serializer_helpers import ReturnDict, ReturnList
 
@@ -30,6 +32,18 @@ class _SideloadMixin:
             return expand.split(",")
         else:
             return False
+
+
+class FieldsLimitMixin:
+    fields_param = "fields"  # so ?fields=.. gives a result
+
+    def get_fields_to_display(self):
+        request = self.context.get("request")
+        if request is not None:
+            fields = request.GET.get(self.fields_param)
+            if fields:
+                return fields.split(",")
+        return None
 
 
 class _LinksField(serializers.HyperlinkedIdentityField):
@@ -98,7 +112,9 @@ class DSOListSerializer(_SideloadMixin, serializers.ListSerializer):
         return items
 
 
-class DSOSerializer(_SideloadMixin, serializers.HyperlinkedModelSerializer):
+class DSOSerializer(
+    _SideloadMixin, FieldsLimitMixin, serializers.HyperlinkedModelSerializer
+):
     """DSO-compliant serializer.
 
     This supports the following extra's:
@@ -155,6 +171,23 @@ class DSOSerializer(_SideloadMixin, serializers.HyperlinkedModelSerializer):
 
     def to_representation(self, instance):
         ret = super().to_representation(instance)
+
+        display_fields = self.get_fields_to_display()
+        if display_fields is not None:
+            if not (set(display_fields) <= set(ret.keys())):
+                # Some of `display_fields` are not in result.
+                invalid_fields = [f for f in display_fields if f not in ret.keys()]
+                raise ValidationError(
+                    "'{}' is not one of available options".format(
+                        ", ".join(invalid_fields)
+                    ),
+                    code="fields",
+                )
+            display_fields.append("_links")
+            # Limit result to requested fields only
+            ret = OrderedDict(
+                [(key, value) for key, value in ret.items() if key in display_fields]
+            )
 
         # See if any HAL-style sideloading was requested
         if not hasattr(self, "parent") or self.root is self:

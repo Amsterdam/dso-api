@@ -1,4 +1,5 @@
 import pytest
+from rest_framework.exceptions import ValidationError
 from rest_framework.request import Request
 
 from rest_framework_dso.fields import EmbeddedField
@@ -72,3 +73,45 @@ def test_pagination_many(api_rf, movie):
             "category": [{"name": "bar"}],
         },
     }
+
+
+@pytest.mark.django_db
+def test_fields_limit_works(api_rf, movie):
+    """Prove that serializer can limit output fields."""
+    django_request = api_rf.get("/", {"fields": "name"})
+    request = Request(django_request)
+    queryset = Movie.objects.all()
+
+    serializer = MovieSerializer(many=True, instance=queryset)
+    serializer.context["request"] = request
+    paginator = DSOPageNumberPagination()
+    paginator.paginate_queryset(queryset, request)
+    response = paginator.get_paginated_response(serializer.data)
+
+    assert response.data == {
+        "_links": {
+            "self": {"href": "http://testserver/"},
+            "next": {"href": None},
+            "previous": {"href": None},
+        },
+        "count": 1,
+        "page_size": 20,
+        "_embedded": {"movie": [{"name": "foo123"}]},
+    }
+
+
+@pytest.mark.django_db
+def test_fields_limit_by_incorrect_field_gives_error(api_rf, movie):
+    """Prove that serializer can limit output fields."""
+    django_request = api_rf.get("/", {"fields": "batman"})
+    request = Request(django_request)
+    queryset = Movie.objects.all()
+
+    serializer = MovieSerializer(many=True, instance=queryset)
+    serializer.context["request"] = request
+    paginator = DSOPageNumberPagination()
+    paginator.paginate_queryset(queryset, request)
+    with pytest.raises(ValidationError) as exec_info:
+        paginator.get_paginated_response(serializer.data)
+
+    assert "'batman' is not one of available options" in str(exec_info.value)

@@ -202,7 +202,7 @@ class TestListOrdering:
             "invalid-params": [
                 {
                     "type": "urn:apiexception:invalid:order-by",
-                    "name": None,
+                    "name": "order-by",
                     "reason": "Invalid sort fields: category",
                 }
             ],
