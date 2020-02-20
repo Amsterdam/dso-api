@@ -14,6 +14,7 @@ class Category(models.Model):
 class Movie(models.Model):
     name = models.CharField(max_length=100)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
+    date_added = models.DateTimeField(null=True)
 
     class Meta:
         app_label = "test_rest_framework_dso"

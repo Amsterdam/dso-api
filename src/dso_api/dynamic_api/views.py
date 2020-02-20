@@ -6,13 +6,12 @@ from django.http import Http404, JsonResponse
 from gisserver.features import FeatureType, ServiceDescription
 from gisserver.views import WFSView
 from rest_framework import viewsets
-from rest_framework_dso import crs
+from rest_framework_dso import crs, fields
 from rest_framework_dso.pagination import DSOPageNumberPagination
 from rest_framework_dso.views import DSOViewMixin
 
 from dso_api.lib.schematools.models import DynamicModel
-from . import serializers
-from .locking import ReadLockMixin
+from . import filterset, locking, serializers
 
 
 def reload_patterns(request):
@@ -35,8 +34,13 @@ def reload_patterns(request):
     )
 
 
-class DynamicApiViewSet(ReadLockMixin, DSOViewMixin, viewsets.ReadOnlyModelViewSet):
-    """Viewset for an API, that is """
+class DynamicApiViewSet(
+    locking.ReadLockMixin, DSOViewMixin, viewsets.ReadOnlyModelViewSet,
+):
+    """Viewset for an API, that is DSO-compatible and dynamically generated.
+    Each dynamically generated model in this server will receive a viewset.
+
+    """
 
     pagination_class = DSOPageNumberPagination
 
@@ -50,18 +54,63 @@ class DynamicApiViewSet(ReadLockMixin, DSOViewMixin, viewsets.ReadOnlyModelViewS
     def get_queryset(self):
         return self.model.objects.all()
 
-    def get_serializer_class(self):
-        """Dynamically generate the serializer class for this model."""
-        return serializers.serializer_factory(self.model)
+
+def _get_viewset_api_docs(
+    model: Type[DynamicModel],
+    filterset_class: Type[filterset.DynamicFilterSet],
+    ordering_fields: list,
+) -> str:
+    """Generate the API documentation header for the viewset.
+    This documentation is also shown in the Swagger / DRF HTML browser.
+    """
+    lines = []
+    if filterset_class and filterset_class.base_filters:
+        lines.append(f"The following fields can be used as filter with ?FIELDNAME=...:")
+        for name, filter_field in filterset_class.base_filters.items():
+            description = filter_field.extra["help_text"]
+            lines.append(f" • {name}={description}")
+
+    embedded_fields = sorted(f.name for f in model._meta.get_fields() if f.is_relation)
+    if embedded_fields:
+        if lines:
+            lines.append("")
+        lines.append(f"The following fields can be expanded with ?expand=...:")
+        lines.extend(f" • {name}" for name in embedded_fields)
+        lines.append("\nExpand everything using expand=true.")
+
+    if ordering_fields:
+        lines.append("Use ?sorteer=field,field2,-field3 to sort on fields")
+
+    return "\n".join(lines)
+
+
+def _get_ordering_fields(
+    serializer_class: Type[serializers.DynamicSerializer],
+) -> List[str]:
+    """Make sure the ordering doesn't happen on foreign relations.
+    This creates an unnecessary join, which can be avoided by sorting on the _id field.
+    """
+    return [
+        name
+        for name in serializer_class.Meta.fields
+        if name not in {"_links", "schema"}
+        and not isinstance(getattr(serializer_class, name, None), fields.EmbeddedField)
+    ]
 
 
 def viewset_factory(model: Type[DynamicModel]) -> Type[DynamicApiViewSet]:
     """Generate the viewset for a schema."""
-    embedded = sorted(f.name for f in model._meta.get_fields() if f.is_relation)
-    attrs = {"model": model}
-    if embedded:
-        embedded_text = "\n • ".join(embedded)
-        attrs["__doc__"] = f"The following fields can be expanded:\n • {embedded_text}"
+    filterset_class = filterset.filterset_factory(model)
+    serializer_class = serializers.serializer_factory(model)
+    ordering_fields = _get_ordering_fields(serializer_class)
+
+    attrs = {
+        "__doc__": _get_viewset_api_docs(model, filterset_class, ordering_fields),
+        "model": model,
+        "serializer_class": serializer_class,
+        "filterset_class": filterset_class,
+        "ordering_fields": ordering_fields,
+    }
     return type(f"{model.__name__}ViewSet", (DynamicApiViewSet,), attrs)
 
 
