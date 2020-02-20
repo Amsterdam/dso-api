@@ -7,6 +7,7 @@ import threading
 from functools import wraps
 
 from django.apps import apps
+from django.urls import resolve
 from readerwriterlock.rwlock import RWLockRead
 from rest_framework.exceptions import NotFound
 
@@ -56,6 +57,9 @@ class ReadLockMixin:
     def dispatch(self, request, *args, **kwargs):
         # Acquire a read lock. This would be a pass-through unless a writer(=reload) is active.
         # In such case, this request would pause until the reload is complete.
+        if kwargs.pop("_skip_lock", False):
+            return super().dispatch(request, *args, **kwargs)
+
         try:
             reload_lock_status.in_read = True
             with reload_lock.gen_rlock():
@@ -78,12 +82,24 @@ class ReadLockMixin:
                 else:
                     # Detected that reload updated the model
                     if new_model is not self.model:
-                        logger.debug(
-                            "Resuming request with updated model %s",
-                            request.get_full_path(),
-                        )
-                        self.model = new_model
+                        return self._reloaded_view_dispatch(request, *args, **kwargs)
 
                 return super().dispatch(request, *args, **kwargs)
         finally:
             reload_lock_status.in_read = False
+
+    def _reloaded_view_dispatch(self, request, *args, **kwargs):
+        """Redirect the request when all models/views/serializers were recreated."""
+        # Trying to call super() on this view risks using old serializers/filtersets.
+        # Instead, re-resolve the newly generated view class, and call that instead.
+        logger.debug(
+            "Re-fetching view for updated model %s", request.get_full_path(),
+        )
+
+        # Fetch the newly generated view.
+        match = resolve(request.path)  # raises 404 if view was removed.
+        request.resolver_match = match
+        view = match.func
+
+        # Call this new view to handle the request
+        return view(request, *match.args, **match.kwargs, _skip_lock=True)

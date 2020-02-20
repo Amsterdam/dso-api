@@ -1,10 +1,9 @@
-from typing import Union, Optional
+from typing import Optional, Type, Union
 
 from gisserver.types import CRS
-from rest_framework.exceptions import NotAcceptable, ErrorDetail, ValidationError
+from rest_framework.exceptions import ErrorDetail, NotAcceptable, ValidationError
 from rest_framework.views import exception_handler as drf_exception_handler
-
-from rest_framework_dso import crs, parsers
+from rest_framework_dso import crs, filters, parsers
 from rest_framework_dso.exceptions import PreconditionFailed
 
 
@@ -78,13 +77,31 @@ def get_invalid_params(
 
 
 class DSOViewMixin:
-    """Basic logic for all DSO-based views"""
+    """View/Viewset mixin that adds DSO-compatible API's
+
+    This adds:
+    * HTTP Accept-Crs and HTTP POST Content-Crs support.
+    * Default filter backends in the view for sorting and filtering.
+      The filtering logic is delegated to a ``filterset_class`` by django-filter.
+
+    Usage:
+    * Set ``filterset_class`` to enable filtering on fields.
+    * The ``ordering_fields`` can be set on the view as well.
+      By default, it accepts all serializer field names as input.
+    """
 
     #: The list of allowed coordinate reference systems for the request header
     accept_crs = {crs.RD_NEW, crs.WEB_MERCATOR, crs.ETRS89, crs.WGS84}
 
     #: If there is a geo field, DSO requires that Accept-Crs is set.
     accept_crs_required = False
+
+    # Using standard fields
+    filter_backends = [filters.DSOFilterSetBackend, filters.DSOOrderingFilter]
+
+    #: Class to configure the filterset
+    #: (auto-generated when filterset_fields is defined, but this is slower).
+    filterset_class: Type[filters.DSOFilterSet] = None
 
     #: Enforce parsing Content-Crs for POST requests:
     parser_classes = [parsers.DSOJsonParser]
