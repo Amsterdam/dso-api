@@ -1,3 +1,4 @@
+import json
 from datetime import datetime
 
 import pytest
@@ -201,12 +202,65 @@ class TestListOrdering:
             "invalid-params": [
                 {
                     "type": "urn:apiexception:invalid:order-by",
-                    "name": None,
+                    "name": "order-by",
                     "reason": "Invalid sort fields: category",
                 }
             ],
             "x-validation-errors": ["Invalid sort fields: category"],
         }
+
+
+@pytest.mark.django_db
+class TestLimitFields:
+    """Prove that fields limiting works as expected."""
+
+    def test_limit_one_field(self, api_client):
+        """Prove that ?fields=name results in result with only names"""
+        Movie.objects.create(name="test")
+        Movie.objects.create(name="foo123")
+
+        response = api_client.get(f"/v1/movies", data={"fields": "name"})
+        assert response.status_code == 200, response.json()
+        assert json.dumps(response.data["_embedded"]["movie"]) == json.dumps(
+            [{"name": "foo123"}, {"name": "test"}]
+        )
+
+    def test_limit_multiple_fields(self, api_client):
+        """Prove that ?fields=name,date results in result with only names and dates"""
+        Movie.objects.create(name="test")
+        Movie.objects.create(name="foo123")
+
+        response = api_client.get(f"/v1/movies", data={"fields": "name,date_added"})
+        assert response.status_code == 200, response.json()
+        assert json.dumps(response.data["_embedded"]["movie"]) == json.dumps(
+            [
+                {"name": "foo123", "date_added": None},
+                {"name": "test", "date_added": None},
+            ]
+        )
+
+    def test_incorrect_field_in_fields_results_in_error(self, api_client):
+        """Prove that adding invalid name to ?fields will result in error"""
+        Movie.objects.create(name="test")
+        Movie.objects.create(name="foo123")
+
+        response = api_client.get(f"/v1/movies", data={"fields": "name,date"})
+        assert response.status_code == 400, response.json()
+        assert json.dumps(response.json()) == json.dumps(
+            {
+                "type": "urn:apiexception:invalid",
+                "detail": "Invalid input.",
+                "status": 400,
+                "invalid-params": [
+                    {
+                        "type": "urn:apiexception:invalid:fields",
+                        "name": "fields",
+                        "reason": "'date' is not one of available options",
+                    }
+                ],
+                "x-validation-errors": ["'date' is not one of available options"],
+            }
+        )
 
 
 class TestExceptionHandler:
