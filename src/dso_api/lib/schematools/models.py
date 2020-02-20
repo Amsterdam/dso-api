@@ -8,6 +8,8 @@ from django.contrib.gis.db import models
 from django.db.models.base import ModelBase
 from django_postgres_unlimited_varchar import UnlimitedCharField
 from string_utils import slugify
+
+from dso_api.lib.crs import RD_NEW
 from gisserver.types import CRS
 
 from amsterdam_schema.types import DatasetFieldSchema, DatasetSchema, DatasetTableSchema
@@ -18,8 +20,6 @@ ALLOWED_ID_PATTERN = re.compile(r"[a-zA-Z][ \w\d]*")
 SCHEMA_DEFS_URL = "https://schemas.data.amsterdam.nl/schema"
 
 DATE_MODELS_LOOKUP = {"date": models.DateField, "date-time": models.DateTimeField}
-
-RD_NEW = 28992
 
 
 TypeAndSignature = Tuple[Type[models.Field], tuple, Dict[str, Any]]
@@ -120,14 +120,14 @@ JSON_TYPE_TO_DJANGO = {
     "https://geojson.org/schema/Geometry.json": FieldMaker(
         models.MultiPolygonField,
         value_getter=fetch_crs,
-        srid=RD_NEW,
+        srid=RD_NEW.srid,
         geography=False,
         db_index=True,
     ),
     "https://geojson.org/schema/Point.json": FieldMaker(
         models.PointField,
         value_getter=fetch_crs,
-        srid=RD_NEW,
+        srid=RD_NEW.srid,
         geography=False,
         db_index=True,
     ),

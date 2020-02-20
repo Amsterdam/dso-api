@@ -2,22 +2,17 @@ from typing import List, Type
 
 from django.contrib.gis.db.models import GeometryField
 from django.http import Http404, JsonResponse
-from gisserver.types import CRS, WGS84
 
-from dso_api.lib.schematools.models import DynamicModel
 from gisserver.features import FeatureType, ServiceDescription
 from gisserver.views import WFSView
 from rest_framework import viewsets
 
 from rest_framework_dso.pagination import DSOPageNumberPagination
 
+from dso_api.lib import crs
+from dso_api.lib.schematools.models import DynamicModel
 from . import serializers
 from .locking import ReadLockMixin
-
-# Common projections for Dutch GIS systems:
-RD_NEW = CRS.from_string("EPSG:28992")  # Amersfoort / RD New
-WEB_MERCATOR = CRS.from_string("EPSG:3857")  # Spherical Mercator (Google Maps, ...)
-ETRS89 = CRS.from_string("EPSG:4258")  # European Terrestrial Reference System 1989
 
 
 def reload_patterns(request):
@@ -105,7 +100,7 @@ class DatasetWFSView(WFSView):
         """Generate map feature layers for all models that have geometry data."""
         return [
             # TODO: Extend FeatureType with extra meta data
-            FeatureType(model, crs=RD_NEW, other_crs=[WGS84, WEB_MERCATOR, ETRS89])
+            FeatureType(model, crs=crs.DEFAULT_CRS, other_crs=crs.OTHER_CRS)
             for name, model in self.models.items()
             if self._has_geometry_field(model)
         ]
