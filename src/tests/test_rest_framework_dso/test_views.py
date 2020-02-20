@@ -80,10 +80,10 @@ def test_list_expand_true(api_client, movie, expand):
 
     This also tests the parameter expansion within the view logic.
     """
-    response = api_client.get(f"/v1/movies", data={"expand": expand})
+    response = api_client.get("/v1/movies", data={"expand": expand})
     assert response.data == {
         "_links": {
-            "self": {"href": f"http://testserver/v1/movies"},
+            "self": {"href": "http://testserver/v1/movies"},
             "next": {"href": None},
             "previous": {"href": None},
         },

@@ -13,6 +13,11 @@ repos:
       - id: flake8
         exclude: migrations/
         additional_dependencies:
+          # temporary using git versions for Python 3.8 support in pyflakes
+          - '-e'
+          - 'git+https://github.com/pycqa/pyflakes@0af480e#egg=pyflakes'
+          - '-e'
+          - 'git+https://github.com/pycqa/pycodestyle@68cc24f#egg=pycodestyle'
           - flake8-blind-except == 0.1.1
           - flake8-debugger == 3.2.1
           - flake8-colors == 0.1.6

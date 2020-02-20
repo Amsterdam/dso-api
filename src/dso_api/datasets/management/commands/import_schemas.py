@@ -18,7 +18,7 @@ class Command(BaseCommand):
         datasets = self.import_schemas(settings.SCHEMA_URL)
 
         if not datasets:
-            self.stdout.write(f"No new datasets imported")
+            self.stdout.write("No new datasets imported")
         else:
             create_tables(self, datasets, allow_unmanaged=True)
 

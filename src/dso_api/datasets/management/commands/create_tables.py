@@ -23,7 +23,7 @@ def create_tables(  # noqa:C901
     This is a separate function to allow easy reuse.
     """
     errors = 0
-    command.stdout.write(f"Creating tables")
+    command.stdout.write("Creating tables")
 
     # First create all models. This allows Django to resolve  model relations.
     models = []

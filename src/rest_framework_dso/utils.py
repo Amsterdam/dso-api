@@ -34,7 +34,7 @@ class EmbeddedHelper:
                 available = ", ".join(sorted(allowed_names))
                 if not available:
                     raise ParseError(
-                        f"Eager loading is not supported for this endpoint"
+                        "Eager loading is not supported for this endpoint"
                     ) from None
                 else:
                     raise ParseError(
