@@ -22,7 +22,7 @@ schema_view = get_schema_view(
             "* Use `?expand=true` to sideload all relations.\n"
             "\n"
             "The models in this server are generated from the Amsterdam Schema files.\n"
-            "These are located at: https://github.com/Amsterdam/schemas"
+            "These are located at: https://schemas.data.amsterdam.nl/datasets"
         ),
         terms_of_service="https://data.amsterdam.nl/",
         contact=openapi.Contact(email="datapunt@amsterdam.nl"),
