@@ -4,7 +4,7 @@ from gisserver.types import CRS
 from rest_framework.exceptions import NotAcceptable
 from rest_framework.views import exception_handler as drf_exception_handler
 
-from rest_framework_dso import crs
+from rest_framework_dso import crs, parsers
 from rest_framework_dso.exceptions import PreconditionFailed
 
 
@@ -36,6 +36,9 @@ class DSOViewMixin:
 
     #: If there is a geo field, DSO requires that Accept-Crs is set.
     accept_crs_required = False
+
+    #: Enforce parsing Content-Crs for POST requests:
+    parser_classes = [parsers.DSOJsonParser]
 
     def initial(self, request, *args, **kwargs):
         super().initial(request, *args, **kwargs)
