@@ -176,7 +176,9 @@ class DSOSerializer(
         if display_fields is not None:
             if not (set(display_fields) <= set(ret.keys())):
                 # Some of `display_fields` are not in result.
-                invalid_fields = [f for f in display_fields if f not in ret.keys()]
+                invalid_fields = [
+                    field_name for field_name in display_fields if field_name not in ret
+                ]
                 raise ValidationError(
                     "'{}' is not one of available options".format(
                         ", ".join(invalid_fields)

@@ -82,8 +82,9 @@ def test_fields_limit_works(api_rf, movie):
     request = Request(django_request)
     queryset = Movie.objects.all()
 
-    serializer = MovieSerializer(many=True, instance=queryset)
-    serializer.context["request"] = request
+    serializer = MovieSerializer(
+        many=True, instance=queryset, context={"request": request}
+    )
     paginator = DSOPageNumberPagination()
     paginator.paginate_queryset(queryset, request)
     response = paginator.get_paginated_response(serializer.data)
@@ -107,8 +108,9 @@ def test_fields_limit_by_incorrect_field_gives_error(api_rf, movie):
     request = Request(django_request)
     queryset = Movie.objects.all()
 
-    serializer = MovieSerializer(many=True, instance=queryset)
-    serializer.context["request"] = request
+    serializer = MovieSerializer(
+        many=True, instance=queryset, context={"request": request}
+    )
     paginator = DSOPageNumberPagination()
     paginator.paginate_queryset(queryset, request)
     with pytest.raises(ValidationError) as exec_info:
