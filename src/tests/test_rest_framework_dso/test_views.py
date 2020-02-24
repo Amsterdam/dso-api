@@ -5,12 +5,13 @@ import pytest
 from django.urls import path
 from rest_framework import generics
 from rest_framework.exceptions import ValidationError, ErrorDetail
+from rest_framework import status
 
 from rest_framework_dso.fields import EmbeddedField
 from rest_framework_dso.filters import DSOFilterSet
 from rest_framework_dso.serializers import DSOSerializer
 from rest_framework_dso.views import DSOViewMixin, get_invalid_params
-from .models import Category, Movie
+from .models import Category, Movie, Location
 
 
 class CategorySerializer(DSOSerializer):
@@ -27,10 +28,22 @@ class MovieSerializer(DSOSerializer):
         fields = ["name", "category_id", "date_added"]
 
 
+class LocationSerializer(DSOSerializer):
+    class Meta:
+        model = Location
+        fields = ["geometry"]
+
+
 class MovieFilterSet(DSOFilterSet):
     class Meta:
         model = Movie
         fields = ["name", "date_added"]
+
+
+class LocationFilterSet(DSOFilterSet):
+    class Meta:
+        model = Location
+        fields = ["geometry"]
 
 
 class MovieDetailAPIView(generics.RetrieveAPIView):
@@ -44,9 +57,16 @@ class MovieListAPIView(DSOViewMixin, generics.ListAPIView):
     filterset_class = MovieFilterSet
 
 
+class LocationListAPIView(DSOViewMixin, generics.ListAPIView):
+    serializer_class = LocationSerializer
+    queryset = Location.objects.all()
+    filterset_class = LocationFilterSet
+
+
 urlpatterns = [
     path("v1/movies", MovieListAPIView.as_view(), name="movies-list"),
     path("v1/movies/<pk>", MovieDetailAPIView.as_view(), name="movies-detail"),
+    path("v1/locations", LocationListAPIView.as_view(), name="locations-list"),
 ]
 
 pytestmark = [pytest.mark.urls(__name__)]  # enable for all tests in this file
@@ -160,6 +180,58 @@ class TestListFilters:
             ],
             "x-validation-errors": {"date_added": ["Enter a valid date."]},
         }
+
+    @staticmethod
+    def test_geometry_filter_valid(api_client, location):
+        """Prove that geometry filter accepts a valid CRS."""
+
+        response = api_client.get(
+            "/v1/locations",
+            data={"geometry": "POINT(10 10)"},
+            HTTP_CONTENT_CRS="EPSG:28992",
+        )
+        assert response.status_code == 200, response.data
+        assert response.json() == {
+            "_links": {
+                "self": {"href": "http://testserver/v1/locations"},
+                "next": {"href": None},
+                "previous": {"href": None},
+            },
+            "count": 1,
+            "page_size": 20,
+            "_embedded": {
+                "location": [
+                    {"geometry": {"type": "Point", "coordinates": [10.0, 10.0]}}
+                ]
+            },
+        }
+
+    @staticmethod
+    def test_geometry_filter_preconditions_failed_without_crs(api_client, location):
+        """Prove that geometry filter needs a Content-Crs."""
+        response = api_client.get("/v1/locations", data={"geometry": "POINT(1 2)"})
+        assert response.status_code == status.HTTP_412_PRECONDITION_FAILED, response
+
+    @staticmethod
+    def test_geometry_filter_does_not_accept_unsupported_crs(api_client, location):
+        """Prove that geometry filter needs a supported Content-Crs."""
+
+        response = api_client.get(
+            "/v1/locations",
+            data={"geometry": "POINT(1 2)"},
+            HTTP_CONTENT_CRS="EPSG:2000",
+        )
+        assert response.status_code == 406, response.data
+
+    @staticmethod
+    def test_geometry_filter_does_not_accept_bogus_crs(api_client, location):
+        """Prove that geometry filter does not accept an invalid Content-Crs."""
+        response = api_client.get(
+            "/v1/locations",
+            data={"geometry": "POINT(1 2)"},
+            HTTP_CONTENT_CRS="nonsense",
+        )
+        assert response.status_code == 406, response.data
 
 
 @pytest.mark.django_db

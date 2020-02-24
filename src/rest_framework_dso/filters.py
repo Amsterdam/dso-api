@@ -10,9 +10,11 @@ from django.db import models
 from django.db.models import lookups
 from django_filters.constants import EMPTY_VALUES
 from django_filters.rest_framework import DjangoFilterBackend, FilterSet, filters
-from rest_framework.exceptions import ValidationError
+from gisserver.types import CRS
+from rest_framework.exceptions import ValidationError, NotAcceptable
 from rest_framework.filters import OrderingFilter
 from rest_framework_gis.filters import GeometryFilter
+from rest_framework_dso.exceptions import PreconditionFailed
 
 __all__ = [
     "DSOFilterSet",
@@ -162,6 +164,25 @@ class DSOFilterSetBackend(DjangoFilterBackend):
         (which can be HUGE in our case)
         """
         return ""
+
+    def get_filterset_kwargs(self, request, queryset, view):
+        # If there is a geometry field, it is named "geometry"
+        if "geometry" in request.GET:
+            if (content_header := request.META.get("HTTP_CONTENT_CRS")) is None:  # NoQA
+                raise PreconditionFailed("Content-Crs is mandatory for geo qeuries")
+            else:
+                pass
+                try:
+                    content_crs = CRS.from_string(content_header)
+                except ValueError as e:
+                    raise NotAcceptable(
+                        f"Chosen CRS header is invalid: {content_header}"
+                    ) from e
+
+                if content_crs not in view.accept_crs:
+                    raise NotAcceptable(f"Chosen CRS is not supported: {content_crs}")
+
+        return super().get_filterset_kwargs(request, queryset, view)
 
 
 class DSOOrderingFilter(OrderingFilter):
