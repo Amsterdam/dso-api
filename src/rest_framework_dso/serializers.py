@@ -195,14 +195,14 @@ class DSOSerializer(_SideloadMixin, serializers.HyperlinkedModelSerializer):
                 if request.response_content_crs is None:
                     request.response_content_crs = self._get_crs(instance)
 
-        ret = super().to_representation(instance)
-
         display_fields = self.get_fields_to_display()
         if display_fields is not None:
-            if not (set(display_fields) <= set(ret.keys())):
+            if not (set(display_fields) <= set(self.fields.keys())):
                 # Some of `display_fields` are not in result.
                 invalid_fields = [
-                    field_name for field_name in display_fields if field_name not in ret
+                    field_name
+                    for field_name in display_fields
+                    if field_name not in self.fields
                 ]
                 raise ValidationError(
                     "'{}' is not one of available options".format(
@@ -210,11 +210,17 @@ class DSOSerializer(_SideloadMixin, serializers.HyperlinkedModelSerializer):
                     ),
                     code="fields",
                 )
-            display_fields.append("_links")
+            # display_fields.append("_links")
             # Limit result to requested fields only
-            ret = OrderedDict(
-                [(key, value) for key, value in ret.items() if key in display_fields]
+            self.fields = OrderedDict(
+                [
+                    (field_name, field)
+                    for field_name, field in self.fields.items()
+                    if field_name in display_fields
+                ]
             )
+
+        ret = super().to_representation(instance)
 
         # See if any HAL-style sideloading was requested
         if not hasattr(self, "parent") or self.root is self:
