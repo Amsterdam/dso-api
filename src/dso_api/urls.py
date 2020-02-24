@@ -9,6 +9,9 @@ from rest_framework import exceptions, permissions
 import dso_api.datasets.urls
 import dso_api.dynamic_api.urls
 
+from .openapi import GeoEnabledSchemaGenerator
+
+
 schema_view = get_schema_view(
     openapi.Info(
         title="DSO-API",
@@ -30,6 +33,7 @@ schema_view = get_schema_view(
     ),
     url=f"{settings.DATAPUNT_API_URL}v1/",
     public=True,
+    generator_class=GeoEnabledSchemaGenerator,
     permission_classes=(permissions.AllowAny,),
 )
 
