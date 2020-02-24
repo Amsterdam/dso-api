@@ -168,7 +168,22 @@ class DSOSerializer(_SideloadMixin, serializers.HyperlinkedModelSerializer):
         if request is not None:
             fields = request.GET.get(self.fields_param)
             if fields:
-                return fields.split(",")
+                display_fields = fields.split(",")
+
+                if not (set(display_fields) <= set(self.fields.keys())):
+                    # Some of `display_fields` are not in result.
+                    invalid_fields = [
+                        field_name
+                        for field_name in display_fields
+                        if field_name not in self.fields
+                    ]
+                    raise ValidationError(
+                        "'{}' is not one of available options".format(
+                            ", ".join(invalid_fields)
+                        ),
+                        code="fields",
+                    )
+                return display_fields
         return None
 
     @cached_property
@@ -197,19 +212,6 @@ class DSOSerializer(_SideloadMixin, serializers.HyperlinkedModelSerializer):
 
         display_fields = self.get_fields_to_display()
         if display_fields is not None:
-            if not (set(display_fields) <= set(self.fields.keys())):
-                # Some of `display_fields` are not in result.
-                invalid_fields = [
-                    field_name
-                    for field_name in display_fields
-                    if field_name not in self.fields
-                ]
-                raise ValidationError(
-                    "'{}' is not one of available options".format(
-                        ", ".join(invalid_fields)
-                    ),
-                    code="fields",
-                )
             # display_fields.append("_links")
             # Limit result to requested fields only
             self.fields = OrderedDict(
