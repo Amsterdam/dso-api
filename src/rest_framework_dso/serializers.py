@@ -212,7 +212,6 @@ class DSOSerializer(_SideloadMixin, serializers.HyperlinkedModelSerializer):
 
         display_fields = self.get_fields_to_display()
         if display_fields is not None:
-            # display_fields.append("_links")
             # Limit result to requested fields only
             self.fields = OrderedDict(
                 [
