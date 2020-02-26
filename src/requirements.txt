@@ -8,10 +8,13 @@ amsterdam-schema==0.1.2
 asgiref==3.2.3            # via django
 attrs==19.3.0             # via jsonschema, pytest
 certifi==2019.11.28       # via requests, sentry-sdk
+cffi==1.14.0              # via cryptography
 chardet==3.0.4            # via requests
 coreapi==2.3.3            # via drf-yasg
 coreschema==0.0.4         # via coreapi, drf-yasg
 coverage==5.0.3           # via pytest-cov
+cryptography==2.8         # via jwcrypto
+datapunt-authorization-django==0.3.1
 defusedxml==0.6.0         # via djangorestframework-xml
 django-cors-headers==3.2.1
 django-environ==0.4.5
@@ -26,28 +29,30 @@ djangorestframework-xml==1.4.0  # via drf-amsterdam
 djangorestframework==3.11.0
 drf-amsterdam==0.3.2
 drf-extensions==0.6.0     # via drf-amsterdam
-drf-yasg==1.17.0
+drf-yasg==1.17.1
 entrypoints==0.3          # via flake8
 flake8-blind-except==0.1.1
 flake8-colors==0.1.6
 flake8-debugger==3.2.1
 flake8-raise==0.0.5
 flake8==3.7.9
-idna==2.8                 # via requests
+idna==2.9                 # via requests
 inflection==0.3.1         # via drf-yasg
 itypes==1.1.0             # via coreapi
 jinja2==2.11.1            # via coreschema
 jsonschema==3.2.0
+jwcrypto==0.7             # via datapunt-authorization-django
 lxml==4.5.0               # via django-gisserver
 markupsafe==1.1.1         # via jinja2
 mccabe==0.6.1             # via flake8
 more-itertools==8.2.0     # via pytest
-orjson==2.5.0             # via django-gisserver
+orjson==2.5.1             # via django-gisserver
 packaging==20.1           # via drf-yasg, pytest
 pluggy==0.13.1            # via pytest
 psycopg2-binary==2.8.4
 py==1.8.1                 # via pytest
 pycodestyle==2.5.0        # via flake8, flake8-debugger
+pycparser==2.19           # via cffi
 pyflakes==2.1.1           # via flake8
 pyparsing==2.4.6          # via packaging
 pyrsistent==0.15.7        # via jsonschema
@@ -57,10 +62,11 @@ pytest==5.3.5
 python-string-utils==0.6.0
 pytz==2019.3              # via django
 readerwriterlock==1.0.6
-requests==2.22.0
-ruamel.yaml==0.16.7       # via drf-yasg
+requests==2.23.0
+ruamel.yaml.clib==0.2.0   # via ruamel.yaml
+ruamel.yaml==0.16.10      # via drf-yasg
 sentry-sdk==0.14.1
-six==1.14.0               # via django-healthchecks, djangorestframework-csv, drf-yasg, jsonschema, packaging, pyrsistent
+six==1.14.0               # via cryptography, django-healthchecks, djangorestframework-csv, drf-yasg, jsonschema, packaging, pyrsistent
 sqlparse==0.3.0           # via django
 typing-extensions==3.7.4.1  # via readerwriterlock
 unicodecsv==0.14.1        # via djangorestframework-csv
