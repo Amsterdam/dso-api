@@ -1,9 +1,6 @@
-import time
 import pytest
 from django.db import connection
 from django.urls import reverse
-from jwcrypto.jwt import JWT
-from authorization_django import jwks
 
 from rest_framework_dso.crs import CRS, RD_NEW
 from dso_api.datasets import models
@@ -118,30 +115,12 @@ class TestDSOViewMixin:
         assert RD_NEW == CRS.from_string(response["Content-Crs"])
 
 
-@pytest.fixture
-def tokendata_correct():
-    now = int(time.time())
-    return {
-        "iat": now,
-        "exp": now + 30,
-        "scopes": ["BAG/R"],
-        "sub": "test@tester.nl",
-    }
-
-
-def create_token(tokendata, alg):
-    kid = "2aedafba-8170-4064-b704-ce92b7c89cc6"
-    key = jwks.get_keyset().get_key(kid)
-    token = JWT(header={"alg": alg, "kid": kid}, claims=tokendata)
-    token.make_signed_token(key)
-    return token
-
-
+# TODO: Make parametrized, too much repetion. JJM
 @pytest.mark.django_db
 class TestAuth:
     """ Test authorization """
 
-    def test_auth_on_dataset_schema_protects_endpoint(
+    def test_auth_on_dataset_schema_protects_containers(
         self, api_client, filled_router, afval_schema
     ):
         url = reverse("dynamic_api:afvalwegingen-containers-list")
@@ -149,7 +128,15 @@ class TestAuth:
         response = api_client.get(url)
         assert response.status_code == 403, response.data
 
-    def test_auth_on_table_schema_protects_endpoint(
+    def test_auth_on_dataset_schema_protects_cluster(
+        self, api_client, filled_router, afval_schema
+    ):
+        url = reverse("dynamic_api:afvalwegingen-clusters-list")
+        models.Dataset.objects.filter(name="afval").update(auth="BAG/R")
+        response = api_client.get(url)
+        assert response.status_code == 403, response.data
+
+    def test_auth_on_table_schema_protects(
         self, api_client, filled_router, afval_schema
     ):
         url = reverse("dynamic_api:afvalwegingen-containers-list")
@@ -157,11 +144,28 @@ class TestAuth:
         response = api_client.get(url)
         assert response.status_code == 403, response.data
 
-    def test_auth_on_table_schema_with_token(
-        self, api_client, filled_router, afval_schema, tokendata_correct
+    def test_auth_on_table_schema_does_not_protect_sibling_tables(
+        self, api_client, filled_router, afval_schema, fetch_auth_token
+    ):
+        url = reverse("dynamic_api:afvalwegingen-containers-list")
+        models.DatasetTable.objects.filter(name="clusters").update(auth="BAG/R")
+        response = api_client.get(url)
+        assert response.status_code == 200, response.data
+
+    def test_auth_on_table_schema_with_token_for_valid_scope(
+        self, api_client, filled_router, afval_schema, fetch_auth_token
     ):
         url = reverse("dynamic_api:afvalwegingen-containers-list")
         models.DatasetTable.objects.filter(name="containers").update(auth="BAG/R")
-        token = create_token(tokendata_correct, "ES256").serialize()
+        token = fetch_auth_token(["BAG/R"])
         response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
         assert response.status_code == 200, response.data
+
+    def test_auth_on_table_schema_with_token_for_invalid_scope(
+        self, api_client, filled_router, afval_schema, fetch_auth_token
+    ):
+        url = reverse("dynamic_api:afvalwegingen-containers-list")
+        models.DatasetTable.objects.filter(name="containers").update(auth="BAG/R")
+        token = fetch_auth_token(["BAG/RSN"])
+        response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
+        assert response.status_code == 403, response.data
