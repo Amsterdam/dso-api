@@ -35,9 +35,7 @@ class Dataset(models.Model):
     ordering = models.IntegerField(_("Ordering"), default=1)
     enable_api = models.BooleanField(default=True)
 
-    authorization = models.CharField(
-        _("Authorization"), blank=True, null=True, max_length=250
-    )
+    auth = models.CharField(_("Authorization"), blank=True, null=True, max_length=250)
     schema_data = JSONField(_("Amsterdam Schema Contents"))
 
     class Meta:
@@ -140,7 +138,7 @@ class DatasetTable(models.Model):
     name = models.CharField(max_length=100)
 
     # Exposed metadata from the jsonschema, so other utils can query these
-    authorization = models.CharField(max_length=250, blank=True, null=True)
+    auth = models.CharField(max_length=250, blank=True, null=True)
     enable_geosearch = models.BooleanField(default=True)
     db_table = models.CharField(max_length=100, unique=True)
     display_field = models.CharField(max_length=50, null=True, blank=True)
@@ -170,7 +168,10 @@ class DatasetTable(models.Model):
         if dataset.name in settings.AMSTERDAM_SCHEMA["geosearch_disabled_datasets"]:
             enable_geosearch = False
 
-        authorization = table["schema"].get("autorisatie")
+        claims = table.get("auth", [])
+        if isinstance(claims, str):
+            claims = [claims]
+
         # XXX For now, be OK with missing "display", is mandatory in aschema v1.1.1
         display_field = table["schema"].get("display")
         geometry_field = None
@@ -195,7 +196,7 @@ class DatasetTable(models.Model):
             dataset=dataset,
             name=table.id,
             db_table=get_db_table_name(table),
-            authorization=authorization,
+            auth=" ".join(claims),
             display_field=display_field,
             geometry_field=geometry_field,
             geometry_field_type=geometry_field_type,

@@ -227,6 +227,7 @@ def model_factory(table: DatasetTableSchema) -> Type[DynamicModel]:
         (DynamicModel,),
         {
             **fields,
+            "_dataset_schema": dataset,
             "_table_schema": table,
             "_display_field": "",
             "__module__": module_name,
