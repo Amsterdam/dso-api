@@ -1,8 +1,12 @@
+import time
 import pytest
 from django.db import connection
 from django.urls import reverse
+from jwcrypto.jwt import JWT
+from authorization_django import jwks
 
 from rest_framework_dso.crs import CRS, RD_NEW
+from dso_api.datasets import models
 from dso_api.lib.schematools.db import create_tables
 
 
@@ -112,3 +116,52 @@ class TestDSOViewMixin:
         assert response.status_code == 200, response.data
         assert response.has_header("Content-Crs"), dict(response.items())
         assert RD_NEW == CRS.from_string(response["Content-Crs"])
+
+
+@pytest.fixture
+def tokendata_correct():
+    now = int(time.time())
+    return {
+        "iat": now,
+        "exp": now + 30,
+        "scopes": ["BAG/R"],
+        "sub": "test@tester.nl",
+    }
+
+
+def create_token(tokendata, alg):
+    kid = "2aedafba-8170-4064-b704-ce92b7c89cc6"
+    key = jwks.get_keyset().get_key(kid)
+    token = JWT(header={"alg": alg, "kid": kid}, claims=tokendata)
+    token.make_signed_token(key)
+    return token
+
+
+@pytest.mark.django_db
+class TestAuth:
+    """ Test authorization """
+
+    def test_auth_on_dataset_schema_protects_endpoint(
+        self, api_client, filled_router, afval_schema
+    ):
+        url = reverse("dynamic_api:afvalwegingen-containers-list")
+        models.Dataset.objects.filter(name="afval").update(auth="BAG/R")
+        response = api_client.get(url)
+        assert response.status_code == 403, response.data
+
+    def test_auth_on_table_schema_protects_endpoint(
+        self, api_client, filled_router, afval_schema
+    ):
+        url = reverse("dynamic_api:afvalwegingen-containers-list")
+        models.DatasetTable.objects.filter(name="containers").update(auth="BAG/R")
+        response = api_client.get(url)
+        assert response.status_code == 403, response.data
+
+    def test_auth_on_table_schema_with_token(
+        self, api_client, filled_router, afval_schema, tokendata_correct
+    ):
+        url = reverse("dynamic_api:afvalwegingen-containers-list")
+        models.DatasetTable.objects.filter(name="containers").update(auth="BAG/R")
+        token = create_token(tokendata_correct, "ES256").serialize()
+        response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
+        assert response.status_code == 200, response.data

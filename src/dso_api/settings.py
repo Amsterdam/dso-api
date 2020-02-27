@@ -177,6 +177,7 @@ REST_FRAMEWORK = dict(
 
 SWAGGER_SETTINGS = {
     "USE_SESSION_AUTH": False,
+    "OAUTH2_REDIRECT_URL": "https://acc.data.amsterdam.nl/",
     "SECURITY_DEFINITIONS": {
         "oauth2": {
             "type": "oauth2",
