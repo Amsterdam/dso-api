@@ -1,13 +1,16 @@
+import time
 import json
 from datetime import date
 from pathlib import Path
 
 import pytest
+from jwcrypto.jwt import JWT
 from django.db import connection
 from django.utils.timezone import now
+from django.contrib.gis.geos import GEOSGeometry, Point
 from rest_framework.request import Request
 from rest_framework.test import APIClient, APIRequestFactory
-from django.contrib.gis.geos import GEOSGeometry, Point
+from authorization_django import jwks
 
 from dso_api.datasets.models import Dataset
 from dso_api.lib.schematools.db import create_tables
@@ -148,3 +151,33 @@ def movie(category) -> Movie:
 def location() -> Location:
     """A dummy model to test our API with"""
     return Location.objects.create(geometry=GEOSGeometry("Point(10 10)", srid=RD_NEW))
+
+
+@pytest.fixture
+def fetch_tokendata():
+    """ Fixture to create valid token data, scopes is flexible """
+
+    def _fetcher(scopes):
+        now = int(time.time())
+        return {
+            "iat": now,
+            "exp": now + 30,
+            "scopes": scopes,
+            "sub": "test@tester.nl",
+        }
+
+    return _fetcher
+
+
+@pytest.fixture
+def fetch_auth_token(fetch_tokendata):
+    """ Fixture to create an auth token, scopes is flexible """
+
+    def _fetcher(scopes):
+        kid = "2aedafba-8170-4064-b704-ce92b7c89cc6"
+        key = jwks.get_keyset().get_key(kid)
+        token = JWT(header={"alg": "ES256", "kid": kid}, claims=fetch_tokendata(scopes))
+        token.make_signed_token(key)
+        return token.serialize()
+
+    return _fetcher
