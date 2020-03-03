@@ -123,7 +123,7 @@ class TestListFilters:
         Movie.objects.create(name="foo123")
         Movie.objects.create(name="test")
 
-        response = api_client.get(f"/v1/movies", data={"name": "foo1?3"})
+        response = api_client.get("/v1/movies", data={"name": "foo1?3"})
         assert response.status_code == 200, response
         assert response.data["count"] == 1
         assert response["Content-Type"] == "application/hal+json"
@@ -134,7 +134,7 @@ class TestListFilters:
         Movie.objects.create(name="foo123", date_added=datetime(2020, 1, 1, 0, 45))
         Movie.objects.create(name="test", date_added=datetime(2020, 2, 2, 13, 15))
 
-        response = api_client.get(f"/v1/movies", data={"date_added": "2020-01-01"})
+        response = api_client.get("/v1/movies", data={"date_added": "2020-01-01"})
         assert response.status_code == 200, response
         names = [movie["name"] for movie in response.data["_embedded"]["movie"]]
         assert response.data["count"] == 1, names
@@ -144,7 +144,7 @@ class TestListFilters:
     @staticmethod
     def test_list_filter_datetime_invalid(api_client):
         """Prove that invalid input is captured, and returns a proper error response."""
-        response = api_client.get(f"/v1/movies", data={"date_added": "2020-01-fubar"})
+        response = api_client.get("/v1/movies", data={"date_added": "2020-01-fubar"})
         assert response.status_code == 400, response
         assert response["Content-Type"] == "application/problem+json", response
         assert response.json() == {
@@ -173,7 +173,7 @@ class TestListOrdering:
         Movie.objects.create(name="foo123")
 
         # Sort descending by name
-        response = api_client.get(f"/v1/movies", data={"sorteer": "-name"})
+        response = api_client.get("/v1/movies", data={"sorteer": "-name"})
         assert response.status_code == 200, response.json()
         names = [movie["name"] for movie in response.data["_embedded"]["movie"]]
         assert names == ["test", "foo123"]
@@ -185,7 +185,7 @@ class TestListOrdering:
         Movie.objects.create(name="test", date_added=datetime(2020, 2, 2, 13, 15))
 
         # Sort descending by name
-        response = api_client.get(f"/v1/movies", data={"sorteer": "-date_added"})
+        response = api_client.get("/v1/movies", data={"sorteer": "-date_added"})
         assert response.status_code == 200, response.json()
         names = [movie["name"] for movie in response.data["_embedded"]["movie"]]
         assert names == ["test", "foo123"]
@@ -193,7 +193,7 @@ class TestListOrdering:
     @staticmethod
     def test_list_ordering_invalid(api_client, category, django_assert_num_queries):
         """Prove that ?sorteer=... only works on a fixed set of fields (e.g. not on FK's)."""
-        response = api_client.get(f"/v1/movies", data={"sorteer": "category"})
+        response = api_client.get("/v1/movies", data={"sorteer": "category"})
         assert response.status_code == 400, response.json()
         assert response.json() == {
             "type": "urn:apiexception:invalid",
@@ -219,7 +219,7 @@ class TestLimitFields:
         Movie.objects.create(name="test")
         Movie.objects.create(name="foo123")
 
-        response = api_client.get(f"/v1/movies", data={"fields": "name"})
+        response = api_client.get("/v1/movies", data={"fields": "name"})
         assert response.status_code == 200, response.json()
         assert json.dumps(response.data["_embedded"]["movie"]) == json.dumps(
             [{"name": "foo123"}, {"name": "test"}]
@@ -230,7 +230,7 @@ class TestLimitFields:
         Movie.objects.create(name="test")
         Movie.objects.create(name="foo123")
 
-        response = api_client.get(f"/v1/movies", data={"fields": "name,date_added"})
+        response = api_client.get("/v1/movies", data={"fields": "name,date_added"})
         assert response.status_code == 200, response.json()
         assert json.dumps(response.data["_embedded"]["movie"]) == json.dumps(
             [
@@ -244,7 +244,7 @@ class TestLimitFields:
         Movie.objects.create(name="test")
         Movie.objects.create(name="foo123")
 
-        response = api_client.get(f"/v1/movies", data={"fields": "name,date"})
+        response = api_client.get("/v1/movies", data={"fields": "name,date"})
         assert response.status_code == 400, response.json()
         assert json.dumps(response.json()) == json.dumps(
             {

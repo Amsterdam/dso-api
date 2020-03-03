@@ -65,7 +65,7 @@ def _get_viewset_api_docs(
     """
     lines = []
     if filterset_class and filterset_class.base_filters:
-        lines.append(f"The following fields can be used as filter with ?FIELDNAME=...:")
+        lines.append("The following fields can be used as filter with ?FIELDNAME=...:")
         for name, filter_field in filterset_class.base_filters.items():
             description = filter_field.extra["help_text"]
             lines.append(f" • {name}={description}")
@@ -74,7 +74,7 @@ def _get_viewset_api_docs(
     if embedded_fields:
         if lines:
             lines.append("")
-        lines.append(f"The following fields can be expanded with ?expand=...:")
+        lines.append("The following fields can be expanded with ?expand=...:")
         lines.extend(f" • {name}" for name in embedded_fields)
         lines.append("\nExpand everything using expand=true.")
 
