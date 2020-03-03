@@ -5,13 +5,17 @@ from rest_framework import serializers
 from rest_framework.exceptions import ParseError
 
 from rest_framework_dso.fields import AbstractEmbeddedField
+from rest_framework_dso.permissions import fetch_scopes_for_model
 
 EmbeddedFieldDict = Dict[str, AbstractEmbeddedField]
 
 
 class EmbeddedHelper:
     def __init__(
-        self, parent_serializer: serializers.ModelSerializer, expand: Union[list, bool]
+        self,
+        parent_serializer: serializers.ModelSerializer,
+        expand: Union[list, bool],
+        auth_checker=None,
     ):
         """Find all serializers that are configured for the sideloading feature.
 
@@ -19,9 +23,13 @@ class EmbeddedHelper:
         The dictionary only contains the items for which sideloading is requested.
         """
         self.parent_serializer = parent_serializer
-        self.embedded_fields = self._get_embedded_fields(expand) if expand else {}
+        self.embedded_fields = (
+            self._get_embedded_fields(expand, auth_checker) if expand else {}
+        )
 
-    def _get_embedded_fields(self, expand: Union[list, bool]):  # noqa: C901
+    def _get_embedded_fields(
+        self, expand: Union[list, bool], auth_checker=None
+    ):  # noqa: C901
         allowed_names = getattr(self.parent_serializer.Meta, "embedded_fields", [])
         embedded_fields = {}
 
@@ -44,15 +52,18 @@ class EmbeddedHelper:
 
             # Get the field, and
             try:
-                embedded_fields[field_name] = getattr(
-                    self.parent_serializer, field_name
-                )
+                field = getattr(self.parent_serializer, field_name)
+                scopes = fetch_scopes_for_model(field.related_model)
+                if auth_checker and not auth_checker(*scopes):
+                    continue
+                embedded_fields[field_name] = field
             except AttributeError:
                 raise RuntimeError(
                     f"{self.parent_serializer.__class__.__name__}.{field_name}"
                     f" does not reffer to an embedded field."
                 ) from None
 
+        # Add authorization check
         return embedded_fields
 
     def get_list_embedded(self, instances: Iterable[models.Model]):
