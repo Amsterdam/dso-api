@@ -153,7 +153,7 @@ class TestAuth:
         assert response.status_code == 200, response.data
 
     def test_auth_on_table_schema_with_token_for_valid_scope(
-        self, api_client, filled_router, afval_schema, fetch_auth_token
+        self, api_client, filled_router, afval_schema, fetch_auth_token, afval_container
     ):
         url = reverse("dynamic_api:afvalwegingen-containers-list")
         models.DatasetTable.objects.filter(name="containers").update(auth="BAG/R")
@@ -169,3 +169,28 @@ class TestAuth:
         token = fetch_auth_token(["BAG/RSN"])
         response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
         assert response.status_code == 403, response.data
+
+    def test_auth_on_embedded_fields_with_token_for_valid_scope(
+        self, api_client, filled_router, afval_schema, fetch_auth_token, afval_container
+    ):
+        """ Prove that expanded fields are shown when a reference field is protected
+            with an auth scope and there is a valid token """
+        url = reverse("dynamic_api:afvalwegingen-containers-list")
+        url = f"{url}?expand=true"
+        models.DatasetTable.objects.filter(name="clusters").update(auth="BAG/R")
+        token = fetch_auth_token(["BAG/R"])
+        response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
+        assert response.status_code == 200, response.data
+        assert "cluster" in response.json()["_embedded"], response.data
+
+    def test_auth_on_embedded_fields_without_token_for_valid_scope(
+        self, api_client, filled_router, afval_schema, fetch_auth_token, afval_container
+    ):
+        """ Prove that expanded fields are *not* shown when a reference field is protected
+            with an auth scope and there is a valid token """
+        url = reverse("dynamic_api:afvalwegingen-containers-list")
+        url = f"{url}?expand=true"
+        models.DatasetTable.objects.filter(name="clusters").update(auth="BAG/R")
+        response = api_client.get(url)
+        assert response.status_code == 200, response.data
+        assert "cluster" not in response.json()["_embedded"], response.data

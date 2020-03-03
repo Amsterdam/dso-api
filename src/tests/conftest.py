@@ -101,19 +101,25 @@ def afval_cluster_model(filled_router):
 
 
 @pytest.fixture()
+def afval_cluster(afval_cluster_model):
+    return afval_cluster_model.objects.create(id="c1", status="valid")
+
+
+@pytest.fixture()
 def afval_container_model(filled_router):
     # Using filled_router so all urls can be generated too.
     return filled_router.all_models["afvalwegingen"]["containers"]
 
 
 @pytest.fixture()
-def afval_container(afval_container_model):
+def afval_container(afval_container_model, afval_cluster):
     return afval_container_model.objects.create(
         id=1,
         serienummer="foobar-123",
         eigenaar_naam="Dataservices",
         datum_creatie=date.today(),
         datum_leegmaken=now(),
+        cluster=afval_cluster,
         geometry=Point(10, 10),  # no SRID on purpose, should use django model field.
     )
 

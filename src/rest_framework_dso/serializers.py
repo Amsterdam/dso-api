@@ -24,6 +24,7 @@ class _SideloadMixin:
     def get_fields_to_expand(self) -> Union[list, bool]:
         if self.fields_to_expand is not empty:
             return cast(list, self.fields_to_expand)
+        # model = self.context["view"].serializer_class.Meta.model
 
         # Initialize from request
         expand = self.context["request"].GET.get(self.expand_param)
@@ -93,7 +94,13 @@ class DSOListSerializer(_SideloadMixin, serializers.ListSerializer):
             expand = self.get_fields_to_expand()
             embeds = {}
             if expand and items:
-                embed_helper = EmbeddedHelper(self.child, expand=expand)
+                request = self.context.get("request")
+                auth_checker = (
+                    getattr(request, "is_authorized_for", None) if request else None
+                )
+                embed_helper = EmbeddedHelper(
+                    self.child, expand=expand, auth_checker=auth_checker
+                )
                 embeds = embed_helper.get_list_embedded(iterable)
                 if embeds:
                     # Provide the _embedded section, that DSO..Paginator classes wrap.
@@ -227,7 +234,13 @@ class DSOSerializer(_SideloadMixin, serializers.HyperlinkedModelSerializer):
         if not hasattr(self, "parent") or self.root is self:
             expand = self.get_fields_to_expand()
             if expand:
-                embed_helper = EmbeddedHelper(self, expand=expand)
+                request = self.context.get("request")
+                auth_checker = (
+                    getattr(request, "is_authorized_for", None) if request else None
+                )
+                embed_helper = EmbeddedHelper(
+                    self, expand=expand, auth_checker=auth_checker
+                )
                 ret[self.expand_field] = embed_helper.get_embedded(instance)
 
         return ret
