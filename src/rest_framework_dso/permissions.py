@@ -36,14 +36,6 @@ class HasSufficientScopes(permissions.BasePermission):
             of claims. """
 
         model = view.serializer_class.Meta.model
-        # if not hasattr(model, "_dataset_schema"):
-        #     return True
-        # dataset_table = model._dataset_schema.get_table_by_id(model._meta.model_name)
-        # try:
-        #     table = models.DatasetTable.objects.get(name=dataset_table.id)
-        # except models.DatasetTable.DoesNotExist:
-        #     return True
-        # scopes = self._fetch_scopes(table) | self._fetch_scopes(table.dataset)
         scopes = fetch_scopes_for_model(model)
         return request.is_authorized_for(*scopes)
 
