@@ -8,7 +8,7 @@ django-gisserver == 0.2
 djangorestframework == 3.11.0
 djangorestframework-gis == 0.15
 amsterdam-schema == 0.1.2
-datapunt-authorization-django==0.3.1
+datapunt-authorization-django==1.0.0
 drf-amsterdam == 0.3.2
 drf-yasg == 1.17.1
 jsonschema == 3.2.0
@@ -16,7 +16,7 @@ psycopg2-binary == 2.8.4
 python-string-utils == 0.6.0
 readerwriterlock == 1.0.6
 requests == 2.23.0
-sentry-sdk == 0.14.1
+sentry-sdk == 0.14.2
 
 # Testing
 flake8 == 3.7.9
