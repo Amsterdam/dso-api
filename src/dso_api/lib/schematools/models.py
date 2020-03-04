@@ -6,6 +6,7 @@ from urllib.parse import urlparse
 
 from django.contrib.gis.db import models
 from django.db.models.base import ModelBase
+from django.conf import settings
 from django_postgres_unlimited_varchar import UnlimitedCharField
 from string_utils import slugify
 
@@ -16,8 +17,6 @@ from amsterdam_schema.types import DatasetFieldSchema, DatasetSchema, DatasetTab
 
 # Could be used to check fieldnames
 ALLOWED_ID_PATTERN = re.compile(r"[a-zA-Z][ \w\d]*")
-
-SCHEMA_DEFS_URL = "https://schemas.data.amsterdam.nl/schema"
 
 DATE_MODELS_LOOKUP = {"date": models.DateField, "date-time": models.DateTimeField}
 
@@ -195,7 +194,7 @@ def model_factory(table: DatasetTableSchema) -> Type[DynamicModel]:
         if type_.endswith("definitions/schema"):
             continue
         # reduce amsterdam schema refs to their fragment
-        if type_.startswith(SCHEMA_DEFS_URL):
+        if type_.startswith(settings.SCHEMA_DEFS_URL):
             type_ = urlparse(type_).fragment
         # Generate field object
         kls, args, kwargs = JSON_TYPE_TO_DJANGO[type_](field, dataset)
