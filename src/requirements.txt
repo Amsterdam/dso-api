@@ -4,9 +4,10 @@
 #
 #    pip-compile --output-file=requirements.txt requirements.in
 #
-amsterdam-schema==0.1.2   # via -r requirements.in (line 10)
+amsterdam-schema==0.1.2   # via -r requirements.in
 asgiref==3.2.3            # via django
 attrs==19.3.0             # via jsonschema, pytest
+cachetools==4.0.0         # via -r requirements.in
 certifi==2019.11.28       # via requests, sentry-sdk
 cffi==1.14.0              # via cryptography
 chardet==3.0.4            # via requests
@@ -14,33 +15,33 @@ coreapi==2.3.3            # via drf-yasg
 coreschema==0.0.4         # via coreapi, drf-yasg
 coverage==5.0.3           # via pytest-cov
 cryptography==2.8         # via jwcrypto
-datapunt-authorization-django==1.0.0  # via -r requirements.in (line 11)
+datapunt-authorization-django==1.0.0  # via -r requirements.in
 defusedxml==0.6.0         # via djangorestframework-xml
-django-cors-headers==3.2.1  # via -r requirements.in (line 3)
-django-environ==0.4.5     # via -r requirements.in (line 2)
-django-filter==2.2.0      # via -r requirements.in (line 4)
-django-gisserver==0.2     # via -r requirements.in (line 7)
-django-healthchecks==1.4.2  # via -r requirements.in (line 5)
-django-postgres-unlimited-varchar==1.1.0  # via -r requirements.in (line 6)
-django==3.0.3             # via -r requirements.in (line 1), datapunt-authorization-django, django-cors-headers, django-filter, django-gisserver, django-healthchecks, django-postgres-unlimited-varchar, djangorestframework, drf-yasg
+django-cors-headers==3.2.1  # via -r requirements.in
+django-environ==0.4.5     # via -r requirements.in
+django-filter==2.2.0      # via -r requirements.in
+django-gisserver==0.2     # via -r requirements.in
+django-healthchecks==1.4.2  # via -r requirements.in
+django-postgres-unlimited-varchar==1.1.0  # via -r requirements.in
+django==3.0.4             # via -r requirements.in, datapunt-authorization-django, django-cors-headers, django-filter, django-gisserver, django-healthchecks, django-postgres-unlimited-varchar, djangorestframework, drf-yasg
 djangorestframework-csv==2.1.0  # via drf-amsterdam
-djangorestframework-gis==0.15  # via -r requirements.in (line 9)
+djangorestframework-gis==0.15  # via -r requirements.in
 djangorestframework-xml==1.4.0  # via drf-amsterdam
-djangorestframework==3.11.0  # via -r requirements.in (line 8), djangorestframework-csv, djangorestframework-gis, drf-amsterdam, drf-extensions, drf-yasg
-drf-amsterdam==0.3.2      # via -r requirements.in (line 12)
+djangorestframework==3.11.0  # via -r requirements.in, djangorestframework-csv, djangorestframework-gis, drf-amsterdam, drf-extensions, drf-yasg
+drf-amsterdam==0.3.2      # via -r requirements.in
 drf-extensions==0.6.0     # via drf-amsterdam
-drf-yasg==1.17.1          # via -r requirements.in (line 13)
+drf-yasg==1.17.1          # via -r requirements.in
 entrypoints==0.3          # via flake8
-flake8-blind-except==0.1.1  # via -r requirements.in (line 23)
-flake8-colors==0.1.6      # via -r requirements.in (line 24)
-flake8-debugger==3.2.1    # via -r requirements.in (line 25)
-flake8-raise==0.0.5       # via -r requirements.in (line 26)
-flake8==3.7.9             # via -r requirements.in (line 22), flake8-colors, flake8-debugger, flake8-raise
+flake8-blind-except==0.1.1  # via -r requirements.in
+flake8-colors==0.1.6      # via -r requirements.in
+flake8-debugger==3.2.1    # via -r requirements.in
+flake8-raise==0.0.5       # via -r requirements.in
+flake8==3.7.9             # via -r requirements.in, flake8-colors, flake8-debugger, flake8-raise
 idna==2.9                 # via requests
 inflection==0.3.1         # via drf-yasg
 itypes==1.1.0             # via coreapi
 jinja2==2.11.1            # via coreschema
-jsonschema==3.2.0         # via -r requirements.in (line 14), amsterdam-schema
+jsonschema==3.2.0         # via -r requirements.in, amsterdam-schema
 jwcrypto==0.7             # via datapunt-authorization-django
 lxml==4.5.0               # via django-gisserver
 markupsafe==1.1.1         # via jinja2
@@ -49,23 +50,23 @@ more-itertools==8.2.0     # via pytest
 orjson==2.5.1             # via django-gisserver
 packaging==20.1           # via drf-yasg, pytest
 pluggy==0.13.1            # via pytest
-psycopg2-binary==2.8.4    # via -r requirements.in (line 15)
+psycopg2-binary==2.8.4    # via -r requirements.in
 py==1.8.1                 # via pytest
 pycodestyle==2.5.0        # via flake8, flake8-debugger
 pycparser==2.19           # via cffi
 pyflakes==2.1.1           # via flake8
 pyparsing==2.4.6          # via packaging
 pyrsistent==0.15.7        # via jsonschema
-pytest-cov==2.8.1         # via -r requirements.in (line 29)
-pytest-django==3.8.0      # via -r requirements.in (line 28)
-pytest==5.3.5             # via -r requirements.in (line 27), pytest-cov, pytest-django
-python-string-utils==0.6.0  # via -r requirements.in (line 16)
+pytest-cov==2.8.1         # via -r requirements.in
+pytest-django==3.8.0      # via -r requirements.in
+pytest==5.3.5             # via -r requirements.in, pytest-cov, pytest-django
+python-string-utils==0.6.0  # via -r requirements.in
 pytz==2019.3              # via django
-readerwriterlock==1.0.6   # via -r requirements.in (line 17)
-requests==2.23.0          # via -r requirements.in (line 18), amsterdam-schema, coreapi, datapunt-authorization-django, django-healthchecks
+readerwriterlock==1.0.6   # via -r requirements.in
+requests==2.23.0          # via -r requirements.in, amsterdam-schema, coreapi, datapunt-authorization-django, django-healthchecks
 ruamel.yaml.clib==0.2.0   # via ruamel.yaml
 ruamel.yaml==0.16.10      # via drf-yasg
-sentry-sdk==0.14.2        # via -r requirements.in (line 19)
+sentry-sdk==0.14.2        # via -r requirements.in
 six==1.14.0               # via cryptography, django-healthchecks, djangorestframework-csv, drf-yasg, jsonschema, packaging, pyrsistent
 sqlparse==0.3.1           # via django
 typing-extensions==3.7.4.1  # via readerwriterlock
