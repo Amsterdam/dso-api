@@ -1,7 +1,9 @@
+from cachetools.func import ttl_cache
 from rest_framework import permissions
 from dso_api.datasets import models
 
 
+@ttl_cache(ttl=60 * 60)
 def fetch_scopes_for_model(model):
     """ Get the scopes for a Django model, based on the Amsterdam schema information """
 
