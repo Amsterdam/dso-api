@@ -27,6 +27,10 @@ SECRET_KEY = env.str("SECRET_KEY", "insecure")
 SESSION_COOKIE_SECURE = env.bool("SESSION_COOKIE_SECURE", not DEBUG)
 CSRF_COOKIE_SECURE = env.bool("CSRF_COOKIE_SECURE", not DEBUG)
 
+# On unapplied migrations, the Django 'check' fails when trying to
+# Fetch datasets from the database. Viewsets are not needed when migrating.
+INITIALIZE_DYNAMIC_VIEWSETS = env.bool("INITIALIZE_DYNAMIC_VIEWSETS", True)
+
 INTERNAL_IPS = ("127.0.0.1", "0.0.0.0")
 
 

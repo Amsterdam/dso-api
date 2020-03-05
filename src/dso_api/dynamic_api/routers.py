@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Dict, List, Type
 from django.apps import apps
 from django.db import connection
 from django.urls import NoReverseMatch, reverse
+from django.conf import settings
 from rest_framework import routers
 
 from dso_api.datasets.models import Dataset
@@ -27,6 +28,9 @@ class DynamicRouter(routers.SimpleRouter):
 
     def initialize(self):
         """Initialize all dynamic routes on startup."""
+        if not settings.INITIALIZE_DYNAMIC_VIEWSETS:
+            return []
+
         if Dataset._meta.db_table not in connection.introspection.table_names():
             # There are no tables, so no routes to initialize.
             # This avoids a startup error for manage.py migrate
