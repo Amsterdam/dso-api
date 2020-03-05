@@ -12,7 +12,7 @@ def fetch_scopes_for_model(model):
             return set(obj.auth.split(","))
         return set()
 
-    # If it is not a DSO=based model, we leave it alone
+    # If it is not a DSO-based model, we leave it alone
     if not hasattr(model, "_dataset_schema"):
         return []
     dataset_table = model._dataset_schema.get_table_by_id(model._meta.model_name)
