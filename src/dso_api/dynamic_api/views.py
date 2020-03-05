@@ -10,6 +10,8 @@ from rest_framework_dso import crs, fields
 from rest_framework_dso.pagination import DSOPageNumberPagination
 from rest_framework_dso.views import DSOViewMixin
 
+# from rest_framework_dso.permissions import fetch_scopes_for_model
+
 from dso_api.lib.schematools.models import DynamicModel
 from . import filterset, locking, serializers
 
@@ -52,6 +54,8 @@ class DynamicApiViewSet(
     model: Type[DynamicModel] = None
 
     def get_queryset(self):
+        # XXX use objects.only or objects.defer to filter columns
+        # scopes = fetch_scopes_for_model(self.model)
         return self.model.objects.all()
 
 

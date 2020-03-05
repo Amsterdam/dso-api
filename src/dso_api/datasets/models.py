@@ -16,7 +16,7 @@ from dso_api.lib.schematools.models import (
     is_possible_display_field,
     schema_models_factory,
 )
-from amsterdam_schema.types import DatasetSchema, DatasetTableSchema
+from amsterdam_schema.types import DatasetSchema, DatasetTableSchema, DatasetFieldSchema
 
 
 logger = logging.getLogger(__name__)
@@ -157,6 +157,31 @@ class DatasetTable(models.Model):
         return self.name
 
     @classmethod
+    def _get_field_values(cls, table):
+        ret = {}
+
+        # XXX For now, be OK with missing "display", is mandatory in aschema v1.1.1
+        ret["display_field"] = table["schema"].get("display")
+        ret["geometry_field"] = None
+        ret["geometry_field_type"] = None
+        for field in table.fields:
+            # Take the first geojson field as geometry field
+            if not ret["geometry_field"] and field.type.startswith(GEOJSON_PREFIX):
+                ret["geometry_field"] = field.name
+                match = re.search(r"schema\/(?P<schema>\w+)\.json", field.type)
+                if match is not None:
+                    ret["geometry_field_type"] = match.group("schema")
+                break
+
+            # Take the first string field as display name.
+            if not ret["display_field"] and is_possible_display_field(field):
+                ret["display_field"] = field.name
+
+            if ret["display_field"] and ret["geometry_field"]:
+                break
+        return ret
+
+    @classmethod
     def create_for_schema(
         cls, dataset: Dataset, table: DatasetTableSchema
     ) -> DatasetTable:
@@ -172,33 +197,53 @@ class DatasetTable(models.Model):
         if isinstance(claims, str):
             claims = [claims]
 
-        # XXX For now, be OK with missing "display", is mandatory in aschema v1.1.1
-        display_field = table["schema"].get("display")
-        geometry_field = None
-        geometry_field_type = None
-        for field in table.fields:
-            # Take the first geojson field as geometry field
-            if not geometry_field and field.type.startswith(GEOJSON_PREFIX):
-                geometry_field = field.name
-                match = re.search(r"schema\/(?P<schema>\w+)\.json", field.type)
-                if match is not None:
-                    geometry_field_type = match.group("schema")
-                break
-
-            # Take the first string field as display name.
-            if not display_field and is_possible_display_field(field):
-                display_field = field.name
-
-            if display_field and geometry_field:
-                break
-
-        return cls.objects.create(
+        instance = cls.objects.create(
             dataset=dataset,
             name=table.id,
             db_table=get_db_table_name(table),
             auth=" ".join(claims),
-            display_field=display_field,
-            geometry_field=geometry_field,
-            geometry_field_type=geometry_field_type,
             enable_geosearch=enable_geosearch,
+            **cls._get_field_values(table),
         )
+
+        for field in table.fields:
+            DatasetField.create_for_schema(instance, field)
+
+        return instance
+
+
+class DatasetField(models.Model):
+    """Exposed metadata per field.
+    """
+
+    table = models.ForeignKey(
+        DatasetTable, on_delete=models.CASCADE, related_name="fields"
+    )
+    name = models.CharField(max_length=100)
+
+    # Exposed metadata from the jsonschema, so other utils can query these
+    auth = models.CharField(max_length=250, blank=True, null=True)
+
+    class Meta:
+        ordering = ("name",)
+        verbose_name = _("Dataset Field")
+        verbose_name_plural = _("Dataset Fields")
+        unique_together = [
+            ("table", "name"),
+        ]
+
+    def __str__(self):
+        return self.name
+
+    @classmethod
+    def create_for_schema(
+        cls, table: DatasetTableSchema, field: DatasetFieldSchema
+    ) -> DatasetField:
+        """Create a DatasetField object based on the Amsterdam Schema field spec.
+
+        """
+        claims = field.get("auth", [])
+        if isinstance(claims, str):
+            claims = [claims]
+
+        return cls.objects.create(table=table, name=field.name, auth=" ".join(claims))

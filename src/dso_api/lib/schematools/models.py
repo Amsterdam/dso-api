@@ -55,7 +55,7 @@ class FieldMaker:
         kwargs["primary_key"] = field.is_primary
         kwargs["null"] = not field.required
         if self.value_getter:
-            kwargs = {**kwargs, **self.value_getter(dataset)}
+            kwargs = {**kwargs, **self.value_getter(dataset, field)}
         return field_cls, args, kwargs
 
     def handle_relation(
@@ -105,7 +105,7 @@ class FieldMaker:
         return field_cls, args, kwargs
 
 
-def fetch_crs(dataset: DatasetSchema) -> Dict[str, Any]:
+def fetch_srid(dataset: DatasetSchema, field: DatasetFieldSchema) -> Dict[str, Any]:
     return {"srid": CRS.from_string(dataset.data["crs"]).srid}
 
 
@@ -118,14 +118,14 @@ JSON_TYPE_TO_DJANGO = {
     "/definitions/schema": FieldMaker(UnlimitedCharField),
     "https://geojson.org/schema/Geometry.json": FieldMaker(
         models.MultiPolygonField,
-        value_getter=fetch_crs,
+        value_getter=fetch_srid,
         srid=RD_NEW.srid,
         geography=False,
         db_index=True,
     ),
     "https://geojson.org/schema/Point.json": FieldMaker(
         models.PointField,
-        value_getter=fetch_crs,
+        value_getter=fetch_srid,
         srid=RD_NEW.srid,
         geography=False,
         db_index=True,
@@ -250,4 +250,5 @@ def get_db_table_name(table: DatasetTableSchema) -> str:
     """Generate the table name for a database schema."""
     dataset = table._parent_schema
     app_label = dataset.id
-    return f"{app_label}_{table.id}"
+    table_id = f"{slugify(table.id, sign='_')}"
+    return f"{app_label}_{table_id}"
