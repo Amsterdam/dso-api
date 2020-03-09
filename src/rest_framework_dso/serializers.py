@@ -11,6 +11,7 @@ from rest_framework_gis.fields import GeometryField
 
 from rest_framework_dso.crs import CRS
 from rest_framework_dso.utils import EmbeddedHelper
+from rest_framework_dso.permissions import fetch_scopes_for_model
 
 
 class _SideloadMixin:
@@ -170,7 +171,7 @@ class DSOSerializer(_SideloadMixin, serializers.HyperlinkedModelSerializer):
 
         return list_serializer_class(*args, **list_kwargs)
 
-    def get_fields_to_display(self):
+    def get_fields_to_display(self) -> set:
         request = self.context.get("request")
         if request is not None:
             fields = request.GET.get(self.fields_param)
@@ -190,8 +191,26 @@ class DSOSerializer(_SideloadMixin, serializers.HyperlinkedModelSerializer):
                         ),
                         code="fields",
                     )
-                return display_fields
-        return None
+                return set(display_fields)
+        return set()
+
+    def remove_protected_fields(self, display_fields):
+        model = self.Meta.model
+        request = self.context.get("request")
+        scopes_info = fetch_scopes_for_model(model)
+        all_fields = set([f.name for f in model._meta.get_fields()])
+        unauthorized_fields = set()
+        if hasattr(request, "is_authorized_for"):
+            for name in all_fields:
+                scopes = scopes_info["field"].get(name)
+                if scopes is None:
+                    continue
+                if not request.is_authorized_for(*scopes):
+                    unauthorized_fields.add(name)
+        if unauthorized_fields:
+            display_fields = all_fields - unauthorized_fields
+
+        return display_fields
 
     @cached_property
     def _geometry_fields(self) -> List[GeometryField]:
@@ -218,7 +237,9 @@ class DSOSerializer(_SideloadMixin, serializers.HyperlinkedModelSerializer):
                     request.response_content_crs = self._get_crs(instance)
 
         display_fields = self.get_fields_to_display()
-        if display_fields is not None:
+        display_fields = self.remove_protected_fields(display_fields)
+
+        if display_fields:
             # Limit result to requested fields only
             self.fields = OrderedDict(
                 [

@@ -123,6 +123,8 @@ class TestAuth:
     def test_auth_on_dataset_schema_protects_containers(
         self, api_client, filled_router, afval_schema
     ):
+        """ Prove that auth protection at dataset level leads to a 403 on the container listview.
+        """
         url = reverse("dynamic_api:afvalwegingen-containers-list")
         models.Dataset.objects.filter(name="afval").update(auth="BAG/R")
         response = api_client.get(url)
@@ -131,6 +133,8 @@ class TestAuth:
     def test_auth_on_dataset_schema_protects_cluster(
         self, api_client, filled_router, afval_schema
     ):
+        """ Prove that auth protection at dataset level leads to a 403 on the cluster listview.
+        """
         url = reverse("dynamic_api:afvalwegingen-clusters-list")
         models.Dataset.objects.filter(name="afval").update(auth="BAG/R")
         response = api_client.get(url)
@@ -139,6 +143,8 @@ class TestAuth:
     def test_auth_on_table_schema_protects(
         self, api_client, filled_router, afval_schema
     ):
+        """ Prove that auth protection at table level (container) leads to a 403 on the container listview.
+        """
         url = reverse("dynamic_api:afvalwegingen-containers-list")
         models.DatasetTable.objects.filter(name="containers").update(auth="BAG/R")
         response = api_client.get(url)
@@ -147,6 +153,8 @@ class TestAuth:
     def test_auth_on_table_schema_does_not_protect_sibling_tables(
         self, api_client, filled_router, afval_schema, fetch_auth_token
     ):
+        """ Prove that auth protection at table level (cluster) does not protect the container list view.
+        """
         url = reverse("dynamic_api:afvalwegingen-containers-list")
         models.DatasetTable.objects.filter(name="clusters").update(auth="BAG/R")
         response = api_client.get(url)
@@ -155,6 +163,8 @@ class TestAuth:
     def test_auth_on_table_schema_with_token_for_valid_scope(
         self, api_client, filled_router, afval_schema, fetch_auth_token, afval_container
     ):
+        """ Prove that auth protected table (container) can be viewed with a token with the correct scope.
+        """
         url = reverse("dynamic_api:afvalwegingen-containers-list")
         models.DatasetTable.objects.filter(name="containers").update(auth="BAG/R")
         token = fetch_auth_token(["BAG/R"])
@@ -164,6 +174,9 @@ class TestAuth:
     def test_auth_on_table_schema_with_token_for_invalid_scope(
         self, api_client, filled_router, afval_schema, fetch_auth_token
     ):
+        """ Prove that auth protected table (container) cannot be
+            viewed with a token with an incorrect scope.
+        """
         url = reverse("dynamic_api:afvalwegingen-containers-list")
         models.DatasetTable.objects.filter(name="containers").update(auth="BAG/R")
         token = fetch_auth_token(["BAG/RSN"])
@@ -187,10 +200,42 @@ class TestAuth:
         self, api_client, filled_router, afval_schema, fetch_auth_token, afval_container
     ):
         """ Prove that expanded fields are *not* shown when a reference field is protected
-            with an auth scope and there is a valid token """
+            with an auth scope """
         url = reverse("dynamic_api:afvalwegingen-containers-list")
         url = f"{url}?expand=true"
         models.DatasetTable.objects.filter(name="clusters").update(auth="BAG/R")
         response = api_client.get(url)
         assert response.status_code == 200, response.data
-        assert "cluster" not in response.json()["_embedded"], response.data
+
+    def test_auth_on_individual_fields_with_token_for_valid_scope(
+        self, api_client, filled_router, afval_schema, fetch_auth_token, afval_container
+    ):
+        """ Prove that protected fields are shown
+            with an auth scope and there is a valid token """
+        url = reverse("dynamic_api:afvalwegingen-containers-list")
+        models.DatasetField.objects.filter(name="eigenaar_naam").update(auth="BAG/R")
+        token = fetch_auth_token(["BAG/R"])
+        response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
+        assert response.status_code == 200, response.data
+        assert "eigenaar_naam" in set(
+            [
+                field_name
+                for field_name in response.data["_embedded"]["containers"][0].keys()
+            ]
+        ), response.data
+
+    def test_auth_on_individual_fields_without_token_for_valid_scope(
+        self, api_client, filled_router, afval_schema, fetch_auth_token, afval_container
+    ):
+        """ Prove that protected fields are *not* shown
+            with an auth scope and there is not a valid token """
+        url = reverse("dynamic_api:afvalwegingen-containers-list")
+        models.DatasetField.objects.filter(name="eigenaar_naam").update(auth="BAG/R")
+        response = api_client.get(url)
+        assert response.status_code == 200, response.data
+        assert "eigenaar_naam" not in set(
+            [
+                field_name
+                for field_name in response.data["_embedded"]["containers"][0].keys()
+            ]
+        ), response.data
