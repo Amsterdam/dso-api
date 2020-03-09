@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 import logging
 from typing import List, Type
+from string_utils import slugify
 
 from django.conf import settings
 from django.contrib.postgres.fields import JSONField
@@ -199,7 +200,7 @@ class DatasetTable(models.Model):
 
         instance = cls.objects.create(
             dataset=dataset,
-            name=table.id,
+            name=slugify(table.id, sign="_"),
             db_table=get_db_table_name(table),
             auth=" ".join(claims),
             enable_geosearch=enable_geosearch,
@@ -246,4 +247,6 @@ class DatasetField(models.Model):
         if isinstance(claims, str):
             claims = [claims]
 
-        return cls.objects.create(table=table, name=field.name, auth=" ".join(claims))
+        return cls.objects.create(
+            table=table, name=slugify(field.name, sign="_"), auth=" ".join(claims)
+        )
