@@ -33,6 +33,10 @@ class HasSufficientScopes(permissions.BasePermission):
     Custom permission to check auth scopes from Amsterdam schema.
     """
 
+    def _has_permission(self, request, model):
+        scopes = fetch_scopes_for_model(model)
+        return request.is_authorized_for(*scopes["table"])
+
     def has_permission(self, request, view):
         """ Based on the model that is associated with the view
             the Dataset and DatasetTable (if available)
@@ -41,10 +45,9 @@ class HasSufficientScopes(permissions.BasePermission):
             of claims. """
 
         model = view.serializer_class.Meta.model
-        scopes = fetch_scopes_for_model(model)
-        return request.is_authorized_for(*scopes["table"])
+        return self._has_permission(request, model)
 
     def has_object_permission(self, request, view, obj):
         """ This method is not called for list views """
         # XXX For now, this is OK, later on we need to add row-level permissions
-        return True
+        return self._has_permission(request, obj)
