@@ -12,15 +12,20 @@ def fetch_scopes_for_model(model):
             return set(obj.auth.split(","))
         return set()
 
+    default_value = dict(table=set(), field={})
     # If it is not a DSO-based model, we leave it alone
     if not hasattr(model, "_dataset_schema"):
-        return []
+        return default_value
     dataset_table = model._dataset_schema.get_table_by_id(model._meta.model_name)
     try:
         table = models.DatasetTable.objects.get(name=dataset_table.id)
     except models.DatasetTable.DoesNotExist:
-        return []
-    return _fetch_scopes(table) | _fetch_scopes(table.dataset)
+        return default_value
+
+    return {
+        "table": _fetch_scopes(table) | _fetch_scopes(table.dataset),
+        "field": {field.name: _fetch_scopes(field) for field in table.fields.all()},
+    }
 
 
 class HasSufficientScopes(permissions.BasePermission):
@@ -37,7 +42,7 @@ class HasSufficientScopes(permissions.BasePermission):
 
         model = view.serializer_class.Meta.model
         scopes = fetch_scopes_for_model(model)
-        return request.is_authorized_for(*scopes)
+        return request.is_authorized_for(*scopes["table"])
 
     def has_object_permission(self, request, view, obj):
         """ This method is not called for list views """

@@ -54,7 +54,7 @@ class EmbeddedHelper:
             try:
                 field = getattr(self.parent_serializer, field_name)
                 scopes = fetch_scopes_for_model(field.related_model)
-                if auth_checker and not auth_checker(*scopes):
+                if auth_checker and not auth_checker(*scopes["table"]):
                     continue
                 embedded_fields[field_name] = field
             except AttributeError:
