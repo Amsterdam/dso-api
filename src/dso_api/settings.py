@@ -119,9 +119,10 @@ DATABASE_ROUTERS = ["dso_api.dbrouters.ExternDatabaseRouter"]
 locals().update(env.email_url(default="smtp://"))
 
 SENTRY_DSN = env.str("SENTRY_DSN", default="")
-SENTRY_ENVIRONMENT = env.str("SENTRY_ENVIRONMENT", default="dev")
 if SENTRY_DSN:
-    sentry_sdk.init(dsn=SENTRY_DSN, integrations=[DjangoIntegration()])
+    sentry_sdk.init(
+        dsn=SENTRY_DSN, environment="dso-api", integrations=[DjangoIntegration()]
+    )
 
 
 LOGGING = {
