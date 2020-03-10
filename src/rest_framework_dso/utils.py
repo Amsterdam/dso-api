@@ -2,20 +2,17 @@ from typing import Dict, Iterable, Union
 
 from django.db import models
 from rest_framework import serializers
-from rest_framework.exceptions import ParseError
+from rest_framework.exceptions import ParseError, PermissionDenied
 
 from rest_framework_dso.fields import AbstractEmbeddedField
-from rest_framework_dso.permissions import fetch_scopes_for_model
+from dso_api.dynamic_api.permissions import fetch_scopes_for_model
 
 EmbeddedFieldDict = Dict[str, AbstractEmbeddedField]
 
 
 class EmbeddedHelper:
     def __init__(
-        self,
-        parent_serializer: serializers.ModelSerializer,
-        expand: Union[list, bool],
-        auth_checker=None,
+        self, parent_serializer: serializers.ModelSerializer, expand: Union[list, bool],
     ):
         """Find all serializers that are configured for the sideloading feature.
 
@@ -23,19 +20,21 @@ class EmbeddedHelper:
         The dictionary only contains the items for which sideloading is requested.
         """
         self.parent_serializer = parent_serializer
-        self.embedded_fields = (
-            self._get_embedded_fields(expand, auth_checker) if expand else {}
-        )
+        self.embedded_fields = self._get_embedded_fields(expand) if expand else {}
 
-    def _get_embedded_fields(
-        self, expand: Union[list, bool], auth_checker=None
-    ):  # noqa: C901
+    def _get_embedded_fields(self, expand: Union[list, bool]):  # noqa: C901
         allowed_names = getattr(self.parent_serializer.Meta, "embedded_fields", [])
+        auth_checker = getattr(
+            self.parent_serializer, "get_auth_checker", lambda: None
+        )()
         embedded_fields = {}
 
         # ?expand=true should expand all names
         if expand is True:
             expand = allowed_names
+            specified_expands = set()
+        else:
+            specified_expands = set(expand)
 
         for field_name in expand:
             if field_name not in allowed_names:
@@ -55,12 +54,16 @@ class EmbeddedHelper:
                 field = getattr(self.parent_serializer, field_name)
                 scopes = fetch_scopes_for_model(field.related_model)
                 if auth_checker and not auth_checker(*scopes["table"]):
+                    if field_name in specified_expands:
+                        raise PermissionDenied(
+                            f"Eager loading not allowed for field '{field_name}'"
+                        )
                     continue
                 embedded_fields[field_name] = field
             except AttributeError:
                 raise RuntimeError(
                     f"{self.parent_serializer.__class__.__name__}.{field_name}"
-                    f" does not reffer to an embedded field."
+                    f" does not refer to an embedded field."
                 ) from None
 
         # Add authorization check

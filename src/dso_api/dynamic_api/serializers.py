@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 from functools import lru_cache
 from typing import Type
+from collections import OrderedDict
 
 from django.db import models
 
@@ -11,6 +12,7 @@ from amsterdam_schema.types import DatasetTableSchema
 from rest_framework import serializers
 from rest_framework_dso.fields import EmbeddedField
 from rest_framework_dso.serializers import DSOSerializer
+from dso_api.dynamic_api.permissions import fetch_scopes_for_model
 
 
 class _DynamicLinksField(DSOSerializer.serializer_url_field):
@@ -40,6 +42,10 @@ class DynamicSerializer(DSOSerializer):
 
     table_schema: DatasetTableSchema = None
 
+    def get_auth_checker(self):
+        request = self.context.get("request")
+        return getattr(request, "is_authorized_for", None) if request else None
+
     def get_schema(self, instance):
         """The schema field is exposed with every record"""
         name = instance.get_dataset_id()
@@ -64,6 +70,38 @@ class DynamicSerializer(DSOSerializer):
             field_kwargs["view_name"] = get_view_name(model_class, "detail")
 
         return field_class, field_kwargs
+
+    def get_unauthorized_fields(self) -> set:
+        model = self.Meta.model
+        request = self.context.get("request")
+        scopes_info = fetch_scopes_for_model(model)
+        all_fields = set([f.name for f in model._meta.get_fields()])
+        unauthorized_fields = set()
+        if hasattr(request, "is_authorized_for"):
+            for name in all_fields:
+                scopes = scopes_info["field"].get(name)
+                if scopes is None:
+                    continue
+                if not request.is_authorized_for(*scopes):
+                    unauthorized_fields.add(name)
+        if unauthorized_fields:
+            return unauthorized_fields
+
+        return set()
+
+    def to_representation(self, instance):
+        unauthorized_fields = self.get_unauthorized_fields()
+
+        if unauthorized_fields:
+            # Limit result to allowed fields only
+            self.fields = OrderedDict(
+                [
+                    (field_name, field)
+                    for field_name, field in self.fields.items()
+                    if field_name not in unauthorized_fields
+                ]
+            )
+        return super().to_representation(instance)
 
 
 def get_view_name(model: Type[DynamicModel], suffix: str):

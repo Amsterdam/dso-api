@@ -11,7 +11,6 @@ from rest_framework_gis.fields import GeometryField
 
 from rest_framework_dso.crs import CRS
 from rest_framework_dso.utils import EmbeddedHelper
-from rest_framework_dso.permissions import fetch_scopes_for_model
 
 
 class _SideloadMixin:
@@ -95,13 +94,7 @@ class DSOListSerializer(_SideloadMixin, serializers.ListSerializer):
             expand = self.get_fields_to_expand()
             embeds = {}
             if expand and items:
-                request = self.context.get("request")
-                auth_checker = (
-                    getattr(request, "is_authorized_for", None) if request else None
-                )
-                embed_helper = EmbeddedHelper(
-                    self.child, expand=expand, auth_checker=auth_checker
-                )
+                embed_helper = EmbeddedHelper(self.child, expand=expand)
                 embeds = embed_helper.get_list_embedded(iterable)
                 if embeds:
                     # Provide the _embedded section, that DSO..Paginator classes wrap.
@@ -194,24 +187,6 @@ class DSOSerializer(_SideloadMixin, serializers.HyperlinkedModelSerializer):
                 return set(display_fields)
         return set()
 
-    def remove_protected_fields(self, display_fields):
-        model = self.Meta.model
-        request = self.context.get("request")
-        scopes_info = fetch_scopes_for_model(model)
-        all_fields = set([f.name for f in model._meta.get_fields()])
-        unauthorized_fields = set()
-        if hasattr(request, "is_authorized_for"):
-            for name in all_fields:
-                scopes = scopes_info["field"].get(name)
-                if scopes is None:
-                    continue
-                if not request.is_authorized_for(*scopes):
-                    unauthorized_fields.add(name)
-        if unauthorized_fields:
-            display_fields = all_fields - unauthorized_fields
-
-        return display_fields
-
     @cached_property
     def _geometry_fields(self) -> List[GeometryField]:
         # Allow classes to exclude fields (e.g. a "point_wgs84" field shouldn't be used.)
@@ -237,7 +212,6 @@ class DSOSerializer(_SideloadMixin, serializers.HyperlinkedModelSerializer):
                     request.response_content_crs = self._get_crs(instance)
 
         display_fields = self.get_fields_to_display()
-        display_fields = self.remove_protected_fields(display_fields)
 
         if display_fields:
             # Limit result to requested fields only
@@ -255,13 +229,7 @@ class DSOSerializer(_SideloadMixin, serializers.HyperlinkedModelSerializer):
         if not hasattr(self, "parent") or self.root is self:
             expand = self.get_fields_to_expand()
             if expand:
-                request = self.context.get("request")
-                auth_checker = (
-                    getattr(request, "is_authorized_for", None) if request else None
-                )
-                embed_helper = EmbeddedHelper(
-                    self, expand=expand, auth_checker=auth_checker
-                )
+                embed_helper = EmbeddedHelper(self, expand=expand)
                 ret[self.expand_field] = embed_helper.get_embedded(instance)
 
         return ret

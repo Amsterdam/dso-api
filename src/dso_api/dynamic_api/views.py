@@ -9,6 +9,7 @@ from rest_framework import viewsets
 from rest_framework_dso import crs, fields
 from rest_framework_dso.pagination import DSOPageNumberPagination
 from rest_framework_dso.views import DSOViewMixin
+from dso_api.dynamic_api import permissions
 
 
 from dso_api.lib.schematools.models import DynamicModel
@@ -51,6 +52,9 @@ class DynamicApiViewSet(
 
     #: Define the model class to use (e.g. in .as_view() call / subclass)
     model: Type[DynamicModel] = None
+
+    #: Custom permission that checks amsterdam schema auth settings
+    permission_classes = [permissions.HasSufficientScopes]
 
     def get_queryset(self):
         # XXX use objects.only or objects.defer to filter columns

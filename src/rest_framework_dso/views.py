@@ -3,7 +3,7 @@ from typing import Optional, Type, Union
 from gisserver.types import CRS
 from rest_framework.exceptions import ErrorDetail, NotAcceptable, ValidationError
 from rest_framework.views import exception_handler as drf_exception_handler
-from rest_framework_dso import crs, filters, parsers, permissions
+from rest_framework_dso import crs, filters, parsers
 from rest_framework_dso.exceptions import PreconditionFailed
 
 
@@ -107,9 +107,6 @@ class DSOViewMixin:
 
     #: Enforce parsing Content-Crs for POST requests:
     parser_classes = [parsers.DSOJsonParser]
-
-    #: Custom permission that checks amsterdam schema auth settings
-    permission_classes = [permissions.HasSufficientScopes]
 
     def initial(self, request, *args, **kwargs):
         super().initial(request, *args, **kwargs)
