@@ -16,11 +16,11 @@ coreschema==0.0.4         # via coreapi, drf-yasg
 coverage==5.0.3           # via pytest-cov
 cryptography==2.8         # via jwcrypto
 datapunt-authorization-django==1.0.0  # via -r requirements.in
-defusedxml==0.6.0         # via djangorestframework-xml
+defusedxml==0.6.0         # via django-gisserver, djangorestframework-xml
 django-cors-headers==3.2.1  # via -r requirements.in
 django-environ==0.4.5     # via -r requirements.in
 django-filter==2.2.0      # via -r requirements.in
-django-gisserver==0.2     # via -r requirements.in
+django-gisserver==0.3     # via -r requirements.in
 django-healthchecks==1.4.2  # via -r requirements.in
 django-postgres-unlimited-varchar==1.1.0  # via -r requirements.in
 django==3.0.4             # via -r requirements.in, datapunt-authorization-django, django-cors-headers, django-filter, django-gisserver, django-healthchecks, django-postgres-unlimited-varchar, djangorestframework, drf-yasg
