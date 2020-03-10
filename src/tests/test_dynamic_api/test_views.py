@@ -200,12 +200,26 @@ class TestAuth:
         self, api_client, filled_router, afval_schema, fetch_auth_token, afval_container
     ):
         """ Prove that expanded fields are *not* shown when a reference field is protected
-            with an auth scope """
+            with an auth scope. For expand=true, we return a result,
+            without the fields that are protected """
         url = reverse("dynamic_api:afvalwegingen-containers-list")
         url = f"{url}?expand=true"
         models.DatasetTable.objects.filter(name="clusters").update(auth="BAG/R")
         response = api_client.get(url)
         assert response.status_code == 200, response.data
+        assert "cluster" not in response.json()["_embedded"], response.data
+
+    def test_auth_on_specified_embedded_fields_without_token_for_valid_scope(
+        self, api_client, filled_router, afval_schema, fetch_auth_token, afval_container
+    ):
+        """ Prove that a 403 is returned when asked for a specific expanded field that is protected
+            and there is no authorization in the token for that field.
+        """
+        url = reverse("dynamic_api:afvalwegingen-containers-list")
+        url = f"{url}?expand=cluster"
+        models.DatasetTable.objects.filter(name="clusters").update(auth="BAG/R")
+        response = api_client.get(url)
+        assert response.status_code == 403, response.data
 
     def test_auth_on_individual_fields_with_token_for_valid_scope(
         self, api_client, filled_router, afval_schema, fetch_auth_token, afval_container
