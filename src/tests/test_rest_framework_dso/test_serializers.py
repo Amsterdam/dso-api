@@ -79,6 +79,10 @@ def test_pagination_many(api_request, movie):
             "category": [{"name": "bar"}],
         },
     }
+    assert response["X-Total-Count"] == "1"
+    assert response["X-Pagination-Count"] == "1"
+    assert response["X-Pagination-Page"] == "1"
+    assert response["X-Pagination-Limit"] == "20"
 
 
 @pytest.mark.django_db
@@ -105,6 +109,10 @@ def test_fields_limit_works(api_rf, movie):
         "page_size": 20,
         "_embedded": {"movie": [{"name": "foo123"}]},
     }
+    assert response["X-Total-Count"] == "1"
+    assert response["X-Pagination-Count"] == "1"
+    assert response["X-Pagination-Page"] == "1"
+    assert response["X-Pagination-Limit"] == "20"
 
 
 @pytest.mark.django_db
