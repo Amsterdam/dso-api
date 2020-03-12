@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from rest_framework import pagination, response
+from rest_framework import pagination
+from rest_framework.response import Response
 from rest_framework.serializers import ListSerializer
 from rest_framework.utils.serializer_helpers import ReturnList
 
@@ -22,7 +23,16 @@ class DSOPageNumberPagination(pagination.PageNumberPagination):
 
     def get_paginated_response(self, data):
         data = self._get_paginated_data(data)
-        return response.Response(data)
+        response = Response(data)
+        response["X-Pagination-Page"] = self.page.number
+        response["X-Pagination-Limit"] = self.page_size
+
+        # Optional but available on this paginator:
+        paginator = self.page.paginator
+        response["X-Total-Count"] = paginator.count
+        response["X-Pagination-Count"] = paginator.num_pages
+
+        return response
 
     def _get_paginated_data(self, data: ReturnList) -> dict:
         # Avoid adding ?expand=.. and other parameters in the 'self' url.
