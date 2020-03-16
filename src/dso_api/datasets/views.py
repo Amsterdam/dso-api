@@ -7,7 +7,7 @@ from amsterdam_schema.types import DatasetSchema
 
 
 class SchemaUploadView(APIView):
-    swagger_schema = None  # Hide from swagger
+    schema = None  # Hide from swagger
 
     def post(self, request):
         schema = DatasetSchema.from_dict(request.data)

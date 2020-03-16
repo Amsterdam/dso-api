@@ -44,7 +44,7 @@ INSTALLED_APPS = [
     "django.contrib.postgres",
     "corsheaders",
     "django_filters",
-    "drf_yasg",
+    "drf_spectacular",
     "rest_framework",
     "rest_framework_gis",
     "gisserver",
@@ -170,6 +170,7 @@ REST_FRAMEWORK = dict(
         # 'rest_framework.authentication.SessionAuthentication',
     ],
     DEFAULT_PAGINATION_CLASS="rest_framework_dso.pagination.DSOPageNumberPagination",
+    DEFAULT_SCHEMA_CLASS="rest_framework_dso.openapi.DSOAutoSchema",
     DEFAULT_RENDERER_CLASSES=[
         "rest_framework_dso.renderers.HALJSONRenderer",
         "dso_api.lib.renderers.PatchedBrowsableAPIRenderer",
@@ -180,18 +181,6 @@ REST_FRAMEWORK = dict(
     EXCEPTION_HANDLER="rest_framework_dso.views.exception_handler",
     COERCE_DECIMAL_TO_STRING=True,
 )
-
-SWAGGER_SETTINGS = {
-    "USE_SESSION_AUTH": False,
-    "OAUTH2_REDIRECT_URL": "https://acc.data.amsterdam.nl/",
-    "SECURITY_DEFINITIONS": {
-        "oauth2": {
-            "type": "oauth2",
-            "authorizationUrl": f"{DATAPUNT_API_URL}oauth2/authorize",
-            "flow": "implicit",
-        }
-    },
-}
 
 # -- Amsterdam oauth settings
 
