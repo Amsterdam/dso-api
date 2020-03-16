@@ -63,7 +63,7 @@ class DynamicApiViewSet(
 
 
 def _get_viewset_api_docs(
-    model: Type[DynamicModel],
+    serializer_class: Type[serializers.DynamicSerializer],
     filterset_class: Type[filterset.DynamicFilterSet],
     ordering_fields: list,
 ) -> str:
@@ -77,7 +77,7 @@ def _get_viewset_api_docs(
             description = filter_field.extra["help_text"]
             lines.append(f" • {name}={description}")
 
-    embedded_fields = sorted(f.name for f in model._meta.get_fields() if f.is_relation)
+    embedded_fields = getattr(serializer_class.Meta, "embedded_fields", [])
     if embedded_fields:
         if lines:
             lines.append("")
@@ -112,7 +112,9 @@ def viewset_factory(model: Type[DynamicModel]) -> Type[DynamicApiViewSet]:
     ordering_fields = _get_ordering_fields(serializer_class)
 
     attrs = {
-        "__doc__": _get_viewset_api_docs(model, filterset_class, ordering_fields),
+        "__doc__": _get_viewset_api_docs(
+            serializer_class, filterset_class, ordering_fields
+        ),
         "model": model,
         "serializer_class": serializer_class,
         "filterset_class": filterset_class,

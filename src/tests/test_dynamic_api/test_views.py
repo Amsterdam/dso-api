@@ -231,7 +231,7 @@ class TestAuth:
         token = fetch_auth_token(["BAG/R"])
         response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
         assert response.status_code == 200, response.data
-        assert "eigenaar_naam" in set(
+        assert "eigenaarNaam" in set(
             [
                 field_name
                 for field_name in response.data["_embedded"]["containers"][0].keys()
