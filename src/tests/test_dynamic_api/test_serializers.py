@@ -65,13 +65,13 @@ class TestDynamicSerializer:
             },
             "id": 2,
             "schema": "https://schemas.data.amsterdam.nl/datasets/afvalwegingen/afvalwegingen#containers",  # noqa: E501
-            "cluster_id": "123.456",
+            "clusterId": "123.456",
             "cluster": "http://testserver/v1/afvalwegingen/clusters/123.456/",
             "serienummer": "serie123",
-            "datum_creatie": "2020-02-03",
-            "datum_leegmaken": None,
+            "datumCreatie": "2020-02-03",
+            "datumLeegmaken": None,
             "geometry": None,
-            "eigenaar_naam": "datapunt",
+            "eigenaarNaam": "datapunt",
         }
 
     @staticmethod
@@ -100,13 +100,13 @@ class TestDynamicSerializer:
             },
             "id": 2,
             "schema": "https://schemas.data.amsterdam.nl/datasets/afvalwegingen/afvalwegingen#containers",  # noqa: E501
-            "cluster_id": "123.456",
+            "clusterId": "123.456",
             "cluster": "http://testserver/v1/afvalwegingen/clusters/123.456/",
             "serienummer": None,
-            "datum_creatie": None,
-            "datum_leegmaken": None,
+            "datumCreatie": None,
+            "datumLeegmaken": None,
             "geometry": None,
-            "eigenaar_naam": None,
+            "eigenaarNaam": None,
             "_embedded": {
                 "cluster": {
                     "_links": {
@@ -146,13 +146,13 @@ class TestDynamicSerializer:
             },
             "id": 3,
             "schema": "https://schemas.data.amsterdam.nl/datasets/afvalwegingen/afvalwegingen#containers",  # noqa: E501
-            "cluster_id": None,
+            "clusterId": None,
             "cluster": None,
             "serienummer": None,
-            "datum_creatie": None,
-            "datum_leegmaken": None,
+            "datumCreatie": None,
+            "datumLeegmaken": None,
             "geometry": None,
-            "eigenaar_naam": None,
+            "eigenaarNaam": None,
             "_embedded": {"cluster": None},
         }
 
@@ -180,12 +180,12 @@ class TestDynamicSerializer:
             },
             "id": 4,
             "schema": "https://schemas.data.amsterdam.nl/datasets/afvalwegingen/afvalwegingen#containers",  # noqa: E501
-            "cluster_id": 99,
+            "clusterId": 99,
             "cluster": "http://testserver/v1/afvalwegingen/clusters/99/",
             "serienummer": None,
-            "datum_creatie": None,
-            "datum_leegmaken": None,
+            "datumCreatie": None,
+            "datumLeegmaken": None,
             "geometry": None,
-            "eigenaar_naam": None,
+            "eigenaarNaam": None,
             "_embedded": {"cluster": None},
         }

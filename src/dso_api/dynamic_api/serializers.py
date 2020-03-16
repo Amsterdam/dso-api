@@ -13,6 +13,7 @@ from rest_framework import serializers
 from rest_framework_dso.fields import EmbeddedField
 from rest_framework_dso.serializers import DSOSerializer
 from dso_api.dynamic_api.permissions import fetch_scopes_for_model
+from dso_api.dynamic_api.utils import snake_to_camel_case
 
 
 class _DynamicLinksField(DSOSerializer.serializer_url_field):
@@ -123,15 +124,33 @@ def serializer_factory(model: Type[DynamicModel]) -> Type[DynamicSerializer]:
     }
 
     # Parse fields for serializer
+    extra_kwargs = {}
     for model_field in model._meta.get_fields():
-        if isinstance(model_field, models.ForeignKey):
-            new_attrs[model_field.name] = EmbeddedField(
-                serializer_class=serializer_factory(model_field.related_model),
-            )
-            fields.append(model_field.attname)
+        orig_name = model_field.name
 
-        fields.append(model_field.name)
+        # Instead of having to apply camelize() on every response,
+        # create converted field names on the serializer construction.
+        camel_name = snake_to_camel_case(model_field.name)
+
+        # Add extra embedded part for foreign keys
+        if isinstance(model_field, models.ForeignKey):
+            new_attrs[camel_name] = EmbeddedField(
+                serializer_class=serializer_factory(model_field.related_model),
+                source=model_field.name,
+            )
+
+            camel_id_name = snake_to_camel_case(model_field.attname)
+            fields.append(camel_id_name)
+
+            if model_field.attname != camel_id_name:
+                extra_kwargs[camel_id_name] = {"source": model_field.attname}
+
+        fields.append(camel_name)
+        if orig_name != camel_name:
+            extra_kwargs[camel_name] = {"source": model_field.name}
 
     # Generate Meta section and serializer class
-    new_attrs["Meta"] = type("Meta", (), {"model": model, "fields": fields})
+    new_attrs["Meta"] = type(
+        "Meta", (), {"model": model, "fields": fields, "extra_kwargs": extra_kwargs}
+    )
     return type(serializer_name, (DynamicSerializer,), new_attrs)

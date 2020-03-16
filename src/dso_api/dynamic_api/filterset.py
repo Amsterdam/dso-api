@@ -6,12 +6,24 @@ from typing import Type
 
 from django.contrib.gis.db.models import GeometryField
 
+from dso_api.dynamic_api.utils import snake_to_camel_case
 from dso_api.lib.schematools.models import DynamicModel
 from rest_framework_dso.filters import DSOFilterSet
 
 
 class DynamicFilterSet(DSOFilterSet):
     """Base class for dynamic filter sets."""
+
+    @classmethod
+    def get_filters(cls):
+        filters = super().get_filters()
+
+        # Apply camelCase to the filter names, after they've been initialized
+        # using the model fields snake_case as input.
+        return {
+            snake_to_camel_case(attr_name): filter
+            for attr_name, filter in filters.items()
+        }
 
 
 def filterset_factory(model: Type[DynamicModel]) -> Type[DynamicFilterSet]:
