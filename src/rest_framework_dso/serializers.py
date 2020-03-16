@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from typing import List, Union, cast, Optional
+from typing import List, Optional, Union, cast
 
 from django.db import models
 from django.utils.functional import cached_property
@@ -14,6 +14,12 @@ from rest_framework_dso.utils import EmbeddedHelper
 
 
 class _SideloadMixin:
+    """Handling ?expand parameter.
+
+    This is only a separate mixin because the parameter needs to be handled
+    in 2 separate classes: `DSOListSerializer` and the regular `DSOSerializer`.
+    """
+
     expand_param = "expand"  # so ?expand=.. gives a result
     expand_field = "_embedded"  # with _embedded in the result
 
