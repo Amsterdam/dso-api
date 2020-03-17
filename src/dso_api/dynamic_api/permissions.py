@@ -1,10 +1,21 @@
+from dataclasses import dataclass, field
+from typing import Dict, Set
+
 from cachetools.func import ttl_cache
 from rest_framework import permissions
 from dso_api.datasets import models
 
 
+@dataclass
+class TableScopes:
+    """OAuth scopes for tables and fields."""
+
+    table: Set[str] = field(default_factory=set)
+    fields: Dict[str, Set[str]] = field(default_factory=dict)
+
+
 @ttl_cache(ttl=60 * 60)
-def fetch_scopes_for_model(model):
+def fetch_scopes_for_model(model) -> TableScopes:
     """ Get the scopes for a Django model, based on the Amsterdam schema information """
 
     def _fetch_scopes(obj):
@@ -12,20 +23,20 @@ def fetch_scopes_for_model(model):
             return set(obj.auth.split(","))
         return set()
 
-    default_value = dict(table=set(), field={})
     # If it is not a DSO-based model, we leave it alone
     if not hasattr(model, "_dataset_schema"):
-        return default_value
+        return TableScopes()
+
     dataset_table = model._dataset_schema.get_table_by_id(model._meta.model_name)
     try:
         table = models.DatasetTable.objects.get(name=dataset_table.id)
     except models.DatasetTable.DoesNotExist:
-        return default_value
+        return TableScopes()
 
-    return {
-        "table": _fetch_scopes(table) | _fetch_scopes(table.dataset),
-        "field": {field.name: _fetch_scopes(field) for field in table.fields.all()},
-    }
+    return TableScopes(
+        table=_fetch_scopes(table) | _fetch_scopes(table.dataset),
+        fields={field.name: _fetch_scopes(field) for field in table.fields.all()},
+    )
 
 
 class HasSufficientScopes(permissions.BasePermission):
@@ -35,7 +46,7 @@ class HasSufficientScopes(permissions.BasePermission):
 
     def _has_permission(self, request, model):
         scopes = fetch_scopes_for_model(model)
-        return request.is_authorized_for(*scopes["table"])
+        return request.is_authorized_for(*scopes.table)
 
     def has_permission(self, request, view):
         """ Based on the model that is associated with the view
