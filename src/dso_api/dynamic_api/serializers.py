@@ -73,22 +73,22 @@ class DynamicSerializer(DSOSerializer):
         return field_class, field_kwargs
 
     def get_unauthorized_fields(self) -> set:
+        """Check which field names should be excluded"""
         model = self.Meta.model
         request = self.context.get("request")
-        scopes_info = fetch_scopes_for_model(model)
-        all_fields = set([f.name for f in model._meta.get_fields()])
+        scope_data = fetch_scopes_for_model(model).fields
+
         unauthorized_fields = set()
         if hasattr(request, "is_authorized_for"):
-            for name in all_fields:
-                scopes = scopes_info["field"].get(name)
+            for field in model._meta.get_fields():
+                scopes = scope_data.get(field.name)
                 if scopes is None:
                     continue
-                if not request.is_authorized_for(*scopes):
-                    unauthorized_fields.add(name)
-        if unauthorized_fields:
-            return unauthorized_fields
 
-        return set()
+                if not request.is_authorized_for(*scopes):
+                    unauthorized_fields.add(field.name)
+
+        return unauthorized_fields
 
     def to_representation(self, instance):
         unauthorized_fields = self.get_unauthorized_fields()

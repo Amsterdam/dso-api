@@ -53,7 +53,7 @@ class EmbeddedHelper:
             try:
                 field = getattr(self.parent_serializer, field_name)
                 scopes = fetch_scopes_for_model(field.related_model)
-                if auth_checker and not auth_checker(*scopes["table"]):
+                if auth_checker and not auth_checker(*scopes.table):
                     if field_name in specified_expands:
                         raise PermissionDenied(
                             f"Eager loading not allowed for field '{field_name}'"
