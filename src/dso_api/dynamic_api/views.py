@@ -2,10 +2,11 @@ from typing import List, Type
 
 from django.contrib.gis.db.models import GeometryField
 from django.http import Http404, JsonResponse
+from django.urls import reverse
 
 from gisserver.features import FeatureType, ServiceDescription
 from gisserver.views import WFSView
-from rest_framework import viewsets
+from rest_framework import viewsets, routers
 from rest_framework_dso import crs, fields
 from rest_framework_dso.pagination import DSOPageNumberPagination
 from rest_framework_dso.views import DSOViewMixin
@@ -34,6 +35,31 @@ def reload_patterns(request):
             ]
         }
     )
+
+
+class DynamicAPIRootView(routers.APIRootView):
+    """
+    This is the generic [DSO-compatible](https://aandeslagmetdeomgevingswet.nl/digitaal-stelsel/aansluiten/standaarden/api-en-uri-strategie/) API server.
+
+    The following features are supported:
+
+    * HAL-JSON based links, pagination and response structure.
+    * Use `?expand=name1,name2` to sideload specific relations.
+    * Use `?expand=true` to sideload all relations.
+
+    The models in this server are generated from the Amsterdam Schema files.
+    These are located at:
+    [https://schemas.data.amsterdam.nl/datasets](https://schemas.data.amsterdam.nl/datasets)
+    """  # noqa: E501
+
+    #: Title shown in the root API view.
+    name = "DSO-API"
+
+    def get(self, request, *args, **kwargs):
+        response = super().get(request, *args, **kwargs)
+        response.content_type = "application/json"
+        response.data["openapi"] = request.build_absolute_uri(reverse("openapi.json"))
+        return response
 
 
 class DynamicApiViewSet(
@@ -72,21 +98,23 @@ def _get_viewset_api_docs(
     """
     lines = []
     if filterset_class and filterset_class.base_filters:
-        lines.append("The following fields can be used as filter with ?FIELDNAME=...:")
+        lines.append(
+            "The following fields can be used as filter with `?FIELDNAME=...`:\n"
+        )
         for name, filter_field in filterset_class.base_filters.items():
             description = filter_field.extra["help_text"]
-            lines.append(f" • {name}={description}")
+            lines.append(f"* {name}=*{description}*")
 
     embedded_fields = getattr(serializer_class.Meta, "embedded_fields", [])
     if embedded_fields:
         if lines:
             lines.append("")
-        lines.append("The following fields can be expanded with ?expand=...:")
-        lines.extend(f" • {name}" for name in embedded_fields)
-        lines.append("\nExpand everything using expand=true.")
+        lines.append("The following fields can be expanded with `?expand=...`:\n")
+        lines.extend(f"* {name}" for name in embedded_fields)
+        lines.append("\nExpand everything using `expand=true`.")
 
     if ordering_fields:
-        lines.append("Use ?sorteer=field,field2,-field3 to sort on fields")
+        lines.append("\nUse `?sorteer=field,field2,-field3` to sort on fields")
 
     return "\n".join(lines)
 

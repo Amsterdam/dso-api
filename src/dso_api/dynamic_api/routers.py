@@ -12,7 +12,7 @@ from rest_framework import routers
 from dso_api.datasets.models import Dataset
 from dso_api.dynamic_api.locking import lock_for_writing
 from dso_api.dynamic_api.serializers import serializer_factory, get_view_name
-from dso_api.dynamic_api.views import viewset_factory
+from dso_api.dynamic_api.views import DynamicAPIRootView, viewset_factory
 
 logger = logging.getLogger(__name__)
 reload_counter = 0
@@ -21,7 +21,14 @@ if TYPE_CHECKING:
     from dso_api.lib.schematools.models import DynamicModel
 
 
-class DynamicRouter(routers.SimpleRouter):
+class DynamicRouter(routers.DefaultRouter):
+    """Router that dynamically creates all viewsets based on the Dataset models."""
+
+    #: Override root view to add description
+    APIRootView = DynamicAPIRootView
+
+    include_format_suffixes = False
+
     def __init__(self):
         super().__init__(trailing_slash=True)
         self.all_models = {}

@@ -10,11 +10,12 @@ from dso_api.lib.schematools.db import create_tables
 @pytest.mark.django_db
 def test_list_dynamic_view(api_client, api_rf, router, bommen_dataset):
     """Prove that building the router also creates the available viewsets."""
-    assert len(router.urls) == 0, [p.name for p in router.urls]
+    router_urls = [p.name for p in router.urls]
+    assert router_urls == ["api-root"]
 
     # Prove that the router URLs are extended on adding a model
     router.reload()
-    assert len(router.urls) > 0
+    assert len(router.urls) > 1
 
     # Make sure the tables are created too
     if "bommen_bommen" not in connection.introspection.table_names():

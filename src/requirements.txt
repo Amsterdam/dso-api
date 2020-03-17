@@ -39,6 +39,7 @@ idna==2.9                 # via requests
 jsonschema==3.2.0         # via -r requirements.in, amsterdam-schema
 jwcrypto==0.7             # via datapunt-authorization-django
 lxml==4.5.0               # via django-gisserver
+markdown==3.2.1           # via -r requirements.in
 mccabe==0.6.1             # via flake8
 more-itertools==8.2.0     # via pytest
 orjson==2.5.1             # via django-gisserver

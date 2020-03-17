@@ -5,6 +5,7 @@ from django.views.generic import RedirectView
 from drf_spectacular import openapi
 from rest_framework import exceptions, permissions, renderers
 from rest_framework.schemas import get_schema_view
+from rest_framework.utils.formatting import dedent
 
 import dso_api.datasets.urls
 import dso_api.dynamic_api.urls
@@ -17,17 +18,7 @@ class ExtendedSchemaGenerator(openapi.SchemaGenerator):
         "info": {
             "title": "DSO-API",
             "version": "v1",
-            "description": (
-                "This is the generic [DSO-compatible](https://aandeslagmetdeomgevingswet.nl/digitaal-stelsel/aansluiten/standaarden/api-en-uri-strategie/) API server.\n"  # noqa E501
-                "\n"
-                "The following features are supported:\n"
-                "* HAL-JSON based links, pagination and response structure.\n"
-                "* Use `?expand=name1,name2` to sideload specific relations.\n"
-                "* Use `?expand=true` to sideload all relations.\n"
-                "\n"
-                "The models in this server are generated from the Amsterdam Schema files.\n"
-                "These are located at: https://schemas.data.amsterdam.nl/datasets"
-            ),
+            "description": dedent(dso_api.dynamic_api.urls.router.APIRootView.__doc__),
             # These fields can't be specified in get_schema_view():
             "termsOfService": "https://data.amsterdam.nl/",
             "contact": {"email": "datapunt@amsterdam.nl"},
@@ -79,8 +70,16 @@ urlpatterns = [
     path("datasets/", include(dso_api.datasets.urls)),
     path("v1/", include(dso_api.dynamic_api.urls)),
     # path("v1/", schema_view.with_ui("swagger", cache_timeout=0)),
-    path("v1/openapi.yaml", _get_schema_view([renderers.OpenAPIRenderer])),
-    path("v1/openapi.json", _get_schema_view([renderers.JSONOpenAPIRenderer])),
+    path(
+        "v1/openapi.yaml",
+        _get_schema_view(renderer_classes=[renderers.OpenAPIRenderer]),
+        name="openapi.yaml",
+    ),
+    path(
+        "v1/openapi.json",
+        _get_schema_view(renderer_classes=[renderers.JSONOpenAPIRenderer]),
+        name="openapi.json",
+    ),
     path("", RedirectView.as_view(url="/v1/"), name="root-redirect"),
 ]
 

@@ -66,7 +66,8 @@ def router():
 def filled_router(router, afval_dataset, bommen_dataset):
     # Prove that the router URLs are extended on adding a model
     router.reload()
-    assert len(router.urls) > 0
+    router_urls = [p.name for p in router.urls]
+    assert len(router_urls) > 1, router_urls
 
     # Make sure the tables are created too
     table_names = connection.introspection.table_names()
