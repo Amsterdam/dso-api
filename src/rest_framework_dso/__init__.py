@@ -4,6 +4,9 @@ DSO = Digitaal Stelsel Omgevingswet.
 This is a Dutch standard for API's for the government in The Netherlands:
 https://aandeslagmetdeomgevingswet.nl/digitaal-stelsel/aansluiten/standaarden/api-en-uri-strategie/
 
+Which is updated as "NL Designrules":
+https://docs.geostandaarden.nl/api/API-Strategie-ext/
+
 Implemented:
 
 * HAL links {"_links": {"self": {"href": ..., "title": ...}}}
@@ -18,8 +21,7 @@ Via other packages:
 Not implemented:
 
 * ?fields=field1.subfield
-* ?sorteer=-field  (ordering)
-* ?zoek=urgent (search queries, including ``*`` and ``?`` wildcards for single words)
+* ?search=urgent (search queries, including ``*`` and ``?`` wildcards for single words)
 * GeoJSON support.
 
 Extra recommendations:

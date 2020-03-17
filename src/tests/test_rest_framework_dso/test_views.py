@@ -168,7 +168,19 @@ class TestListOrdering:
 
     @staticmethod
     def test_list_ordering_name(api_client):
-        """Prove that ?sorteer=... works on the list view."""
+        """Prove that ?sort=... works on the list view."""
+        Movie.objects.create(name="test")
+        Movie.objects.create(name="foo123")
+
+        # Sort descending by name
+        response = api_client.get("/v1/movies", data={"sort": "-name"})
+        assert response.status_code == 200, response.json()
+        names = [movie["name"] for movie in response.data["_embedded"]["movie"]]
+        assert names == ["test", "foo123"]
+
+    @staticmethod
+    def test_list_ordering_name_old_param(api_client):
+        """Prove that ?sort=... works on the list view."""
         Movie.objects.create(name="test")
         Movie.objects.create(name="foo123")
 
@@ -180,20 +192,20 @@ class TestListOrdering:
 
     @staticmethod
     def test_list_ordering_date(api_client):
-        """Prove that ?sorteer=... works on the list view."""
+        """Prove that ?sort=... works on the list view."""
         Movie.objects.create(name="foo123", date_added=datetime(2020, 1, 1, 0, 45))
         Movie.objects.create(name="test", date_added=datetime(2020, 2, 2, 13, 15))
 
         # Sort descending by name
-        response = api_client.get("/v1/movies", data={"sorteer": "-date_added"})
+        response = api_client.get("/v1/movies", data={"sort": "-date_added"})
         assert response.status_code == 200, response.json()
         names = [movie["name"] for movie in response.data["_embedded"]["movie"]]
         assert names == ["test", "foo123"]
 
     @staticmethod
     def test_list_ordering_invalid(api_client, category, django_assert_num_queries):
-        """Prove that ?sorteer=... only works on a fixed set of fields (e.g. not on FK's)."""
-        response = api_client.get("/v1/movies", data={"sorteer": "category"})
+        """Prove that ?sort=... only works on a fixed set of fields (e.g. not on FK's)."""
+        response = api_client.get("/v1/movies", data={"sort": "category"})
         assert response.status_code == 400, response.json()
         assert response.json() == {
             "type": "urn:apiexception:invalid",
