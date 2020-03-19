@@ -213,3 +213,6 @@ DATAPUNT_AUTHZ = {
 # -- Local app settings
 
 AMSTERDAM_SCHEMA = {"geosearch_disabled_datasets": ["bag"]}
+
+PROJECT_DIR = os.path.abspath(os.path.join(BASE_DIR, ".."))
+DATA_DIR = os.path.abspath(os.path.join(PROJECT_DIR, "data"))
