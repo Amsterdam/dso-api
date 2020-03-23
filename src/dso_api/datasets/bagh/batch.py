@@ -37,17 +37,6 @@ class ImportGemeenteTask(batch.BasicTask):
         pass
 
     def process(self):
-        pass
-
-        #     id character varying(18) COLLATE pg_catalog."default" NOT NULL,
-        # identificatie character varying(14) COLLATE pg_catalog."default" NOT NULL,
-        # volgnummer smallint NOT NULL,
-        # registratiedatum timestamp with time zone NOT NULL,
-        # begin_geldigheid date,
-        # einde_geldigheid date,
-        # naam character varying(40) COLLATE pg_catalog."default" NOT NULL,
-        # verzorgingsgebied boolean,
-        # vervallen boolean,
 
         gemeentes = [
             self.model(
