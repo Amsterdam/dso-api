@@ -46,7 +46,7 @@ class AbstractEmbeddedField:
 
     def get_serializer(self, parent: Serializer) -> Serializer:
         """Build the EmbeddedFieldserializer object that can generate an embedded result."""
-        embedded_serializer = self.serializer_class()
+        embedded_serializer = self.serializer_class(context=parent.context)
         embedded_serializer.bind(field_name=self.field_name, parent=parent)
         return embedded_serializer
 

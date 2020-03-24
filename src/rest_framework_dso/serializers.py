@@ -170,28 +170,38 @@ class DSOSerializer(_SideloadMixin, serializers.HyperlinkedModelSerializer):
 
         return list_serializer_class(*args, **list_kwargs)
 
-    def get_fields_to_display(self) -> set:
-        request = self.context.get("request")
-        if request is not None:
-            fields = request.GET.get(self.fields_param)
-            if fields:
-                display_fields = fields.split(",")
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        request = self.context["request"]
 
-                if not (set(display_fields) <= set(self.fields.keys())):
-                    # Some of `display_fields` are not in result.
-                    invalid_fields = [
-                        field_name
-                        for field_name in display_fields
-                        if field_name not in self.fields
-                    ]
-                    raise ValidationError(
-                        "'{}' is not one of available options".format(
-                            ", ".join(invalid_fields)
-                        ),
-                        code="fields",
-                    )
-                return set(display_fields)
-        return set()
+        # Adjust the serializer based on the request.
+        fields = request.GET.get(self.fields_param)
+        if fields:
+            display_fields = self.get_fields_to_display(fields)
+
+            # Limit result to requested fields only
+            self.fields = OrderedDict(
+                [
+                    (field_name, field)
+                    for field_name, field in self.fields.items()
+                    if field_name in display_fields
+                ]
+            )
+
+    def get_fields_to_display(self, fields) -> set:
+        """Tell which fields should be displayed"""
+        display_fields = set(fields.split(","))
+
+        invalid_fields = display_fields - set(self.fields.keys())
+        if invalid_fields:
+            # Some of `display_fields` are not in result.
+            raise ValidationError(
+                "'{}' is not one of available options".format(
+                    "', '".join(sorted(invalid_fields))
+                ),
+                code="fields",
+            )
+        return display_fields
 
     @cached_property
     def _geometry_fields(self) -> List[GeometryField]:
@@ -216,18 +226,6 @@ class DSOSerializer(_SideloadMixin, serializers.HyperlinkedModelSerializer):
                 # Write back the used content CRS to include in the response.
                 if request.response_content_crs is None:
                     request.response_content_crs = self._get_crs(instance)
-
-        display_fields = self.get_fields_to_display()
-
-        if display_fields:
-            # Limit result to requested fields only
-            self.fields = OrderedDict(
-                [
-                    (field_name, field)
-                    for field_name, field in self.fields.items()
-                    if field_name in display_fields
-                ]
-            )
 
         ret = super().to_representation(instance)
 

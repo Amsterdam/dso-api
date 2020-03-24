@@ -4,6 +4,7 @@ from datetime import date
 from pathlib import Path
 
 import pytest
+from django.core.handlers.wsgi import WSGIRequest
 from jwcrypto.jwt import JWT
 from django.db import connection
 from django.utils.timezone import now
@@ -28,12 +29,22 @@ def api_rf() -> APIRequestFactory:
 
 
 @pytest.fixture()
-def api_request(api_rf) -> Request:
-    """Return a very basic Request object that's good enough as serializer context."""
+def api_request(api_rf) -> WSGIRequest:
+    """Return a very basic Request object. This can be used for the APIClient.
+    The DRF views use a different request object internally, see `drf_request` for that.
+    """
     request = api_rf.get("/v1/dummy/")
     request.accept_crs = None  # for DSOSerializer, expects to be used with DSOViewMixin
     request.response_content_crs = None
     return request
+
+
+@pytest.fixture()
+def drf_request(api_request) -> Request:
+    """The wrapped WSGI Request as a Django-Rest-Framework request.
+    This is the 'request' object that APIView.dispatch() creates.
+    """
+    return Request(api_request)
 
 
 @pytest.fixture()

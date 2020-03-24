@@ -31,9 +31,11 @@ class LocationSerializer(DSOSerializer):
 
 
 @pytest.mark.django_db
-def test_serializer_single(movie):
+def test_serializer_single(api_request, movie):
     """Prove that the serializer can embed data (for the detail page)"""
-    serializer = MovieSerializer(instance=movie, fields_to_expand=["category"])
+    serializer = MovieSerializer(
+        instance=movie, fields_to_expand=["category"], context={"request": api_request}
+    )
     assert serializer.data == {
         "name": "foo123",
         "category_id": movie.category_id,
@@ -42,10 +44,13 @@ def test_serializer_single(movie):
 
 
 @pytest.mark.django_db
-def test_serializer_many(movie):
+def test_serializer_many(api_request, movie):
     """Prove that the serializer can embed data (for the detail page)"""
     serializer = MovieSerializer(
-        many=True, instance=[movie], fields_to_expand=["category"]
+        many=True,
+        instance=[movie],
+        fields_to_expand=["category"],
+        context={"request": api_request},
     )
     assert serializer.data == {
         "movie": [{"name": "foo123", "category_id": movie.category_id}],
@@ -54,13 +59,15 @@ def test_serializer_many(movie):
 
 
 @pytest.mark.django_db
-def test_pagination_many(api_request, movie):
+def test_pagination_many(drf_request, movie):
     """Prove that the serializer can embed data (for the detail page)"""
-    drf_request = Request(api_request)
     queryset = Movie.objects.all()
 
     serializer = MovieSerializer(
-        many=True, instance=queryset, fields_to_expand=["category"]
+        many=True,
+        instance=queryset,
+        fields_to_expand=["category"],
+        context={"request": drf_request},
     )
     paginator = DSOPageNumberPagination()
     paginator.paginate_queryset(queryset, drf_request)
@@ -122,13 +129,8 @@ def test_fields_limit_by_incorrect_field_gives_error(api_rf, movie):
     request = Request(django_request)
     queryset = Movie.objects.all()
 
-    serializer = MovieSerializer(
-        many=True, instance=queryset, context={"request": request}
-    )
-    paginator = DSOPageNumberPagination()
-    paginator.paginate_queryset(queryset, request)
     with pytest.raises(ValidationError) as exec_info:
-        paginator.get_paginated_response(serializer.data)
+        MovieSerializer(many=True, instance=queryset, context={"request": request})
 
     assert "'batman' is not one of available options" in str(exec_info.value)
 

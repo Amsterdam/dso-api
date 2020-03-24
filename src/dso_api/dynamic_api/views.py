@@ -1,6 +1,7 @@
 from typing import List, Type
 
 from django.contrib.gis.db.models import GeometryField
+from django.db import models
 from django.http import Http404, JsonResponse
 from django.urls import reverse
 
@@ -15,6 +16,7 @@ from dso_api.dynamic_api import permissions
 
 from dso_api.lib.schematools.models import DynamicModel
 from . import filterset, locking, serializers
+from .permissions import get_unauthorized_fields
 
 
 def reload_patterns(request):
@@ -80,7 +82,7 @@ class DynamicApiViewSet(
     model: Type[DynamicModel] = None
 
     #: Custom permission that checks amsterdam schema auth settings
-    permission_classes = [permissions.HasSufficientScopes]
+    permission_classes = [permissions.HasOAuth2Scopes]
 
     def get_queryset(self):
         # XXX use objects.only or objects.defer to filter columns
@@ -186,10 +188,36 @@ class DatasetWFSView(WFSView):
         """Generate map feature layers for all models that have geometry data."""
         return [
             # TODO: Extend FeatureType with extra meta data
-            FeatureType(model, crs=crs.DEFAULT_CRS, other_crs=crs.OTHER_CRS)
+            FeatureType(
+                model,
+                fields=self.get_field_names(model),
+                crs=crs.DEFAULT_CRS,
+                other_crs=crs.OTHER_CRS,
+            )
             for name, model in self.models.items()
             if self._has_geometry_field(model)
         ]
+
+    def get_field_names(self, model):
+        """Define which fields should be exposed with the model.
+
+        Instead of opting for the "__all__" value of django-gisserver,
+        provide an exist list of fields so unauthorized fields are excluded.
+        """
+        unauthorized_fields = get_unauthorized_fields(self.request, model)
+        fields = []
+        for model_field in model._meta.get_fields():
+            if model_field.name in unauthorized_fields:
+                continue
+
+            if isinstance(model_field, models.ForeignKey):
+                # Don't let it query on the relation value yet
+                field_name = model_field.attname
+            else:
+                field_name = model_field.name
+
+            fields.append(field_name)
+        return fields
 
     def _has_geometry_field(self, model):
         return any(isinstance(f, GeometryField) for f in model._meta.get_fields())

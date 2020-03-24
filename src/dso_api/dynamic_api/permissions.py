@@ -39,7 +39,25 @@ def fetch_scopes_for_model(model) -> TableScopes:
     )
 
 
-class HasSufficientScopes(permissions.BasePermission):
+def get_unauthorized_fields(request, model) -> set:
+    """Check which field names should be excluded"""
+    scope_data = fetch_scopes_for_model(model).fields
+
+    unauthorized_fields = set()
+    # is_authorized_for is added by authorization_django middleware
+    if hasattr(request, "is_authorized_for"):
+        for model_field in model._meta.get_fields():
+            scopes = scope_data.get(model_field.name)
+            if scopes is None:
+                continue
+
+            if not request.is_authorized_for(*scopes):
+                unauthorized_fields.add(model_field.name)
+
+    return unauthorized_fields
+
+
+class HasOAuth2Scopes(permissions.BasePermission):
     """
     Custom permission to check auth scopes from Amsterdam schema.
     """
