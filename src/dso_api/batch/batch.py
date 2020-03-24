@@ -3,6 +3,8 @@ import logging
 
 log = logging.getLogger(__name__)
 
+BATCH_SIZE = 50000
+
 
 class BasicJob:
     """Interface for jobs"""
