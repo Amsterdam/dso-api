@@ -104,7 +104,7 @@ def _get_viewset_api_docs(
             "The following fields can be used as filter with `?FIELDNAME=...`:\n"
         )
         for name, filter_field in filterset_class.base_filters.items():
-            description = filter_field.extra["help_text"]
+            description = filter_field.label  # other kwarg appear in .extra[".."]
             lines.append(f"* {name}=*{description}*")
 
     embedded_fields = getattr(serializer_class.Meta, "embedded_fields", [])

@@ -175,18 +175,20 @@ class DSOSerializer(_SideloadMixin, serializers.HyperlinkedModelSerializer):
         request = self.context["request"]
 
         # Adjust the serializer based on the request.
-        fields = request.GET.get(self.fields_param)
-        if fields:
-            display_fields = self.get_fields_to_display(fields)
+        # request can be None for get_schema_view(public=True)
+        if request is not None:
+            fields = request.GET.get(self.fields_param)
+            if fields:
+                display_fields = self.get_fields_to_display(fields)
 
-            # Limit result to requested fields only
-            self.fields = OrderedDict(
-                [
-                    (field_name, field)
-                    for field_name, field in self.fields.items()
-                    if field_name in display_fields
-                ]
-            )
+                # Limit result to requested fields only
+                self.fields = OrderedDict(
+                    [
+                        (field_name, field)
+                        for field_name, field in self.fields.items()
+                        if field_name in display_fields
+                    ]
+                )
 
     def get_fields_to_display(self, fields) -> set:
         """Tell which fields should be displayed"""

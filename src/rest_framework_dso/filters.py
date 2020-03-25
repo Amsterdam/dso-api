@@ -124,8 +124,10 @@ class DSOFilterSet(FilterSet):
         This data is shown in the Swagger docs, and browsable API.
         """
         filter_class, params = super().filter_for_lookup(field, lookup_type)
-        if "help_text" not in params:
-            params["help_text"] = cls.get_filter_help_text(filter_class, params)
+        if "label" not in params:
+            # description for swagger:
+            params["label"] = cls.get_filter_help_text(filter_class, params)
+
         return filter_class, params
 
     @classmethod

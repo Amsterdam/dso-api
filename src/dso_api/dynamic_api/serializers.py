@@ -48,15 +48,17 @@ class DynamicSerializer(DSOSerializer):
         request = self.context["request"]
 
         # Adjust the serializer based on the request.
-        unauthorized_fields = get_unauthorized_fields(request, self.Meta.model)
-        if unauthorized_fields:
-            self.fields = OrderedDict(
-                [
-                    (field_name, field)
-                    for field_name, field in self.fields.items()
-                    if field_name not in unauthorized_fields
-                ]
-            )
+        # request can be None for get_schema_view(public=True)
+        if request is not None:
+            unauthorized_fields = get_unauthorized_fields(request, self.Meta.model)
+            if unauthorized_fields:
+                self.fields = OrderedDict(
+                    [
+                        (field_name, field)
+                        for field_name, field in self.fields.items()
+                        if field_name not in unauthorized_fields
+                    ]
+                )
 
     def get_auth_checker(self):
         request = self.context.get("request")
