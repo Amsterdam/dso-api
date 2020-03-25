@@ -157,6 +157,8 @@ class DSOFilterSetBackend(DjangoFilterBackend):
     and processed.
     """
 
+    filterset_base = DSOFilterSet
+
     def to_html(self, request, queryset, view):
         """See https://github.com/tomchristie/django-rest-framework/issues/3766.
 
