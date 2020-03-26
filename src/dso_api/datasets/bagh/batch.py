@@ -1,25 +1,184 @@
+import copy
 import logging
 import os
 
-from django.db.models import Count
+from django.db import connection, transaction
 
 from dso_api import settings
 from dso_api.batch import batch, csv, geo
 from dso_api.batch.objectstore import download_file
 from dso_api.datasets.models import Dataset
 
-GOB_CSV_ENCODING = "utf-8-sig"
 GOB_SHAPE_ENCODING = "utf-8"
 
 log = logging.getLogger(__name__)
 
 
-class ImportGemeenteTask(batch.BasicTask):
+class ImportBagHTask(batch.BasicTask):
+    def __init__(self, *args, **kwargs):
+        self.table = f"{self.__class__.dataset}_{self.__class__.name}"
+        self.temp_table = f"{self.__class__.dataset}_temp"
+        self.path = kwargs.get("path")
+        self.models = kwargs["models"]
+        self.model = copy.deepcopy(self.models[self.__class__.name])
+        self.gob_path = kwargs.get("gob_path", "bag")
+        self.gob_id = {"bag": "BAG", "gebieden": "GBD"}[self.gob_path]
+
+        self.filename = f"{self.gob_id}_{self.__class__.name}_ActueelEnHistorie.csv"
+        self.source_path = f"{self.gob_path}/CSV_ActueelEnHistorie"
+        self.use_gemeentes = kwargs.get("use_gemeentes", False)
+        if self.use_gemeentes:
+            self.gemeentes = set()
+
+    def get_non_pk_fields(self):
+        return [x.name for x in self.model._meta.get_fields() if not x.primary_key]
+
+    def before(self):
+        cursor = connection.cursor()
+        cursor.execute(f"DROP TABLE IF EXISTS {self.temp_table}")
+        cursor.execute(
+            f"CREATE TEMPORARY TABLE {self.temp_table} AS TABLE {self.table} WITH NO DATA"
+        )
+        self.model._meta.db_table = self.temp_table
+
+        if self.path:
+            download_file(os.path.join(self.source_path, self.filename))
+
+        if self.use_gemeentes:
+            self.gemeentes = set(
+                self.models["gemeente"]
+                .objects.filter(eind_geldigheid__isnull=True)
+                .order_by("code")
+                .distinct("code")
+                .values_list("code", flat=True)
+            )
+
+    def after(self):
+        cursor = connection.cursor()
+        cursor.execute(f"ALTER TABLE {self.temp_table} ADD PRIMARY KEY(id)")
+        cursor.execute(f"CREATE INDEX ON {self.temp_table}(identificatie)")
+
+        if self.do_date_checks() > 0:
+            log.error(f"Data invalid. Skip table {self.table}")
+            return
+
+        # validate_geometry(models.Stadsdeel)
+
+        # Check rows to delete. In history database there should be no rows to delete
+        cursor.execute(
+            f"""
+            SELECT COUNT(e.*) FROM {self.table} e
+            LEFT JOIN  {self.temp_table} t ON e.id = t.id
+            WHERE t.id IS NULL
+            """
+        )
+        (count,) = cursor.fetchone()
+        if count > 0:
+            log.error(f"Rows deleted. Data invalid. Skip table {self.table}")
+            return
+        with transaction.atomic():
+            cursor.execute(
+                f"""
+                INSERT INTO  {self.table}
+                SELECT t.* FROM {self.temp_table} t
+                LEFT JOIN  {self.table} e ON t.id = e.id
+                WHERE e.id IS NULL
+                """
+            )
+            log.info(f"Inserted into {self.table} : {cursor.rowcount}")
+            setters = map(lambda x: f"{x} = t.{x}", self.get_non_pk_fields())
+            cursor.execute(
+                f"""
+                UPDATE {self.table} e SET {",".join(setters)}
+                FROM {self.temp_table} t
+                WHERE e.id = t.id AND t IS DISTINCT FROM e
+                """
+            )
+            log.info(f"Updated {self.table} : {cursor.rowcount}")
+
+        cursor.execute(f"DROP TABLE {self.temp_table}")
+        self.model._meta.db_table = self.table
+        if self.use_gemeentes:
+            self.gemeentes.clear()
+
+    def process_row_common(self, r):
+        identificatie = r["identificatie"]
+        volgnummer = int(r["volgnummer"])
+        id = f"{identificatie}_{volgnummer:03}"
+        begin_geldigheid = csv.iso_datum_tijd(r["beginGeldigheid"])
+        eind_geldigheid = csv.iso_datum_tijd(r["eindGeldigheid"]) or None
+        if not csv.datum_geldig(begin_geldigheid, eind_geldigheid):
+            log.error(
+                f"self.name.title() {id} has invalid geldigheid {begin_geldigheid}-{eind_geldigheid}; skipping"  # noqa: E501
+            )
+            return None
+
+        wkt_geometrie = r["geometrie"]
+        if wkt_geometrie:
+            geometrie = geo.get_multipoly(wkt_geometrie)
+            if not geometrie:
+                log.error(f"{self.name.title()} {id} has no valid geometry; skipping")
+                return None
+        else:
+            log.warning(f"{self.name.title} {id} has no geometry")
+            geometrie = None
+
+        values = {
+            "id": id,
+            "identificatie": identificatie,
+            "volgnummer": volgnummer,
+            "begin_geldigheid": begin_geldigheid,
+            "eind_geldigheid": eind_geldigheid,
+            "geometrie": geometrie,
+        }
+        if self.use_gemeentes:
+            gemeente_id = r["ligtIn:BRK.GME.identificatie"] or None
+            if gemeente_id and gemeente_id not in self.gemeentes:
+                log.error(
+                    f"Woonplaats {id} has invalid gemeente_id {gemeente_id}; skipping"
+                )
+                return None
+            else:
+                values["gemeente_identificatie"] = gemeente_id
+        return values
+
+    def do_date_checks(self):
+        cursor = connection.cursor()
+        cursor.execute(
+            f"""
+        SELECT identificatie, count(*)
+        FROM {self.temp_table}
+        WHERE eind_geldigheid IS NULL
+        GROUP BY identificatie HAVING count(*) > 1
+        """
+        )
+        multiple_endranges = cursor.fetchall()
+        if len(multiple_endranges) > 0:
+            log.error(f"Multiple open eind_geldigheid for: {multiple_endranges}")
+            return 1
+
+        cursor.execute(
+            f"""SELECT w1.id, w2.id FROM {self.temp_table} w1
+        JOIN {self.temp_table} w2 ON w1.identificatie = w2.identificatie
+        WHERE w1.volgnummer <> w2.volgnummer
+        AND  w1.begin_geldigheid >= w2.begin_geldigheid
+        AND  (w1.begin_geldigheid < w2.eind_geldigheid OR w2.eind_geldigheid IS NULL)
+        """
+        )
+        overlapping_ranges = cursor.fetchall()
+        if len(overlapping_ranges) > 0:
+            log.error(f"Overlapping date ranges for: {overlapping_ranges}")
+            return 2
+        return 0
+
+
+class ImportGemeenteTask(ImportBagHTask):
     """
     Gemeente is not delivered by GOB. So we hardcode gemeente Amsterdam data
     """
 
-    name = "Import gemeente code / naam"
+    name = "gemeente"
+    dataset = "bagh"
     data = [
         (
             "03630000000000",
@@ -33,18 +192,10 @@ class ImportGemeenteTask(batch.BasicTask):
         )
     ]
 
-    def __init__(self, path, models):
-        self.path = path
-        self.model = models["gemeente"]
-
-    def before(self):
-        self.model.objects.all().delete()
-
-    def after(self):
-        pass
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
     def process(self):
-
         gemeentes = [
             self.model(
                 id=f"{r[0]}_{r[1]:03}",
@@ -62,98 +213,61 @@ class ImportGemeenteTask(batch.BasicTask):
         self.model.objects.bulk_create(gemeentes, batch_size=100)
 
 
-class ImportWoonplaatsTask(batch.BasicTask):
-    name = "Import woonplaats"
-
-    def __init__(self, path, models):
-        self.path = path
-        self.models = models
-        self.model = models["woonplaats"]
-        self.filename = "BAG_woonplaats_ActueelEnHistorie.csv"
-        self.source_path = "bag/CSV_ActueelEnHistorie"
-        self.gemeentes = set()
-
-    def before(self):
-        self.model.objects.all().delete()
-        download_file(os.path.join(self.source_path, self.filename))
-        self.gemeentes = set(
-            self.models["gemeente"]
-            .objects.filter(eind_geldigheid__isnull=True)
-            .order_by("code")
-            .distinct("code")
-            .values_list("code", flat=True)
-        )
-
-    def after(self):
-        multiple_endranges = (
-            self.model.objects.values("identificatie")
-            .filter(eind_geldigheid__isnull=True)
-            .annotate(cnt=Count("identificatie"))
-            .filter(cnt__gt=1)
-        )
-
-        if len(multiple_endranges) > 0:
-            log.error(f"Multiple undefined eind_geldigheid for: {multiple_endranges}")
-
-        # TODO : Check overlapping time periods for each identificatie
-
-        self.gemeentes.clear()
+class ImportWoonplaatsTask(ImportBagHTask):
+    name = "woonplaats"
+    dataset = "bagh"
 
     def process(self):
         source = os.path.join(self.path, self.filename)
-        woonplaatsen = csv.process_csv(
-            None, None, self.process_row, source=source, encoding=GOB_CSV_ENCODING
-        )
+        woonplaatsen = csv.process_csv(None, None, self.process_row, source=source)
 
         self.model.objects.bulk_create(woonplaatsen, batch_size=batch.BATCH_SIZE)
 
     def process_row(self, r):
-        identificatie = r["identificatie"]
-        volgnummer = int(r["volgnummer"])
-        id = f"{identificatie}_{volgnummer:03}"
-        wkt_geometrie = r["geometrie"]
-        if wkt_geometrie:
-            geometrie = geo.get_multipoly(wkt_geometrie)
-            if not geometrie:
-                log.error(f"Woonplaats {id} has no valid geometry; skipping")
-                return None
+        values = self.process_row_common(r)
+        if values:
+            values.update(
+                {
+                    "registratiedatum": csv.iso_datum_tijd(r["registratiedatum"]),
+                    "aanduiding_in_onderzoek": csv.get_janee_boolean(
+                        r["aanduidingInOnderzoek"]
+                    ),
+                    "geconstateerd": csv.get_janee_boolean(r["geconstateerd"]),
+                    "naam": r["naam"],
+                    "documentdatum": csv.iso_datum_tijd(r["documentdatum"]),
+                    "documentnummer": r["documentnummer"],
+                    "status": r["status"],
+                }
+            )
+            return self.model(**values)
         else:
-            log.warning(f"OpenbareRuimte {id} has no geometry")
-            geometrie = None
-
-        gemeente_id = r["ligtIn:BRK.GME.identificatie"] or None
-        if gemeente_id and gemeente_id not in self.gemeentes:
-            log.error(
-                f"Woonplaats {id} has invalid gemeente_id {gemeente_id}; skipping"
-            )
-            return None
-        begin_geldigheid = csv.iso_datum_tijd(r["beginGeldigheid"])
-        eind_geldigheid = csv.iso_datum_tijd(r["eindGeldigheid"]) or None
-        if not csv.datum_geldig(begin_geldigheid, eind_geldigheid):
-            log.error(
-                f"Woonplaats {id} has invalid geldigheid {begin_geldigheid}-{eind_geldigheid}; skipping"  # noqa: E501
-            )
             return None
 
-        values = {
-            "id": id,
-            "identificatie": r["identificatie"],
-            "volgnummer": r["volgnummer"],
-            "registratiedatum": csv.iso_datum_tijd(r["registratiedatum"]),
-            "begin_geldigheid": csv.iso_datum_tijd(r["beginGeldigheid"]),
-            "eind_geldigheid": csv.iso_datum_tijd(r["eindGeldigheid"]),
-            "aanduiding_in_onderzoek": csv.get_janee_boolean(
-                r["aanduidingInOnderzoek"]
-            ),
-            "geconstateerd": csv.get_janee_boolean(r["geconstateerd"]),
-            "naam": r["naam"],
-            "document_datum": csv.iso_datum(r["documentdatum"]),
-            "document_nummer": r["documentnummer"],
-            "status": r["status"],
-            "geometrie": geometrie,
-            "gemeente_identificatie": gemeente_id,
-        }
-        return self.model(**values)
+
+class ImportStadsdeelTask(ImportBagHTask):
+    name = "stadsdeel"
+    dataset = "bagh"
+
+    def process(self):
+        source = os.path.join(self.path, self.filename)
+        stadsdelen = csv.process_csv(None, None, self.process_row, source=source)
+        self.model.objects.bulk_create(stadsdelen, batch_size=batch.BATCH_SIZE)
+
+    def process_row(self, r):
+        values = self.process_row_common(r)
+        if values:
+            values.update(
+                {
+                    "code": r["code"],
+                    "naam": r["naam"],
+                    "registratiedatum": csv.iso_datum_tijd(r["registratiedatum"]),
+                    "documentdatum": csv.iso_datum_tijd(r["documentdatum"]),
+                    "documentnummer": r["documentnummer"],
+                }
+            )
+            return self.model(**values)
+        else:
+            return None
 
 
 class ImportBagHJob(batch.BasicJob):
@@ -175,16 +289,21 @@ class ImportBagHJob(batch.BasicJob):
         }
 
     def __del__(self):
-        # TODO : shapefiles for BRK are not yet in utf-8.
-        #        If every shapefile is utf-8 SHAPE_ENCODING variable can be set globally
         os.environ.pop("SHAPE_ENCODING")
 
     def tasks(self):
         return [
             # no-dependencies.
-            ImportGemeenteTask(self.data_dir, self.models),
-            ImportWoonplaatsTask(self.data_dir, self.models),
-            # ImportStadsdeelTask(self.gob_gebieden_path),
+            ImportGemeenteTask(models=self.models),
+            ImportWoonplaatsTask(
+                path=self.data_dir, models=self.models, use_gemeentes=True
+            ),
+            ImportStadsdeelTask(
+                path=self.data_dir,
+                models=self.models,
+                gob_path="gebieden",
+                use_gemeentes=True,
+            ),
             # ImportWijkTask(self.gob_gebieden_shp_path),
             #
             # # stadsdelen.

@@ -123,11 +123,11 @@
             "type": "string",
             "format": "date"
           },
-          "document datum": {
+          "documentdatum": {
             "type": "string",
             "format": "date"
           },
-          "document nummer": {
+          "documentnummer": {
             "type": "string"
           },
           "wijk identificatie": {
@@ -185,11 +185,11 @@
             "type": "string",
             "format": "date"
           },
-          "document datum": {
+          "documentdatum": {
             "type": "string",
             "format": "date"
           },
-          "document nummer": {
+          "documentnummer": {
             "type": "string"
           },
           "code": {
@@ -258,11 +258,11 @@
           "naam": {
             "type": "string"
           },
-          "document datum": {
+          "documentdatum": {
             "type": "string",
             "format": "date"
           },
-          "document nummer": {
+          "documentnummer": {
             "type": "string"
           },
           "geometrie": {
@@ -369,11 +369,11 @@
             "type": "string",
             "format": "date"
           },
-          "document datum": {
+          "documentdatum": {
             "type": "string",
             "format": "date"
           },
-          "document nummer": {
+          "documentnummer": {
             "type": "string"
           },
           "aanduiding in onderzoek": {
@@ -438,11 +438,11 @@
             "type": "string",
             "format": "date"
           },
-          "document datum": {
+          "documentdatum": {
             "type": "string",
             "format": "date"
           },
-          "document nummer": {
+          "documentnummer": {
             "type": "string"
           },
           "aanduiding in onderzoek": {
@@ -542,11 +542,11 @@
           "type": {
             "type": "string"
           },
-          "document datum": {
+          "documentdatum": {
             "type": "string",
             "format": "date"
           },
-          "document nummer": {
+          "documentnummer": {
             "type": "string"
           },
           "status": {
@@ -601,11 +601,11 @@
             "type": "string",
             "format": "date"
           },
-          "document datum": {
+          "documentdatum": {
             "type": "string",
             "format": "date"
           },
-          "document nummer": {
+          "documentnummer": {
             "type": "string"
           },
           "aanduiding in onderzoek": {
@@ -700,17 +700,17 @@
           "naam": {
             "type": "string"
           },
+          "documentdatum": {
+            "type": "string",
+            "format": "date"
+          },
+          "documentnummer": {
+            "type": "string"
+          },
           "vervallen": {
             "type": "boolean"
           },
           "ingang cyclus": {
-            "type": "string",
-            "format": "date"
-          },
-          "brondocument naam": {
-            "type": "string"
-          },
-          "brondocument datum": {
             "type": "string",
             "format": "date"
           },
@@ -762,11 +762,11 @@
             "type": "string",
             "format": "date"
           },
-          "document datum": {
+          "documentdatum": {
             "type": "string",
             "format": "date"
           },
-          "document nummer": {
+          "documentnummer": {
             "type": "string"
           },
           "aanduiding in onderzoek": {
@@ -834,11 +834,11 @@
             "type": "string",
             "format": "date"
           },
-          "document datum": {
+          "documentdatum": {
             "type": "string",
             "format": "date"
           },
-          "document nummer": {
+          "documentnummer": {
             "type": "string"
           },
           "aanduiding in onderzoek": {
@@ -983,11 +983,11 @@
           "vollcode": {
             "type": "string"
           },
-          "document datum": {
+          "documentdatum": {
             "type": "string",
             "format": "date"
           },
-          "document nummer": {
+          "documentnummer": {
             "type": "string"
           },
           "cbs code": {
@@ -1052,11 +1052,11 @@
           "naam": {
             "type": "string"
           },
-          "document datum": {
+          "documentdatum": {
             "type": "string",
             "format": "date"
           },
-          "document nummer": {
+          "documentnummer": {
             "type": "string"
           },
           "status": {

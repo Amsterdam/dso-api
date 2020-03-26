@@ -6,19 +6,18 @@ from contextlib import contextmanager
 
 log = logging.getLogger(__name__)
 
-
-def iso_datum(s):
-    if not s:
-        return None
-
-    return datetime.datetime.strptime(s, "%Y-%m-%d").date()
+GOB_CSV_ENCODING = "utf-8-sig"
 
 
 def iso_datum_tijd(s):
     if not s:
         return None
+    if len(s) > 10:
+        pat = "%Y-%m-%dT%H:%M:%S"
+    else:
+        pat = "%Y-%m-%d"
 
-    return datetime.datetime.strptime(s, "%Y-%m-%dT%H:%M:%S").date()
+    return datetime.datetime.strptime(s, pat).date()
 
 
 def get_janee_boolean(value):
@@ -35,7 +34,11 @@ def _wrap_row(r, headers):
 
 @contextmanager
 def _context_reader(
-    source, quotechar=None, quoting=csv.QUOTE_NONE, with_header=True, encoding="cp1252",
+    source,
+    quotechar=None,
+    quoting=csv.QUOTE_NONE,
+    with_header=True,
+    encoding=GOB_CSV_ENCODING,
 ):
 
     if not os.path.exists(source):

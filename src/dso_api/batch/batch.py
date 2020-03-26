@@ -30,8 +30,8 @@ def _execute_task(task):
         task_name = task.__name__
         execute_func = task
     else:
-        task_name = getattr(task, "name", "no name specified")
         execute_func = task.execute
+        task_name = task.__class__.__name__
 
     log.debug("Starting task: %s", task_name)
 
