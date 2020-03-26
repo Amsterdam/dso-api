@@ -87,6 +87,7 @@ class ImportBagHTask(batch.BasicTask):
             )
             log.info(f"Inserted into {self.table} : {cursor.rowcount}")
             setters = map(lambda x: f"{x} = t.{x}", self.get_non_pk_fields())
+            # No
             cursor.execute(
                 f"""
                 UPDATE {self.table} e SET {",".join(setters)}
@@ -105,9 +106,9 @@ class ImportBagHTask(batch.BasicTask):
         identificatie = r["identificatie"]
         volgnummer = int(r["volgnummer"])
         id = f"{identificatie}_{volgnummer:03}"
-        begin_geldigheid = csv.iso_datum_tijd(r["beginGeldigheid"])
-        eind_geldigheid = csv.iso_datum_tijd(r["eindGeldigheid"]) or None
-        if not csv.datum_geldig(begin_geldigheid, eind_geldigheid):
+        begin_geldigheid = csv.parse_date_time(r["beginGeldigheid"])
+        eind_geldigheid = csv.parse_date_time(r["eindGeldigheid"]) or None
+        if not csv.is_valid_date_range(begin_geldigheid, eind_geldigheid):
             log.error(
                 f"self.name.title() {id} has invalid geldigheid {begin_geldigheid}-{eind_geldigheid}; skipping"  # noqa: E501
             )
@@ -240,13 +241,13 @@ class ImportWoonplaatsTask(ImportBagHTask):
         if values:
             values.update(
                 {
-                    "registratiedatum": csv.iso_datum_tijd(r["registratiedatum"]),
-                    "aanduiding_in_onderzoek": csv.get_janee_boolean(
+                    "registratiedatum": csv.parse_date_time(r["registratiedatum"]),
+                    "aanduiding_in_onderzoek": csv.parse_yesno_boolean(
                         r["aanduidingInOnderzoek"]
                     ),
-                    "geconstateerd": csv.get_janee_boolean(r["geconstateerd"]),
+                    "geconstateerd": csv.parse_yesno_boolean(r["geconstateerd"]),
                     "naam": r["naam"],
-                    "documentdatum": csv.iso_datum_tijd(r["documentdatum"]),
+                    "documentdatum": csv.parse_date_time(r["documentdatum"]),
                     "documentnummer": r["documentnummer"],
                     "status": r["status"],
                 }
@@ -272,8 +273,8 @@ class ImportStadsdeelTask(ImportBagHTask):
                 {
                     "code": r["code"],
                     "naam": r["naam"],
-                    "registratiedatum": csv.iso_datum_tijd(r["registratiedatum"]),
-                    "documentdatum": csv.iso_datum_tijd(r["documentdatum"]),
+                    "registratiedatum": csv.parse_date_time(r["registratiedatum"]),
+                    "documentdatum": csv.parse_date_time(r["documentdatum"]),
                     "documentnummer": r["documentnummer"],
                 }
             )
