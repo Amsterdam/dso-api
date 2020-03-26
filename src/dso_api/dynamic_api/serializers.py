@@ -103,7 +103,7 @@ def get_view_name(model: Type[DynamicModel], suffix: str):
 
 
 @lru_cache()
-def serializer_factory(model: Type[DynamicModel]) -> Type[DynamicSerializer]:
+def serializer_factory(model: Type[DynamicModel], flat=None) -> Type[DynamicSerializer]:
     """Generate the DRF serializer class for a specific dataset model."""
     fields = ["_links", "schema"]
     serializer_name = f"{model.get_dataset_id()}{model.__name__}Serializer"
@@ -124,7 +124,7 @@ def serializer_factory(model: Type[DynamicModel]) -> Type[DynamicSerializer]:
         # Add extra embedded part for foreign keys
         if isinstance(model_field, models.ForeignKey):
             new_attrs[camel_name] = EmbeddedField(
-                serializer_class=serializer_factory(model_field.related_model),
+                serializer_class=serializer_factory(model_field.related_model, flat=True),
                 source=model_field.name,
             )
 
@@ -138,8 +138,20 @@ def serializer_factory(model: Type[DynamicModel]) -> Type[DynamicSerializer]:
         if orig_name != camel_name:
             extra_kwargs[camel_name] = {"source": model_field.name}
 
+    # Generate embedded relations
+    if not flat:
+        for key, item in model.__dict__.items():
+            if isinstance(item, models.fields.related_descriptors.ReverseManyToOneDescriptor):
+                related_serialier = serializer_factory(
+                    model=item.rel.related_model,
+                    flat=True)
+                related_key = key.replace('_set', '')
+                fields.append(related_key)
+                new_attrs[related_key] = related_serialier(many=True, read_only=True)
+
     # Generate Meta section and serializer class
     new_attrs["Meta"] = type(
         "Meta", (), {"model": model, "fields": fields, "extra_kwargs": extra_kwargs}
     )
+
     return type(serializer_name, (DynamicSerializer,), new_attrs)

@@ -7,6 +7,7 @@ from urllib.parse import urlparse
 from django.contrib.gis.db import models
 from django.db.models.base import ModelBase
 from django.conf import settings
+from django.contrib.postgres.fields import JSONField
 from django_postgres_unlimited_varchar import UnlimitedCharField
 from string_utils import slugify
 
@@ -114,8 +115,12 @@ JSON_TYPE_TO_DJANGO = {
     "integer": FieldMaker(models.IntegerField),
     "number": FieldMaker(models.FloatField),
     "boolean": FieldMaker(models.BooleanField),
-    "/definitions/id": FieldMaker(models.IntegerField),
+    "date": FieldMaker(models.DateField),
+    "time": FieldMaker(models.TimeField),
+    "array": FieldMaker(JSONField),
+    "/definitions/id": FieldMaker(models.AutoField),
     "/definitions/schema": FieldMaker(UnlimitedCharField),
+
     "https://geojson.org/schema/Geometry.json": FieldMaker(
         models.MultiPolygonField,
         value_getter=fetch_srid,
@@ -252,3 +257,7 @@ def get_db_table_name(table: DatasetTableSchema) -> str:
     app_label = dataset.id
     table_id = f"{slugify(table.id, sign='_')}"
     return f"{app_label}_{table_id}"
+
+
+def get_field_schema_properties(model: DynamicModel, field_name: str) -> dict:
+    return model._table_schema['schema']['properties'][field_name]['entity']['properties']

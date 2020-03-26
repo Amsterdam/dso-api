@@ -22,6 +22,17 @@ services:
     volumes:
       - "~/.ssh/datapunt.key:/root/.ssh/datapunt.key"
       - .:/host
+  parkeervakken_database:
+    image: amsterdam/postgres11
+    ports:
+      - "5434:5432"
+    environment:
+      POSTGRES_DB: parkeervakken
+      POSTGRES_USER: parkeervakken
+      POSTGRES_PASSWORD: insecure
+    volumes:
+      - "~/.ssh/datapunt.key:/root/.ssh/datapunt.key"
+      - .:/host
   web:
     build:
       context: src/
