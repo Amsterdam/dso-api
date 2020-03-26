@@ -1,9 +1,9 @@
 import copy
 import logging
 import os
+import sqlparse
 
 from django.db import connection, transaction
-
 from dso_api import settings
 from dso_api.batch import batch, csv, geo
 from dso_api.batch.objectstore import download_file
@@ -172,6 +172,18 @@ class ImportBagHTask(batch.BasicTask):
         return 0
 
 
+class CreateBagHTables(batch.BasicTask):
+    def process(self):
+        processed = 0
+        with open("dso_api/datasets/bagh/bagh_create.sql", "r") as sql_file:
+            with connection.cursor() as c:
+                for sql in sqlparse.split(sql_file.read()):
+                    if sql and not sql.isspace():
+                        c.execute(sql)
+                        processed += 1
+        log.info(f"Processed {processed} statements")
+
+
 class ImportGemeenteTask(ImportBagHTask):
     """
     Gemeente is not delivered by GOB. So we hardcode gemeente Amsterdam data
@@ -287,48 +299,54 @@ class ImportBagHJob(batch.BasicJob):
         self.models = {
             model._meta.model_name: model for model in dataset.create_models()
         }
+        self.create = kwargs.get("create", False)
 
     def __del__(self):
         os.environ.pop("SHAPE_ENCODING")
 
     def tasks(self):
-        return [
-            # no-dependencies.
-            ImportGemeenteTask(models=self.models),
-            ImportWoonplaatsTask(
-                path=self.data_dir, models=self.models, use_gemeentes=True
-            ),
-            ImportStadsdeelTask(
-                path=self.data_dir,
-                models=self.models,
-                gob_path="gebieden",
-                use_gemeentes=True,
-            ),
-            # ImportWijkTask(self.gob_gebieden_shp_path),
-            #
-            # # stadsdelen.
-            # ImportGebiedsgerichtwerkenTask(self.gob_gebieden_shp_path),
-            # ImportGebiedsgerichtwerkenPraktijkgebiedenTask(self.gob_gebieden_shp_path),
-            # ImportGrootstedelijkgebiedTask(self.gob_gebieden_shp_path),
-            # ImportUnescoTask(self.gob_gebieden_shp_path),
-            # ImportBuurtTask(self.gob_gebieden_path),
-            # ImportBouwblokTask(self.gob_gebieden_path),
-            # #
-            # ImportOpenbareRuimteTask(self.gob_bag_path),
-            # #
-            # ImportLigplaatsTask(self.gob_bag_path),
-            # ImportStandplaatsenTask(self.gob_bag_path),
-            # ImportPandTask(self.gob_bag_path),
-            # # large. 500.000
-            # ImportVerblijfsobjectTask(self.gob_bag_path),
-            # #
-            # # large. 500.000
-            # ImportNummeraanduidingTask(self.gob_bag_path),
-            # #
-            # # some sql copying fields
-            # DenormalizeDataTask(),
-            # #
-            # # more denormalizing sql
-            # UpdateGebiedenAttributenTask(),
-            # UpdateGrootstedelijkAttri
-        ]
+        tasks1 = []
+        if self.create:
+            tasks1.append(CreateBagHTables())
+
+        tasks1.extend(
+            [
+                # no-dependencies.
+                ImportGemeenteTask(models=self.models),
+                ImportWoonplaatsTask(
+                    path=self.data_dir, models=self.models, use_gemeentes=True
+                ),
+                ImportStadsdeelTask(
+                    path=self.data_dir,
+                    models=self.models,
+                    gob_path="gebieden",
+                    use_gemeentes=True,
+                ),
+                # ImportWijkTask(self.gob_gebieden_shp_path),
+                # ImportGebiedsgerichtwerkenTask(self.gob_gebieden_shp_path),
+                # ImportGebiedsgerichtwerkenPraktijkgebiedenTask(self.gob_gebieden_shp_path),
+                # ImportGrootstedelijkgebiedTask(self.gob_gebieden_shp_path),
+                # ImportUnescoTask(self.gob_gebieden_shp_path),
+                # ImportBuurtTask(self.gob_gebieden_path),
+                # ImportBouwblokTask(self.gob_gebieden_path),
+                # #
+                # ImportOpenbareRuimteTask(self.gob_bag_path),
+                # #
+                # ImportLigplaatsTask(self.gob_bag_path),
+                # ImportStandplaatsenTask(self.gob_bag_path),
+                # ImportPandTask(self.gob_bag_path),
+                # # large. 500.000
+                # ImportVerblijfsobjectTask(self.gob_bag_path),
+                # #
+                # # large. 500.000
+                # ImportNummeraanduidingTask(self.gob_bag_path),
+                # #
+                # # some sql copying fields
+                # DenormalizeDataTask(),
+                # #
+                # # more denormalizing sql
+                # UpdateGebiedenAttributenTask(),
+                # UpdateGrootstedelijkAttri
+            ]
+        )
+        return tasks1
