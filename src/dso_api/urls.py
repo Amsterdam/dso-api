@@ -2,19 +2,20 @@ import django_healthchecks.urls
 from django.conf import settings
 from django.urls import include, path
 from django.views.generic import RedirectView
-from drf_spectacular import openapi
 from rest_framework import exceptions, permissions, renderers
 from rest_framework.schemas import get_schema_view
 from rest_framework.utils.formatting import dedent
 
 import dso_api.datasets.urls
 import dso_api.dynamic_api.urls
+from rest_framework_dso.openapi import DSOSchemaGenerator
 
 
-class ExtendedSchemaGenerator(openapi.SchemaGenerator):
+class ExtendedSchemaGenerator(DSOSchemaGenerator):
     """drf_spectacular also provides 'components' which DRF doesn't do."""
 
-    extra_schema = {
+    # Provide the missing data that DRF get_schema_view() doesn't yet offer.:
+    schema_overrides = {
         "info": {
             "title": "DSO-API",
             "version": "v1",
@@ -24,7 +25,6 @@ class ExtendedSchemaGenerator(openapi.SchemaGenerator):
             "contact": {"email": "datapunt@amsterdam.nl"},
             "license": {"name": "CC0 1.0 Universal"},
         },
-        "servers": [{"url": settings.DATAPUNT_API_URL}],
         # While drf_spectacular parses authentication_classes, it won't
         # recognize oauth2 nor detect a remote authenticator. Adding manually:
         "security": [{"oauth2": []}],
@@ -43,17 +43,8 @@ class ExtendedSchemaGenerator(openapi.SchemaGenerator):
         },
     }
 
-    def get_schema(self, request=None, public=False):
-        """Provide the missing data that DRF get_schema_view() doesn't yet offer."""
-        schema = super().get_schema(request=request, public=public)
-        schema["info"].update(self.extra_schema["info"])
-        schema["components"].update(self.extra_schema["components"])
-        schema["security"] = self.extra_schema["security"]
-
-        if not settings.DEBUG:
-            schema["servers"] = self.extra_schema["servers"]
-
-        return schema
+    if not settings.DEBUG:
+        schema_overrides["servers"] = [{"url": settings.DATAPUNT_API_URL}]
 
 
 def _get_schema_view(renderer_classes=None):

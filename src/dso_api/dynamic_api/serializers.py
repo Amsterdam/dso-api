@@ -1,19 +1,22 @@
 from __future__ import annotations
 
 import re
+from collections import OrderedDict
 from functools import lru_cache
 from typing import Type
-from collections import OrderedDict
 
 from django.db import models
 
-from dso_api.lib.schematools.models import DynamicModel
 from amsterdam_schema.types import DatasetTableSchema
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 from rest_framework_dso.fields import EmbeddedField
 from rest_framework_dso.serializers import DSOSerializer
+
 from dso_api.dynamic_api.permissions import get_unauthorized_fields
 from dso_api.dynamic_api.utils import snake_to_camel_case
+from dso_api.lib.schematools.models import DynamicModel
 
 
 class _DynamicLinksField(DSOSerializer.serializer_url_field):
@@ -64,6 +67,7 @@ class DynamicSerializer(DSOSerializer):
         request = self.context.get("request")
         return getattr(request, "is_authorized_for", None) if request else None
 
+    @extend_schema_field(OpenApiTypes.URI)
     def get_schema(self, instance):
         """The schema field is exposed with every record"""
         name = instance.get_dataset_id()

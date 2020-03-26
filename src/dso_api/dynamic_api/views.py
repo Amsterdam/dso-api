@@ -84,11 +84,6 @@ class DynamicApiViewSet(
     #: Custom permission that checks amsterdam schema auth settings
     permission_classes = [permissions.HasOAuth2Scopes]
 
-    def get_queryset(self):
-        # XXX use objects.only or objects.defer to filter columns
-        # scopes = fetch_scopes_for_model(self.model)
-        return self.model.objects.all()
-
 
 def _get_viewset_api_docs(
     serializer_class: Type[serializers.DynamicSerializer],
@@ -146,6 +141,7 @@ def viewset_factory(model: Type[DynamicModel]) -> Type[DynamicApiViewSet]:
             serializer_class, filterset_class, ordering_fields
         ),
         "model": model,
+        "queryset": model.objects.all(),  # also for OpenAPI schema parsing.
         "serializer_class": serializer_class,
         "filterset_class": filterset_class,
         "ordering_fields": ordering_fields,
