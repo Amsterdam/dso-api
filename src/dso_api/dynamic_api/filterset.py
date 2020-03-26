@@ -4,11 +4,28 @@ This uses the django-filter logic to process the GET parameters.
 """
 from typing import Type
 
-from django.contrib.gis.db.models import GeometryField
+from django.db import models
 
 from dso_api.dynamic_api.utils import snake_to_camel_case
 from dso_api.lib.schematools.models import DynamicModel
 from rest_framework_dso.filters import DSOFilterSet
+
+
+# These extra lookups are available for specific data types:
+_comparison_lookups = ["exact", "gte", "gt", "lt", "lte"]
+_identifier_lookups = ["exact", "in"]
+DEFAULT_LOOKUPS_BY_TYPE = {
+    models.AutoField: _identifier_lookups,
+    models.IntegerField: _comparison_lookups + ["in"],
+    models.FloatField: _comparison_lookups + ["in"],
+    models.DecimalField: _comparison_lookups + ["in"],
+    models.DateField: _comparison_lookups,
+    models.DateTimeField: _comparison_lookups,
+    models.TimeField: _comparison_lookups,
+    models.ForeignKey: _identifier_lookups,
+    models.OneToOneField: _identifier_lookups,
+    models.OneToOneRel: _identifier_lookups,
+}
 
 
 class DynamicFilterSet(DSOFilterSet):
@@ -32,11 +49,7 @@ def filterset_factory(model: Type[DynamicModel]) -> Type[DynamicFilterSet]:
     # Determine which fields are included:
     # Excluding geometry fields for now, as the default filter only performs exact matches.
     # This isn't useful for polygon fields, and excluding it avoids support issues later.
-    fields = [
-        f.name
-        for f in model._meta.get_fields()
-        if not f.primary_key and not isinstance(f, GeometryField)
-    ]
+    fields = {f.attname: _get_field_lookups(f) for f in model._meta.get_fields()}
 
     # Generate the class
     meta_attrs = {
@@ -45,3 +58,8 @@ def filterset_factory(model: Type[DynamicModel]) -> Type[DynamicFilterSet]:
     }
     meta = type("Meta", (), meta_attrs)
     return type(f"{model.__name__}FilterSet", (DynamicFilterSet,), {"Meta": meta})
+
+
+def _get_field_lookups(field: models.Field) -> list:
+    """Find the possible lookups for a given field type."""
+    return DEFAULT_LOOKUPS_BY_TYPE.get(field.__class__, ["exact"])

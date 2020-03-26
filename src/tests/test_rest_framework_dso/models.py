@@ -20,6 +20,9 @@ class Movie(models.Model):
         app_label = "test_rest_framework_dso"
         ordering = ("name",)
 
+    def __str__(self):
+        return self.name
+
 
 class Location(models.Model):
     geometry = gis_models.PointField(srid=RD_NEW.srid)

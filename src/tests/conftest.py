@@ -156,7 +156,7 @@ def bommen_dataset(bommen_schema_json) -> Dataset:
 @pytest.fixture
 def category() -> Category:
     """A dummy model to test our API with"""
-    return Category.objects.create(name="bar")
+    return Category.objects.create(pk=1, name="bar")
 
 
 @pytest.fixture

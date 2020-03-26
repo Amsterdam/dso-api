@@ -1,8 +1,10 @@
+from datetime import date
+
 import pytest
 from django.db.models import Value
 
-from rest_framework_dso.filters import Wildcard
-from .models import Category
+from rest_framework_dso.filters import DSOFilterSet, Wildcard
+from .models import Category, Movie
 
 
 class TestWildcard:
@@ -28,3 +30,70 @@ class TestWildcard:
 
         sql = context.captured_queries[0]["sql"]
         assert r"""."name" LIKE 'foo%bar_'""" in sql
+
+
+class TestDSOFilterSet:
+    class MovieFilterSet(DSOFilterSet):
+        class Meta:
+            model = Movie
+            fields = {
+                "name": ["exact"],
+                "category_id": ["exact", "in"],
+                "date_added": ["exact", "lt", "lte", "gt", "gte"],
+            }
+
+    @pytest.fixture
+    def movie1(self, category):
+        return Movie.objects.create(
+            name="movie1", category=category, date_added=date(2020, 2, 1)
+        )
+
+    @pytest.fixture
+    def movie2(self):
+        return Movie.objects.create(name="movie2", date_added=date(2020, 3, 1))
+
+    @pytest.mark.django_db
+    @pytest.mark.parametrize(
+        "comparison",
+        [
+            # Less then
+            ({"date_added[lt]": "2020-2-10"}, {"movie1"}),
+            ({"date_added[lt]": "2020-3-1"}, {"movie1"}),
+            ({"date_added[lte]": "2020-3-1"}, {"movie1", "movie2"}),
+            # Less then full datetime
+            ({"date_added[lt]": "2020-3-1T23:00:00"}, {"movie1", "movie2"}),
+            # Greater then
+            ({"date_added[gt]": "2020-2-10"}, {"movie2"}),
+            ({"date_added[gt]": "2020-3-1"}, set()),
+            ({"date_added[gte]": "2020-3-1"}, {"movie2"}),
+        ],
+    )
+    def test_filter_logic(self, movie1, movie2, comparison):
+        """Prove that date lookups work"""
+        filter_data, expect = comparison
+        filterset = self.MovieFilterSet(filter_data)
+        assert filterset.is_valid(), filterset.errors
+        qs = filterset.filter_queryset(Movie.objects.all())
+        assert set(obj.name for obj in qs) == expect, str(qs.query)
+
+    @pytest.mark.django_db
+    @pytest.mark.parametrize(
+        "comparison",
+        [
+            ({"category_id[in]": "{cat_id}"}, {"movie1"}),  # test ID
+            ({"category_id[in]": "{cat_id},{cat_id}"}, {"movie1"}),  # test comma
+            ({"category_id[in]": "97,98,{cat_id}"}, {"movie1"}),  # test invalid IDs
+            ({"category_id[in]": "97,98,99"}, set()),  # test all invalid IDs
+        ],
+    )
+    def test_foreignkey(self, movie1, movie2, category, comparison):
+        filter_data, expect = comparison
+        filter_data = {
+            field: value.format(cat_id=category.pk)
+            for field, value in filter_data.items()
+        }
+
+        filterset = self.MovieFilterSet(filter_data)
+        assert filterset.is_valid(), filterset.errors
+        qs = filterset.filter_queryset(Movie.objects.all())
+        assert set(obj.name for obj in qs) == expect, str(qs.query)

@@ -3,11 +3,15 @@
 This implements the filtering and ordering spec.
 DSO 1.1 Spec: "2.6.6 Filteren, sorteren en zoeken"
 """
+from datetime import datetime
 from typing import Type
 
 from django.contrib.gis.db import models as gis_models
 from django.db import models
 from django.db.models import lookups
+from django.utils.functional import cached_property
+from django.utils.translation import ugettext_lazy as _
+from django_filters import fields
 from django_filters.constants import EMPTY_VALUES
 from django_filters.rest_framework import DjangoFilterBackend, FilterSet, filters
 from rest_framework.exceptions import ValidationError
@@ -54,16 +58,73 @@ class Wildcard(lookups.Lookup):
         return "%s", [value]
 
 
-class SimpleDateTimeFilter(filters.DateFilter):
-    """Filter a DateTime field using a date only. Ignore the time component."""
+class WildcardCharFilter(filters.CharFilter):
+    """Char filter that uses the 'wildcard' lookup by default."""
 
-    # TODO: implement before/after syntax.
-    # Currently this is not implemented, as it's unclear what syntax is preferred:
-    # - ?datefield=lt:...
-    # - ?datefield__lt=...
-    # - ?datefield_before=...
-    # - ?datefield.before=...
-    # - ?datefield[before]=...
+    def __init__(self, field_name=None, lookup_expr="exact", **kwargs):
+        # Make sure that only the "__exact" lookup is translated into a
+        # wildcard lookup. Passing 'lookup_expr' in FILTER_DEFAULTS's "extra"
+        # field overrides all chosen lookup types.
+        if lookup_expr == "exact":
+            lookup_expr = "wildcard"
+        super().__init__(field_name, lookup_expr, **kwargs)
+
+
+class ModelIdChoiceField(fields.ModelChoiceField):
+    """Allow testing an IN query against invalid ID's"""
+
+    def to_python(self, value):
+        """Bypass the queryset value check entirely.
+        Copied the parts of the base method that are relevent here.
+        """
+        if self.null_label is not None and value == self.null_value:
+            return value
+        if value in self.empty_values:
+            return None
+
+        if isinstance(value, self.queryset.model):
+            value = getattr(value, self.to_field_name or "pk")
+
+        return value
+
+
+class ModelIdChoiceFilter(filters.ModelChoiceFilter):
+    """Improved choice filter for IN queries.
+
+    Note that the django-filter's ``BaseFilterSet.filter_for_lookup()``
+    subclasses this class as ``ConcreteInFilter(BaseInFilter, filter_class)``
+    for lookup_type="in".
+    """
+
+    field_class = ModelIdChoiceField
+
+
+class FlexDateTimeField(fields.IsoDateTimeField):
+    """Allow input both as date or full datetime"""
+
+    default_error_messages = {
+        "invalid": _("Enter a valid ISO date-time, or single date."),
+    }
+
+    @cached_property
+    def input_formats(self):
+        # Note these types are lazy, hence the casts
+        return list(fields.IsoDateTimeField.input_formats) + list(
+            filters.DateFilter.field_class.input_formats
+        )
+
+    def strptime(self, value, format):
+        if format in set(filters.DateFilter.field_class.input_formats):
+            # Emulate forms.DateField.strptime()
+            return datetime.strptime(value, format).date()
+        else:
+            return super().strptime(value, format)
+
+
+class FlexDateTimeFilter(filters.IsoDateTimeFilter):
+    """Flexible input parsing for a datetime field, allowing dates only."""
+
+    field_class = FlexDateTimeField
 
     def filter(self, qs, value):
         """Implement filtering on single day for a 'datetime' field."""
@@ -72,7 +133,15 @@ class SimpleDateTimeFilter(filters.DateFilter):
         if self.distinct:
             qs = qs.distinct()
 
-        return self.get_method(qs)(**{f"{self.field_name}__date": value})
+        if not isinstance(value, datetime):
+            # When something different then a full datetime is given, only compare dates.
+            # Otherwise, the "lte" comparison happens against 00:00:00.000 of that date,
+            # instead of anything that includes that day itself.
+            lookup = f"date__{self.lookup_expr}"
+        else:
+            lookup = self.lookup_expr
+
+        return self.get_method(qs)(**{f"{self.field_name}__{lookup}": value})
 
 
 class DSOFilterSet(FilterSet):
@@ -81,46 +150,72 @@ class DSOFilterSet(FilterSet):
     The 'FILTER_DEFAULTS' field defines how fields are constructed.
     Usage in views::
 
+        class MyFilterSet(DSOFilterSetBackend):
+            class Meta:
+                model = MyModel
+                fields = {
+                    'field1': ['exact', 'gt', 'lt', 'lte'],
+                    'field2': ['exact'],
+                }
+
+
         class View(APIView):
             filter_backends = [filters.DSOFilterSetBackend]
-            filterset_class = ... # subclass of DSOFilterSetBackend
+            filterset_class = MyFilterSet
     """
 
     FILTER_DEFAULTS = {
         **FilterSet.FILTER_DEFAULTS,
         # Unlike **GeoFilterSet.GEOFILTER_FOR_DBFIELD_DEFAULTS,
         # also enforce the geom_type for the input:
-        models.CharField: {
-            "filter_class": filters.CharFilter,
-            "extra": lambda field: {"lookup_expr": "wildcard"},
-        },
-        models.TextField: {
-            "filter_class": filters.CharFilter,
-            "extra": lambda field: {"lookup_expr": "wildcard"},
-        },
+        models.CharField: {"filter_class": WildcardCharFilter},
+        models.TextField: {"filter_class": WildcardCharFilter},
         models.DateTimeField: {
             # Only allow filtering on dates for now, ignore time component.
-            "filter_class": SimpleDateTimeFilter,
+            "filter_class": FlexDateTimeFilter,
         },
         gis_models.GeometryField: {
             "filter_class": GeometryFilter,
             "extra": lambda field: {"geom_type": field.geom_type},
+        },
+        # Unlike the base class, don't enforce ID value checking on foreign keys
+        models.ForeignKey: {
+            **FilterSet.FILTER_DEFAULTS[models.ForeignKey],
+            "filter_class": ModelIdChoiceFilter,
+        },
+        models.OneToOneField: {
+            **FilterSet.FILTER_DEFAULTS[models.OneToOneField],
+            "filter_class": ModelIdChoiceFilter,
+        },
+        models.OneToOneRel: {
+            **FilterSet.FILTER_DEFAULTS[models.OneToOneRel],
+            "filter_class": ModelIdChoiceFilter,
         },
     }
 
     FILTER_HELP_TEXT = {
         filters.BooleanFilter: "true | false",
         filters.CharFilter: "text",
+        WildcardCharFilter: "text with wildcards",
         filters.DateFilter: "yyyy-mm-dd",
-        SimpleDateTimeFilter: "yyyy-mm-dd",
+        FlexDateTimeFilter: "yyyy-mm-dd or yyyy-mm-ddThh:mm[:ss[.ms]]",
         filters.IsoDateTimeFilter: "yyyy-mm-ddThh:mm[:ss[.ms]]",
         filters.ModelChoiceFilter: "id",
+        ModelIdChoiceFilter: "id",
         GeometryFilter: "GeoJSON | GEOMETRY(...)",
     }
 
     @classmethod
+    def get_filter_name(cls, field_name, lookup_expr):
+        """Generate the lookup expression syntax field[..]=..."""
+        if lookup_expr == "exact":
+            return field_name
+        else:
+            return f"{field_name}[{lookup_expr}]"
+
+    @classmethod
     def filter_for_lookup(cls, field, lookup_type):
-        """Generate the 'help_text' if the model field doesn't present this.
+        """Generate the 'label' if the model field doesn't present this.
         This data is shown in the Swagger docs, and browsable API.
         """
         filter_class, params = super().filter_for_lookup(field, lookup_type)
@@ -136,6 +231,10 @@ class DSOFilterSet(FilterSet):
         if issubclass(filter_class, GeometryFilter):
             geom_type = params.get("geom_type", "GEOMETRY")
             return f"GeoJSON | {geom_type}(x y ...)"
+        elif issubclass(filter_class, filters.BaseInFilter):
+            # Auto-generated "ConcreteInFilter" class, e.g. ModelIdChoiceFilterIn
+            if issubclass(filter_class, filters.ModelChoiceFilter):
+                return "id1,id2,...,idN"
 
         try:
             return cls.FILTER_HELP_TEXT[filter_class]

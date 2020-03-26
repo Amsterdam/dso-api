@@ -155,10 +155,12 @@ class TestListFilters:
                 {
                     "type": "urn:apiexception:invalid:invalid",
                     "name": "date_added",
-                    "reason": "Enter a valid date.",
+                    "reason": "Enter a valid ISO date-time, or single date.",
                 }
             ],
-            "x-validation-errors": {"date_added": ["Enter a valid date."]},
+            "x-validation-errors": {
+                "date_added": ["Enter a valid ISO date-time, or single date."]
+            },
         }
 
 
