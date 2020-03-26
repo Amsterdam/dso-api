@@ -29,10 +29,10 @@ class Command(BaseCommand):
         )
 
         parser.add_argument(
-            "--only-update",
+            "--create",
             action="store_true",
-            dest="only_update",
-            default=True,
+            dest="create",
+            default=False,
             help="Only update dataset",
         )
 
@@ -48,4 +48,4 @@ class Command(BaseCommand):
 
         for one_ds in sets:
             for job_class in self.imports[one_ds]:
-                batch.execute(job_class())
+                batch.execute(job_class(create=options["create"]))
