@@ -1,5 +1,6 @@
 import logging
 import os
+import time
 from functools import lru_cache
 from pathlib import Path
 
@@ -54,7 +55,10 @@ def download_file(
         newfilename = "{}/{}".format(target_root, file_name)
 
     if file_exists(newfilename):
-        log.debug("Skipped file exists: %s", newfilename)
+        st = os.stat(newfilename)
+        age_seconds = time.time() - st.st_mtime
+        if age_seconds < 24 * 60 * 60:  # If not older then a day skip download
+            log.debug("Skipped file exists: %s", newfilename)
         return
 
     with open(newfilename, "wb") as newfile:
