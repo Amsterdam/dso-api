@@ -44,8 +44,8 @@ def process_shp(path, filename, callback, encoding="ISO-8859-1"):
     """
     source = os.path.join(path, filename)
     ds = DataSource(source, encoding=encoding)
-    lyr = ds[0]
-    for feature in lyr:
+    layer = ds[0]
+    for feature in layer:
         callback(feature)
 
 
@@ -57,11 +57,9 @@ def get_multipoly(wkt):
 
     if not geom:
         return None
-
-    if isinstance(geom, Polygon):
+    elif isinstance(geom, Polygon):
         return MultiPolygon(geom)
-
-    if isinstance(geom, Point):
+    elif isinstance(geom, Point):
         return None
 
     return geom
