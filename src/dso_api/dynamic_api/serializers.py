@@ -142,12 +142,19 @@ def serializer_factory(model: Type[DynamicModel], flat=None) -> Type[DynamicSeri
     if not flat:
         for key, item in model.__dict__.items():
             if isinstance(item, models.fields.related_descriptors.ReverseManyToOneDescriptor):
+                array_fields = [
+                    f"{model._table_schema.id}_{p}_set" for p, spec in model._table_schema["schema"]["properties"].items()
+                    if spec.get("type") == "table"
+                ]
                 related_serialier = serializer_factory(
                     model=item.rel.related_model,
                     flat=True)
-                related_key = key.replace('_set', '')
+                if key in array_fields:
+                    related_key = "_".join(key.split("_")[1:-1])
+                else:
+                    related_key = key.replace('_set', '')
                 fields.append(related_key)
-                new_attrs[related_key] = related_serialier(many=True, read_only=True)
+                new_attrs[related_key] = related_serialier(many=True, read_only=True, source=key)
 
     # Generate Meta section and serializer class
     new_attrs["Meta"] = type(

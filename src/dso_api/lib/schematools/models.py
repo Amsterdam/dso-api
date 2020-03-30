@@ -7,7 +7,7 @@ from urllib.parse import urlparse
 from django.contrib.gis.db import models
 from django.db.models.base import ModelBase
 from django.conf import settings
-from django.contrib.postgres.fields import JSONField
+from django.contrib.postgres.fields import ArrayField
 from django_postgres_unlimited_varchar import UnlimitedCharField
 from string_utils import slugify
 
@@ -57,6 +57,19 @@ class FieldMaker:
         kwargs["null"] = not field.required
         if self.value_getter:
             kwargs = {**kwargs, **self.value_getter(dataset, field)}
+        return field_cls, args, kwargs
+
+    def handle_array(
+            self,
+            dataset: DatasetSchema,
+            field: DatasetFieldSchema,
+            field_cls,
+            *args,
+            **kwargs
+    ) -> TypeAndSignature:
+        if field.data.get("type", "").lower() == "array":
+            base_field, _ = JSON_TYPE_TO_DJANGO[field.data.get("entity", {}).get("type", "string")]
+            kwargs["base_field"] = base_field()
         return field_cls, args, kwargs
 
     def handle_relation(
@@ -111,30 +124,31 @@ def fetch_srid(dataset: DatasetSchema, field: DatasetFieldSchema) -> Dict[str, A
 
 
 JSON_TYPE_TO_DJANGO = {
-    "string": FieldMaker(UnlimitedCharField),
-    "integer": FieldMaker(models.IntegerField),
-    "number": FieldMaker(models.FloatField),
-    "boolean": FieldMaker(models.BooleanField),
-    "date": FieldMaker(models.DateField),
-    "time": FieldMaker(models.TimeField),
-    "array": FieldMaker(JSONField),
-    "/definitions/id": FieldMaker(models.AutoField),
-    "/definitions/schema": FieldMaker(UnlimitedCharField),
+    "string": (UnlimitedCharField, None),
+    "integer": (models.IntegerField, None),
+    "number": (models.FloatField, None),
+    "boolean": (models.BooleanField, None),
+    "date": (models.DateField, None),
+    "time": (models.TimeField, None),
+    "array": (ArrayField, None),
+    "/definitions/id": (models.AutoField, None),
+    "/definitions/schema": (UnlimitedCharField, None),
 
-    "https://geojson.org/schema/Geometry.json": FieldMaker(
+    "https://geojson.org/schema/Geometry.json": (
         models.MultiPolygonField,
-        value_getter=fetch_srid,
-        srid=RD_NEW.srid,
-        geography=False,
-        db_index=True,
+        dict(value_getter=fetch_srid,
+             srid=RD_NEW.srid,
+             geography=False,
+             db_index=True)
     ),
-    "https://geojson.org/schema/Point.json": FieldMaker(
+    "https://geojson.org/schema/Point.json": (
         models.PointField,
-        value_getter=fetch_srid,
-        srid=RD_NEW.srid,
-        geography=False,
-        db_index=True,
+        dict(value_getter=fetch_srid,
+             srid=RD_NEW.srid,
+             geography=False,
+             db_index=True),
     ),
+    "table": (None, None)
 }
 
 
@@ -198,19 +212,34 @@ def model_factory(table: DatasetTableSchema) -> Type[DynamicModel]:
         # skip schema field for now
         if type_.endswith("definitions/schema"):
             continue
+        # skip nested tables
+        if type_ == "table":
+            continue
         # reduce amsterdam schema refs to their fragment
         if type_.startswith(settings.SCHEMA_DEFS_URL):
             type_ = urlparse(type_).fragment
         # Generate field object
-        kls, args, kwargs = JSON_TYPE_TO_DJANGO[type_](field, dataset)
+        base_class, init_kwargs = JSON_TYPE_TO_DJANGO[type_]
+        if base_class is None:
+            # Some fields are not mapped into classes
+            continue
+        kls, args, kwargs = FieldMaker(base_class, **(init_kwargs or dict()))(field, dataset)
+        if kls is None:
+            # Some fields are not mapped into classes
+            continue
         model_field = kls(*args, **kwargs)
 
         # Generate name, fix if needed.
         field_name = slugify(field.name, sign="_")
+        model_field.name = field_name
         fields[field_name] = model_field
 
         if not display_field and is_possible_display_field(field):
             display_field = field.name
+
+        if kls == ArrayField:
+            print(model_field.__dict__)
+
 
     # Generate Meta part
     meta_cls = type(

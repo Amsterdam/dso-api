@@ -1,4 +1,5 @@
 from django.db import connections
+from django.core.exceptions import ValidationError
 from environ import Env
 from amsterdam_schema.utils import schema_def_from_file
 
@@ -27,6 +28,7 @@ class Command(BaseCommand):
         dataset = self.import_schema('parkeervakken', result['parkeervakken'])
         tables = {table.id: table for table in dataset.schema.tables}
         Parkeervaak = model_factory(tables['parkeervakken'])
+        Regime = model_factory(tables["parkeervakken_regimes"])
 
         parkeervakken_db_connection = connections.databases['default'].copy()
         parkeervakken_db_connection.update(Env.db_url_config(
@@ -37,15 +39,16 @@ class Command(BaseCommand):
 
         connections.databases['parkeervakken'] = parkeervakken_db_connection
 
+        breakpoint()
         # Creating DB tables.
         if options['createdb']:
             with connections['default'].schema_editor() as schema_editor:
                 schema_editor.create_model(Parkeervaak)
+                schema_editor.create_model(Regime)
                 print("Created models")
 
         # Seed test data
         # seed_test_data(connections['parkeervakken'])
-
         # Fill in data
         parkeervakken_cursor = connections['parkeervakken'].cursor()
 
@@ -64,8 +67,11 @@ class Command(BaseCommand):
             parkeervaak.aantal = row['aantal']
             parkeervaak.geom = row['geom']
             parkeervaak.e_type = row['e_type']
-            parkeervaak.regimes = create_regimes(row=row)
             parkeervaak.save()
+            try:
+                create_regimes(parkeervaak=parkeervaak, Regime=Regime, row=row)
+            except ValidationError as e:
+                print(f"Failed to create regimes for {parkeervaak}: {e}")
 
 
 def seed_test_data(conn):
@@ -150,7 +156,7 @@ def seed_test_data(conn):
             cursor.execute(sql)
 
 
-def create_regimes(row):
+def create_regimes(parkeervaak, Regime, row):
     if not any([
             row['kenteken'],
             row['bord'],
@@ -171,31 +177,28 @@ def create_regimes(row):
 
     base_data = dict(
         soort=row['soort'],
-        eType=row['e_type'],
+        e_type=row['e_type'],
         bord=row['bord'],
-        beginTijd=row['begintijd1'] if row['begintijd1'] else '00:00',
-        eindTijd=row['eindtijd1'] if row['eindtijd1'] else '23:59',
+        begin_tijd=format_time(row['begintijd1'], '00:00'),
+        eind_tijd=format_time(row['eindtijd1'], '23:59'),
         opmerking=row['opmerking'],
         dagen=days,
+        parent=parkeervaak
     )
-
-    regimes = []
 
     if row.get('kenteken'):
         kenteken_regime = base_data.copy()
         kenteken_regime.update(dict(
             kenteken=row['kenteken'],
         ))
-        regimes.append(kenteken_regime)
-    elif row.get('begintijd2'):
-        regimes.append(base_data)
+        Regime.objects.create(**kenteken_regime)
+    elif any([row.get('begintijd2'), row.get('eindtijd2')]):
+        Regime.objects.create(**base_data)
 
         second_mode = base_data.copy()
-        second_mode.update(dict(
-            begin_tijd=row['begintijd2'],
-            eind_tijd=row['eindtijd2']
-        ))
-        regimes.append(second_mode)
+        second_mode["begin_tijd"] = format_time(row['begintijd2'])
+        second_mode["eind_tijd"] = format_time(row['eindtijd2'])
+        Regime.objects.create(**second_mode)
     elif any([
             row['tvm_begind'],
             row['tvm_eindd'],
@@ -206,14 +209,13 @@ def create_regimes(row):
         # TVM
         tvm_mode = base_data.copy()
         tvm_mode.update(dict(
-            beginDatum=row['tvm_begind'],
-            eindDatum=row['tvm_eindd'],
-            beginTijd=row['tvm_begint'],
-            eindTijd=row['tvm_eindt'],
-            opmerking=row['tvm_opmerk']
+            begin_datum=row['tvm_begind'],
+            eind_datum=row['tvm_eindd'],
+            opmerking=row['tvm_opmerk'],
+            begin_tijd=format_time(row['tvm_begint']),
+            eind_tijd=format_time(row['tvm_eindt'])
         ))
-
-    return regimes
+        Regime.objects.create(**tvm_mode)
 
 
 def days_from_row(row):
@@ -237,6 +239,19 @@ def days_from_row(row):
         days = [key for key, v in row.items() if key in week_days and v]
 
     return days
+
+
+def format_time(value, default=None):
+    """
+    Format time or return None
+    """
+    if value not in [None, "", "-", "????"]:
+        if value == "24:00":
+            value = "23:59"
+        if value.startswith("va "):
+            value = value[3:]
+        return value
+    return default
 
 
 def dictfetchall(cursor):
