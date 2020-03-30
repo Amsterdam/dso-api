@@ -15,6 +15,8 @@ log = logging.getLogger(__name__)
 
 
 class ImportBagHTask(batch.BasicTask):
+    dataset = "bagh"
+
     def __init__(self, *args, **kwargs):
         self.table = f"{self.__class__.dataset}_{self.__class__.name}"
         self.temp_table = f"{self.__class__.dataset}_temp"
@@ -27,8 +29,14 @@ class ImportBagHTask(batch.BasicTask):
         self.filename = f"{self.gob_id}_{self.__class__.name}_ActueelEnHistorie.csv"
         self.source_path = f"{self.gob_path}/CSV_ActueelEnHistorie"
         self.use_gemeentes = kwargs.get("use_gemeentes", False)
+        self.use_stadsdelen = kwargs.get("use_stadsdelen", False)
+        self.use_ggw_gebieden = kwargs.get("use_ggw_gebieden", False)
         if self.use_gemeentes:
             self.gemeentes = set()
+        if self.use_stadsdelen:
+            self.stadsdelen = set()
+        if self.use_ggw_gebieden:
+            self.ggw_gebieden = set()
 
     def get_non_pk_fields(self):
         return [x.name for x in self.model._meta.get_fields() if not x.primary_key]
@@ -51,6 +59,22 @@ class ImportBagHTask(batch.BasicTask):
                 .order_by("code")
                 .distinct("code")
                 .values_list("code", flat=True)
+            )
+        if self.use_stadsdelen:
+            self.stadsdelen = set(
+                self.models["stadsdeel"]
+                .objects.filter(eind_geldigheid__isnull=True)
+                .order_by("identificatie")
+                .distinct("identificatie")
+                .values_list("identificatie", flat=True)
+            )
+        if self.use_ggw_gebieden:
+            self.ggw_gebieden = set(
+                self.models["ggw_gebied"]
+                .objects.filter(eind_geldigheid__isnull=True)
+                .order_by("identificatie")
+                .distinct("identificatie")
+                .values_list("identificatie", flat=True)
             )
 
     def after(self):
@@ -101,8 +125,32 @@ class ImportBagHTask(batch.BasicTask):
         self.model._meta.db_table = self.table
         if self.use_gemeentes:
             self.gemeentes.clear()
+        if self.use_stadsdelen:
+            self.stadsdelen.clear
+        if self.use_ggw_gebieden:
+            self.ggw_gebieden.clear()
 
-    def process_row_common(self, r):
+    def process(self):
+        entries = csv.process_csv(self.path, self.filename, self.process_row)
+        self.model.objects.bulk_create(entries, batch_size=batch.BATCH_SIZE)
+
+    def process_row(self, r):
+        values = self.process_row_common(r)
+        if values:
+            values.update(
+                {
+                    "code": r["code"],
+                    "naam": r["naam"],
+                    "registratiedatum": csv.parse_date_time(r["registratiedatum"]),
+                    "documentdatum": csv.parse_date_time(r["documentdatum"]),
+                    "documentnummer": r["documentnummer"],
+                }
+            )
+            return self.model(**values)
+        else:
+            return None
+
+    def process_row_common(self, r):  # noqa: C901
         identificatie = r["identificatie"]
         volgnummer = int(r["volgnummer"])
         id = f"{identificatie}_{volgnummer:03}"
@@ -136,11 +184,30 @@ class ImportBagHTask(batch.BasicTask):
             gemeente_id = r["ligtIn:BRK.GME.identificatie"] or None
             if gemeente_id and gemeente_id not in self.gemeentes:
                 log.error(
-                    f"Woonplaats {id} has invalid gemeente_id {gemeente_id}; skipping"
+                    f"{self.name.title()} {id} has invalid gemeente_id {gemeente_id}; skipping"
                 )
                 return None
             else:
                 values["gemeente_identificatie"] = gemeente_id
+        if self.use_stadsdelen:
+            stadsdeel_id = r["ligtIn:GBD.SDL.identificatie"] or None
+            if stadsdeel_id and stadsdeel_id not in self.stadsdelen:
+                log.error(
+                    f"{self.name.title()} {id} has invalid stadsdeel_id {stadsdeel_id}; skipping"
+                )
+                return None
+            else:
+                values["stadsdeel_identificatie"] = stadsdeel_id
+        if self.use_ggw_gebieden:
+            ggw_gebied_id = r["ligtIn:GBD.GGW.identificatie"] or None
+            if ggw_gebied_id and ggw_gebied_id not in self.ggw_gebieden:
+                log.error(
+                    f"{self.name.title()} {id} has invalid ggw_gebied_id {ggw_gebied_id}; skipping"
+                )
+                return None
+            else:
+                values["ggw_gebied_identificatie"] = ggw_gebied_id
+
         return values
 
     def do_date_checks(self):
@@ -191,7 +258,6 @@ class ImportGemeenteTask(ImportBagHTask):
     """
 
     name = "gemeente"
-    dataset = "bagh"
     data = [
         (
             "03630000000000",
@@ -228,13 +294,6 @@ class ImportGemeenteTask(ImportBagHTask):
 
 class ImportWoonplaatsTask(ImportBagHTask):
     name = "woonplaats"
-    dataset = "bagh"
-
-    def process(self):
-        source = os.path.join(self.path, self.filename)
-        woonplaatsen = csv.process_csv(None, None, self.process_row, source=source)
-
-        self.model.objects.bulk_create(woonplaatsen, batch_size=batch.BATCH_SIZE)
 
     def process_row(self, r):
         values = self.process_row_common(r)
@@ -259,12 +318,18 @@ class ImportWoonplaatsTask(ImportBagHTask):
 
 class ImportStadsdeelTask(ImportBagHTask):
     name = "stadsdeel"
-    dataset = "bagh"
 
-    def process(self):
-        source = os.path.join(self.path, self.filename)
-        stadsdelen = csv.process_csv(None, None, self.process_row, source=source)
-        self.model.objects.bulk_create(stadsdelen, batch_size=batch.BATCH_SIZE)
+
+class ImportGgwGebied(ImportBagHTask):
+    name = "ggw_gebied"
+
+
+class ImportGgwPraktijkGebied(ImportBagHTask):
+    name = "ggw_praktijkgebied"
+
+
+class ImportWijkTask(ImportBagHTask):
+    name = "wijk"
 
     def process_row(self, r):
         values = self.process_row_common(r)
@@ -276,6 +341,7 @@ class ImportStadsdeelTask(ImportBagHTask):
                     "registratiedatum": csv.parse_date_time(r["registratiedatum"]),
                     "documentdatum": csv.parse_date_time(r["documentdatum"]),
                     "documentnummer": r["documentnummer"],
+                    "cbs_code": r["cbsCode"],
                 }
             )
             return self.model(**values)
@@ -323,13 +389,35 @@ class ImportBagHJob(batch.BasicJob):
                     gob_path="gebieden",
                     use_gemeentes=True,
                 ),
-                # ImportWijkTask(self.gob_gebieden_shp_path),
-                # ImportGebiedsgerichtwerkenTask(self.gob_gebieden_shp_path),
-                # ImportGebiedsgerichtwerkenPraktijkgebiedenTask(self.gob_gebieden_shp_path),
+                ImportGgwGebied(
+                    path=self.data_dir,
+                    models=self.models,
+                    gob_path="gebieden",
+                    use_stadsdelen=True,
+                ),
+                ImportGgwPraktijkGebied(
+                    path=self.data_dir, models=self.models, gob_path="gebieden"
+                ),
+                ImportWijkTask(
+                    path=self.data_dir,
+                    models=self.models,
+                    gob_path="gebieden",
+                    use_ggw_gebieden=True,
+                ),
                 # ImportGrootstedelijkgebiedTask(self.gob_gebieden_shp_path),
                 # ImportUnescoTask(self.gob_gebieden_shp_path),
-                # ImportBuurtTask(self.gob_gebieden_path),
-                # ImportBouwblokTask(self.gob_gebieden_path),
+                # ImportBuurtTask(
+                #     path=self.data_dir,
+                #     models=self.models,
+                #     gob_path="gebieden",
+                #     use_wijken=True,
+                # ),
+                # ImportBouwblokTask(
+                #     path=self.data_dir,
+                #     models=self.models,
+                #     gob_path="gebieden",
+                #     use_wijken=True,
+                # ),
                 # #
                 # ImportOpenbareRuimteTask(self.gob_bag_path),
                 # #

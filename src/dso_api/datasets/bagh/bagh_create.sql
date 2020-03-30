@@ -7,9 +7,9 @@ DROP TABLE IF EXISTS bagh_nummeraanduiding;
 DROP TABLE IF EXISTS bagh_openbareruimte;
 DROP TABLE IF EXISTS bagh_woonplaats;
 DROP TABLE IF EXISTS bagh_bouwblok;
-DROP TABLE IF EXISTS bagh_gebiedsgerichtwerkenpraktijkgebieden;
+DROP TABLE IF EXISTS bagh_ggw_praktijkgebied;
 DROP TABLE IF EXISTS bagh_buurt;
-DROP TABLE IF EXISTS bagh_gebiedsgerichtwerken;
+DROP TABLE IF EXISTS bagh_ggw_gebied;
 DROP TABLE IF EXISTS bagh_wijk;
 DROP TABLE IF EXISTS bagh_stadsdeel;
 DROP TABLE IF EXISTS bagh_gemeente;
@@ -58,20 +58,21 @@ CREATE TABLE bagh_wijk
     begin_geldigheid date,
     eind_geldigheid date,
     naam character varying(100) NOT NULL,
-    code character varying(2) NOT NULL,
-    vollcode character varying(3) NOT NULL,
+    code character varying(3) NOT NULL,
   	documentdatum date,
     documentnummer character varying(100),
 	cbs_code character varying(9),
     geometrie geometry(MultiPolygon,28992),
+    ggw_gebied_identificatie character varying(14),
     stadsdeel_identificatie character varying(14) NOT NULL
 );
 
 CREATE INDEX ON bagh_wijk(identificatie);
 CREATE INDEX ON bagh_wijk USING gist(geometrie);
 CREATE INDEX ON bagh_wijk(stadsdeel_identificatie);
+CREATE INDEX ON bagh_wijk(ggw_gebied_identificatie);
 
-CREATE TABLE public.bagh_gebiedsgerichtwerken
+CREATE TABLE public.bagh_ggw_gebied
 (
     id character varying(18) PRIMARY KEY,
 	identificatie character varying(14) NOT NULL,
@@ -83,15 +84,14 @@ CREATE TABLE public.bagh_gebiedsgerichtwerken
     documentnummer text,
     code character varying(4) NOT NULL,
     naam text NOT NULL,
-    date_modified timestamp with time zone NOT NULL,
     geometrie geometry(MultiPolygon,28992),
     stadsdeel_identificatie character varying(14) NOT NULL
 );
 
-CREATE INDEX ON bagh_gebiedsgerichtwerken(identificatie);
-CREATE INDEX ON bagh_gebiedsgerichtwerken(code);
-CREATE INDEX ON bagh_gebiedsgerichtwerken(stadsdeel_identificatie);
-CREATE INDEX ON bagh_gebiedsgerichtwerken USING gist(geometrie);
+CREATE INDEX ON bagh_ggw_gebied(identificatie);
+CREATE INDEX ON bagh_ggw_gebied(code);
+CREATE INDEX ON bagh_ggw_gebied(stadsdeel_identificatie);
+CREATE INDEX ON bagh_ggw_gebied USING gist(geometrie);
 
 CREATE TABLE bagh_buurt
 (
@@ -102,26 +102,24 @@ CREATE TABLE bagh_buurt
     begin_geldigheid date,
     eind_geldigheid date,
     geometrie geometry(MultiPolygon,28992),
-    date_modified timestamp with time zone NOT NULL,
     code character varying(4),
     naam text,
-    vervallen boolean,
-    ingang_cyclus date,
+    cbs_code character varying(14),
     documentdatum date,
     documentnummer text,
     wijk_identificatie character varying(14) NOT NULL,
-    gebiedsgerichtwerken_identificatie character varying(14) NOT NULL,
+    ggw_gebied_identificatie character varying(14) NOT NULL,
     stadsdeel_identificatie character varying(14) NOT NULL
 );
 
 CREATE INDEX ON bagh_buurt(identificatie);
 CREATE INDEX ON bagh_buurt(wijk_identificatie);
-CREATE INDEX ON bagh_buurt(gebiedsgerichtwerken_identificatie);
+CREATE INDEX ON bagh_buurt(ggw_gebied_identificatie);
 CREATE INDEX ON bagh_buurt(stadsdeel_identificatie);
 CREATE INDEX ON bagh_buurt USING gist(geometrie);
 
 
-CREATE TABLE bagh_gebiedsgerichtwerkenpraktijkgebieden
+CREATE TABLE bagh_ggw_praktijkgebied
 (
 	id character varying(18) PRIMARY KEY,
 	identificatie character varying(14) NOT NULL,
@@ -137,9 +135,9 @@ CREATE TABLE bagh_gebiedsgerichtwerkenpraktijkgebieden
 	stadsdeel_identificatie character varying(14) NOT NULL
 );
 
-CREATE INDEX ON bagh_gebiedsgerichtwerkenpraktijkgebieden(identificatie);
-CREATE INDEX ON bagh_gebiedsgerichtwerkenpraktijkgebieden(stadsdeel_identificatie);
-CREATE INDEX ON bagh_gebiedsgerichtwerkenpraktijkgebieden USING gist(geometrie);
+CREATE INDEX ON bagh_ggw_praktijkgebied(identificatie);
+CREATE INDEX ON bagh_ggw_praktijkgebied(stadsdeel_identificatie);
+CREATE INDEX ON bagh_ggw_praktijkgebied USING gist(geometrie);
 
 
 CREATE TABLE bagh_bouwblok

@@ -58,16 +58,11 @@ def process_csv(
     file_name,
     process_row_callback,
     quotechar='"',
-    source=None,
     encoding="utf-8-sig",
     max_rows=None,
 ):
-
-    if not source:
-        source = os.path.join(path, file_name)
-
+    source = os.path.join(path, file_name)
     cb = logging_callback(source, process_row_callback)
-
     with _context_reader(
         source, quotechar=quotechar, quoting=csv.QUOTE_MINIMAL, encoding=encoding,
     ) as rows:
