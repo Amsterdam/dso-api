@@ -39,7 +39,6 @@ class Command(BaseCommand):
 
         connections.databases['parkeervakken'] = parkeervakken_db_connection
 
-        breakpoint()
         # Creating DB tables.
         if options['createdb']:
             with connections['default'].schema_editor() as schema_editor:

@@ -237,10 +237,6 @@ def model_factory(table: DatasetTableSchema) -> Type[DynamicModel]:
         if not display_field and is_possible_display_field(field):
             display_field = field.name
 
-        if kls == ArrayField:
-            print(model_field.__dict__)
-
-
     # Generate Meta part
     meta_cls = type(
         "Meta",

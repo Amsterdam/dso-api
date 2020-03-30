@@ -105,7 +105,16 @@ def get_view_name(model: Type[DynamicModel], suffix: str):
 @lru_cache()
 def serializer_factory(model: Type[DynamicModel], flat=None) -> Type[DynamicSerializer]:
     """Generate the DRF serializer class for a specific dataset model."""
+
+    is_nested_table = False
+    # Exclude links for nested tables
+    if model._table_schema.get("schema", {}).get("parentTable") is not None:
+        is_nested_table = True
+
     fields = ["_links", "schema"]
+    if is_nested_table:
+        fields = []
+
     serializer_name = f"{model.get_dataset_id()}{model.__name__}Serializer"
     new_attrs = {
         "table_schema": model._table_schema,
@@ -115,7 +124,9 @@ def serializer_factory(model: Type[DynamicModel], flat=None) -> Type[DynamicSeri
     # Parse fields for serializer
     extra_kwargs = {}
     for model_field in model._meta.get_fields():
-        orig_name = model_field.name
+        if is_nested_table and model_field.name in ["id", "parent"]:
+            # Do not render PK and FK to parent on nested tables
+            continue
 
         # Instead of having to apply camelize() on every response,
         # create converted field names on the serializer construction.
@@ -135,7 +146,7 @@ def serializer_factory(model: Type[DynamicModel], flat=None) -> Type[DynamicSeri
                 extra_kwargs[camel_id_name] = {"source": model_field.attname}
 
         fields.append(camel_name)
-        if orig_name != camel_name:
+        if model_field.name != camel_name:
             extra_kwargs[camel_name] = {"source": model_field.name}
 
     # Generate embedded relations
