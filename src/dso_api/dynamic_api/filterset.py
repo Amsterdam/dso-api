@@ -61,12 +61,6 @@ class DynamicFilterSet(DSOFilterSet):
 
         return base_filters
 
-    def filter_queryset(self, queryset):
-        for name, value in self.form.cleaned_data.items():
-            print(name, value)
-
-        return super().filter_queryset(queryset)
-
 
 def filterset_factory(model: Type[DynamicModel]) -> Type[DynamicFilterSet]:
     """Generate the filterset based on the dynamic model."""
