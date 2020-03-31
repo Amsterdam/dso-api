@@ -58,7 +58,7 @@ def download_file(
         st = os.stat(newfilename)
         age_seconds = time.time() - st.st_mtime
         if age_seconds < 24 * 60 * 60:  # If not older then a day skip download
-            log.debug("Skipped file exists: %s", newfilename)
+            log.debug("Recent file exists: %s - Skipped download", newfilename)
         return
 
     with open(newfilename, "wb") as newfile:

@@ -4,7 +4,7 @@ DROP TABLE IF EXISTS bagh_verblijfsobject;
 DROP TABLE IF EXISTS bagh_standplaats;
 DROP TABLE IF EXISTS bagh_ligplaats;
 DROP TABLE IF EXISTS bagh_nummeraanduiding;
-DROP TABLE IF EXISTS bagh_openbareruimte;
+DROP TABLE IF EXISTS bagh_openbare_ruimte;
 DROP TABLE IF EXISTS bagh_woonplaats;
 DROP TABLE IF EXISTS bagh_bouwblok;
 DROP TABLE IF EXISTS bagh_ggw_praktijkgebied;
@@ -16,10 +16,9 @@ DROP TABLE IF EXISTS bagh_gemeente;
 
 CREATE TABLE bagh_gemeente
 (
-    id character varying(18) PRIMARY KEY,
-	identificatie character varying(14) NOT NULL,
+    id character varying(8) PRIMARY KEY,
+	identificatie character varying(4) NOT NULL,
 	volgnummer smallint NOT NULL,
-	code character varying(4) NOT NULL,
 	registratiedatum timestamp with time zone,
     begin_geldigheid date,
     eind_geldigheid date,
@@ -181,7 +180,7 @@ CREATE INDEX ON bagh_woonplaats(gemeente_identificatie);
 CREATE INDEX ON bagh_woonplaats USING gist(geometrie);
 
 
-CREATE TABLE bagh_openbareruimte
+CREATE TABLE bagh_openbare_ruimte
 (
 	id character varying(20) PRIMARY KEY,
 	identificatie character varying(16) NOT NULL,
@@ -201,9 +200,9 @@ CREATE TABLE bagh_openbareruimte
 	woonplaats_identificatie character varying(4) NOT NULL
 );
 
-CREATE INDEX ON bagh_openbareruimte(identificatie);
-CREATE INDEX ON bagh_openbareruimte(woonplaats_identificatie);
-CREATE INDEX ON bagh_openbareruimte USING gist(geometrie);
+CREATE INDEX ON bagh_openbare_ruimte(identificatie);
+CREATE INDEX ON bagh_openbare_ruimte(woonplaats_identificatie);
+CREATE INDEX ON bagh_openbare_ruimte USING gist(geometrie);
 
 
 CREATE TABLE bagh_nummeraanduiding
