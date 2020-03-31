@@ -135,7 +135,9 @@ def serializer_factory(model: Type[DynamicModel], flat=None) -> Type[DynamicSeri
         # Add extra embedded part for foreign keys
         if isinstance(model_field, models.ForeignKey):
             new_attrs[camel_name] = EmbeddedField(
-                serializer_class=serializer_factory(model_field.related_model, flat=True),
+                serializer_class=serializer_factory(
+                    model_field.related_model, flat=True
+                ),
                 source=model_field.name,
             )
 
@@ -152,20 +154,25 @@ def serializer_factory(model: Type[DynamicModel], flat=None) -> Type[DynamicSeri
     # Generate embedded relations
     if not flat:
         for key, item in model.__dict__.items():
-            if isinstance(item, models.fields.related_descriptors.ReverseManyToOneDescriptor):
+            if isinstance(
+                item, models.fields.related_descriptors.ReverseManyToOneDescriptor
+            ):
                 array_fields = [
-                    f"{model._table_schema.id}_{p}_set" for p, spec in model._table_schema["schema"]["properties"].items()
+                    f"{model._table_schema.id}_{p}_set"
+                    for p, spec in model._table_schema["schema"]["properties"].items()
                     if spec.get("type") == "table"
                 ]
                 related_serialier = serializer_factory(
-                    model=item.rel.related_model,
-                    flat=True)
+                    model=item.rel.related_model, flat=True
+                )
                 if key in array_fields:
                     related_key = "_".join(key.split("_")[1:-1])
                 else:
-                    related_key = key.replace('_set', '')
+                    related_key = key.replace("_set", "")
                 fields.append(related_key)
-                new_attrs[related_key] = related_serialier(many=True, read_only=True, source=key)
+                new_attrs[related_key] = related_serialier(
+                    many=True, read_only=True, source=key
+                )
 
     # Generate Meta section and serializer class
     new_attrs["Meta"] = type(

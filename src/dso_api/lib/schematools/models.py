@@ -60,15 +60,17 @@ class FieldMaker:
         return field_cls, args, kwargs
 
     def handle_array(
-            self,
-            dataset: DatasetSchema,
-            field: DatasetFieldSchema,
-            field_cls,
-            *args,
-            **kwargs
+        self,
+        dataset: DatasetSchema,
+        field: DatasetFieldSchema,
+        field_cls,
+        *args,
+        **kwargs,
     ) -> TypeAndSignature:
         if field.data.get("type", "").lower() == "array":
-            base_field, _ = JSON_TYPE_TO_DJANGO[field.data.get("entity", {}).get("type", "string")]
+            base_field, _ = JSON_TYPE_TO_DJANGO[
+                field.data.get("entity", {}).get("type", "string")
+            ]
             kwargs["base_field"] = base_field()
         return field_cls, args, kwargs
 
@@ -133,22 +135,15 @@ JSON_TYPE_TO_DJANGO = {
     "array": (ArrayField, None),
     "/definitions/id": (models.AutoField, None),
     "/definitions/schema": (UnlimitedCharField, None),
-
     "https://geojson.org/schema/Geometry.json": (
         models.MultiPolygonField,
-        dict(value_getter=fetch_srid,
-             srid=RD_NEW.srid,
-             geography=False,
-             db_index=True)
+        dict(value_getter=fetch_srid, srid=RD_NEW.srid, geography=False, db_index=True),
     ),
     "https://geojson.org/schema/Point.json": (
         models.PointField,
-        dict(value_getter=fetch_srid,
-             srid=RD_NEW.srid,
-             geography=False,
-             db_index=True),
+        dict(value_getter=fetch_srid, srid=RD_NEW.srid, geography=False, db_index=True),
     ),
-    "table": (None, None)
+    "table": (None, None),
 }
 
 
@@ -223,7 +218,9 @@ def model_factory(table: DatasetTableSchema) -> Type[DynamicModel]:
         if base_class is None:
             # Some fields are not mapped into classes
             continue
-        kls, args, kwargs = FieldMaker(base_class, **(init_kwargs or dict()))(field, dataset)
+        kls, args, kwargs = FieldMaker(base_class, **(init_kwargs or dict()))(
+            field, dataset
+        )
         if kls is None:
             # Some fields are not mapped into classes
             continue
@@ -285,4 +282,6 @@ def get_db_table_name(table: DatasetTableSchema) -> str:
 
 
 def get_field_schema_properties(model: DynamicModel, field_name: str) -> dict:
-    return model._table_schema['schema']['properties'][field_name]['entity']['properties']
+    return model._table_schema["schema"]["properties"][field_name]["entity"][
+        "properties"
+    ]

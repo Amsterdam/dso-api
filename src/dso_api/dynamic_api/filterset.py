@@ -79,15 +79,17 @@ def filterset_factory(model: Type[DynamicModel]) -> Type[DynamicFilterSet]:
         if field.get("type") == "array":
             fields[field_name] = ["exact"]
             filters[field_name] = dj_filters.CharFilter(
-                lookup_expr='kenteken__exact',
-                help_text=field["type"])
+                lookup_expr="kenteken__exact", help_text=field["type"]
+            )
 
     meta_attrs = {
         "model": model,
         "fields": fields,
     }
     meta = type("Meta", (), meta_attrs)
-    return type(f"{model.__name__}FilterSet", (DynamicFilterSet,), {"Meta": meta, **filters})
+    return type(
+        f"{model.__name__}FilterSet", (DynamicFilterSet,), {"Meta": meta, **filters}
+    )
 
 
 def _get_field_lookups(field: models.Field) -> list:
@@ -100,4 +102,4 @@ def get_schema_property(model, field):
 
 
 def _get_lookups(field_cls) -> list:
-    return ['exact']
+    return ["exact"]
