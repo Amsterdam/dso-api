@@ -18,7 +18,11 @@ from amsterdam_schema.types import DatasetFieldSchema, DatasetSchema, DatasetTab
 # Could be used to check fieldnames
 ALLOWED_ID_PATTERN = re.compile(r"[a-zA-Z][ \w\d]*")
 
-DATE_MODELS_LOOKUP = {"date": models.DateField, "date-time": models.DateTimeField}
+DATE_MODELS_LOOKUP = {
+    "date": models.DateField,
+    "time": models.TimeField,
+    "date-time": models.DateTimeField,
+}
 
 
 TypeAndSignature = Tuple[Type[models.Field], tuple, Dict[str, Any]]
@@ -250,5 +254,5 @@ def get_db_table_name(table: DatasetTableSchema) -> str:
     """Generate the table name for a database schema."""
     dataset = table._parent_schema
     app_label = dataset.id
-    table_id = f"{slugify(table.id, sign='_')}"
-    return f"{app_label}_{table_id}"
+    table_id = table.id
+    return slugify(f"{app_label}_{table_id}", sign="_")
