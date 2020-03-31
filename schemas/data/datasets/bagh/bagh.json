@@ -145,7 +145,6 @@
           "id",
           "identificatie",
           "volgnummer",
-          "code",
           "naam"
         ],
         "display": "id",
@@ -161,9 +160,6 @@
           },
           "volgnummer": {
             "type": "integer"
-          },
-          "code": {
-            "type": "string"
           },
           "registratiedatum": {
             "type": "string",
@@ -471,7 +467,7 @@
       }
     },
     {
-      "id": "openbareruimte",
+      "id": "openbare_ruimte",
       "type": "table",
       "schema": {
         "$schema": "http://json-schema.org/draft-07/schema#",
