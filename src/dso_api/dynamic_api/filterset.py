@@ -31,20 +31,6 @@ DEFAULT_LOOKUPS_BY_TYPE = {
 }
 
 
-class DynamicArrayFilter(dj_filters.Filter):
-    def __init__(self, meta_properties, *args, **kwargs):
-        self._meta_properties = meta_properties
-        super().__init__(*args, **kwargs)
-
-    def filter(self, qs, lookup):
-        if lookup is None:
-            return qs
-        field_name, inner_field = self.field_name.split("__")
-        self.field_name = field_name
-        lookup = [{inner_field: lookup}]
-        return super().filter(qs, lookup)
-
-
 class DynamicFilterSet(DSOFilterSet):
     """Base class for dynamic filter sets."""
 
@@ -68,19 +54,7 @@ def filterset_factory(model: Type[DynamicModel]) -> Type[DynamicFilterSet]:
     # Determine which fields are included:
     # Excluding geometry fields for now, as the default filter only performs exact matches.
     # This isn't useful for polygon fields, and excluding it avoids support issues later.
-    fields = {
-        f.attname: _get_lookups(f.__class__)
-        for f in model._meta.get_fields()
-        if not f.primary_key and not isinstance(f, GeometryField)
-    }
-    filters = {}
-    # Extend fields with sub serializers
-    for field_name, field in model._table_schema["schema"]["properties"].items():
-        if field.get("type") == "array":
-            fields[field_name] = ["exact"]
-            filters[field_name] = dj_filters.CharFilter(
-                lookup_expr="kenteken__exact", help_text=field["type"]
-            )
+    fields = {f.attname: _get_field_lookups(f) for f in model._meta.get_fields()}
 
     meta_attrs = {
         "model": model,
@@ -88,18 +62,10 @@ def filterset_factory(model: Type[DynamicModel]) -> Type[DynamicFilterSet]:
     }
     meta = type("Meta", (), meta_attrs)
     return type(
-        f"{model.__name__}FilterSet", (DynamicFilterSet,), {"Meta": meta, **filters}
+        f"{model.__name__}FilterSet", (DynamicFilterSet,), {"Meta": meta}
     )
 
 
 def _get_field_lookups(field: models.Field) -> list:
     """Find the possible lookups for a given field type."""
     return DEFAULT_LOOKUPS_BY_TYPE.get(field.__class__, ["exact"])
-
-
-def get_schema_property(model, field):
-    return model._table_schema["schema"]["properties"][field.name]
-
-
-def _get_lookups(field_cls) -> list:
-    return ["exact"]
