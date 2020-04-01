@@ -29,9 +29,7 @@ class ImportBagHTask(batch.BasicTask):
         self.filename = f"{self.gob_id}_{self.__class__.name}_ActueelEnHistorie.csv"
         self.source_path = f"{self.gob_path}/CSV_ActueelEnHistorie"
         self.use_models = {model_name: set() for model_name in kwargs.get("use", [])}
-        self.use_gemeentes = kwargs.get("use_gemeentes", False)
-        self.use_stadsdelen = kwargs.get("use_stadsdelen", False)
-        self.use_ggw_gebieden = kwargs.get("use_ggw_gebieden", False)
+        self.geotype = kwargs.get("geotype", "multipolygon")
 
     def get_non_pk_fields(self):
         return [x.name for x in self.model._meta.get_fields() if not x.primary_key]
@@ -128,7 +126,7 @@ class ImportBagHTask(batch.BasicTask):
 
         wkt_geometrie = r["geometrie"]
         if wkt_geometrie:
-            geometrie = geo.get_multipoly(wkt_geometrie)
+            geometrie = geo.get_geotype(wkt_geometrie, self.geotype)
             if not geometrie:
                 log.error(f"{self.name.title()} {id} has no valid geometry; skipping")
                 return None
@@ -296,6 +294,26 @@ class ImportOpenbareRuimteTask(ImportBagHTask):
     name = "openbare_ruimte"
 
 
+class ImportLigplaatsTask(ImportBagHTask):
+    name = "ligplaats"
+
+
+class ImportStandplaatsTask(ImportBagHTask):
+    name = "standplaats"
+
+
+class ImportPandTask(ImportBagHTask):
+    name = "pand"
+
+
+class ImportVerblijfsobjectTask(ImportBagHTask):
+    name = "verblijfsobject"
+
+
+class ImportNummeraanduidingTask(ImportBagHTask):
+    name = "nummeraanduiding"
+
+
 class ImportBagHJob(batch.BasicJob):
     name = "Import BAGH"
 
@@ -369,13 +387,40 @@ class ImportBagHJob(batch.BasicJob):
                     gob_path="bag",
                     use=["woonplaats"],
                 ),
-                # ImportLigplaatsTask(self.gob_bag_path),
-                # ImportStandplaatsTask(self.gob_bag_path),
-                # ImportPandTask(self.gob_bag_path),
-                # # large. 500.000
-                # ImportVerblijfsobjectTask(self.gob_bag_path),
-                # # large. 500.000
-                # ImportNummeraanduidingTask(self.gob_bag_path),
+                ImportLigplaatsTask(
+                    path=self.data_dir,
+                    models=self.models,
+                    gob_path="bag",
+                    geotype="polygon",
+                ),
+                ImportStandplaatsTask(
+                    path=self.data_dir,
+                    models=self.models,
+                    gob_path="bag",
+                    geotype="polygon",
+                ),
+                ImportPandTask(
+                    path=self.data_dir,
+                    models=self.models,
+                    gob_path="bag",
+                    geotype="polygon",
+                ),
+                # large. 500.000
+                ImportVerblijfsobjectTask(
+                    path=self.data_dir,
+                    models=self.models,
+                    gob_path="bag",
+                    geotype="polygon",
+                ),
+                # large. 500.000
+                ImportNummeraanduidingTask(
+                    path=self.data_dir, models=self.models, gob_path="bag"
+                ),
+                # ImportVerblijfsobjectPandRelatieTask(
+                #     path=self.data_dir,
+                #     models=self.models,
+                #     gob_path="bag"
+                # ),
             ]
         )
         return tasks1

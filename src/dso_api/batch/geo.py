@@ -49,58 +49,26 @@ def process_shp(path, filename, callback, encoding="ISO-8859-1"):
         callback(feature)
 
 
-def get_multipoly(wkt):
+def get_geotype(wkt, geotype):  # noqa: C901
     if not wkt:
         return None
 
     geom = GEOSGeometry(wkt)
-
-    if not geom:
-        return None
-    elif isinstance(geom, Polygon):
-        return MultiPolygon(geom)
-    elif isinstance(geom, Point):
-        return None
-
-    return geom
-
-
-def get_poly(wkt):
-    if not wkt:
-        return None
-
-    geom = GEOSGeometry(wkt)
-
-    if geom and isinstance(geom, Polygon):
-        return geom
-    return None
-
-
-def get_point(wkt):
-    if not wkt:
-        return None
-
-    geom = GEOSGeometry(wkt)
-
-    if geom and isinstance(geom, Point):
-        return geom
-
-    return None
-
-
-def get_multiline(wkt):
-    if not wkt:
-        return None
-
-    geom = GEOSGeometry(wkt)
-
-    if not geom:
-        return None
-
-    if isinstance(geom, LineString):
-        geom = MultiLineString(geom)
-
-    if not isinstance(geom, MultiLineString):
-        return None
-
+    if geom:
+        if geotype == "multipolygon":
+            if isinstance(geom, Polygon):
+                geom = MultiPolygon(geom)
+            elif isinstance(geom, MultiPolygon):
+                pass
+            else:
+                geom = None
+        elif geotype == "polygon" and isinstance(geom, Polygon):
+            pass
+        elif geotype == "point" and isinstance(geom, Point):
+            pass
+        elif geotype == "multiline":
+            if isinstance(geom, LineString):
+                geom = MultiLineString(geom)
+            elif isinstance(geom, MultiLineString):
+                pass
     return geom
