@@ -115,6 +115,9 @@ class DynamicRouter(routers.DefaultRouter):
         # Return which models + urls were generated
         result = {}
         for model in models:
+            if model._table_schema.get("schema", {}).get("parentTable") is not None:
+                # Do not create separate viewsets for nested tables.
+                continue
             viewname = get_view_name(model, "list")
             try:
                 url = reverse(viewname)

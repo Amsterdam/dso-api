@@ -7,7 +7,6 @@ from datetime import datetime
 from typing import Type
 
 from django.contrib.gis.db import models as gis_models
-from django.contrib.postgres.fields import JSONField
 from django.db import models
 from django.db.models import lookups
 from django.utils.functional import cached_property
@@ -191,10 +190,6 @@ class DSOFilterSet(FilterSet):
         models.OneToOneRel: {
             **FilterSet.FILTER_DEFAULTS[models.OneToOneRel],
             "filter_class": ModelIdChoiceFilter,
-        },
-        JSONField: {
-            "filter_class": filters.CharFilter,
-            "extra": lambda field: {"lookup_expr": "wildcard"},
         }
     }
 
@@ -224,12 +219,10 @@ class DSOFilterSet(FilterSet):
         This data is shown in the Swagger docs, and browsable API.
         """
         filter_class, params = super().filter_for_lookup(field, lookup_type)
-        if "label" not in params:
+        if filter_class is not None and "label" not in params:
             # description for swagger:
             params["label"] = cls.get_filter_help_text(filter_class, params)
 
-        if "help_text" not in params and filter_class is not None:
-            params["help_text"] = cls.get_filter_help_text(filter_class, params)
         return filter_class, params
 
     @classmethod

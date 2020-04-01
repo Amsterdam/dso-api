@@ -24,7 +24,7 @@
           "schema": {
             "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.0#/definitions/schema"
           },
-          "parkeer_id": {
+          "parkeer id": {
             "type": "string",
             "description": ""
           },
@@ -44,7 +44,7 @@
             "type": "string",
             "description": ""
           },
-          "e_type": {
+          "e type": {
             "type": "string",
             "description": ""
           },
@@ -98,8 +98,8 @@
                 },
                 "dagen": {
                   "type": "array",
-                  "entity": {
-                      "type": "string"
+                  "items": {
+                    "type": "string"
                   }
                 },
                 "opmerking": {

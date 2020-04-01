@@ -7,6 +7,7 @@ from typing import Type
 from django.db import models
 from django import forms
 from django.contrib.gis.db.models import GeometryField
+from django.contrib.postgres.fields import ArrayField
 from django_filters import filters as dj_filters
 
 from dso_api.dynamic_api.utils import snake_to_camel_case
@@ -28,6 +29,7 @@ DEFAULT_LOOKUPS_BY_TYPE = {
     models.ForeignKey: _identifier_lookups,
     models.OneToOneField: _identifier_lookups,
     models.OneToOneRel: _identifier_lookups,
+    ArrayField: ["in"],
 }
 
 

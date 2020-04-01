@@ -7,7 +7,7 @@ from typing import Type
 
 from django.db import models
 
-from amsterdam_schema.types import DatasetTableSchema
+from amsterdam_schema.types import DatasetTableSchema, field_is_nested_table
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
@@ -48,7 +48,7 @@ class DynamicSerializer(DSOSerializer):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        request = self.context["request"]
+        request = self.context.get("request")
 
         # Adjust the serializer based on the request.
         # request can be None for get_schema_view(public=True)
@@ -157,22 +157,13 @@ def serializer_factory(model: Type[DynamicModel], flat=None) -> Type[DynamicSeri
             if isinstance(
                 item, models.fields.related_descriptors.ReverseManyToOneDescriptor
             ):
-                array_fields = [
-                    f"{model._table_schema.id}_{p}_set"
-                    for p, spec in model._table_schema["schema"]["properties"].items()
-                    if spec.get("type") == "table"
-                ]
-                related_serialier = serializer_factory(
-                    model=item.rel.related_model, flat=True
-                )
-                if key in array_fields:
-                    related_key = "_".join(key.split("_")[1:-1])
-                else:
-                    related_key = key.replace("_set", "")
-                fields.append(related_key)
-                new_attrs[related_key] = related_serialier(
-                    many=True, read_only=True, source=key
-                )
+                if key in model._table_schema["schema"]["properties"] and \
+                   field_is_nested_table(model._table_schema["schema"]["properties"][key]):
+                    related_serialier = serializer_factory(
+                        model=item.rel.related_model, flat=True
+                    )
+                    fields.append(key)
+                    new_attrs[key] = related_serialier(many=True)
 
     # Generate Meta section and serializer class
     new_attrs["Meta"] = type(

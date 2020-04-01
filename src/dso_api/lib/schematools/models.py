@@ -89,6 +89,9 @@ class FieldMaker:
             args = [self._make_related_classname(relation), models.SET_NULL]
             # In schema foeign keys should be specified without _id,
             # but the db_column should be with _id
+            if "parentTable" in field._parent_table["schema"]:
+                kwargs["related_name"] = field._parent_table.id.replace(
+                    field._parent_table["schema"]["parentTable"], "")[1:]
             kwargs["db_column"] = f"{slugify(field.name, sign='_')}_id"
             kwargs["db_constraint"] = False  # don't expect relations to exist.
         return field_cls, args, kwargs
@@ -143,7 +146,6 @@ JSON_TYPE_TO_DJANGO = {
         models.PointField,
         dict(value_getter=fetch_srid, srid=RD_NEW.srid, geography=False, db_index=True),
     ),
-    "table": (None, None),
 }
 
 
@@ -208,7 +210,7 @@ def model_factory(table: DatasetTableSchema) -> Type[DynamicModel]:
         if type_.endswith("definitions/schema"):
             continue
         # skip nested tables
-        if type_ == "table":
+        if type_ == "array" and "items" in field and field["items"].get("type") == "object":
             continue
         # reduce amsterdam schema refs to their fragment
         if type_.startswith(settings.SCHEMA_DEFS_URL):
@@ -280,8 +282,3 @@ def get_db_table_name(table: DatasetTableSchema) -> str:
     table_id = f"{slugify(table.id, sign='_')}"
     return f"{app_label}_{table_id}"
 
-
-def get_field_schema_properties(model: DynamicModel, field_name: str) -> dict:
-    return model._table_schema["schema"]["properties"][field_name]["entity"][
-        "properties"
-    ]
