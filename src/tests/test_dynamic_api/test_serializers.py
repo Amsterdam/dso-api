@@ -330,7 +330,7 @@ class TestDynamicSerializer:
         ParkeervaakSerializer = serializer_factory(parkeervakken_parkeervaak_model, flat=True)
 
         # Prove that no reverse relation to containers here.
-        assert "regimes" in ParkeervaakSerializer._declared_fields
+        assert "regimes" not in ParkeervaakSerializer._declared_fields
 
         # Prove that data is serialized with relations.
         # Both the cluster_id field and 'cluster' field are generated.
@@ -353,26 +353,5 @@ class TestDynamicSerializer:
             "eType": "E9",
             "buurtcode": "A05d",
             "parkeerId": "121138489047",
-            "straatnaam": "Zoutkeetsgracht",
-            "regimes": [
-                OrderedDict(
-                    bord='',
-                    dagen=['ma',
-                           'di',
-                           'wo',
-                           'do',
-                           'vr',
-                           'za',
-                           'zo'],
-                    soort='MULDER',
-                    aantal=None,
-                    eType='E6b',
-                    kenteken='69-SF-NT',
-                    eindTijd='23:59:00',
-                    opmerking='',
-                    beginTijd='00:00:00',
-                    eindDatum=None,
-                    beginDatum=None
-                )
-            ],
+            "straatnaam": "Zoutkeetsgracht"
         }
