@@ -23,9 +23,7 @@ def parse_yesno_boolean(value):
 
 
 def is_valid_date_range(start, end):
-    # Temporarily reject ranges with same value for start and end
-    # return end is None or start <= end
-    return end is None or start < end
+    return end is None or start <= end
 
 
 @contextmanager

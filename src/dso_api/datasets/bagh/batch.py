@@ -14,6 +14,10 @@ GOB_SHAPE_ENCODING = "utf-8"
 log = logging.getLogger(__name__)
 
 
+def create_id(identificatie, volgnummer):
+    return f"{identificatie}_{volgnummer:03}" if identificatie else None
+
+
 class ImportBagHTask(batch.BasicTask):
     dataset = "bagh"
 
@@ -28,11 +32,13 @@ class ImportBagHTask(batch.BasicTask):
 
         self.filename = f"{self.gob_id}_{self.__class__.name}_ActueelEnHistorie.csv"
         self.source_path = f"{self.gob_path}/CSV_ActueelEnHistorie"
-        self.use_models = {model_name: set() for model_name in kwargs.get("use", [])}
+        self.reference_models = {
+            model_name: set() for model_name in kwargs.get("references", [])
+        }
         self.geotype = kwargs.get("geotype", "multipolygon")
 
     def get_non_pk_fields(self):
-        return [x.name for x in self.model._meta.get_fields() if not x.primary_key]
+        return [x.attname for x in self.model._meta.get_fields() if not x.primary_key]
 
     def before(self):
         cursor = connection.cursor()
@@ -45,12 +51,9 @@ class ImportBagHTask(batch.BasicTask):
         if self.path:
             download_file(os.path.join(self.source_path, self.filename))
 
-        for model_name in self.use_models:
-            self.use_models[model_name] = set(
-                self.models[model_name]
-                .objects.order_by("identificatie")
-                .distinct("identificatie")
-                .values_list("identificatie", flat=True)
+        for model_name in self.reference_models:
+            self.reference_models[model_name] = set(
+                self.models[model_name].objects.values_list("id", flat=True)
             )
 
     def after(self):
@@ -99,7 +102,7 @@ class ImportBagHTask(batch.BasicTask):
 
         cursor.execute(f"DROP TABLE {self.temp_table}")
         self.model._meta.db_table = self.table
-        self.use_models.clear()
+        self.reference_models.clear()
 
     def process(self):
         entries = csv.process_csv(self.path, self.filename, self.process_row)
@@ -115,7 +118,7 @@ class ImportBagHTask(batch.BasicTask):
     def process_row_common(self, r):  # noqa: C901
         identificatie = r["identificatie"]
         volgnummer = int(r["volgnummer"])
-        id = f"{identificatie}_{volgnummer:03}"
+        id = create_id(identificatie, volgnummer)
         begin_geldigheid = csv.parse_date_time(r["beginGeldigheid"])
         eind_geldigheid = csv.parse_date_time(r["eindGeldigheid"]) or None
         if not csv.is_valid_date_range(begin_geldigheid, eind_geldigheid):
@@ -169,24 +172,26 @@ class ImportBagHTask(batch.BasicTask):
             values["type"] = r["type"]
 
         model_field_map = {
-            "gemeente": "ligtIn:BRK.GME.identificatie",
-            "stadsdeel": "ligtIn:GBD.SDL.identificatie",
-            "ggw_gebied": "ligtIn:GBD.GGW.identificatie",
-            "wijk": "ligtIn:GBD.WIJK.identificatie",
-            "buurt": "ligtIn:GBD.BRT.identificatie",
-            "woonplaats": "ligtIn:BAG.WPS.identificatie",
-            "openbare_ruimte": "ligtIn:BAG.OPR.identificatie",
+            "gemeente": "ligtIn:BRK.GME",
+            "stadsdeel": "ligtIn:GBD.SDL",
+            "ggw_gebied": "ligtIn:GBD.GGW",
+            "wijk": "ligtIn:GBD.WIJK",
+            "buurt": "ligtIn:GBD.BRT",
+            "woonplaats": "ligtIn:BAG.WPS",
+            "openbare_ruimte": "ligtIn:BAG.OPR",
         }
-        for model_name in self.use_models:
-            field = model_field_map[model_name]
-            id1 = r[field]
-            if id1 and id1 not in self.use_models[model_name]:
+        for model_name in self.reference_models:
+            fname = model_field_map[model_name]
+            identificatie = r[f"{fname}.identificatie"]
+            volgnummer = r[f"{fname}.volgnummer"] or "1"
+            id1 = create_id(identificatie, int(volgnummer))
+            if id1 and id1 not in self.reference_models[model_name]:
                 log.error(
                     f"{self.name.title()} {id} has invalid id for {model_name} ; skipping"
                 )
                 return None
             else:
-                values[f"{model_name}_identificatie"] = id1
+                values[f"{model_name}_id"] = id1
 
         return values
 
@@ -216,6 +221,7 @@ class ImportBagHTask(batch.BasicTask):
         overlapping_ranges = cursor.fetchall()
         if len(overlapping_ranges) > 0:
             log.error(f"Overlapping date ranges for: {overlapping_ranges}")
+            # For now only notify
             return 0
         return 0
 
@@ -352,52 +358,57 @@ class ImportBagHJob(batch.BasicJob):
                     path=self.data_dir,
                     models=self.models,
                     gob_path="gebieden",
-                    use=["gemeente"],
+                    references=["gemeente"],
                 ),
                 ImportGgwGebied(
                     path=self.data_dir,
                     models=self.models,
                     gob_path="gebieden",
-                    use=["stadsdeel"],
+                    references=["stadsdeel"],
                 ),
                 ImportGgwPraktijkGebied(
-                    path=self.data_dir, models=self.models, gob_path="gebieden"
+                    path=self.data_dir,
+                    models=self.models,
+                    gob_path="gebieden",
+                    references=["stadsdeel"],
                 ),
                 ImportWijkTask(
                     path=self.data_dir,
                     models=self.models,
                     gob_path="gebieden",
-                    use=["stadsdeel", "ggw_gebied"],
+                    references=["stadsdeel", "ggw_gebied"],
                 ),
                 ImportBuurtTask(
                     path=self.data_dir,
                     models=self.models,
                     gob_path="gebieden",
-                    use=["wijk", "ggw_gebied", "stadsdeel"],
+                    references=["wijk", "ggw_gebied", "stadsdeel"],
                 ),
                 ImportBouwblokTask(
                     path=self.data_dir,
                     models=self.models,
                     gob_path="gebieden",
-                    use=["buurt"],
+                    references=["buurt"],
                 ),
                 ImportOpenbareRuimteTask(
                     path=self.data_dir,
                     models=self.models,
                     gob_path="bag",
-                    use=["woonplaats"],
+                    references=["woonplaats"],
                 ),
                 ImportLigplaatsTask(
                     path=self.data_dir,
                     models=self.models,
                     gob_path="bag",
                     geotype="polygon",
+                    references=["buurt"],
                 ),
                 ImportStandplaatsTask(
                     path=self.data_dir,
                     models=self.models,
                     gob_path="bag",
                     geotype="polygon",
+                    references=["buurt"],
                 ),
                 ImportPandTask(
                     path=self.data_dir,
@@ -410,11 +421,15 @@ class ImportBagHJob(batch.BasicJob):
                     path=self.data_dir,
                     models=self.models,
                     gob_path="bag",
-                    geotype="polygon",
+                    geotype="point",
+                    references=["buurt"],
                 ),
                 # large. 500.000
                 ImportNummeraanduidingTask(
-                    path=self.data_dir, models=self.models, gob_path="bag"
+                    path=self.data_dir,
+                    models=self.models,
+                    gob_path="bag",
+                    references=["ligplaats", "standplaats", "verblijfsobject"],
                 ),
                 # ImportVerblijfsobjectPandRelatieTask(
                 #     path=self.data_dir,

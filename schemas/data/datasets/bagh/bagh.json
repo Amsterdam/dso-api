@@ -19,8 +19,7 @@
           "identificatie",
           "volgnummer",
           "registratiedatum",
-          "code",
-          "buurt identificatie"
+          "code"
         ],
         "display": "id",
         "properties": {
@@ -52,10 +51,11 @@
             "type": "string"
           },
           "geometrie": {
-            "$ref": "https://geojson.org/schema/Geometry.json"
+            "$ref": "https://geojson.org/schema/MultiPolygon.json"
           },
-          "buurt identificatie": {
-            "type": "string"
+          "buurt": {
+            "type": "string",
+            "relation": "bagh:buurt"
           }
         }
       }
@@ -72,9 +72,8 @@
           "id",
           "identificatie",
           "volgnummer",
-          "wijk identificatie",
-          "ggw gebied identificatie",
-          "stadsdeel identificatie"
+          "wijk",
+          "stadsdeel"
         ],
         "display": "id",
         "properties": {
@@ -103,7 +102,7 @@
             "format": "date"
           },
           "geometrie": {
-            "$ref": "https://geojson.org/schema/Geometry.json"
+            "$ref": "https://geojson.org/schema/MultiPolygon.json"
           },
           "code": {
             "type": "string"
@@ -121,14 +120,17 @@
           "documentnummer": {
             "type": "string"
           },
-          "wijk identificatie": {
-            "type": "string"
+          "wijk": {
+            "type": "string",
+            "relation": "bagh:wijk"
           },
-          "ggw gebied identificatie": {
-            "type": "string"
+          "ggw gebied": {
+            "type": "string",
+            "relation": "bagh:ggw_gebied"
           },
-          "stadsdeel identificatie": {
-            "type": "string"
+          "stadsdeel": {
+            "type": "string",
+            "relation": "bagh:stadsdeel"
           }
         }
       }
@@ -196,7 +198,7 @@
           "volgnummer",
           "code",
           "naam",
-          "stadsdeel identificatie"
+          "stadsdeel"
         ],
         "display": "id",
         "properties": {
@@ -238,10 +240,11 @@
             "type": "string"
           },
           "geometrie": {
-            "$ref": "https://geojson.org/schema/Geometry.json"
+            "$ref": "https://geojson.org/schema/MultiPolygon.json"
           },
-          "stadsdeel identificatie": {
-            "type": "string"
+          "stadsdeel": {
+            "type": "string",
+            "relation": "bagh:stadsdeel"
           }
         }
       }
@@ -259,7 +262,7 @@
           "identificatie",
           "volgnummer",
           "naam",
-          "stadsdeel identificatie"
+          "stadsdeel"
         ],
         "display": "id",
         "properties": {
@@ -301,10 +304,11 @@
             "type": "string"
           },
           "geometrie": {
-            "$ref": "https://geojson.org/schema/Geometry.json"
+            "$ref": "https://geojson.org/schema/MultiPolygon.json"
           },
-          "stadsdeel identificatie": {
-            "type": "string"
+          "stadsdeel": {
+            "type": "string",
+            "relation": "bagh:stadsdeel"
           }
         }
       }
@@ -321,9 +325,9 @@
           "id",
           "identificatie",
           "volgnummer",
-          "hoofdadres identificatie",
+          "hoofdadres id",
           "status",
-          "buurt identificatie"
+          "buurt"
         ],
         "display": "id",
         "properties": {
@@ -364,17 +368,18 @@
           "geconstateerd": {
             "type": "boolean"
           },
-          "hoofdadres identificatie": {
+          "hoofdadres id": {
             "type": "string"
           },
           "geometrie": {
-            "$ref": "https://geojson.org/schema/Geometry.json"
+            "$ref": "https://geojson.org/schema/Polygon.json"
           },
           "status": {
             "type": "string"
           },
-          "buurt identificatie": {
-            "type": "string"
+          "buurt": {
+            "type": "string",
+            "relation": "bagh:buurt"
           }
         }
       }
@@ -392,7 +397,7 @@
           "identificatie",
           "volgnummer",
           "huisnummer",
-          "openbare ruimte identificatie"
+          "openbare ruimte"
         ],
         "display": "id",
         "properties": {
@@ -445,17 +450,21 @@
           "postcode": {
             "type": "string"
           },
-          "openbare ruimte identificatie": {
-            "type": "string"
+          "openbare ruimte": {
+            "type": "string",
+            "relation": "bagh:openbare_ruimte"
           },
-          "ligplaats identificatie": {
-            "type": "string"
+          "ligplaats": {
+            "type": "string",
+            "relation": "bagh:ligplaats"
           },
-          "standplaats identificatie": {
-            "type": "string"
+          "standplaats": {
+            "type": "string",
+            "relation": "bagh:standplaats"
           },
-          "verblijfsobject identificatie": {
-            "type": "string"
+          "verblijfsobject": {
+            "type": "string",
+            "relation": "bagh:verblijfsobject"
           },
           "type adres": {
             "type": "string"
@@ -480,8 +489,7 @@
           "volgnummer",
           "naam",
           "naam nen",
-          "status",
-          "woonplaats identificatie"
+          "status"
         ],
         "display": "id",
         "properties": {
@@ -535,10 +543,11 @@
             "type": "string"
           },
           "geometrie": {
-            "$ref": "https://geojson.org/schema/Geometry.json"
+            "$ref": "https://geojson.org/schema/MultiPolygon.json"
           },
-          "woonplaats identificatie": {
-            "type": "string"
+          "woonplaats": {
+            "type": "string",
+            "relation": "bagh:woonplaats"
           }
         }
       }
@@ -602,7 +611,7 @@
           "status": {
             "type": "string"
           },
-          "pandnaam": {
+          "naam": {
             "type": "string"
           },
           "ligging": {
@@ -611,10 +620,7 @@
           "type woonobject": {
             "type": "string"
           },
-          "bouwblok identificatie": {
-            "type": "string"
-          },
-          "bouwlagen": {
+          "aantal bouwlagen": {
             "type": "integer"
           },
           "laagste bouwlaag": {
@@ -624,7 +630,11 @@
             "type": "integer"
           },
           "geometrie": {
-            "$ref": "https://geojson.org/schema/Geometry.json"
+            "$ref": "https://geojson.org/schema/Polygon.json"
+          },
+          "bouwblok": {
+            "type": "string",
+            "relation": "bagh:bouwblok"
           }
         }
       }
@@ -641,7 +651,7 @@
           "id",
           "identificatie",
           "volgnummer",
-          "gemeente identificatie"
+          "gemeente"
         ],
         "display": "id",
         "properties": {
@@ -670,7 +680,7 @@
             "format": "date"
           },
           "geometrie": {
-            "$ref": "https://geojson.org/schema/Geometry.json"
+            "$ref": "https://geojson.org/schema/MultiPolygon.json"
           },
           "date modified": {
             "type": "string",
@@ -696,8 +706,9 @@
             "type": "string",
             "format": "date"
           },
-          "gemeente identificatie": {
-            "type": "string"
+          "gemeente": {
+            "type": "string",
+            "relation": "bagh:gemeente"
           }
         }
       }
@@ -714,9 +725,9 @@
           "id",
           "identificatie",
           "volgnummer",
-          "hoofdadres identificatie",
+          "hoofdadres id",
           "status",
-          "buurt identificatie"
+          "buurt"
         ],
         "display": "id",
         "properties": {
@@ -757,17 +768,18 @@
           "geconstateerd": {
             "type": "boolean"
           },
-          "hoofdadres identificatie": {
+          "hoofdadres id": {
             "type": "string"
           },
           "geometrie": {
-            "$ref": "https://geojson.org/schema/Geometry.json"
+            "$ref": "https://geojson.org/schema/Polygon.json"
           },
           "status": {
             "type": "string"
           },
-          "buurt identificatie": {
-            "type": "string"
+          "buurt": {
+            "type": "string",
+            "relation": "bagh:buurt"
           }
         }
       }
@@ -784,9 +796,9 @@
           "id",
           "identificatie",
           "volgnummer",
-          "hoofdadres identificatie",
+          "hoofdadres id",
           "status",
-          "buurt identificatie",
+          "buurt",
           "gebruiksdoel",
           "toegang"
         ],
@@ -829,17 +841,18 @@
           "geconstateerd": {
             "type": "boolean"
           },
-          "hoofdadres identificatie": {
+          "hoofdadres id": {
             "type": "string"
           },
           "geometrie": {
-            "$ref": "https://geojson.org/schema/Geometry.json"
+            "$ref": "https://geojson.org/schema/Point.json"
           },
           "status": {
             "type": "string"
           },
-          "buurt identificatie": {
-            "type": "string"
+          "buurt": {
+            "type": "string",
+            "relation": "bagh:buurt"
           },
           "oppervlakte": {
             "type": "integer"
@@ -893,8 +906,8 @@
         "required": [
           "schema",
           "id",
-          "pand identificatie",
-          "verblijfsobject identificatie"
+          "pand",
+          "verblijfsobject"
         ],
         "display": "id",
         "properties": {
@@ -904,11 +917,13 @@
           "id": {
             "type": "integer"
           },
-          "pand identificatie": {
-            "type": "string"
+          "pand": {
+            "type": "string",
+            "relation": "bagh:pand"
           },
-          "verblijfsobject identificatie": {
-            "type": "string"
+          "verblijfsobject": {
+            "type": "string",
+            "relation": "bagh:verblijfsobject"
           }
         }
       }
@@ -927,7 +942,7 @@
           "volgnummer",
           "naam",
           "code",
-          "stadsdeel identificatie"
+          "stadsdeel"
         ],
         "display": "id",
         "properties": {
@@ -972,13 +987,15 @@
             "type": "string"
           },
           "geometrie": {
-            "$ref": "https://geojson.org/schema/Geometry.json"
+            "$ref": "https://geojson.org/schema/MultiPolygon.json"
           },
-          "ggw gebied identificatie": {
-            "type": "string"
+          "ggw gebied": {
+            "type": "string",
+            "relation": "bagh:ggw_gebied"
           },
-          "stadsdeel identificatie": {
-            "type": "string"
+          "stadsdeel": {
+            "type": "string",
+            "relation": "bagh:stadsdeel"
           }
         }
       }
@@ -1044,10 +1061,11 @@
             "type": "string"
           },
           "geometrie": {
-            "$ref": "https://geojson.org/schema/Geometry.json"
+            "$ref": "https://geojson.org/schema/MultiPolygon.json"
           },
-          "gemeente identificatie": {
-            "type": "string"
+          "gemeente": {
+            "type": "string",
+            "relation": "bagh:gemeente"
           }
         }
       }
