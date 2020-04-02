@@ -70,4 +70,5 @@ def filterset_factory(model: Type[DynamicModel]) -> Type[DynamicFilterSet]:
 
 def _get_field_lookups(field: models.Field) -> list:
     """Find the possible lookups for a given field type."""
+    print(field.name)
     return DEFAULT_LOOKUPS_BY_TYPE.get(field.__class__, ["exact"])

@@ -52,11 +52,10 @@ class Command(BaseCommand):
 
         parkeervakken_cursor.execute("SELECT * FROM parkeervakken")
         for row in dictfetchall(parkeervakken_cursor):
-            parkeervaak, created = Parkeervaak.objects.get_or_create(
+            parkeervaak, _ = Parkeervaak.objects.get_or_create(
                 parkeer_id=row["parkeer_id"]
             )
 
-            # TODO: improveme
             parkeervaak.buurtcode = row["buurtcode"]
             parkeervaak.straatnaam = row["straatnaam"]
             parkeervaak.soort = row["soort"]
@@ -181,8 +180,8 @@ def create_regimes(parkeervaak, Regime, row):
         soort=row["soort"],
         e_type=row["e_type"],
         bord=row["bord"],
-        begin_tijd=format_time(row["begintijd1"], "00:00"),
-        eind_tijd=format_time(row["eindtijd1"], "23:59"),
+        begin_tijd="00:00",
+        eind_tijd="23:59",
         opmerking=row["opmerking"],
         dagen=days,
         parent=parkeervaak,
@@ -190,24 +189,35 @@ def create_regimes(parkeervaak, Regime, row):
 
     if row.get("kenteken"):
         kenteken_regime = base_data.copy()
-        kenteken_regime.update(dict(kenteken=row["kenteken"],))
+        kenteken_regime.update(dict(
+            kenteken=row["kenteken"],
+            begin_tijd=format_time(row["begintijd1"]),
+            eind_tijd=format_time(row["eindtijd1"])
+        ))
         Regime.objects.create(**kenteken_regime)
+    elif any([row.get("begintijd1"), row.get("eindtijd1")]):
+        Regime.objects.create(**base_data)
+
+        second_mode = base_data.copy()
+        second_mode["begin_tijd"] = format_time(row["begintijd1"])
+        second_mode["eind_tijd"] = format_time(row["eindtijd1"])
+        Regime.objects.create(**second_mode)
     elif any([row.get("begintijd2"), row.get("eindtijd2")]):
         Regime.objects.create(**base_data)
 
         second_mode = base_data.copy()
         second_mode["begin_tijd"] = format_time(row["begintijd2"])
         second_mode["eind_tijd"] = format_time(row["eindtijd2"])
+
         Regime.objects.create(**second_mode)
-    elif any(
-        [
+    elif any([
             row["tvm_begind"],
             row["tvm_eindd"],
             row["tvm_begint"],
             row["tvm_eindt"],
             row["tvm_opmerk"],
-        ]
-    ):
+    ]):
+        Regime.objects.create(**base_data)
         # TVM
         tvm_mode = base_data.copy()
         tvm_mode.update(
@@ -223,6 +233,9 @@ def create_regimes(parkeervaak, Regime, row):
 
 
 def days_from_row(row):
+    """
+    Parse week days from row.
+    """
     week_days = ["ma", "di", "wo", "do", "vr", "za", "zo"]
 
     if row["ma_vr"]:
