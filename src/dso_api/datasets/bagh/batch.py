@@ -18,6 +18,13 @@ def create_id(identificatie, volgnummer):
     return f"{identificatie}_{volgnummer:03}" if identificatie else None
 
 
+def int_or_none(value):
+    if value and value.isdigit():
+        return int(value)
+    else:
+        return None
+
+
 class ImportBagHTask(batch.BasicTask):
     dataset = "bagh"
 
@@ -36,6 +43,7 @@ class ImportBagHTask(batch.BasicTask):
             model_name: set() for model_name in kwargs.get("references", [])
         }
         self.geotype = kwargs.get("geotype", "multipolygon")
+        self.extra_fields = kwargs.get("extra_fields")
 
     def get_non_pk_fields(self):
         return [x.attname for x in self.model._meta.get_fields() if not x.primary_key]
@@ -127,18 +135,6 @@ class ImportBagHTask(batch.BasicTask):
             )
             return None
 
-        wkt_geometrie = r["geometrie"]
-        if wkt_geometrie:
-            geometrie = geo.get_geotype(wkt_geometrie, self.geotype)
-            if not geometrie:
-                log.error(f"{self.name.title()} {id} has no valid geometry; skipping")
-                return None
-        else:
-            if eind_geldigheid is None:
-                # Only log when is is the current entity
-                log.warning(f"{self.name.title()} {id} has no geometry")
-            geometrie = None
-
         values = {
             "id": id,
             "identificatie": identificatie,
@@ -146,8 +142,24 @@ class ImportBagHTask(batch.BasicTask):
             "begin_geldigheid": begin_geldigheid,
             "eind_geldigheid": eind_geldigheid,
             "registratiedatum": csv.parse_date_time(r["registratiedatum"]),
-            "geometrie": geometrie,
         }
+
+        if "geometrie" in r:
+            wkt_geometrie = r["geometrie"]
+            if wkt_geometrie:
+                geometrie = geo.get_geotype(wkt_geometrie, self.geotype)
+                if not geometrie:
+                    log.error(
+                        f"{self.name.title()} {id} has no valid geometry; skipping"
+                    )
+                    return None
+            else:
+                if eind_geldigheid is None:
+                    # Only log when is is the current entity
+                    log.warning(f"{self.name.title()} {id} has no geometry")
+                geometrie = None
+            values["geometrie"] = geometrie
+
         if "naam" in r:
             values["naam"] = r["naam"]
         if "code" in r:
@@ -170,6 +182,10 @@ class ImportBagHTask(batch.BasicTask):
             values["naam_nen"] = r["naamNEN"]
         if "type" in r:
             values["type"] = r["type"]
+
+        if self.extra_fields:
+            for k, l in self.extra_fields.items():
+                values[k] = l(r)
 
         model_field_map = {
             "gemeente": "ligtIn:BRK.GME",
@@ -350,72 +366,72 @@ class ImportBagHJob(batch.BasicJob):
         tasks1.extend(
             [
                 # no-dependencies.
-                ImportGemeenteTask(models=self.models),
-                ImportWoonplaatsTask(
-                    path=self.data_dir, models=self.models, use=["gemeente"]
-                ),
-                ImportStadsdeelTask(
-                    path=self.data_dir,
-                    models=self.models,
-                    gob_path="gebieden",
-                    references=["gemeente"],
-                ),
-                ImportGgwGebied(
-                    path=self.data_dir,
-                    models=self.models,
-                    gob_path="gebieden",
-                    references=["stadsdeel"],
-                ),
-                ImportGgwPraktijkGebied(
-                    path=self.data_dir,
-                    models=self.models,
-                    gob_path="gebieden",
-                    references=["stadsdeel"],
-                ),
-                ImportWijkTask(
-                    path=self.data_dir,
-                    models=self.models,
-                    gob_path="gebieden",
-                    references=["stadsdeel", "ggw_gebied"],
-                ),
-                ImportBuurtTask(
-                    path=self.data_dir,
-                    models=self.models,
-                    gob_path="gebieden",
-                    references=["wijk", "ggw_gebied", "stadsdeel"],
-                ),
-                ImportBouwblokTask(
-                    path=self.data_dir,
-                    models=self.models,
-                    gob_path="gebieden",
-                    references=["buurt"],
-                ),
-                ImportOpenbareRuimteTask(
-                    path=self.data_dir,
-                    models=self.models,
-                    gob_path="bag",
-                    references=["woonplaats"],
-                ),
-                ImportLigplaatsTask(
-                    path=self.data_dir,
-                    models=self.models,
-                    gob_path="bag",
-                    geotype="polygon",
-                    references=["buurt"],
-                ),
-                ImportStandplaatsTask(
-                    path=self.data_dir,
-                    models=self.models,
-                    gob_path="bag",
-                    geotype="polygon",
-                    references=["buurt"],
-                ),
-                ImportPandTask(
-                    path=self.data_dir,
-                    models=self.models,
-                    gob_path="bag",
-                    geotype="polygon",
-                ),
+                # ImportGemeenteTask(models=self.models),
+                # ImportWoonplaatsTask(
+                #     path=self.data_dir, models=self.models, use=["gemeente"]
+                # ),
+                # ImportStadsdeelTask(
+                #     path=self.data_dir,
+                #     models=self.models,
+                #     gob_path="gebieden",
+                #     references=["gemeente"],
+                # ),
+                # ImportGgwGebied(
+                #     path=self.data_dir,
+                #     models=self.models,
+                #     gob_path="gebieden",
+                #     references=["stadsdeel"],
+                # ),
+                # ImportGgwPraktijkGebied(
+                #     path=self.data_dir,
+                #     models=self.models,
+                #     gob_path="gebieden",
+                #     references=["stadsdeel"],
+                # ),
+                # ImportWijkTask(
+                #     path=self.data_dir,
+                #     models=self.models,
+                #     gob_path="gebieden",
+                #     references=["stadsdeel", "ggw_gebied"],
+                # ),
+                # ImportBuurtTask(
+                #     path=self.data_dir,
+                #     models=self.models,
+                #     gob_path="gebieden",
+                #     references=["wijk", "ggw_gebied", "stadsdeel"],
+                # ),
+                # ImportBouwblokTask(
+                #     path=self.data_dir,
+                #     models=self.models,
+                #     gob_path="gebieden",
+                #     references=["buurt"],
+                # ),
+                # ImportOpenbareRuimteTask(
+                #     path=self.data_dir,
+                #     models=self.models,
+                #     gob_path="bag",
+                #     references=["woonplaats"],
+                # ),
+                # ImportLigplaatsTask(
+                #     path=self.data_dir,
+                #     models=self.models,
+                #     gob_path="bag",
+                #     geotype="polygon",
+                #     references=["buurt"],
+                # ),
+                # ImportStandplaatsTask(
+                #     path=self.data_dir,
+                #     models=self.models,
+                #     gob_path="bag",
+                #     geotype="polygon",
+                #     references=["buurt"],
+                # ),
+                # ImportPandTask(
+                #     path=self.data_dir,
+                #     models=self.models,
+                #     gob_path="bag",
+                #     geotype="polygon",
+                # ),
                 # large. 500.000
                 ImportVerblijfsobjectTask(
                     path=self.data_dir,
@@ -423,6 +439,35 @@ class ImportBagHJob(batch.BasicJob):
                     gob_path="bag",
                     geotype="point",
                     references=["buurt"],
+                    extra_fields={
+                        "oppervlakte": lambda r: int_or_none(r["oppervlakte"]),
+                        "verdieping_toegang": lambda r: int_or_none(
+                            r["verdiepingToegang"]
+                        ),
+                        "hoogste_bouwlaag": lambda r: int_or_none(r["hoogsteBouwlaag"]),
+                        "laagste_bouwlaag": lambda r: int_or_none(r["laagsteBouwlaag"]),
+                        "aantal_kamers": lambda r: int_or_none(r["aantalKamers"]),
+                        "eigendomsverhouding": lambda r: r["eigendomsverhouding"],
+                        "gebruiksdoel": lambda r: r["gebruiksdoel"].split("|"),
+                        "gebruiksdoel_woonfunctie": lambda r: r[
+                            "gebruiksdoelWoonfunctie"
+                        ]
+                        or None,
+                        "gebruiksdoel_gezondheidszorgfunctie": lambda r: r[
+                            "gebruiksdoelGezondheidszorgfunctie"
+                        ]
+                        or None,
+                        "toegang": lambda r: r["toegang"].split("|")
+                        if r["toegang"]
+                        else [],
+                        "redenopvoer": lambda r: r["redenopvoer"] or None,
+                        "redenafvoer": lambda r: r["redenopvoer"] or None,
+                        "heeftin_hoofdadres_id": lambda r: create_id(
+                            r["heeftIn:BAG.NAG.identificatieHoofdadres"],
+                            int_or_none(r["heeftIn:BAG.NAG.volgnummerHoofdadres"]),
+                        ),
+                        # heeftin_hoofdadres_id
+                    },
                 ),
                 # large. 500.000
                 ImportNummeraanduidingTask(

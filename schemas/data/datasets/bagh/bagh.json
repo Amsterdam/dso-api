@@ -796,11 +796,11 @@
           "id",
           "identificatie",
           "volgnummer",
-          "hoofdadres id",
+          "heeftin hoofdadres id",
           "status",
-          "buurt",
           "gebruiksdoel",
-          "toegang"
+          "toegang",
+          "buurt"
         ],
         "display": "id",
         "properties": {
@@ -841,21 +841,20 @@
           "geconstateerd": {
             "type": "boolean"
           },
-          "hoofdadres id": {
+          "heeftin hoofdadres id": {
+            "type": "string"
+          },
+          "heeftin nevenadres id": {
             "type": "string"
           },
           "geometrie": {
             "$ref": "https://geojson.org/schema/Point.json"
           },
-          "status": {
-            "type": "string"
-          },
-          "buurt": {
-            "type": "string",
-            "relation": "bagh:buurt"
-          },
           "oppervlakte": {
             "type": "integer"
+          },
+          "status": {
+            "type": "string"
           },
           "verdieping toegang": {
             "type": "integer"
@@ -863,17 +862,8 @@
           "aantal eenheden complex": {
             "type": "integer"
           },
-          "bouwlagen": {
+          "aantal bouwlagen": {
             "type": "integer"
-          },
-          "aantal kamers": {
-            "type": "integer"
-          },
-          "gebruiksdoel gezondheidszorgfunctie": {
-            "type": "string"
-          },
-          "gebruiksdoel woonfunctie": {
-            "type": "string"
           },
           "hoogste bouwlaag": {
             "type": "integer"
@@ -881,7 +871,16 @@
           "laagste bouwlaag": {
             "type": "integer"
           },
+          "aantal kamers": {
+            "type": "integer"
+          },
           "eigendomsverhouding": {
+            "type": "string"
+          },
+          "gebruiksdoel gezondheidszorgfunctie": {
+            "type": "string"
+          },
+          "gebruiksdoel woonfunctie": {
             "type": "string"
           },
           "gebruik": {
@@ -892,6 +891,16 @@
           },
           "toegang": {
             "type": "string"
+          },
+          "redenopvoer": {
+            "type": "string"
+          },
+          "redenafvoer": {
+            "type": "string"
+          },
+          "buurt": {
+            "type": "string",
+            "relation": "bagh:buurt"
           }
         }
       }
