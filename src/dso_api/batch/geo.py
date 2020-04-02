@@ -71,4 +71,8 @@ def get_geotype(wkt, geotype):  # noqa: C901
                 geom = MultiLineString(geom)
             elif isinstance(geom, MultiLineString):
                 pass
+            else:
+                geom = None
+        else:
+            geom = None
     return geom
