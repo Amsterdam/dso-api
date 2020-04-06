@@ -389,11 +389,8 @@ class ImportVerblijfsobjectPandRelatieTask(ImportBagHTask):
     def after(self):
         cursor = connection.cursor()
         with transaction.atomic():
-            cursor.execute(f"DROP TABLE IF EXISTS {self.table}")
-            cursor.execute(f"ALTER TABLE {self.temp_table} RENAME TO {self.table}")
-            cursor.execute(f"ALTER TABLE {self.table} ADD PRIMARY KEY(id)")
-            cursor.execute(f"CREATE INDEX ON {self.table}(pand_id)")
-            cursor.execute(f"CREATE INDEX ON {self.table}(verblijfsobject_id)")
+            cursor.execute(f"TRUNCATE {self.table}")
+            cursor.execute(f"INSERT INTO  {self.table} SELECT * FROM {self.temp_table}")
         self.model._meta.db_table = self.table
         self.reference_models.clear()
 
