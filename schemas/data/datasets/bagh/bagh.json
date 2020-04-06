@@ -396,8 +396,7 @@
           "id",
           "identificatie",
           "volgnummer",
-          "huisnummer",
-          "openbare ruimte"
+          "huisnummer"
         ],
         "display": "id",
         "properties": {
@@ -726,8 +725,7 @@
           "identificatie",
           "volgnummer",
           "hoofdadres id",
-          "status",
-          "buurt"
+          "status"
         ],
         "display": "id",
         "properties": {
@@ -799,8 +797,7 @@
           "heeftin hoofdadres id",
           "status",
           "gebruiksdoel",
-          "toegang",
-          "buurt"
+          "toegang"
         ],
         "display": "id",
         "properties": {
@@ -845,7 +842,10 @@
             "type": "string"
           },
           "heeftin nevenadres id": {
-            "type": "string"
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           },
           "geometrie": {
             "$ref": "https://geojson.org/schema/Point.json"
@@ -887,10 +887,16 @@
             "type": "string"
           },
           "gebruiksdoel": {
-            "type": "string"
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           },
           "toegang": {
-            "type": "string"
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           },
           "redenopvoer": {
             "type": "string"
@@ -924,7 +930,7 @@
             "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.1#/definitions/schema"
           },
           "id": {
-            "type": "integer"
+            "type": "string"
           },
           "pand": {
             "type": "string",

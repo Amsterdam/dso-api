@@ -1,5 +1,6 @@
 import gc
 import logging
+import time
 
 log = logging.getLogger(__name__)
 
@@ -49,12 +50,21 @@ class BasicTask:
     """
 
     name = "Basic Task"
+    count = 0
+    prev_time = time.time()
 
     def execute(self):
         self.before()
         self.process()
         self.after()
         gc.collect()
+
+    def log_progress(self):
+        self.count += 1
+        now_time = time.time()
+        if now_time - self.prev_time > 10.0:  # Report every 10 seconds
+            self.prev_time = now_time
+            log.debug(f"{self.name} processed {self.count}...")
 
     def before(self):
         pass

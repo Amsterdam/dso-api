@@ -226,7 +226,7 @@ CREATE TABLE bagh_standplaats
 	hoofdadres_id character varying(20) NOT NULL,
     geometrie geometry(Polygon,28992),
 	status text NOT NULL,
-	buurt_id character varying(18) NOT NULL REFERENCES bagh_buurt(id)
+	buurt_id character varying(18) REFERENCES bagh_buurt(id)
 );
 
 CREATE INDEX ON bagh_standplaats(identificatie);
@@ -263,7 +263,7 @@ CREATE TABLE bagh_verblijfsobject
     toegang text[] NOT NULL,
     redenopvoer text,
     redenafvoer text,
-	buurt_id character varying(18) NOT NULL REFERENCES bagh_buurt(id),
+	buurt_id character varying(18) REFERENCES bagh_buurt(id)
 );
 
 CREATE INDEX ON bagh_verblijfsobject(identificatie);
@@ -285,7 +285,7 @@ CREATE TABLE bagh_nummeraanduiding
     huisletter character varying(1),
     huisnummer_toevoeging character varying(4),
     postcode character varying(6),
-    openbare_ruimte_id character varying(20) NOT NULL REFERENCES bagh_openbare_ruimte(id),
+    openbare_ruimte_id character varying(20) REFERENCES bagh_openbare_ruimte(id),
     ligplaats_id character varying(20) REFERENCES bagh_ligplaats(id),
     standplaats_id character varying(20) REFERENCES bagh_standplaats(id),
     verblijfsobject_id character varying(20) REFERENCES bagh_verblijfsobject(id),
@@ -324,7 +324,7 @@ CREATE INDEX ON bagh_pand USING gist(geometrie);
 
 CREATE TABLE bagh_verblijfsobjectpandrelatie
 (
-    id SERIAL PRIMARY KEY,
+    id character varying(41) PRIMARY KEY,
     pand_id character varying(20) NOT NULL REFERENCES bagh_pand(id),
     verblijfsobject_id character varying(20) NOT NULL REFERENCES bagh_verblijfsobject(id)
 );

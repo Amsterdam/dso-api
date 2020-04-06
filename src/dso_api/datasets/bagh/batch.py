@@ -1,6 +1,8 @@
 import copy
 import logging
 import os
+from collections import defaultdict
+
 import sqlparse
 
 from django.db import connection, transaction
@@ -44,6 +46,7 @@ class ImportBagHTask(batch.BasicTask):
         }
         self.geotype = kwargs.get("geotype", "multipolygon")
         self.extra_fields = kwargs.get("extra_fields")
+        self.stash = kwargs.get("stash")
 
     def get_non_pk_fields(self):
         return [x.attname for x in self.model._meta.get_fields() if not x.primary_key]
@@ -176,10 +179,6 @@ class ImportBagHTask(batch.BasicTask):
             values["geconstateerd"] = csv.parse_yesno_boolean(r["geconstateerd"])
         if "status" in r:
             values["status"] = r["status"]
-        if "cbsCode" in r:
-            values["cbs_code"] = r["cbsCode"]
-        if "naamNEN" in r:
-            values["naam_nen"] = r["naamNEN"]
         if "type" in r:
             values["type"] = r["type"]
 
@@ -194,7 +193,10 @@ class ImportBagHTask(batch.BasicTask):
             "wijk": "ligtIn:GBD.WIJK",
             "buurt": "ligtIn:GBD.BRT",
             "woonplaats": "ligtIn:BAG.WPS",
-            "openbare_ruimte": "ligtIn:BAG.OPR",
+            "openbare_ruimte": "ligtAan:BAG.ORE",
+            "ligplaats": "adresseert:BAG.LPS",
+            "standplaats": "adresseert:BAG.SPS",
+            "verblijfsobject": "adresseert:BAG.VOT",
         }
         for model_name in self.reference_models:
             fname = model_field_map[model_name]
@@ -208,7 +210,7 @@ class ImportBagHTask(batch.BasicTask):
                 return None
             else:
                 values[f"{model_name}_id"] = id1
-
+        self.log_progress()
         return values
 
     def do_date_checks(self):
@@ -331,9 +333,69 @@ class ImportPandTask(ImportBagHTask):
 class ImportVerblijfsobjectTask(ImportBagHTask):
     name = "verblijfsobject"
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.stash["pandrelatie"] = defaultdict(list)
+        self.pandrelatie = self.stash["pandrelatie"]
+        self.panden = set()
+
+    def before(self):
+        super().before()
+        self.panden = set(self.models["pand"].objects.values_list("id", flat=True))
+
+    def after(self):
+        self.panden.clear()
+        super().after()
+
+    def process_row(self, r):
+        result = super().process_row(r)
+        if result:
+            id = result.id
+            pand_identificaties = r["ligtIn:BAG.PND.identificatie"] or None
+            if pand_identificaties:
+                pand_identificaties = pand_identificaties.split("|")
+                pand_volgnummers = r["ligtIn:BAG.PND.volgnummer"].split("|")
+                for i in range(len(pand_identificaties)):
+                    pand_id = create_id(
+                        pand_identificaties[i], int(pand_volgnummers[i])
+                    )
+                    if pand_id not in self.panden:
+                        log.error(
+                            f"{self.name.title()} {id} has invalid pand_id {pand_id} ; skipping"
+                        )
+                    else:
+                        self.pandrelatie[pand_id].append(id)
+        return result
+
 
 class ImportNummeraanduidingTask(ImportBagHTask):
     name = "nummeraanduiding"
+
+
+class ImportVerblijfsobjectPandRelatieTask(ImportBagHTask):
+    name = "verblijfsobjectpandrelatie"
+
+    def process(self):
+        def gen_pand_vbo_objects(dict1: dict):
+            for pand_id, vbo_ids in dict1.items():
+                for vbo_id in vbo_ids:
+                    id1 = f"{vbo_id}_{pand_id}"
+                    yield self.model(id=id1, verblijfsobject_id=vbo_id, pand_id=pand_id)
+
+        entries = gen_pand_vbo_objects(self.stash["pandrelatie"])
+        self.model.objects.bulk_create(entries, batch_size=batch.BATCH_SIZE)
+        self.stash["pandrelatie"].clear()
+
+    def after(self):
+        cursor = connection.cursor()
+        with transaction.atomic():
+            cursor.execute(f"DROP TABLE IF EXISTS {self.table}")
+            cursor.execute(f"ALTER TABLE {self.temp_table} RENAME TO {self.table}")
+            cursor.execute(f"ALTER TABLE {self.table} ADD PRIMARY KEY(id)")
+            cursor.execute(f"CREATE INDEX ON {self.table}(pand_id)")
+            cursor.execute(f"CREATE INDEX ON {self.table}(verblijfsobject_id)")
+        self.model._meta.db_table = self.table
+        self.reference_models.clear()
 
 
 class ImportBagHJob(batch.BasicJob):
@@ -354,9 +416,11 @@ class ImportBagHJob(batch.BasicJob):
             model._meta.model_name: model for model in dataset.create_models()
         }
         self.create = kwargs.get("create", False)
+        self.stash = {}
 
     def __del__(self):
         os.environ.pop("SHAPE_ENCODING")
+        self.stash.clear()
 
     def tasks(self):
         tasks1 = []
@@ -366,73 +430,75 @@ class ImportBagHJob(batch.BasicJob):
         tasks1.extend(
             [
                 # no-dependencies.
-                # ImportGemeenteTask(models=self.models),
-                # ImportWoonplaatsTask(
-                #     path=self.data_dir, models=self.models, use=["gemeente"]
-                # ),
-                # ImportStadsdeelTask(
-                #     path=self.data_dir,
-                #     models=self.models,
-                #     gob_path="gebieden",
-                #     references=["gemeente"],
-                # ),
-                # ImportGgwGebied(
-                #     path=self.data_dir,
-                #     models=self.models,
-                #     gob_path="gebieden",
-                #     references=["stadsdeel"],
-                # ),
-                # ImportGgwPraktijkGebied(
-                #     path=self.data_dir,
-                #     models=self.models,
-                #     gob_path="gebieden",
-                #     references=["stadsdeel"],
-                # ),
-                # ImportWijkTask(
-                #     path=self.data_dir,
-                #     models=self.models,
-                #     gob_path="gebieden",
-                #     references=["stadsdeel", "ggw_gebied"],
-                # ),
-                # ImportBuurtTask(
-                #     path=self.data_dir,
-                #     models=self.models,
-                #     gob_path="gebieden",
-                #     references=["wijk", "ggw_gebied", "stadsdeel"],
-                # ),
-                # ImportBouwblokTask(
-                #     path=self.data_dir,
-                #     models=self.models,
-                #     gob_path="gebieden",
-                #     references=["buurt"],
-                # ),
-                # ImportOpenbareRuimteTask(
-                #     path=self.data_dir,
-                #     models=self.models,
-                #     gob_path="bag",
-                #     references=["woonplaats"],
-                # ),
-                # ImportLigplaatsTask(
-                #     path=self.data_dir,
-                #     models=self.models,
-                #     gob_path="bag",
-                #     geotype="polygon",
-                #     references=["buurt"],
-                # ),
-                # ImportStandplaatsTask(
-                #     path=self.data_dir,
-                #     models=self.models,
-                #     gob_path="bag",
-                #     geotype="polygon",
-                #     references=["buurt"],
-                # ),
-                # ImportPandTask(
-                #     path=self.data_dir,
-                #     models=self.models,
-                #     gob_path="bag",
-                #     geotype="polygon",
-                # ),
-                # large. 500.000
+                ImportGemeenteTask(models=self.models),
+                ImportWoonplaatsTask(
+                    path=self.data_dir, models=self.models, use=["gemeente"]
+                ),
+                ImportStadsdeelTask(
+                    path=self.data_dir,
+                    models=self.models,
+                    gob_path="gebieden",
+                    references=["gemeente"],
+                ),
+                ImportGgwGebied(
+                    path=self.data_dir,
+                    models=self.models,
+                    gob_path="gebieden",
+                    references=["stadsdeel"],
+                ),
+                ImportGgwPraktijkGebied(
+                    path=self.data_dir,
+                    models=self.models,
+                    gob_path="gebieden",
+                    references=["stadsdeel"],
+                ),
+                ImportWijkTask(
+                    path=self.data_dir,
+                    models=self.models,
+                    gob_path="gebieden",
+                    references=["stadsdeel", "ggw_gebied"],
+                    extra_fields={"cbs_code": lambda r: r["cbsCode"],},
+                ),
+                ImportBuurtTask(
+                    path=self.data_dir,
+                    models=self.models,
+                    gob_path="gebieden",
+                    references=["wijk", "ggw_gebied", "stadsdeel"],
+                    extra_fields={"cbs_code": lambda r: r["cbsCode"],},
+                ),
+                ImportBouwblokTask(
+                    path=self.data_dir,
+                    models=self.models,
+                    gob_path="gebieden",
+                    references=["buurt"],
+                ),
+                ImportOpenbareRuimteTask(
+                    path=self.data_dir,
+                    models=self.models,
+                    gob_path="bag",
+                    references=["woonplaats"],
+                    extra_fields={"naam_nen": lambda r: r["naamNEN"],},
+                ),
+                ImportLigplaatsTask(
+                    path=self.data_dir,
+                    models=self.models,
+                    gob_path="bag",
+                    geotype="polygon",
+                    references=["buurt"],
+                ),
+                ImportStandplaatsTask(
+                    path=self.data_dir,
+                    models=self.models,
+                    gob_path="bag",
+                    geotype="polygon",
+                    references=["buurt"],
+                ),
+                ImportPandTask(
+                    path=self.data_dir,
+                    models=self.models,
+                    gob_path="bag",
+                    geotype="polygon",
+                ),
                 ImportVerblijfsobjectTask(
                     path=self.data_dir,
                     models=self.models,
@@ -466,21 +532,35 @@ class ImportBagHJob(batch.BasicJob):
                             r["heeftIn:BAG.NAG.identificatieHoofdadres"],
                             int_or_none(r["heeftIn:BAG.NAG.volgnummerHoofdadres"]),
                         ),
-                        # heeftin_hoofdadres_id
                     },
+                    stash=self.stash,
+                ),
+                ImportVerblijfsobjectPandRelatieTask(
+                    models=self.models,
+                    gob_path="bag",
+                    stash=self.stash,
+                    references=["verblijfsobject", "pand"],
                 ),
                 # large. 500.000
                 ImportNummeraanduidingTask(
                     path=self.data_dir,
                     models=self.models,
                     gob_path="bag",
-                    references=["ligplaats", "standplaats", "verblijfsobject"],
+                    references=[
+                        "ligplaats",
+                        "standplaats",
+                        "verblijfsobject",
+                        "openbare_ruimte",
+                    ],
+                    extra_fields={
+                        "huisnummer": lambda r: r["huisnummer"],
+                        "huisletter": lambda r: r["huisletter"] or None,
+                        "huisnummer_toevoeging": lambda r: r["huisnummertoevoeging"]
+                        or None,
+                        "postcode": lambda r: r["postcode"],
+                        "type_adres": lambda r: r["typeAdres"],
+                    },
                 ),
-                # ImportVerblijfsobjectPandRelatieTask(
-                #     path=self.data_dir,
-                #     models=self.models,
-                #     gob_path="bag"
-                # ),
             ]
         )
         return tasks1

@@ -14,7 +14,7 @@ logging.getLogger("requests").setLevel(logging.WARNING)
 logging.getLogger("urllib3").setLevel(logging.WARNING)
 logging.getLogger("swiftclient").setLevel(logging.WARNING)
 
-container = os.getenv("GOB_OBJECTSTORE_ENV", "productie")
+container = os.getenv("GOB_OBJECTSTORE_ENV", "acceptatie")
 
 connection = {
     "auth_version": "2.0",
