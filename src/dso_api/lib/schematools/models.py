@@ -14,7 +14,12 @@ from string_utils import slugify
 from rest_framework_dso.crs import RD_NEW
 from gisserver.types import CRS
 
-from amsterdam_schema.types import DatasetFieldSchema, DatasetSchema, DatasetTableSchema
+from amsterdam_schema.types import (
+    DatasetFieldSchema,
+    DatasetSchema,
+    DatasetTableSchema,
+    field_is_nested_table
+)
 
 # Could be used to check fieldnames
 ALLOWED_ID_PATTERN = re.compile(r"[a-zA-Z][ \w\d]*")
@@ -210,7 +215,7 @@ def model_factory(table: DatasetTableSchema) -> Type[DynamicModel]:
         if type_.endswith("definitions/schema"):
             continue
         # skip nested tables
-        if type_ == "array" and "items" in field and field["items"].get("type") == "object":
+        if field_is_nested_table(field):
             continue
         # reduce amsterdam schema refs to their fragment
         if type_.startswith(settings.SCHEMA_DEFS_URL):

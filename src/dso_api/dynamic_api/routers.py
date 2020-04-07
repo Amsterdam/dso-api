@@ -68,6 +68,8 @@ class DynamicRouter(routers.DefaultRouter):
         # This makes sure the 'to' field is resolved to an actual model class.
         for app_label, models_by_name in self.all_models.items():
             for model in models_by_name.values():
+                # Register model in Django apps.
+                apps.register_model("datasets", model)
                 if model._table_schema.get("schema", {}).get("parentTable") is not None:
                     # Do not create separate viewsets for nested tables.
                     continue
