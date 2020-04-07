@@ -28,8 +28,11 @@ def fetch_scopes_for_model(model) -> TableScopes:
         return TableScopes()
 
     dataset_table = model._dataset_schema.get_table_by_id(model._meta.model_name)
+    dataset = model._meta.app_label
     try:
-        table = models.DatasetTable.objects.get(name=dataset_table.id)
+        table = models.DatasetTable.objects.get(
+            name=dataset_table.id, dataset__name=dataset
+        )
     except models.DatasetTable.DoesNotExist:
         return TableScopes()
 
