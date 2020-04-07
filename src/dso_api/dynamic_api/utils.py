@@ -1,6 +1,13 @@
 import re
+from string_utils import slugify
 
 RE_CAMELIZE = re.compile(r"[a-z0-9]_[a-z0-9]")
+
+
+def format_field_name(key):
+    """Convert space separated Amsterdam Schema key into API acceptable key.
+    """
+    return snake_to_camel_case(slugify(key, sign='_'))
 
 
 def _underscore_to_camel(match):

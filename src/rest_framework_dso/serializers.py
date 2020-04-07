@@ -172,7 +172,7 @@ class DSOSerializer(_SideloadMixin, serializers.HyperlinkedModelSerializer):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        request = self.context["request"]
+        request = self.context.get("request")
 
         # Adjust the serializer based on the request.
         # request can be None for get_schema_view(public=True)

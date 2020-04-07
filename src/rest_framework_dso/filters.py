@@ -15,6 +15,7 @@ from django.utils.translation import ugettext_lazy as _
 from django_filters import fields
 from django_filters.constants import EMPTY_VALUES
 from django_filters.rest_framework import DjangoFilterBackend, FilterSet, filters
+from django_postgres_unlimited_varchar import UnlimitedCharField
 from django.contrib.postgres.fields.array import ArrayField
 from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter
@@ -58,6 +59,28 @@ class Wildcard(lookups.Lookup):
             .replace("?", "_")
         )
         return "%s", [value]
+
+
+class CharArrayField(forms.CharField):
+    """Comma separated strings field"""
+    default_error_messages = {
+        'invalid_choice': _('Select a valid choice. %(value)s is not one of the available choices.'),
+        'invalid_list': _('Enter a list of values.'),
+    }
+
+    def to_python(self, value):
+        if not value:
+            return []
+        elif isinstance(value, str):
+            value = value.split(",")
+        elif not isinstance(value, (list, tuple)):
+            raise ValidationError(self.error_messages['invalid_list'], code='invalid_list')
+        return [str(val) for val in value]
+
+
+class CharArrayFilter(filters.BaseCSVFilter, filters.CharFilter):
+    """Comma Separated Array filter"""
+    base_field_class = CharArrayField
 
 
 class WildcardCharFilter(filters.CharFilter):
@@ -146,23 +169,6 @@ class FlexDateTimeFilter(filters.IsoDateTimeFilter):
         return self.get_method(qs)(**{f"{self.field_name}__{lookup}": value})
 
 
-class CharArrayField(forms.CharField):
-    def to_python(self, value):
-        if not value:
-            return []
-        elif isinstance(value, str):
-            value = value.split(",")
-        elif not isinstance(value, (list, tuple)):
-            raise ValidationError(
-                self.error_messages["invalid_list"], code="invalid_list"
-            )
-        return [str(val) for val in value]
-
-
-class CharArrayFilter(filters.BaseCSVFilter, filters.CharFilter):
-    base_field_class = CharArrayField
-
-
 class DSOFilterSet(FilterSet):
     """Base class to create filter sets.
 
@@ -210,6 +216,7 @@ class DSOFilterSet(FilterSet):
             **FilterSet.FILTER_DEFAULTS[models.OneToOneRel],
             "filter_class": ModelIdChoiceFilter,
         },
+        UnlimitedCharField: {"filter_class": WildcardCharFilter},
         ArrayField: {"filter_class": CharArrayFilter},
     }
 
@@ -240,7 +247,7 @@ class DSOFilterSet(FilterSet):
         This data is shown in the Swagger docs, and browsable API.
         """
         filter_class, params = super().filter_for_lookup(field, lookup_type)
-        if "label" not in params:
+        if filter_class is not None and "label" not in params:
             # description for swagger:
             params["label"] = cls.get_filter_help_text(filter_class, params)
 

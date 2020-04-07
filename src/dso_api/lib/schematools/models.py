@@ -14,7 +14,12 @@ from string_utils import slugify
 from rest_framework_dso.crs import RD_NEW
 from gisserver.types import CRS
 
-from amsterdam_schema.types import DatasetFieldSchema, DatasetSchema, DatasetTableSchema
+from amsterdam_schema.types import (
+    DatasetFieldSchema,
+    DatasetSchema,
+    DatasetTableSchema,
+    field_is_nested_table
+)
 
 # Could be used to check fieldnames
 ALLOWED_ID_PATTERN = re.compile(r"[a-zA-Z][ \w\d]*")
@@ -63,6 +68,21 @@ class FieldMaker:
             kwargs = {**kwargs, **self.value_getter(dataset, field)}
         return field_cls, args, kwargs
 
+    def handle_array(
+        self,
+        dataset: DatasetSchema,
+        field: DatasetFieldSchema,
+        field_cls,
+        *args,
+        **kwargs,
+    ) -> TypeAndSignature:
+        if field.data.get("type", "").lower() == "array":
+            base_field, _ = JSON_TYPE_TO_DJANGO[
+                field.data.get("entity", {}).get("type", "string")
+            ]
+            kwargs["base_field"] = base_field()
+        return field_cls, args, kwargs
+
     def handle_relation(
         self,
         dataset: DatasetSchema,
@@ -78,6 +98,9 @@ class FieldMaker:
             args = [self._make_related_classname(relation), models.SET_NULL]
             # In schema foeign keys should be specified without _id,
             # but the db_column should be with _id
+            if "parentTable" in field._parent_table["schema"]:
+                kwargs["related_name"] = field._parent_table.id.replace(
+                    field._parent_table["schema"]["parentTable"], "")[1:]
             kwargs["db_column"] = f"{slugify(field.name, sign='_')}_id"
             kwargs["db_constraint"] = False  # don't expect relations to exist.
         return field_cls, args, kwargs
@@ -93,20 +116,6 @@ class FieldMaker:
         format_ = field.format
         if format_ is not None:
             field_cls = DATE_MODELS_LOOKUP[format_]
-        return field_cls, args, kwargs
-
-    def handle_array(
-        self,
-        dataset: DatasetSchema,
-        field: DatasetFieldSchema,
-        field_cls,
-        *args,
-        **kwargs,
-    ) -> TypeAndSignature:
-        if field.data.get("type", "").lower() == "array":
-            array_type = field.data.get("items", {}).get("type", "string")
-            base_field, _ = JSON_TYPE_TO_DJANGO[array_type]
-            kwargs["base_field"] = base_field()
         return field_cls, args, kwargs
 
     def __call__(
@@ -133,6 +142,8 @@ JSON_TYPE_TO_DJANGO = {
     "integer": (models.IntegerField, None),
     "number": (models.FloatField, None),
     "boolean": (models.BooleanField, None),
+    "date": (models.DateField, None),
+    "time": (models.TimeField, None),
     "array": (ArrayField, None),
     "/definitions/id": (models.IntegerField, None),
     "/definitions/schema": (UnlimitedCharField, None),
@@ -247,6 +258,9 @@ def model_factory(table: DatasetTableSchema) -> Type[DynamicModel]:
         # skip schema field for now
         if type_.endswith("definitions/schema"):
             continue
+        # skip nested tables
+        if field_is_nested_table(field):
+            continue
         # reduce amsterdam schema refs to their fragment
         if type_.startswith(settings.SCHEMA_DEFS_URL):
             type_ = urlparse(type_).fragment
@@ -314,5 +328,5 @@ def get_db_table_name(table: DatasetTableSchema) -> str:
     """Generate the table name for a database schema."""
     dataset = table._parent_schema
     app_label = dataset.id
-    table_id = table.id
-    return slugify(f"{app_label}_{table_id}", sign="_")
+    table_id = f"{slugify(table.id, sign='_')}"
+    return f"{app_label}_{table_id}"

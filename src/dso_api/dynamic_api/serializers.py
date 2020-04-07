@@ -7,7 +7,7 @@ from typing import Type
 
 from django.db import models
 
-from amsterdam_schema.types import DatasetTableSchema
+from amsterdam_schema.types import DatasetTableSchema, field_is_nested_table
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
@@ -48,7 +48,7 @@ class DynamicSerializer(DSOSerializer):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        request = self.context["request"]
+        request = self.context.get("request")
 
         # Adjust the serializer based on the request.
         # request can be None for get_schema_view(public=True)
@@ -103,9 +103,18 @@ def get_view_name(model: Type[DynamicModel], suffix: str):
 
 
 @lru_cache()
-def serializer_factory(model: Type[DynamicModel]) -> Type[DynamicSerializer]:
+def serializer_factory(model: Type[DynamicModel], flat=None) -> Type[DynamicSerializer]:
     """Generate the DRF serializer class for a specific dataset model."""
+
+    is_nested_table = False
+    # Exclude links for nested tables
+    if model._table_schema.get("schema", {}).get("parentTable") is not None:
+        is_nested_table = True
+
     fields = ["_links", "schema"]
+    if is_nested_table:
+        fields = []
+
     serializer_name = f"{model.get_dataset_id()}{model.__name__}Serializer"
     new_attrs = {
         "table_schema": model._table_schema,
@@ -115,7 +124,9 @@ def serializer_factory(model: Type[DynamicModel]) -> Type[DynamicSerializer]:
     # Parse fields for serializer
     extra_kwargs = {}
     for model_field in model._meta.get_fields():
-        orig_name = model_field.name
+        if is_nested_table and model_field.name in ["id", "parent"]:
+            # Do not render PK and FK to parent on nested tables
+            continue
 
         # Instead of having to apply camelize() on every response,
         # create converted field names on the serializer construction.
@@ -124,7 +135,9 @@ def serializer_factory(model: Type[DynamicModel]) -> Type[DynamicSerializer]:
         # Add extra embedded part for foreign keys
         if isinstance(model_field, models.ForeignKey):
             new_attrs[camel_name] = EmbeddedField(
-                serializer_class=serializer_factory(model_field.related_model),
+                serializer_class=serializer_factory(
+                    model_field.related_model, flat=True
+                ),
                 source=model_field.name,
             )
 
@@ -135,11 +148,26 @@ def serializer_factory(model: Type[DynamicModel]) -> Type[DynamicSerializer]:
                 extra_kwargs[camel_id_name] = {"source": model_field.attname}
 
         fields.append(camel_name)
-        if orig_name != camel_name:
+        if model_field.name != camel_name:
             extra_kwargs[camel_name] = {"source": model_field.name}
+
+    # Generate embedded relations
+    if not flat:
+        for key, item in model.__dict__.items():
+            if isinstance(
+                item, models.fields.related_descriptors.ReverseManyToOneDescriptor
+            ):
+                if key in model._table_schema["schema"]["properties"] and \
+                   field_is_nested_table(model._table_schema["schema"]["properties"][key]):
+                    related_serialier = serializer_factory(
+                        model=item.rel.related_model, flat=True
+                    )
+                    fields.append(key)
+                    new_attrs[key] = related_serialier(many=True)
 
     # Generate Meta section and serializer class
     new_attrs["Meta"] = type(
         "Meta", (), {"model": model, "fields": fields, "extra_kwargs": extra_kwargs}
     )
+
     return type(serializer_name, (DynamicSerializer,), new_attrs)
