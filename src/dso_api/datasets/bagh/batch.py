@@ -20,6 +20,17 @@ def create_id(identificatie, volgnummer):
     return f"{identificatie}_{volgnummer:03}" if identificatie else None
 
 
+def create_ids(row, naam_identificatie, naam_volgnummer):
+    identificaties = row[naam_identificatie] or None
+    result = []
+    if identificaties:
+        identificaties = identificaties.split("|")
+        volgnummers = row[naam_volgnummer].split("|")
+        for i in range(len(identificaties)):
+            result.append(create_id(identificaties[i], int(volgnummers[i])))
+    return result
+
+
 def int_or_none(value):
     if value and value.isdigit():
         return int(value)
@@ -528,6 +539,11 @@ class ImportBagHJob(batch.BasicJob):
                         "heeftin_hoofdadres_id": lambda r: create_id(
                             r["heeftIn:BAG.NAG.identificatieHoofdadres"],
                             int_or_none(r["heeftIn:BAG.NAG.volgnummerHoofdadres"]),
+                        ),
+                        "heeftin_nevenadres_id": lambda r: create_ids(
+                            r,
+                            "heeftIn:BAG.NAG.identificatieNevenadres",
+                            "heeftIn:BAG.NAG.volgnummerNevenadres",
                         ),
                     },
                     stash=self.stash,

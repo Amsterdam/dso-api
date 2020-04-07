@@ -244,7 +244,7 @@ CREATE TABLE bagh_verblijfsobject
     documentnummer character varying(100),
 	aanduiding_in_onderzoek boolean,
 	geconstateerd boolean,
-	heeftin_hoofdadres_id character varying(20) NOT NULL,
+	heeftin_hoofdadres_id character varying(20),
 	heeftin_nevenadres_id character varying(20) [],
     geometrie geometry(Point,28992),
     oppervlakte integer,
