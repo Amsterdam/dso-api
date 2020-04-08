@@ -332,5 +332,5 @@ def get_db_table_name(table: DatasetTableSchema) -> str:
     """Generate the table name for a database schema."""
     dataset = table._parent_schema
     app_label = dataset.id
-    table_id = f"{slugify(table.id, sign='_')}"
-    return f"{app_label}_{table_id}"
+    table_id = table.id
+    return slugify(f"{app_label}_{table_id}", sign="_")
