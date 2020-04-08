@@ -5,6 +5,7 @@ from typing import Any, Callable, Dict, List, Tuple, Type
 from urllib.parse import urlparse
 
 from django.contrib.gis.db import models
+from django.contrib.postgres.fields import ArrayField
 from django.db.models.base import ModelBase
 from django.conf import settings
 from django_postgres_unlimited_varchar import UnlimitedCharField
@@ -35,10 +36,12 @@ class FieldMaker:
         self,
         field_cls: Type[models.Field],
         value_getter: Callable[[DatasetSchema], Dict[str, Any]] = None,
+        arg_getter: Callable[[DatasetSchema], Dict[str, Any]] = None,
         **kwargs,
     ):
         self.field_cls = field_cls
         self.value_getter = value_getter
+        self.arg_getter = arg_getter
         self.kwargs = kwargs
         self.modifiers = [
             getattr(self, an) for an in dir(self) if an.startswith("handle_")
@@ -60,6 +63,8 @@ class FieldMaker:
         kwargs["null"] = not field.required
         if self.value_getter:
             kwargs = {**kwargs, **self.value_getter(dataset, field)}
+        elif self.arg_getter:
+            args.append(self.arg_getter(dataset, field))
         return field_cls, args, kwargs
 
     def handle_relation(
@@ -94,6 +99,20 @@ class FieldMaker:
             field_cls = DATE_MODELS_LOOKUP[format_]
         return field_cls, args, kwargs
 
+    def handle_array(
+        self,
+        dataset: DatasetSchema,
+        field: DatasetFieldSchema,
+        field_cls,
+        *args,
+        **kwargs,
+    ) -> TypeAndSignature:
+        if field.data.get("type", "").lower() == "array":
+            array_type = field.data.get("items", {}).get("type", "string")
+            base_field, _ = JSON_TYPE_TO_DJANGO[array_type]
+            kwargs["base_field"] = base_field()
+        return field_cls, args, kwargs
+
     def __call__(
         self, field: DatasetFieldSchema, dataset: DatasetSchema
     ) -> TypeAndSignature:
@@ -113,68 +132,68 @@ def fetch_srid(dataset: DatasetSchema, field: DatasetFieldSchema) -> Dict[str, A
     return {"srid": CRS.from_string(dataset.data["crs"]).srid}
 
 
+def array_type_getter(
+    dataset: DatasetSchema, field: DatasetFieldSchema
+) -> Dict[str, Any]:
+
+    return JSON_TYPE_TO_DJANGO(dataset["properties"][field.name]["items"])
+
+
 JSON_TYPE_TO_DJANGO = {
-    "string": FieldMaker(UnlimitedCharField),
-    "integer": FieldMaker(models.IntegerField),
-    "number": FieldMaker(models.FloatField),
-    "boolean": FieldMaker(models.BooleanField),
-    "/definitions/id": FieldMaker(models.IntegerField),
-    "/definitions/schema": FieldMaker(UnlimitedCharField),
-    "https://geojson.org/schema/Geometry.json": FieldMaker(
+    "string": (UnlimitedCharField, None),
+    "integer": (models.IntegerField, None),
+    "number": (models.FloatField, None),
+    "boolean": (models.BooleanField, None),
+    "array": (ArrayField, None),
+    "/definitions/id": (models.IntegerField, None),
+    "/definitions/schema": (UnlimitedCharField, None),
+    "https://geojson.org/schema/Geometry.json": (
         models.GeometryField,
-        value_getter=fetch_srid,
-        srid=RD_NEW.srid,
-        geography=False,
-        db_index=True,
+        dict(
+            value_getter=fetch_srid, srid=RD_NEW.srid, geography=False, db_index=True,
+        ),
     ),
-    "https://geojson.org/schema/Point.json": FieldMaker(
+    "https://geojson.org/schema/Point.json": (
         models.PointField,
-        value_getter=fetch_srid,
-        srid=RD_NEW.srid,
-        geography=False,
-        db_index=True,
+        dict(
+            value_getter=fetch_srid, srid=RD_NEW.srid, geography=False, db_index=True,
+        ),
     ),
-    "https://geojson.org/schema/MultiPoint.json": FieldMaker(
+    "https://geojson.org/schema/MultiPoint.json": (
         models.MultiPointField,
-        value_getter=fetch_srid,
-        srid=RD_NEW.srid,
-        geography=False,
-        db_index=True,
+        dict(
+            value_getter=fetch_srid, srid=RD_NEW.srid, geography=False, db_index=True,
+        ),
     ),
-    "https://geojson.org/schema/Polygon.json": FieldMaker(
+    "https://geojson.org/schema/Polygon.json": (
         models.PolygonField,
-        value_getter=fetch_srid,
-        srid=RD_NEW.srid,
-        geography=False,
-        db_index=True,
+        dict(
+            value_getter=fetch_srid, srid=RD_NEW.srid, geography=False, db_index=True,
+        ),
     ),
-    "https://geojson.org/schema/MultiPolygon.json": FieldMaker(
+    "https://geojson.org/schema/MultiPolygon.json": (
         models.MultiPolygonField,
-        value_getter=fetch_srid,
-        srid=RD_NEW.srid,
-        geography=False,
-        db_index=True,
+        dict(
+            value_getter=fetch_srid, srid=RD_NEW.srid, geography=False, db_index=True,
+        ),
     ),
-    "https://geojson.org/schema/LineString.json": FieldMaker(
+    "https://geojson.org/schema/LineString.json": (
         models.LineStringField,
-        value_getter=fetch_srid,
-        srid=RD_NEW.srid,
-        geography=False,
-        db_index=True,
+        dict(
+            value_getter=fetch_srid, srid=RD_NEW.srid, geography=False, db_index=True,
+        ),
     ),
-    "https://geojson.org/schema/MultiLineString.json": FieldMaker(
+    "https://geojson.org/schema/MultiLineString.json": (
         models.MultiLineStringField,
-        value_getter=fetch_srid,
-        srid=RD_NEW.srid,
-        geography=False,
-        db_index=True,
+        dict(
+            value_getter=fetch_srid, srid=RD_NEW.srid, geography=False, db_index=True,
+        ),
     ),
-    "https://geojson.org/schema/GeometryCollection.json": FieldMaker(
+    "https://geojson.org/schema/GeometryCollection.json": (
         models.GeometryCollectionField,
-        value_getter=fetch_srid,
-        srid=RD_NEW.srid,
-        geography=False,
-        db_index=True,
+        dict(
+            value_getter=fetch_srid, srid=RD_NEW.srid, geography=False, db_index=True,
+        ),
     ),
 }
 
@@ -243,11 +262,21 @@ def model_factory(table: DatasetTableSchema) -> Type[DynamicModel]:
         if type_.startswith(settings.SCHEMA_DEFS_URL):
             type_ = urlparse(type_).fragment
         # Generate field object
-        kls, args, kwargs = JSON_TYPE_TO_DJANGO[type_](field, dataset)
+        base_class, init_kwargs = JSON_TYPE_TO_DJANGO[type_]
+        if base_class is None:
+            # Some fields are not mapped into classes
+            continue
+        kls, args, kwargs = FieldMaker(base_class, **(init_kwargs or dict()))(
+            field, dataset
+        )
+        if kls is None:
+            # Some fields are not mapped into classes
+            continue
         model_field = kls(*args, **kwargs)
 
         # Generate name, fix if needed.
         field_name = slugify(field.name, sign="_")
+        model_field.name = field_name
         fields[field_name] = model_field
 
         if not display_field and is_possible_display_field(field):

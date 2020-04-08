@@ -6,6 +6,7 @@ DSO 1.1 Spec: "2.6.6 Filteren, sorteren en zoeken"
 from datetime import datetime
 from typing import Type
 
+from django import forms
 from django.contrib.gis.db import models as gis_models
 from django.db import models
 from django.db.models import lookups
@@ -14,6 +15,7 @@ from django.utils.translation import ugettext_lazy as _
 from django_filters import fields
 from django_filters.constants import EMPTY_VALUES
 from django_filters.rest_framework import DjangoFilterBackend, FilterSet, filters
+from django.contrib.postgres.fields.array import ArrayField
 from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter
 from rest_framework_gis.filters import GeometryFilter
@@ -144,6 +146,23 @@ class FlexDateTimeFilter(filters.IsoDateTimeFilter):
         return self.get_method(qs)(**{f"{self.field_name}__{lookup}": value})
 
 
+class CharArrayField(forms.CharField):
+    def to_python(self, value):
+        if not value:
+            return []
+        elif isinstance(value, str):
+            value = value.split(",")
+        elif not isinstance(value, (list, tuple)):
+            raise ValidationError(
+                self.error_messages["invalid_list"], code="invalid_list"
+            )
+        return [str(val) for val in value]
+
+
+class CharArrayFilter(filters.BaseCSVFilter, filters.CharFilter):
+    base_field_class = CharArrayField
+
+
 class DSOFilterSet(FilterSet):
     """Base class to create filter sets.
 
@@ -191,6 +210,7 @@ class DSOFilterSet(FilterSet):
             **FilterSet.FILTER_DEFAULTS[models.OneToOneRel],
             "filter_class": ModelIdChoiceFilter,
         },
+        ArrayField: {"filter_class": CharArrayFilter},
     }
 
     FILTER_HELP_TEXT = {
@@ -203,6 +223,7 @@ class DSOFilterSet(FilterSet):
         filters.ModelChoiceFilter: "id",
         ModelIdChoiceFilter: "id",
         GeometryFilter: "GeoJSON | GEOMETRY(...)",
+        CharArrayFilter: "Comma separated list of strings",
     }
 
     @classmethod
