@@ -181,8 +181,8 @@ class DSOSerializer(_SideloadMixin, serializers.HyperlinkedModelSerializer):
         # request can be None for get_schema_view(public=True)
         if request is not None:
             request_fields = request.GET.get(self.fields_param)
-            if fields:
-                display_fields = self.get_fields_to_display(request_fields)
+            if request_fields:
+                display_fields = self.get_fields_to_display(fields, request_fields)
 
                 # Limit result to requested fields only
                 fields = OrderedDict(
