@@ -52,36 +52,35 @@ class DynamicRouter(routers.DefaultRouter):
 
         # Generate new viewsets for everything
         for dataset in Dataset.objects.all():
-            dataset_name = dataset.schema.id  # not dataset.name!
+            dataset_id = dataset.schema.id  # not dataset.name!
             new_models = {}
 
             for model in dataset.create_models():
-                logger.debug("Created model %s.%s", dataset_name, model.__name__)
+                logger.debug("Created model %s.%s", dataset_id, model.__name__)
 
+                # Register model in Django apps.
+                apps.register_model("datasets", model)
                 if dataset.enable_api:
                     new_models[model._meta.model_name] = model
 
-            self.all_models[dataset_name] = new_models
+            self.all_models[dataset_id] = new_models
             generated_models.extend(new_models.values())
 
         # Generate views now that all models have been created.
         # This makes sure the 'to' field is resolved to an actual model class.
-        for app_label, models_by_name in self.all_models.items():
+        for dataset_id, models_by_name in self.all_models.items():
             for model in models_by_name.values():
-                # Register model in Django apps.
-                apps.register_model("datasets", model)
-                if model._table_schema.get("schema", {}).get("parentTable") is not None:
+                if model.is_nested_table():
                     # Do not create separate viewsets for nested tables.
                     continue
-                dataset_name = model.get_dataset_id()
-                url_prefix = f"{dataset_name}/{model.get_table_id()}"
+                url_prefix = f"{dataset_id}/{model.get_table_id()}"
                 logger.debug("Created viewset %s", url_prefix)
 
                 viewset = viewset_factory(model)
                 tmp_router.register(
                     prefix=url_prefix,
                     viewset=viewset,
-                    basename=f"{dataset_name}-{model.get_table_id()}",
+                    basename=f"{dataset_id}-{model.get_table_id()}",
                 )
 
         # Atomically copy the new viewset registrations
@@ -117,7 +116,7 @@ class DynamicRouter(routers.DefaultRouter):
         # Return which models + urls were generated
         result = {}
         for model in models:
-            if model._table_schema.get("schema", {}).get("parentTable") is not None:
+            if model.is_nested_table():
                 # Do not create separate viewsets for nested tables.
                 continue
             viewname = get_view_name(model, "list")

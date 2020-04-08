@@ -46,25 +46,32 @@ class DynamicSerializer(DSOSerializer):
 
     table_schema: DatasetTableSchema = None
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        request = self.context.get("request")
+    def get_request(self):
+        """
+        Get request from this or parent instance.
+        """
+        return self.context["request"]
+
+    @property
+    def fields(self):
+        fields = super().fields
+        request = self.get_request()
 
         # Adjust the serializer based on the request.
         # request can be None for get_schema_view(public=True)
-        if request is not None:
-            unauthorized_fields = get_unauthorized_fields(request, self.Meta.model)
-            if unauthorized_fields:
-                self.fields = OrderedDict(
-                    [
-                        (field_name, field)
-                        for field_name, field in self.fields.items()
-                        if field_name not in unauthorized_fields
-                    ]
-                )
+        unauthorized_fields = get_unauthorized_fields(request, self.Meta.model)
+        if unauthorized_fields:
+            fields = OrderedDict(
+                [
+                    (field_name, field)
+                    for field_name, field in fields.items()
+                    if field_name not in unauthorized_fields
+                ]
+            )
+        return fields
 
     def get_auth_checker(self):
-        request = self.context.get("request")
+        request = self.get_request()
         return getattr(request, "is_authorized_for", None) if request else None
 
     @extend_schema_field(OpenApiTypes.URI)
@@ -153,17 +160,14 @@ def serializer_factory(model: Type[DynamicModel], flat=None) -> Type[DynamicSeri
 
     # Generate embedded relations
     if not flat:
-        for key, item in model.__dict__.items():
-            if isinstance(
-                item, models.fields.related_descriptors.ReverseManyToOneDescriptor
-            ):
-                if key in model._table_schema["schema"]["properties"] and \
-                   field_is_nested_table(model._table_schema["schema"]["properties"][key]):
-                    related_serialier = serializer_factory(
-                        model=item.rel.related_model, flat=True
-                    )
-                    fields.append(key)
-                    new_attrs[key] = related_serialier(many=True)
+        for item in model._meta.related_objects:
+            if item.name in model._table_schema["schema"]["properties"] and \
+               field_is_nested_table(model._table_schema["schema"]["properties"][item.name]):
+                related_serialier = serializer_factory(
+                    model=item.related_model, flat=True
+                )
+                fields.append(item.name)
+                new_attrs[item.name] = related_serialier(many=True)
 
     # Generate Meta section and serializer class
     new_attrs["Meta"] = type(

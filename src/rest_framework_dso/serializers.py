@@ -67,6 +67,7 @@ class DSOListSerializer(_SideloadMixin, serializers.ListSerializer):
 
     #: The field name for the results envelope
     results_field = None
+    requires_context = True
 
     def __init__(self, *args, results_field=None, **kwargs):
         super().__init__(*args, **kwargs)
@@ -135,6 +136,7 @@ class DSOSerializer(_SideloadMixin, serializers.HyperlinkedModelSerializer):
     # Make sure the _links bit is generated:
     url_field_name = "_links"
     serializer_url_field = _LinksField
+    requires_context = True
 
     fields_param = "fields"  # so ?fields=.. gives a result
 
@@ -170,31 +172,33 @@ class DSOSerializer(_SideloadMixin, serializers.HyperlinkedModelSerializer):
 
         return list_serializer_class(*args, **list_kwargs)
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    @property
+    def fields(self):
         request = self.context.get("request")
+        fields = super().fields
 
         # Adjust the serializer based on the request.
         # request can be None for get_schema_view(public=True)
         if request is not None:
-            fields = request.GET.get(self.fields_param)
+            request_fields = request.GET.get(self.fields_param)
             if fields:
-                display_fields = self.get_fields_to_display(fields)
+                display_fields = self.get_fields_to_display(request_fields)
 
                 # Limit result to requested fields only
-                self.fields = OrderedDict(
+                fields = OrderedDict(
                     [
                         (field_name, field)
-                        for field_name, field in self.fields.items()
+                        for field_name, field in fields.items()
                         if field_name in display_fields
                     ]
                 )
+        return fields
 
-    def get_fields_to_display(self, fields) -> set:
+    def get_fields_to_display(self, fields, request_fields) -> set:
         """Tell which fields should be displayed"""
-        display_fields = set(fields.split(","))
+        display_fields = set(request_fields.split(","))
 
-        invalid_fields = display_fields - set(self.fields.keys())
+        invalid_fields = display_fields - set(fields.keys())
         if invalid_fields:
             # Some of `display_fields` are not in result.
             raise ValidationError(

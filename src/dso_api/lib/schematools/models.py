@@ -231,6 +231,10 @@ class DynamicModel(models.Model):
         """Give access to the table name"""
         return cls._table_schema.id
 
+    @classmethod
+    def is_nested_table(cls):
+        return cls._table_schema.get("schema", {}).get("parentTable") is not None
+
 
 def schema_models_factory(
     dataset: DatasetSchema, tables=None
