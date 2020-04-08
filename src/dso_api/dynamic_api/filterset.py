@@ -6,7 +6,6 @@ from typing import Type
 
 from django.db import models
 from django.contrib.postgres.fields import ArrayField
-from django_filters import filters as dj_filters
 
 from amsterdam_schema.types import field_is_nested_table
 from dso_api.dynamic_api.utils import snake_to_camel_case, format_api_field_name, format_field_name
@@ -32,12 +31,6 @@ DEFAULT_LOOKUPS_BY_TYPE = {
 }
 
 
-class DynamicFilter(dj_filters.CharFilter):
-    def __init__(self, field_schema, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.field_schema = field_schema
-
-
 class DynamicFilterSet(DSOFilterSet):
     """Base class for dynamic filter sets."""
 
@@ -47,12 +40,10 @@ class DynamicFilterSet(DSOFilterSet):
 
         # Apply camelCase to the filter names, after they've been initialized
         # using the model fields snake_case as input.
-        base_filters = {
+        return {
             snake_to_camel_case(attr_name): filter_class
             for attr_name, filter_class in filters.items()
         }
-
-        return base_filters
 
 
 def filterset_factory(model: Type[DynamicModel]) -> Type[DynamicFilterSet]:

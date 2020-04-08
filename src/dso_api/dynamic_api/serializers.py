@@ -59,15 +59,16 @@ class DynamicSerializer(DSOSerializer):
 
         # Adjust the serializer based on the request.
         # request can be None for get_schema_view(public=True)
-        unauthorized_fields = get_unauthorized_fields(request, self.Meta.model)
-        if unauthorized_fields:
-            fields = OrderedDict(
-                [
-                    (field_name, field)
-                    for field_name, field in fields.items()
-                    if field_name not in unauthorized_fields
-                ]
-            )
+        if request is not None:
+            unauthorized_fields = get_unauthorized_fields(request, self.Meta.model)
+            if unauthorized_fields:
+                fields = OrderedDict(
+                    [
+                        (field_name, field)
+                        for field_name, field in fields.items()
+                        if field_name not in unauthorized_fields
+                    ]
+                )
         return fields
 
     def get_auth_checker(self):
@@ -113,13 +114,8 @@ def get_view_name(model: Type[DynamicModel], suffix: str):
 def serializer_factory(model: Type[DynamicModel], flat=None) -> Type[DynamicSerializer]:
     """Generate the DRF serializer class for a specific dataset model."""
 
-    is_nested_table = False
-    # Exclude links for nested tables
-    if model._table_schema.get("schema", {}).get("parentTable") is not None:
-        is_nested_table = True
-
     fields = ["_links", "schema"]
-    if is_nested_table:
+    if model.is_nested_table:
         fields = []
 
     serializer_name = f"{model.get_dataset_id()}{model.__name__}Serializer"
@@ -131,7 +127,7 @@ def serializer_factory(model: Type[DynamicModel], flat=None) -> Type[DynamicSeri
     # Parse fields for serializer
     extra_kwargs = {}
     for model_field in model._meta.get_fields():
-        if is_nested_table and model_field.name in ["id", "parent"]:
+        if model.is_nested_table and model_field.name in ["id", "parent"]:
             # Do not render PK and FK to parent on nested tables
             continue
 
