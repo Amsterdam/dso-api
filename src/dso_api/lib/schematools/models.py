@@ -36,12 +36,10 @@ class FieldMaker:
         self,
         field_cls: Type[models.Field],
         value_getter: Callable[[DatasetSchema], Dict[str, Any]] = None,
-        arg_getter: Callable[[DatasetSchema], Dict[str, Any]] = None,
         **kwargs,
     ):
         self.field_cls = field_cls
         self.value_getter = value_getter
-        self.arg_getter = arg_getter
         self.kwargs = kwargs
         self.modifiers = [
             getattr(self, an) for an in dir(self) if an.startswith("handle_")
@@ -63,8 +61,6 @@ class FieldMaker:
         kwargs["null"] = not field.required
         if self.value_getter:
             kwargs = {**kwargs, **self.value_getter(dataset, field)}
-        elif self.arg_getter:
-            args.append(self.arg_getter(dataset, field))
         return field_cls, args, kwargs
 
     def handle_relation(
