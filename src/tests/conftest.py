@@ -103,7 +103,7 @@ def afval_schema(afval_schema_json) -> DatasetSchema:
 
 @pytest.fixture()
 def afval_dataset(afval_schema_json) -> Dataset:
-    return Dataset.objects.create(name="afval", schema_data=afval_schema_json)
+    return Dataset.objects.create(name="afvalwegingen", schema_data=afval_schema_json)
 
 
 @pytest.fixture()

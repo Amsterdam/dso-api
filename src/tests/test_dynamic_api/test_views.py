@@ -127,7 +127,7 @@ class TestAuth:
         """ Prove that auth protection at dataset level leads to a 403 on the container listview.
         """
         url = reverse("dynamic_api:afvalwegingen-containers-list")
-        models.Dataset.objects.filter(name="afval").update(auth="BAG/R")
+        models.Dataset.objects.filter(name="afvalwegingen").update(auth="BAG/R")
         response = api_client.get(url)
         assert response.status_code == 403, response.data
 
@@ -137,7 +137,7 @@ class TestAuth:
         """ Prove that auth protection at dataset level leads to a 403 on the cluster listview.
         """
         url = reverse("dynamic_api:afvalwegingen-clusters-list")
-        models.Dataset.objects.filter(name="afval").update(auth="BAG/R")
+        models.Dataset.objects.filter(name="afvalwegingen").update(auth="BAG/R")
         response = api_client.get(url)
         assert response.status_code == 403, response.data
 
@@ -260,7 +260,7 @@ class TestAuth:
     ):
         """ Prove that protection at datasets level protects detail views """
         url = reverse("dynamic_api:afvalwegingen-containers-detail", args=[1])
-        models.Dataset.objects.filter(name="afval").update(auth="BAG/R")
+        models.Dataset.objects.filter(name="afvalwegingen").update(auth="BAG/R")
         response = api_client.get(url)
         assert response.status_code == 403, response.data
 
@@ -278,7 +278,7 @@ class TestAuth:
     ):
         """ Prove that protection at datasets level protects detail views """
         url = reverse("dynamic_api:afvalwegingen-containers-detail", args=[1])
-        models.Dataset.objects.filter(name="afval").update(auth="BAG/R")
+        models.Dataset.objects.filter(name="afvalwegingen").update(auth="BAG/R")
         token = fetch_auth_token(["BAG/R"])
         response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
         assert response.status_code == 200, response.data
