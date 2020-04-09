@@ -128,13 +128,6 @@ def fetch_srid(dataset: DatasetSchema, field: DatasetFieldSchema) -> Dict[str, A
     return {"srid": CRS.from_string(dataset.data["crs"]).srid}
 
 
-def array_type_getter(
-    dataset: DatasetSchema, field: DatasetFieldSchema
-) -> Dict[str, Any]:
-
-    return JSON_TYPE_TO_DJANGO(dataset["properties"][field.name]["items"])
-
-
 JSON_TYPE_TO_DJANGO = {
     "string": (UnlimitedCharField, None),
     "integer": (models.IntegerField, None),
