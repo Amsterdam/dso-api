@@ -1,12 +1,11 @@
 from typing import List, Optional
 
+from amsterdam_schema.types import DatasetSchema
+from amsterdam_schema.utils import schema_defs_from_url
 from django.conf import settings
 from django.core.management import BaseCommand
 
 from dso_api.datasets.models import Dataset
-from amsterdam_schema.types import DatasetSchema
-from amsterdam_schema.utils import schema_defs_from_url
-
 from .create_tables import create_tables
 
 
@@ -14,15 +13,33 @@ class Command(BaseCommand):
     help = "Import all known Amsterdam schema files."
     requires_system_checks = False
 
+    def add_arguments(self, parser):
+        parser.add_argument("schema", nargs="*", help="Local schema files to import")
+        parser.add_argument("--schema-url", default=settings.SCHEMA_URL)
+
     def handle(self, *args, **options):
-        datasets = self.import_schemas(settings.SCHEMA_URL)
+        if options["schema"]:
+            datasets = self.import_from_files(options["schema"])
+        else:
+            datasets = self.import_from_url(options["schema_url"])
 
         if not datasets:
             self.stdout.write("No new datasets imported")
         else:
             create_tables(self, datasets, allow_unmanaged=True)
 
-    def import_schemas(self, schema_url) -> List[Dataset]:
+    def import_from_files(self, schema_files) -> List[Dataset]:
+        """Import all schema definitions from the given files."""
+        datasets = []
+        for filename in schema_files:
+            self.stdout.write(f"Loading schema from {filename}")
+            schema = DatasetSchema.from_file(filename)
+            dataset = self.import_schema(schema.id, schema)
+            datasets.append(dataset)
+
+        return datasets
+
+    def import_from_url(self, schema_url) -> List[Dataset]:
         """Import all schema definitions from an URL"""
         self.stdout.write(f"Loading schema from {schema_url}")
         datasets = []
