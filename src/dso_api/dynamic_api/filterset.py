@@ -100,7 +100,7 @@ def generate_relation_filters(model: Type[DynamicModel]):
                 # Generate set of filters per lookup (e.g. __lte, __gte etc)
                 subfilter_name = filter_name
                 if lookup_expr not in ['exact', 'contains']:
-                    subfilter_name = f"{filter_name}__{lookup_expr}"
+                    subfilter_name = f"{filter_name}[{lookup_expr}]"
                 filters[subfilter_name] = filter_class(
                     field_name="__".join([relation.name, model_field_name]),
                     lookup_expr=lookup_expr,
