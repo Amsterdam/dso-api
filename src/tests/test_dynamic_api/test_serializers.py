@@ -210,7 +210,8 @@ class TestDynamicSerializer:
             parkeer_id="121138489047",
             straatnaam="Zoutkeetsgracht"
         )
-        regime = parkeervakken_regime_model.objects.create(
+        parkeervakken_regime_model.objects.create(
+            id=1,
             parent=parkeervaak,
             bord="",
             dagen=[
@@ -283,7 +284,6 @@ class TestDynamicSerializer:
             ],
         }
 
-
     @staticmethod
     def test_flat_serializer_has_no_nested_table(
             api_request, parkeervakken_parkeervaak_model, parkeervakken_regime_model
@@ -297,14 +297,15 @@ class TestDynamicSerializer:
         parkeervaak = parkeervakken_parkeervaak_model.objects.create(
             id=1,
             type="File",
-            soort= "MULDER",
+            soort="MULDER",
             aantal=1.0,
             e_type="E9",
             buurtcode="A05d",
             parkeer_id="121138489047",
             straatnaam="Zoutkeetsgracht"
         )
-        regime = parkeervakken_regime_model.objects.create(
+        parkeervakken_regime_model.objects.create(
+            id=1,
             parent=parkeervaak,
             bord="",
             dagen=[
