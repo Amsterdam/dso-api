@@ -174,7 +174,7 @@ class DSOSerializer(_SideloadMixin, serializers.HyperlinkedModelSerializer):
 
     @property
     def fields(self):
-        request = self.context.get("request")
+        request = self.context["request"]
         fields = super().fields
 
         # Adjust the serializer based on the request.
