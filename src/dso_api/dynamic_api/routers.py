@@ -58,7 +58,8 @@ class DynamicRouter(routers.DefaultRouter):
             for model in dataset.create_models():
                 logger.debug("Created model %s.%s", dataset_id, model.__name__)
 
-                # Register model in Django apps.
+                # Register model in Django apps under Datasets application name,
+                #  because django requires fully set up app for model discovery to work.
                 apps.register_model("datasets", model)
                 if dataset.enable_api:
                     new_models[model._meta.model_name] = model
