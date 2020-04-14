@@ -115,7 +115,7 @@ def serializer_factory(model: Type[DynamicModel], flat=None) -> Type[DynamicSeri
     """Generate the DRF serializer class for a specific dataset model."""
 
     fields = ["_links", "schema"]
-    if model.is_nested_table:
+    if model.is_nested_table():
         fields = []
 
     serializer_name = f"{model.get_dataset_id()}{model.__name__}Serializer"
@@ -127,7 +127,10 @@ def serializer_factory(model: Type[DynamicModel], flat=None) -> Type[DynamicSeri
     # Parse fields for serializer
     extra_kwargs = {}
     for model_field in model._meta.get_fields():
-        if model.is_nested_table and model_field.name in ["id", "parent"]:
+        if isinstance(model_field, models.ManyToOneRel):
+            # Temporarily skip creation of fields for backwards relations.
+            continue
+        if model.is_nested_table() and model_field.name in ["id", "parent"]:
             # Do not render PK and FK to parent on nested tables
             continue
 

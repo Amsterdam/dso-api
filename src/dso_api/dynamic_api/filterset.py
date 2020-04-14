@@ -53,8 +53,8 @@ def filterset_factory(model: Type[DynamicModel]) -> Type[DynamicFilterSet]:
     # Excluding geometry fields for now, as the default filter only performs exact matches.
     # This isn't useful for polygon fields, and excluding it avoids support issues later.
     fields = {
-        f.attname: _get_field_lookups(f.__class__) for f in model._meta.get_fields()
-        if isinstance(f, models.fields.Field)
+        f.attname: _get_field_lookups(f) for f in model._meta.get_fields()
+        if isinstance(f, (models.fields.Field, models.fields.related.ForeignKey))
     }
 
     extra_fields, filters = generate_relation_filters(model)
@@ -79,6 +79,7 @@ def generate_relation_filters(model: Type[DynamicModel]):
     for relation in model._meta.related_objects:
         schema_fields = dict([(f.name, f) for f in model._table_schema.fields])
         if relation.name not in schema_fields:
+            fields[relation.name] = ["exact"]
             continue
         if not field_is_nested_table(schema_fields[relation.name]):
             continue

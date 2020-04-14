@@ -70,7 +70,7 @@ class CharArrayField(forms.CharField):
 
     def to_python(self, value):
         if not value:
-            return []
+            value = []
         elif isinstance(value, str):
             value = value.split(",")
         elif not isinstance(value, (list, tuple)):
