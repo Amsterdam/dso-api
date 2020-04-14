@@ -250,14 +250,12 @@ def model_factory(table: DatasetTableSchema) -> Type[DynamicModel]:
         # reduce amsterdam schema refs to their fragment
         if type_.startswith(settings.SCHEMA_DEFS_URL):
             type_ = urlparse(type_).fragment
-        # Generate field object
         base_class, init_kwargs = JSON_TYPE_TO_DJANGO[type_]
-        if base_class is None:
-            # Some fields are not mapped into classes
-            continue
-        kls, args, kwargs = FieldMaker(base_class, **(init_kwargs or dict()))(
-            field, dataset
-        )
+        if init_kwargs is None:
+            init_kwargs = {}
+
+        # Generate field object
+        kls, args, kwargs = FieldMaker(base_class, **init_kwargs)(field, dataset)
         if kls is None:
             # Some fields are not mapped into classes
             continue
