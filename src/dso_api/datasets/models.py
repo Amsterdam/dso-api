@@ -91,7 +91,7 @@ class Dataset(models.Model):
                 self.tables.all().delete()
             return
 
-        new_definitions = {slugify(t.id, sign="_"): t for t in self.schema.tables}
+        new_definitions = {slugify(t.id, sign="_"): t for t in self.schema.get_tables(include_nested=True)}
         new_names = set(new_definitions.keys())
         existing_models = {t.name: t for t in self.tables.all()}
         existing_names = set(existing_models.keys())

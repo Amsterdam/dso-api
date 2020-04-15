@@ -18,7 +18,6 @@ from amsterdam_schema.types import (
     DatasetFieldSchema,
     DatasetSchema,
     DatasetTableSchema,
-    field_is_nested_table
 )
 
 # Could be used to check fieldnames
@@ -242,7 +241,7 @@ def schema_models_factory(
     """Generate Django models from the data of the schema."""
     return [
         model_factory(table)
-        for table in dataset.tables
+        for table in dataset.get_tables(include_nested=True)
         if tables is None or table.id in tables
     ]
 
@@ -263,7 +262,7 @@ def model_factory(table: DatasetTableSchema) -> Type[DynamicModel]:
         if type_.endswith("definitions/schema"):
             continue
         # skip nested tables
-        if field_is_nested_table(field):
+        if field.is_nested_table:
             continue
         # reduce amsterdam schema refs to their fragment
         if type_.startswith(settings.SCHEMA_DEFS_URL):
