@@ -28,7 +28,7 @@ def create_tables(  # noqa:C901
     # First create all models. This allows Django to resolve  model relations.
     models = []
     for dataset in datasets:
-        models.extend(schema_models_factory(dataset.schema))
+        models.extend(schema_models_factory(dataset.schema, base_app_name="dso_api.dynamic_api"))
 
     # Create all tables
     with connection.schema_editor() as schema_editor:
