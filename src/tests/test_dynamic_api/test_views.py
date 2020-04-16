@@ -4,7 +4,7 @@ from django.urls import reverse
 
 from rest_framework_dso.crs import CRS, RD_NEW
 from dso_api.datasets import models
-from dso_api.lib.schematools.db import create_tables
+from schematools.contrib.django.db import create_tables
 
 
 @pytest.mark.django_db

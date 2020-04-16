@@ -8,8 +8,8 @@ from django.db import models
 from django.contrib.postgres.fields import ArrayField
 
 from dso_api.dynamic_api.utils import snake_to_camel_case
-from dso_api.lib.schematools.models import DynamicModel
 from rest_framework_dso.filters import DSOFilterSet
+from schematools.contrib.django.models import DynamicModel
 
 
 # These extra lookups are available for specific data types:

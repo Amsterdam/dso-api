@@ -5,7 +5,7 @@ from django.core.management import BaseCommand, CommandError
 from django.db import DatabaseError, connection, router, transaction
 
 from dso_api.datasets.models import Dataset
-from dso_api.lib.schematools.models import schema_models_factory
+from schematools.contrib.django.models import schema_models_factory
 
 
 class Command(BaseCommand):
