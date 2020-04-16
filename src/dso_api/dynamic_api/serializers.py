@@ -13,10 +13,10 @@ from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 from rest_framework_dso.fields import EmbeddedField
 from rest_framework_dso.serializers import DSOSerializer
+from schematools.contrib.django.models import DynamicModel
 
 from dso_api.dynamic_api.permissions import get_unauthorized_fields
 from dso_api.dynamic_api.utils import snake_to_camel_case
-from dso_api.lib.schematools.models import DynamicModel
 
 
 class _DynamicLinksField(DSOSerializer.serializer_url_field):

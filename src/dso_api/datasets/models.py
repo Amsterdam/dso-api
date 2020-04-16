@@ -11,13 +11,13 @@ from django.db import models, transaction
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 
-from dso_api.lib.schematools.models import (
+from amsterdam_schema.types import DatasetSchema, DatasetTableSchema, DatasetFieldSchema
+from schematools.contrib.django.models import (
     DynamicModel,
     get_db_table_name,
     is_possible_display_field,
     schema_models_factory,
 )
-from amsterdam_schema.types import DatasetSchema, DatasetTableSchema, DatasetFieldSchema
 
 
 logger = logging.getLogger(__name__)

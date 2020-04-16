@@ -11,10 +11,10 @@ from rest_framework import viewsets, routers
 from rest_framework_dso import crs, fields
 from rest_framework_dso.pagination import DSOPageNumberPagination
 from rest_framework_dso.views import DSOViewMixin
+from schematools.contrib.django.models import DynamicModel
 from dso_api.dynamic_api import permissions
 
 
-from dso_api.lib.schematools.models import DynamicModel
 from . import filterset, locking, serializers
 from .permissions import get_unauthorized_fields
 
