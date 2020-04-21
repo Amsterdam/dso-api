@@ -6,7 +6,7 @@ from rest_framework import exceptions, permissions, renderers
 from rest_framework.schemas import get_schema_view
 from rest_framework.utils.formatting import dedent
 
-import dso_api.datasets.urls
+# import dso_api.datasets.urls
 import dso_api.dynamic_api.urls
 from rest_framework_dso.openapi import DSOSchemaGenerator
 
@@ -58,7 +58,7 @@ def _get_schema_view(renderer_classes=None):
 
 urlpatterns = [
     path("status/health/", include(django_healthchecks.urls)),
-    path("datasets/", include(dso_api.datasets.urls)),
+    # path("datasets/", include(dso_api.datasets.urls)),
     path("v1/", include(dso_api.dynamic_api.urls)),
     # path("v1/", schema_view.with_ui("swagger", cache_timeout=0)),
     path(
