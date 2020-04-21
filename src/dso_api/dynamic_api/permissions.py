@@ -3,7 +3,7 @@ from typing import Dict, Set
 
 from cachetools.func import ttl_cache
 from rest_framework import permissions
-from dso_api.datasets import models
+from schematools.contrib.django import models
 
 
 @dataclass

@@ -13,9 +13,9 @@ from rest_framework.request import Request
 from rest_framework.test import APIClient, APIRequestFactory
 from authorization_django import jwks
 
-from dso_api.datasets.models import Dataset
+from schematools.contrib.django.models import Dataset
 from schematools.contrib.django.db import create_tables
-from amsterdam_schema.types import DatasetSchema
+from schematools.types import DatasetSchema
 from rest_framework_dso.crs import RD_NEW
 from tests.test_rest_framework_dso.models import Category, Movie, Location
 

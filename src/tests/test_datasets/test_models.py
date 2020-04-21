@@ -1,6 +1,6 @@
 import pytest
 
-from dso_api.datasets.models import Dataset
+from schematools.contrib.django.models import Dataset
 
 
 def test_save_blocks_invalid_json():
