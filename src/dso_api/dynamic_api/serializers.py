@@ -7,12 +7,12 @@ from typing import Type
 
 from django.db import models
 
-from amsterdam_schema.types import DatasetTableSchema
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 from rest_framework_dso.fields import EmbeddedField
 from rest_framework_dso.serializers import DSOSerializer
+from schematools.types import DatasetTableSchema
 from schematools.contrib.django.models import DynamicModel
 
 from dso_api.dynamic_api.permissions import get_unauthorized_fields
