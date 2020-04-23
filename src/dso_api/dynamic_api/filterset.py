@@ -84,7 +84,8 @@ def generate_relation_filters(model: Type[DynamicModel]):
         if not schema_fields[relation.name].is_nested_table:
             continue
 
-        for field_name, field_schema in schema_fields[relation.name]['items']['properties'].items():
+        relation_properties = schema_fields[relation.name]['items']['properties']
+        for field_name, field_schema in relation_properties.items():
             # contert space separated property name into snake_case name
             model_field_name = format_field_name(field_name)
             model_field = getattr(relation.related_model, model_field_name).field
@@ -94,7 +95,10 @@ def generate_relation_filters(model: Type[DynamicModel]):
                 continue
             filter_class = filter_class["filter_class"]
             # Filter name presented in API
-            filter_name = "__".join([format_api_field_name(relation.name), format_api_field_name(field_name)])
+            filter_name = "__".join([
+                format_api_field_name(relation.name),
+                format_api_field_name(field_name)
+            ])
             filter_lookups = _get_field_lookups(model_field)
             for lookup_expr in filter_lookups:
                 # Generate set of filters per lookup (e.g. __lte, __gte etc)
