@@ -114,7 +114,7 @@ def get_view_name(model: Type[DynamicModel], suffix: str):
 def serializer_factory(model: Type[DynamicModel], flat=None) -> Type[DynamicSerializer]:
     """Generate the DRF serializer class for a specific dataset model."""
     fields = ["_links", "schema"]
-    if model.is_inner_table():
+    if model.has_parent_table():
         # Inner tables have no schema or links defined.
         fields = []
     serializer_name = f"{model.get_dataset_id()}{model.__name__}Serializer"
@@ -144,7 +144,7 @@ def generate_field_serializer(model, model_field, new_attrs, fields, extra_kwarg
     if isinstance(model_field, models.ManyToOneRel):
         # Temporarily skip creation of fields for backwards relations.
         return
-    if model.is_inner_table() and model_field.name in ["id", "parent"]:
+    if model.has_parent_table() and model_field.name in ["id", "parent"]:
         # Do not render PK and FK to parent on nested tables
         return
 

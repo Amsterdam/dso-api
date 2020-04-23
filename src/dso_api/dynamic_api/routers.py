@@ -71,7 +71,7 @@ class DynamicRouter(routers.DefaultRouter):
         # This makes sure the 'to' field is resolved to an actual model class.
         for app_label, models_by_name in self.all_models.items():
             for model in models_by_name.values():
-                if model.is_inner_table():
+                if model.has_parent_table():
                     # Do not create separate viewsets for nested tables.
                     continue
 
@@ -119,7 +119,7 @@ class DynamicRouter(routers.DefaultRouter):
         # Return which models + urls were generated
         result = {}
         for model in models:
-            if model.is_inner_table():
+            if model.has_parent_table():
                 # Do not create separate viewsets for nested tables.
                 continue
             viewname = get_view_name(model, "list")
