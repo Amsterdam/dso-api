@@ -126,49 +126,57 @@ def serializer_factory(model: Type[DynamicModel], flat=None) -> Type[DynamicSeri
     # Parse fields for serializer
     extra_kwargs = {}
     for model_field in model._meta.get_fields():
-        orig_name = model_field.name
-        if isinstance(model_field, models.ManyToOneRel):
-            # Temporarily skip creation of fields for backwards relations.
-            continue
-        if model.is_inner_table() and model_field.name in ["id", "parent"]:
-            # Do not render PK and FK to parent on nested tables
-            continue
-
-        # Instead of having to apply camelize() on every response,
-        # create converted field names on the serializer construction.
-        camel_name = snake_to_camel_case(model_field.name)
-
-        # Add extra embedded part for foreign keys
-        if isinstance(model_field, models.ForeignKey):
-            new_attrs[camel_name] = EmbeddedField(
-                serializer_class=serializer_factory(model_field.related_model, flat=True),
-                source=model_field.name,
-            )
-
-            camel_id_name = snake_to_camel_case(model_field.attname)
-            fields.append(camel_id_name)
-
-            if model_field.attname != camel_id_name:
-                extra_kwargs[camel_id_name] = {"source": model_field.attname}
-
-        fields.append(camel_name)
-        if orig_name != camel_name:
-            extra_kwargs[camel_name] = {"source": model_field.name}
+        generate_field_serializer(model, model_field, new_attrs, fields, extra_kwargs)
 
     # Generate embedded relations
     if not flat:
-        for item in model._meta.related_objects:
-            # Do not create fields for django-created relations.
-            if item.name in model._table_schema["schema"]["properties"] and \
-               field_is_nested_table(model._table_schema["schema"]["properties"][item.name]):
-                related_serialier = serializer_factory(
-                    model=item.related_model, flat=True
-                )
-                fields.append(item.name)
-                new_attrs[item.name] = related_serialier(many=True)
+        generate_embedded_relations(model, fields, new_attrs)
 
     # Generate Meta section and serializer class
     new_attrs["Meta"] = type(
         "Meta", (), {"model": model, "fields": fields, "extra_kwargs": extra_kwargs}
     )
     return type(serializer_name, (DynamicSerializer,), new_attrs)
+
+
+def generate_field_serializer(model, model_field, new_attrs, fields, extra_kwargs):
+    orig_name = model_field.name
+    if isinstance(model_field, models.ManyToOneRel):
+        # Temporarily skip creation of fields for backwards relations.
+        return
+    if model.is_inner_table() and model_field.name in ["id", "parent"]:
+        # Do not render PK and FK to parent on nested tables
+        return
+
+    # Instead of having to apply camelize() on every response,
+    # create converted field names on the serializer construction.
+    camel_name = snake_to_camel_case(model_field.name)
+
+    # Add extra embedded part for foreign keys
+    if isinstance(model_field, models.ForeignKey):
+        new_attrs[camel_name] = EmbeddedField(
+            serializer_class=serializer_factory(model_field.related_model, flat=True),
+            source=model_field.name,
+        )
+
+        camel_id_name = snake_to_camel_case(model_field.attname)
+        fields.append(camel_id_name)
+
+        if model_field.attname != camel_id_name:
+            extra_kwargs[camel_id_name] = {"source": model_field.attname}
+
+    fields.append(camel_name)
+    if orig_name != camel_name:
+        extra_kwargs[camel_name] = {"source": model_field.name}
+
+
+def generate_embedded_relations(model, fields, new_attrs):
+    for item in model._meta.related_objects:
+        # Do not create fields for django-created relations.
+        if item.name in model._table_schema["schema"]["properties"] and \
+           field_is_nested_table(model._table_schema["schema"]["properties"][item.name]):
+            related_serialier = serializer_factory(
+                model=item.related_model, flat=True
+            )
+            fields.append(item.name)
+            new_attrs[item.name] = related_serialier(many=True)
