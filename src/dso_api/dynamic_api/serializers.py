@@ -12,7 +12,7 @@ from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 from rest_framework_dso.fields import EmbeddedField
 from rest_framework_dso.serializers import DSOSerializer
-from schematools.types import DatasetTableSchema
+from schematools.types import DatasetTableSchema, field_is_nested_table
 from schematools.contrib.django.models import DynamicModel
 
 from dso_api.dynamic_api.permissions import get_unauthorized_fields
@@ -46,25 +46,33 @@ class DynamicSerializer(DSOSerializer):
 
     table_schema: DatasetTableSchema = None
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        request = self.context["request"]
+    def get_request(self):
+        """
+        Get request from this or parent instance.
+        """
+        return self.context["request"]
+
+    @property
+    def fields(self):
+        fields = super().fields
+        request = self.get_request()
 
         # Adjust the serializer based on the request.
         # request can be None for get_schema_view(public=True)
         if request is not None:
             unauthorized_fields = get_unauthorized_fields(request, self.Meta.model)
             if unauthorized_fields:
-                self.fields = OrderedDict(
+                fields = OrderedDict(
                     [
                         (field_name, field)
-                        for field_name, field in self.fields.items()
+                        for field_name, field in fields.items()
                         if field_name not in unauthorized_fields
                     ]
                 )
+        return fields
 
     def get_auth_checker(self):
-        request = self.context.get("request")
+        request = self.get_request()
         return getattr(request, "is_authorized_for", None) if request else None
 
     @extend_schema_field(OpenApiTypes.URI)
@@ -103,9 +111,12 @@ def get_view_name(model: Type[DynamicModel], suffix: str):
 
 
 @lru_cache()
-def serializer_factory(model: Type[DynamicModel]) -> Type[DynamicSerializer]:
+def serializer_factory(model: Type[DynamicModel], flat=None) -> Type[DynamicSerializer]:
     """Generate the DRF serializer class for a specific dataset model."""
     fields = ["_links", "schema"]
+    if model.is_inner_table():
+        # Inner tables have no schema or links defined.
+        fields = []
     serializer_name = f"{model.get_dataset_id()}{model.__name__}Serializer"
     new_attrs = {
         "table_schema": model._table_schema,
@@ -116,6 +127,12 @@ def serializer_factory(model: Type[DynamicModel]) -> Type[DynamicSerializer]:
     extra_kwargs = {}
     for model_field in model._meta.get_fields():
         orig_name = model_field.name
+        if isinstance(model_field, models.ManyToOneRel):
+            # Temporarily skip creation of fields for backwards relations.
+            continue
+        if model.is_inner_table() and model_field.name in ["id", "parent"]:
+            # Do not render PK and FK to parent on nested tables
+            continue
 
         # Instead of having to apply camelize() on every response,
         # create converted field names on the serializer construction.
@@ -124,7 +141,7 @@ def serializer_factory(model: Type[DynamicModel]) -> Type[DynamicSerializer]:
         # Add extra embedded part for foreign keys
         if isinstance(model_field, models.ForeignKey):
             new_attrs[camel_name] = EmbeddedField(
-                serializer_class=serializer_factory(model_field.related_model),
+                serializer_class=serializer_factory(model_field.related_model, flat=True),
                 source=model_field.name,
             )
 
@@ -137,6 +154,18 @@ def serializer_factory(model: Type[DynamicModel]) -> Type[DynamicSerializer]:
         fields.append(camel_name)
         if orig_name != camel_name:
             extra_kwargs[camel_name] = {"source": model_field.name}
+
+    # Generate embedded relations
+    if not flat:
+        for item in model._meta.related_objects:
+            # Do not create fields for django-created relations.
+            if item.name in model._table_schema["schema"]["properties"] and \
+               field_is_nested_table(model._table_schema["schema"]["properties"][item.name]):
+                related_serialier = serializer_factory(
+                    model=item.related_model, flat=True
+                )
+                fields.append(item.name)
+                new_attrs[item.name] = related_serialier(many=True)
 
     # Generate Meta section and serializer class
     new_attrs["Meta"] = type(

@@ -129,8 +129,11 @@ def test_fields_limit_by_incorrect_field_gives_error(api_rf, movie):
     request = Request(django_request)
     queryset = Movie.objects.all()
 
+    serializer = MovieSerializer(many=True, instance=queryset, context={"request": request})
     with pytest.raises(ValidationError) as exec_info:
-        MovieSerializer(many=True, instance=queryset, context={"request": request})
+        # Error is delayed until serialier is evaulated,
+        #  as fields limit is performed on Single serializer level.
+        repr(serializer)
 
     assert "'batman' is not one of available options" in str(exec_info.value)
 
