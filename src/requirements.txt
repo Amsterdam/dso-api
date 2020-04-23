@@ -4,13 +4,15 @@
 #
 #    pip-compile --output-file=requirements.txt requirements.in
 #
-amsterdam-schema==0.1.2   # via -r requirements.in
+amsterdam-schema-tools==0.0.4  # via -r requirements.in
+amsterdam-schema==0.1.2   # via amsterdam-schema-tools
 asgiref==3.2.3            # via django
 attrs==19.3.0             # via jsonschema, pytest
 cachetools==4.0.0         # via -r requirements.in
 certifi==2019.11.28       # via requests, sentry-sdk
 cffi==1.14.0              # via cryptography
 chardet==3.0.4            # via requests
+click==7.1.1              # via amsterdam-schema-tools, mappyfile
 coverage==5.0.3           # via pytest-cov
 cryptography==2.8         # via jwcrypto
 datapunt-authorization-django==1.0.0  # via -r requirements.in
@@ -35,16 +37,24 @@ flake8-colors==0.1.6      # via -r requirements.in
 flake8-debugger==3.2.1    # via -r requirements.in
 flake8-raise==0.0.5       # via -r requirements.in
 flake8==3.7.9             # via -r requirements.in, flake8-colors, flake8-debugger, flake8-raise
+geoalchemy2==0.7.0        # via amsterdam-schema-tools
 idna==2.9                 # via requests
-jsonschema==3.2.0         # via -r requirements.in, amsterdam-schema
+jinja2==2.11.2            # via amsterdam-schema-tools
+jsonref==0.2              # via mappyfile
+jsonschema==3.2.0         # via -r requirements.in, amsterdam-schema, amsterdam-schema-tools, mappyfile
 jwcrypto==0.7             # via datapunt-authorization-django
+lark-parser==0.7.8        # via mappyfile
+mappyfile==0.8.4          # via amsterdam-schema-tools
 markdown==3.2.1           # via -r requirements.in
+markupsafe==1.1.1         # via jinja2
 mccabe==0.6.1             # via flake8
 more-itertools==8.2.0     # via pytest
+ndjson==0.3.1             # via amsterdam-schema-tools
 orjson==2.5.1             # via django-gisserver
 packaging==20.1           # via pytest
 pluggy==0.13.1            # via pytest
 psycopg2-binary==2.8.4    # via -r requirements.in
+psycopg2==2.8.5           # via amsterdam-schema-tools
 py==1.8.1                 # via pytest
 pycodestyle==2.5.0        # via flake8, flake8-debugger
 pycparser==2.19           # via cffi
@@ -54,13 +64,16 @@ pyrsistent==0.15.7        # via jsonschema
 pytest-cov==2.8.1         # via -r requirements.in
 pytest-django==3.8.0      # via -r requirements.in
 pytest==5.3.5             # via -r requirements.in, pytest-cov, pytest-django
-python-string-utils==0.6.0  # via -r requirements.in
+python-dateutil==2.8.1    # via amsterdam-schema-tools
+python-string-utils==0.6.0  # via -r requirements.in, amsterdam-schema-tools
 pytz==2019.3              # via django
 pyyaml==5.3               # via drf-spectacular
 readerwriterlock==1.0.6   # via -r requirements.in
 requests==2.23.0          # via -r requirements.in, amsterdam-schema, datapunt-authorization-django, django-healthchecks
 sentry-sdk==0.14.2        # via -r requirements.in
-six==1.14.0               # via cryptography, django-healthchecks, djangorestframework-csv, jsonschema, packaging, pyrsistent
+shapely==1.7.0            # via amsterdam-schema-tools
+six==1.14.0               # via cryptography, django-healthchecks, djangorestframework-csv, jsonschema, packaging, pyrsistent, python-dateutil
+sqlalchemy==1.3.16        # via geoalchemy2
 sqlparse==0.3.1           # via django
 typing-extensions==3.7.4.1  # via readerwriterlock
 unicodecsv==0.14.1        # via djangorestframework-csv
