@@ -50,7 +50,6 @@ INSTALLED_APPS = [
     "gisserver",
     "schematools.contrib.django",
     # Own apps
-    # "dso_api.datasets",
     "dso_api.dynamic_api",
 ]
 
