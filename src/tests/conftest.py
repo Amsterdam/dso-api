@@ -74,7 +74,7 @@ def router():
 
 
 @pytest.fixture()
-def filled_router(router, afval_dataset, bommen_dataset):
+def filled_router(router, afval_dataset, bommen_dataset, parkeervakken_dataset):
     # Prove that the router URLs are extended on adding a model
     router.reload()
     router_urls = [p.name for p in router.urls]
@@ -86,6 +86,8 @@ def filled_router(router, afval_dataset, bommen_dataset):
         create_tables(afval_dataset.schema)
     if "bommen_bommen" not in table_names:
         create_tables(bommen_dataset.schema)
+    if "parkeervakken_parkeervakken" not in table_names:
+        create_tables(parkeervakken_dataset.schema)
 
     return router
 
@@ -169,6 +171,34 @@ def movie(category) -> Movie:
 def location() -> Location:
     """A dummy model to test our API with"""
     return Location.objects.create(geometry=GEOSGeometry("Point(10 10)", srid=RD_NEW))
+
+
+@pytest.fixture()
+def parkeervakken_schema_json() -> dict():
+    path = HERE / "files/parkeervakken.json"
+    return json.loads(path.read_text())
+
+
+@pytest.fixture()
+def parkeervakken_schema(parkeervakken_schema_json) -> DatasetSchema:
+    return DatasetSchema.from_dict(parkeervakken_schema_json)
+
+
+@pytest.fixture()
+def parkeervakken_dataset(parkeervakken_schema_json) -> Dataset:
+    return Dataset.objects.create(name="parkeervakken", schema_data=parkeervakken_schema_json)
+
+
+@pytest.fixture()
+def parkeervakken_parkeervaak_model(filled_router):
+    # Using filled_router so all urls can be generated too.
+    return filled_router.all_models["parkeervakken"]["parkeervakken"]
+
+
+@pytest.fixture()
+def parkeervakken_regime_model(filled_router):
+    # Using filled_router so all urls can be generated too.
+    return filled_router.all_models["parkeervakken"]["parkeervakken_regimes"]
 
 
 @pytest.fixture
