@@ -12,11 +12,11 @@ from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 from rest_framework_dso.fields import EmbeddedField
 from rest_framework_dso.serializers import DSOSerializer
-from schematools.types import DatasetTableSchema, field_is_nested_table
+from schematools.types import DatasetTableSchema
 from schematools.contrib.django.models import DynamicModel
 
 from dso_api.dynamic_api.permissions import get_unauthorized_fields
-from dso_api.dynamic_api.utils import snake_to_camel_case
+from dso_api.dynamic_api.utils import snake_to_camel_case, format_field_name
 
 
 class _DynamicLinksField(DSOSerializer.serializer_url_field):
@@ -171,10 +171,10 @@ def generate_field_serializer(model, model_field, new_attrs, fields, extra_kwarg
 
 
 def generate_embedded_relations(model, fields, new_attrs):
+    schema_fields = {format_field_name(f._name): f for f in model._table_schema.fields}
     for item in model._meta.related_objects:
         # Do not create fields for django-created relations.
-        if item.name in model._table_schema["schema"]["properties"] and \
-           field_is_nested_table(model._table_schema["schema"]["properties"][item.name]):
+        if item.name in schema_fields and schema_fields[item.name].is_nested_table:
             related_serialier = serializer_factory(
                 model=item.related_model, flat=True
             )
