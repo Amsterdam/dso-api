@@ -69,8 +69,9 @@ class DynamicRouter(routers.DefaultRouter):
         # This makes sure the 'to' field is resolved to an actual model class.
         for app_label, models_by_name in self.all_models.items():
             for model in models_by_name.values():
-                dataset_name = model.get_dataset_id()
-                url_prefix = slugify(f"{dataset_name}/{model.get_table_id()}", sign="_")
+                dataset_name = slugify(model.get_dataset_id(), sign="_")
+                table_id = slugify(model.get_table_id(), sign="_")
+                url_prefix = f"{dataset_name}/{table_id}"
                 logger.debug("Created viewset %s", url_prefix)
 
                 viewset = viewset_factory(model)
