@@ -8,6 +8,7 @@ from django.db import connection
 from django.urls import NoReverseMatch, reverse
 from django.conf import settings
 from rest_framework import routers
+from string_utils import slugify
 
 from schematools.contrib.django.models import Dataset
 from dso_api.dynamic_api.locking import lock_for_writing
@@ -69,7 +70,7 @@ class DynamicRouter(routers.DefaultRouter):
         for app_label, models_by_name in self.all_models.items():
             for model in models_by_name.values():
                 dataset_name = model.get_dataset_id()
-                url_prefix = f"{dataset_name}/{model.get_table_id()}"
+                url_prefix = slugify(f"{dataset_name}/{model.get_table_id()}", sign="_")
                 logger.debug("Created viewset %s", url_prefix)
 
                 viewset = viewset_factory(model)
