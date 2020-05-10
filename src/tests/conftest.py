@@ -90,11 +90,6 @@ def filled_router(router, afval_dataset, bommen_dataset, parkeervakken_dataset):
     if "parkeervakken_parkeervakken" not in table_names:
         create_tables(parkeervakken_dataset.schema)
 
-    apps.register_model("afvalwegingen", router.all_models["afvalwegingen"]["clusters"])
-    apps.register_model("afvalwegingen", router.all_models["afvalwegingen"]["containers"])
-
-    apps.register_model("parkeervakken", router.all_models["parkeervakken"]["parkeervakken"])
-    apps.register_model("parkeervakken", router.all_models["parkeervakken"]["parkeervakken_regimes"])
     return router
 
 
