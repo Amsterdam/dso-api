@@ -4,8 +4,9 @@ from datetime import date
 from pathlib import Path
 
 import pytest
-from django.core.handlers.wsgi import WSGIRequest
 from jwcrypto.jwt import JWT
+from django.apps import apps
+from django.core.handlers.wsgi import WSGIRequest
 from django.db import connection
 from django.utils.timezone import now
 from django.contrib.gis.geos import GEOSGeometry, Point
@@ -89,6 +90,11 @@ def filled_router(router, afval_dataset, bommen_dataset, parkeervakken_dataset):
     if "parkeervakken_parkeervakken" not in table_names:
         create_tables(parkeervakken_dataset.schema)
 
+    apps.register_model("afvalwegingen", router.all_models["afvalwegingen"]["clusters"])
+    apps.register_model("afvalwegingen", router.all_models["afvalwegingen"]["containers"])
+
+    apps.register_model("parkeervakken", router.all_models["parkeervakken"]["parkeervakken"])
+    apps.register_model("parkeervakken", router.all_models["parkeervakken"]["parkeervakken_regimes"])
     return router
 
 

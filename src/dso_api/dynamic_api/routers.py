@@ -13,6 +13,7 @@ from schematools.contrib.django.models import Dataset
 from dso_api.dynamic_api.locking import lock_for_writing
 from dso_api.dynamic_api.serializers import serializer_factory, get_view_name
 from dso_api.dynamic_api.views import DynamicAPIRootView, viewset_factory
+from dso_api.dynamic_api.app_config import register_model
 
 logger = logging.getLogger(__name__)
 reload_counter = 0
@@ -60,7 +61,8 @@ class DynamicRouter(routers.DefaultRouter):
 
                 # Register model in Django apps under Datasets application name,
                 #  because django requires fully set up app for model discovery to work.
-                apps.register_model("datasets", model)
+                register_model(dataset, model)
+
                 if dataset.enable_api:
                     new_models[model._meta.model_name] = model
 
@@ -106,12 +108,12 @@ class DynamicRouter(routers.DefaultRouter):
         serializer_factory.cache_clear()
         self.all_models.clear()
 
+        # Clear models from the Django App registry cache for removed apps
+        self._prune_app_registry(old_dynamic_apps)
+
         # Note that the models get recreated too. This works as expected,
         # since each model creation flushes the App registry caches.
         models = self._initialize_viewsets()
-
-        # Clear models from the Django App registry cache for removed apps
-        self._prune_app_registry(old_dynamic_apps)
 
         # Refresh URLConf in urls.py
         urls.refresh_urls(self)
