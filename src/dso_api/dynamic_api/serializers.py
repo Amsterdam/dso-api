@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 from collections import OrderedDict
 from functools import lru_cache
+from string_utils import slugify
 from typing import Type
 
 from django.db import models
@@ -29,10 +30,11 @@ class _DynamicLinksField(DSOSerializer.serializer_url_field):
             viewset = self.root.context.get("view")
             if viewset is not None:  # testing serializer without view
                 lookup = getattr(viewset, "lookup_value_regex", "[^/.]+")
-                if not re.fullmatch(lookup, value.pk):
+                if not re.fullmatch(lookup, pk):
+                    full_table_id = f"{value.get_dataset_id()}.{value.get_table_id()}"
                     raise RuntimeError(
-                        "Unsupported URL characters in "
-                        f"{value.get_dataset_id()}/{value.get_table_id()} id='{value.pk}' "
+                        "Unsupported URL characters in object ID of model "
+                        f"{full_table_id}: instance id={pk}"
                     )
         return super().to_representation(value)
 
@@ -107,7 +109,9 @@ def get_view_name(model: Type[DynamicModel], suffix: str):
 
     :param suffix: This can be "detail" or "list".
     """
-    return f"dynamic_api:{model.get_dataset_id()}-{model.get_table_id()}-{suffix}"
+    dataset_id = slugify(model.get_dataset_id(), sign="_")
+    table_id = slugify(model.get_table_id(), sign="_")
+    return f"dynamic_api:{dataset_id}-{table_id}-{suffix}"
 
 
 @lru_cache()
@@ -117,10 +121,12 @@ def serializer_factory(model: Type[DynamicModel], flat=None) -> Type[DynamicSeri
     if model.has_parent_table():
         # Inner tables have no schema or links defined.
         fields = []
-    serializer_name = f"{model.get_dataset_id()}{model.__name__}Serializer"
+
+    safe_dataset_id = slugify(model.get_dataset_id(), sign="_")
+    serializer_name = f"{safe_dataset_id}{model.__name__}Serializer"
     new_attrs = {
         "table_schema": model._table_schema,
-        "__module__": f"dso_api.dynamic_api.serializers.{model.get_dataset_id()}",
+        "__module__": f"dso_api.dynamic_api.serializers.{safe_dataset_id}",
     }
 
     # Parse fields for serializer
