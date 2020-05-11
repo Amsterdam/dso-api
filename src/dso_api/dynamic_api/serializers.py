@@ -12,7 +12,7 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 from rest_framework_dso.fields import EmbeddedField
-from rest_framework_dso.serializers import DSOSerializer
+from rest_framework_dso.serializers import DSOModelSerializer
 from schematools.types import DatasetTableSchema
 from schematools.contrib.django.models import DynamicModel
 
@@ -20,7 +20,7 @@ from dso_api.dynamic_api.permissions import get_unauthorized_fields
 from dso_api.dynamic_api.utils import snake_to_camel_case, format_field_name
 
 
-class _DynamicLinksField(DSOSerializer.serializer_url_field):
+class _DynamicLinksField(DSOModelSerializer.serializer_url_field):
     def to_representation(self, value: DynamicModel):
         """Before generating the URL, check whether the "PK" value is valid.
         This avoids more obscure error messages when the string.
@@ -39,7 +39,7 @@ class _DynamicLinksField(DSOSerializer.serializer_url_field):
         return super().to_representation(value)
 
 
-class DynamicSerializer(DSOSerializer):
+class DynamicSerializer(DSOModelSerializer):
     """Base class for all generic serializers of this package."""
 
     serializer_url_field = _DynamicLinksField

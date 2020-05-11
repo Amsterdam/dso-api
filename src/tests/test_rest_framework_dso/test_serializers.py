@@ -5,18 +5,18 @@ from rest_framework.request import Request
 from rest_framework_dso.crs import RD_NEW, WGS84
 from rest_framework_dso.fields import EmbeddedField
 from rest_framework_dso.pagination import DSOPageNumberPagination
-from rest_framework_dso.serializers import DSOSerializer
+from rest_framework_dso.serializers import DSOModelSerializer
 
 from .models import Category, Location, Movie
 
 
-class CategorySerializer(DSOSerializer):
+class CategorySerializer(DSOModelSerializer):
     class Meta:
         model = Category
         fields = ["name"]
 
 
-class MovieSerializer(DSOSerializer):
+class MovieSerializer(DSOModelSerializer):
     category = EmbeddedField(CategorySerializer)
 
     class Meta:
@@ -24,7 +24,7 @@ class MovieSerializer(DSOSerializer):
         fields = ["name", "category_id"]
 
 
-class LocationSerializer(DSOSerializer):
+class LocationSerializer(DSOModelSerializer):
     class Meta:
         model = Location
         fields = ["geometry"]
