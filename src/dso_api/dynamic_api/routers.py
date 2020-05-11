@@ -4,16 +4,16 @@ import logging
 from typing import TYPE_CHECKING, Dict, List, Type
 
 from django.apps import apps
+from django.conf import settings
 from django.db import connection
 from django.urls import NoReverseMatch, reverse
-from django.conf import settings
 from rest_framework import routers
-
 from schematools.contrib.django.models import Dataset
-from dso_api.dynamic_api.locking import lock_for_writing
-from dso_api.dynamic_api.serializers import serializer_factory, get_view_name
-from dso_api.dynamic_api.views import DynamicAPIRootView, viewset_factory
+
 from dso_api.dynamic_api.app_config import register_model
+from dso_api.dynamic_api.locking import lock_for_writing
+from dso_api.dynamic_api.serializers import get_view_name, serializer_factory
+from dso_api.dynamic_api.views import DynamicAPIRootView, viewset_factory
 
 logger = logging.getLogger(__name__)
 reload_counter = 0

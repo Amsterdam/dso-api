@@ -7,7 +7,11 @@ from typing import Type
 from django.db import models
 from django.contrib.postgres.fields import ArrayField
 
-from dso_api.dynamic_api.utils import snake_to_camel_case, format_api_field_name, format_field_name
+from dso_api.dynamic_api.utils import (
+    snake_to_camel_case,
+    format_api_field_name,
+    format_field_name,
+)
 from rest_framework_dso.filters import DSOFilterSet
 from schematools.contrib.django.models import DynamicModel
 
@@ -52,7 +56,8 @@ def filterset_factory(model: Type[DynamicModel]) -> Type[DynamicFilterSet]:
     # Excluding geometry fields for now, as the default filter only performs exact matches.
     # This isn't useful for polygon fields, and excluding it avoids support issues later.
     fields = {
-        f.attname: _get_field_lookups(f) for f in model._meta.get_fields()
+        f.attname: _get_field_lookups(f)
+        for f in model._meta.get_fields()
         if isinstance(f, (models.fields.Field, models.fields.related.ForeignKey))
     }
 
@@ -84,7 +89,7 @@ def generate_relation_filters(model: Type[DynamicModel]):
         if not schema_fields[relation.name].is_nested_table:
             continue
 
-        relation_properties = schema_fields[relation.name]['items']['properties']
+        relation_properties = schema_fields[relation.name]["items"]["properties"]
         for field_name, field_schema in relation_properties.items():
             # contert space separated property name into snake_case name
             model_field_name = format_field_name(field_name)
@@ -94,21 +99,21 @@ def generate_relation_filters(model: Type[DynamicModel]):
                 # No mapping found for this model field, skip it.
                 continue
             filter_class = filter_class["filter_class"]
+
             # Filter name presented in API
-            filter_name = "__".join([
-                format_api_field_name(relation.name),
-                format_api_field_name(field_name)
-            ])
+            filter_name = "{}__{}".format(
+                format_api_field_name(relation.name), format_api_field_name(field_name),
+            )
             filter_lookups = _get_field_lookups(model_field)
             for lookup_expr in filter_lookups:
                 # Generate set of filters per lookup (e.g. __lte, __gte etc)
                 subfilter_name = filter_name
-                if lookup_expr not in ['exact', 'contains']:
+                if lookup_expr not in ["exact", "contains"]:
                     subfilter_name = f"{filter_name}[{lookup_expr}]"
                 filters[subfilter_name] = filter_class(
                     field_name="__".join([relation.name, model_field_name]),
                     lookup_expr=lookup_expr,
-                    label=DSOFilterSet.FILTER_HELP_TEXT.get(filter_class, lookup_expr)
+                    label=DSOFilterSet.FILTER_HELP_TEXT.get(filter_class, lookup_expr),
                 )
                 fields[subfilter_name] = filter_lookups
 

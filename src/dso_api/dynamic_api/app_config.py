@@ -8,10 +8,11 @@ logger = logging.getLogger(__name__)
 
 class VirtualAppConfig(apps_config.AppConfig):
     """
-    Virtualt App Config, allowing to add models for datasets on the fly.
+    Virtual App Config, allowing to add models for datasets on the fly.
     """
+
     def __init__(self, apps, *args, **kwargs):
-        super(VirtualAppConfig, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         # Make django think that App is initiated already.
         self.models = dict()
         # Path is required for Django to think this APP is real.
@@ -26,7 +27,7 @@ class VirtualAppConfig(apps_config.AppConfig):
         try:
             settings.MIGRATION_MODULES[self.label] = None
         except TypeError as e:
-            logger.warn(f"Failed to disable migrations for {self.label}: {e}")
+            logger.warning(f"Failed to disable migrations for {self.label}: {e}")
 
     def _path_from_module(self, module):
         """
