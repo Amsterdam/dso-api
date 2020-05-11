@@ -175,8 +175,6 @@ def generate_embedded_relations(model, fields, new_attrs):
     for item in model._meta.related_objects:
         # Do not create fields for django-created relations.
         if item.name in schema_fields and schema_fields[item.name].is_nested_table:
-            related_serialier = serializer_factory(
-                model=item.related_model, flat=True
-            )
+            related_serialier = serializer_factory(model=item.related_model, flat=True)
             fields.append(item.name)
             new_attrs[item.name] = related_serialier(many=True)

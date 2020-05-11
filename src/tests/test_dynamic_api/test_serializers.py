@@ -44,7 +44,8 @@ class TestDynamicSerializer:
 
         # Generate serializers from models
         ContainerSerializer = serializer_factory(afval_container_model)
-        # Important note is that ClusterSerializer is initiated as flat, not allowing relations to resolve.
+        # Important note is that ClusterSerializer is initiated as flat,
+        # not allowing relations to resolve.
         ClusterSerializer = serializer_factory(afval_cluster_model, flat=True)
 
         # Prove that EmbeddedField is created, as it should be.
@@ -194,7 +195,7 @@ class TestDynamicSerializer:
 
     @staticmethod
     def test_serializer_has_nested_table(
-            api_request, parkeervakken_parkeervaak_model, parkeervakken_regime_model
+        api_request, parkeervakken_parkeervaak_model, parkeervakken_regime_model
     ):
         """Prove that the serializer factory properly generates nested tables.
         Serialiser should contain reverse relations.
@@ -207,21 +208,13 @@ class TestDynamicSerializer:
             e_type="E9",
             buurtcode="A05d",
             parkeer_id="121138489047",
-            straatnaam="Zoutkeetsgracht"
+            straatnaam="Zoutkeetsgracht",
         )
         parkeervakken_regime_model.objects.create(
             id=1,
             parent=parkeervaak,
             bord="",
-            dagen=[
-                "ma",
-                "di",
-                "wo",
-                "do",
-                "vr",
-                "za",
-                "zo"
-            ],
+            dagen=["ma", "di", "wo", "do", "vr", "za", "zo"],
             soort="MULDER",
             aantal=None,
             e_type="E6b",
@@ -230,7 +223,7 @@ class TestDynamicSerializer:
             eind_tijd="23:59:00",
             begin_tijd="00:00:00",
             eind_datum=None,
-            begin_datum=None
+            begin_datum=None,
         )
 
         ParkeervaakSerializer = serializer_factory(parkeervakken_parkeervaak_model)
@@ -262,30 +255,24 @@ class TestDynamicSerializer:
             "straatnaam": "Zoutkeetsgracht",
             "regimes": [
                 OrderedDict(
-                    bord='',
-                    dagen=['ma',
-                           'di',
-                           'wo',
-                           'do',
-                           'vr',
-                           'za',
-                           'zo'],
-                    soort='MULDER',
+                    bord="",
+                    dagen=["ma", "di", "wo", "do", "vr", "za", "zo"],
+                    soort="MULDER",
                     aantal=None,
-                    eType='E6b',
-                    kenteken='69-SF-NT',
-                    eindTijd='23:59:00',
-                    opmerking='',
-                    beginTijd='00:00:00',
+                    eType="E6b",
+                    kenteken="69-SF-NT",
+                    eindTijd="23:59:00",
+                    opmerking="",
+                    beginTijd="00:00:00",
                     eindDatum=None,
-                    beginDatum=None
+                    beginDatum=None,
                 )
             ],
         }
 
     @staticmethod
     def test_flat_serializer_has_no_nested_table(
-            api_request, parkeervakken_parkeervaak_model, parkeervakken_regime_model
+        api_request, parkeervakken_parkeervaak_model, parkeervakken_regime_model
     ):
         """Prove that the serializer factory properly skipping generation of reverse
         relations if `flat=True`.
@@ -300,21 +287,13 @@ class TestDynamicSerializer:
             e_type="E9",
             buurtcode="A05d",
             parkeer_id="121138489047",
-            straatnaam="Zoutkeetsgracht"
+            straatnaam="Zoutkeetsgracht",
         )
         parkeervakken_regime_model.objects.create(
             id=1,
             parent=parkeervaak,
             bord="",
-            dagen=[
-                "ma",
-                "di",
-                "wo",
-                "do",
-                "vr",
-                "za",
-                "zo"
-            ],
+            dagen=["ma", "di", "wo", "do", "vr", "za", "zo"],
             soort="MULDER",
             aantal=None,
             e_type="E6b",
@@ -323,10 +302,12 @@ class TestDynamicSerializer:
             eind_tijd="23:59:00",
             begin_tijd="00:00:00",
             eind_datum=None,
-            begin_datum=None
+            begin_datum=None,
         )
 
-        ParkeervaakSerializer = serializer_factory(parkeervakken_parkeervaak_model, flat=True)
+        ParkeervaakSerializer = serializer_factory(
+            parkeervakken_parkeervaak_model, flat=True
+        )
 
         # Prove that no reverse relation to containers here.
         assert "regimes" not in ParkeervaakSerializer._declared_fields
@@ -352,5 +333,5 @@ class TestDynamicSerializer:
             "eType": "E9",
             "buurtcode": "A05d",
             "parkeerId": "121138489047",
-            "straatnaam": "Zoutkeetsgracht"
+            "straatnaam": "Zoutkeetsgracht",
         }

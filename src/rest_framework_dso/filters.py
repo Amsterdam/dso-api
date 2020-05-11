@@ -149,9 +149,12 @@ class FlexDateTimeFilter(filters.IsoDateTimeFilter):
 
 class CharArrayField(forms.CharField):
     """Comma separated strings field"""
+
     default_error_messages = {
-        'invalid_choice': _('Select a valid choice. %(value)s is not one of the available choices.'),
-        'invalid_list': _('Enter a list of values.'),
+        "invalid_choice": _(
+            "Select a valid choice. %(value)s is not one of the available choices."
+        ),
+        "invalid_list": _("Enter a list of values."),
     }
 
     def to_python(self, value):
@@ -160,12 +163,15 @@ class CharArrayField(forms.CharField):
         elif isinstance(value, str):
             value = value.split(",")
         elif not isinstance(value, (list, tuple)):
-            raise ValidationError(self.error_messages['invalid_list'], code='invalid_list')
+            raise ValidationError(
+                self.error_messages["invalid_list"], code="invalid_list"
+            )
         return [str(val) for val in value]
 
 
 class CharArrayFilter(filters.BaseCSVFilter, filters.CharFilter):
     """Comma Separated Array filter"""
+
     base_field_class = CharArrayField
 
 

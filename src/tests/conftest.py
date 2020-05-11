@@ -5,7 +5,6 @@ from pathlib import Path
 
 import pytest
 from jwcrypto.jwt import JWT
-from django.apps import apps
 from django.core.handlers.wsgi import WSGIRequest
 from django.db import connection
 from django.utils.timezone import now
@@ -187,7 +186,9 @@ def parkeervakken_schema(parkeervakken_schema_json) -> DatasetSchema:
 
 @pytest.fixture()
 def parkeervakken_dataset(parkeervakken_schema_json) -> Dataset:
-    return Dataset.objects.create(name="parkeervakken", schema_data=parkeervakken_schema_json)
+    return Dataset.objects.create(
+        name="parkeervakken", schema_data=parkeervakken_schema_json
+    )
 
 
 @pytest.fixture()
