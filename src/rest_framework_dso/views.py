@@ -1,5 +1,6 @@
 from typing import Optional, Type, Union
 
+from dso_api.lib.exceptions import RemoteAPIException
 from gisserver.types import CRS
 from rest_framework.exceptions import ErrorDetail, NotAcceptable, ValidationError
 from rest_framework.views import exception_handler as drf_exception_handler
@@ -29,6 +30,22 @@ def exception_handler(exc, context):
             "x-validation-errors": response.data,
         }
 
+        response.content_type = "application/problem+json"
+    elif isinstance(exc, RemoteAPIException):
+        # Raw problem json response forwarded (for RemoteViewSet)
+        # Normalize the problem+json fields to be identical to how
+        # our own API's would return these.
+        normalized_fields = {
+            "type": f"urn:apiexception:{exc.code}",
+            "code": exc.code,
+            "title": exc.default_detail,
+            "status": int(exc.status_code),
+            "instance": request.build_absolute_uri() if request else None,
+        }
+        # This merge stategy puts the normal fields first:
+        response.data = {**normalized_fields, **response.data}
+        response.data.update(normalized_fields)
+        response.status_code = int(exc.status_code)
         response.content_type = "application/problem+json"
     elif isinstance(response.data.get("detail"), ErrorDetail):
         # DRF parsed the exception as API

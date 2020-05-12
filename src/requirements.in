@@ -8,7 +8,7 @@ django-postgres-unlimited-varchar == 1.1.0
 django-gisserver == 0.5
 djangorestframework == 3.11.0
 djangorestframework-gis == 0.15
-amsterdam-schema-tools[django] == 0.5.1
+amsterdam-schema-tools[django] == 0.6.0
 datapunt-authorization-django==1.0.0
 drf-amsterdam == 0.3.2
 drf-spectacular == 0.8.5
@@ -16,8 +16,11 @@ jsonschema == 3.2.0
 psycopg2-binary == 2.8.4
 python-string-utils == 0.6.0
 readerwriterlock == 1.0.6
+orjson == 2.5.1
 requests == 2.23.0
 sentry-sdk == 0.14.2
+urllib3 == 1.25.8
+urllib3-mock == 0.3.3
 
 # When installed, it's used for API doc markup:
 markdown == 3.2.1
