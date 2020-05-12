@@ -123,7 +123,7 @@ def serializer_factory(model: Type[DynamicModel], flat=None) -> Type[DynamicSeri
         fields = []
 
     safe_dataset_id = slugify(model.get_dataset_id(), sign="_")
-    serializer_name = f"{safe_dataset_id}{model.__name__}Serializer"
+    serializer_name = f"{safe_dataset_id.title()}{model.__name__}Serializer"
     new_attrs = {
         "table_schema": model._table_schema,
         "__module__": f"dso_api.dynamic_api.serializers.{safe_dataset_id}",
