@@ -28,7 +28,7 @@ def exception_handler(exc, context):
         }
 
         response.content_type = "application/problem+json"
-    elif isinstance(response.get("detail"), ErrorDetail):
+    elif isinstance(response.data.get("detail"), ErrorDetail):
         # DRF parsed the exception as API
         detail = response.data["detail"]
         response.data = {
