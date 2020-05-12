@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from string_utils import slugify
 from typing import TYPE_CHECKING, Dict, List, Type
 
 from django.apps import apps
@@ -33,6 +34,7 @@ class DynamicRouter(routers.DefaultRouter):
     def __init__(self):
         super().__init__(trailing_slash=True)
         self.all_models = {}
+        self.static_routes = []
 
     def initialize(self):
         """Initialize all dynamic routes on startup."""
@@ -46,18 +48,38 @@ class DynamicRouter(routers.DefaultRouter):
 
         self._initialize_viewsets()
 
+    def register(self, prefix, viewset, basename=None):
+        """Preserve any manually added routes on reloading"""
+        super().register(prefix, viewset, basename=basename)
+        self.static_routes.append(self.registry[-1])
+
     def _initialize_viewsets(self) -> List[Type[DynamicModel]]:
         """Build all viewsets, serializers, models and URL routes."""
+        # Generate new viewsets for everything
+        dataset_routes, generated_models = self._build_db_viewsets()
+
+        # Atomically copy the new viewset registrations
+        self.registry = self.static_routes + dataset_routes
+
+        # invalidate the urls cache
+        if hasattr(self, "_urls"):
+            del self._urls
+
+        return generated_models
+
+    def _build_db_viewsets(self):
+        """Initialize viewsets that are linked to Django database models."""
         tmp_router = routers.SimpleRouter()
         generated_models = []
 
-        # Generate new viewsets for everything
-        for dataset in Dataset.objects.all():
-            dataset_name = dataset.schema.id  # not dataset.name!
+        datasets = {}
+        for dataset in Dataset.objects.db_enabled():  # type: Dataset
+            dataset_id = dataset.schema.id  # not dataset.name!
+            datasets[dataset_id] = dataset
             new_models = {}
 
             for model in dataset.create_models():
-                logger.debug("Created model %s.%s", dataset_name, model.__name__)
+                logger.debug("Created model %s.%s", dataset_id, model.__name__)
 
                 # Register model in Django apps under Datasets application name,
                 #  because django requires fully set up app for model discovery to work.
@@ -66,7 +88,7 @@ class DynamicRouter(routers.DefaultRouter):
                 if dataset.enable_api:
                     new_models[model._meta.model_name] = model
 
-            self.all_models[dataset_name] = new_models
+            self.all_models[dataset_id] = new_models
             generated_models.extend(new_models.values())
 
         # Generate views now that all models have been created.
@@ -77,25 +99,35 @@ class DynamicRouter(routers.DefaultRouter):
                     # Do not create separate viewsets for nested tables.
                     continue
 
-                dataset_name = model.get_dataset_id()
-                url_prefix = f"{dataset_name}/{model.get_table_id()}"
-                logger.debug("Created viewset %s", url_prefix)
+                dataset_id = model.get_dataset_id()
+                dataset = datasets[dataset_id]
 
+                # Determine the URL prefix for the model
+                url_prefix = self.make_url(
+                    dataset.url_prefix, dataset_id, model.get_table_id()
+                )
+
+                logger.debug("Created viewset %s", url_prefix)
                 viewset = viewset_factory(model)
                 tmp_router.register(
                     prefix=url_prefix,
                     viewset=viewset,
-                    basename=f"{dataset_name}-{model.get_table_id()}",
+                    basename=f"{dataset_id}-{model.get_table_id()}",
                 )
 
-        # Atomically copy the new viewset registrations
-        self.registry = tmp_router.registry
+        return tmp_router.registry, generated_models
 
-        # invalidate the urls cache
-        if hasattr(self, "_urls"):
-            del self._urls
+    def make_url(self, prefix, *parts):
+        """Generate the URL for the viewset"""
+        parts = [slugify(part) for part in parts]
+        url_path = "/".join(parts)
 
-        return generated_models
+        # Allow to add a prefix
+        prefix = prefix.strip("/")  # extra strip for safety
+        if prefix:
+            url_path = f"{prefix}/{url_path}"
+
+        return url_path
 
     @lock_for_writing
     def reload(self) -> Dict[Type[DynamicModel], str]:
