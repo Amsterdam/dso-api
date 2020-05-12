@@ -12,6 +12,7 @@ def exception_handler(exc, context):
 
     See: https://tools.ietf.org/html/rfc7807
     """
+    request = context.get("request")
     response = drf_exception_handler(exc, context)
     if response is None:
         return None
@@ -20,8 +21,9 @@ def exception_handler(exc, context):
         # response.data are the fields
         response.data = {
             "type": f"urn:apiexception:{exc.default_code}",
-            "detail": str(exc.default_detail),
+            "title": str(exc.default_detail),
             "status": response.status_code,
+            "instance": request.build_absolute_uri() if request else None,
             "invalid-params": get_invalid_params(exc, exc.detail),
             # Also include the whole tree of recursive errors that DRF generates
             "x-validation-errors": response.data,
@@ -33,6 +35,7 @@ def exception_handler(exc, context):
         detail = response.data["detail"]
         response.data = {
             "type": f"urn:apiexception:{detail.code}",
+            "title": exc.default_detail,
             "detail": str(detail),
             "status": response.status_code,
         }

@@ -80,6 +80,7 @@ def test_detail_expand_unknown_field(api_client, movie):
     assert response.json() == {
         "status": 400,
         "type": "urn:apiexception:parse_error",
+        "title": "Malformed request.",
         "detail": (
             "Eager loading is not supported for field 'foobar', "
             "available options are: category"
@@ -149,8 +150,9 @@ class TestListFilters:
         assert response["Content-Type"] == "application/problem+json", response
         assert response.json() == {
             "type": "urn:apiexception:invalid",
-            "detail": "Invalid input.",
+            "title": "Invalid input.",
             "status": 400,
+            "instance": "http://testserver/v1/movies?date_added=2020-01-fubar",
             "invalid-params": [
                 {
                     "type": "urn:apiexception:invalid:invalid",
@@ -211,8 +213,9 @@ class TestListOrdering:
         assert response.status_code == 400, response.json()
         assert response.json() == {
             "type": "urn:apiexception:invalid",
-            "detail": "Invalid input.",
+            "title": "Invalid input.",
             "status": 400,
+            "instance": "http://testserver/v1/movies?sort=category",
             "invalid-params": [
                 {
                     "type": "urn:apiexception:invalid:order-by",
@@ -260,21 +263,20 @@ class TestLimitFields:
 
         response = api_client.get("/v1/movies", data={"fields": "name,date"})
         assert response.status_code == 400, response.json()
-        assert json.dumps(response.json()) == json.dumps(
-            {
-                "type": "urn:apiexception:invalid",
-                "detail": "Invalid input.",
-                "status": 400,
-                "invalid-params": [
-                    {
-                        "type": "urn:apiexception:invalid:fields",
-                        "name": "fields",
-                        "reason": "'date' is not one of available options",
-                    }
-                ],
-                "x-validation-errors": ["'date' is not one of available options"],
-            }
-        )
+        assert response.json() == {
+            "type": "urn:apiexception:invalid",
+            "title": "Invalid input.",
+            "status": 400,
+            "instance": "http://testserver/v1/movies?fields=name%2Cdate",
+            "invalid-params": [
+                {
+                    "type": "urn:apiexception:invalid:fields",
+                    "name": "fields",
+                    "reason": "'date' is not one of available options",
+                }
+            ],
+            "x-validation-errors": ["'date' is not one of available options"],
+        }
 
 
 class TestExceptionHandler:
