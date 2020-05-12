@@ -155,6 +155,35 @@ def bommen_dataset(bommen_schema_json) -> Dataset:
     return Dataset.objects.create(name="bommen", schema_data=bommen_schema_json)
 
 
+@pytest.fixture()
+def brp_schema_json() -> dict:
+    """Fixture for the BRP dataset"""
+    path = HERE / "files/brp.json"
+    return json.loads(path.read_text())
+
+
+@pytest.fixture()
+def brp_schema(brp_schema_json) -> DatasetSchema:
+    return DatasetSchema.from_dict(brp_schema_json)
+
+
+@pytest.fixture()
+def brp_endpoint_url() -> str:
+    return "http://remote-server/unittest/brp/ingeschrevenpersonen/"
+
+
+@pytest.fixture()
+def brp_dataset(brp_schema_json, brp_endpoint_url) -> Dataset:
+    """Create a remote dataset."""
+    return Dataset.objects.create(
+        name="brp",
+        schema_data=brp_schema_json,
+        enable_db=False,
+        endpoint_url=brp_endpoint_url,
+        url_prefix="remote",
+    )
+
+
 @pytest.fixture
 def category() -> Category:
     """A dummy model to test our API with"""

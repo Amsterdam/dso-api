@@ -13,6 +13,7 @@ from schematools.contrib.django.models import Dataset
 
 from dso_api.dynamic_api.app_config import register_model
 from dso_api.dynamic_api.locking import lock_for_writing
+from dso_api.dynamic_api.remote import remote_serializer_factory, remote_viewset_factory
 from dso_api.dynamic_api.serializers import get_view_name, serializer_factory
 from dso_api.dynamic_api.views import DynamicAPIRootView, viewset_factory
 
@@ -57,9 +58,10 @@ class DynamicRouter(routers.DefaultRouter):
         """Build all viewsets, serializers, models and URL routes."""
         # Generate new viewsets for everything
         dataset_routes, generated_models = self._build_db_viewsets()
+        remote_routes = self._build_remote_viewsets()
 
         # Atomically copy the new viewset registrations
-        self.registry = self.static_routes + dataset_routes
+        self.registry = self.static_routes + dataset_routes + remote_routes
 
         # invalidate the urls cache
         if hasattr(self, "_urls"):
@@ -116,6 +118,29 @@ class DynamicRouter(routers.DefaultRouter):
                 )
 
         return tmp_router.registry, generated_models
+
+    def _build_remote_viewsets(self):
+        """Initialize viewsets that are are proxies for remote URLs"""
+        tmp_router = routers.SimpleRouter()
+
+        for dataset in Dataset.objects.endpoint_enabled():  # type: Dataset
+            schema = dataset.schema
+            dataset_id = schema.id
+
+            for table in schema.tables:
+                # Determine the URL prefix for the model
+                url_prefix = self.make_url(dataset.url_prefix, dataset_id, table.id)
+                serializer_class = remote_serializer_factory(table)
+                viewset = remote_viewset_factory(
+                    endpoint_url=dataset.endpoint_url, serializer_class=serializer_class
+                )
+                tmp_router.register(
+                    prefix=url_prefix,
+                    viewset=viewset,
+                    basename=f"{dataset_id}-{table.id}",
+                )
+
+        return tmp_router.registry
 
     def make_url(self, prefix, *parts):
         """Generate the URL for the viewset"""
