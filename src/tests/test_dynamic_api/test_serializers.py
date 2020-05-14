@@ -200,7 +200,7 @@ class TestDynamicSerializer:
         """Prove that the serializer factory properly generates nested tables.
         Serialiser should contain reverse relations.
         """
-        parkeervaak = parkeervakken_parkeervak_model.objects.create(
+        parkeervak = parkeervakken_parkeervak_model.objects.create(
             id="121138489047",
             type="File",
             soort="MULDER",
@@ -211,7 +211,7 @@ class TestDynamicSerializer:
         )
         parkeervakken_regime_model.objects.create(
             id=1,
-            parent=parkeervaak,
+            parent=parkeervak,
             bord="",
             dagen=["ma", "di", "wo", "do", "vr", "za", "zo"],
             soort="MULDER",
@@ -233,7 +233,7 @@ class TestDynamicSerializer:
         # Prove that data is serialized with relations.
         # Both the cluster_id field and 'cluster' field are generated.
         parkeervaak_serializer = ParkeervaakSerializer(
-            parkeervaak, context={"request": api_request}
+            parkeervak, context={"request": api_request}
         )
         assert parkeervaak_serializer.data == {
             "_links": {
@@ -277,7 +277,7 @@ class TestDynamicSerializer:
         Flat serialiser should not contain any reverse relations,
         as flat serializers are used to represet instances of sub-serializers.
         """
-        parkeervaak = parkeervakken_parkeervak_model.objects.create(
+        parkeervak = parkeervakken_parkeervak_model.objects.create(
             type="File",
             soort="MULDER",
             aantal=1.0,
@@ -288,7 +288,7 @@ class TestDynamicSerializer:
         )
         parkeervakken_regime_model.objects.create(
             id=1,
-            parent=parkeervaak,
+            parent=parkeervak,
             bord="",
             dagen=["ma", "di", "wo", "do", "vr", "za", "zo"],
             soort="MULDER",
@@ -312,7 +312,7 @@ class TestDynamicSerializer:
         # Prove that data is serialized with relations.
         # Both the cluster_id field and 'cluster' field are generated.
         parkeervaak_serializer = ParkeervaakSerializer(
-            parkeervaak, context={"request": api_request}
+            parkeervak, context={"request": api_request}
         )
         assert parkeervaak_serializer.data == {
             "_links": {
