@@ -192,7 +192,7 @@ def parkeervakken_dataset(parkeervakken_schema_json) -> Dataset:
 
 
 @pytest.fixture()
-def parkeervakken_parkeervaak_model(filled_router):
+def parkeervakken_parkeervak_model(filled_router):
     # Using filled_router so all urls can be generated too.
     return filled_router.all_models["parkeervakken"]["parkeervakken"]
 
@@ -201,7 +201,6 @@ def parkeervakken_parkeervaak_model(filled_router):
 def parkeervakken_regime_model(filled_router):
     # Using filled_router so all urls can be generated too.
     return filled_router.all_models["parkeervakken"]["parkeervakken_regimes"]
-
 
 @pytest.fixture
 def fetch_tokendata():
