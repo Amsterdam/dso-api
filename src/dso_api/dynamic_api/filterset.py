@@ -101,7 +101,7 @@ def generate_relation_filters(model: Type[DynamicModel]):
             filter_class = filter_class["filter_class"]
 
             # Filter name presented in API
-            filter_name = "{}__{}".format(
+            filter_name = "{}.{}".format(
                 format_api_field_name(relation.name), format_api_field_name(field_name),
             )
             filter_lookups = _get_field_lookups(model_field)

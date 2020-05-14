@@ -2,6 +2,7 @@ import pytest
 from django.db import connection
 from django.urls import reverse
 
+from rest_framework.test import APIClient
 from rest_framework_dso.crs import CRS, RD_NEW
 from schematools.contrib.django import models
 from schematools.contrib.django.db import create_tables
@@ -282,3 +283,64 @@ class TestAuth:
         token = fetch_auth_token(["BAG/R"])
         response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
         assert response.status_code == 200, response.data
+
+    @staticmethod
+    def test_serializer_has_nested_table(
+            parkeervakken_parkeervak_model, parkeervakken_regime_model
+    ):
+        """Prove that the serializer factory properly generates nested tables.
+        Serialiser should contain reverse relations.
+        """
+        parkeervaak = parkeervakken_parkeervak_model.objects.create(
+            id="121138489047",
+            type="File",
+            soort="MULDER",
+            aantal=1.0,
+            e_type="E9",
+            buurtcode="A05d",
+            straatnaam="Zoutkeetsgracht",
+        )
+        parkeervakken_regime_model.objects.create(
+            id=1,
+            parent=parkeervaak,
+            bord="",
+            dagen=["ma", "di", "wo", "do", "vr", "za", "zo"],
+            soort="MULDER",
+            aantal=None,
+            e_type="E6b",
+            kenteken="69-SF-NT",
+            opmerking="",
+            eind_tijd="23:59:00",
+            begin_tijd="00:00:00",
+            eind_datum=None,
+            begin_datum=None,
+        )
+        other_parkeervaak = parkeervakken_parkeervak_model.objects.create(
+            id="121138489006",
+            type="File",
+            soort="MULDER",
+            aantal=1.0,
+            e_type="E6b",
+            buurtcode="A05d",
+            straatnaam="Zoutkeetsgracht",
+        )
+        parkeervakken_regime_model.objects.create(
+            id=2,
+            parent=other_parkeervaak,
+            bord="",
+            dagen=["ma", "di", "wo", "do", "vr", "za", "zo"],
+            soort="MULDER",
+            aantal=None,
+            e_type="E6b",
+            kenteken="69-SF-NT",
+            opmerking="",
+            eind_tijd="23:59:00",
+            begin_tijd="00:00:00",
+            eind_datum=None,
+            begin_datum=None,
+        )
+
+        url = reverse("dynamic_api:parkeervakken-parkeervakken-list")
+        api_client = APIClient()
+        response = api_client.get(url + '?regimes.eType=E6b')
+        breakpoint()

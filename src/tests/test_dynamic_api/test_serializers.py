@@ -195,19 +195,18 @@ class TestDynamicSerializer:
 
     @staticmethod
     def test_serializer_has_nested_table(
-        api_request, parkeervakken_parkeervaak_model, parkeervakken_regime_model
+        api_request, parkeervakken_parkeervak_model, parkeervakken_regime_model
     ):
         """Prove that the serializer factory properly generates nested tables.
         Serialiser should contain reverse relations.
         """
-        parkeervaak = parkeervakken_parkeervaak_model.objects.create(
-            id=1,
+        parkeervaak = parkeervakken_parkeervak_model.objects.create(
+            id="121138489047",
             type="File",
             soort="MULDER",
             aantal=1.0,
             e_type="E9",
             buurtcode="A05d",
-            parkeer_id="121138489047",
             straatnaam="Zoutkeetsgracht",
         )
         parkeervakken_regime_model.objects.create(
@@ -226,7 +225,7 @@ class TestDynamicSerializer:
             begin_datum=None,
         )
 
-        ParkeervaakSerializer = serializer_factory(parkeervakken_parkeervaak_model)
+        ParkeervaakSerializer = serializer_factory(parkeervakken_parkeervak_model)
 
         # Prove that no reverse relation to containers here.
         assert "regimes" in ParkeervaakSerializer._declared_fields
@@ -239,19 +238,18 @@ class TestDynamicSerializer:
         assert parkeervaak_serializer.data == {
             "_links": {
                 "self": {
-                    "href": "http://testserver/v1/parkeervakken/parkeervakken/1/",
-                    "title": "(no title: Parkeervakken #1)",
+                    "href": "http://testserver/v1/parkeervakken/parkeervakken/121138489047/",
+                    "title": "(no title: Parkeervakken #121138489047)",
                 }
             },
             "geom": None,
-            "id": 1,
+            "id": "121138489047",
             "schema": "https://schemas.data.amsterdam.nl/datasets/parkeervakken/parkeervakken#parkeervakken",  # noqa: E501
             "type": "File",
             "soort": "MULDER",
             "aantal": 1.0,
             "eType": "E9",
             "buurtcode": "A05d",
-            "parkeerId": "121138489047",
             "straatnaam": "Zoutkeetsgracht",
             "regimes": [
                 OrderedDict(
@@ -272,21 +270,20 @@ class TestDynamicSerializer:
 
     @staticmethod
     def test_flat_serializer_has_no_nested_table(
-        api_request, parkeervakken_parkeervaak_model, parkeervakken_regime_model
+        api_request, parkeervakken_parkeervak_model, parkeervakken_regime_model
     ):
         """Prove that the serializer factory properly skipping generation of reverse
         relations if `flat=True`.
         Flat serialiser should not contain any reverse relations,
         as flat serializers are used to represet instances of sub-serializers.
         """
-        parkeervaak = parkeervakken_parkeervaak_model.objects.create(
-            id=1,
+        parkeervaak = parkeervakken_parkeervak_model.objects.create(
             type="File",
             soort="MULDER",
             aantal=1.0,
             e_type="E9",
             buurtcode="A05d",
-            parkeer_id="121138489047",
+            id="121138489047",
             straatnaam="Zoutkeetsgracht",
         )
         parkeervakken_regime_model.objects.create(
@@ -306,7 +303,7 @@ class TestDynamicSerializer:
         )
 
         ParkeervaakSerializer = serializer_factory(
-            parkeervakken_parkeervaak_model, flat=True
+            parkeervakken_parkeervak_model, flat=True
         )
 
         # Prove that no reverse relation to containers here.
@@ -320,18 +317,17 @@ class TestDynamicSerializer:
         assert parkeervaak_serializer.data == {
             "_links": {
                 "self": {
-                    "href": "http://testserver/v1/parkeervakken/parkeervakken/1/",
-                    "title": "(no title: Parkeervakken #1)",
+                    "href": "http://testserver/v1/parkeervakken/parkeervakken/121138489047/",
+                    "title": "(no title: Parkeervakken #121138489047)",
                 }
             },
             "geom": None,
-            "id": 1,
+            "id": "121138489047",
             "schema": "https://schemas.data.amsterdam.nl/datasets/parkeervakken/parkeervakken#parkeervakken",  # noqa: E501
             "type": "File",
             "soort": "MULDER",
             "aantal": 1.0,
             "eType": "E9",
             "buurtcode": "A05d",
-            "parkeerId": "121138489047",
             "straatnaam": "Zoutkeetsgracht",
         }

@@ -18,15 +18,11 @@
         ],
         "properties": {
           "id": {
-            "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.0#/definitions/id",
+            "type": "string",
             "description": ""
           },
           "schema": {
             "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.0#/definitions/schema"
-          },
-          "parkeer id": {
-            "type": "string",
-            "description": ""
           },
           "buurtcode": {
             "type": "string",
