@@ -51,7 +51,7 @@ def get_unauthorized_fields(request, model) -> set:
     if hasattr(request, "is_authorized_for"):
         for model_field in model._meta.get_fields():
             scopes = scope_data.get(model_field.name)
-            if scopes is None:
+            if not scopes:
                 continue
 
             if not request.is_authorized_for(*scopes):
