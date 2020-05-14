@@ -52,6 +52,12 @@ class EmbeddedHelper:
             # Get the field, and
             try:
                 field = getattr(self.parent_serializer, field_name)
+            except AttributeError:
+                raise RuntimeError(
+                    f"{self.parent_serializer.__class__.__name__}.{field_name}"
+                    f" does not refer to an embedded field."
+                ) from None
+            else:
                 scopes = fetch_scopes_for_model(field.related_model)
                 if auth_checker and not auth_checker(*scopes.table):
                     if field_name in specified_expands:
@@ -60,11 +66,6 @@ class EmbeddedHelper:
                         )
                     continue
                 embedded_fields[field_name] = field
-            except AttributeError:
-                raise RuntimeError(
-                    f"{self.parent_serializer.__class__.__name__}.{field_name}"
-                    f" does not refer to an embedded field."
-                ) from None
 
         # Add authorization check
         return embedded_fields
