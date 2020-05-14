@@ -1,19 +1,20 @@
+from collections import UserList
 from typing import List, Type
 
 from django.contrib.gis.db.models import GeometryField
 from django.db import models
 from django.http import Http404, JsonResponse
 from django.urls import reverse
-
+from django.utils.functional import cached_property
 from gisserver.features import FeatureType, ServiceDescription
 from gisserver.views import WFSView
+from schematools.contrib.django.models import DynamicModel
+
 from rest_framework import viewsets, routers
 from rest_framework_dso import crs, fields
 from rest_framework_dso.pagination import DSOPageNumberPagination
 from rest_framework_dso.views import DSOViewMixin
-from schematools.contrib.django.models import DynamicModel
 from dso_api.dynamic_api import permissions
-
 
 from . import filterset, locking, serializers
 from .permissions import get_unauthorized_fields
@@ -184,9 +185,11 @@ class DatasetWFSView(WFSView):
         """Generate map feature layers for all models that have geometry data."""
         return [
             # TODO: Extend FeatureType with extra meta data
+            # the get_unauthorized_fields() part of get_field_names() is an
+            # expensive operation, hence this is only read when needed.
             FeatureType(
                 model,
-                fields=self.get_field_names(model),
+                fields=LazyList(self.get_field_names, model),
                 crs=crs.DEFAULT_CRS,
                 other_crs=crs.OTHER_CRS,
             )
@@ -217,3 +220,14 @@ class DatasetWFSView(WFSView):
 
     def _has_geometry_field(self, model):
         return any(isinstance(f, GeometryField) for f in model._meta.get_fields())
+
+
+class LazyList(UserList):
+    def __init__(self, func, *args, **kwargs):
+        self.func = func
+        self.args = args
+        self.kwargs = kwargs
+
+    @cached_property
+    def data(self):
+        return self.func(*self.args, **self.kwargs)
