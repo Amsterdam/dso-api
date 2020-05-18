@@ -9,7 +9,7 @@ from typing import Type
 from django import forms
 from django.contrib.gis.db import models as gis_models
 from django.db import models
-from django.db.models import lookups
+from django.db.models import expressions, lookups
 from django.utils.functional import cached_property
 from django.utils.translation import ugettext_lazy as _
 from django_filters import fields
@@ -26,6 +26,44 @@ __all__ = [
     "DSOFilterSetBackend",
     "DSOOrderingFilter",
 ]
+
+
+@models.Field.register_lookup
+@models.ForeignObject.register_lookup
+class NotEqual(lookups.Lookup):
+    """Allow fieldname__not=... lookups in querysets."""
+
+    lookup_name = "not"
+    can_use_none_as_rhs = True
+
+    def as_sql(self, compiler, connection):
+        """Generate the required SQL."""
+        # Need to extract metadata from lhs, so parsing happens inline
+        lhs = self.lhs  # typically a Col(alias, target) object
+        if hasattr(lhs, "resolve_expression"):
+            lhs = lhs.resolve_expression(compiler.query)
+
+        lhs_field = lhs
+        while isinstance(lhs_field, expressions.Func):
+            # Allow date_field__day__not=12 to return None values
+            lhs_field = lhs_field.source_expressions[0]
+        lhs_nullable = lhs_field.target.null
+
+        # Generate the SQL-prepared values
+        lhs, lhs_params = self.process_lhs(compiler, connection, lhs=lhs)  # (field, [])
+        rhs, rhs_params = self.process_rhs(compiler, connection)  # ("%s", [value])
+
+        if lhs_nullable and rhs is not None:
+            # Allow field__not=value to return NULL fields too.
+            return (
+                f"({lhs} IS NULL OR {lhs} != {rhs})",
+                lhs_params + lhs_params + rhs_params,
+            )
+        elif rhs_params and rhs_params[0] is None:
+            # Allow field__not=None to work.
+            return f"{lhs} IS NOT NULL", lhs_params
+        else:
+            return f"{lhs} != {rhs}", lhs_params + rhs_params
 
 
 @models.CharField.register_lookup

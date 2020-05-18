@@ -38,8 +38,8 @@ class TestDSOFilterSet:
             model = Movie
             fields = {
                 "name": ["exact"],
-                "category_id": ["exact", "in"],
-                "date_added": ["exact", "lt", "lte", "gt", "gte"],
+                "category_id": ["exact", "in", "not"],
+                "date_added": ["exact", "lt", "lte", "gt", "gte", "not"],
             }
 
     @pytest.fixture
@@ -66,6 +66,8 @@ class TestDSOFilterSet:
             ({"date_added[gt]": "2020-2-10"}, {"movie2"}),
             ({"date_added[gt]": "2020-3-1"}, set()),
             ({"date_added[gte]": "2020-3-1"}, {"movie2"}),
+            # Not
+            ({"date_added[not]": "2020-2-1"}, {"movie2"}),
         ],
     )
     def test_filter_logic(self, movie1, movie2, comparison):
@@ -80,10 +82,14 @@ class TestDSOFilterSet:
     @pytest.mark.parametrize(
         "comparison",
         [
+            # IN filter
             ({"category_id[in]": "{cat_id}"}, {"movie1"}),  # test ID
             ({"category_id[in]": "{cat_id},{cat_id}"}, {"movie1"}),  # test comma
             ({"category_id[in]": "97,98,{cat_id}"}, {"movie1"}),  # test invalid IDs
             ({"category_id[in]": "97,98,99"}, set()),  # test all invalid IDs
+            # NOT filter
+            ({"category_id[not]": "{cat_id}"}, {"movie2"}),
+            ({"category_id[not]": "99"}, {"movie1", "movie2"}),
         ],
     )
     def test_foreignkey(self, movie1, movie2, category, comparison):
