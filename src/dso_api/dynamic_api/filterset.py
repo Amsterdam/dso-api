@@ -17,8 +17,8 @@ from schematools.contrib.django.models import DynamicModel
 
 
 # These extra lookups are available for specific data types:
-_comparison_lookups = ["exact", "gte", "gt", "lt", "lte"]
-_identifier_lookups = ["exact", "in"]
+_comparison_lookups = ["exact", "gte", "gt", "lt", "lte", "not"]
+_identifier_lookups = ["exact", "in", "not"]  # needs ForeignObject.register_lookup()
 DEFAULT_LOOKUPS_BY_TYPE = {
     models.AutoField: _identifier_lookups,
     models.IntegerField: _comparison_lookups + ["in"],
