@@ -106,6 +106,8 @@ WSGI_APPLICATION = "dso_api.wsgi.application"
 
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["*"])
 
+CACHES = {"default": env.cache_url(default="locmemcache://")}
+
 DATABASES = {
     "default": env.db_url(
         "DATABASE_URL",
