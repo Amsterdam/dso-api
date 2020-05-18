@@ -34,7 +34,9 @@ CSRF_COOKIE_SECURE = env.bool("CSRF_COOKIE_SECURE", not DEBUG)
 # Fetch datasets from the database. Viewsets are not needed when migrating.
 INITIALIZE_DYNAMIC_VIEWSETS = env.bool(
     "INITIALIZE_DYNAMIC_VIEWSETS",
-    default=("migrate" not in sys.argv and "makemigrations" not in sys.argv),
+    default=(
+        not set(["migrate", "makemigrations", "showmigrations"]) & set(sys.argv[1:])
+    ),
 )
 
 INTERNAL_IPS = ("127.0.0.1", "0.0.0.0")
