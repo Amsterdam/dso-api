@@ -23,7 +23,7 @@ def snake_to_camel_case(key: str) -> str:
 def format_field_name(key):
     """Convert space separated Amsterdam Schema key into snake_case model property name.
     """
-    return slugify(key, sign="_")
+    return slugify(key, separator="_")
 
 
 def format_api_field_name(key):

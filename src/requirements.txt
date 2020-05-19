@@ -64,7 +64,7 @@ pytest-cov==2.8.1         # via -r requirements.in
 pytest-django==3.8.0      # via -r requirements.in
 pytest==5.3.5             # via -r requirements.in, pytest-cov, pytest-django
 python-dateutil==2.8.1    # via amsterdam-schema-tools
-python-string-utils==0.6.0  # via -r requirements.in, amsterdam-schema-tools
+python-string-utils==1.0.0  # via -r requirements.in, amsterdam-schema-tools
 pytz==2019.3              # via django
 pyyaml==5.3               # via drf-spectacular
 readerwriterlock==1.0.6   # via -r requirements.in
