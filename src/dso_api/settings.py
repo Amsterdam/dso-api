@@ -111,7 +111,7 @@ CACHES = {"default": env.cache_url(default="locmemcache://")}
 DATABASES = {
     "default": env.db_url(
         "DATABASE_URL",
-        default="postgres://dso_api:insecure@localhost:5415/dso_api",
+        default="postgres://dataservices:insecure@localhost:5415/dataservices",
         engine="django.contrib.gis.db.backends.postgis",
     ),
     "bag_v11": env.db_url(
@@ -214,6 +214,7 @@ JWKS_TEST_KEY = """
 
 DATAPUNT_AUTHZ = {
     "JWKS": os.getenv("PUB_JWKS", JWKS_TEST_KEY),
+    "JWKS_URL": os.getenv("KEYCLOAK_JWKS_URL"),
     "ALWAYS_OK": False,
 }
 

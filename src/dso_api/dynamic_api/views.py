@@ -3,14 +3,15 @@ from typing import List, Type
 
 from django.contrib.gis.db.models import GeometryField
 from django.db import models
-from django.http import Http404, JsonResponse
+from django.http import Http404, JsonResponse, HttpResponse
 from django.urls import reverse
 from django.utils.functional import cached_property
+from gisserver.exceptions import WFSException
 from gisserver.features import FeatureType, ServiceDescription
 from gisserver.views import WFSView
 from schematools.contrib.django.models import DynamicModel
 
-from rest_framework import viewsets, routers
+from rest_framework import viewsets, routers, status
 from rest_framework_dso import crs, fields
 from rest_framework_dso.pagination import DSOPageNumberPagination
 from rest_framework_dso.views import DSOViewMixin
@@ -18,6 +19,14 @@ from dso_api.dynamic_api import permissions
 
 from . import filterset, locking, serializers
 from .permissions import get_unauthorized_fields
+
+
+class PermissionDenied(WFSException):
+    """Permission denied"""
+
+    status_code = status.HTTP_403_FORBIDDEN
+    reason = "permission denied"
+    text_template = "You do not have permission to perform this action"
 
 
 def reload_patterns(request):
@@ -220,6 +229,46 @@ class DatasetWFSView(WFSView):
 
     def _has_geometry_field(self, model):
         return any(isinstance(f, GeometryField) for f in model._meta.get_fields())
+
+    def dispatch(self, request, *args, **kwargs):
+        try:
+            self.check_permissions(request)
+        except PermissionDenied as exc:
+            return HttpResponse(
+                exc.as_xml().encode("utf-8"),
+                content_type="text/xml; charset=utf-8",
+                status=exc.status_code,
+                reason=exc.reason,
+            )
+        result = super().dispatch(request, *args, **kwargs)
+        return result
+
+    #: Custom permission that checks amsterdam schema auth settings
+    permission_classes = [permissions.HasOAuth2Scopes]
+
+    def check_permissions(self, request):
+        """
+        Check if the request should be permitted.
+        """
+        for permission in self.get_permissions():
+            if not permission.has_permission(request, self):
+                self.permission_denied(
+                    request, message=getattr(permission, "message", None)
+                )
+
+    def get_permissions(self):
+        """
+        Instantiates and returns the list of permissions that this view requires.
+        """
+        return [permission() for permission in self.permission_classes]
+
+    def permission_denied(self, request, message=None):
+        """
+        If request is not permitted, determine what kind of exception to raise.
+        """
+        # if request.authenticators and not request.successful_authenticator:
+        #     raise exceptions.NotAuthenticated()
+        raise PermissionDenied("check_permissions")
 
 
 class LazyList(UserList):

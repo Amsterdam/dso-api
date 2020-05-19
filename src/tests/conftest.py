@@ -231,6 +231,7 @@ def parkeervakken_regime_model(filled_router):
     # Using filled_router so all urls can be generated too.
     return filled_router.all_models["parkeervakken"]["parkeervakken_regimes"]
 
+
 @pytest.fixture
 def fetch_tokendata():
     """ Fixture to create valid token data, scopes is flexible """

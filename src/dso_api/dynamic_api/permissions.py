@@ -75,8 +75,10 @@ class HasOAuth2Scopes(permissions.BasePermission):
             are check for their 'auth' field.
             These auth fields could contain a komma-separated list
             of claims. """
-
-        model = view.serializer_class.Meta.model
+        if hasattr(view, "serializer_class"):
+            model = view.serializer_class.Meta.model
+        else:
+            model = list(view.models.values())[0]
         return self._has_permission(request, model)
 
     def has_object_permission(self, request, view, obj):
