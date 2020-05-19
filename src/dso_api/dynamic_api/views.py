@@ -120,6 +120,8 @@ def _get_viewset_api_docs(
         lines.extend(f"* {name}" for name in embedded_fields)
         lines.append("\nExpand everything using `_expand=true`.")
 
+    lines.append("\nUse `?_fields=field,field2` to limit which fields to receive")
+
     if ordering_fields:
         lines.append("\nUse `?sort=field,field2,-field3` to sort on fields")
 
