@@ -4,7 +4,7 @@ from typing import Iterable, List, Optional, Union, cast
 from django.db import models
 from django.utils.functional import cached_property
 from rest_framework import serializers
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import ParseError, ValidationError
 from rest_framework.fields import empty
 from rest_framework.utils.serializer_helpers import ReturnDict, ReturnList
 from rest_framework_gis.fields import GeometryField
@@ -14,13 +14,14 @@ from rest_framework_dso.utils import EmbeddedHelper
 
 
 class _SideloadMixin:
-    """Handling ?expand parameter.
+    """Handling ?_expand / ?_expandScope parameter.
 
     This is only a separate mixin because the parameter needs to be handled
     in 2 separate classes: `DSOListSerializer` and the regular `DSOSerializer`.
     """
 
-    expand_param = "expand"  # so ?expand=.. gives a result
+    expand_all_param = "_expand"
+    expand_param = "_expandScope"  # so ?_expandScope=.. gives a result
     expand_field = "_embedded"  # with _embedded in the result
 
     def __init__(self, *args, fields_to_expand=empty, **kwargs):
@@ -33,15 +34,18 @@ class _SideloadMixin:
         request = self.context["request"]
 
         # Initialize from request
-        expand = request.GET.get(self.expand_param)
+        expand = request.GET.get(self.expand_all_param)
         if expand == "true":
-            # ?expand=true should export all fields
+            # ?_expand=true should export all fields
             return True
         elif expand:
-            # otherwise, parse as a list of fields to expand.
-            return expand.split(",")
-        else:
-            return False
+            raise ParseError(
+                "Only _expand=true is allowed. Use _expandScope to expanding specific fields."
+            ) from None
+
+        # otherwise, parse as a list of fields to expand.
+        expand = request.GET.get(self.expand_param)
+        return expand.split(",") if expand else False
 
 
 class _LinksField(serializers.HyperlinkedIdentityField):

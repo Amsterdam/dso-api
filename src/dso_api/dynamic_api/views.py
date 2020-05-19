@@ -56,8 +56,8 @@ class DynamicAPIRootView(routers.APIRootView):
     The following features are supported:
 
     * HAL-JSON based links, pagination and response structure.
-    * Use `?expand=name1,name2` to sideload specific relations.
-    * Use `?expand=true` to sideload all relations.
+    * Use `?_expandScope=name1,name2` to sideload specific relations.
+    * Use `?_expand=true` to sideload all relations.
 
     The models in this server are generated from the Amsterdam Schema files.
     These are located at:
@@ -116,9 +116,9 @@ def _get_viewset_api_docs(
     if embedded_fields:
         if lines:
             lines.append("")
-        lines.append("The following fields can be expanded with `?expand=...`:\n")
+        lines.append("The following fields can be expanded with `?_expandScope=...`:\n")
         lines.extend(f"* {name}" for name in embedded_fields)
-        lines.append("\nExpand everything using `expand=true`.")
+        lines.append("\nExpand everything using `_expand=true`.")
 
     if ordering_fields:
         lines.append("\nUse `?sort=field,field2,-field3` to sort on fields")

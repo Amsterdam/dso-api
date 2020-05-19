@@ -53,13 +53,13 @@ pytestmark = [pytest.mark.urls(__name__)]  # enable for all tests in this file
 
 
 @pytest.mark.django_db
-@pytest.mark.parametrize("expand", ["true", "category"])
-def test_detail_expand_true(api_client, movie, expand):
-    """Prove that ?expand=true and ?expand=category both work for the detail view.
+@pytest.mark.parametrize("params", [{"_expand": "true"}, {"_expandScope": "category"}])
+def test_detail_expand_true(api_client, movie, params):
+    """Prove that ?_expand=true and ?_expand=category both work for the detail view.
 
     This also tests the parameter expansion within the view logic.
     """
-    response = api_client.get(f"/v1/movies/{movie.pk}", data={"expand": expand})
+    response = api_client.get(f"/v1/movies/{movie.pk}", data=params)
     assert response.data == {
         "name": "foo123",
         "category_id": movie.category_id,
@@ -71,11 +71,11 @@ def test_detail_expand_true(api_client, movie, expand):
 
 @pytest.mark.django_db
 def test_detail_expand_unknown_field(api_client, movie):
-    """Prove that ?expand=true and ?expand=category both work for the detail view.
+    """Prove that ?_expand=true and ?_expandScope=category both work for the detail view.
 
     This also tests the parameter expansion within the view logic.
     """
-    response = api_client.get(f"/v1/movies/{movie.pk}", data={"expand": "foobar"})
+    response = api_client.get(f"/v1/movies/{movie.pk}", data={"_expandScope": "foobar"})
     assert response.status_code == 400, response.data
     assert response.json() == {
         "status": 400,
@@ -89,13 +89,13 @@ def test_detail_expand_unknown_field(api_client, movie):
 
 
 @pytest.mark.django_db
-@pytest.mark.parametrize("expand", ["true", "category"])
-def test_list_expand_true(api_client, movie, expand):
-    """Prove that ?expand=true and ?expand=category both work for the detail view.
+@pytest.mark.parametrize("params", [{"_expand": "true"}, {"_expandScope": "category"}])
+def test_list_expand_true(api_client, movie, params):
+    """Prove that ?_expand=true and ?_expandScope=category both work for the detail view.
 
     This also tests the parameter expansion within the view logic.
     """
-    response = api_client.get("/v1/movies", data={"expand": expand})
+    response = api_client.get("/v1/movies", data=params)
     assert response.data == {
         "_links": {
             "self": {"href": "http://testserver/v1/movies"},

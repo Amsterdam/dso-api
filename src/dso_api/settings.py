@@ -147,10 +147,7 @@ LOGGING = {
     },
     "root": {"level": "INFO", "handlers": ["console"]},
     "loggers": {
-        # 'django.db.backends': {
-        #     'level': 'DEBUG',
-        #     'handlers': ['console'],
-        # },
+        # "django.db.backends": {"level": "DEBUG", "handlers": ["console"]},
         "dso_api": {"handlers": ["console"], "level": "DEBUG", "propagate": False},
     },
 }

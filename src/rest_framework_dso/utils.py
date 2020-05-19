@@ -29,7 +29,7 @@ class EmbeddedHelper:
         )()
         embedded_fields = {}
 
-        # ?expand=true should expand all names
+        # ?_expand=true should expand all names
         if expand is True:
             expand = allowed_names
             specified_expands = set()

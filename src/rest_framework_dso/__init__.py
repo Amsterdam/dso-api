@@ -10,8 +10,8 @@ https://docs.geostandaarden.nl/api/API-Strategie-ext/
 Implemented:
 
 * HAL links {"_links": {"self": {"href": ..., "title": ...}}}
-* HAL ``?expand=field1,field2`` -> gives ``_embedded`` field in response.
-* The ``?expand=true`` option to expand all fields
+* HAL ``?_expandScope=field1,field2`` -> gives ``_embedded`` field in response.
+* The ``?_expand=true`` option to expand all fields
 * No envelope for single-object / detail views.
 
 Via other packages:

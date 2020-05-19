@@ -190,7 +190,7 @@ class TestAuth:
         """ Prove that expanded fields are shown when a reference field is protected
             with an auth scope and there is a valid token """
         url = reverse("dynamic_api:afvalwegingen-containers-list")
-        url = f"{url}?expand=true"
+        url = f"{url}?_expand=true"
         models.DatasetTable.objects.filter(name="clusters").update(auth="BAG/R")
         token = fetch_auth_token(["BAG/R"])
         response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
@@ -204,7 +204,7 @@ class TestAuth:
             with an auth scope. For expand=true, we return a result,
             without the fields that are protected """
         url = reverse("dynamic_api:afvalwegingen-containers-list")
-        url = f"{url}?expand=true"
+        url = f"{url}?_expand=true"
         models.DatasetTable.objects.filter(name="clusters").update(auth="BAG/R")
         response = api_client.get(url)
         assert response.status_code == 200, response.data
@@ -217,7 +217,7 @@ class TestAuth:
             and there is no authorization in the token for that field.
         """
         url = reverse("dynamic_api:afvalwegingen-containers-list")
-        url = f"{url}?expand=cluster"
+        url = f"{url}?_expandScope=cluster"
         models.DatasetTable.objects.filter(name="clusters").update(auth="BAG/R")
         response = api_client.get(url)
         assert response.status_code == 403, response.data
