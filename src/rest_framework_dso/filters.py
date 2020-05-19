@@ -346,21 +346,19 @@ class DSOOrderingFilter(OrderingFilter):
         class View(APIView):
             filter_backends = [filters.DSOOrderingFilter]
 
-    This adds an ``?sort=<fieldname>,-<desc-fieldname>`` option to the view.
+    This adds an ``?_sort=<fieldname>,-<desc-fieldname>`` option to the view.
     On the view, an ``view.ordering_fields`` attribute may limit which fields
     can be used in the sorting. By default, it's all serializer fields.
     """
 
-    ordering_param = "sort"
+    ordering_param = "_sort"
 
     def get_ordering(self, request, queryset, view):
-        # Allow deprecated Dutch "sorteer" parameter
-        # Can adjust 'self' as this instance is recreated each request.
-        if (
-            self.ordering_param not in request.query_params
-            and "sorteer" in request.query_params
-        ):
-            self.ordering_param = "sorteer"
+        if self.ordering_param not in request.query_params:
+            # Allow DSO 1.0 Dutch "sorteer" parameter
+            # Can adjust 'self' as this instance is recreated each request.
+            if "sorteer" in request.query_params:
+                self.ordering_param = "sorteer"
         return super().get_ordering(request, queryset, view)
 
     def remove_invalid_fields(self, queryset, fields, view, request):
