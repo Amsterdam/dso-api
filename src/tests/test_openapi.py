@@ -36,7 +36,7 @@ def test_openapi_json(api_client, filled_router, caplog):
     assert afval_parameters["datumCreatie"]["description"] == "yyyy-mm-dd"
 
     # Prove that DSOOrderingFilter exposes parameters
-    assert "sort" in afval_parameters, ", ".join(afval_parameters.keys())
+    assert "_sort" in afval_parameters, ", ".join(afval_parameters.keys())
 
     # Prove that the lookups of LOOKUPS_BY_TYPE are parsed
     # ([lt] for dates, [in] for keys)

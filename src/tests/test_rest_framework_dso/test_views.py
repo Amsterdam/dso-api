@@ -172,19 +172,19 @@ class TestListOrdering:
 
     @staticmethod
     def test_list_ordering_name(api_client):
-        """Prove that ?sort=... works on the list view."""
+        """Prove that ?_sort=... works on the list view."""
         Movie.objects.create(name="test")
         Movie.objects.create(name="foo123")
 
         # Sort descending by name
-        response = api_client.get("/v1/movies", data={"sort": "-name"})
+        response = api_client.get("/v1/movies", data={"_sort": "-name"})
         assert response.status_code == 200, response.json()
         names = [movie["name"] for movie in response.data["_embedded"]["movie"]]
         assert names == ["test", "foo123"]
 
     @staticmethod
     def test_list_ordering_name_old_param(api_client):
-        """Prove that ?sort=... works on the list view."""
+        """Prove that ?_sort=... works on the list view."""
         Movie.objects.create(name="test")
         Movie.objects.create(name="foo123")
 
@@ -196,26 +196,26 @@ class TestListOrdering:
 
     @staticmethod
     def test_list_ordering_date(api_client):
-        """Prove that ?sort=... works on the list view."""
+        """Prove that ?_sort=... works on the list view."""
         Movie.objects.create(name="foo123", date_added=datetime(2020, 1, 1, 0, 45))
         Movie.objects.create(name="test", date_added=datetime(2020, 2, 2, 13, 15))
 
         # Sort descending by name
-        response = api_client.get("/v1/movies", data={"sort": "-date_added"})
+        response = api_client.get("/v1/movies", data={"_sort": "-date_added"})
         assert response.status_code == 200, response.json()
         names = [movie["name"] for movie in response.data["_embedded"]["movie"]]
         assert names == ["test", "foo123"]
 
     @staticmethod
     def test_list_ordering_invalid(api_client, category, django_assert_num_queries):
-        """Prove that ?sort=... only works on a fixed set of fields (e.g. not on FK's)."""
-        response = api_client.get("/v1/movies", data={"sort": "category"})
+        """Prove that ?_sort=... only works on a fixed set of fields (e.g. not on FK's)."""
+        response = api_client.get("/v1/movies", data={"_sort": "category"})
         assert response.status_code == 400, response.json()
         assert response.json() == {
             "type": "urn:apiexception:invalid",
             "title": "Invalid input.",
             "status": 400,
-            "instance": "http://testserver/v1/movies?sort=category",
+            "instance": "http://testserver/v1/movies?_sort=category",
             "invalid-params": [
                 {
                     "type": "urn:apiexception:invalid:order-by",

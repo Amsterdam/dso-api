@@ -123,7 +123,7 @@ def _get_viewset_api_docs(
     lines.append("\nUse `?_fields=field,field2` to limit which fields to receive")
 
     if ordering_fields:
-        lines.append("\nUse `?sort=field,field2,-field3` to sort on fields")
+        lines.append("\nUse `?_sort=field,field2,-field3` to sort on fields")
 
     return "\n".join(lines)
 
