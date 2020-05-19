@@ -109,8 +109,8 @@ def get_view_name(model: Type[DynamicModel], suffix: str):
 
     :param suffix: This can be "detail" or "list".
     """
-    dataset_id = slugify(model.get_dataset_id(), sign="_")
-    table_id = slugify(model.get_table_id(), sign="_")
+    dataset_id = slugify(model.get_dataset_id(), separator="_")
+    table_id = slugify(model.get_table_id(), separator="_")
     return f"dynamic_api:{dataset_id}-{table_id}-{suffix}"
 
 
@@ -122,7 +122,7 @@ def serializer_factory(model: Type[DynamicModel], flat=None) -> Type[DynamicSeri
         # Inner tables have no schema or links defined.
         fields = []
 
-    safe_dataset_id = slugify(model.get_dataset_id(), sign="_")
+    safe_dataset_id = slugify(model.get_dataset_id(), separator="_")
     serializer_name = f"{safe_dataset_id.title()}{model.__name__}Serializer"
     new_attrs = {
         "table_schema": model._table_schema,

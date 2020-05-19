@@ -113,7 +113,7 @@ def _remote_object_field_factory(
     """Generate a serializer for an sub-object field"""
     table_schema = field.table
     dataset = table_schema.dataset
-    safe_dataset_id = slugify(dataset.id, sign="_")
+    safe_dataset_id = slugify(dataset.id, separator="_")
     serializer_name = (
         f"{dataset.id.title()}{table_schema.id.title()}"
         f"_{field.name.title()}Serializer"
