@@ -122,7 +122,7 @@ class DSOSerializer(_SideloadMixin, serializers.Serializer):
     # Requires context in order to limit fields in representation.
     requires_context = True
 
-    fields_param = "fields"  # so ?fields=.. gives a result
+    fields_param = "_fields"  # so ?_fields=.. gives a result
     _default_list_serializer_class = DSOListSerializer
 
     @classmethod
@@ -166,6 +166,9 @@ class DSOSerializer(_SideloadMixin, serializers.Serializer):
         # request can be None for get_schema_view(public=True)
         if request is not None:
             request_fields = request.GET.get(self.fields_param)
+            if not request_fields and "fields" in request.GET:
+                request_fields = request.GET["fields"]  # DSO 1.0
+
             if request_fields:
                 display_fields = self.get_fields_to_display(fields, request_fields)
 

@@ -232,22 +232,22 @@ class TestLimitFields:
     """Prove that fields limiting works as expected."""
 
     def test_limit_one_field(self, api_client):
-        """Prove that ?fields=name results in result with only names"""
+        """Prove that ?_fields=name results in result with only names"""
         Movie.objects.create(name="test")
         Movie.objects.create(name="foo123")
 
-        response = api_client.get("/v1/movies", data={"fields": "name"})
+        response = api_client.get("/v1/movies", data={"_fields": "name"})
         assert response.status_code == 200, response.json()
         assert json.dumps(response.data["_embedded"]["movie"]) == json.dumps(
             [{"name": "foo123"}, {"name": "test"}]
         )
 
     def test_limit_multiple_fields(self, api_client):
-        """Prove that ?fields=name,date results in result with only names and dates"""
+        """Prove that ?_fields=name,date results in result with only names and dates"""
         Movie.objects.create(name="test")
         Movie.objects.create(name="foo123")
 
-        response = api_client.get("/v1/movies", data={"fields": "name,date_added"})
+        response = api_client.get("/v1/movies", data={"_fields": "name,date_added"})
         assert response.status_code == 200, response.json()
         assert json.dumps(response.data["_embedded"]["movie"]) == json.dumps(
             [
@@ -257,17 +257,17 @@ class TestLimitFields:
         )
 
     def test_incorrect_field_in_fields_results_in_error(self, api_client):
-        """Prove that adding invalid name to ?fields will result in error"""
+        """Prove that adding invalid name to ?_fields will result in error"""
         Movie.objects.create(name="test")
         Movie.objects.create(name="foo123")
 
-        response = api_client.get("/v1/movies", data={"fields": "name,date"})
+        response = api_client.get("/v1/movies", data={"_fields": "name,date"})
         assert response.status_code == 400, response.json()
         assert response.json() == {
             "type": "urn:apiexception:invalid",
             "title": "Invalid input.",
             "status": 400,
-            "instance": "http://testserver/v1/movies?fields=name%2Cdate",
+            "instance": "http://testserver/v1/movies?_fields=name%2Cdate",
             "invalid-params": [
                 {
                     "type": "urn:apiexception:invalid:fields",

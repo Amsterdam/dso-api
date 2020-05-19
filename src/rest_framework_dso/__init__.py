@@ -12,6 +12,7 @@ Implemented:
 * HAL links {"_links": {"self": {"href": ..., "title": ...}}}
 * HAL ``?_expandScope=field1,field2`` -> gives ``_embedded`` field in response.
 * The ``?_expand=true`` option to expand all fields
+# The ``?_fields=...`` option to define which fields to return.
 * No envelope for single-object / detail views.
 
 Via other packages:
@@ -20,8 +21,8 @@ Via other packages:
 
 Not implemented:
 
-* ?fields=field1.subfield
-* ?search=urgent (search queries, including ``*`` and ``?`` wildcards for single words)
+* ?_fields=field1.subfield
+* ?_find=urgent (search queries, including ``*`` and ``?`` wildcards for single words)
 * GeoJSON support.
 
 Extra recommendations:
