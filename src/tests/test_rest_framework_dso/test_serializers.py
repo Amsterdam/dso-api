@@ -79,12 +79,11 @@ def test_pagination_many(drf_request, movie):
             "next": {"href": None},
             "previous": {"href": None},
         },
-        "count": 1,
-        "page_size": 20,
         "_embedded": {
             "movie": [{"name": "foo123", "category_id": movie.category_id}],
             "category": [{"name": "bar"}],
         },
+        "page": {"number": 1, "size": 20, "totalElements": 1, "totalPages": 1},
     }
     assert response["X-Total-Count"] == "1"
     assert response["X-Pagination-Count"] == "1"
@@ -112,9 +111,8 @@ def test_fields_limit_works(api_rf, movie):
             "next": {"href": None},
             "previous": {"href": None},
         },
-        "count": 1,
-        "page_size": 20,
         "_embedded": {"movie": [{"name": "foo123"}]},
+        "page": {"number": 1, "size": 20, "totalElements": 1, "totalPages": 1},
     }
     assert response["X-Total-Count"] == "1"
     assert response["X-Pagination-Count"] == "1"
