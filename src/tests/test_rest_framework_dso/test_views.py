@@ -102,14 +102,13 @@ def test_list_expand_true(api_client, movie, params):
             "next": {"href": None},
             "previous": {"href": None},
         },
-        "count": 1,
-        "page_size": 20,
         "_embedded": {
             "movie": [
                 {"name": "foo123", "category_id": movie.category_id, "date_added": None}
             ],
             "category": [{"name": "bar"}],
         },
+        "page": {"number": 1, "size": 20, "totalElements": 1, "totalPages": 1},
     }
     assert response["Content-Type"] == "application/hal+json"
 
@@ -126,7 +125,7 @@ class TestListFilters:
 
         response = api_client.get("/v1/movies", data={"name": "foo1?3"})
         assert response.status_code == 200, response
-        assert response.data["count"] == 1
+        assert response.data["page"]["totalElements"] == 1
         assert response["Content-Type"] == "application/hal+json"
 
     @staticmethod
@@ -138,7 +137,7 @@ class TestListFilters:
         response = api_client.get("/v1/movies", data={"date_added": "2020-01-01"})
         assert response.status_code == 200, response
         names = [movie["name"] for movie in response.data["_embedded"]["movie"]]
-        assert response.data["count"] == 1, names
+        assert response.data["page"]["totalElements"] == 1, names
         assert names == ["foo123"]
         assert response["Content-Type"] == "application/hal+json"
 

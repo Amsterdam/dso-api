@@ -33,9 +33,8 @@ def test_list_dynamic_view(api_client, api_rf, router, bommen_dataset):
             "next": {"href": None},
             "previous": {"href": None},
         },
-        "count": 0,
-        "page_size": 20,
         "_embedded": {"bommen": []},
+        "page": {"number": 1, "size": 20, "totalElements": 0, "totalPages": 1},
     }
 
 

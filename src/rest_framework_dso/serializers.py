@@ -101,7 +101,8 @@ class DSOListSerializer(_SideloadMixin, serializers.ListSerializer):
         # Only when we're the root structure, consider returning a dictionary.
         # When acting as a child list somewhere, embedding never happens.
         if self.root is self:
-            # See if any HAL-style sideloading was requested
+            # DSO always mandates a dict structure: {"objectname": [...]}
+            # Add any HAL-style sideloading if these were requested
             embeds = self.get_embeds(iterable, items)
             return {self.results_field: items, **embeds}
 
