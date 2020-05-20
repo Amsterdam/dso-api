@@ -6,7 +6,7 @@ from django.db import models
 from django.http import Http404, JsonResponse, HttpResponse
 from django.urls import reverse
 from django.utils.functional import cached_property
-from gisserver.exceptions import WFSException
+from gisserver.exceptions import WFSException, InvalidParameterValue
 from gisserver.features import FeatureType, ServiceDescription
 from gisserver.views import WFSView
 from schematools.contrib.django.models import DynamicModel
@@ -192,6 +192,25 @@ class DatasetWFSView(WFSView):
 
     def get_feature_types(self) -> List[FeatureType]:
         """Generate map feature layers for all models that have geometry data."""
+        typenames = self.KVP.get("TYPENAMES")
+        models1 = (
+            {
+                name: model
+                for name, model in self.models.items()
+                if name in typenames.split(",")
+            }
+            if typenames
+            else self.models
+        )
+        if not models1:
+            raise InvalidParameterValue(
+                "typename",
+                f"Typename '{typenames}' doesn't exist in this server. "
+                f"Please check the capabilities and reformulate your request.",
+            ) from None
+
+        if self.KVP["REQUEST"].upper() != "GETCAPABILITIES":
+            self.check_permissions(self.request, models1.values())
         return [
             # TODO: Extend FeatureType with extra meta data
             # the get_unauthorized_fields() part of get_field_names() is an
@@ -202,7 +221,7 @@ class DatasetWFSView(WFSView):
                 crs=crs.DEFAULT_CRS,
                 other_crs=crs.OTHER_CRS,
             )
-            for name, model in self.models.items()
+            for model in models1.values()
             if self._has_geometry_field(model)
         ]
 
@@ -230,28 +249,15 @@ class DatasetWFSView(WFSView):
     def _has_geometry_field(self, model):
         return any(isinstance(f, GeometryField) for f in model._meta.get_fields())
 
-    def dispatch(self, request, *args, **kwargs):
-        try:
-            self.check_permissions(request)
-        except PermissionDenied as exc:
-            return HttpResponse(
-                exc.as_xml().encode("utf-8"),
-                content_type="text/xml; charset=utf-8",
-                status=exc.status_code,
-                reason=exc.reason,
-            )
-        result = super().dispatch(request, *args, **kwargs)
-        return result
-
     #: Custom permission that checks amsterdam schema auth settings
     permission_classes = [permissions.HasOAuth2Scopes]
 
-    def check_permissions(self, request):
+    def check_permissions(self, request, models):
         """
         Check if the request should be permitted.
         """
         for permission in self.get_permissions():
-            if not permission.has_permission(request, self):
+            if not permission.has_permission(request, self, models):
                 self.permission_denied(
                     request, message=getattr(permission, "message", None)
                 )
