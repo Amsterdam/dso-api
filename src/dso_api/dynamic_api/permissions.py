@@ -69,15 +69,20 @@ class HasOAuth2Scopes(permissions.BasePermission):
         scopes = fetch_scopes_for_model(model)
         return request.is_authorized_for(*scopes.table)
 
-    def has_permission(self, request, view):
+    def has_permission(self, request, view, models=None):
         """ Based on the model that is associated with the view
             the Dataset and DatasetTable (if available)
             are check for their 'auth' field.
             These auth fields could contain a komma-separated list
             of claims. """
-
-        model = view.serializer_class.Meta.model
-        return self._has_permission(request, model)
+        if models:
+            for model in models:
+                if not self._has_permission(request, model):
+                    return False
+            return True
+        else:
+            model = view.serializer_class.Meta.model
+            return self._has_permission(request, model)
 
     def has_object_permission(self, request, view, obj):
         """ This method is not called for list views """
