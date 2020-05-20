@@ -3,7 +3,7 @@ from typing import List, Type
 
 from django.contrib.gis.db.models import GeometryField
 from django.db import models
-from django.http import Http404, JsonResponse, HttpResponse
+from django.http import Http404, JsonResponse
 from django.urls import reverse
 from django.utils.functional import cached_property
 from gisserver.exceptions import WFSException, InvalidParameterValue
