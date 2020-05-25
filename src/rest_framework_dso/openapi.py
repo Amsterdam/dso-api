@@ -230,7 +230,7 @@ class DSOAutoSchema(openapi.AutoSchema):
             if isinstance(field, GeometryField):
                 # or use $ref when examples are included.
                 # model_field.geom_type is uppercase
-                model_field = field.parent.Meta.model._meta.get_field(field.field_name)
+                model_field = field.parent.Meta.model._meta.get_field(field.source)
                 geojson_type = GEOM_TYPES_TO_GEOJSON.get(
                     model_field.geom_type, "Geometry"
                 )
