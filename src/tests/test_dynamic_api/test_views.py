@@ -2,7 +2,6 @@ import pytest
 from django.db import connection
 from django.urls import reverse
 
-from rest_framework.test import APIClient
 from rest_framework_dso.crs import CRS, RD_NEW
 from schematools.contrib.django import models
 from schematools.contrib.django.db import create_tables
