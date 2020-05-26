@@ -26,7 +26,7 @@ __all__ = [
     "DSOFilterSet",
     "DSOFilterSetBackend",
     "DSOOrderingFilter",
-    "EffectiveFilter",
+    "RangeFilter",
 ]
 
 
@@ -113,7 +113,7 @@ class WildcardCharFilter(filters.CharFilter):
         super().__init__(field_name, lookup_expr, **kwargs)
 
 
-class EffectiveFilter(filters.CharFilter):
+class RangeFilter(filters.CharFilter):
     """Filter by effective date."""
 
     filter_name = "inWerkingOp"
