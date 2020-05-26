@@ -4,14 +4,13 @@ from typing import List, Type
 from django.contrib.gis.db.models import GeometryField
 from django.db import models
 from django.http import Http404, JsonResponse
-from django.urls import reverse
 from django.utils.functional import cached_property
 from gisserver.exceptions import WFSException, InvalidParameterValue
 from gisserver.features import FeatureType, ServiceDescription
 from gisserver.views import WFSView
 from schematools.contrib.django.models import DynamicModel
 
-from rest_framework import viewsets, routers, status
+from rest_framework import viewsets, status
 from rest_framework_dso import crs, fields
 from rest_framework_dso.pagination import DSOPageNumberPagination
 from rest_framework_dso.views import DSOViewMixin
@@ -47,31 +46,6 @@ def reload_patterns(request):
             ]
         }
     )
-
-
-class DynamicAPIRootView(routers.APIRootView):
-    """
-    This is the generic [DSO-compatible](https://aandeslagmetdeomgevingswet.nl/digitaal-stelsel/aansluiten/standaarden/api-en-uri-strategie/) API server.
-
-    The following features are supported:
-
-    * HAL-JSON based links, pagination and response structure.
-    * Use `?_expandScope=name1,name2` to sideload specific relations.
-    * Use `?_expand=true` to sideload all relations.
-
-    The models in this server are generated from the Amsterdam Schema files.
-    These are located at:
-    [https://schemas.data.amsterdam.nl/datasets](https://schemas.data.amsterdam.nl/datasets)
-    """  # noqa: E501
-
-    #: Title shown in the root API view.
-    name = "DSO-API"
-
-    def get(self, request, *args, **kwargs):
-        response = super().get(request, *args, **kwargs)
-        response.content_type = "application/json"
-        response.data["openapi"] = request.build_absolute_uri(reverse("openapi.json"))
-        return response
 
 
 class DynamicApiViewSet(

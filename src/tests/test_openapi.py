@@ -9,9 +9,12 @@ def test_openapi_json(api_client, filled_router, caplog):
     """Prove that the OpenAPI page can be rendered."""
     caplog.set_level(logging.WARNING)
 
-    url = reverse("openapi.json")
+    url = reverse("dynamic_api:api-root")
+    assert url == "/v1/"
+
     response = api_client.get(url)
     assert response.status_code == 200, response.data
+    assert response["content-type"] == "application/vnd.oai.openapi+json"
     schema = response.data
 
     # Prove that the oauth model is exposed
