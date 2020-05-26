@@ -225,8 +225,9 @@ class TestDynamicFilterSet:
         )
 
         # Router reload is needed to make sure that viewsets are using relations.
-        # from dso_api.dynamic_api.urls import router
-        # router.reload()
+        from dso_api.dynamic_api.urls import router
+
+        router.reload()
         response = APIClient().get(
             "/v1/parkeervakken/parkeervakken/",
             data={"regimes.inWerkingOp": "08:00", "regimes.eType": "E6b"},

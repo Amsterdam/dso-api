@@ -164,16 +164,6 @@ class TestListFilters:
             },
         }
 
-    @staticmethod
-    def test_list_filter_nested_serializer(
-        api_client, parkeervakken_parkeervak_model, parkeervakken_regime_model
-    ):
-        response = api_client.get(
-            "/v1/parkeervakken", data={"regimes.inWerkingOp": "08:00"}
-        )
-
-        assert response.status_code == 200, response
-
 
 @pytest.mark.django_db
 class TestListOrdering:

@@ -133,8 +133,6 @@ def generate_relation_filters(model: Type[DynamicModel]):
 
 
 def generate_additional_filters(model: Type[DynamicModel]):
-    if model.__name__ != "Parkeervakken":
-        return {}
     filters = {}
     for filter_type, options in model._table_schema.filters.items():
         try:
