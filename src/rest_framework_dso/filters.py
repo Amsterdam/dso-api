@@ -20,11 +20,13 @@ from django.contrib.postgres.fields.array import ArrayField
 from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter
 from rest_framework_gis.filters import GeometryFilter
+from schematools.types import slugify
 
 __all__ = [
     "DSOFilterSet",
     "DSOFilterSetBackend",
     "DSOOrderingFilter",
+    "EffectiveFilter",
 ]
 
 
@@ -109,6 +111,32 @@ class WildcardCharFilter(filters.CharFilter):
         if lookup_expr == "exact":
             lookup_expr = "wildcard"
         super().__init__(field_name, lookup_expr, **kwargs)
+
+
+class EffectiveFilter(filters.CharFilter):
+    """Filter by effective date."""
+
+    filter_name = "inWerkingOp"
+    label = "Filter values effective on provided date/time."
+
+    def __init__(self, start_field, end_field, lookup_expr="exact", **kwargs):
+        self.start_field = self.convert_field_name(start_field)
+        self.end_field = self.convert_field_name(end_field)
+        super().__init__(field_name=self.start_field, lookup_expr=lookup_expr, **kwargs)
+
+    def filter(self, qs, value):
+        if value.strip() == "":
+            return qs
+        return qs.filter(
+            **{f"{self.start_field}__lte": value, f"{self.end_field}__gt": value}
+        )
+
+    def convert_field_name(self, field_name):
+        if "." in field_name:
+            return "__".join(
+                [self.convert_field_name(part) for part in field_name.split(".")]
+            )
+        return slugify(field_name, sign="_")
 
 
 class ModelIdChoiceField(fields.ModelChoiceField):

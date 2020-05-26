@@ -16,6 +16,13 @@
           "id",
           "schema"
         ],
+        "additionalFilters": {
+          "effective": {
+            "name": "regimes.inWerkingOp",
+            "start": "regimes.begin tijd",
+            "end": "regimes.eind tijd"
+          }
+        },
         "properties": {
           "id": {
             "type": "string",

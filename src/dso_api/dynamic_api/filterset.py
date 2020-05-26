@@ -3,6 +3,7 @@ Creating filters for the dynamic model fields.
 This uses the django-filter logic to process the GET parameters.
 """
 from typing import Type
+import logging
 
 from django.db import models
 from django.contrib.postgres.fields import ArrayField
@@ -12,8 +13,10 @@ from dso_api.dynamic_api.utils import (
     format_api_field_name,
     format_field_name,
 )
-from rest_framework_dso.filters import DSOFilterSet
+from rest_framework_dso import filters as dso_filters
 from schematools.contrib.django.models import DynamicModel
+
+logger = logging.getLogger(__name__)
 
 
 # These extra lookups are available for specific data types:
@@ -33,8 +36,12 @@ DEFAULT_LOOKUPS_BY_TYPE = {
     ArrayField: ["contains"],
 }
 
+ADDITIONAL_FILTERS = {
+    "effective": dso_filters.EffectiveFilter,
+}
 
-class DynamicFilterSet(DSOFilterSet):
+
+class DynamicFilterSet(dso_filters.DSOFilterSet):
     """Base class for dynamic filter sets."""
 
     @classmethod
@@ -61,7 +68,8 @@ def filterset_factory(model: Type[DynamicModel]) -> Type[DynamicFilterSet]:
         if isinstance(f, (models.fields.Field, models.fields.related.ForeignKey))
     }
 
-    extra_fields, filters = generate_relation_filters(model)
+    filters = generate_relation_filters(model)
+    filters.update(generate_additional_filters(model))
 
     # Generate the class
     meta_attrs = {
@@ -94,7 +102,9 @@ def generate_relation_filters(model: Type[DynamicModel]):
             # contert space separated property name into snake_case name
             model_field_name = format_field_name(field_name)
             model_field = getattr(relation.related_model, model_field_name).field
-            filter_class = DSOFilterSet.FILTER_DEFAULTS.get(model_field.__class__)
+            filter_class = dso_filters.DSOFilterSet.FILTER_DEFAULTS.get(
+                model_field.__class__
+            )
             if filter_class is None:
                 # No mapping found for this model field, skip it.
                 continue
@@ -113,11 +123,32 @@ def generate_relation_filters(model: Type[DynamicModel]):
                 filters[subfilter_name] = filter_class(
                     field_name="__".join([relation.name, model_field_name]),
                     lookup_expr=lookup_expr,
-                    label=DSOFilterSet.FILTER_HELP_TEXT.get(filter_class, lookup_expr),
+                    label=dso_filters.DSOFilterSet.FILTER_HELP_TEXT.get(
+                        filter_class, lookup_expr
+                    ),
                 )
                 fields[subfilter_name] = filter_lookups
 
-    return fields, filters
+    return filters
+
+
+def generate_additional_filters(model: Type[DynamicModel]):
+    if model.__name__ != "Parkeervakken":
+        return {}
+    filters = {}
+    for filter_type, options in model._table_schema.filters.items():
+        try:
+            filter_class = ADDITIONAL_FILTERS[filter_type]
+        except KeyError:
+            logger.warn(f"Incorrect filter type: {filter_type}")
+        else:
+            filters[options["name"]] = filter_class(
+                label=filter_class.label,
+                start_field=options.get("start"),
+                end_field=options.get("end"),
+            )
+
+    return filters
 
 
 def _get_field_lookups(field: models.Field) -> list:

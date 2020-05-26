@@ -11,6 +11,8 @@ services:
     volumes:
       - "~/.ssh/datapunt.key:/root/.ssh/datapunt.key"
       - .:/host
+    extra_hosts:
+      admin.data.amsterdam.nl: 10.243.16.4
   bag_v11_database:
     image: amsterdam/postgres11
     ports:
