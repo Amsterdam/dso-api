@@ -136,7 +136,7 @@ class EffectiveFilter(filters.CharFilter):
             return "__".join(
                 [self.convert_field_name(part) for part in field_name.split(".")]
             )
-        return slugify(field_name, sign="_")
+        return slugify(field_name, separator="_")
 
 
 class ModelIdChoiceField(fields.ModelChoiceField):

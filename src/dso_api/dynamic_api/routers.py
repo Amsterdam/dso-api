@@ -168,15 +168,15 @@ class DynamicRouter(routers.DefaultRouter):
         serializer_factory.cache_clear()
         self.all_models.clear()
 
+        # Clear models from the Django App registry cache for removed apps
+        self._prune_app_registry(old_dynamic_apps)
+
         # Note that the models get recreated too. This works as expected,
         # since each model creation flushes the App registry caches.
         models = self._initialize_viewsets()
 
         # Refresh URLConf in urls.py
         urls.refresh_urls(self)
-
-        # Clear models from the Django App registry cache for removed apps
-        self._prune_app_registry(old_dynamic_apps)
 
         # Return which models + urls were generated
         result = {}
