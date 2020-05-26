@@ -9,13 +9,15 @@ from django.conf import settings
 from django.db import connection
 from django.urls import NoReverseMatch, reverse
 from rest_framework import routers
+
 from schematools.contrib.django.models import Dataset
 
 from dso_api.dynamic_api.app_config import register_model
 from dso_api.dynamic_api.locking import lock_for_writing
+from dso_api.dynamic_api.oas3 import get_openapi_json_view
 from dso_api.dynamic_api.remote import remote_serializer_factory, remote_viewset_factory
 from dso_api.dynamic_api.serializers import get_view_name, serializer_factory
-from dso_api.dynamic_api.views import DynamicAPIRootView, viewset_factory
+from dso_api.dynamic_api.views import viewset_factory
 
 logger = logging.getLogger(__name__)
 reload_counter = 0
@@ -27,15 +29,15 @@ if TYPE_CHECKING:
 class DynamicRouter(routers.DefaultRouter):
     """Router that dynamically creates all viewsets based on the Dataset models."""
 
-    #: Override root view to add description
-    APIRootView = DynamicAPIRootView
-
     include_format_suffixes = False
 
     def __init__(self):
         super().__init__(trailing_slash=True)
         self.all_models = {}
         self.static_routes = []
+
+    def get_api_root_view(self, api_urls=None):
+        return get_openapi_json_view()
 
     def initialize(self):
         """Initialize all dynamic routes on startup."""
