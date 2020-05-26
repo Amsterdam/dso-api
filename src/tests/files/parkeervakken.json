@@ -17,8 +17,8 @@
           "schema"
         ],
         "additionalFilters": {
-          "effective": {
-            "name": "regimes.inWerkingOp",
+          "regimes.inWerkingOp": {
+            "type": "range",
             "start": "regimes.begin tijd",
             "end": "regimes.eind tijd"
           }

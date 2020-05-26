@@ -37,7 +37,7 @@ DEFAULT_LOOKUPS_BY_TYPE = {
 }
 
 ADDITIONAL_FILTERS = {
-    "effective": dso_filters.EffectiveFilter,
+    "range": dso_filters.RangeFilter,
 }
 
 
@@ -134,13 +134,13 @@ def generate_relation_filters(model: Type[DynamicModel]):
 
 def generate_additional_filters(model: Type[DynamicModel]):
     filters = {}
-    for filter_type, options in model._table_schema.filters.items():
+    for filter_name, options in model._table_schema.filters.items():
         try:
-            filter_class = ADDITIONAL_FILTERS[filter_type]
+            filter_class = ADDITIONAL_FILTERS[options.get("type", "range")]
         except KeyError:
-            logger.warn(f"Incorrect filter type: {filter_type}")
+            logger.warn(f"Incorrect filter type: {options}")
         else:
-            filters[options["name"]] = filter_class(
+            filters[filter_name] = filter_class(
                 label=filter_class.label,
                 start_field=options.get("start"),
                 end_field=options.get("end"),
