@@ -113,10 +113,11 @@ class DynamicRouter(routers.DefaultRouter):
 
                 logger.debug("Created viewset %s", url_prefix)
                 viewset = viewset_factory(model)
+                table_id = slugify(model.get_table_id(), separator="_")
                 tmp_router.register(
                     prefix=url_prefix,
                     viewset=viewset,
-                    basename=f"{dataset_id}-{model.get_table_id()}",
+                    basename=f"{dataset_id}-{table_id}",
                 )
 
         return tmp_router.registry, generated_models
@@ -139,14 +140,14 @@ class DynamicRouter(routers.DefaultRouter):
                 tmp_router.register(
                     prefix=url_prefix,
                     viewset=viewset,
-                    basename=f"{dataset_id}-{table.id}",
+                    basename=slugify(f"{dataset_id}-{table.id}"),
                 )
 
         return tmp_router.registry
 
     def make_url(self, prefix, *parts):
         """Generate the URL for the viewset"""
-        parts = [slugify(part) for part in parts]
+        parts = [slugify(part, separator="_") for part in parts]
         url_path = "/".join(parts)
 
         # Allow to add a prefix
