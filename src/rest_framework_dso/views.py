@@ -52,7 +52,7 @@ def exception_handler(exc, context):
         detail = response.data["detail"]
         response.data = {
             "type": f"urn:apiexception:{detail.code}",
-            "title": exc.default_detail,
+            "title": exc.default_detail if hasattr(exc, "default_detail") else str(exc),
             "detail": str(detail),
             "status": response.status_code,
         }
