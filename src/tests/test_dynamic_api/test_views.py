@@ -247,12 +247,73 @@ class TestAuth:
         models.DatasetField.objects.filter(name="eigenaar_naam").update(auth="BAG/R")
         response = api_client.get(url)
         assert response.status_code == 200, response.data
-        assert "eigenaar_naam" not in set(
+        assert "eigenaarNaam" not in set(
             [
                 field_name
                 for field_name in response.data["_embedded"]["containers"][0].keys()
             ]
         ), response.data
+
+    def test_auth_on_field_level_is_not_cached(
+        self,
+        api_client,
+        filled_router,
+        fetch_auth_token,
+        parkeervakken_parkeervak_model,
+        parkeervakken_regime_model,
+    ):
+        """ Prove that Auth is not cached.
+        """
+        # Router reload is needed to make sure that viewsets are using relations.
+        from dso_api.dynamic_api.urls import router
+
+        router.reload()
+
+        url = reverse("dynamic_api:parkeervakken-parkeervakken-list")
+
+        models.DatasetField.objects.filter(name="dagen").update(auth="BAG/R")
+
+        parkeervak = parkeervakken_parkeervak_model.objects.create(
+            id="121138489666",
+            type="File",
+            soort="MULDER",
+            aantal=1.0,
+            e_type="",
+            buurtcode="A05d",
+            straatnaam="Zoutkeetsgracht",
+        )
+        parkeervakken_regime_model.objects.create(
+            id=1,
+            parent=parkeervak,
+            bord="",
+            dagen=["ma", "di", "wo", "do", "vr", "za", "zo"],
+            soort="MULDER",
+            aantal=None,
+            e_type="",
+            kenteken="",
+            opmerking="",
+            begin_tijd="00:00:00",
+            eind_tijd="23:59:00",
+            eind_datum=None,
+            begin_datum=None,
+        )
+
+        token = fetch_auth_token(["BAG/R"])
+        response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
+
+        assert (
+            "dagen"
+            in response.data["_embedded"]["parkeervakken"][0]["regimes"][0].keys()
+        )
+
+        public_response = api_client.get(url)
+
+        assert (
+            "dagen"
+            not in public_response.data["_embedded"]["parkeervakken"][0]["regimes"][
+                0
+            ].keys()
+        )
 
     def test_auth_on_dataset_protects_detail_view(
         self, api_client, filled_router, afval_schema, fetch_auth_token, afval_container

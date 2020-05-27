@@ -4,6 +4,7 @@ from typing import Dict, Set
 from cachetools.func import ttl_cache
 from rest_framework import permissions
 from schematools.contrib.django import models
+from dso_api.dynamic_api.utils import snake_to_camel_case
 
 
 @dataclass
@@ -55,7 +56,7 @@ def get_unauthorized_fields(request, model) -> set:
                 continue
 
             if not request.is_authorized_for(*scopes):
-                unauthorized_fields.add(model_field.name)
+                unauthorized_fields.add(snake_to_camel_case(model_field.name))
 
     return unauthorized_fields
 
