@@ -17,7 +17,7 @@ def multiple_trailing_slashes(request):
     response_data = {
         "type": "error",
         "code": "HTTP_404_NOT_FOUND",
-        "title": "Multiple trailing slashes not supported",
+        "title": "Multiple slashes not supported",
         "status": "404",
         "instance": request.path,
     }
