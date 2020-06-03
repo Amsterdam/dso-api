@@ -12,7 +12,7 @@ from rest_framework_dso import crs, filters, parsers
 from rest_framework_dso.exceptions import PreconditionFailed
 
 
-def multiple_trailing_slashes(request):
+def multiple_slashes(request):
     response_data = {}
     response_data = {
         "type": "error",
