@@ -1,3 +1,7 @@
+import json
+
+from django.http import HttpResponseNotFound
+
 from typing import Optional, Type, Union
 
 from dso_api.lib.exceptions import RemoteAPIException
@@ -6,6 +10,21 @@ from rest_framework.exceptions import ErrorDetail, NotAcceptable, ValidationErro
 from rest_framework.views import exception_handler as drf_exception_handler
 from rest_framework_dso import crs, filters, parsers
 from rest_framework_dso.exceptions import PreconditionFailed
+
+
+def multiple_slashes(request):
+    response_data = {}
+    response_data = {
+        "type": "error",
+        "code": "HTTP_404_NOT_FOUND",
+        "title": "Multiple slashes not supported",
+        "status": "404",
+        "instance": request.path,
+    }
+
+    return HttpResponseNotFound(
+        json.dumps(response_data), content_type="application/json"
+    )
 
 
 def exception_handler(exc, context):
