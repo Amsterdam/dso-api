@@ -2,14 +2,18 @@ from typing import Type
 
 from django.db import models
 from django.utils.functional import cached_property
-from rest_framework.serializers import Serializer
+from rest_framework import serializers
 
 
 class AbstractEmbeddedField:
     """A 'virtual' field that contains the configuration of an embedded field."""
 
     def __init__(
-        self, serializer_class: Type[Serializer], *, to_field=None, source=None
+        self,
+        serializer_class: Type[serializers.Serializer],
+        *,
+        to_field=None,
+        source=None,
     ):
         self.serializer_class = serializer_class
         self.to_field = to_field
@@ -44,7 +48,7 @@ class AbstractEmbeddedField:
         """Return the "ID" values that is referenced to."""
         raise NotImplementedError()
 
-    def get_serializer(self, parent: Serializer) -> Serializer:
+    def get_serializer(self, parent: serializers.Serializer) -> serializers.Serializer:
         """Build the EmbeddedFieldserializer object that can generate an embedded result."""
         embedded_serializer = self.serializer_class(context=parent.context)
         embedded_serializer.bind(field_name=self.field_name, parent=parent)
@@ -81,3 +85,84 @@ class EmbeddedField(AbstractEmbeddedField):
                 return f"{field_name}_id"
             else:
                 return field_name
+
+
+class VersionedGetUrlMixin:
+    def get_url(self, obj, view_name, request, format=None):
+        # Unsaved objects will not yet have a valid URL.
+        if hasattr(obj, "pk") and obj.pk in (None, ""):
+            return None
+
+        # note that `obj` has only PK field.
+        lookup_value, version = obj.pk.split("_")
+        kwargs = {self.lookup_field: lookup_value}
+
+        base_url = self.reverse(
+            view_name, kwargs=kwargs, request=request, format=format
+        )
+        if hasattr(request.dataset, "versioning"):
+            if request.dataset_version is not None:
+                base_url = "{}?{}={}".format(
+                    base_url,
+                    request.dataset.versioning["version_field_name"],
+                    request.dataset_version,
+                )
+            elif request.dataset_temporal_slice is not None:
+                key = request.dataset_temporal_slice["key"]
+                value = request.dataset_temporal_slice["value"]
+                base_url = "{}?{}={}".format(base_url, key, value)
+        else:
+            base_url = self.reverse(
+                view_name, kwargs=kwargs, request=request, format=format
+            )
+        return base_url
+
+
+class VersionedHyperlinkedRelatedField(
+    VersionedGetUrlMixin, serializers.HyperlinkedRelatedField
+):
+    pass
+
+
+class VersionedReadOnlyField(serializers.ReadOnlyField):
+    def to_representation(self, value):
+        # Unsaved objects will not yet have a valid URL.
+        if "request" in self.parent.context and hasattr(
+            self.parent.context["request"].dataset, "versioning"
+        ):
+            value = value.split("_")[0]
+        return value
+
+
+class LinksField(serializers.HyperlinkedIdentityField):
+    """Internal field to generate the _links bit"""
+
+    def get_url(self, obj, view_name, request, format):
+        # Unsaved objects will not yet have a valid URL.
+        if hasattr(obj, "pk") and obj.pk in (None, ""):
+            return None
+
+        kwargs = {self.lookup_field: obj.pk}
+
+        if not hasattr(request.dataset, "versioning"):
+            return super().get_url(obj, view_name, request, format)
+
+        lookup_value = getattr(obj, request.dataset.versioning["pk_field_name"])
+        kwargs = {self.lookup_field: lookup_value}
+        base_url = self.reverse(
+            view_name, kwargs=kwargs, request=request, format=format
+        )
+
+        version = getattr(obj, request.dataset.versioning["version_field_name"])
+        return "{}?{}={}".format(
+            base_url, request.dataset.versioning["request_parameter"], version
+        )
+
+    def to_representation(self, value):
+        request = self.context.get("request")
+        return {
+            "self": {
+                "href": self.get_url(value, self.view_name, request, None),
+                "title": str(value),
+            },
+        }

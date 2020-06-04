@@ -11,7 +11,12 @@ from django.db import models
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
-from rest_framework_dso.fields import EmbeddedField
+from rest_framework.relations import HyperlinkedRelatedField
+from rest_framework_dso.fields import (
+    EmbeddedField,
+    VersionedHyperlinkedRelatedField,
+    VersionedReadOnlyField,
+)
 from rest_framework_dso.serializers import DSOModelSerializer
 from schematools.types import DatasetTableSchema
 from schematools.contrib.django.models import DynamicModel
@@ -20,7 +25,7 @@ from dso_api.dynamic_api.permissions import get_unauthorized_fields
 from dso_api.dynamic_api.utils import snake_to_camel_case, format_field_name
 
 
-class _DynamicLinksField(DSOModelSerializer.serializer_url_field):
+class DynamicLinksField(DSOModelSerializer.serializer_url_field):
     def to_representation(self, value: DynamicModel):
         """Before generating the URL, check whether the "PK" value is valid.
         This avoids more obscure error messages when the string.
@@ -42,7 +47,7 @@ class _DynamicLinksField(DSOModelSerializer.serializer_url_field):
 class DynamicSerializer(DSOModelSerializer):
     """Base class for all generic serializers of this package."""
 
-    serializer_url_field = _DynamicLinksField
+    serializer_url_field = DynamicLinksField
 
     schema = serializers.SerializerMethodField()
 
@@ -100,6 +105,20 @@ class DynamicSerializer(DSOModelSerializer):
         if "view_name" in field_kwargs:
             model_class = relation_info[1]
             field_kwargs["view_name"] = get_view_name(model_class, "detail")
+
+        if field_class == HyperlinkedRelatedField:
+            field_class = VersionedHyperlinkedRelatedField
+        return field_class, field_kwargs
+
+    def build_property_field(self, field_name, model_class):
+        field_class, field_kwargs = super().build_property_field(
+            field_name, model_class
+        )
+        if isinstance(
+            model_class._meta._forward_fields_map[field_name],
+            models.fields.related.ForeignKey,
+        ):
+            field_class = VersionedReadOnlyField
 
         return field_class, field_kwargs
 
