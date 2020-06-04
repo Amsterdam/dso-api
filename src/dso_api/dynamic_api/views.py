@@ -118,7 +118,7 @@ def _get_ordering_fields(
 
 def viewset_factory(model: Type[DynamicModel]) -> Type[DynamicApiViewSet]:
     """Generate the viewset for a schema."""
-    serializer_class = serializers.serializer_factory(model)
+    serializer_class = serializers.serializer_factory(model=model, seen=frozenset())
     filterset_class = filterset.filterset_factory(model)
     ordering_fields = _get_ordering_fields(serializer_class)
 
