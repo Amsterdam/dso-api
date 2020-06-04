@@ -15,7 +15,7 @@ click==7.1.1              # via amsterdam-schema-tools, mappyfile
 coverage==5.0.3           # via pytest-cov
 cryptography==2.8         # via jwcrypto
 datapunt-authorization-django==1.0.0  # via -r requirements.in
-defusedxml==0.6.0         # via django-gisserver, djangorestframework-xml
+defusedxml==0.6.0         # via django-gisserver
 django-cors-headers==3.2.1  # via -r requirements.in
 django-environ==0.4.5     # via -r requirements.in, amsterdam-schema-tools
 django-filter==2.2.0      # via -r requirements.in
@@ -23,12 +23,8 @@ django-gisserver==0.6     # via -r requirements.in, amsterdam-schema-tools
 django-healthchecks==1.4.2  # via -r requirements.in
 django-postgres-unlimited-varchar==1.1.0  # via -r requirements.in, amsterdam-schema-tools
 django==3.0.4             # via -r requirements.in, amsterdam-schema-tools, datapunt-authorization-django, django-cors-headers, django-filter, django-gisserver, django-healthchecks, django-postgres-unlimited-varchar, djangorestframework
-djangorestframework-csv==2.1.0  # via drf-amsterdam
 djangorestframework-gis==0.15  # via -r requirements.in
-djangorestframework-xml==1.4.0  # via drf-amsterdam
-djangorestframework==3.11.0  # via -r requirements.in, djangorestframework-csv, djangorestframework-gis, drf-amsterdam, drf-extensions
-drf-amsterdam==0.3.2      # via -r requirements.in
-drf-extensions==0.6.0     # via drf-amsterdam
+djangorestframework==3.11.0  # via -r requirements.in, djangorestframework-gis
 drf-spectacular==0.8.5    # via -r requirements.in
 entrypoints==0.3          # via flake8
 flake8-blind-except==0.1.1  # via -r requirements.in
@@ -71,11 +67,10 @@ readerwriterlock==1.0.6   # via -r requirements.in
 requests==2.23.0          # via -r requirements.in, amsterdam-schema-tools, datapunt-authorization-django, django-healthchecks
 sentry-sdk==0.14.2        # via -r requirements.in
 shapely==1.7.0            # via amsterdam-schema-tools
-six==1.14.0               # via cryptography, django-healthchecks, djangorestframework-csv, jsonschema, packaging, pyrsistent, python-dateutil
+six==1.14.0               # via cryptography, django-healthchecks, jsonschema, packaging, pyrsistent, python-dateutil
 sqlalchemy==1.3.16        # via geoalchemy2
 sqlparse==0.3.1           # via django
 typing-extensions==3.7.4.1  # via readerwriterlock
-unicodecsv==0.14.1        # via djangorestframework-csv
 uritemplate==3.0.1        # via drf-spectacular
 urllib3-mock==0.3.3       # via -r requirements.in
 urllib3==1.25.8           # via -r requirements.in, requests, sentry-sdk
