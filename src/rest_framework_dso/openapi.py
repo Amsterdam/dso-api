@@ -10,7 +10,7 @@ from rest_framework import serializers
 from rest_framework.fields import ReadOnlyField
 from rest_framework_gis.fields import GeometryField
 
-from rest_framework_dso.serializers import _LinksField
+from rest_framework_dso.fields import LinksField
 
 __all__ = ["DSOSchemaGenerator", "DSOAutoSchema"]
 
@@ -220,7 +220,7 @@ class DSOAutoSchema(openapi.AutoSchema):
         This method is overwritten to fix some missing field types.
         """
         if not hasattr(field, "_spectacular_annotation"):
-            if isinstance(field, _LinksField):
+            if isinstance(field, LinksField):
                 return {"$ref": "#/components/schemas/_SelfLink"}
 
             # Fix support for missing field types:

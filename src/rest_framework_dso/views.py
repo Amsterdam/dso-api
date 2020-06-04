@@ -183,3 +183,8 @@ class DSOViewMixin:
             response["Content-Crs"] = str(content_crs)
 
         return super().finalize_response(request, response, *args, **kwargs)
+
+    def get_view_description(self, **kwargs):
+        if self.action == "retrieve":
+            return ""
+        return super().get_view_description(**kwargs)

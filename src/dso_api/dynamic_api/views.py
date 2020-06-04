@@ -5,6 +5,7 @@ from django.contrib.gis.db.models import GeometryField
 from django.db import models
 from django.http import Http404, JsonResponse
 from django.utils.functional import cached_property
+from django.utils.translation import gettext as _
 from gisserver.exceptions import WFSException, InvalidParameterValue
 from gisserver.features import FeatureType, ServiceDescription
 from gisserver.views import WFSView
@@ -48,8 +49,52 @@ def reload_patterns(request):
     )
 
 
+class VersionedRetrieveModelMixin:
+    def get_object(self, queryset=None):
+        """
+        Do some black magic, find things in DB's garbage bags.
+        """
+        if queryset is None:
+            queryset = self.get_queryset()
+
+        if not hasattr(self.request.dataset, "versioning"):
+            return super().get_object(queryset=queryset)
+
+        pk = self.kwargs.get("pk")
+
+        pk_field = self.request.dataset.versioning["pk_field_name"]
+        version_field = self.request.dataset.versioning["version_field_name"]
+        queryset = queryset.filter(
+            models.Q(**{pk_field: pk}) | models.Q(pk=pk)
+        )  # fallback to full id search.
+
+        if self.request.dataset_version is not None:
+            queryset = queryset.filter(
+                **{
+                    self.request.dataset.versioning[
+                        "version_field_name"
+                    ]: self.request.dataset_version
+                }
+            )
+        elif self.request.dataset_temporal_slice is not None:
+            temporal_value = self.request.dataset_temporal_slice["value"]
+            start_field, _end_field = self.request.dataset_temporal_slice["fields"]
+            queryset = queryset.filter(**{f"{start_field}__lte": temporal_value})
+
+        obj = queryset.order_by(version_field).last()
+        if obj is None:
+            raise Http404(
+                _("No %(verbose_name)s found matching the query")
+                % {"verbose_name": queryset.model._meta.verbose_name}
+            )
+        return obj
+
+
 class DynamicApiViewSet(
-    locking.ReadLockMixin, DSOViewMixin, viewsets.ReadOnlyModelViewSet,
+    VersionedRetrieveModelMixin,
+    locking.ReadLockMixin,
+    DSOViewMixin,
+    viewsets.ReadOnlyModelViewSet,
 ):
     """Viewset for an API, that is DSO-compatible and dynamically generated.
     Each dynamically generated model in this server will receive a viewset.

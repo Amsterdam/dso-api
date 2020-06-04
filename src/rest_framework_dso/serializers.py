@@ -10,6 +10,7 @@ from rest_framework.utils.serializer_helpers import ReturnDict, ReturnList
 from rest_framework_gis.fields import GeometryField
 
 from rest_framework_dso.crs import CRS
+from rest_framework_dso.fields import LinksField
 from rest_framework_dso.utils import EmbeddedHelper
 
 
@@ -46,19 +47,6 @@ class _SideloadMixin:
         # otherwise, parse as a list of fields to expand.
         expand = request.GET.get(self.expand_param)
         return expand.split(",") if expand else False
-
-
-class _LinksField(serializers.HyperlinkedIdentityField):
-    """Internal field to generate the _links bit"""
-
-    def to_representation(self, value):
-        request = self.context.get("request")
-        return {
-            "self": {
-                "href": self.get_url(value, self.view_name, request, None),
-                "title": str(value),
-            },
-        }
 
 
 class DSOListSerializer(_SideloadMixin, serializers.ListSerializer):
@@ -300,7 +288,7 @@ class DSOModelSerializer(DSOSerializer, serializers.HyperlinkedModelSerializer):
 
     # Make sure the _links bit is generated:
     url_field_name = "_links"
-    serializer_url_field = _LinksField
+    serializer_url_field = LinksField
 
     def to_representation(self, instance):
         """Check whether the geofields need to be transformed."""
