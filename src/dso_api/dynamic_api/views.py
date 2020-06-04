@@ -50,6 +50,21 @@ def reload_patterns(request):
 
 
 class VersionedRetrieveModelMixin:
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        if hasattr(self.request.dataset, "versioning"):
+            if self.request.dataset_temporal_slice is not None:
+                temporal_value = self.request.dataset_temporal_slice["value"]
+                start_field, end_field = self.request.dataset_temporal_slice["fields"]
+                queryset = queryset.filter(
+                    **{f"{start_field}__lte": temporal_value}
+                ).filter(
+                    models.Q(**{f"{end_field}__gte": temporal_value})
+                    | models.Q(**{f"{end_field}__isnull": True})
+                )
+        return queryset
+
     def get_object(self, queryset=None):
         """
         Do some black magic, find things in DB's garbage bags.
@@ -76,10 +91,6 @@ class VersionedRetrieveModelMixin:
                     ]: self.request.dataset_version
                 }
             )
-        elif self.request.dataset_temporal_slice is not None:
-            temporal_value = self.request.dataset_temporal_slice["value"]
-            start_field, _end_field = self.request.dataset_temporal_slice["fields"]
-            queryset = queryset.filter(**{f"{start_field}__lte": temporal_value})
 
         obj = queryset.order_by(version_field).last()
         if obj is None:
