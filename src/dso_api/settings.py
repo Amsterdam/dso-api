@@ -65,6 +65,7 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "authorization_django.authorization_middleware",
+    "dso_api.dynamic_api.middleware.DatasetMiddleware",
 ]
 
 if DEBUG:
