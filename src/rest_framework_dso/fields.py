@@ -93,14 +93,14 @@ class VersionedGetUrlMixin:
         if hasattr(obj, "pk") and obj.pk in (None, ""):
             return None
 
-        # note that `obj` has only PK field.
-        lookup_value, version = obj.pk.split("_")
-        kwargs = {self.lookup_field: lookup_value}
-
-        base_url = self.reverse(
-            view_name, kwargs=kwargs, request=request, format=format
-        )
         if hasattr(request.dataset, "versioning"):
+            # note that `obj` has only PK field.
+            lookup_value, version = obj.pk.split("_")
+            kwargs = {self.lookup_field: lookup_value}
+
+            base_url = self.reverse(
+                view_name, kwargs=kwargs, request=request, format=format
+            )
             if request.dataset_version is not None:
                 base_url = "{}?{}={}".format(
                     base_url,
@@ -112,6 +112,7 @@ class VersionedGetUrlMixin:
                 value = request.dataset_temporal_slice["value"]
                 base_url = "{}?{}={}".format(base_url, key, value)
         else:
+            kwargs = {self.lookup_field: obj.pk}
             base_url = self.reverse(
                 view_name, kwargs=kwargs, request=request, format=format
             )

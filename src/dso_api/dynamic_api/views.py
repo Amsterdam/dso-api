@@ -73,7 +73,7 @@ class VersionedRetrieveModelMixin:
             queryset = self.get_queryset()
 
         if not hasattr(self.request.dataset, "versioning"):
-            return super().get_object(queryset=queryset)
+            return super().get_object()
 
         pk = self.kwargs.get("pk")
 
