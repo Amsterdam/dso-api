@@ -22,7 +22,7 @@ django-filter==2.2.0      # via -r requirements.in
 django-gisserver==0.6     # via -r requirements.in, amsterdam-schema-tools
 django-healthchecks==1.4.2  # via -r requirements.in
 django-postgres-unlimited-varchar==1.1.0  # via -r requirements.in, amsterdam-schema-tools
-django==3.0.4             # via -r requirements.in, amsterdam-schema-tools, datapunt-authorization-django, django-cors-headers, django-filter, django-gisserver, django-healthchecks, django-postgres-unlimited-varchar, djangorestframework
+django==3.0.7             # via -r requirements.in, amsterdam-schema-tools, datapunt-authorization-django, django-cors-headers, django-filter, django-gisserver, django-healthchecks, django-postgres-unlimited-varchar, djangorestframework
 djangorestframework-csv==2.1.0  # via drf-amsterdam
 djangorestframework-gis==0.15  # via -r requirements.in
 djangorestframework-xml==1.4.0  # via drf-amsterdam

@@ -1,5 +1,5 @@
 cachetools == 4.0.0
-Django == 3.0.4
+Django == 3.0.7
 django-environ == 0.4.5
 django-cors-headers == 3.2.1
 django-filter == 2.2.0
