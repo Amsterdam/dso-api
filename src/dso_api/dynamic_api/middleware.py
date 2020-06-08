@@ -33,6 +33,10 @@ class DatasetMiddleware(BaseMiddleware):
 
 
 class TemporalDatasetMiddleware(BaseMiddleware):
+    """
+    Assign `dateset_verison` and `dataset_temporal_slice` to request.
+    """
+
     def process_view(self, request, view_func, view_args, view_kwargs):
         request.dataset_version = None
         request.dataset_temporal_slice = None

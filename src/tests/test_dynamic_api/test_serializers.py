@@ -28,12 +28,17 @@ class TestDynamicSerializer:
 
     @staticmethod
     def test_basic_factory_logic(
-        api_request, afval_cluster_model, afval_container_model, afval_cluster
+        api_request,
+        afval_dataset,
+        afval_cluster_model,
+        afval_container_model,
+        afval_cluster,
     ):
         """Prove that the serializer factory properly generates the embedded fields.
 
         This checks whether the factory generates the proper FK/embedded fields.
         """
+        api_request.dataset = afval_dataset
         afval_container = afval_container_model.objects.create(
             id=2,
             cluster=afval_cluster,
@@ -78,11 +83,12 @@ class TestDynamicSerializer:
         }
 
     @staticmethod
-    def test_expand(api_request, afval_container_model, afval_cluster):
+    def test_expand(api_request, afval_dataset, afval_container_model, afval_cluster):
         """Prove expanding works.
 
         The _embedded section is generated, using the cluster serializer.
         """
+        api_request.dataset = afval_dataset
         ContainerSerializer = serializer_factory(afval_container_model)
         afval_container = afval_container_model.objects.create(
             id=2, cluster=afval_cluster
@@ -126,11 +132,12 @@ class TestDynamicSerializer:
         }
 
     @staticmethod
-    def test_expand_none(api_request, afval_container_model):
+    def test_expand_none(api_request, afval_dataset, afval_container_model):
         """Prove that expanding None values doesn't crash.
 
         The _embedded part has a None value instead.
         """
+        api_request.dataset = afval_dataset
         ContainerSerializer = serializer_factory(afval_container_model)
         container_without_cluster = afval_container_model.objects.create(
             id=3, cluster=None,
@@ -160,11 +167,12 @@ class TestDynamicSerializer:
         }
 
     @staticmethod
-    def test_expand_broken_relation(api_request, afval_container_model):
+    def test_expand_broken_relation(api_request, afval_dataset, afval_container_model):
         """Prove that expanding non-existing FK values values doesn't crash.
 
         The _embedded part has a None value instead.
         """
+        api_request.dataset = afval_dataset
         ContainerSerializer = serializer_factory(afval_container_model)
         container_invalid_cluster = afval_container_model.objects.create(
             id=4, cluster_id=99,
@@ -195,11 +203,15 @@ class TestDynamicSerializer:
 
     @staticmethod
     def test_serializer_has_nested_table(
-        api_request, parkeervakken_parkeervak_model, parkeervakken_regime_model
+        api_request,
+        parkeervakken_dataset,
+        parkeervakken_parkeervak_model,
+        parkeervakken_regime_model,
     ):
         """Prove that the serializer factory properly generates nested tables.
         Serialiser should contain reverse relations.
         """
+        api_request.dataset = parkeervakken_dataset
         parkeervak = parkeervakken_parkeervak_model.objects.create(
             id="121138489047",
             type="File",
@@ -270,13 +282,17 @@ class TestDynamicSerializer:
 
     @staticmethod
     def test_flat_serializer_has_no_nested_table(
-        api_request, parkeervakken_parkeervak_model, parkeervakken_regime_model
+        api_request,
+        parkeervakken_dataset,
+        parkeervakken_parkeervak_model,
+        parkeervakken_regime_model,
     ):
         """Prove that the serializer factory properly skipping generation of reverse
         relations if `flat=True`.
         Flat serialiser should not contain any reverse relations,
         as flat serializers are used to represet instances of sub-serializers.
         """
+        api_request.dataset = parkeervakken_dataset
         parkeervak = parkeervakken_parkeervak_model.objects.create(
             type="File",
             soort="MULDER",
