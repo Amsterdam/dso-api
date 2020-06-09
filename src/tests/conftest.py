@@ -36,6 +36,9 @@ def api_request(api_rf) -> WSGIRequest:
     request = api_rf.get("/v1/dummy/")
     request.accept_crs = None  # for DSOSerializer, expects to be used with DSOViewMixin
     request.response_content_crs = None
+
+    # Temporal modifications. Usually done via TemporalDatasetMiddleware
+    request.versioned = False
     return request
 
 
