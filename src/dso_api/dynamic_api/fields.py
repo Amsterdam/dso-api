@@ -2,7 +2,11 @@ from rest_framework import serializers
 from rest_framework_dso.fields import LinksField
 
 
-class TemporalGetUrlMixin:
+class TemporalHyperlinkedRelatedField(serializers.HyperlinkedRelatedField):
+    """Temporal Hyperlinked Related Field
+
+    Usef for forward relations in serializers."""
+
     def get_url(self, obj, view_name, request, format=None):
         # Unsaved objects will not yet have a valid URL.
         if hasattr(obj, "pk") and obj.pk in (None, ""):
@@ -16,32 +20,19 @@ class TemporalGetUrlMixin:
             base_url = self.reverse(
                 view_name, kwargs=kwargs, request=request, format=format
             )
-            if request.dataset_version is not None:
-                base_url = "{}?{}={}".format(
-                    base_url,
-                    request.dataset.temporal.get("identifier"),
-                    request.dataset_version,
-                )
-            elif request.dataset_temporal_slice is not None:
+            if request.dataset_temporal_slice is None:
+                key = request.dataset.temporal.get("identifier")
+                value = version
+            else:
                 key = request.dataset_temporal_slice["key"]
                 value = request.dataset_temporal_slice["value"]
-                base_url = "{}?{}={}".format(base_url, key, value)
+            base_url = "{}?{}={}".format(base_url, key, value)
         else:
             kwargs = {self.lookup_field: obj.pk}
             base_url = self.reverse(
                 view_name, kwargs=kwargs, request=request, format=format
             )
         return base_url
-
-
-class TemporalHyperlinkedRelatedField(
-    TemporalGetUrlMixin, serializers.HyperlinkedRelatedField
-):
-    """Temporal Hyperlinked Related Field
-
-    Usef for forward relations in serializers."""
-
-    pass
 
 
 class TemporalReadOnlyField(serializers.ReadOnlyField):
