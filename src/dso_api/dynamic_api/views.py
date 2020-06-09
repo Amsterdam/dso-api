@@ -49,11 +49,11 @@ def reload_patterns(request):
     )
 
 
-class VersionedRetrieveModelMixin:
+class TemporalRetrieveModelMixin:
     def get_queryset(self):
         queryset = super().get_queryset()
 
-        if hasattr(self.request.dataset, "versioning"):
+        if self.request.versioned:
             if self.request.dataset_temporal_slice is not None:
                 temporal_value = self.request.dataset_temporal_slice["value"]
                 start_field, end_field = self.request.dataset_temporal_slice["fields"]
@@ -72,27 +72,31 @@ class VersionedRetrieveModelMixin:
         if queryset is None:
             queryset = self.get_queryset()
 
-        if not hasattr(self.request.dataset, "versioning"):
+        if not self.request.versioned:
             return super().get_object()
 
         pk = self.kwargs.get("pk")
-
-        pk_field = self.request.dataset.versioning["pk_field_name"]
-        version_field = self.request.dataset.versioning["version_field_name"]
-        queryset = queryset.filter(
-            models.Q(**{pk_field: pk}) | models.Q(pk=pk)
-        )  # fallback to full id search.
-
-        if self.request.dataset_version is not None:
+        pk_field = self.request.dataset.identifier
+        if pk_field != "pk":
             queryset = queryset.filter(
-                **{
-                    self.request.dataset.versioning[
-                        "version_field_name"
-                    ]: self.request.dataset_version
-                }
-            )
+                models.Q(**{pk_field: pk}) | models.Q(pk=pk)
+            )  # fallback to full id search.
+        else:
+            queryset = queryset.filter(pk=pk)
 
-        obj = queryset.order_by(version_field).last()
+        identifier = self.request.dataset.temporal("identifier", None)
+
+        # Filter queryset using GET parameters, if any.
+        for field in queryset.model._table_schema.fields:
+            if field.name != pk_field and field.name in self.request.GET:
+                queryset = queryset.filter(**{field.name: self.request.GET[field.name]})
+
+        if identifier is None:
+            queryset = queryset.order_by(pk_field)
+        else:
+            queryset = queryset.order_by(identifier)
+
+        obj = queryset.last()
         if obj is None:
             raise Http404(
                 _("No %(verbose_name)s found matching the query")
@@ -102,7 +106,7 @@ class VersionedRetrieveModelMixin:
 
 
 class DynamicApiViewSet(
-    VersionedRetrieveModelMixin,
+    TemporalRetrieveModelMixin,
     locking.ReadLockMixin,
     DSOViewMixin,
     viewsets.ReadOnlyModelViewSet,

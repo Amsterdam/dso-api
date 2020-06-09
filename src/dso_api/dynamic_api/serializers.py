@@ -12,20 +12,21 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 from rest_framework.relations import HyperlinkedRelatedField
-from rest_framework_dso.fields import (
-    EmbeddedField,
-    VersionedHyperlinkedRelatedField,
-    VersionedReadOnlyField,
-)
+from rest_framework_dso.fields import EmbeddedField
 from rest_framework_dso.serializers import DSOModelSerializer
 from schematools.types import DatasetTableSchema
 from schematools.contrib.django.models import DynamicModel
 
+from dso_api.dynamic_api.fields import (
+    TemporalHyperlinkedRelatedField,
+    TemporalReadOnlyField,
+    TemporalLinksField,
+)
 from dso_api.dynamic_api.permissions import get_unauthorized_fields
 from dso_api.dynamic_api.utils import snake_to_camel_case, format_field_name
 
 
-class DynamicLinksField(DSOModelSerializer.serializer_url_field):
+class DynamicLinksField(TemporalLinksField):
     def to_representation(self, value: DynamicModel):
         """Before generating the URL, check whether the "PK" value is valid.
         This avoids more obscure error messages when the string.
@@ -107,7 +108,7 @@ class DynamicSerializer(DSOModelSerializer):
             field_kwargs["view_name"] = get_view_name(model_class, "detail")
 
         if field_class == HyperlinkedRelatedField:
-            field_class = VersionedHyperlinkedRelatedField
+            field_class = TemporalHyperlinkedRelatedField
         return field_class, field_kwargs
 
     def build_property_field(self, field_name, model_class):
@@ -118,7 +119,7 @@ class DynamicSerializer(DSOModelSerializer):
             model_class._meta._forward_fields_map[field_name],
             models.fields.related.ForeignKey,
         ):
-            field_class = VersionedReadOnlyField
+            field_class = TemporalReadOnlyField
 
         return field_class, field_kwargs
 
