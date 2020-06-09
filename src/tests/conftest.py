@@ -77,7 +77,9 @@ def router():
 
 
 @pytest.fixture()
-def filled_router(router, afval_dataset, bommen_dataset, parkeervakken_dataset):
+def filled_router(
+    router, afval_dataset, bommen_dataset, parkeervakken_dataset, bagh_dataset
+):
     # Prove that the router URLs are extended on adding a model
     router.reload()
     router_urls = [p.name for p in router.urls]
@@ -91,6 +93,8 @@ def filled_router(router, afval_dataset, bommen_dataset, parkeervakken_dataset):
         create_tables(bommen_dataset.schema)
     if "parkeervakken_parkeervakken" not in table_names:
         create_tables(parkeervakken_dataset.schema)
+    if "bagh_buurt" not in table_names:
+        create_tables(bagh_dataset.schema)
 
     return router
 
@@ -233,6 +237,28 @@ def parkeervakken_parkeervak_model(filled_router):
 def parkeervakken_regime_model(filled_router):
     # Using filled_router so all urls can be generated too.
     return filled_router.all_models["parkeervakken"]["parkeervakken_regimes"]
+
+
+@pytest.fixture()
+def bagh_schema_json() -> dict():
+    path = HERE / "files/bagh.json"
+    return json.loads(path.read_text())
+
+
+@pytest.fixture()
+def bagh_schema(bagh_schema_json) -> DatasetSchema:
+    return DatasetSchema.from_dict(bagh_schema_json)
+
+
+@pytest.fixture()
+def bagh_dataset(bagh_schema_json) -> Dataset:
+    return Dataset.objects.create(name="bagh", schema_data=bagh_schema_json)
+
+
+@pytest.fixture()
+def bagh_models(filled_router):
+    # Using filled_router so all urls can be generated too.
+    return filled_router.all_models["bagh"]
 
 
 @pytest.fixture

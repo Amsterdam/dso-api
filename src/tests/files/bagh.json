@@ -9,7 +9,7 @@
   "temporal": {
     "identifier": "volgnummer",
     "dimensions": {
-      "geldigOp": ["begin_geldigheid", "eind_geldigheid"]
+      "geldigOp": ["begin geldigheid", "eind geldigheid"]
     }
   },
   "tables": [

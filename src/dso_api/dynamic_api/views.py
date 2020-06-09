@@ -84,7 +84,7 @@ class TemporalRetrieveModelMixin:
         else:
             queryset = queryset.filter(pk=pk)
 
-        identifier = self.request.dataset.temporal("identifier", None)
+        identifier = self.request.dataset.temporal.get("identifier", None)
 
         # Filter queryset using GET parameters, if any.
         for field in queryset.model._table_schema.fields:
