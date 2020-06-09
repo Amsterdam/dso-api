@@ -4,7 +4,7 @@ import re
 from collections import OrderedDict
 from functools import lru_cache
 from string_utils import slugify
-from typing import Type, Dict
+from typing import Type
 
 from django.db import models
 
@@ -12,7 +12,6 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 from rest_framework.relations import HyperlinkedRelatedField
-from rest_framework.reverse import reverse
 from rest_framework_dso.fields import EmbeddedField
 from rest_framework_dso.serializers import DSOModelSerializer
 from schematools.types import DatasetTableSchema
@@ -44,25 +43,6 @@ class DynamicLinksField(TemporalLinksField):
                         f"{full_table_id}: instance id={pk}"
                     )
         return super().to_representation(value)
-
-
-class RelatedSummaryField(serializers.Field):
-    def to_representation(self, value):
-        count = value.count()
-
-        model_name = value.model.__name__
-        mapping = model_name.lower() + "-list"
-        url = reverse(mapping, request=self.context["request"])
-
-        parent_pk = value.instance.pk
-
-        filter_name = list(value.core_filters.keys())[0]
-
-        separator = "&" if "?" in url else "?"
-        return {
-            "count": count,
-            "href": f"{url}{separator}{filter_name}={parent_pk}",
-        }
 
 
 class DynamicSerializer(DSOModelSerializer):
@@ -194,7 +174,7 @@ def generate_field_serializer(model, model_field, new_attrs, fields, extra_kwarg
     camel_name = snake_to_camel_case(model_field.name)
     seen = extra_kwargs.get("seen", frozenset())
     if isinstance(model_field, models.ManyToOneRel):
-        if not camel_name in seen and camel_name == "buurt":
+        if camel_name not in seen and camel_name == "buurt":
             new_seen = set(seen)
             new_seen.add(camel_name)
             new_attrs[camel_name] = EmbeddedField(
@@ -212,7 +192,7 @@ def generate_field_serializer(model, model_field, new_attrs, fields, extra_kwarg
 
     # Add extra embedded part for foreign keys
     if isinstance(model_field, models.ForeignKey):
-        if not camel_name in seen:
+        if camel_name not in seen:
             new_attrs[camel_name] = EmbeddedField(
                 serializer_class=serializer_factory(
                     model_field.related_model, seen, flat=True
