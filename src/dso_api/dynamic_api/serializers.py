@@ -194,10 +194,16 @@ def generate_field_serializer(  # noqa: C901
     depth = extra_kwargs.get("depth", 0)
     if isinstance(model_field, models.ManyToOneRel):
         relation = model._table_schema.relations.get(camel_name)
-        if depth <= 1 and relation:
+        if (
+            depth <= 1
+            and relation
+            and relation["table"] == model_field.related_model._meta.model_name
+            and relation["field"] == model_field.field.name
+        ):
             depth += 1
+            format = relation.get("format", "summary")
             att_name = model_field.name + "_set"
-            if relation == "embedded":
+            if format == "embedded":
                 new_attrs[camel_name] = EmbeddedField(
                     serializer_class=serializer_factory(
                         model_field.related_model, depth, flat=True
@@ -206,7 +212,7 @@ def generate_field_serializer(  # noqa: C901
                 )
                 fields.append(camel_name)
                 extra_kwargs[camel_name] = {"source": att_name}
-            elif relation == "summary":
+            elif format == "summary":
                 new_attrs[camel_name] = _RelatedSummaryField(source=att_name)
                 fields.append(camel_name)
 
