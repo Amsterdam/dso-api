@@ -128,7 +128,10 @@ class RangeFilter(filters.CharFilter):
         if value.strip() == "":
             return qs
         return qs.filter(
-            Q(**{f"{self.start_field}__lte": value})
+            (
+                Q(**{f"{self.start_field}__lte": value})
+                | Q(**{f"{self.start_field}__isnull": True})
+            )
             & (
                 Q(**{f"{self.end_field}__gt": value})
                 | Q(**{f"{self.end_field}__isnull": True})

@@ -240,6 +240,61 @@ class TestDynamicFilterSet:
         ), response.data
 
     @staticmethod
+    def test_additional_filters_with_null_start_value(
+        parkeervakken_parkeervak_model, parkeervakken_regime_model
+    ):
+        """
+        Prove that additional filters work as expected.
+
+        Setup contains:
+         - 1 parkeervak with eType E6b between no start time and 10:00
+
+        Request with: regimes.eType=E6b&regimes.inWerkingOp=09:00
+        should yield parkeervak.
+        """
+
+        parkeervak = parkeervakken_parkeervak_model.objects.create(
+            id="121138489006",
+            type="File",
+            soort="MULDER",
+            aantal=1.0,
+            e_type="E6b",
+            buurtcode="A05d",
+            straatnaam="Zoutkeetsgracht",
+        )
+
+        parkeervakken_regime_model.objects.create(
+            id=6,
+            parent=parkeervak,
+            bord="",
+            dagen=["ma", "di", "wo", "do", "vr", "za", "zo"],
+            soort="MULDER",
+            aantal=None,
+            e_type="E6b",
+            kenteken="",
+            opmerking="",
+            begin_tijd=None,
+            eind_tijd="10:00:00",
+            eind_datum=None,
+            begin_datum=None,
+        )
+
+        # Router reload is needed to make sure that viewsets are using relations.
+        from dso_api.dynamic_api.urls import router
+
+        router.reload()
+        response = APIClient().get(
+            "/v1/parkeervakken/parkeervakken/",
+            data={"regimes.inWerkingOp": "09:00", "regimes.eType": "E6b"},
+        )
+
+        assert len(response.data["_embedded"]["parkeervakken"]) == 1, response.data
+        assert response.data["_embedded"]["parkeervakken"][0]["id"] == parkeervak.pk
+        assert (
+            len(response.data["_embedded"]["parkeervakken"][0]["regimes"]) == 1
+        ), response.data
+
+    @staticmethod
     def test_additional_filters_with_null_end_value(
         parkeervakken_parkeervak_model, parkeervakken_regime_model
     ):
