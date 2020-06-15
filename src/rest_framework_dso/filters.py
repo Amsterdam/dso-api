@@ -9,7 +9,7 @@ from typing import Type
 from django import forms
 from django.contrib.gis.db import models as gis_models
 from django.db import models
-from django.db.models import expressions, lookups
+from django.db.models import Q, expressions, lookups
 from django.utils.functional import cached_property
 from django.utils.translation import ugettext_lazy as _
 from django_filters import fields
@@ -128,7 +128,11 @@ class RangeFilter(filters.CharFilter):
         if value.strip() == "":
             return qs
         return qs.filter(
-            **{f"{self.start_field}__lte": value, f"{self.end_field}__gt": value}
+            Q(**{f"{self.start_field}__lte": value})
+            & (
+                Q(**{f"{self.end_field}__gt": value})
+                | Q(**{f"{self.end_field}__isnull": True})
+            )
         )
 
     def convert_field_name(self, field_name):
