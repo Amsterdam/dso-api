@@ -65,7 +65,7 @@ class EmbeddedField(AbstractEmbeddedField):
 
     def get_related_id(self, instance):
         """Find the _id field value"""
-        return getattr(instance, self.attname)
+        return getattr(instance, self.attname, None)
 
     def get_related_ids(self, instances) -> list:
         """Find the object IDs of the instances."""

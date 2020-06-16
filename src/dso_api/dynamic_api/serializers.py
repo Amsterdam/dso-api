@@ -14,6 +14,8 @@ from rest_framework import serializers
 from rest_framework.relations import HyperlinkedRelatedField
 from rest_framework_dso.fields import EmbeddedField
 from rest_framework_dso.serializers import DSOModelSerializer
+from rest_framework.serializers import Field
+from rest_framework.reverse import reverse
 from schematools.types import DatasetTableSchema
 from schematools.contrib.django.models import DynamicModel
 
@@ -43,6 +45,21 @@ class DynamicLinksField(TemporalLinksField):
                         f"{full_table_id}: instance id={pk}"
                     )
         return super().to_representation(value)
+
+
+class _RelatedSummaryField(Field):
+    def to_representation(self, value: DynamicModel):
+        count = value.count()
+        url = reverse(
+            get_view_name(value.model, "list"), request=self.context["request"]
+        )
+        parent_pk = value.instance.pk
+        filter_name = list(value.core_filters.keys())[0] + "Id"
+        separator = "&" if "?" in url else "?"
+        return {
+            "count": count,
+            "href": f"{url}{separator}{filter_name}={parent_pk}",
+        }
 
 
 class DynamicSerializer(DSOModelSerializer):
@@ -135,7 +152,9 @@ def get_view_name(model: Type[DynamicModel], suffix: str):
 
 
 @lru_cache()
-def serializer_factory(model: Type[DynamicModel], flat=None) -> Type[DynamicSerializer]:
+def serializer_factory(
+    model: Type[DynamicModel], depth: int = 0, flat=None
+) -> Type[DynamicSerializer]:
     """Generate the DRF serializer class for a specific dataset model."""
     fields = ["_links", "schema"]
     if model.has_parent_table():
@@ -150,7 +169,7 @@ def serializer_factory(model: Type[DynamicModel], flat=None) -> Type[DynamicSeri
     }
 
     # Parse fields for serializer
-    extra_kwargs = {}
+    extra_kwargs = {"depth": depth}
     for model_field in model._meta.get_fields():
         generate_field_serializer(model, model_field, new_attrs, fields, extra_kwargs)
 
@@ -165,31 +184,58 @@ def serializer_factory(model: Type[DynamicModel], flat=None) -> Type[DynamicSeri
     return type(serializer_name, (DynamicSerializer,), new_attrs)
 
 
-def generate_field_serializer(model, model_field, new_attrs, fields, extra_kwargs):
+def generate_field_serializer(  # noqa: C901
+    model, model_field, new_attrs, fields, extra_kwargs
+):
     orig_name = model_field.name
+    # Instead of having to apply camelize() on every response,
+    # create converted field names on the serializer construction.
+    camel_name = snake_to_camel_case(model_field.name)
+    depth = extra_kwargs.get("depth", 0)
     if isinstance(model_field, models.ManyToOneRel):
-        # Temporarily skip creation of fields for backwards relations.
+        relation = model._table_schema.relations.get(camel_name)
+        if (
+            depth <= 1
+            and relation
+            and relation["table"] == model_field.related_model._meta.model_name
+            and relation["field"] == model_field.field.name
+        ):
+            depth += 1
+            format = relation.get("format", "summary")
+            att_name = model_field.name + "_set"
+            if format == "embedded":
+                new_attrs[camel_name] = EmbeddedField(
+                    serializer_class=serializer_factory(
+                        model_field.related_model, depth, flat=True
+                    ),
+                    source=model_field.name,
+                )
+                fields.append(camel_name)
+                extra_kwargs[camel_name] = {"source": att_name}
+            elif format == "summary":
+                new_attrs[camel_name] = _RelatedSummaryField(source=att_name)
+                fields.append(camel_name)
+
         return
     if model.has_parent_table() and model_field.name in ["id", "parent"]:
         # Do not render PK and FK to parent on nested tables
         return
 
-    # Instead of having to apply camelize() on every response,
-    # create converted field names on the serializer construction.
-    camel_name = snake_to_camel_case(model_field.name)
-
     # Add extra embedded part for foreign keys
     if isinstance(model_field, models.ForeignKey):
-        new_attrs[camel_name] = EmbeddedField(
-            serializer_class=serializer_factory(model_field.related_model, flat=True),
-            source=model_field.name,
-        )
+        if depth == 0:
+            new_attrs[camel_name] = EmbeddedField(
+                serializer_class=serializer_factory(
+                    model_field.related_model, depth=depth, flat=True
+                ),
+                source=model_field.name,
+            )
 
-        camel_id_name = snake_to_camel_case(model_field.attname)
-        fields.append(camel_id_name)
+            camel_id_name = snake_to_camel_case(model_field.attname)
+            fields.append(camel_id_name)
 
-        if model_field.attname != camel_id_name:
-            extra_kwargs[camel_id_name] = {"source": model_field.attname}
+            if model_field.attname != camel_id_name:
+                extra_kwargs[camel_id_name] = {"source": model_field.attname}
 
     fields.append(camel_name)
     if orig_name != camel_name:
@@ -201,6 +247,6 @@ def generate_embedded_relations(model, fields, new_attrs):
     for item in model._meta.related_objects:
         # Do not create fields for django-created relations.
         if item.name in schema_fields and schema_fields[item.name].is_nested_table:
-            related_serialier = serializer_factory(model=item.related_model, flat=True)
+            related_serializer = serializer_factory(model=item.related_model, flat=True)
             fields.append(item.name)
-            new_attrs[item.name] = related_serialier(many=True)
+            new_attrs[item.name] = related_serializer(many=True)
