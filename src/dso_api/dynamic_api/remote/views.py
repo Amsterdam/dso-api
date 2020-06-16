@@ -18,6 +18,7 @@ from dso_api.lib.exceptions import (
     ServiceUnavailable,
 )
 from . import serializers
+from .. import permissions
 
 logger = logging.getLogger(__name__)
 http_pool = urllib3.PoolManager(cert_reqs="CERT_REQUIRED", ca_certs=certifi.where())
@@ -35,6 +36,9 @@ class RemoteViewSet(ViewSet):
         # "MKS_GEBRUIKER": "...",
     }
     headers_passthrough = ("Authorization",)
+
+    #: Custom permission that checks amsterdam schema auth settings
+    permission_classes = [permissions.HasOAuth2Scopes]
 
     def get_serializer(self, *args, **kwargs) -> serializers.RemoteSerializer:
         """Instantiate the serializer that validates the remote data."""
@@ -158,8 +162,12 @@ class RemoteViewSet(ViewSet):
     def get_headers(self):
         """Collect the headers to submit to the remote service."""
         client_ip = self.request.META["REMOTE_ADDR"]
-        forward = self.request.META.get("HTTP_X_FORWARDED_FOR", b"").decode()
+        if isinstance(client_ip, str):
+            client_ip = client_ip.encode("iso-8859-1")
+        forward = self.request.META.get("HTTP_X_FORWARDED_FOR", "")
         if forward:
+            if isinstance(forward, str):
+                forward = forward.encode("iso-8859-1")
             forward = b"%b %b" % (forward, client_ip)
         else:
             forward = client_ip
@@ -170,7 +178,7 @@ class RemoteViewSet(ViewSet):
         }
 
         for header in self.headers_passthrough:
-            value = self.request.headers.get(header, b"")
+            value = self.request.headers.get(header, "")
             if not value:
                 continue
 
