@@ -223,14 +223,17 @@ def generate_field_serializer(  # noqa: C901
             format = relation.get("format", "summary")
             att_name = model_field.name + "_set"
             if format == "embedded":
-                new_attrs[camel_name] = EmbeddedField(
-                    serializer_class=serializer_factory(
-                        model_field.related_model, depth, flat=True
-                    ),
-                    source=model_field.name,
+                view_name = "dynamic_api:{}-{}-detail".format(
+                    slugify(model._table_schema.dataset.id),
+                    slugify(model_field.related_model._table_schema.id),
+                )
+                new_attrs[camel_name] = TemporalHyperlinkedRelatedField(
+                    many=True,
+                    view_name=view_name,
+                    queryset=getattr(model, att_name),
+                    source=att_name,
                 )
                 fields.append(camel_name)
-                extra_kwargs[camel_name] = {"source": att_name}
             elif format == "summary":
                 new_attrs[camel_name] = _RelatedSummaryField(source=att_name)
                 fields.append(camel_name)
