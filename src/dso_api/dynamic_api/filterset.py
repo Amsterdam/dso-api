@@ -65,7 +65,7 @@ class DynamicFilterSet(dso_filters.DSOFilterSet):
 
 
 def filterset_factory(model: Type[DynamicModel]) -> Type[DynamicFilterSet]:
-    """Generate the filterset based on the dynamicprint model."""
+    """Generate the filterset based on the dynamic model."""
     # See https://django-filter.readthedocs.io/en/master/guide/usage.html on how filters are used.
     # Determine which fields are included:
     # Excluding geometry fields for now, as the default filter only performs exact matches.
