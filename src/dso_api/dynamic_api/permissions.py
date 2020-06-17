@@ -42,10 +42,10 @@ def fetch_scopes_for_model(model) -> TableScopes:
     # If it is not a DSO-based model, we leave it alone
     if not hasattr(model, "_dataset_schema"):
         return TableScopes()
-    dataset_table = model._dataset_schema.get_table_by_id(model._meta.model_name)
+    table = model._table_schema.id
     dataset = model._meta.app_label
 
-    return fetch_scopes_for_dataset_table(dataset, dataset_table.id)
+    return fetch_scopes_for_dataset_table(dataset, table)
 
 
 def get_unauthorized_fields(request, model) -> set:
