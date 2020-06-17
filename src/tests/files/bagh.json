@@ -157,6 +157,13 @@
           "naam"
         ],
         "display": "id",
+        "additionalRelations": {
+          "stadsdeel": {
+            "table": "stadsdeel",
+            "field": "gemeente",
+            "format": "embedded"
+          }
+        },
         "properties": {
           "schema": {
             "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.1#/definitions/schema"
@@ -660,6 +667,13 @@
           "gemeente"
         ],
         "display": "id",
+        "additionalRelations": {
+          "buurt": {
+            "table": "buurt",
+            "field": "stadsdeel",
+            "format": "summary"
+          }
+        },
         "properties": {
           "schema": {
             "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.1#/definitions/schema"

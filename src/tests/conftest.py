@@ -106,8 +106,34 @@ def afval_schema_json() -> dict:
 
 
 @pytest.fixture()
+def afval_schema_backwards_embedded_json() -> dict:
+    path = HERE / "files/afval_backwards_embedded.json"
+    return json.loads(path.read_text())
+
+
+@pytest.fixture()
+def afval_schema_backwards_summary_json() -> dict:
+    path = HERE / "files/afval_backwards_summary.json"
+    return json.loads(path.read_text())
+
+
+@pytest.fixture()
 def afval_schema(afval_schema_json) -> DatasetSchema:
     return DatasetSchema.from_dict(afval_schema_json)
+
+
+@pytest.fixture()
+def afval_schema_backwards_embedded(
+    afval_schema_backwards_embedded_json,
+) -> DatasetSchema:
+    return DatasetSchema.from_dict(afval_schema_backwards_embedded_json)
+
+
+@pytest.fixture()
+def afval_schema_backwards_summary(
+    afval_schema_backwards_summary_json,
+) -> DatasetSchema:
+    return DatasetSchema.from_dict(afval_schema_backwards_summary_json)
 
 
 @pytest.fixture()
@@ -259,6 +285,52 @@ def bagh_dataset(bagh_schema_json) -> Dataset:
 def bagh_models(filled_router):
     # Using filled_router so all urls can be generated too.
     return filled_router.all_models["bagh"]
+
+
+@pytest.fixture()
+def bagh_gemeente_model(bagh_models):
+    return bagh_models["gemeente"]
+
+
+@pytest.fixture()
+def bagh_stadsdeel_model(bagh_models):
+    return bagh_models["stadsdeel"]
+
+
+@pytest.fixture()
+def bagh_wijk_model(bagh_models):
+    return bagh_models["wijk"]
+
+
+@pytest.fixture()
+def bagh_gemeente(bagh_gemeente_model):
+    return bagh_gemeente_model.objects.create(
+        naam="Amsterdam", id="0363_001", identificatie="0363", volgnummer=1
+    )
+
+
+@pytest.fixture()
+def bagh_stadsdeel(bagh_stadsdeel_model, bagh_gemeente):
+    return bagh_stadsdeel_model.objects.create(
+        id="03630000000001_001",
+        code="H",
+        naam="Bos en Lommer",
+        gemeente=bagh_gemeente,
+        identificatie="03630000000001",
+        volgnummer=1,
+    )
+
+
+@pytest.fixture()
+def bagh_wijk(bagh_wijk_model, bagh_stadsdeel):
+    return bagh_wijk_model.objects.create(
+        id="03630012052022_001",
+        identificatie="03630012052022",
+        volgnummer=1,
+        code="H36",
+        naam="Sloterdijk",
+        stadsdeel=bagh_stadsdeel,
+    )
 
 
 @pytest.fixture

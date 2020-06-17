@@ -48,16 +48,19 @@ class TestDynamicSerializer:
         )
 
         # Generate serializers from models
-        ContainerSerializer = serializer_factory(afval_container_model)
+        ContainerSerializer = serializer_factory(afval_container_model, 0)
         # Important note is that ClusterSerializer is initiated as flat,
         # not allowing relations to resolve.
-        ClusterSerializer = serializer_factory(afval_cluster_model, flat=True)
+        ClusterSerializer = serializer_factory(afval_cluster_model, 0, flat=True)
 
         # Prove that EmbeddedField is created, as it should be.
         assert ContainerSerializer.Meta.embedded_fields == ["cluster"]
         assert isinstance(ContainerSerializer.cluster, EmbeddedField)
         assert ContainerSerializer.cluster.related_model is afval_cluster_model
-        assert ContainerSerializer.cluster.serializer_class is ClusterSerializer
+        assert (
+            ContainerSerializer.cluster.serializer_class.__name__
+            == ClusterSerializer.__name__
+        )
 
         # Prove that data is serialized with relations.
         # Both the cluster_id field and 'cluster' field are generated.
@@ -89,7 +92,7 @@ class TestDynamicSerializer:
         The _embedded section is generated, using the cluster serializer.
         """
         api_request.dataset = afval_schema
-        ContainerSerializer = serializer_factory(afval_container_model)
+        ContainerSerializer = serializer_factory(afval_container_model, 0)
         afval_container = afval_container_model.objects.create(
             id=2, cluster=afval_cluster
         )
@@ -138,7 +141,7 @@ class TestDynamicSerializer:
         The _embedded part has a None value instead.
         """
         api_request.dataset = afval_schema
-        ContainerSerializer = serializer_factory(afval_container_model)
+        ContainerSerializer = serializer_factory(afval_container_model, 0)
         container_without_cluster = afval_container_model.objects.create(
             id=3, cluster=None,
         )
@@ -173,7 +176,7 @@ class TestDynamicSerializer:
         The _embedded part has a None value instead.
         """
         api_request.dataset = afval_schema
-        ContainerSerializer = serializer_factory(afval_container_model)
+        ContainerSerializer = serializer_factory(afval_container_model, 0)
         container_invalid_cluster = afval_container_model.objects.create(
             id=4, cluster_id=99,
         )
@@ -199,6 +202,38 @@ class TestDynamicSerializer:
             "geometry": None,
             "eigenaarNaam": None,
             "_embedded": {"cluster": None},
+        }
+
+    @staticmethod
+    def test_backwards_relation(
+        api_request,
+        bagh_schema,
+        bagh_gemeente_model,
+        bagh_stadsdeel_model,
+        bagh_gemeente,
+        bagh_stadsdeel,
+    ):
+        """Show backwards
+
+        The _embedded part has a None value instead.
+        """
+        api_request.dataset = bagh_schema
+        GemeenteSerializer = serializer_factory(bagh_gemeente_model, 0)
+        gemeente_serializer = GemeenteSerializer(
+            bagh_gemeente, context={"request": api_request},
+        )
+        assert gemeente_serializer.data == {
+            "_links": {
+                "self": {
+                    "href": "http://testserver/v1/bagh/gemeente/0363_001/",
+                    "title": "(no title: Gemeente #0363_001)",
+                }
+            },
+            "schema": "https://schemas.data.amsterdam.nl/datasets/bagh/bagh#gemeente",
+            "stadsdeel": ["http://testserver/v1/bagh/stadsdeel/03630000000001_001"],
+            "id": "0363_001",
+            "identificatie": "0363",
+            "volgnummer": 1,
         }
 
     @staticmethod
@@ -237,7 +272,7 @@ class TestDynamicSerializer:
             begin_datum=None,
         )
 
-        ParkeervaakSerializer = serializer_factory(parkeervakken_parkeervak_model)
+        ParkeervaakSerializer = serializer_factory(parkeervakken_parkeervak_model, 0)
 
         # Prove that no reverse relation to containers here.
         assert "regimes" in ParkeervaakSerializer._declared_fields
@@ -319,7 +354,7 @@ class TestDynamicSerializer:
         )
 
         ParkeervaakSerializer = serializer_factory(
-            parkeervakken_parkeervak_model, flat=True
+            parkeervakken_parkeervak_model, 0, flat=True
         )
 
         # Prove that no reverse relation to containers here.
