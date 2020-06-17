@@ -131,10 +131,8 @@ class DynamicSerializer(DSOModelSerializer):
         field_class, field_kwargs = super().build_property_field(
             field_name, model_class
         )
-        if isinstance(
-            model_class._meta._forward_fields_map[field_name],
-            models.fields.related.ForeignKey,
-        ):
+        forward_map = model_class._meta._forward_fields_map.get(field_name)
+        if forward_map and isinstance(forward_map, models.fields.related.ForeignKey):
             field_class = TemporalReadOnlyField
 
         return field_class, field_kwargs
