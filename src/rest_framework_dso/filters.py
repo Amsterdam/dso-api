@@ -20,7 +20,7 @@ from django.contrib.postgres.fields.array import ArrayField
 from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter
 from rest_framework_gis.filters import GeometryFilter
-from schematools.types import slugify
+from schematools.utils import to_snake_case
 
 __all__ = [
     "DSOFilterSet",
@@ -143,7 +143,7 @@ class RangeFilter(filters.CharFilter):
             return "__".join(
                 [self.convert_field_name(part) for part in field_name.split(".")]
             )
-        return slugify(field_name, separator="_")
+        return to_snake_case(field_name)
 
 
 class ModelIdChoiceField(fields.ModelChoiceField):

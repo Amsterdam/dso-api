@@ -3,7 +3,6 @@ from __future__ import annotations
 import re
 from collections import OrderedDict
 from functools import lru_cache
-from string_utils import slugify
 from typing import Type
 
 from django.db import models
@@ -16,6 +15,7 @@ from rest_framework_dso.fields import EmbeddedField
 from rest_framework_dso.serializers import DSOModelSerializer
 from schematools.types import DatasetTableSchema
 from schematools.contrib.django.models import DynamicModel
+from schematools.utils import to_snake_case, toCamelCase
 
 from dso_api.dynamic_api.fields import (
     TemporalHyperlinkedRelatedField,
@@ -23,7 +23,6 @@ from dso_api.dynamic_api.fields import (
     TemporalLinksField,
 )
 from dso_api.dynamic_api.permissions import get_unauthorized_fields
-from dso_api.dynamic_api.utils import snake_to_camel_case, format_field_name
 
 
 class DynamicLinksField(TemporalLinksField):
@@ -129,8 +128,8 @@ def get_view_name(model: Type[DynamicModel], suffix: str):
 
     :param suffix: This can be "detail" or "list".
     """
-    dataset_id = slugify(model.get_dataset_id(), separator="_")
-    table_id = slugify(model.get_table_id(), separator="_")
+    dataset_id = to_snake_case(model.get_dataset_id())
+    table_id = to_snake_case(model.get_table_id())
     return f"dynamic_api:{dataset_id}-{table_id}-{suffix}"
 
 
@@ -142,7 +141,7 @@ def serializer_factory(model: Type[DynamicModel], flat=None) -> Type[DynamicSeri
         # Inner tables have no schema or links defined.
         fields = []
 
-    safe_dataset_id = slugify(model.get_dataset_id(), separator="_")
+    safe_dataset_id = to_snake_case(model.get_dataset_id())
     serializer_name = f"{safe_dataset_id.title()}{model.__name__}Serializer"
     new_attrs = {
         "table_schema": model._table_schema,
@@ -176,7 +175,7 @@ def generate_field_serializer(model, model_field, new_attrs, fields, extra_kwarg
 
     # Instead of having to apply camelize() on every response,
     # create converted field names on the serializer construction.
-    camel_name = snake_to_camel_case(model_field.name)
+    camel_name = toCamelCase(model_field.name)
 
     # Add extra embedded part for foreign keys
     if isinstance(model_field, models.ForeignKey):
@@ -185,7 +184,7 @@ def generate_field_serializer(model, model_field, new_attrs, fields, extra_kwarg
             source=model_field.name,
         )
 
-        camel_id_name = snake_to_camel_case(model_field.attname)
+        camel_id_name = toCamelCase(model_field.attname)
         fields.append(camel_id_name)
 
         if model_field.attname != camel_id_name:
@@ -197,7 +196,7 @@ def generate_field_serializer(model, model_field, new_attrs, fields, extra_kwarg
 
 
 def generate_embedded_relations(model, fields, new_attrs):
-    schema_fields = {format_field_name(f._name): f for f in model._table_schema.fields}
+    schema_fields = {to_snake_case(f._name): f for f in model._table_schema.fields}
     for item in model._meta.related_objects:
         # Do not create fields for django-created relations.
         if item.name in schema_fields and schema_fields[item.name].is_nested_table:

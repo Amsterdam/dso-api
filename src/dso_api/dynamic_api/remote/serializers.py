@@ -1,5 +1,4 @@
 """Generate a serializer from a (remote) source"""
-from string_utils import slugify
 from typing import Dict, List
 from urllib.parse import urlparse
 
@@ -12,6 +11,7 @@ from rest_framework import serializers
 from rest_framework_dso.serializers import DSOSerializer
 from rest_framework_gis.fields import GeometryField
 from schematools.types import DatasetFieldSchema, DatasetTableSchema
+from schematools.utils import to_snake_case
 
 JSON_TYPE_TO_DRF = {
     "string": serializers.CharField,
@@ -113,7 +113,7 @@ def _remote_object_field_factory(
     """Generate a serializer for an sub-object field"""
     table_schema = field.table
     dataset = table_schema.dataset
-    safe_dataset_id = slugify(dataset.id, separator="_")
+    safe_dataset_id = to_snake_case(dataset.id)
     serializer_name = (
         f"{dataset.id.title()}{table_schema.id.title()}"
         f"_{field.name.title()}Serializer"
