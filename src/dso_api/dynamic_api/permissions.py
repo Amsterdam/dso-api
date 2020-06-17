@@ -16,24 +16,16 @@ class TableScopes:
 
 
 @ttl_cache(ttl=60 * 60)
-def fetch_scopes_for_model(model) -> TableScopes:
-    """ Get the scopes for a Django model, based on the Amsterdam schema information """
+def fetch_scopes_for_dataset_table(dataset_id: str, table_id: str):
+    """ Get the scopes for a dataset and table, based on the Amsterdam schema information """
 
     def _fetch_scopes(obj):
         if obj.auth:
             return set(obj.auth.split(","))
         return set()
 
-    # If it is not a DSO-based model, we leave it alone
-    if not hasattr(model, "_dataset_schema"):
-        return TableScopes()
-
-    dataset_table = model._dataset_schema.get_table_by_id(model._meta.model_name)
-    dataset = model._meta.app_label
     try:
-        table = models.DatasetTable.objects.get(
-            name=dataset_table.id, dataset__name=dataset
-        )
+        table = models.DatasetTable.objects.get(name=table_id, dataset__name=dataset_id)
     except models.DatasetTable.DoesNotExist:
         return TableScopes()
 
@@ -41,6 +33,19 @@ def fetch_scopes_for_model(model) -> TableScopes:
         table=_fetch_scopes(table) | _fetch_scopes(table.dataset),
         fields={field.name: _fetch_scopes(field) for field in table.fields.all()},
     )
+
+
+@ttl_cache(ttl=60 * 60)
+def fetch_scopes_for_model(model) -> TableScopes:
+    """ Get the scopes for a Django model, based on the Amsterdam schema information """
+
+    # If it is not a DSO-based model, we leave it alone
+    if not hasattr(model, "_dataset_schema"):
+        return TableScopes()
+    table = model._table_schema.id
+    dataset = model._meta.app_label
+
+    return fetch_scopes_for_dataset_table(dataset, table)
 
 
 def get_unauthorized_fields(request, model) -> set:
@@ -66,8 +71,11 @@ class HasOAuth2Scopes(permissions.BasePermission):
     Custom permission to check auth scopes from Amsterdam schema.
     """
 
-    def _has_permission(self, request, model):
-        scopes = fetch_scopes_for_model(model)
+    def _has_permission(self, request, model=None, dataset_id=None, table_id=None):
+        if model:
+            scopes = fetch_scopes_for_model(model)
+        elif dataset_id and table_id:
+            scopes = fetch_scopes_for_dataset_table(dataset_id, table_id)
         return request.is_authorized_for(*scopes.table)
 
     def has_permission(self, request, view, models=None):
@@ -81,9 +89,13 @@ class HasOAuth2Scopes(permissions.BasePermission):
                 if not self._has_permission(request, model):
                     return False
             return True
+        elif hasattr(view, "dataset_id") and hasattr(view, "table_id"):
+            return self._has_permission(
+                request, dataset_id=view.dataset_id, table_id=view.table_id
+            )
         else:
             model = view.serializer_class.Meta.model
-            return self._has_permission(request, model)
+            return self._has_permission(request, model=model)
 
     def has_object_permission(self, request, view, obj):
         """ This method is not called for list views """
