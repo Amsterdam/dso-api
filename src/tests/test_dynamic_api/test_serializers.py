@@ -225,15 +225,20 @@ class TestDynamicSerializer:
         assert gemeente_serializer.data == {
             "_links": {
                 "self": {
-                    "href": "http://testserver/v1/bagh/gemeente/0363_001/",
+                    "href": "http://testserver/v1/bagh/gemeente/0363/?volgnummer=1",
                     "title": "(no title: Gemeente #0363_001)",
                 }
             },
             "schema": "https://schemas.data.amsterdam.nl/datasets/bagh/bagh#gemeente",
-            "stadsdeel": ["http://testserver/v1/bagh/stadsdeel/03630000000001_001"],
+            "stadsdeel": ["http://testserver/v1/bagh/stadsdeel/03630000000001_001/",],
             "id": "0363_001",
-            "identificatie": "0363",
+            "naam": "Amsterdam",
             "volgnummer": 1,
+            "identificatie": "0363",
+            "eindGeldigheid": None,
+            "beginGeldigheid": None,
+            "registratiedatum": None,
+            "verzorgingsgebied": None,
         }
 
     @staticmethod
