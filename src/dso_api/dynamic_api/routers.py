@@ -135,7 +135,10 @@ class DynamicRouter(routers.DefaultRouter):
                 url_prefix = self.make_url(dataset.url_prefix, dataset_id, table.id)
                 serializer_class = remote_serializer_factory(table)
                 viewset = remote_viewset_factory(
-                    endpoint_url=dataset.endpoint_url, serializer_class=serializer_class
+                    endpoint_url=dataset.endpoint_url,
+                    serializer_class=serializer_class,
+                    dataset_id=dataset_id,
+                    table_id=table.id,
                 )
                 tmp_router.register(
                     prefix=url_prefix,

@@ -29,6 +29,8 @@ class RemoteViewSet(ViewSet):
 
     serializer_class = None
     endpoint_url = None
+    dataset_id = None
+    table_id = None
 
     default_headers = {
         "Accept": "application/json; charset=utf-8",
@@ -191,7 +193,9 @@ class RemoteViewSet(ViewSet):
         return headers
 
 
-def remote_viewset_factory(endpoint_url, serializer_class) -> Type[RemoteViewSet]:
+def remote_viewset_factory(
+    endpoint_url, serializer_class, dataset_id, table_id
+) -> Type[RemoteViewSet]:
     """Construct the viewset class that handles the remote serializer."""
     return type(
         f"{serializer_class.__name__}Viewset",
@@ -200,5 +204,7 @@ def remote_viewset_factory(endpoint_url, serializer_class) -> Type[RemoteViewSet
             "__doc__": "Forwarding proxy serializer",
             "endpoint_url": endpoint_url,
             "serializer_class": serializer_class,
+            "dataset_id": dataset_id,
+            "table_id": table_id,
         },
     )
