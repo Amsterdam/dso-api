@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-from string_utils import slugify
 from typing import TYPE_CHECKING, Dict, List, Type
 
 from django.apps import apps
@@ -11,6 +10,7 @@ from django.urls import NoReverseMatch, reverse
 from rest_framework import routers
 
 from schematools.contrib.django.models import Dataset
+from schematools.utils import to_snake_case
 
 from dso_api.dynamic_api.app_config import register_model
 from dso_api.dynamic_api.locking import lock_for_writing
@@ -113,7 +113,7 @@ class DynamicRouter(routers.DefaultRouter):
 
                 logger.debug("Created viewset %s", url_prefix)
                 viewset = viewset_factory(model)
-                table_id = slugify(model.get_table_id(), separator="_")
+                table_id = to_snake_case(model.get_table_id())
                 tmp_router.register(
                     prefix=url_prefix,
                     viewset=viewset,
@@ -143,14 +143,14 @@ class DynamicRouter(routers.DefaultRouter):
                 tmp_router.register(
                     prefix=url_prefix,
                     viewset=viewset,
-                    basename=slugify(f"{dataset_id}-{table.id}"),
+                    basename=f"{to_snake_case(dataset_id)}-{to_snake_case(table.id)}",
                 )
 
         return tmp_router.registry
 
     def make_url(self, prefix, *parts):
         """Generate the URL for the viewset"""
-        parts = [slugify(part, separator="_") for part in parts]
+        parts = [to_snake_case(part) for part in parts]
         url_path = "/".join(parts)
 
         # Allow to add a prefix

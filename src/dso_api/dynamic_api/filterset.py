@@ -4,17 +4,14 @@ This uses the django-filter logic to process the GET parameters.
 """
 from typing import Type
 import logging
+import re
 
 from django.db import models
 from django.contrib.postgres.fields import ArrayField
 
-from dso_api.dynamic_api.utils import (
-    snake_to_camel_case,
-    format_api_field_name,
-    format_field_name,
-)
 from rest_framework_dso import filters as dso_filters
 from schematools.contrib.django.models import DynamicModel
+from schematools.utils import to_snake_case, toCamelCase
 
 logger = logging.getLogger(__name__)
 
@@ -48,16 +45,27 @@ class DynamicFilterSet(dso_filters.DSOFilterSet):
     def get_filters(cls):
         filters = super().get_filters()
 
+        def filter_to_camel_case(value):
+            """
+            Convert filters to camelCase, not including [lookups].
+            """
+            match = re.match(
+                r"^(?P<key>[a-zA-Z0-9\_\.\-]+)(?P<lookup>[\[\]a-zA-Z0-9\.]+|)", value
+            )
+            if match is not None:
+                return "".join([toCamelCase(match["key"]), match["lookup"]])
+            return toCamelCase(value)
+
         # Apply camelCase to the filter names, after they've been initialized
         # using the model fields snake_case as input.
         return {
-            snake_to_camel_case(attr_name): filter
+            filter_to_camel_case(attr_name): filter
             for attr_name, filter in filters.items()
         }
 
 
 def filterset_factory(model: Type[DynamicModel]) -> Type[DynamicFilterSet]:
-    """Generate the filterset based on the dynamic model."""
+    """Generate the filterset based on the dynamicprint model."""
     # See https://django-filter.readthedocs.io/en/master/guide/usage.html on how filters are used.
     # Determine which fields are included:
     # Excluding geometry fields for now, as the default filter only performs exact matches.
@@ -100,7 +108,7 @@ def generate_relation_filters(model: Type[DynamicModel]):
         relation_properties = schema_fields[relation.name]["items"]["properties"]
         for field_name, field_schema in relation_properties.items():
             # contert space separated property name into snake_case name
-            model_field_name = format_field_name(field_name)
+            model_field_name = to_snake_case(field_name)
             model_field = getattr(relation.related_model, model_field_name).field
             filter_class = dso_filters.DSOFilterSet.FILTER_DEFAULTS.get(
                 model_field.__class__
@@ -112,7 +120,7 @@ def generate_relation_filters(model: Type[DynamicModel]):
 
             # Filter name presented in API
             filter_name = "{}.{}".format(
-                format_api_field_name(relation.name), format_api_field_name(field_name),
+                toCamelCase(relation.name), toCamelCase(field_name),
             )
             filter_lookups = _get_field_lookups(model_field)
             for lookup_expr in filter_lookups:
