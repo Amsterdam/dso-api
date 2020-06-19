@@ -11,7 +11,9 @@ from gisserver.features import FeatureType, ServiceDescription
 from gisserver.views import WFSView
 from schematools.contrib.django.models import DynamicModel
 
+from rest_pandas import PandasView, PandasCSVRenderer, PandasSerializer
 from rest_framework import viewsets, status
+from rest_framework import serializers as drf_serializers
 from rest_framework_dso import crs, fields
 from rest_framework_dso.pagination import DSOPageNumberPagination
 from rest_framework_dso.views import DSOViewMixin
@@ -311,6 +313,57 @@ class DatasetWFSView(WFSView):
         # if request.authenticators and not request.successful_authenticator:
         #     raise exceptions.NotAuthenticated()
         raise PermissionDenied("check_permissions")
+
+
+class DatasetCSVView(PandasView):
+    def setup(self, request, *args, **kwargs):
+        """Initial setup logic before request handling:
+
+        Resolve the current model or return a 404 instead.
+        """
+        super().setup(request, *args, **kwargs)
+        from .urls import router
+
+        dataset_name = self.kwargs["dataset_name"]
+        table_name = self.kwargs["table_name"]
+        try:
+            self.model = router.all_models[dataset_name][table_name]
+        except KeyError:
+            raise Http404("Invalid dataset") from None
+
+    #: Custom permission that checks amsterdam schema auth settings
+    # permission_classes = [permissions.HasOAuth2Scopes]
+
+    def get_queryset(self):
+        return self.model.objects.all()
+
+    def get_serializer_class(self):
+
+        # Dirty hack to make drf_spectacular happy :-(
+        if not (hasattr(self, "model")):
+
+            class Dummy(models.Model):
+                pass
+
+            self.model = Dummy
+
+        return type(
+            "CSVSerializer",
+            (drf_serializers.ModelSerializer,),
+            {
+                "Meta": type(
+                    "Meta",
+                    (),
+                    {
+                        "fields": "__all__",
+                        "model": self.model,
+                        "list_serializer_class": PandasSerializer,
+                    },
+                )
+            },
+        )
+
+    renderer_classes = [PandasCSVRenderer]
 
 
 class LazyList(UserList):
