@@ -94,7 +94,7 @@ class HasOAuth2Scopes(permissions.BasePermission):
                 request, dataset_id=view.dataset_id, table_id=view.table_id
             )
         else:
-            model = view.serializer_class.Meta.model
+            model = view.get_serializer_class().Meta.model
             return self._has_permission(request, model=model)
 
     def has_object_permission(self, request, view, obj):

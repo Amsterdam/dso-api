@@ -332,7 +332,7 @@ class DatasetCSVView(PandasView):
             raise Http404("Invalid dataset") from None
 
     #: Custom permission that checks amsterdam schema auth settings
-    # permission_classes = [permissions.HasOAuth2Scopes]
+    permission_classes = [permissions.HasOAuth2Scopes]
 
     def get_queryset(self):
         return self.model.objects.all()
