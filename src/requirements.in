@@ -8,7 +8,7 @@ django-postgres-unlimited-varchar == 1.1.0
 django-gisserver == 0.7
 djangorestframework == 3.11.0
 djangorestframework-gis == 0.15
-amsterdam-schema-tools[django] == 0.8.5
+amsterdam-schema-tools[django] == 0.8.7
 datapunt-authorization-django==1.0.0
 drf-amsterdam == 0.3.2
 drf-spectacular == 0.8.5
@@ -16,6 +16,7 @@ jsonschema == 3.2.0
 psycopg2-binary == 2.8.4
 python-string-utils == 1.0.0
 readerwriterlock == 1.0.6
+rest-pandas == 1.1.0
 orjson == 2.5.1
 requests == 2.23.0
 sentry-sdk == 0.14.2
