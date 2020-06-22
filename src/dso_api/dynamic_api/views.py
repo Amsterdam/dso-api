@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections import UserList
 from typing import List, Type, Union
 
@@ -205,6 +207,18 @@ def viewset_factory(model: Type[DynamicModel]) -> Type[DynamicApiViewSet]:
     return type(f"{model.__name__}ViewSet", (DynamicApiViewSet,), attrs)
 
 
+class AuthenticatedFeatureType(FeatureType):
+    """Extended WFS feature type definition that also performs authentication."""
+
+    def __init__(self, queryset, *, wfs_view: DatasetWFSView, **kwargs):
+        super().__init__(queryset, **kwargs)
+        self.wfs_view = wfs_view
+
+    def check_permissions(self, request):
+        """Relay permission check to the view"""
+        self.wfs_view.check_permissions(request, [self.model])
+
+
 class DatasetWFSView(WFSView):
     """A WFS view for a single dataset.
 
@@ -261,9 +275,6 @@ class DatasetWFSView(WFSView):
                     f"Please check the capabilities and reformulate your request.",
                 ) from None
 
-        if self.KVP["REQUEST"].upper() != "GETCAPABILITIES":
-            self.check_permissions(self.request, subset.values())
-
         features = []
         for model in subset.values():
             geo_fields = self._get_geometry_fields(model)
@@ -285,7 +296,7 @@ class DatasetWFSView(WFSView):
                     name = f"{base_name}-{geo_field.name}"
                     title = f"{base_title} ({geo_field.verbose_name})"
 
-                feature = FeatureType(
+                feature = AuthenticatedFeatureType(
                     model,
                     name=name,
                     title=title,
@@ -293,6 +304,7 @@ class DatasetWFSView(WFSView):
                     geometry_field_name=geo_field.name,
                     crs=crs.DEFAULT_CRS,
                     other_crs=crs.OTHER_CRS,
+                    wfs_view=self,
                 )
                 features.append(feature)
         return features
