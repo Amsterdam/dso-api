@@ -6,6 +6,7 @@ from django.db import models
 from django.http import Http404, JsonResponse
 from django.utils.functional import cached_property
 from django.utils.translation import gettext as _
+from django.contrib.gis.geos.geometry import GEOSGeometry
 from gisserver.exceptions import WFSException, InvalidParameterValue
 from gisserver.features import FeatureType, ServiceDescription
 from gisserver.views import WFSView
@@ -338,6 +339,13 @@ class DatasetCSVView(PandasView):
         return self.model.objects.all()
 
     def get_serializer_class(self):
+        def _to_representation(self, instance):
+            ret = super(self.__class__, self).to_representation(instance)
+            for field_name in self.fields.keys():
+                field_value = getattr(instance, field_name)
+                if isinstance(field_value, GEOSGeometry):
+                    ret[field_name] = field_value.wkt
+            return ret
 
         # Dirty hack to make drf_spectacular happy :-(
         if not (hasattr(self, "model")):
@@ -359,7 +367,8 @@ class DatasetCSVView(PandasView):
                         "model": self.model,
                         "list_serializer_class": PandasSerializer,
                     },
-                )
+                ),
+                "to_representation": _to_representation,
             },
         )
 
