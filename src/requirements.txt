@@ -25,14 +25,10 @@ django-postgres-unlimited-varchar==1.1.0  # via -r requirements.in, amsterdam-sc
 django==3.0.7             # via -r requirements.in, amsterdam-schema-tools, datapunt-authorization-django, django-cors-headers, django-filter, django-gisserver, django-healthchecks, django-postgres-unlimited-varchar, djangorestframework
 djangorestframework-csv==2.1.0  # via drf-amsterdam
 djangorestframework-gis==0.15  # via -r requirements.in
-<<<<<<< HEAD
 djangorestframework-xml==1.4.0  # via drf-amsterdam
 djangorestframework==3.11.0  # via -r requirements.in, djangorestframework-csv, djangorestframework-gis, drf-amsterdam, drf-extensions, rest-pandas
 drf-amsterdam==0.3.2      # via -r requirements.in
 drf-extensions==0.6.0     # via drf-amsterdam
-=======
-djangorestframework==3.11.0  # via -r requirements.in, djangorestframework-gis
->>>>>>> d593791... Add backwards relations
 drf-spectacular==0.8.5    # via -r requirements.in
 entrypoints==0.3          # via flake8
 flake8-blind-except==0.1.1  # via -r requirements.in

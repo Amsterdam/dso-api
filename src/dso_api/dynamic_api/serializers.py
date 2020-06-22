@@ -148,27 +148,6 @@ def get_view_name(model: Type[DynamicModel], suffix: str):
     return f"dynamic_api:{dataset_id}-{table_id}-{suffix}"
 
 
-# def canonicalize_args(f):
-#     """Wrapper for functools.lru_cache() to canonicalize default
-#     and keyword arguments so cache hits are maximized."""
-#
-#     @wraps(f)
-#     def wrapper(*args, **kwargs):
-#         sig = inspect.getfullargspec(f.__wrapped__)
-#
-#         # build newargs by filling in defaults, args, kwargs
-#         newargs = [None] * len(sig.args)
-#         newargs[-len(sig.defaults) :] = sig.defaults
-#         newargs[: len(args)] = args
-#         for name, value in kwargs.items():
-#             newargs[sig.args.index(name)] = value
-#
-#         return f(*newargs)
-#
-#     return wrapper
-#
-
-
 @lru_cache()
 def serializer_factory(
     model: Type[DynamicModel], depth: int, flat=None
@@ -208,7 +187,7 @@ def generate_field_serializer(  # noqa: C901
     orig_name = model_field.name
     # Instead of having to apply camelize() on every response,
     # create converted field names on the serializer construction.
-    camel_name = snake_to_camel_case(model_field.name)
+    camel_name = toCamelCase(model_field.name)
     depth = extra_kwargs.get("depth", 0)
     if isinstance(model_field, models.ManyToOneRel):
         relation = model._table_schema.relations.get(camel_name)
@@ -223,8 +202,8 @@ def generate_field_serializer(  # noqa: C901
             att_name = model_field.name + "_set"
             if format == "embedded":
                 view_name = "dynamic_api:{}-{}-detail".format(
-                    slugify(model._table_schema.dataset.id),
-                    slugify(model_field.related_model._table_schema.id),
+                    to_snake_case(model._table_schema.dataset.id),
+                    to_snake_case(model_field.related_model._table_schema.id),
                 )
                 new_attrs[camel_name] = TemporalHyperlinkedRelatedField(
                     many=True,
