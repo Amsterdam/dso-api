@@ -232,39 +232,61 @@ class DatasetWFSView(WFSView):
     def get_feature_types(self) -> List[FeatureType]:
         """Generate map feature layers for all models that have geometry data."""
         typenames = self.KVP.get("TYPENAMES")
-        models1 = (
-            {
-                name: model
-                for name, model in self.models.items()
-                if name in typenames.split(",")
+        if not typenames:
+            # Need to parse all models (e.g. GetCapabilities)
+            subset = self.models
+        else:
+            # Already filter the number of exported features, to avoid intense database queries.
+            # The dash is used as variants of the same feature.
+            typenames = [name.split("-", 1)[0] for name in typenames.split(",")]
+            subset = {
+                name: model for name, model in self.models.items() if name in typenames
             }
-            if typenames
-            else self.models
-        )
-        if not models1:
-            raise InvalidParameterValue(
-                "typename",
-                f"Typename '{typenames}' doesn't exist in this server. "
-                f"Please check the capabilities and reformulate your request.",
-            ) from None
+
+            if not subset:
+                raise InvalidParameterValue(
+                    "typename",
+                    f"Typename '{typenames}' doesn't exist in this server. "
+                    f"Please check the capabilities and reformulate your request.",
+                ) from None
 
         if self.KVP["REQUEST"].upper() != "GETCAPABILITIES":
-            self.check_permissions(self.request, models1.values())
-        return [
-            # TODO: Extend FeatureType with extra meta data
-            # the get_unauthorized_fields() part of get_field_names() is an
-            # expensive operation, hence this is only read when needed.
-            FeatureType(
-                model,
-                fields=LazyList(self.get_field_names, model),
-                crs=crs.DEFAULT_CRS,
-                other_crs=crs.OTHER_CRS,
-            )
-            for model in models1.values()
-            if self._has_geometry_field(model)
-        ]
+            self.check_permissions(self.request, subset.values())
 
-    def get_field_names(self, model):
+        features = []
+        for model in subset.values():
+            geo_fields = self._get_geometry_fields(model)
+            base_name = model._meta.model_name
+            base_title = model._meta.verbose_name
+
+            # When there are multiple geometry fields for a model,
+            # multiple features are generated so both can be displayed.
+            # By default, QGis and friends only show the first geometry.
+            for i, geo_field in enumerate(geo_fields):
+                # the get_unauthorized_fields() part of get_field_names() is an
+                # expensive operation, hence this is only read when needed.
+                fields = LazyList(self.get_field_names, model, geo_field.name)
+
+                if i == 0:
+                    name = base_name
+                    title = base_title
+                else:
+                    name = f"{base_name}-{geo_field.name}"
+                    title = f"{base_title} ({geo_field.verbose_name})"
+
+                feature = FeatureType(
+                    model,
+                    name=name,
+                    title=title,
+                    fields=fields,
+                    geometry_field_name=geo_field.name,
+                    crs=crs.DEFAULT_CRS,
+                    other_crs=crs.OTHER_CRS,
+                )
+                features.append(feature)
+        return features
+
+    def get_field_names(self, model, main_geometry_field_name):
         """Define which fields should be exposed with the model.
 
         Instead of opting for the "__all__" value of django-gisserver,
@@ -272,6 +294,7 @@ class DatasetWFSView(WFSView):
         """
         unauthorized_fields = get_unauthorized_fields(self.request, model)
         fields = []
+        other_geo_fields = []
         for model_field in model._meta.get_fields():
             if model_field.name in unauthorized_fields:
                 continue
@@ -282,11 +305,21 @@ class DatasetWFSView(WFSView):
             else:
                 field_name = model_field.name
 
-            fields.append(field_name)
-        return fields
+            if (
+                isinstance(model_field, GeometryField)
+                and field_name != main_geometry_field_name
+            ):
+                # The other geometry fields are moved to the end, so the main geometryfield
+                # is listed as first value in a feature. This makes sure QGis and friends
+                # render that particular field.
+                other_geo_fields.append(model_field.name)
+            else:
+                fields.append(field_name)
 
-    def _has_geometry_field(self, model):
-        return any(isinstance(f, GeometryField) for f in model._meta.get_fields())
+        return fields + other_geo_fields
+
+    def _get_geometry_fields(self, model) -> List[GeometryField]:
+        return [f for f in model._meta.get_fields() if isinstance(f, GeometryField)]
 
     #: Custom permission that checks amsterdam schema auth settings
     permission_classes = [permissions.HasOAuth2Scopes]
