@@ -194,8 +194,9 @@ def generate_field_serializer(  # noqa: C901
         if (
             depth <= 1
             and relation
-            and relation["table"] == model_field.related_model._meta.model_name
-            and relation["field"] == model_field.field.name
+            and relation["table"]
+            == toCamelCase(model_field.related_model._meta.model_name)
+            and relation["field"] == toCamelCase(model_field.field.name)
         ):
             depth += 1
             format = relation.get("format", "summary")

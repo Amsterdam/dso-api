@@ -22,7 +22,7 @@ def test_openapi_json(api_client, filled_router, caplog):
 
     # Prove that the serializer field types are reasonably converted
     component_schemas = schema["components"]["schemas"]
-    container_properties = component_schemas["AfvalwegingenContainers"]["properties"]
+    container_properties = component_schemas["Afvalwegingencontainers"]["properties"]
     assert "MultiPolygon" in component_schemas, list(component_schemas)
     assert container_properties["geometry"]["$ref"] == "#/components/schemas/Point"
     assert container_properties["id"]["type"] == "integer"
