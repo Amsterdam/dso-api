@@ -4,7 +4,7 @@
 #
 #    pip-compile --output-file=requirements.txt requirements.in
 #
-amsterdam-schema-tools[django]==0.8.10  # via -r requirements.in
+amsterdam-schema-tools[django]==0.8.11  # via -r requirements.in
 asgiref==3.2.3            # via django
 attrs==19.3.0             # via jsonschema, pytest
 cachetools==4.0.0         # via -r requirements.in
