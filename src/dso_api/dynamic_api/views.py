@@ -1,5 +1,5 @@
 from collections import UserList
-from typing import List, Type
+from typing import List, Type, Union
 
 from django.contrib.gis.db.models import GeometryField
 from django.db import models
@@ -8,7 +8,12 @@ from django.utils.functional import cached_property
 from django.utils.translation import gettext as _
 from django.contrib.gis.geos.geometry import GEOSGeometry
 from gisserver.exceptions import WFSException, InvalidParameterValue
-from gisserver.features import FeatureType, ServiceDescription
+from gisserver.features import (
+    ComplexFeatureField,
+    FeatureField,
+    FeatureType,
+    ServiceDescription,
+)
 from gisserver.views import WFSView
 from schematools.contrib.django.models import DynamicModel
 
@@ -22,6 +27,8 @@ from dso_api.dynamic_api import permissions
 
 from . import filterset, locking, serializers
 from .permissions import get_unauthorized_fields
+
+FieldList = List[Union[str, FeatureField]]
 
 
 class PermissionDenied(WFSException):
@@ -219,6 +226,10 @@ class DatasetWFSView(WFSView):
         except KeyError:
             raise Http404("Invalid dataset") from None
 
+        # Allow to define the expand fields on request.
+        expand = request.GET.get("expand", "")
+        self.expand_fields = set(expand.split(",")) if expand else set()
+
     def get_service_description(self, service: str) -> ServiceDescription:
         dataset_name = self.kwargs["dataset_name"]
         return ServiceDescription(
@@ -263,9 +274,9 @@ class DatasetWFSView(WFSView):
             # multiple features are generated so both can be displayed.
             # By default, QGis and friends only show the first geometry.
             for i, geo_field in enumerate(geo_fields):
-                # the get_unauthorized_fields() part of get_field_names() is an
+                # the get_unauthorized_fields() part of get_feature_fields() is an
                 # expensive operation, hence this is only read when needed.
-                fields = LazyList(self.get_field_names, model, geo_field.name)
+                fields = LazyList(self.get_feature_fields, model, geo_field.name)
 
                 if i == 0:
                     name = base_name
@@ -286,7 +297,7 @@ class DatasetWFSView(WFSView):
                 features.append(feature)
         return features
 
-    def get_field_names(self, model, main_geometry_field_name):
+    def get_feature_fields(self, model, main_geometry_field_name) -> FieldList:
         """Define which fields should be exposed with the model.
 
         Instead of opting for the "__all__" value of django-gisserver,
@@ -294,6 +305,7 @@ class DatasetWFSView(WFSView):
         """
         unauthorized_fields = get_unauthorized_fields(self.request, model)
         fields = []
+        expandable = set()
         other_geo_fields = []
         for model_field in model._meta.get_fields():
             if model_field.name in unauthorized_fields:
@@ -301,7 +313,17 @@ class DatasetWFSView(WFSView):
 
             if isinstance(model_field, models.ForeignKey):
                 # Don't let it query on the relation value yet
+                expandable.add(model_field.name)
                 field_name = model_field.attname
+
+                if model_field.name in self.expand_fields:
+                    # Include an expanded field definition to the list of fields
+                    relation_fields = self.get_expanded_fields(
+                        model_field.related_model
+                    )
+                    fields.append(
+                        ComplexFeatureField(model_field.name, fields=relation_fields)
+                    )
             else:
                 field_name = model_field.name
 
@@ -316,7 +338,29 @@ class DatasetWFSView(WFSView):
             else:
                 fields.append(field_name)
 
+        # Check whether the requested expanded fields are even supported.
+        invalid_expands = self.expand_fields - expandable
+        if invalid_expands:
+            names = ", ".join(sorted(invalid_expands))
+            raise InvalidParameterValue(
+                "expand", f"Invalid field for expanding: {names}"
+            )
+
         return fields + other_geo_fields
+
+    def get_expanded_fields(self, model) -> FieldList:
+        """Define which fields to include in an expanded relation.
+        This is a shorter list, as including a geometry has no use here.
+        Relations are also avoided as these won't be expanded anyway.
+        """
+        unauthorized_fields = get_unauthorized_fields(self.request, model)
+        return [
+            model_field.name
+            for model_field in model._meta.get_fields()  # type: models.Field
+            if not model_field.is_relation
+            and model_field.name not in unauthorized_fields
+            and not isinstance(model_field, GeometryField)
+        ]
 
     def _get_geometry_fields(self, model) -> List[GeometryField]:
         return [f for f in model._meta.get_fields() if isinstance(f, GeometryField)]
