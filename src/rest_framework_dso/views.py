@@ -5,7 +5,6 @@ from django.http import HttpResponseNotFound
 from typing import Optional, Type, Union
 
 from dso_api.lib.exceptions import RemoteAPIException
-from gisserver.types import CRS
 from rest_framework.exceptions import ErrorDetail, NotAcceptable, ValidationError
 from rest_framework.views import exception_handler as drf_exception_handler
 from rest_framework_dso import crs, filters, parsers
@@ -152,7 +151,7 @@ class DSOViewMixin:
         request.accept_crs = self._parse_accept_crs(request.META.get("HTTP_ACCEPT_CRS"))
         request.response_content_crs = None
 
-    def _parse_accept_crs(self, http_value) -> Optional[CRS]:
+    def _parse_accept_crs(self, http_value) -> Optional[crs.CRS]:
         """Parse the HTTP Accept-Crs header.
 
         Clients provide this header to indicate which CRS
@@ -166,7 +165,7 @@ class DSOViewMixin:
                 return None
 
         try:
-            accept_crs = CRS.from_string(http_value)
+            accept_crs = crs.CRS.from_string(http_value)
         except ValueError as e:
             raise NotAcceptable(f"Chosen CRS is invalid: {e}") from e
 
