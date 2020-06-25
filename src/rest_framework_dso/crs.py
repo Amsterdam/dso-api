@@ -2,7 +2,7 @@
 
 NOTE: the CRS class should be imported when publishing this as a separate library.
 """
-from gisserver.types import CRS, WGS84
+from gisserver.geometries import CRS, WGS84
 
 __all__ = [
     "CRS",
