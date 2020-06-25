@@ -230,7 +230,7 @@ class TestDynamicSerializer:
                 }
             },
             "schema": "https://schemas.data.amsterdam.nl/datasets/bagh/bagh#gemeente",
-            "stadsdeel": ["http://testserver/v1/bagh/stadsdeel/03630000000001_001/",],
+            "stadsdelen": ["http://testserver/v1/bagh/stadsdeel/03630000000001_001/",],
             "id": "0363_001",
             "naam": "Amsterdam",
             "volgnummer": 1,

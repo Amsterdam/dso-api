@@ -194,11 +194,10 @@ def generate_field_serializer(  # noqa: C901
         if (
             depth <= 1
             and relation
-            and relation["table"]
-            == toCamelCase(model_field.related_model._meta.model_name)
             and relation["field"] == toCamelCase(model_field.field.name)
         ):
             depth += 1
+            name = relation.get("name", camel_name)
             format = relation.get("format", "summary")
             att_name = model_field.name + "_set"
             if format == "embedded":
@@ -206,16 +205,16 @@ def generate_field_serializer(  # noqa: C901
                     to_snake_case(model._table_schema.dataset.id),
                     to_snake_case(model_field.related_model._table_schema.id),
                 )
-                new_attrs[camel_name] = TemporalHyperlinkedRelatedField(
+                new_attrs[name] = TemporalHyperlinkedRelatedField(
                     many=True,
                     view_name=view_name,
                     queryset=getattr(model, att_name),
                     source=att_name,
                 )
-                fields.append(camel_name)
+                fields.append(name)
             elif format == "summary":
-                new_attrs[camel_name] = _RelatedSummaryField(source=att_name)
-                fields.append(camel_name)
+                new_attrs[name] = _RelatedSummaryField(source=att_name)
+                fields.append(name)
 
         return
     if model.has_parent_table() and model_field.name in ["id", "parent"]:

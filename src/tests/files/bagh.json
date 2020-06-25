@@ -131,9 +131,9 @@
             "type": "string",
             "relation": "bagh:wijk"
           },
-          "ggw gebied": {
+          "ggwGebied": {
             "type": "string",
-            "relation": "bagh:ggw_gebied"
+            "relation": "bagh:ggwGebied"
           },
           "stadsdeel": {
             "type": "string",
@@ -159,7 +159,7 @@
         "display": "id",
         "additionalRelations": {
           "stadsdeel": {
-            "table": "stadsdeel",
+            "name": "stadsdelen",
             "field": "gemeente",
             "format": "embedded"
           }
@@ -199,7 +199,7 @@
       }
     },
     {
-      "id": "ggw_gebied",
+      "id": "ggwGebied",
       "type": "table",
       "schema": {
         "$schema": "http://json-schema.org/draft-07/schema#",
@@ -264,7 +264,7 @@
       }
     },
     {
-      "id": "ggw_praktijkgebied",
+      "id": "ggwPraktijkgebied",
       "type": "table",
       "schema": {
         "$schema": "http://json-schema.org/draft-07/schema#",
@@ -463,9 +463,9 @@
           "postcode": {
             "type": "string"
           },
-          "openbare ruimte": {
+          "openbareRuimte": {
             "type": "string",
-            "relation": "bagh:openbare_ruimte"
+            "relation": "bagh:openbareRuimte"
           },
           "ligplaats": {
             "type": "string",
@@ -489,7 +489,7 @@
       }
     },
     {
-      "id": "openbare_ruimte",
+      "id": "openbareRuimte",
       "type": "table",
       "schema": {
         "$schema": "http://json-schema.org/draft-07/schema#",
@@ -669,7 +669,7 @@
         "display": "id",
         "additionalRelations": {
           "buurt": {
-            "table": "buurt",
+            "name": "buurten",
             "field": "stadsdeel",
             "format": "summary"
           }
@@ -1024,9 +1024,9 @@
           "geometrie": {
             "$ref": "https://geojson.org/schema/MultiPolygon.json"
           },
-          "ggw gebied": {
+          "ggwGebied": {
             "type": "string",
-            "relation": "bagh:ggw_gebied"
+            "relation": "bagh:ggwGebied"
           },
           "stadsdeel": {
             "type": "string",
