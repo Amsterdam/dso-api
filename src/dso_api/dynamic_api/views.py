@@ -216,7 +216,16 @@ class AuthenticatedFeatureType(FeatureType):
 
     def check_permissions(self, request):
         """Relay permission check to the view"""
-        self.wfs_view.check_permissions(request, [self.model])
+        models = [self.model]
+
+        # If the ?expand=.. parameter is used, check the type definition for
+        # any expanded elements. These models are also checked for permission.
+        for xsd_element in self.xsd_type.complex_elements:
+            related_model = xsd_element.type.source
+            if related_model is not None:
+                models.append(related_model)
+
+        self.wfs_view.check_permissions(request, models)
 
 
 class DatasetWFSView(WFSView):
