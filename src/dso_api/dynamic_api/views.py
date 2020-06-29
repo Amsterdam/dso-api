@@ -336,6 +336,8 @@ class DatasetWFSView(WFSView):
                     fields.append(
                         ComplexFeatureField(model_field.name, fields=relation_fields)
                     )
+            elif model_field.is_relation:
+                continue  # don't support other relations yet
             else:
                 field_name = model_field.name
 
