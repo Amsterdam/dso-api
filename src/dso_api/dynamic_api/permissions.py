@@ -72,6 +72,8 @@ class HasOAuth2Scopes(permissions.BasePermission):
     """
 
     def _has_permission(self, request, model=None, dataset_id=None, table_id=None):
+        if request.method == "OPTIONS":
+            return True
         if model:
             scopes = fetch_scopes_for_model(model)
         elif dataset_id and table_id:
