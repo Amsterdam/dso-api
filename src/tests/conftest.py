@@ -78,7 +78,12 @@ def router():
 
 @pytest.fixture()
 def filled_router(
-    router, afval_dataset, bommen_dataset, parkeervakken_dataset, bagh_dataset
+    router,
+    afval_dataset,
+    bommen_dataset,
+    parkeervakken_dataset,
+    bagh_dataset,
+    vestiging_dataset,
 ):
     # Prove that the router URLs are extended on adding a model
     router.reload()
@@ -95,6 +100,8 @@ def filled_router(
         create_tables(parkeervakken_dataset.schema)
     if "bagh_buurt" not in table_names:
         create_tables(bagh_dataset.schema)
+    if "vestiging_vestiging" not in table_names:
+        create_tables(vestiging_dataset.schema)
 
     return router
 
@@ -331,6 +338,73 @@ def bagh_wijk(bagh_wijk_model, bagh_stadsdeel):
         naam="Sloterdijk",
         stadsdeel=bagh_stadsdeel,
     )
+
+
+@pytest.fixture()
+def vestiging_schema_json() -> dict():
+    path = HERE / "files/vestiging.json"
+    return json.loads(path.read_text())
+
+
+@pytest.fixture()
+def vestiging_schema(vestiging_schema_json) -> DatasetSchema:
+    return DatasetSchema.from_dict(vestiging_schema_json)
+
+
+@pytest.fixture()
+def vestiging_adres_model(vestiging_models):
+    return vestiging_models["adres"]
+
+
+@pytest.fixture()
+def vestiging_vestiging_model(vestiging_models):
+    return vestiging_models["vestiging"]
+
+
+@pytest.fixture()
+def bezoek_adres1(vestiging_adres_model):
+    return vestiging_adres_model.objects.create(
+        id=1, plaats="Amsterdam", straat="Strawinskylaan", nummer=123, postcode="1234AB"
+    )
+
+
+@pytest.fixture()
+def bezoek_adres2(vestiging_adres_model):
+    return vestiging_adres_model.objects.create(
+        id=2, plaats="Amsterdam", straat="Singel", nummer=321, postcode="1011ZZ"
+    )
+
+
+@pytest.fixture()
+def post_adres1(vestiging_adres_model):
+    return vestiging_adres_model.objects.create(
+        id=3, plaats="Amsterdam", straat="Dam", nummer=1, postcode="1000AA"
+    )
+
+
+@pytest.fixture()
+def vestiging1(vestiging_vestiging_model, bezoek_adres1, post_adres1):
+    return vestiging_vestiging_model.objects.create(
+        id=1, naam="Snake Oil", bezoek_adres=bezoek_adres1, post_adres=post_adres1
+    )
+
+
+@pytest.fixture()
+def vestiging2(vestiging_vestiging_model, bezoek_adres2, post_adres1):
+    return vestiging_vestiging_model.objects.create(
+        id=2, naam="Haarlemmer olie", bezoek_adres=bezoek_adres2, post_adres=post_adres1
+    )
+
+
+@pytest.fixture()
+def vestiging_dataset(vestiging_schema_json) -> Dataset:
+    return Dataset.objects.create(name="vestiging", schema_data=vestiging_schema_json)
+
+
+@pytest.fixture()
+def vestiging_models(filled_router):
+    # Using filled_router so all urls can be generated too.
+    return filled_router.all_models["vestiging"]
 
 
 @pytest.fixture

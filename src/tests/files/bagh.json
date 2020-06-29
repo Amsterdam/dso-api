@@ -158,8 +158,8 @@
         ],
         "display": "id",
         "additionalRelations": {
-          "stadsdeel": {
-            "name": "stadsdelen",
+          "stadsdelen": {
+            "table": "stadsdeel",
             "field": "gemeente",
             "format": "embedded"
           }
@@ -668,8 +668,8 @@
         ],
         "display": "id",
         "additionalRelations": {
-          "buurt": {
-            "name": "buurten",
+          "buurten": {
+            "table": "buurt",
             "field": "stadsdeel",
             "format": "summary"
           }

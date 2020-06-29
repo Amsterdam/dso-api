@@ -190,32 +190,31 @@ def generate_field_serializer(  # noqa: C901
     camel_name = toCamelCase(model_field.name)
     depth = extra_kwargs.get("depth", 0)
     if isinstance(model_field, models.ManyToOneRel):
-        relation = model._table_schema.relations.get(camel_name)
-        if (
-            depth <= 1
-            and relation
-            and relation["field"] == toCamelCase(model_field.field.name)
-        ):
-            depth += 1
-            name = relation.get("name", camel_name)
-            format = relation.get("format", "summary")
-            att_name = model_field.name + "_set"
-            if format == "embedded":
-                view_name = "dynamic_api:{}-{}-detail".format(
-                    to_snake_case(model._table_schema.dataset.id),
-                    to_snake_case(model_field.related_model._table_schema.id),
-                )
-                new_attrs[name] = TemporalHyperlinkedRelatedField(
-                    many=True,
-                    view_name=view_name,
-                    queryset=getattr(model, att_name),
-                    source=att_name,
-                )
-                fields.append(name)
-            elif format == "summary":
-                new_attrs[name] = _RelatedSummaryField(source=att_name)
-                fields.append(name)
-
+        for name, relation in model._table_schema.relations.items():
+            if (
+                depth <= 1
+                and relation["table"]
+                == toCamelCase(model_field.related_model._meta.model_name)
+                and relation["field"] == toCamelCase(model_field.field.name)
+            ):
+                depth += 1
+                format1 = relation.get("format", "summary")
+                att_name = model_field.name
+                if format1 == "embedded":
+                    view_name = "dynamic_api:{}-{}-detail".format(
+                        to_snake_case(model._table_schema.dataset.id),
+                        to_snake_case(model_field.related_model._table_schema.id),
+                    )
+                    new_attrs[name] = TemporalHyperlinkedRelatedField(
+                        many=True,
+                        view_name=view_name,
+                        queryset=getattr(model, att_name),
+                    )
+                    fields.append(name)
+                elif format1 == "summary":
+                    new_attrs[name] = _RelatedSummaryField()
+                    fields.append(name)
+                break
         return
     if model.has_parent_table() and model_field.name in ["id", "parent"]:
         # Do not render PK and FK to parent on nested tables

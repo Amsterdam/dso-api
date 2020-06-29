@@ -1,0 +1,94 @@
+{
+  "type": "dataset",
+  "id": "vestiging",
+  "title": "vestiging",
+  "status": "beschikbaar",
+  "version": "0.0.1",
+  "crs": "EPSG:28992",
+  "tables": [
+    {
+      "id": "adres",
+      "type": "table",
+      "schema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "schema",
+          "id",
+          "plaats",
+          "straat",
+          "nummer",
+          "postcode"
+        ],
+        "display": "id",
+        "additionalRelations": {
+          "vestigingenBezoek": {
+            "table": "vestiging",
+            "field": "bezoekAdres",
+            "format": "embedded"
+          },
+          "vestigingenPost": {
+            "table": "vestiging",
+            "field": "postAdres",
+            "format": "embedded"
+          }
+        },
+        "properties": {
+          "schema": {
+            "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.1#/definitions/schema"
+          },
+          "id": {
+            "type": "integer"
+          },
+          "plaats": {
+            "type": "string"
+          },
+          "straat": {
+            "type": "string"
+          },
+          "nummer": {
+            "type": "integer"
+          },
+          "postcode": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    {
+      "id": "vestiging",
+      "type": "table",
+      "schema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "schema",
+          "id",
+          "naam"
+        ],
+        "display": "id",
+        "properties": {
+          "schema": {
+            "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.1#/definitions/schema"
+          },
+          "id": {
+            "type": "integer"
+          },
+          "naam": {
+            "type": "string"
+          },
+          "bezoekAdres": {
+            "type": "integer",
+            "relation": "vestiging:adres"
+          },
+          "postAdres": {
+            "type": "integer",
+            "relation": "vestiging:adres"
+          }
+        }
+      }
+    }
+  ]
+}
