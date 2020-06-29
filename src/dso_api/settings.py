@@ -2,6 +2,7 @@ import sys
 
 import os
 
+from corsheaders.defaults import default_headers
 import environ
 import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
@@ -157,6 +158,12 @@ LOGGING = {
 # -- Third party app settings
 
 CORS_ORIGIN_ALLOW_ALL = True
+
+
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    "Accept-Crs",
+    "Content-Crs",
+]
 
 HEALTH_CHECKS = {
     "app": lambda request: True,
