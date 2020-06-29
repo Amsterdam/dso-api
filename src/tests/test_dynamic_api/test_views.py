@@ -353,3 +353,13 @@ class TestAuth:
         token = fetch_auth_token(["BAG/R"])
         response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
         assert response.status_code == 200, response.data
+
+    def test_auth_options_requests_are_not_protected(
+        self, api_client, filled_router, afval_schema
+    ):
+        """ Prove that options requests are not protected
+        """
+        url = reverse("dynamic_api:afvalwegingen-clusters-list")
+        models.Dataset.objects.filter(name="afvalwegingen").update(auth="BAG/R")
+        response = api_client.options(url)
+        assert response.status_code == 200, response.data
