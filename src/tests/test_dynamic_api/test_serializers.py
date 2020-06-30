@@ -230,7 +230,7 @@ class TestDynamicSerializer:
                 }
             },
             "schema": "https://schemas.data.amsterdam.nl/datasets/bagh/bagh#gemeente",
-            "stadsdeel": ["http://testserver/v1/bagh/stadsdeel/03630000000001_001/",],
+            "stadsdelen": ["http://testserver/v1/bagh/stadsdeel/03630000000001_001/",],
             "id": "0363_001",
             "naam": "Amsterdam",
             "volgnummer": 1,
@@ -239,6 +239,84 @@ class TestDynamicSerializer:
             "beginGeldigheid": None,
             "registratiedatum": None,
             "verzorgingsgebied": None,
+        }
+
+    @staticmethod
+    def test_multiple_backwards_relations(
+        api_request,
+        vestiging_schema,
+        vestiging_adres_model,
+        vestiging_vestiging_model,
+        vestiging1,
+        vestiging2,
+        post_adres1,
+    ):
+        """Show backwards
+
+        The _embedded part has a None value instead.
+        """
+        api_request.dataset = vestiging_schema
+        VestigingSerializer = serializer_factory(vestiging_vestiging_model, 0)
+        vestiging_serializer = VestigingSerializer(
+            vestiging1, context={"request": api_request},
+        )
+        assert vestiging_serializer.data == {
+            "_links": {
+                "self": {
+                    "href": "http://testserver/v1/vestiging/vestiging/1/",
+                    "title": "(no title: vestiging #1)",
+                }
+            },
+            "schema": "https://schemas.data.amsterdam.nl/datasets/vestiging/vestiging#vestiging",
+            "id": 1,
+            "naam": "Snake Oil",
+            "postAdresId": 3,
+            "postAdres": "http://testserver/v1/vestiging/adres/3/",
+            "bezoekAdresId": 1,
+            "bezoekAdres": "http://testserver/v1/vestiging/adres/1/",
+        }
+
+        vestiging_serializer = VestigingSerializer(
+            vestiging2, context={"request": api_request},
+        )
+        assert vestiging_serializer.data == {
+            "_links": {
+                "self": {
+                    "href": "http://testserver/v1/vestiging/vestiging/2/",
+                    "title": "(no title: vestiging #2)",
+                }
+            },
+            "schema": "https://schemas.data.amsterdam.nl/datasets/vestiging/vestiging#vestiging",
+            "id": 2,
+            "naam": "Haarlemmer olie",
+            "postAdresId": 3,
+            "postAdres": "http://testserver/v1/vestiging/adres/3/",
+            "bezoekAdresId": 2,
+            "bezoekAdres": "http://testserver/v1/vestiging/adres/2/",
+        }
+
+        AdresSerializer = serializer_factory(vestiging_adres_model, 0)
+        adres_serializer = AdresSerializer(
+            post_adres1, context={"request": api_request},
+        )
+        assert adres_serializer.data == {
+            "_links": {
+                "self": {
+                    "href": "http://testserver/v1/vestiging/adres/3/",
+                    "title": "(no title: adres #3)",
+                }
+            },
+            "schema": "https://schemas.data.amsterdam.nl/datasets/vestiging/vestiging#adres",
+            "vestigingenBezoek": [],
+            "vestigingenPost": [
+                "http://testserver/v1/vestiging/vestiging/1/",
+                "http://testserver/v1/vestiging/vestiging/2/",
+            ],
+            "id": 3,
+            "nummer": 1,
+            "plaats": "Amsterdam",
+            "straat": "Dam",
+            "postcode": "1000AA",
         }
 
     @staticmethod
