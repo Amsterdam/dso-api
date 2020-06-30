@@ -23,5 +23,5 @@ services:
       bash -c ".jenkins/test/test.sh"
 
   docs:
-    build: ../../docs
+    build: ../../../docs
       
