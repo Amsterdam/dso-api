@@ -38,6 +38,16 @@ node {
             }
         }
     }
+
+    // The rebuilding likely reuses the build cache from docker-compose.
+    stage("Build API-Docs image") {
+        tryStep "build", {
+            docker.withRegistry("${DOCKER_REGISTRY_HOST}",'docker_registry_auth') {
+                def image = docker.build("datapunt/dataservices/dso-api-docs:${env.BUILD_NUMBER}", "src")
+                image.push()
+            }
+        }
+    }
 }
 
 
@@ -50,6 +60,13 @@ if (BRANCH == "master") {
             tryStep "image tagging", {
                 docker.withRegistry("${DOCKER_REGISTRY_HOST}",'docker_registry_auth') {
                     def image = docker.image("datapunt/dataservices/dso-api:${env.BUILD_NUMBER}")
+                    image.pull()
+                    image.push("acceptance")
+                }
+            }
+            tryStep "docs image tagging", {
+                docker.withRegistry("${DOCKER_REGISTRY_HOST}",'docker_registry_auth') {
+                    def image = docker.image("datapunt/dataservices/dso-api-docs:${env.BUILD_NUMBER}")
                     image.pull()
                     image.push("acceptance")
                 }
@@ -79,6 +96,14 @@ if (BRANCH == "master") {
             tryStep "image tagging", {
                 docker.withRegistry("${DOCKER_REGISTRY_HOST}",'docker_registry_auth') {
                     def image = docker.image("datapunt/dataservices/dso-api:${env.BUILD_NUMBER}")
+                    image.pull()
+                    image.push("production")
+                    image.push("latest")
+                }
+            }
+            tryStep "docs image tagging", {
+                docker.withRegistry("${DOCKER_REGISTRY_HOST}",'docker_registry_auth') {
+                    def image = docker.image("datapunt/dataservices/dso-api-docs:${env.BUILD_NUMBER}")
                     image.pull()
                     image.push("production")
                     image.push("latest")
