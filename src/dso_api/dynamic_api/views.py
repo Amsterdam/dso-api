@@ -361,14 +361,6 @@ class DatasetWFSView(WFSView):
             else:
                 fields.append(field_name)
 
-        # Check whether the requested expanded fields are even supported.
-        invalid_expands = self.expand_fields - expandable
-        if invalid_expands:
-            names = ", ".join(sorted(invalid_expands))
-            raise InvalidParameterValue(
-                "expand", f"Invalid field for expanding: {names}"
-            )
-
         return fields + other_geo_fields
 
     def get_expanded_fields(self, model) -> FieldList:
