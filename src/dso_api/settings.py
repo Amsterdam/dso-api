@@ -226,4 +226,4 @@ DATAPUNT_AUTHZ = {
 
 # -- Local app settings
 
-AMSTERDAM_SCHEMA = {"geosearch_disabled_datasets": ["bag"]}
+AMSTERDAM_SCHEMA = {"geosearch_disabled_datasets": ["bag", "meetbouten"]}
