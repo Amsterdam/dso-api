@@ -1,7 +1,7 @@
 Temporele Datasets
 ==================
 
-Somige datasets (BAGH) presenteren historische data en dus bieden "tijd reisen" megelijkheid aan.
+Sommige datasets (BAGH) presenteren historische data en dus bieden eeen "tijd reizen" mogelijkheid aan.
 
 
 Filtering op versie nummer
@@ -9,7 +9,7 @@ Filtering op versie nummer
 
 Elk object binnen temporele dataset heeft  een of meer versies per ID.
 
-Voorbeeld: `BAGH Riekerpolder Buurt`_ :code:`/v1/bagh/buurt/03630000000477/`
+Bijvoorbeeld: `BAGH Riekerpolder Buurt`_ :code:`/v1/bagh/buurt/03630000000477/`
 
 .. code-block::
 
@@ -26,7 +26,7 @@ Voorbeeld: `BAGH Riekerpolder Buurt`_ :code:`/v1/bagh/buurt/03630000000477/`
        ...
    }
 
-Hetzelfde link met `volgnummer`_ :code:`/v1/bagh/buurt/03630000000477/?volgnummer=1` geeft eerste versie van `Riekerpolder` buurt.
+Dezelfde link met `volgnummer`_ :code:`/v1/bagh/buurt/03630000000477/?volgnummer=1` geeft de eerste versie van `Riekerpolder` buurt.
 
 .. code-block::
 
@@ -48,16 +48,16 @@ Hetzelfde link met `volgnummer`_ :code:`/v1/bagh/buurt/03630000000477/?volgnumme
 Filtering op basis van geldigheids datum
 ----------------------------------------
 
-Objecten binnen temporele dataset mogen gefiltered worden op basis van geldigheids datum.
+Objecten binnen een temporele dataset mogen gefilterd worden op basis van geldigheids datum.
 
-Dit kan gedaan worden op basis van :code:`additionalFilters` gedifineerd in Amsterdam Schema definitie van datasets.
+Dit kan gedaan worden op basis van :code:`additionalFilters`, gedefinieerd in de Amsterdam Schema definitie van datasets.
 
-BAGH heeft een temporele filter: :code:`geldigOp`, dit is een filter, die zorgd dat:
- - allen objecten waar `geldigOp` valt binnen `beginGeldigheid` en `eindGeldigheids` datums worden getoond,
+BAGH heeft een temporele filter: :code:`geldigOp`. Dit is een filter die zorgt dat:
+ - alle objecten waar `geldigOp` valt binnen `beginGeldigheid` en `eindGeldigheids` datums worden getoond,
  - alle links tussen objecten krijgen `geldigOp` referenties
 
 
-Voorbeeld:
+Bijvoorbeeld:
 
 `BAGH Riekerpolder Buurt`_ :code:`/v1/bagh/buurt/03630000000477/`
 
@@ -77,7 +77,7 @@ Voorbeeld:
    }
 
 
-Toevoegen van `geldigOp`_ in URI :code:`/v1/bagh/buurt/03630000000477/?geldigOp=2010-04-30` geeft een buurt informatie die is geldig op 30 April 2010.
+Toevoegen van `geldigOp`_ in URI :code:`/v1/bagh/buurt/03630000000477/?geldigOp=2010-04-30` geeft buurt informatie die geldig is op 30 April 2010.
 
 
 .. code-block::
