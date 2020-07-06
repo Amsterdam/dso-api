@@ -122,7 +122,7 @@ DATABASES = {
     ),
     "bag_v11": env.db_url(
         "BAG_V11_DATABASE_URL",
-        default="postgres://bag_v11_read:insecure@localhost:5434/bag_v11",
+        default="postgres://bag_v11:insecure@localhost:5434/bag_v11",
         engine="django.contrib.gis.db.backends.postgis",
     ),
 }
