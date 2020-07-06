@@ -127,7 +127,12 @@ DATABASES = {
     ),
 }
 
-DATABASE_ROUTERS = ["dso_api.dbrouters.ExternDatabaseRouter"]
+DATABASE_SCHEMAS = {
+    "bag": "bag_v11",  # Important to have 'bag_v11' connection defined in DATABASES.
+}
+DATABASE_DISABLE_MIGRATIONS = ["bag"]
+
+DATABASE_ROUTERS = ["dso_api.dbrouters.DatabaseSchemasRouter"]
 
 locals().update(env.email_url(default="smtp://"))
 
