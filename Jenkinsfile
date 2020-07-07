@@ -43,7 +43,7 @@ node {
     stage("Build API-Docs image") {
         tryStep "build", {
             docker.withRegistry("${DOCKER_REGISTRY_HOST}",'docker_registry_auth') {
-                def image = docker.build("datapunt/dataservices/dso-api-docs:${env.BUILD_NUMBER}", "src")
+                def image = docker.build("datapunt/dataservices/dso-api-docs:${env.BUILD_NUMBER}", "docs")
                 image.push()
             }
         }
