@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from collections import UserList
 from typing import List, Type, Union
 
@@ -31,6 +32,9 @@ from . import filterset, locking, serializers
 from .permissions import get_unauthorized_fields
 
 FieldList = List[Union[str, FeatureField]]
+RE_SIMPLE_NAME = re.compile(
+    r"^(?P<ns>[a-z0-9]+:)(?P<name>[a-z0-9]+)(?P<variant>-[a-z0-9]+)?", re.I
+)
 
 
 class PermissionDenied(WFSException):
@@ -271,10 +275,15 @@ class DatasetWFSView(WFSView):
             subset = self.models
         else:
             # Already filter the number of exported features, to avoid intense database queries.
-            # The dash is used as variants of the same feature.
-            typenames = [name.split("-", 1)[0] for name in typenames.split(",")]
+            # The dash is used as variants of the same feature. The xmlns: prefix is also removed
+            # since it can differ depending on the NAMESPACES parameter.
+            requested_names = set(
+                RE_SIMPLE_NAME.sub(r"\g<name>", name) for name in typenames.split(",")
+            )
             subset = {
-                name: model for name, model in self.models.items() if name in typenames
+                name: model
+                for name, model in self.models.items()
+                if name in requested_names
             }
 
             if not subset:
