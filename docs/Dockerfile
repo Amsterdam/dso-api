@@ -17,3 +17,4 @@ RUN python3 -m pip install Sphinx==3.1.1 Pillow
 
 COPY . /docs
 RUN make html
+RUN cp -rf /docs/build/html/* /usr/share/nginx/html
