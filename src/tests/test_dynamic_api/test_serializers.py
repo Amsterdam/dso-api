@@ -71,7 +71,7 @@ class TestDynamicSerializer:
             "_links": {
                 "self": {
                     "href": "http://testserver/v1/afvalwegingen/containers/2/",
-                    "title": "(no title: containers #2)",
+                    "title": "2",
                 }
             },
             "id": 2,
@@ -107,7 +107,7 @@ class TestDynamicSerializer:
             "_links": {
                 "self": {
                     "href": "http://testserver/v1/afvalwegingen/containers/2/",
-                    "title": "(no title: containers #2)",
+                    "title": "2",
                 }
             },
             "id": 2,
@@ -124,7 +124,7 @@ class TestDynamicSerializer:
                     "_links": {
                         "self": {
                             "href": "http://testserver/v1/afvalwegingen/clusters/123.456/",
-                            "title": "(no title: clusters #123.456)",
+                            "title": "123.456",
                         }
                     },
                     "id": "123.456",
@@ -154,7 +154,7 @@ class TestDynamicSerializer:
             "_links": {
                 "self": {
                     "href": "http://testserver/v1/afvalwegingen/containers/3/",
-                    "title": "(no title: containers #3)",
+                    "title": "3",
                 }
             },
             "id": 3,
@@ -189,7 +189,7 @@ class TestDynamicSerializer:
             "_links": {
                 "self": {
                     "href": "http://testserver/v1/afvalwegingen/containers/4/",
-                    "title": "(no title: containers #4)",
+                    "title": "4",
                 }
             },
             "id": 4,
@@ -226,7 +226,7 @@ class TestDynamicSerializer:
             "_links": {
                 "self": {
                     "href": "http://testserver/v1/bagh/gemeente/0363/?volgnummer=1",
-                    "title": "(no title: gemeente #0363_001)",
+                    "title": "0363_001",
                 }
             },
             "schema": "https://schemas.data.amsterdam.nl/datasets/bagh/bagh#gemeente",
@@ -256,15 +256,18 @@ class TestDynamicSerializer:
         The _embedded part has a None value instead.
         """
         api_request.dataset = vestiging_schema
+
         VestigingSerializer = serializer_factory(vestiging_vestiging_model, 0)
+
         vestiging_serializer = VestigingSerializer(
             vestiging1, context={"request": api_request},
         )
+
         assert vestiging_serializer.data == {
             "_links": {
                 "self": {
                     "href": "http://testserver/v1/vestiging/vestiging/1/",
-                    "title": "(no title: vestiging #1)",
+                    "title": "1",
                 }
             },
             "schema": "https://schemas.data.amsterdam.nl/datasets/vestiging/vestiging#vestiging",
@@ -283,7 +286,7 @@ class TestDynamicSerializer:
             "_links": {
                 "self": {
                     "href": "http://testserver/v1/vestiging/vestiging/2/",
-                    "title": "(no title: vestiging #2)",
+                    "title": "2",
                 }
             },
             "schema": "https://schemas.data.amsterdam.nl/datasets/vestiging/vestiging#vestiging",
@@ -303,7 +306,7 @@ class TestDynamicSerializer:
             "_links": {
                 "self": {
                     "href": "http://testserver/v1/vestiging/adres/3/",
-                    "title": "(no title: adres #3)",
+                    "title": "3",
                 }
             },
             "schema": "https://schemas.data.amsterdam.nl/datasets/vestiging/vestiging#adres",
