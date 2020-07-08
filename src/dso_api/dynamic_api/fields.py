@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from rest_framework_dso.fields import LinksField
+from .utils import split_on_separator
 
 
 class TemporalHyperlinkedRelatedField(serializers.HyperlinkedRelatedField):
@@ -14,7 +15,7 @@ class TemporalHyperlinkedRelatedField(serializers.HyperlinkedRelatedField):
 
         if request.versioned:
             # note that `obj` has only PK field.
-            lookup_value, version = obj.pk.split("_")
+            lookup_value, version = split_on_separator(obj.pk)
             kwargs = {self.lookup_field: lookup_value}
 
             base_url = self.reverse(
@@ -46,7 +47,7 @@ class TemporalReadOnlyField(serializers.ReadOnlyField):
             "request" in self.parent.context
             and self.parent.context["request"].versioned
         ):
-            value = value.split("_")[0]
+            value = split_on_separator(value)[0]
         return value
 
 
