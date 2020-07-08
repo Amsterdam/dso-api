@@ -465,3 +465,53 @@ class TestDynamicSerializer:
             "buurtcode": "A05d",
             "straatnaam": "Zoutkeetsgracht",
         }
+
+    @staticmethod
+    def test_display_title_present(
+        api_request,
+        fietspaaltjes_schema,
+        fietspaaltjes_container_model,
+        fietspaaltjes_data,
+    ):
+        """
+            Prove that title element is generated if display field is specified
+            """
+
+        FietsplaatjesSerializer = serializer_factory(
+            fietspaaltjes_container_model, 0, flat=True
+        )
+
+        api_request.dataset = fietspaaltjes_schema
+
+        fietsplaatjes_serializer = FietsplaatjesSerializer(
+            fietspaaltjes_data, context={"request": api_request}
+        )
+
+        assert "'title': 'reference for DISPLAY FIELD'" in str(
+            fietsplaatjes_serializer.data
+        )
+
+    @staticmethod
+    def test_no_display_title_present(
+        api_request,
+        fietspaaltjes_schema_no_display,
+        fietspaaltjes_container_model_no_display,
+        fietspaaltjes_data_no_display,
+    ):
+        """
+            Prove that title element is NOT generated if display field is NOT specified
+            """
+
+        FietsplaatjesSerializer = serializer_factory(
+            fietspaaltjes_container_model_no_display, 0, flat=True
+        )
+
+        api_request.dataset = fietspaaltjes_schema_no_display
+
+        fietsplaatjes_serializer = FietsplaatjesSerializer(
+            fietspaaltjes_data_no_display, context={"request": api_request}
+        )
+
+        assert "'title': 'reference for DISPLAY FIELD'" not in str(
+            fietsplaatjes_serializer.data
+        )
