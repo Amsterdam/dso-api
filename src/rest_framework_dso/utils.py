@@ -101,6 +101,7 @@ class EmbeddedHelper:
             _embedded[name] = [
                 embedded_serializer.to_representation(data[id])
                 for id in ids_per_relation[name]
+                if id in data
             ]
 
         return _embedded
