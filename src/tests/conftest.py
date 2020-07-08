@@ -82,8 +82,8 @@ def filled_router(
     afval_dataset,
     bommen_dataset,
     parkeervakken_dataset,
-    # bagh_dataset,
-    # vestiging_dataset,
+    bagh_dataset,
+    vestiging_dataset,
     fietspaaltjes_dataset,
     fietspaaltjes_dataset_no_display,
 ):
@@ -100,10 +100,10 @@ def filled_router(
         create_tables(bommen_dataset.schema)
     if "parkeervakken_parkeervakken" not in table_names:
         create_tables(parkeervakken_dataset.schema)
-    # if "bagh_buurt" not in table_names:
-    #     create_tables(bagh_dataset.schema)
-    # if "vestiging_vestiging" not in table_names:
-    #     create_tables(vestiging_dataset.schema)
+    if "bagh_buurt" not in table_names:
+        create_tables(bagh_dataset.schema)
+    if "vestiging_vestiging" not in table_names:
+        create_tables(vestiging_dataset.schema)
     if "fietsplaatjes_fietsplaatjes" not in table_names:
         create_tables(fietspaaltjes_dataset.schema)
     if "fietspaaltjesnodisplay_fietspaaltjesnodisplay" not in table_names:
