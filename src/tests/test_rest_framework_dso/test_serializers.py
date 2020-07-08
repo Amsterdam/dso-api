@@ -1,4 +1,5 @@
 import pytest
+from django.db import connection
 from rest_framework.exceptions import ValidationError
 from rest_framework.request import Request
 
@@ -56,6 +57,31 @@ def test_serializer_many(api_request, movie):
         "movie": [{"name": "foo123", "category_id": movie.category_id}],
         "category": [{"name": "bar"}],
     }
+
+
+@pytest.mark.django_db
+def test_serializer_embed_with_missing_relations(api_request):
+    """Prove that the serializer can embed data (for the detail page)"""
+
+    cursor = connection.cursor()
+    cursor.execute(
+        "INSERT INTO test_rest_framework_dso_movie (name, category_id) VALUES ('Test', 333);"
+    )
+    movie = Movie.objects.get(name="Test")
+
+    serializer = MovieSerializer(
+        many=True,
+        instance=[movie],
+        fields_to_expand=["category"],
+        context={"request": api_request},
+    )
+    assert serializer.data == {
+        "movie": [{"name": "Test", "category_id": movie.category_id}],
+        "category": [],
+    }
+
+    # Cleanup needed to make Django happy.
+    cursor.execute("DELETE FROM test_rest_framework_dso_movie")
 
 
 @pytest.mark.django_db
