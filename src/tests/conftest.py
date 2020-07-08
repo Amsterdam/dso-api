@@ -452,7 +452,7 @@ def fietspaaltjes_schema(fietspaaltjes_schema_json) -> DatasetSchema:
 
 
 @pytest.fixture()
-def fietspaaltjes_container_model(filled_router):
+def fietspaaltjes_model(filled_router):
     # Using filled_router so all urls can be generated too.
     return filled_router.all_models["fietspaaltjes"]["fietspaaltjes"]
 
@@ -472,8 +472,8 @@ def fietspaaltjes_dataset(fietspaaltjes_schema_json) -> Dataset:
 
 
 @pytest.fixture()
-def fietspaaltjes_data(fietspaaltjes_container_model):
-    return fietspaaltjes_container_model.objects.create(
+def fietspaaltjes_data(fietspaaltjes_model):
+    return fietspaaltjes_model.objects.create(
         id="Fietsplaatje record met display",
         geometry="POINT (123207.6558130105 486624.6399002579)",
         street="Weesperplein",
@@ -504,7 +504,7 @@ def fietspaaltjes_schema_no_display(
 
 
 @pytest.fixture()
-def fietspaaltjes_container_model_no_display(filled_router):
+def fietspaaltjes_model_no_display(filled_router):
     # Using filled_router so all urls can be generated too.
     return filled_router.all_models["fietspaaltjesnodisplay"]["fietspaaltjesnodisplay"]
 
@@ -524,8 +524,8 @@ def fietspaaltjes_dataset_no_display(fietspaaltjes_schema_json_no_display) -> Da
 
 
 @pytest.fixture()
-def fietspaaltjes_data_no_display(fietspaaltjes_container_model_no_display):
-    return fietspaaltjes_container_model_no_display.objects.create(
+def fietspaaltjes_data_no_display(fietspaaltjes_model_no_display):
+    return fietspaaltjes_model_no_display.objects.create(
         id="Fietsplaatje record zonder display",
         geometry="POINT (123207.6558130105 486624.6399002579)",
         street="Weesperplein",
