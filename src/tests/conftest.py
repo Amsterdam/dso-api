@@ -84,6 +84,8 @@ def filled_router(
     parkeervakken_dataset,
     bagh_dataset,
     vestiging_dataset,
+    fietspaaltjes_dataset,
+    fietspaaltjes_dataset_no_display,
 ):
     # Prove that the router URLs are extended on adding a model
     router.reload()
@@ -102,6 +104,10 @@ def filled_router(
         create_tables(bagh_dataset.schema)
     if "vestiging_vestiging" not in table_names:
         create_tables(vestiging_dataset.schema)
+    if "fietsplaatjes_fietsplaatjes" not in table_names:
+        create_tables(fietspaaltjes_dataset.schema)
+    if "fietspaaltjesnodisplay_fietspaaltjesnodisplay" not in table_names:
+        create_tables(fietspaaltjes_dataset_no_display.schema)
 
     return router
 
@@ -435,3 +441,111 @@ def fetch_auth_token(fetch_tokendata):
         return token.serialize()
 
     return _fetcher
+
+
+# ---| >> START no display check>> FIETSPAALTJES  >>no display check >> |---#
+
+
+@pytest.fixture()
+def fietspaaltjes_schema(fietspaaltjes_schema_json) -> DatasetSchema:
+    return DatasetSchema.from_dict(fietspaaltjes_schema_json)
+
+
+@pytest.fixture()
+def fietspaaltjes_model(filled_router):
+    # Using filled_router so all urls can be generated too.
+    return filled_router.all_models["fietspaaltjes"]["fietspaaltjes"]
+
+
+@pytest.fixture()
+def fietspaaltjes_schema_json() -> dict:
+    """Fixture to return the schema json for """
+    path = HERE / "files/fietspaaltjes.json"
+    return json.loads(path.read_text())
+
+
+@pytest.fixture()
+def fietspaaltjes_dataset(fietspaaltjes_schema_json) -> Dataset:
+    return Dataset.objects.create(
+        name="fietspaaltjes", schema_data=fietspaaltjes_schema_json
+    )
+
+
+@pytest.fixture()
+def fietspaaltjes_data(fietspaaltjes_model):
+    return fietspaaltjes_model.objects.create(
+        id="Fietsplaatje record met display",
+        geometry="POINT (123207.6558130105 486624.6399002579)",
+        street="Weesperplein",
+        at="Geschutswerf",
+        area="Amsterdam-Centrum",
+        score_2013=None,
+        score_current="reference for DISPLAY FIELD",
+        count=6,
+        paaltjes_weg=["nu paaltje(s)"],
+        soort_paaltje=["paaltje(s) ong. 75cm hoog", "verwijderde paaltjes"],
+        uiterlijk=["rood/wit"],
+        type=["vast", "uitneembaar"],
+        ruimte=["Voldoende: 1.6m of meer"],
+        markering=["markering ontbreekt", "onvoldoende markering"],
+        beschadigingen=None,
+        veiligheid=["overzichtelijke locatie"],
+        zicht_in_donker=["onvoldoende reflectie op paal"],
+        soort_weg=["rijbaan fiets+auto", "fietspad"],
+        noodzaak=["nodig tegen sluipverkeer"],
+    )
+
+
+@pytest.fixture()
+def fietspaaltjes_schema_no_display(
+    fietspaaltjes_schema_json_no_display,
+) -> DatasetSchema:
+    return DatasetSchema.from_dict(fietspaaltjes_schema_json_no_display)
+
+
+@pytest.fixture()
+def fietspaaltjes_model_no_display(filled_router):
+    # Using filled_router so all urls can be generated too.
+    return filled_router.all_models["fietspaaltjesnodisplay"]["fietspaaltjesnodisplay"]
+
+
+@pytest.fixture()
+def fietspaaltjes_schema_json_no_display() -> dict:
+    """Fixture to return the schema json for """
+    path = HERE / "files/fietspaaltjes_no_display.json"
+    return json.loads(path.read_text())
+
+
+@pytest.fixture()
+def fietspaaltjes_dataset_no_display(fietspaaltjes_schema_json_no_display) -> Dataset:
+    return Dataset.objects.create(
+        name="fietspaaltjesnodisplay", schema_data=fietspaaltjes_schema_json_no_display
+    )
+
+
+@pytest.fixture()
+def fietspaaltjes_data_no_display(fietspaaltjes_model_no_display):
+    return fietspaaltjes_model_no_display.objects.create(
+        id="Fietsplaatje record zonder display",
+        geometry="POINT (123207.6558130105 486624.6399002579)",
+        street="Weesperplein",
+        at="Geschutswerf",
+        area="Amsterdam-Centrum",
+        score_2013=None,
+        score_current="reference for DISPLAY FIELD",
+        count=6,
+        paaltjes_weg=["nu paaltje(s)"],
+        soort_paaltje=["paaltje(s) ong. 75cm hoog", "verwijderde paaltjes"],
+        uiterlijk=["rood/wit"],
+        type=["vast", "uitneembaar"],
+        ruimte=["Voldoende: 1.6m of meer"],
+        markering=["markering ontbreekt", "onvoldoende markering"],
+        beschadigingen=None,
+        veiligheid=["overzichtelijke locatie"],
+        zicht_in_donker=["onvoldoende reflectie op paal"],
+        soort_weg=["rijbaan fiets+auto", "fietspad"],
+        noodzaak=["nodig tegen sluipverkeer"],
+    )
+
+
+# --| >> EINDE no display check>> FIETSPAALTJES  >>no display check >> |--#
