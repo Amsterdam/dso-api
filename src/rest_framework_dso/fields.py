@@ -92,9 +92,16 @@ class LinksField(serializers.HyperlinkedIdentityField):
 
     def to_representation(self, value):
         request = self.context.get("request")
-        return {
-            "self": {
-                "href": self.get_url(value, self.view_name, request, None),
-                "title": str(value),
-            },
-        }
+
+        # if no display field, ommit the title element from output
+        if value._display_field:
+            return {
+                "self": {
+                    "href": self.get_url(value, self.view_name, request, None),
+                    "title": str(value),
+                },
+            }
+        else:
+            return {
+                "self": {"href": self.get_url(value, self.view_name, request, None)},
+            }
