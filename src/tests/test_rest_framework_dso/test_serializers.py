@@ -189,7 +189,7 @@ def test_location_transform(api_request, location):
     data = serializer.data
     rounder = lambda p: [round(c, 6) for c in p]
     assert rounder(data["geometry"]["coordinates"]) == rounder(
-        [47.97485812241689, 3.313687692711974]
+        [3.313687692711974, 47.97485812241689]
     )
 
     # Serializer assigned 'response_content_crs' (used accept_crs)
