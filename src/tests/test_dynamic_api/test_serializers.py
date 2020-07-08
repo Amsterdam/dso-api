@@ -369,7 +369,6 @@ class TestDynamicSerializer:
             "_links": {
                 "self": {
                     "href": "http://testserver/v1/parkeervakken/parkeervakken/121138489047/",
-                    "title": "(no title: parkeervakken #121138489047)",
                 }
             },
             "geom": None,
@@ -451,8 +450,7 @@ class TestDynamicSerializer:
         assert parkeervaak_serializer.data == {
             "_links": {
                 "self": {
-                    "href": "http://testserver/v1/parkeervakken/parkeervakken/121138489047/",
-                    "title": "(no title: parkeervakken #121138489047)",
+                    "href": "http://testserver/v1/parkeervakken/parkeervakken/121138489047/"
                 }
             },
             "geom": None,
