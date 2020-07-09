@@ -31,7 +31,7 @@ from dso_api.dynamic_api import permissions
 from . import filterset, locking, serializers
 from .permissions import get_unauthorized_fields
 
-FieldList = List[Union[str, FeatureField]]
+FieldDef = Union[str, FeatureField]
 RE_SIMPLE_NAME = re.compile(
     r"^(?P<ns>[a-z0-9]+:)(?P<name>[a-z0-9]+)(?P<variant>-[a-z0-9]+)?", re.I
 )
@@ -253,9 +253,12 @@ class DatasetWFSView(WFSView):
         except KeyError:
             raise Http404("Invalid dataset") from None
 
-        # Allow to define the expand fields on request.
+        # Allow to define the expand or embed fields on request.
         expand = request.GET.get("expand", "")
         self.expand_fields = set(expand.split(",")) if expand else set()
+
+        embed = request.GET.get("embed", "")
+        self.embed_fields = set(embed.split(",")) if embed else set()
 
     def get_service_description(self, service: str) -> ServiceDescription:
         dataset_name = self.kwargs["dataset_name"]
@@ -327,7 +330,7 @@ class DatasetWFSView(WFSView):
                 features.append(feature)
         return features
 
-    def get_feature_fields(self, model, main_geometry_field_name) -> FieldList:
+    def get_feature_fields(self, model, main_geometry_field_name) -> List[FieldDef]:
         """Define which fields should be exposed with the model.
 
         Instead of opting for the "__all__" value of django-gisserver,
@@ -335,7 +338,6 @@ class DatasetWFSView(WFSView):
         """
         unauthorized_fields = get_unauthorized_fields(self.request, model)
         fields = []
-        expandable = set()
         other_geo_fields = []
         for model_field in model._meta.get_fields():
             if model_field.name in unauthorized_fields:
@@ -343,16 +345,24 @@ class DatasetWFSView(WFSView):
 
             if isinstance(model_field, models.ForeignKey):
                 # Don't let it query on the relation value yet
-                expandable.add(model_field.name)
                 field_name = model_field.attname
 
                 if model_field.name in self.expand_fields:
                     # Include an expanded field definition to the list of fields
-                    relation_fields = self.get_expanded_fields(
-                        model_field.related_model
-                    )
                     fields.append(
-                        ComplexFeatureField(model_field.name, fields=relation_fields)
+                        ComplexFeatureField(
+                            model_field.name,
+                            fields=self.get_expanded_fields(model_field.related_model),
+                        )
+                    )
+                if model_field.name in self.embed_fields:
+                    # The "Model.id" field is added
+                    fields.extend(
+                        self.get_embedded_fields(
+                            model_field.name,
+                            model_field.related_model,
+                            pk_attr=field_name,
+                        )
                     )
             elif model_field.is_relation:
                 continue  # don't support other relations yet
@@ -372,7 +382,7 @@ class DatasetWFSView(WFSView):
 
         return fields + other_geo_fields
 
-    def get_expanded_fields(self, model) -> FieldList:
+    def get_expanded_fields(self, model) -> List[FieldDef]:
         """Define which fields to include in an expanded relation.
         This is a shorter list, as including a geometry has no use here.
         Relations are also avoided as these won't be expanded anyway.
@@ -380,6 +390,24 @@ class DatasetWFSView(WFSView):
         unauthorized_fields = get_unauthorized_fields(self.request, model)
         return [
             model_field.name
+            for model_field in model._meta.get_fields()  # type: models.Field
+            if not model_field.is_relation
+            and model_field.name not in unauthorized_fields
+            and not isinstance(model_field, GeometryField)
+        ]
+
+    def get_embedded_fields(self, relation_name, model, pk_attr=None) -> List[FieldDef]:
+        """Define which fields to embed as flattened fields."""
+        unauthorized_fields = get_unauthorized_fields(self.request, model)
+        return [
+            FeatureField(
+                name=f"{relation_name}.{model_field.name}",  # can differ if needed
+                model_attribute=(
+                    f"{relation_name}.{model_field.name}"
+                    if not model_field.primary_key or not pk_attr
+                    else pk_attr  # optimization, redirect queries to the parent model
+                ),
+            )
             for model_field in model._meta.get_fields()  # type: models.Field
             if not model_field.is_relation
             and model_field.name not in unauthorized_fields
