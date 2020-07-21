@@ -322,10 +322,12 @@ class DatasetWFSView(WFSView):
                     name=name,
                     title=title,
                     fields=fields,
+                    display_field_name=model.get_display_field(),
                     geometry_field_name=geo_field.name,
                     crs=crs.DEFAULT_CRS,
                     other_crs=crs.OTHER_CRS,
                     wfs_view=self,
+                    show_name_field=model.has_display_field(),
                 )
                 features.append(feature)
         return features
