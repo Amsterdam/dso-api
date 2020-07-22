@@ -24,4 +24,7 @@ services:
 
   docs:
     build: ../../../docs
-      
+    environment:
+      DATABASE_URL: "postgres://dataservices:insecure@database/dataservices"
+    command: tail -f /dev/null
+

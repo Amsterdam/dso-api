@@ -41,11 +41,21 @@ node {
 
     // The rebuilding likely reuses the build cache from docker-compose.
     stage("Build API-Docs image") {
-        tryStep "build", {
+        tryStep "build docs", {
             docker.withRegistry("${DOCKER_REGISTRY_HOST}",'docker_registry_auth') {
                 def image = docker.build("datapunt/dataservices/dso-api-docs:${env.BUILD_NUMBER}", "docs")
+                sh "docker-compose -p dso_api -f src/.jenkins/test/docker-compose.yml up -d &&" +
+                    "docker-compose -p dso_api -f src/.jenkins/test/docker-compose.yml exec -T test python manage.py migrate &&" +
+                    "docker-compose -p dso_api -f src/.jenkins/test/docker-compose.yml exec -T test python manage.py import_schemas --no-create-tables &&" +
+                    "docker-compose -p dso_api -f src/.jenkins/test/docker-compose.yml exec -T test python manage.py change_dataset brp --endpoint-url=https://api.data.amsterdam.nl &&" +
+                    "docker-compose -p dso_api -f src/.jenkins/test/docker-compose.yml exec -T test python manage.py import_schemas &&" +
+                    "docker-compose -p dso_api -f src/.jenkins/test/docker-compose.yml exec -T docs make datasets &&" +
+                    "docker commit \$(docker ps -aqf 'name=dso_api_docs') datapunt/dataservices/dso-api-docs:${env.BUILD_NUMBER}"
+
                 image.push()
             }
+        }, {
+            sh "docker-compose -p dso_api -f src/.jenkins/test/docker-compose.yml down"
         }
     }
 }

@@ -8,6 +8,14 @@ SPHINXBUILD   ?= sphinx-build
 SOURCEDIR     = source
 BUILDDIR      = build
 
+datasets:
+	rm -rf /docs/source/datasets/*
+	mkdir -p /docs/source/datasets
+	python3 /docs/source/datasets.py
+	@$(SPHINXBUILD) -M html "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(0)
+	mkdir -p /usr/share/nginx/html/v1/docs/
+	cp -rf /docs/build/html/* /usr/share/nginx/html/v1/docs/
+
 # Put it first so that "make" without argument is like "make help".
 help:
 	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
