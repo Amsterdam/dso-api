@@ -13,9 +13,9 @@ RUN apt-get update \
  && rm -rf /var/lib/apt/lists/*
 
 RUN python3 -m pip install -U pip
-RUN python3 -m pip install Sphinx==3.1.1 Pillow
+RUN python3 -m pip install Sphinx==3.1.1 Pillow sphinx-rtd-theme psycopg2-binary python-string-utils
 
 COPY . /docs
-RUN make html
+# RUN make html
 RUN mkdir -p /usr/share/nginx/html/v1/docs/
-RUN cp -rf /docs/build/html/* /usr/share/nginx/html/v1/docs/
+# RUN cp -rf /docs/build/html/* /usr/share/nginx/html/v1/docs/
