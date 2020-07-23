@@ -4,12 +4,15 @@ RUN apt-get update \
  && apt-get install -y --no-install-recommends \
       graphviz \
       fonts-liberation \
- && rm -rf /var/lib/apt/lists/* \
- && pip install Sphinx==3.1.2 Pillow sphinx-rtd-theme psycopg2-binary python-string-utils
+ && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /docs
-COPY . /docs
-RUN make html
+COPY requirements.txt /docs
+RUN pip install -r requirements.txt
+
+COPY . /docs/
+RUN mkdir -p /docs/_static \
+ && make html
 
 # Static serving runtime
 FROM nginx
