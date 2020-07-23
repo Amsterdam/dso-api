@@ -50,6 +50,7 @@ node {
                     "docker-compose -p dso_api -f src/.jenkins/test/docker-compose.yml exec -T test python manage.py change_dataset brp --endpoint-url=https://api.data.amsterdam.nl &&" +
                     "docker-compose -p dso_api -f src/.jenkins/test/docker-compose.yml exec -T test python manage.py import_schemas &&" +
                     "docker-compose -p dso_api -f src/.jenkins/test/docker-compose.yml exec -T docs make datasets &&" +
+                    "docker-compose -p dso_api -f src/.jenkins/test/docker-compose.yml exec -T docs service nginx restart &&" +
                     "docker commit \$(docker ps -aqf 'name=dso_api_docs') datapunt/dataservices/dso-api-docs:${env.BUILD_NUMBER}"
 
                 image.push()
