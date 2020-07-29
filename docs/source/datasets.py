@@ -1,12 +1,14 @@
-#!/bin/env python
+#!/usr/bin/env python
 import os
 import re
+from pathlib import Path
+
 import psycopg2
 import psycopg2.extras
 from string_utils import slugify
 
 
-BASE_PATH = "/docs/source/"
+BASE_PATH = Path("./source/")
 re_camel_case = re.compile(
     r"(((?<=[^A-Z])[A-Z])|([A-Z](?![A-Z]))|((?<=[a-z])[0-9])|(?<=[0-9])[a-z])"
 )
@@ -22,7 +24,7 @@ _identifier_lookups = [
 def get_datasets():
     connection = psycopg2.connect(dsn=os.environ.get("DATABASE_URL"))
     with connection.cursor(cursor_factory=psycopg2.extras.DictCursor) as cursor:
-        cursor.execute("SELECT * FROM datasets_dataset")
+        cursor.execute("SELECT * FROM datasets_dataset ORDER BY name")
         for dataset in cursor:
             yield dataset
 
@@ -72,12 +74,10 @@ def create_dataset_docs(dataset):
             doc.append("Use ?_fields=field,field2 to limit which fields to receive")
             doc.append("Use ?_sort=field,field2,-field3 to sort on fieldsname")
 
-    filename = os.path.join(
-        BASE_PATH, "datasets", f"{to_snake_case(dataset['name'])}.rst"
-    )
-    with open(filename, "w") as output:
-        output.write("\n".join(doc))
-    return to_snake_case(dataset["name"])
+    snake_name = to_snake_case(dataset["name"])
+    output = BASE_PATH.joinpath(f"datasets/{snake_name}.rst")
+    output.write_text("\n".join(doc))
+    return snake_name
 
 
 def generate_filters(field_id, field):
@@ -123,15 +123,11 @@ def generate_datasets():
     for dataset in get_datasets():
         documents.append(create_dataset_docs(dataset=dataset))
 
-    dataset_links = "\n".join([f"   datasets/{document}.rst" for document in documents])
-    index_file = os.path.join(BASE_PATH, "_templates", "index.tpl")
-    index = open(index_file, "r")
-    index_data = index.read()
-    index.close()
-    with open(os.path.join(BASE_PATH, "index.rst"), "w") as index:
-        data = index_data.replace("{datasets}", dataset_links)
-        print(data)
-        index.write(data)
+    dataset_links = "\n".join([f"   {document}" for document in documents])
+    index_template = BASE_PATH.joinpath("_templates/index.tpl").read_text()
+
+    index_rst = BASE_PATH.joinpath("datasets/index.rst")
+    index_rst.write_text(index_template.replace("{datasets}", dataset_links))
 
 
 # ---------- INTERNAL ---
