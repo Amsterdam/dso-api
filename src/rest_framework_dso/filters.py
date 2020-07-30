@@ -394,7 +394,16 @@ class DSOOrderingFilter(OrderingFilter):
             # Can adjust 'self' as this instance is recreated each request.
             if "sorteer" in request.query_params:
                 self.ordering_param = "sorteer"
-        return super().get_ordering(request, queryset, view)
+
+        ordering = super().get_ordering(request, queryset, view)
+        if ordering is None:
+            return ordering
+
+        # convert to snake_case, preserving `-` if needed
+        correct_ordering = [
+            "-".join([to_snake_case(y) for y in x.split("-")]) for x in ordering
+        ]
+        return correct_ordering
 
     def remove_invalid_fields(self, queryset, fields, view, request):
         """Raise errors for invalid parameters instead of silently dropping them."""
