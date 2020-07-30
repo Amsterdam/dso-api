@@ -363,3 +363,25 @@ class TestAuth:
         models.Dataset.objects.filter(name="afvalwegingen").update(auth="BAG/R")
         response = api_client.options(url)
         assert response.status_code == 200, response.data
+
+    def test_sort_by_accepts_camel_case(
+        self, api_client, filled_router, afval_schema, afval_container
+    ):
+        """ Prove that _sort is accepting camelCase parameters.
+        """
+        url = reverse("dynamic_api:afvalwegingen-containers-list")
+        response = api_client.get(f"{url}?_sort=datumCreatie")
+        assert response.status_code == 200, response.data
+        assert len(response.data["_embedded"]["containers"]) == 1, response.data
+
+    def test_sort_by_not_accepting_db_column_names(
+        self, api_client, filled_router, afval_schema, afval_container
+    ):
+        """ Prove that _sort is not accepting db column names.
+        """
+        url = reverse("dynamic_api:afvalwegingen-containers-list")
+        response = api_client.get(f"{url}?_sort=datum_creatie")
+        assert response.status_code == 400, response.data
+        assert response.data["x-validation-errors"] == [
+            "Invalid sort fields: datum_creatie"
+        ], response.data
