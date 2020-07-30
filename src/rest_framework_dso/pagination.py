@@ -14,6 +14,7 @@ class DSOPageNumberPagination(pagination.PageNumberPagination):
     https://tools.ietf.org/html/draft-kelly-json-hal-08
     """
 
+    page_size_query_param = "page_size"
     #: The field name for the results envelope
     results_field = None
 
