@@ -6,10 +6,11 @@ import re
 from pathlib import Path
 
 import jinja2
-import psycopg2
-import psycopg2.extras
 from string_utils import slugify
+from schematools.types import DatasetSchema, DatasetTableSchema
+from schematools.utils import schema_defs_from_url
 
+SCHEMA_URL = os.getenv("SCHEMA_URL", "https://schemas.data.amsterdam.nl/datasets/")
 
 BASE_PATH = Path("./source/")
 TEMPLATE_PATH = BASE_PATH.joinpath("_templates")
@@ -38,15 +39,7 @@ VALUE_EXAMPLES = {
 }
 
 
-def get_datasets():
-    with psycopg2.connect(dsn=os.environ.get("DATABASE_URL")) as connection:
-        with connection.cursor(cursor_factory=psycopg2.extras.DictCursor) as cursor:
-            cursor.execute("SELECT * FROM datasets_dataset ORDER BY name")
-            yield from cursor
-
-
-def render_dataset_docs(dataset_row):
-    dataset = dataset_row["schema_data"]
+def render_dataset_docs(dataset: DatasetSchema):
     snake_name = to_snake_case(dataset["id"])
 
     render_template(
@@ -56,15 +49,15 @@ def render_dataset_docs(dataset_row):
             "schema": dataset,
             "main_title": dataset.get("title")
             or snake_name.replace("_", " ").capitalize(),
-            "tables": [_get_table_context(dataset, t) for t in dataset["tables"]],
+            "tables": [_get_table_context(t) for t in dataset.tables],
         },
     )
 
     return snake_name
 
 
-def _get_table_context(dataset: dict, table: dict):
-    snake_name = to_snake_case(dataset["id"])
+def _get_table_context(table: DatasetTableSchema):
+    snake_name = to_snake_case(table.dataset.id)
     snake_id = to_snake_case(table["id"])
     uri = f"/v1/{snake_name}/{snake_id}/"
 
@@ -79,6 +72,8 @@ def _get_table_context(dataset: dict, table: dict):
             for relation_name, field in table["schema"]["properties"].items()
             if field.get("relation") is not None
         ],
+        "additional_filters": table.filters,
+        "additional_relations": table.relations,
         "source": table,
     }
 
@@ -135,8 +130,8 @@ def _get_field_context(field_id, field: dict):
 
 def render_datasets():
     documents = []
-    for row in get_datasets():
-        documents.append(render_dataset_docs(dataset_row=row))
+    for name, dataset in schema_defs_from_url(SCHEMA_URL).items():
+        documents.append(render_dataset_docs(dataset))
 
     render_template(
         "datasets/index.rst.j2", "datasets/index.rst", {"documents": documents}
