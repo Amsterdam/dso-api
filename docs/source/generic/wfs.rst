@@ -59,6 +59,9 @@ Bijvoorbeeld:
    Door deze parameter weg te laten worden *alle objecten* in een enkele request opgehaald.
    De server kan voor de meeste datasets dit met een goede performance leveren.
 
+Met de ``SRSNAME`` parameter worden de geometrie velden in de gewenste projectie teruggegeven.
+Bijvoorbeeld: ``SRSNAME=urn:ogc:def:crs:EPSG::3857`` voor de web-mercator projectie die Google Maps gebruikt.
+
 Queries op relaties
 -------------------
 

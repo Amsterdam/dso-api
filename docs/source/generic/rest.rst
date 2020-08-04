@@ -270,7 +270,7 @@ Veelgebruikte projecties zijn:
       - Nederlandse rijksdriehoekscoördinaten (RD New).
     * - ``EPSG:4258``
       - ETRS89, Europese projectie.
-    * - ``EPSG:3856``
+    * - ``EPSG:3857``
       - Pseudo-Mercator (vergelijkbaar met Google Maps)
     * - ``EPSG:4326``
       - WGS 84 latitude-longitude, wereldwijd.
