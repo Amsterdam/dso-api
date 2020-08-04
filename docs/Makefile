@@ -19,14 +19,6 @@ datasets:
 	mkdir -p source/datasets
 	python3 source/datasets.py
 
-datasets-docker:
-	rm -rf /docs/source/datasets
-	mkdir -p /docs/source/datasets
-	python3 /docs/source/datasets.py
-	@$(SPHINXBUILD) -M html "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(0)
-	mkdir -p /usr/share/nginx/html/v1/docs/
-	cp -rf /docs/build/html/* /usr/share/nginx/html/v1/docs/
-
 # Ensure the folder exists
 source/datasets:
 	mkdir -p source/datasets
