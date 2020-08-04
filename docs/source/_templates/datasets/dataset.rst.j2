@@ -2,7 +2,9 @@
 
 {{ schema.description or '' }}
 
-Status: {{ schema.status|default('beschikbaar') }}
+* **ID:** {{ schema_name }}
+* **Status:** {{ schema.status|default('beschikbaar') }}
+* **WFS:** {{ wfs_url }}
 
 .. contents:: Tabellen
    :local:
@@ -15,7 +17,13 @@ Status: {{ schema.status|default('beschikbaar') }}
 
 {{ table.description or '' }}
 
-URI: `{{ table.uri }} <https://api.data.amsterdam.nl{{ table.uri }}>`_
+.. raw:: html
+
+   <ul>
+     <li><b>REST URI:</b> <a href="https://api.data.amsterdam.nl{{ table.uri }}">{{ table.uri|strip_base_url }}</a></li>
+     <li><b>WFS CSV Export:</b> {% if table.wfs_csv %}<a type="text/csv" download href="{{ table.wfs_csv }}">{{ table.wfs_csv|strip_base_url }}</a>{% else %}N.B.{% endif %}</li>
+     <li><b>WFS GeoJSON Export:</b> {% if table.wfs_geojson %}<a type="application/json" download href="{{ table.wfs_geojson }}">{{ table.wfs_geojson|strip_base_url }}</a>{% else %}N.B.{% endif %}</li>
+   </ul>
 
 Velden
 ~~~~~~

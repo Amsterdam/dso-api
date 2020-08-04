@@ -11,6 +11,7 @@ from schematools.types import DatasetSchema, DatasetTableSchema
 from schematools.utils import schema_defs_from_url
 
 SCHEMA_URL = os.getenv("SCHEMA_URL", "https://schemas.data.amsterdam.nl/datasets/")
+BASE_URL = "https://api.data.amsterdam.nl"
 
 BASE_PATH = Path("./source/")
 TEMPLATE_PATH = BASE_PATH.joinpath("_templates")
@@ -47,9 +48,11 @@ def render_dataset_docs(dataset: DatasetSchema):
         f"datasets/{snake_name}.rst",
         {
             "schema": dataset,
+            "schema_name": snake_name,
             "main_title": dataset.get("title")
             or snake_name.replace("_", " ").capitalize(),
             "tables": [_get_table_context(t) for t in dataset.tables],
+            "wfs_url": f"{BASE_URL}/v1/wfs/{snake_name}/",
         },
     )
 
@@ -59,9 +62,13 @@ def render_dataset_docs(dataset: DatasetSchema):
 def _get_table_context(table: DatasetTableSchema):
     snake_name = to_snake_case(table.dataset.id)
     snake_id = to_snake_case(table["id"])
-    uri = f"/v1/{snake_name}/{snake_id}/"
+    uri = f"{BASE_URL}/v1/{snake_name}/{snake_id}/"
 
     fields = _get_fields(table["schema"]["properties"])
+    has_geometry = any(
+        f.get("$ref", "").startswith("https://geojson.org/schema/")
+        for f in table["schema"]["properties"].values()
+    )
 
     return {
         "title": snake_id.replace("_", " ").capitalize(),
@@ -75,6 +82,18 @@ def _get_table_context(table: DatasetTableSchema):
         "additional_filters": table.filters,
         "additional_relations": table.relations,
         "source": table,
+        "wfs_csv": (
+            f"{BASE_URL}/v1/wfs/{snake_name}/?SERVICE=WFS&VERSION=2.0.0"
+            f"&REQUEST=GetFeature&TYPENAMES={snake_id}&OUTPUTFORMAT=csv"
+            if has_geometry
+            else ""
+        ),
+        "wfs_geojson": (
+            f"{BASE_URL}/v1/wfs/{snake_name}/?SERVICE=WFS&VERSION=2.0.0"
+            f"&REQUEST=GetFeature&TYPENAMES={snake_id}&OUTPUTFORMAT=geojson"
+            if has_geometry
+            else ""
+        ),
     }
 
 
@@ -130,6 +149,7 @@ def _get_field_context(field_id, field: dict):
 
 def render_datasets():
     documents = []
+    print(f"fetching definitions from {SCHEMA_URL}")
     for name, dataset in schema_defs_from_url(SCHEMA_URL).items():
         documents.append(render_dataset_docs(dataset))
 
@@ -145,6 +165,7 @@ def render_template(template_name, output_file, context_data: dict):
     """Render a Jinja2 template"""
     template = TEMPLATE_ENV.get_template(template_name)
 
+    print(f"writing {output_file}")
     output_file = BASE_PATH.joinpath(output_file)
     output_file.write_text(template.render(**context_data))
 
@@ -175,9 +196,17 @@ def to_snake_case(name):
     return slugify(re_camel_case.sub(r" \1", name).strip().lower(), separator="_")
 
 
+def strip_base_url(url):
+    if url.startswith(BASE_URL):
+        return url[len(BASE_URL) :]
+    else:
+        return url
+
+
 TEMPLATE_ENV.filters["to_snake_case"] = to_snake_case
 TEMPLATE_ENV.filters["toCamelCase"] = toCamelCase
 TEMPLATE_ENV.filters["underline"] = underline
+TEMPLATE_ENV.filters["strip_base_url"] = strip_base_url
 
 if __name__ == "__main__":
     render_datasets()
