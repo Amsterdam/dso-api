@@ -11,6 +11,9 @@ COPY requirements.txt /docs
 RUN pip install -r requirements.txt
 
 COPY . /docs/
+
+# Added arg here, so build step is invalidated each time
+ARG BUILD_NUMBER=unknown
 RUN mkdir -p /docs/_static \
  && make html
 
