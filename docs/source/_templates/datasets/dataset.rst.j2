@@ -1,0 +1,76 @@
+{{ main_title|underline("=") }}
+
+{{ schema.description or '' }}
+
+Status: {{ schema.status|default('beschikbaar') }}
+
+.. contents:: Tabellen
+   :local:
+   :depth: 1
+
+{% for table in tables %}
+----
+
+{{ table.title|underline('-') }}
+
+{{ table.description or '' }}
+
+URI: `{{ table.uri }} <https://api.data.amsterdam.nl{{ table.uri }}>`_
+
+Velden
+~~~~~~
+
+.. list-table::
+   :header-rows: 1
+
+   * - Veldnaam
+     - Type
+     - Omschrijving
+{%- for field in table.fields %}
+   * - ``{{ field.name }}``
+     - {{ field.type|default('') }}
+     - {{ field.description }}
+{%- endfor %}
+
+* Gebruik ``?_fields=field,field2`` om de teruggegeven velden te beperken.
+* Gebruik ``?_sort=field,field2,-field3`` om te de resultaten te sorteren.
+* Gebruik :samp:`?{veld}={waarde}` om op een exacte waarde te filteren.
+
+Filters
+~~~~~~~
+
+Daarnaast zijn de volgende velden te filteren:
+
+.. list-table::
+   :header-rows: 1
+
+   * - Veldnaam
+     - Notatie
+     - Extra operators
+{%- for field in table.fields %}
+   * - {{ field.name }}
+     - {{ field.value_example|default('') }}
+     - {% for op in field.lookups %}{% if not loop.first %}, {% endif %}``{{ op }}``{% endfor %}
+{%- endfor %}
+
+De velden kunnen in de query-string gebruikt worden.
+Bijvoorbeeld:
+
+* ``?id=1045``
+*  ``?id[gt]=10000``
+*  ``?id[in]=123,789``
+
+{% if table.relations %}
+Relaties
+~~~~~~~~
+
+De volgende velden kunnen ingesloten worden met ``?_expandScope=...``:
+
+{% for name, relation in table.relations: -%}
+* ``{{ name }}``
+{% endfor %}
+
+Gebruik ``?_expand=true`` om alle relaties in te sluiten.
+
+{% endif %}
+{% endfor %}

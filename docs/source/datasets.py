@@ -1,138 +1,163 @@
 #!/usr/bin/env python
+from typing import List, Tuple
+
 import os
 import re
 from pathlib import Path
 
+import jinja2
 import psycopg2
 import psycopg2.extras
 from string_utils import slugify
 
 
 BASE_PATH = Path("./source/")
+TEMPLATE_PATH = BASE_PATH.joinpath("_templates")
+TEMPLATE_ENV = jinja2.Environment(
+    loader=jinja2.FileSystemLoader(searchpath=TEMPLATE_PATH), autoescape=False,
+)
+
 re_camel_case = re.compile(
     r"(((?<=[^A-Z])[A-Z])|([A-Z](?![A-Z]))|((?<=[a-z])[0-9])|(?<=[0-9])[a-z])"
 )
-_comparison_lookups = ["exact", "gte", "gt", "lt", "lte", "not", "isnull"]
+_comparison_lookups = ["gt", "gte", "lt", "lte", "not", "isnull"]
+_integer_lookups = _comparison_lookups + ["in"]
+_array_lookups = ["contains"]  # comma separated list of strings
 _identifier_lookups = [
-    "exact",
     "in",
     "not",
     "isnull",
-]  # needs ForeignObject.register_lookup()
+]
+VALUE_EXAMPLES = {
+    "string": "Tekst met wildcard",
+    "boolean": "``true`` | ``false``",
+    "integer": "Geheel getal",
+    "number": "Getal",
+    "time": "``hh:mm[:ss[.ms]]``",
+    "date": "``yyyy-mm-dd`` or ``yyyy-mm-ddThh:mm[:ss[.ms]]``",
+}
 
 
 def get_datasets():
-    connection = psycopg2.connect(dsn=os.environ.get("DATABASE_URL"))
-    with connection.cursor(cursor_factory=psycopg2.extras.DictCursor) as cursor:
-        cursor.execute("SELECT * FROM datasets_dataset ORDER BY name")
-        for dataset in cursor:
-            yield dataset
+    with psycopg2.connect(dsn=os.environ.get("DATABASE_URL")) as connection:
+        with connection.cursor(cursor_factory=psycopg2.extras.DictCursor) as cursor:
+            cursor.execute("SELECT * FROM datasets_dataset ORDER BY name")
+            yield from cursor
 
 
-def create_dataset_docs(dataset):
-    # Header.
-    metadata = dataset["schema_data"]
-    doc = [make_title(metadata["title"].capitalize(), "=")]
+def render_dataset_docs(dataset_row):
+    dataset = dataset_row["schema_data"]
+    snake_name = to_snake_case(dataset["id"])
 
-    # Status.
-    doc.append(f"Status: {metadata.get('status', 'Beschikbaar')}\n")
+    render_template(
+        "datasets/dataset.rst.j2",
+        f"datasets/{snake_name}.rst",
+        {
+            "schema": dataset,
+            "main_title": dataset.get("title")
+            or snake_name.replace("_", " ").capitalize(),
+            "tables": [_get_table_context(dataset, t) for t in dataset["tables"]],
+        },
+    )
 
-    # Tables.
-    if len(metadata["tables"]):
-        for table in metadata["tables"]:
-            doc.append(f"- `{table['id'].capitalize()} Tabel`_")
-
-        doc.append("\n")
-        for table in metadata["tables"]:
-            # print(dataset['name'], table['id'])
-            doc.append(make_title(f"{table['id'].capitalize()} Tabel", "-"))
-            doc.append(
-                f"URI: `/v1/{to_snake_case(dataset['name'])}/{to_snake_case(table['id'])}/ "
-                "</v1/{to_snake_case(dataset['name'])}/{to_snake_case(table['id'])}/>`_\n"
-            )
-            for field_id, field in table["schema"]["properties"].items():
-                if field_id == "schema":
-                    continue
-                doc.append(f"*{toCamelCase(field_id)}*: {field.get('description', '')}")
-                doc.append(" Filters:\n")
-                doc.append(generate_filters(toCamelCase(field_id), field) + "\n")
-
-            # Relations
-            relations = [
-                relation_name
-                for relation_name, field in table["schema"]["properties"].items()
-                if field.get("relation") is not None
-            ]
-            if len(relations):
-                doc.append(
-                    "The following fields can be expanded with ?_expandScope=...:\n"
-                )
-                for relation in relations:
-                    doc.append(f"- {toCamelCase(relation)}")
-                doc.append("\nExpand everything using _expand=true.")
-
-            doc.append("Use ?_fields=field,field2 to limit which fields to receive")
-            doc.append("Use ?_sort=field,field2,-field3 to sort on fieldsname")
-
-    snake_name = to_snake_case(dataset["name"])
-    output = BASE_PATH.joinpath(f"datasets/{snake_name}.rst")
-    output.write_text("\n".join(doc))
     return snake_name
 
 
-def generate_filters(field_id, field):
-    output = []
-    if "type" not in field:
-        if "$ref" in field and "geojson.org" in field["$ref"]:
-            return f"- {field_id} = GeoJSON | POLYGON(x y ...)"
-        return ""
+def _get_table_context(dataset: dict, table: dict):
+    snake_name = to_snake_case(dataset["id"])
+    snake_id = to_snake_case(table["id"])
+    uri = f"/v1/{snake_name}/{snake_id}/"
 
-    lookups = {
-        "string": f"- {field_id} = string with lookups",
-        "boolean": f"- {field_id} = true | false",
-        "time": f"- {field_id} = hh:mm[:ss[.ms]]",
-        "date": f"- {field_id} = yyyy-mm-dd or yyyy-mm-ddThh:mm[:ss[.ms]]",
+    fields = _get_fields(table["schema"]["properties"])
+
+    return {
+        "title": snake_id.replace("_", " ").capitalize(),
+        "uri": uri,
+        "fields": [_get_field_context(field_id, field) for field_id, field in fields],
+        "relations": [
+            {"name": toCamelCase(relation_name), "relation": field["relation"]}
+            for relation_name, field in table["schema"]["properties"].items()
+            if field.get("relation") is not None
+        ],
+        "source": table,
     }
-    if field["type"] in lookups:
-        output.append(lookups[field["type"]])
+
+
+def _get_fields(properties, prefix=None) -> List[Tuple[str, dict]]:
+    """Flatten a nested listing of fields."""
+    fields = []
+    for field_id, field in properties.items():
+        if field_id == "schema":
+            continue
+
+        fields.append((f"{prefix}.{field_id}" if prefix else field_id, field))
+
+        type = field.get("type")
+        if type == "array":
+            items = field.get("items")
+            if items and items.get("type") == "object":
+                fields.extend(_get_fields(items["properties"], prefix=field_id))
+        elif type == "object":
+            fields.extend(_get_fields(field["properties"], prefix=field_id))
+
+    return fields
+
+
+def _get_field_context(field_id, field: dict):
+    """Get context data for a field."""
+    type = field.get("type")
+    value_example = VALUE_EXAMPLES.get(type)
+    ref = field.get("$ref")
+    if ref:
+        if ref.startswith("https://geojson.org/schema/"):
+            type = ref[27:-5]
+            value_example = f"GeoJSON | {type.upper()}(x y ...)"
+            lookups = []
+        else:
+            lookups = _identifier_lookups
     else:
-        if field["type"] in ["integer", "number"]:
-            integer_filters(field_id, output)
-        elif field["type"] == "array":
-            array_filters(field_id, field, output)
-    return "\n".join(output)
+        if type in ("number", "integer"):
+            lookups = _integer_lookups
+        elif type == "array":
+            lookups = _array_lookups
+        else:
+            lookups = _comparison_lookups
+
+    return {
+        "name": toCamelCase(field_id),
+        "type": (type or "").capitalize(),
+        "value_example": value_example or "",
+        "description": field.get("description", ""),
+        "lookups": lookups,
+        "source": field,
+    }
 
 
-def integer_filters(field_id, output):
-    for filter in _comparison_lookups + ["in"]:
-        output.append(f"- {field_id}[{filter}] = number")
-
-
-def array_filters(field_id, field, output):
-    if "entity" in field and field["entity"]["type"] == "string":
-        output.append(f"- {field_id}[cotnains] = comma separated list of strings")
-    elif field["items"]["type"] == "string":
-        output.append(f"- {field_id}[cotnains] = comma separated list of strings")
-    elif field["items"]["type"] == "object":
-        for item_id, item in field["items"]["properties"].items():
-            output.append(generate_filters(f"{field_id}.{toCamelCase(item_id)}", item))
-
-
-def generate_datasets():
+def render_datasets():
     documents = []
-    for dataset in get_datasets():
-        documents.append(create_dataset_docs(dataset=dataset))
+    for row in get_datasets():
+        documents.append(render_dataset_docs(dataset_row=row))
 
-    dataset_links = "\n".join([f"   {document}" for document in documents])
-    index_template = BASE_PATH.joinpath("_templates/index.tpl").read_text()
-
-    index_rst = BASE_PATH.joinpath("datasets/index.rst")
-    index_rst.write_text(index_template.replace("{datasets}", dataset_links))
+    render_template(
+        "datasets/index.rst.j2", "datasets/index.rst", {"documents": documents}
+    )
 
 
 # ---------- INTERNAL ---
-def make_title(text, symbol):
-    return "\n{text}\n{underscore}\n".format(text=text, underscore=symbol * len(text))
+
+
+def render_template(template_name, output_file, context_data: dict):
+    """Render a Jinja2 template"""
+    template = TEMPLATE_ENV.get_template(template_name)
+
+    output_file = BASE_PATH.joinpath(output_file)
+    output_file.write_text(template.render(**context_data))
+
+
+def underline(text, symbol):
+    return "{text}\n{underline}".format(
+        text=text.capitalize(), underline=symbol * len(text)
+    )
 
 
 def toCamelCase(name):
@@ -155,5 +180,9 @@ def to_snake_case(name):
     return slugify(re_camel_case.sub(r" \1", name).strip().lower(), separator="_")
 
 
+TEMPLATE_ENV.filters["to_snake_case"] = to_snake_case
+TEMPLATE_ENV.filters["toCamelCase"] = toCamelCase
+TEMPLATE_ENV.filters["underline"] = underline
+
 if __name__ == "__main__":
-    generate_datasets()
+    render_datasets()
