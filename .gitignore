@@ -118,5 +118,4 @@ ENV/
 /data
 
 # Docs
-/docs/source/index.rst
 /docs/source/datasets/
