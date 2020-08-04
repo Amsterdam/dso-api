@@ -182,61 +182,63 @@ De response bevat zowel het "buurt" object als de "wijk":
             // ...
         },
         "_embedded": {
-            {
-                "_links": {
-                    "self": {
-                        "href": "https://api.data.amsterdam.nl/v1/gebieden/buurten/03630000000079/?volgnummer=1",
-                        "title": "03630000000079.1"
-                    }
-                },
-                "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/gebieden#buurten",
-                "id": "03630000000079.1",
-                "code": "A00b",
-                "naam": "Oude Kerk e.o.",
-                "geometrie": {
-                    "type": "Polygon",
-                    "coordinates": [
-                        // ...
-                    ]
-                },
-                "ligtinwijkId": "03630012052036",
-                "ligtinwijk": "https://api.data.amsterdam.nl/v1/gebieden/wijken/03630012052036/?volgnummer=1",
-                "volgnummer": 1,
-                "identificatie": "03630000000079",
-                "registratiedatum": "2006-06-12T12:40:21.000000"
-                "begingeldigheid": "2006-06-12",
-                "eindgeldigheid": "2015-01-01",
-            }
-        ],
-        "ligtinwijk": [
-            {
-                "_links": {
-                    "self": {
-                        "href": "https://api.data.amsterdam.nl/v1/gebieden/wijken/03630012052036/?volgnummer=1",
-                        "title": "03630012052036.1"
-                    }
-                },
-                "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/gebieden#wijken",
-                "id": "03630012052036.1",
-                "code": "A00",
-                "naam": "Burgwallen-Oude Zijde",
-                "cbscode": "WK036300",
-                "geometrie": {
-                    "type": "Polygon",
-                    "coordinates": [
-                        // ...
-                    ],
-                },
-                "volgnummer": 1,
-                "documentdatum": null,
-                "identificatie": "03630012052036",
-                "documentnummer": null,
-                "eindgeldigheid": null,
-                "begingeldigheid": "2006-06-12",
-                "ligtinstadsdeelId": "03630000000018",
-                "ligtinstadsdeel": "https://api.data.amsterdam.nl/v1/gebieden/stadsdelen/03630000000018/?volgnummer=3",
-                "registratiedatum": "2018-10-25T12:17:33.000000"
-            },
+            "buurten": [
+                {
+                    "_links": {
+                        "self": {
+                            "href": "https://api.data.amsterdam.nl/v1/gebieden/buurten/03630000000079/?volgnummer=1",
+                            "title": "03630000000079.1"
+                        }
+                    },
+                    "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/gebieden#buurten",
+                    "id": "03630000000079.1",
+                    "code": "A00b",
+                    "naam": "Oude Kerk e.o.",
+                    "geometrie": {
+                        "type": "Polygon",
+                        "coordinates": [
+                            // ...
+                        ]
+                    },
+                    "ligtinwijkId": "03630012052036",
+                    "ligtinwijk": "https://api.data.amsterdam.nl/v1/gebieden/wijken/03630012052036/?volgnummer=1",
+                    "volgnummer": 1,
+                    "identificatie": "03630000000079",
+                    "registratiedatum": "2006-06-12T12:40:21.000000"
+                    "begingeldigheid": "2006-06-12",
+                    "eindgeldigheid": "2015-01-01",
+                }
+            ],
+            "ligtinwijk": [
+                {
+                    "_links": {
+                        "self": {
+                            "href": "https://api.data.amsterdam.nl/v1/gebieden/wijken/03630012052036/?volgnummer=1",
+                            "title": "03630012052036.1"
+                        }
+                    },
+                    "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/gebieden#wijken",
+                    "id": "03630012052036.1",
+                    "code": "A00",
+                    "naam": "Burgwallen-Oude Zijde",
+                    "cbscode": "WK036300",
+                    "geometrie": {
+                        "type": "Polygon",
+                        "coordinates": [
+                            // ...
+                        ],
+                    },
+                    "volgnummer": 1,
+                    "documentdatum": null,
+                    "identificatie": "03630012052036",
+                    "documentnummer": null,
+                    "eindgeldigheid": null,
+                    "begingeldigheid": "2006-06-12",
+                    "ligtinstadsdeelId": "03630000000018",
+                    "ligtinstadsdeel": "https://api.data.amsterdam.nl/v1/gebieden/stadsdelen/03630000000018/?volgnummer=3",
+                    "registratiedatum": "2018-10-25T12:17:33.000000"
+                }
+            ]
         },
         "page": {
             // ...
