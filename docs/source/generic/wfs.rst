@@ -59,8 +59,28 @@ Bijvoorbeeld:
    Door deze parameter weg te laten worden *alle objecten* in een enkele request opgehaald.
    De server kan voor de meeste datasets dit met een goede performance leveren.
 
-Met de ``SRSNAME`` parameter worden de geometrie velden in de gewenste projectie teruggegeven.
-Bijvoorbeeld: ``SRSNAME=urn:ogc:def:crs:EPSG::3857`` voor de web-mercator projectie die Google Maps gebruikt.
+Geometrie projectie
+~~~~~~~~~~~~~~~~~~~
+
+De exportlink kan uitgebreid worden met de ``SRSNAME`` parameter om geometrie velden in de gewenste projectie
+te ontvangen. Bijvoorbeeld: ``SRSNAME=urn:ogc:def:crs:EPSG::3857`` voor de web-mercator projectie die
+Google Maps gebruikt. De toegestane projecties zijn:
+
+.. list-table::
+    :widths: 30 70
+    :header-rows: 1
+
+    * - Projectie
+      - Toelichting
+    * - ``urn:ogc:def:crs:EPSG::28992``
+      - Nederlandse rijksdriehoekscoördinaten (RD New).
+    * - ``urn:ogc:def:crs:EPSG::4258``
+      - ETRS89, Europese projectie.
+    * - ``urn:ogc:def:crs:EPSG::3857``
+      - Pseudo-Mercator (vergelijkbaar met Google Maps)
+    * - ``urn:ogc:def:crs:EPSG::4326``
+      - WGS 84 latitude-longitude, wereldwijd.
+
 
 Queries op relaties
 -------------------

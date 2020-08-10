@@ -35,7 +35,7 @@ Velden
      - Type
      - Omschrijving
 {%- for field in table.fields %}
-   * - ``{{ field.name }}``
+   * - ``{{ field.camel_name }}``
      - {{ field.type|default('') }}
      - {{ field.description }}
 {%- endfor %}
@@ -56,7 +56,7 @@ Daarnaast zijn de volgende velden te filteren:
      - Notatie
      - Extra operators
 {%- for field in table.fields %}
-   * - {{ field.name }}
+   * - {{ field.camel_name }}
      - {{ field.value_example|default('') }}
      - {% for op in field.lookups %}{% if not loop.first %}, {% endif %}``{{ op }}``{% endfor %}
 {%- endfor %}
@@ -74,8 +74,8 @@ Relaties
 
 De volgende velden kunnen ingesloten worden met ``?_expandScope=...``:
 
-{% for name, relation in table.relations: -%}
-* ``{{ name }}``
+{% for relation in table.relations: -%}
+* ``{{ relation.camel_name }}``
 {% endfor %}
 
 Gebruik ``?_expand=true`` om alle relaties in te sluiten.
