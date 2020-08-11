@@ -5,6 +5,7 @@ import pytest
 
 from dso_api.dynamic_api.serializers import serializer_factory
 from rest_framework_dso.fields import EmbeddedField
+from django.core.validators import URLValidator, ValidationError
 
 
 @pytest.fixture(autouse=True)
@@ -507,3 +508,36 @@ class TestDynamicSerializer:
         assert "'title': 'reference for DISPLAY FIELD'" not in str(
             fietsplaatjes_serializer.data
         )
+
+    @staticmethod
+    def test_uri_field_present(explosieven_model):
+        """ Prove that a URLfield is stored as a charfield and default 200 in length """
+        assert (
+            explosieven_model._meta.get_field("pdf").get_internal_type() == "CharField"
+        )
+        assert explosieven_model._meta.get_field("pdf").max_length == 200
+
+    @staticmethod
+    def test_uri_field_can_validate(
+        api_request, explosieven_schema, explosieven_model, explosieven_data
+    ):
+        """ Prove that a URLfield can be validated by the URIValidator """
+
+        ExplosievenSerializer = serializer_factory(explosieven_model, 0, flat=True)
+
+        api_request.dataset = explosieven_schema
+
+        validate_uri = URLValidator()
+
+        explosieven_serializer = ExplosievenSerializer(
+            explosieven_data, context={"request": api_request}
+        )
+
+        try:
+            validate_uri(explosieven_serializer.data["pdf"])
+            validation_result = "valid URI"
+
+        except ValidationError:
+            validation_result = "value cannot be validated"
+
+        assert validation_result == "valid URI"

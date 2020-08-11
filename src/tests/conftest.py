@@ -86,6 +86,7 @@ def filled_router(
     vestiging_dataset,
     fietspaaltjes_dataset,
     fietspaaltjes_dataset_no_display,
+    explosieven_dataset,
 ):
     # Prove that the router URLs are extended on adding a model
     router.reload()
@@ -94,21 +95,23 @@ def filled_router(
 
     # Make sure the tables are created too
     table_names = connection.introspection.table_names()
-    if "afval_containers" not in table_names:
-        create_tables(afval_dataset.schema)
-    if "bommen_bommen" not in table_names:
-        create_tables(bommen_dataset.schema)
-    if "parkeervakken_parkeervakken" not in table_names:
-        create_tables(parkeervakken_dataset.schema)
-    if "bagh_buurt" not in table_names:
-        create_tables(bagh_dataset.schema)
-    if "vestiging_vestiging" not in table_names:
-        create_tables(vestiging_dataset.schema)
-    if "fietsplaatjes_fietsplaatjes" not in table_names:
-        create_tables(fietspaaltjes_dataset.schema)
-    if "fietspaaltjesnodisplay_fietspaaltjesnodisplay" not in table_names:
-        create_tables(fietspaaltjes_dataset_no_display.schema)
 
+    datasets = {
+        afval_dataset: "afval_containers",
+        bommen_dataset: "bommen_bommen",
+        parkeervakken_dataset: "parkeervakken_parkeervakken",
+        bagh_dataset: "bagh_buurt",
+        vestiging_dataset: "vestiging_vestiging",
+        fietspaaltjes_dataset: "fietsplaatjes_fietsplaatjes",
+        fietspaaltjes_dataset_no_display: "fietspaaltjesnodisplay_fietspaaltjesnodisplay",
+        explosieven_dataset: "explosieven_verdachtgebied",
+    }
+
+    # Based on datasets, create test table if not exists
+    for dataset, table in datasets.items():
+        print(dataset, table)
+        if table not in table_names:
+            create_tables(dataset.schema)
     return router
 
 
@@ -549,3 +552,40 @@ def fietspaaltjes_data_no_display(fietspaaltjes_model_no_display):
 
 
 # --| >> EINDE no display check>> FIETSPAALTJES  >>no display check >> |--#
+
+# --| >> START uri check>> EXPLOSIEVEN  >> uri check >> |--#
+
+
+@pytest.fixture()
+def explosieven_schema_json() -> dict:
+    """ Fixture to return the schema json for """
+    path = HERE / "files/explosieven.json"
+    return json.loads(path.read_text())
+
+
+@pytest.fixture()
+def explosieven_schema(explosieven_schema_json,) -> DatasetSchema:
+    return DatasetSchema.from_dict(explosieven_schema_json)
+
+
+@pytest.fixture()
+def explosieven_dataset(explosieven_schema_json) -> Dataset:
+    return Dataset.objects.create(
+        name="explosieven", schema_data=explosieven_schema_json
+    )
+
+
+@pytest.fixture()
+def explosieven_model(filled_router):
+    # Using filled_router so all urls can be generated too.
+    return filled_router.all_models["explosieven"]["verdachtgebied"]
+
+
+@pytest.fixture()
+def explosieven_data(explosieven_model):
+    return explosieven_model.objects.create(
+        id=1, pdf="https://host.domain/file.extension"
+    )
+
+
+# --| >> EINDE uri check>> EXPLOSIEVEN  >> uri check >> |--#
