@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from typing import List, Tuple
+from typing import List
 
 import os
 import re
@@ -7,7 +7,7 @@ from pathlib import Path
 
 import jinja2
 from string_utils import slugify
-from schematools.types import DatasetSchema, DatasetTableSchema
+from schematools.types import DatasetFieldSchema, DatasetSchema, DatasetTableSchema
 from schematools.utils import schema_defs_from_url
 
 SCHEMA_URL = os.getenv("SCHEMA_URL", "https://schemas.data.amsterdam.nl/datasets/")
@@ -41,7 +41,8 @@ VALUE_EXAMPLES = {
 
 
 def render_dataset_docs(dataset: DatasetSchema):
-    snake_name = to_snake_case(dataset["id"])
+    snake_name = to_snake_case(dataset.id)
+    main_title = dataset.title or snake_name.replace("_", " ").capitalize()
 
     render_template(
         "datasets/dataset.rst.j2",
@@ -49,8 +50,7 @@ def render_dataset_docs(dataset: DatasetSchema):
         {
             "schema": dataset,
             "schema_name": snake_name,
-            "main_title": dataset.get("title")
-            or snake_name.replace("_", " ").capitalize(),
+            "main_title": main_title,
             "tables": [_get_table_context(t) for t in dataset.tables],
             "wfs_url": f"{BASE_URL}/v1/wfs/{snake_name}/",
         },
@@ -59,29 +59,90 @@ def render_dataset_docs(dataset: DatasetSchema):
     return snake_name
 
 
+def render_wfs_dataset_docs(dataset: DatasetSchema):
+    """Render the docs for the WFS dataset."""
+    snake_name = to_snake_case(dataset.id)
+    main_title = dataset.title or snake_name.replace("_", " ").capitalize()
+    tables = [_get_feature_type_context(t) for t in dataset.tables]
+    if all(not t["has_geometry"] for t in tables):
+        return None
+
+    render_template(
+        "wfs-datasets/dataset.rst.j2",
+        f"wfs-datasets/{snake_name}.rst",
+        {
+            "schema": dataset,
+            "schema_name": snake_name,
+            "main_title": main_title,
+            "tables": tables,
+            "wfs_url": f"{BASE_URL}/v1/wfs/{snake_name}/",
+        },
+    )
+
+    return snake_name
+
+
 def _get_table_context(table: DatasetTableSchema):
+    """Collect all table data for the REST API spec."""
     snake_name = to_snake_case(table.dataset.id)
     snake_id = to_snake_case(table["id"])
     uri = f"{BASE_URL}/v1/{snake_name}/{snake_id}/"
 
-    fields = _get_fields(table["schema"]["properties"])
-    has_geometry = any(
-        f.get("$ref", "").startswith("https://geojson.org/schema/")
-        for f in table["schema"]["properties"].values()
-    )
+    fields = _get_fields(table.fields)
 
     return {
         "title": snake_id.replace("_", " ").capitalize(),
         "uri": uri,
-        "fields": [_get_field_context(field_id, field) for field_id, field in fields],
+        "fields": [_get_field_context(field) for field in fields],
         "relations": [
-            {"name": toCamelCase(relation_name), "relation": field["relation"]}
+            {
+                "id": relation_name,
+                "camel_name": toCamelCase(relation_name),
+                "relation": field["relation"],
+            }
             for relation_name, field in table["schema"]["properties"].items()
             if field.get("relation") is not None
         ],
         "additional_filters": table.filters,
         "additional_relations": table.relations,
         "source": table,
+    }
+
+
+def _has_geometry(table: DatasetTableSchema) -> bool:
+    """Tell whether a table has a geometry"""
+    return any(
+        f.get("$ref", "").startswith("https://geojson.org/schema/")
+        for f in table["schema"]["properties"].values()
+    )
+
+
+def _get_feature_type_context(table: DatasetTableSchema):
+    """Collect all table data for the WFS server spec."""
+    snake_name = to_snake_case(table.dataset.id)
+    snake_id = to_snake_case(table["id"])
+    uri = f"{BASE_URL}/v1/{snake_name}/{snake_id}/"
+
+    fields = _get_fields(table.fields)
+    has_geometry = _has_geometry(table)
+
+    return {
+        "title": snake_id.replace("_", " ").capitalize(),
+        "typenames": [f"app:{snake_id}", snake_id],
+        "uri": uri,
+        "fields": [_get_field_context(field) for field in fields],
+        "embeds": [
+            {
+                "id": relation_name,
+                "snake_name": to_snake_case(relation_name),
+                "relation": field["relation"],
+            }
+            for relation_name, field in table["schema"]["properties"].items()
+            if field.get("relation") is not None
+        ],
+        "source": table,
+        "has_geometry": has_geometry,
+        "wfs_typename": f"app:{snake_name}",
         "wfs_csv": (
             f"{BASE_URL}/v1/wfs/{snake_name}/?SERVICE=WFS&VERSION=2.0.0"
             f"&REQUEST=GetFeature&TYPENAMES={snake_id}&OUTPUTFORMAT=csv"
@@ -97,31 +158,38 @@ def _get_table_context(table: DatasetTableSchema):
     }
 
 
-def _get_fields(properties, prefix=None) -> List[Tuple[str, dict]]:
+def _get_fields(table_fields, parent_field=None) -> List[DatasetFieldSchema]:
     """Flatten a nested listing of fields."""
-    fields = []
-    for field_id, field in properties.items():
-        if field_id == "schema":
+    result_fields = []
+    for field in table_fields:
+        if field.name == "schema":
             continue
 
-        fields.append((f"{prefix}.{field_id}" if prefix else field_id, field))
+        result_fields.append(field)
 
-        type = field.get("type")
-        if type == "array":
-            items = field.get("items")
-            if items and items.get("type") == "object":
-                fields.extend(_get_fields(items["properties"], prefix=field_id))
-        elif type == "object":
-            fields.extend(_get_fields(field["properties"], prefix=field_id))
+        if field.is_array or field.is_object:
+            result_fields.extend(_get_fields(field.sub_fields, parent_field=field))
 
-    return fields
+    return result_fields
 
 
-def _get_field_context(field_id, field: dict):
+def _get_field_context(field: DatasetFieldSchema):
     """Get context data for a field."""
     type = field.get("type")
     value_example = VALUE_EXAMPLES.get(type)
     ref = field.get("$ref")
+
+    snake_name = to_snake_case(field.name)
+    camel_name = toCamelCase(field.name)
+
+    parent_field = field.parent_field
+    while parent_field is not None:
+        parent_snake_name = to_snake_case(parent_field.name)
+        parent_camel_name = toCamelCase(parent_field.name)
+        snake_name = f"{parent_snake_name}.{snake_name}"
+        camel_name = f"{parent_camel_name}.{camel_name}"
+        parent_field = parent_field.parent_field
+
     if ref:
         if ref.startswith("https://geojson.org/schema/"):
             type = ref[27:-5]
@@ -138,23 +206,39 @@ def _get_field_context(field_id, field: dict):
             lookups = _comparison_lookups
 
     return {
-        "name": toCamelCase(field_id),
+        "name": field.name,
+        "snake_name": snake_name,
+        "camel_name": camel_name,
         "type": (type or "").capitalize(),
         "value_example": value_example or "",
-        "description": field.get("description", ""),
+        "description": field.description,
         "lookups": lookups,
         "source": field,
     }
 
 
 def render_datasets():
-    documents = []
     print(f"fetching definitions from {SCHEMA_URL}")
-    for name, dataset in schema_defs_from_url(SCHEMA_URL).items():
+    schemas = schema_defs_from_url(SCHEMA_URL)
+
+    documents = []
+    for name, dataset in schemas.items():
         documents.append(render_dataset_docs(dataset))
 
     render_template(
         "datasets/index.rst.j2", "datasets/index.rst", {"documents": documents}
+    )
+
+    wfs_documents = []
+    for name, dataset in schemas.items():
+        name = render_wfs_dataset_docs(dataset)
+        if name:
+            wfs_documents.append(name)
+
+    render_template(
+        "wfs-datasets/index.rst.j2",
+        "wfs-datasets/index.rst",
+        {"documents": wfs_documents},
     )
 
 

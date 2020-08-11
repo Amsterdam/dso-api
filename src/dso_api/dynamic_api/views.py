@@ -33,7 +33,7 @@ from .permissions import get_unauthorized_fields
 
 FieldDef = Union[str, FeatureField]
 RE_SIMPLE_NAME = re.compile(
-    r"^(?P<ns>[a-z0-9]+:)(?P<name>[a-z0-9]+)(?P<variant>-[a-z0-9]+)?", re.I
+    r"^(?P<ns>[a-z0-9]+:)?(?P<name>[a-z0-9]+)(?P<variant>-[a-z0-9]+)?$", re.I
 )
 
 
