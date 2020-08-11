@@ -1,0 +1,59 @@
+{{ main_title|underline("=") }}
+
+{{ schema.description or '' }}
+
+* **ID:** {{ schema_name }}
+* **Status:** {{ schema.status|default('beschikbaar') }}
+* **WFS:** {{ wfs_url }}
+
+.. contents:: Features
+   :local:
+   :depth: 1
+
+{% for table in tables %}
+----
+
+{{ table.title|underline('-') }}
+
+{{ table.description or '' }}
+
+{%- if not table.has_geometry %}
+.. note::
+   Deze tabel heeft geen geometrie velden, en kan daarom alleen gebruikt worden in embeds van andere features.
+{% endif %}
+
+.. raw:: html
+
+   <ul>
+     <li><b>Typename:</b> {% for tn in table.typenames %}{% if not loop.first %} / {% endif %}<code>{{tn}}</code>{% endfor %}
+     <li><b>WFS CSV Export:</b> {% if table.wfs_csv %}<a type="text/csv" download href="{{ table.wfs_csv }}">{{ table.wfs_csv|strip_base_url }}</a>{% else %}N.B.{% endif %}</li>
+     <li><b>WFS GeoJSON Export:</b> {% if table.wfs_geojson %}<a type="application/json" download href="{{ table.wfs_geojson }}">{{ table.wfs_geojson|strip_base_url }}</a>{% else %}N.B.{% endif %}</li>
+   </ul>
+
+Velden
+~~~~~~
+
+.. list-table::
+   :header-rows: 1
+
+   * - Veldnaam
+     - Type
+     - Omschrijving
+{%- for field in table.fields %}
+   * - ``{{ field.snake_name }}``
+     - {{ field.type|default('') }}
+     - {{ field.description }}
+{%- endfor %}
+
+{% if table.embeds %}
+Embeds
+~~~~~~~~
+
+De volgende velden kunnen ingesloten worden met ``?embed=...`` en ``?expand=...```:
+
+{% for relation in table.relations: -%}
+* ``{{ relation.snake_name }}``
+{% endfor %}
+
+{% endif %}
+{% endfor %}

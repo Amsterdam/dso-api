@@ -16,17 +16,17 @@ help:
 
 datasets:
 	rm -rf source/datasets
-	mkdir -p source/datasets
+	mkdir -p source/datasets source/wfs-datasets
 	python3 source/datasets.py
 
 # Ensure the folder exists
 source/datasets:
-	mkdir -p source/datasets
+	mkdir -p source/datasets source/wfs-datasets
 	python3 source/datasets.py
 
 clean:
 	rm -rf build/
-	rm -rf source/datasets
+	rm -rf source/datasets source/wfs-datasets
 
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
