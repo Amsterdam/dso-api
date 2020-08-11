@@ -109,7 +109,6 @@ def filled_router(
 
     # Based on datasets, create test table if not exists
     for dataset, table in datasets.items():
-        print(dataset, table)
         if table not in table_names:
             create_tables(dataset.schema)
     return router

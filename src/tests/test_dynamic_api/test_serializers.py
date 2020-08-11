@@ -5,7 +5,7 @@ import pytest
 
 from dso_api.dynamic_api.serializers import serializer_factory
 from rest_framework_dso.fields import EmbeddedField
-from django.core.validators import URLValidator, ValidationError
+from django.core.validators import URLValidator
 
 
 @pytest.fixture(autouse=True)
@@ -533,11 +533,5 @@ class TestDynamicSerializer:
             explosieven_data, context={"request": api_request}
         )
 
-        try:
-            validate_uri(explosieven_serializer.data["pdf"])
-            validation_result = "valid URI"
-
-        except ValidationError:
-            validation_result = "value cannot be validated"
-
-        assert validation_result == "valid URI"
+        # Validation passes if outcome is None
+        assert validate_uri(explosieven_serializer.data["pdf"]) is None
