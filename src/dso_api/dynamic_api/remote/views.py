@@ -108,11 +108,11 @@ class RemoteViewSet(ViewSet):
                 "GET", url, headers=headers, timeout=60, retries=False,
             )
         except (TimeoutError, urllib3.exceptions.TimeoutError) as e:
-            logger.debug("Proxy call failed: %s", e)
+            logger.error("Proxy call failed: %s", e)
             raise GatewayTimeout() from e
         except (OSError, urllib3.exceptions.HTTPError) as e:
             # Any remaining socket / SSL error
-            logger.debug("Proxy call failed: %s", e)
+            logger.error("Proxy call failed: %s", e)
             raise ServiceUnavailable(str(e)) from e
 
         if response.status == 200:
@@ -123,7 +123,8 @@ class RemoteViewSet(ViewSet):
     def _raise_http_error(self, response: HTTPResponse):  # noqa: C901
         """Translate the remote HTTP error to the proper response."""
         content_type = response.headers.get("content-type")
-        logger.debug("Proxy call failed: %s", response.reason)
+        level = logging.ERROR if response.status >= 500 else logging.DEBUG
+        logger.log(level, "Proxy call failed: %s", response.reason)
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug("  Response body: %s", response.data)
 
