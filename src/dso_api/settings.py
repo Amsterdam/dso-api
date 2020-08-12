@@ -1,11 +1,12 @@
+import logging
 import sys
-
 import os
 
-from corsheaders.defaults import default_headers
 import environ
 import sentry_sdk
+from corsheaders.defaults import default_headers
 from sentry_sdk.integrations.django import DjangoIntegration
+from sentry_sdk.integrations.logging import LoggingIntegration
 
 env = environ.Env()
 
@@ -131,7 +132,12 @@ locals().update(env.email_url(default="smtp://"))
 SENTRY_DSN = env.str("SENTRY_DSN", default="")
 if SENTRY_DSN:
     sentry_sdk.init(
-        dsn=SENTRY_DSN, environment="dso-api", integrations=[DjangoIntegration()]
+        dsn=SENTRY_DSN,
+        environment="dso-api",
+        integrations=[
+            LoggingIntegration(event_level=logging.WARNING),
+            DjangoIntegration(),
+        ],
     )
 
 
