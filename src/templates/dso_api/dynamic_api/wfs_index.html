@@ -1,0 +1,18 @@
+<!doctype html>{% load i18n %}{# This is a very basic template that can be overwritten in projects #}
+<html>
+<head>
+  <title>WFS Datasets</title>
+  {% block extrahead %}{% endblock %}
+</head>
+<body>
+  <main>
+    <h1>Index of WFS Datasets</h1>
+
+    <ul>
+    {% for name, schema in datasets %}
+      <li><a href="{{ name }}">{% if schema.title %}{{ schema.title }}{% else %}{{ name|title }}{% endif %}</a></li>
+    {% endfor %}
+    </ul>
+  </main>
+</body>
+</html>

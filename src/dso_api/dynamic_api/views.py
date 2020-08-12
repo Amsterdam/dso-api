@@ -5,11 +5,12 @@ from collections import UserList
 from typing import List, Type, Union
 
 from django.contrib.gis.db.models import GeometryField
+from django.contrib.gis.geos.geometry import GEOSGeometry
 from django.db import models
 from django.http import Http404, JsonResponse
 from django.utils.functional import cached_property
 from django.utils.translation import gettext as _
-from django.contrib.gis.geos.geometry import GEOSGeometry
+from django.views.generic import TemplateView
 from gisserver.exceptions import WFSException, InvalidParameterValue
 from gisserver.features import (
     ComplexFeatureField,
@@ -18,8 +19,7 @@ from gisserver.features import (
     ServiceDescription,
 )
 from gisserver.views import WFSView
-from schematools.contrib.django.models import DynamicModel
-
+from schematools.contrib.django.models import Dataset, DynamicModel
 from rest_pandas import PandasView, PandasCSVRenderer, PandasSerializer
 from rest_framework import viewsets, status
 from rest_framework import serializers as drf_serializers
@@ -232,12 +232,34 @@ class AuthenticatedFeatureType(FeatureType):
         self.wfs_view.check_permissions(request, models)
 
 
+class DatasetWFSIndexView(TemplateView):
+    """An overview of the WFS services"""
+
+    template_name = "dso_api/dynamic_api/wfs_index.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        from .urls import router
+
+        dataset_names = set(router.all_models.keys())
+        datasets = [
+            (ds.name, ds.schema)
+            for ds in Dataset.objects.db_enabled().order_by("name")
+            if ds.name in dataset_names
+        ]
+
+        context["datasets"] = datasets
+        return context
+
+
 class DatasetWFSView(WFSView):
     """A WFS view for a single dataset.
 
     This view does not need a factory-logic as we don't need named-integration
     in the URLConf. Instead, we can resolve the 'dataset' via the URL kwargs.
     """
+
+    index_template_name = "dso_api/dynamic_api/wfs_dataset.html"
 
     def setup(self, request, *args, **kwargs):
         """Initial setup logic before request handling:
@@ -260,10 +282,28 @@ class DatasetWFSView(WFSView):
         embed = request.GET.get("embed", "")
         self.embed_fields = set(embed.split(",")) if embed else set()
 
+    def get_index_context_data(self, **kwargs):
+        """Context data for the HTML root page"""
+        expandable_fields = set()
+        for model in self.models.values():
+            expandable_fields.update(
+                field.name
+                for field in model._meta.get_fields()
+                if isinstance(field, models.ForeignKey)
+            )
+
+        context = super().get_index_context_data(**kwargs)
+
+        context["expandable_fields"] = sorted(expandable_fields)
+        return context
+
     def get_service_description(self, service: str) -> ServiceDescription:
         dataset_name = self.kwargs["dataset_name"]
+        schema = Dataset.objects.get(name=dataset_name).schema
+
         return ServiceDescription(
-            title=dataset_name.title(),
+            title=schema.title or dataset_name.title(),
+            abstract=schema.description,
             keywords=["wfs", "amsterdam", "datapunt"],
             provider_name="Gemeente Amsterdam",
             provider_site="https://data.amsterdam.nl/",
@@ -367,7 +407,9 @@ class DatasetWFSView(WFSView):
                         )
                     )
             elif model_field.is_relation:
-                continue  # don't support other relations yet
+                # don't support other relations yet
+                # Note: this also needs updates in get_index_context_data()!
+                continue
             else:
                 field_name = model_field.name
 
