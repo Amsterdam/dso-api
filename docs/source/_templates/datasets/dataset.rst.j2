@@ -37,7 +37,7 @@ Velden
 {%- for field in table.fields %}
    * - ``{{ field.camel_name }}``
      - {{ field.type|default('') }}
-     - {{ field.description }}
+     - {{ field.description|default('') }}
 {%- endfor %}
 
 * Gebruik ``?_fields=field,field2`` om de teruggegeven velden te beperken.

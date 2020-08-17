@@ -42,7 +42,7 @@ Velden
 {%- for field in table.fields %}
    * - ``{{ field.snake_name }}``
      - {{ field.type|default('') }}
-     - {{ field.description }}
+     - {{ field.description|default('') }}
 {%- endfor %}
 
 {% if table.embeds %}
