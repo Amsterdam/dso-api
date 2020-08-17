@@ -22,8 +22,8 @@ TEMPLATE_ENV = jinja2.Environment(
 re_camel_case = re.compile(
     r"(((?<=[^A-Z])[A-Z])|([A-Z](?![A-Z]))|((?<=[a-z])[0-9])|(?<=[0-9])[a-z])"
 )
-_comparison_lookups = ["gt", "gte", "lt", "lte", "not", "isnull"]
-_integer_lookups = _comparison_lookups + ["in"]
+_integer_lookups = ["gt", "gte", "lt", "lte", "in", "not", "isnull"]
+_date_lookups = _integer_lookups
 _array_lookups = ["contains"]  # comma separated list of strings
 _identifier_lookups = [
     "in",
@@ -31,18 +31,26 @@ _identifier_lookups = [
     "isnull",
 ]
 VALUE_EXAMPLES = {
-    "string": "Tekst met wildcard",
-    "boolean": "``true`` | ``false``",
-    "integer": "Geheel getal",
-    "number": "Getal",
-    "time": "``hh:mm[:ss[.ms]]``",
-    "date": "``yyyy-mm-dd`` or ``yyyy-mm-ddThh:mm[:ss[.ms]]``",
+    "string": ("Tekst met wildcard", []),
+    "boolean": ("``true`` | ``false``", []),
+    "integer": ("Geheel getal", _integer_lookups),
+    "number": ("Getal", _integer_lookups),
+    "time": ("``hh:mm[:ss[.ms]]``", _date_lookups),
+    "date": ("``yyyy-mm-dd``", _date_lookups),
+    "date-time": ("``yyyy-mm-dd`` or ``yyyy-mm-ddThh:mm[:ss[.ms]]``", _date_lookups),
+    "uri": ("https://....", []),
+    "array": ("value,value", _array_lookups),
 }
 
 
 def render_dataset_docs(dataset: DatasetSchema):
     snake_name = to_snake_case(dataset.id)
     main_title = dataset.title or snake_name.replace("_", " ").capitalize()
+    tables = [_get_table_context(t) for t in dataset.tables]
+    if any(t["has_geometry"] for t in tables):
+        wfs_url = f"{BASE_URL}/v1/wfs/{snake_name}/"
+    else:
+        wfs_url = None
 
     render_template(
         "datasets/dataset.rst.j2",
@@ -51,8 +59,8 @@ def render_dataset_docs(dataset: DatasetSchema):
             "schema": dataset,
             "schema_name": snake_name,
             "main_title": main_title,
-            "tables": [_get_table_context(t) for t in dataset.tables],
-            "wfs_url": f"{BASE_URL}/v1/wfs/{snake_name}/",
+            "tables": tables,
+            "wfs_url": wfs_url,
         },
     )
 
@@ -67,6 +75,11 @@ def render_wfs_dataset_docs(dataset: DatasetSchema):
     if all(not t["has_geometry"] for t in tables):
         return None
 
+    embeds = {}
+    for table in tables:
+        for embed in table["embeds"]:
+            embeds[embed["id"]] = embed
+
     render_template(
         "wfs-datasets/dataset.rst.j2",
         f"wfs-datasets/{snake_name}.rst",
@@ -75,6 +88,7 @@ def render_wfs_dataset_docs(dataset: DatasetSchema):
             "schema_name": snake_name,
             "main_title": main_title,
             "tables": tables,
+            "embeds": sorted(embeds.values(), key=lambda e: e["id"]),
             "wfs_url": f"{BASE_URL}/v1/wfs/{snake_name}/",
         },
     )
@@ -106,6 +120,7 @@ def _get_table_context(table: DatasetTableSchema):
         "additional_filters": table.filters,
         "additional_relations": table.relations,
         "source": table,
+        "has_geometry": _has_geometry(table),
     }
 
 
@@ -132,11 +147,7 @@ def _get_feature_type_context(table: DatasetTableSchema):
         "uri": uri,
         "fields": [_get_field_context(field) for field in fields],
         "embeds": [
-            {
-                "id": relation_name,
-                "snake_name": to_snake_case(relation_name),
-                "relation": field["relation"],
-            }
+            {"id": relation_name, "snake_name": to_snake_case(relation_name),}
             for relation_name, field in table["schema"]["properties"].items()
             if field.get("relation") is not None
         ],
@@ -175,12 +186,21 @@ def _get_fields(table_fields, parent_field=None) -> List[DatasetFieldSchema]:
 
 def _get_field_context(field: DatasetFieldSchema):
     """Get context data for a field."""
-    type = field.get("type")
-    value_example = VALUE_EXAMPLES.get(type)
-    ref = field.get("$ref")
+    type = field.type
+    format = field.format
+    try:
+        value_example, lookups = VALUE_EXAMPLES[format or type]
+    except KeyError:
+        value_example = ""
+        lookups = []
 
     snake_name = to_snake_case(field.name)
     camel_name = toCamelCase(field.name)
+
+    if field.relation:
+        # Mimic Django ForeignKey _id suffix.
+        snake_name += "_id"
+        camel_name += "Id"
 
     parent_field = field.parent_field
     while parent_field is not None:
@@ -190,20 +210,13 @@ def _get_field_context(field: DatasetFieldSchema):
         camel_name = f"{parent_camel_name}.{camel_name}"
         parent_field = parent_field.parent_field
 
-    if ref:
-        if ref.startswith("https://geojson.org/schema/"):
-            type = ref[27:-5]
-            value_example = f"GeoJSON | {type.upper()}(x y ...)"
-            lookups = []
-        else:
-            lookups = _identifier_lookups
-    else:
-        if type in ("number", "integer"):
-            lookups = _integer_lookups
-        elif type == "array":
-            lookups = _array_lookups
-        else:
-            lookups = _comparison_lookups
+    # This closely mimics what the Django filter+serializer logic does
+    if type.startswith("https://geojson.org/schema/"):
+        type = type[27:-5]
+        value_example = f"GeoJSON | {type.upper()}(x y ...)"
+        lookups = []
+    elif field.relation or "://" in type:
+        lookups = _identifier_lookups
 
     return {
         "name": field.name,

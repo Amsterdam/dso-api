@@ -4,7 +4,7 @@
 
 * **ID:** {{ schema_name }}
 * **Status:** {{ schema.status|default('beschikbaar') }}
-* **WFS:** {{ wfs_url }}
+* **WFS:** {% if wfs_url %}{{ wfs_url }}{% else %}N.B.{% endif %}
 
 .. contents:: Tabellen
    :local:
@@ -56,7 +56,7 @@ Daarnaast zijn de volgende velden te filteren:
      - Notatie
      - Extra operators
 {%- for field in table.fields %}
-   * - {{ field.camel_name }}
+   * - ``{{ field.camel_name }}``
      - {{ field.value_example|default('') }}
      - {% for op in field.lookups %}{% if not loop.first %}, {% endif %}``{{ op }}``{% endfor %}
 {%- endfor %}
