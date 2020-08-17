@@ -51,7 +51,7 @@ Embeds
 
 De volgende velden kunnen ingesloten worden met ``?embed=...`` en ``?expand=...```:
 
-{% for relation in table.relations: -%}
+{% for relation in table.embeds -%}
 * ``{{ relation.snake_name }}``
 {% endfor %}
 

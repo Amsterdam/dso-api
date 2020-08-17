@@ -24,6 +24,7 @@ Tot slot worden er ook volledige CSV en GeoJSON exports ondersteund.
 
 .. toctree::
    :caption: Datasets:
+   :maxdepth: 3
 
    datasets/index
    wfs-datasets/index
