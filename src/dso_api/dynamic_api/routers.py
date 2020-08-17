@@ -26,6 +26,19 @@ if TYPE_CHECKING:
     from schematools.contrib.django.models import DynamicModel
 
 
+def _environment_enabled_datasets(enabled_datasets):
+    if (
+        settings.DATAPUNT_ENVIRONMENT == "production"
+        and "acceptance_only_datasets" in settings.AMSTERDAM_SCHEMA
+    ):
+        enabled_datasets = filter(
+            lambda ds: ds.schema.id
+            not in settings.AMSTERDAM_SCHEMA["acceptance_only_datasets"],
+            enabled_datasets,
+        )
+    return enabled_datasets
+
+
 class DynamicRouter(routers.DefaultRouter):
     """Router that dynamically creates all viewsets based on the Dataset models."""
 
@@ -77,19 +90,20 @@ class DynamicRouter(routers.DefaultRouter):
         generated_models = []
 
         datasets = {}
-        for dataset in Dataset.objects.db_enabled():  # type: Dataset
+        for dataset in _environment_enabled_datasets(
+            Dataset.objects.db_enabled()
+        ):  # type: Dataset
             dataset_id = dataset.schema.id  # not dataset.name!
             datasets[dataset_id] = dataset
             new_models = {}
 
-            for model in dataset.create_models():
-                logger.debug("Created model %s.%s", dataset_id, model.__name__)
+            if dataset.enable_api:
+                for model in dataset.create_models():
+                    logger.debug("Created model %s.%s", dataset_id, model.__name__)
 
-                # Register model in Django apps under Datasets application name,
-                #  because django requires fully set up app for model discovery to work.
-                register_model(dataset, model)
-
-                if dataset.enable_api:
+                    # Register model in Django apps under Datasets application name,
+                    #  because django requires fully set up app for model discovery to work.
+                    register_model(dataset, model)
                     new_models[model._meta.model_name] = model
 
             self.all_models[dataset_id] = new_models
@@ -126,7 +140,9 @@ class DynamicRouter(routers.DefaultRouter):
         """Initialize viewsets that are are proxies for remote URLs"""
         tmp_router = routers.SimpleRouter()
 
-        for dataset in Dataset.objects.endpoint_enabled():  # type: Dataset
+        for dataset in _environment_enabled_datasets(
+            Dataset.objects.endpoint_enabled()
+        ):  # type: Dataset
             schema = dataset.schema
             dataset_id = schema.id
 

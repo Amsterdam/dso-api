@@ -230,6 +230,20 @@ DATAPUNT_AUTHZ = {
     "ALWAYS_OK": False,
 }
 
+DATAPUNT_ENVIRONMENT = os.getenv("DATAPUNT_ENVIRONMENT")
+if not DATAPUNT_ENVIRONMENT:
+    if schema := os.getenv("SCHEMA_URL") is not None:
+        if "acc." in schema:
+            DATAPUNT_ENVIRONMENT = "acceptance"
+        else:
+            DATAPUNT_ENVIRONMENT = "production"
+    else:
+        DATAPUNT_ENVIRONMENT = "local"
+
 # -- Local app settings
 
-AMSTERDAM_SCHEMA = {"geosearch_disabled_datasets": ["bag", "meetbouten"]}
+AMSTERDAM_SCHEMA = {
+    "geosearch_disabled_datasets": ["bag", "meetbouten"],
+    # For now no acceptance only datasets
+    # "acceptance_only_datasets": []
+}
