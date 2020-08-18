@@ -227,6 +227,8 @@ def generate_field_serializer(  # noqa: C901
     # Add extra embedded part for foreign keys
     if isinstance(model_field, models.ForeignKey):
         if depth == 0:
+            if isinstance(model_field.related_model, str):
+                breakpoint()
             new_attrs[camel_name] = EmbeddedField(
                 serializer_class=serializer_factory(
                     model_field.related_model, depth=depth, flat=True

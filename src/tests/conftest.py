@@ -87,6 +87,7 @@ def filled_router(
     fietspaaltjes_dataset,
     fietspaaltjes_dataset_no_display,
     explosieven_dataset,
+    ggwgebieden_dataset,
 ):
     # Prove that the router URLs are extended on adding a model
     router.reload()
@@ -105,11 +106,13 @@ def filled_router(
         fietspaaltjes_dataset: "fietsplaatjes_fietsplaatjes",
         fietspaaltjes_dataset_no_display: "fietspaaltjesnodisplay_fietspaaltjesnodisplay",
         explosieven_dataset: "explosieven_verdachtgebied",
+        ggwgebieden_dataset: "gebieden_ggwgebied",
     }
 
     # Based on datasets, create test table if not exists
     for dataset, table in datasets.items():
         if table not in table_names:
+            print(dataset)
             create_tables(dataset.schema)
     return router
 
@@ -588,3 +591,27 @@ def explosieven_data(explosieven_model):
 
 
 # --| >> EINDE uri check>> EXPLOSIEVEN  >> uri check >> |--#
+
+@pytest.fixture()
+def ggwgebieden_schema_json() -> dict:
+    """ Fixture to return the schema json for """
+    path = HERE / "files/ggwgebieden.json"
+    return json.loads(path.read_text())
+
+
+@pytest.fixture()
+def ggwgebieden_schema(ggwgebieden_schema_json,) -> DatasetSchema:
+    return DatasetSchema.from_dict(ggwgebieden_schema_json)
+
+
+@pytest.fixture()
+def ggwgebieden_dataset(ggwgebieden_schema_json) -> Dataset:
+    return Dataset.objects.create(
+        name="ggwgebieden", schema_data=ggwgebieden_schema_json
+    )
+
+
+@pytest.fixture()
+def ggwgebieden_model(filled_router):
+    # Using filled_router so all urls can be generated too.
+    return filled_router.all_models["gebieden"]["ggwgebied"]

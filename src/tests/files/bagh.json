@@ -131,10 +131,6 @@
             "type": "string",
             "relation": "bagh:wijk"
           },
-          "ggwGebied": {
-            "type": "string",
-            "relation": "bagh:ggwGebied"
-          },
           "stadsdeel": {
             "type": "string",
             "relation": "bagh:stadsdeel"
@@ -194,71 +190,6 @@
           },
           "verzorgingsgebied": {
             "type": "boolean"
-          }
-        }
-      }
-    },
-    {
-      "id": "ggwGebied",
-      "type": "table",
-      "schema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "schema",
-          "id",
-          "identificatie",
-          "volgnummer",
-          "code",
-          "naam",
-          "stadsdeel"
-        ],
-        "display": "id",
-        "properties": {
-          "schema": {
-            "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.1#/definitions/schema"
-          },
-          "id": {
-            "type": "string"
-          },
-          "identificatie": {
-            "type": "string"
-          },
-          "volgnummer": {
-            "type": "integer"
-          },
-          "registratiedatum": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "begin geldigheid": {
-            "type": "string",
-            "format": "date"
-          },
-          "eind geldigheid": {
-            "type": "string",
-            "format": "date"
-          },
-          "documentdatum": {
-            "type": "string",
-            "format": "date"
-          },
-          "documentnummer": {
-            "type": "string"
-          },
-          "code": {
-            "type": "string"
-          },
-          "naam": {
-            "type": "string"
-          },
-          "geometrie": {
-            "$ref": "https://geojson.org/schema/MultiPolygon.json"
-          },
-          "stadsdeel": {
-            "type": "string",
-            "relation": "bagh:stadsdeel"
           }
         }
       }
@@ -1023,10 +954,6 @@
           },
           "geometrie": {
             "$ref": "https://geojson.org/schema/MultiPolygon.json"
-          },
-          "ggwGebied": {
-            "type": "string",
-            "relation": "bagh:ggwGebied"
           },
           "stadsdeel": {
             "type": "string",
