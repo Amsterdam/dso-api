@@ -47,13 +47,18 @@ Velden
 
 {% if table.embeds %}
 Embeds
-~~~~~~~~
+~~~~~~
 
 De volgende velden kunnen ingesloten worden met ``?embed=...`` en ``?expand=...```:
 
 {% for relation in table.embeds -%}
 * ``{{ relation.snake_name }}``
 {% endfor %}
+
+{% if table.embeds|length > 1 %}
+Je kan meerdere velden insluiten door te ze scheiden met een comma, bijvoorbeeld:
+``?embed={{ table.embeds.0.snake_name }},{{ table.embeds.1.snake_name }}``
+{% endif %}
 
 {% endif %}
 {% endfor %}

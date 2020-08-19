@@ -9,4 +9,9 @@
       {% for name in expandable_fields %}<li><code>{{ name }}</code></li>{% endfor %}
     </ul>
   {% endif %}
+
+  {% if expandable_fields|length > 1 %}
+  <p>Add multiple values by separating them with a comma, e.g:</p>
+  <blockquote><code>{{ connect_url }}?embed={{ expandable_fields.0 }},{{ expandable_fields.1 }}</code></blockquote>
+  {% endif %}
 {% endblock %}

@@ -88,8 +88,8 @@ Queries op relaties
 Om object-relaties uit te lezen in de WFS server,
 kan je de volgende optie toevoegen aan de URL:
 
-* :samp:`?embed={relatienaam}` zal een veld platgeslagen invoegen.
-* :samp:`?expand={relatienaam}` zal een veld als "complex feature" invoegen.
+* :samp:`?embed={relatienaam},{...}` zal een veld platgeslagen invoegen.
+* :samp:`?expand={relatienaam},{...}` zal een veld als "complex feature" invoegen.
 
 Gebruik deze URL in QGis, of een ander GIS-pakket.
 
