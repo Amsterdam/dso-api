@@ -149,7 +149,11 @@ class DSOSerializer(_SideloadMixin, serializers.Serializer):
     @property
     def fields(self):
         request = self.context["request"]
-        fields = super().fields
+        # Exclude fields with double underscores from output.
+        fields = {
+            field_name: field for field_name, field in super().fields.items()
+            if "__" not in field.source
+        }
 
         # Adjust the serializer based on the request.
         # request can be None for get_schema_view(public=True)

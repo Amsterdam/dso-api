@@ -17,6 +17,7 @@ from rest_framework.serializers import Field
 from rest_framework.reverse import reverse
 from schematools.types import DatasetTableSchema
 from schematools.contrib.django.models import DynamicModel
+from schematools.contrib.django.fields import CombinedForeignKey
 from schematools.utils import to_snake_case, toCamelCase
 
 from dso_api.dynamic_api.fields import (
@@ -225,13 +226,14 @@ def generate_field_serializer(  # noqa: C901
     camel_name = toCamelCase(model_field.name)
 
     # Add extra embedded part for foreign keys
-    if isinstance(model_field, models.ForeignKey):
+    if isinstance(model_field, (models.ForeignKey, CombinedForeignKey)):
         if depth == 0:
-            if isinstance(model_field.related_model, str):
-                breakpoint()
+            related_model = model_field.related_model
+            if isinstance(model_field, CombinedForeignKey):
+                related_model = model_field.get_related_model()
             new_attrs[camel_name] = EmbeddedField(
                 serializer_class=serializer_factory(
-                    model_field.related_model, depth=depth, flat=True
+                    related_model, depth=depth, flat=True
                 ),
                 source=model_field.name,
             )

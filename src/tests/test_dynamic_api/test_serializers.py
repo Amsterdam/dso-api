@@ -580,12 +580,72 @@ class TestDynamicSerializer:
         test_gebied = ggwgebieden_model.objects.create(
             identificatie='010001',
             volgnummer=1,
+            naam='De Test',
+            ligtinstadsdeel__identificatie=stadsdeel_1.identificatie,
+            ligtinstadsdeel__volgnummer=stadsdeel_1.volgnummer,
+        )
+
+        GGWGebidenSerializer = serializer_factory(ggwgebieden_model, 0)
+
+        result = GGWGebidenSerializer(
+            test_gebied, context={"request": api_request}
+        )
+
+        assert "ligtinstadsdeelIdentificatie" not in result.data
+        assert "ligtinstadsdeelVolgnummer" not in result.data
+        assert result.data["ligtstadsdeel"] == {}, result.data
+
+
+    @staticmethod
+    def test_gebieden_bestaatuitbuurten_rendered_correctly(
+        api_request,
+        bagh_gemeente,
+        bagh_wijk,
+        bagh_stadsdeel_model,
+        ggwgebieden_schema,
+        ggwgebieden_model,
+        filled_router,
+        ):
+        """Prove that the serializer factory properly skipping generation of reverse
+        relations if `flat=True`.
+        Flat serialiser should not contain any reverse relations,
+        as flat serializers are used to represet instances of sub-serializers.
+        """
+        api_request.dataset = ggwgebieden_schema
+        stadsdeel_1 = bagh_stadsdeel_model.objects.create(
+            id="03630000000002_001",
+            code="H",
+            naam="Bos en Lommer",
+            gemeente=bagh_gemeente,
+            identificatie="03630000000002",
+            volgnummer=1,
+        )
+        stadsdeel_2 = bagh_stadsdeel_model.objects.create(
+            id="03630000000003_001",
+            code="H",
+            naam="Bos en Testen",
+            gemeente=bagh_gemeente,
+            identificatie="03630000000003",
+            volgnummer=1,
+        )
+        buurt = filled_router.all_models['bagh']['buurt'].objects.create(
+            id="000101_1",
+            identificatie="000101",
+            volgnummer=1,
+            naam="Test Buurt",
+            wijk=bagh_wijk,
+            stadsdeel=stadsdeel_1)
+
+        test_gebied = ggwgebieden_model.objects.create(
+            identificatie='010001',
+            volgnummer=1,
             naam='De Test')
 
         GGWGebidenSerializer = serializer_factory(ggwgebieden_model, 0)
 
-        # test_gebied.bestaatuitbuurten.all()
         filled_router.all_models['gebieden']['ggwgebied_buurt'].objects.create(buurt=buurt, ggwgebied=test_gebied, volgnummer=buurt.volgnummer, identificatie=buurt.identificatie)
+
+        assert len(test_gebied.bestaatuitbuurten.all()) == 1
 
         result = GGWGebidenSerializer(
             test_gebied, context={"request": api_request}
