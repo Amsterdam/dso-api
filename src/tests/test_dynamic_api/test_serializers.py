@@ -553,6 +553,8 @@ class TestDynamicSerializer:
         as flat serializers are used to represet instances of sub-serializers.
         """
         api_request.dataset = ggwgebieden_schema
+        api_request.versioned = True
+        api_request.dataset_temporal_slice = None
         stadsdeel_1 = bagh_stadsdeel_model.objects.create(
             id="03630000000002_001",
             code="H",
@@ -593,7 +595,7 @@ class TestDynamicSerializer:
 
         assert "ligtinstadsdeelIdentificatie" not in result.data
         assert "ligtinstadsdeelVolgnummer" not in result.data
-        assert result.data["ligtstadsdeel"] == {}, result.data
+        assert result.data["ligtinstadsdeel"] == "http://testserver/v1/bagh/stadsdeel/03630000000002/?volgnummer=001", result.data
 
 
     @staticmethod
@@ -612,6 +614,7 @@ class TestDynamicSerializer:
         as flat serializers are used to represet instances of sub-serializers.
         """
         api_request.dataset = ggwgebieden_schema
+        api_request.versioned = True
         stadsdeel_1 = bagh_stadsdeel_model.objects.create(
             id="03630000000002_001",
             code="H",

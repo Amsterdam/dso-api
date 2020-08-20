@@ -75,22 +75,6 @@
                }
              },
              "description": "Het stadsdeel waar het gebied in ligt."
-           },
-           "bestaatuitbuurten": {
-             "relation": "bagh:buurt",
-             "type": "array",
-             "items": {
-               "type": "object",
-               "properties": {
-                 "identificatie": {
-                   "type": "string"
-                 },
-                 "volgnummer": {
-                   "type": "integer"
-                 }
-               }
-             },
-             "description": "De buurten waaruit het object bestaat."
            }
          }
        }

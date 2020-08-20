@@ -217,6 +217,21 @@ def generate_field_serializer(  # noqa: C901
                     fields.append(name)
                 break
         return
+    if isinstance(model_field, CombinedForeignKey):
+        # for name, relation in model._table_schema.relations.items():
+        if model_field.name in model._table_schema['schema']['properties']:
+            relation = model._table_schema['schema']['properties'][model_field.name]
+            view_name = "dynamic_api:{}-{}-detail".format(
+                to_snake_case(model_field.get_related_model()._table_schema.dataset.id),
+                to_snake_case(model_field.get_related_model()._table_schema.id),
+            )
+            new_attrs[model_field.name] = TemporalHyperlinkedRelatedField(
+                view_name=view_name,
+                queryset=getattr(model, model_field.name),
+            )
+            fields.append(model_field.name)
+        return
+
     if model.has_parent_table() and model_field.name in ["id", "parent"]:
         # Do not render PK and FK to parent on nested tables
         return
@@ -226,11 +241,9 @@ def generate_field_serializer(  # noqa: C901
     camel_name = toCamelCase(model_field.name)
 
     # Add extra embedded part for foreign keys
-    if isinstance(model_field, (models.ForeignKey, CombinedForeignKey)):
+    if isinstance(model_field, models.ForeignKey):
         if depth == 0:
             related_model = model_field.related_model
-            if isinstance(model_field, CombinedForeignKey):
-                related_model = model_field.get_related_model()
             new_attrs[camel_name] = EmbeddedField(
                 serializer_class=serializer_factory(
                     related_model, depth=depth, flat=True
