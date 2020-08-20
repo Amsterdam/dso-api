@@ -42,6 +42,7 @@ INITIALIZE_DYNAMIC_VIEWSETS = env.bool(
 
 INTERNAL_IPS = ("127.0.0.1", "0.0.0.0")
 
+TIME_ZONE = "Europe/Amsterdam"
 
 # -- Application definition
 
