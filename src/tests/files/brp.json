@@ -1,11 +1,12 @@
 {
   "type": "dataset",
   "id": "brp",
-  "title": null,
+  "title": "Basisregistratie Personen (BRP)",
   "status": "beschikbaar",
-  "description": null,
+  "description": "Deze dataset maakt de basisregistratie personen toegankelijk, bij gebruik van login credentials.",
   "version": "0.0.1",
   "crs": "EPSG:28992",
+  "auth": "BRP/R",
   "tables": [
     {
       "id": "ingeschrevenpersonen",
@@ -37,13 +38,7 @@
                 "type": "string"
               }
             },
-            "required": [
-              "aanduidingNaamgebruik",
-              "voornamen",
-              "voorletters",
-              "geslachtsnaam",
-              "voorvoegsel"
-            ]
+            "required": []
           },
           "leeftijd": {
             "type": "integer"
@@ -58,7 +53,8 @@
                 "type": "object",
                 "properties": {
                   "datum": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "date"
                   },
                   "jaar": {
                     "type": "integer"
@@ -70,17 +66,10 @@
                     "type": "integer"
                   }
                 },
-                "required": [
-                  "datum",
-                  "jaar",
-                  "maand",
-                  "dag"
-                ]
+                "required": []
               }
             },
-            "required": [
-              "datum"
-            ]
+            "required": []
           },
           "verblijfplaats": {
             "type": "object",
@@ -101,7 +90,8 @@
                 "type": "object",
                 "properties": {
                   "datum": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "date"
                   },
                   "jaar": {
                     "type": "integer"
@@ -113,18 +103,14 @@
                     "type": "integer"
                   }
                 },
-                "required": [
-                  "datum",
-                  "jaar",
-                  "maand",
-                  "dag"
-                ]
+                "required": []
               },
               "datumInschrijvingInGemeente": {
                 "type": "object",
                 "properties": {
                   "datum": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "date"
                   },
                   "jaar": {
                     "type": "integer"
@@ -136,12 +122,7 @@
                     "type": "integer"
                   }
                 },
-                "required": [
-                  "datum",
-                  "jaar",
-                  "maand",
-                  "dag"
-                ]
+                "required": []
               },
               "gemeenteVanInschrijving": {
                 "type": "object",
@@ -153,30 +134,14 @@
                     "type": "string"
                   }
                 },
-                "required": [
-                  "code",
-                  "omschrijving"
-                ]
+                "required": []
               }
             },
-            "required": [
-              "functieAdres",
-              "huisnummer",
-              "postcode",
-              "straatnaam",
-              "datumAanvangAdreshouding",
-              "datumInschrijvingInGemeente",
-              "gemeenteVanInschrijving"
-            ]
+            "required": []
           }
         },
         "required": [
-          "geslachtsaanduiding",
-          "naam",
-          "leeftijd",
-          "burgerservicenummer",
-          "geboorte",
-          "verblijfplaats"
+          "burgerservicenummer"
         ]
       }
     }

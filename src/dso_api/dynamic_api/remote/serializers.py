@@ -86,7 +86,12 @@ def _build_declared_fields(
         # The space replacement is unlikely for a remote field, but kept for consistency.
         safe_field_name = field.name.replace(" ", "_")
         camel_name = snake_to_camel_case(safe_field_name)
-        kwargs = {} if camel_name == field.name else {"source": field.name}
+
+        kwargs = {"required": field.required, "allow_null": not field.required}
+        if field.type == "string" and not field.required:
+            kwargs["allow_blank"] = True
+        if camel_name != field.name:
+            kwargs["source"] = field.name
         declared_fields[camel_name] = remote_field_factory(field, **kwargs)
 
     return declared_fields
@@ -101,7 +106,7 @@ def remote_field_factory(field: DatasetFieldSchema, **kwargs) -> serializers.Fie
 
     if type_ == "object":
         # Generate a serializer class for the object
-        return _remote_object_field_factory(field)
+        return _remote_object_field_factory(field, **kwargs)
     else:
         field_cls = JSON_TYPE_TO_DRF[type_]
         return field_cls(**kwargs)
@@ -130,4 +135,4 @@ def _remote_object_field_factory(
     new_attrs.update(declared_fields)
     new_attrs["Meta"] = type("Meta", (), {"fields": list(declared_fields.keys())})
     serializer_class = type(serializer_name, (RemoteObjectSerializer,), new_attrs)
-    return serializer_class()
+    return serializer_class(**kwargs)
