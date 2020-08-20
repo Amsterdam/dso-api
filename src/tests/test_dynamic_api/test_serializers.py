@@ -1,4 +1,3 @@
-import unittest
 from collections import OrderedDict
 from datetime import date
 
@@ -598,7 +597,6 @@ class TestDynamicSerializer:
         assert result.data["ligtinstadsdeel"] == "http://testserver/v1/bagh/stadsdeel/03630000000002/?volgnummer=001", result.data
 
 
-    @unittest.skip("not finished yet")
     @staticmethod
     def test_gebieden_bestaatuitbuurten_rendered_correctly(
         api_request,
