@@ -4,6 +4,7 @@ import os
 
 import environ
 import sentry_sdk
+import sentry_sdk.utils
 from corsheaders.defaults import default_headers
 from sentry_sdk.integrations.django import DjangoIntegration
 from sentry_sdk.integrations.logging import LoggingIntegration
@@ -139,6 +140,7 @@ if SENTRY_DSN:
             DjangoIntegration(),
         ],
     )
+    sentry_sdk.utils.MAX_STRING_LENGTH = 2048  # for WFS FILTER exceptions
 
 
 LOGGING = {
