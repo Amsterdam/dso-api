@@ -26,10 +26,10 @@ class DSOPageNumberPagination(pagination.PageNumberPagination):
         data = self._get_paginated_data(data)
         response = Response(data)
         response["X-Pagination-Page"] = self.page.number
-        response["X-Pagination-Limit"] = self.page_size
 
-        # Optional but available on this paginator:
         paginator = self.page.paginator
+        response["X-Pagination-Limit"] = paginator.per_page
+        # Optional but available on this paginator:
         response["X-Pagination-Count"] = paginator.num_pages
         response["X-Total-Count"] = paginator.count
         return response
@@ -54,7 +54,7 @@ class DSOPageNumberPagination(pagination.PageNumberPagination):
         paginator = self.page.paginator
         page = {
             "number": self.page.number,
-            "size": self.page_size,
+            "size": paginator.per_page,
             "totalElements": paginator.count,
             "totalPages": paginator.num_pages,
         }
