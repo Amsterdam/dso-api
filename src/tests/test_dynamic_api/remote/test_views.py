@@ -5,7 +5,6 @@ from urllib3_mock import Responses
 from django.urls import reverse
 
 DEFAULT_RESPONSE = {
-    "schema": "https://schemas.data.amsterdam.nl/datasets/brp/brp#ingeschrevenpersonen",
     "naam": {
         "voornamen": "Ria",
         "voorletters": "R.",
@@ -38,6 +37,62 @@ DEFAULT_RESPONSE = {
     "geslachtsaanduiding": "vrouw",
 }
 
+SMALL_RESPONSE = {
+    "_links": {
+        "self": {
+            "href": (
+                "https://acc.api.secure.amsterdam.nl"
+                "/gob_stuf/brp/ingeschrevenpersonen/230164419"
+            )
+        }
+    },
+    "geslachtsaanduiding": "",
+    "burgerservicenummer": "230164419",  # from acc, is faked data
+    "verblijfplaats": {
+        "functieAdres": "woonadres",
+        "naamOpenbareRuimte": "Cycladenlaan",
+        "huisnummer": "41",
+        "postcode": "1060MB",
+        "woonplaatsnaam": "Amsterdam",
+        "straatnaam": "Cycladenlaan",
+        "gemeenteVanInschrijving": {"code": "0363", "omschrijving": "Amsterdam"},
+        "vanuitVertrokkenOnbekendWaarheen": False,
+    },
+}
+
+SUCCESS_TESTS = {
+    "default": (
+        DEFAULT_RESPONSE,
+        {
+            "schema": "https://schemas.data.amsterdam.nl/datasets/brp/brp#ingeschrevenpersonen",
+            **DEFAULT_RESPONSE,
+        },
+    ),
+    "small": (
+        SMALL_RESPONSE,
+        {
+            "schema": "https://schemas.data.amsterdam.nl/datasets/brp/brp#ingeschrevenpersonen",
+            "naam": None,
+            "geboorte": None,
+            "leeftijd": None,
+            "verblijfplaats": {
+                "postcode": "1060MB",
+                "huisnummer": "41",
+                "straatnaam": "Cycladenlaan",
+                "functieAdres": "woonadres",
+                "gemeenteVanInschrijving": {
+                    "code": "0363",
+                    "omschrijving": "Amsterdam",
+                },
+                "datumAanvangAdreshouding": None,
+                "datumInschrijvingInGemeente": None,
+            },
+            "burgerservicenummer": "230164419",
+            "geslachtsaanduiding": "",
+        },
+    ),
+}
+
 
 @pytest.fixture()
 def urllib3_mocker() -> Responses:
@@ -47,13 +102,15 @@ def urllib3_mocker() -> Responses:
 
 
 @pytest.mark.django_db
-def test_remote_detail_view(api_client, router, brp_dataset, urllib3_mocker):
+@pytest.mark.parametrize("test_name", list(SUCCESS_TESTS.keys()))
+def test_remote_detail_view(api_client, router, brp_dataset, urllib3_mocker, test_name):
     """Prove that the remote router can proxy the other service."""
+    remote_response, local_response = SUCCESS_TESTS[test_name]
     router.reload()
     urllib3_mocker.add(
         "GET",
         "/unittest/brp/ingeschrevenpersonen/999990901",
-        body=orjson.dumps(DEFAULT_RESPONSE),
+        body=orjson.dumps(remote_response),
         content_type="application/json",
     )
 
@@ -63,8 +120,9 @@ def test_remote_detail_view(api_client, router, brp_dataset, urllib3_mocker):
     )
     response = api_client.get(url)
 
+    # To test: print(json.dumps(response.json(), indent=2))
     assert response.status_code == 200, response.data
-    assert response.json() == DEFAULT_RESPONSE, response.data
+    assert response.json() == local_response, response.data
 
 
 @pytest.mark.django_db
@@ -93,14 +151,7 @@ def test_remote_schema_validation(api_client, router, brp_dataset, urllib3_mocke
         "status": 502,
         "instance": "http://testserver/v1/remote/brp/ingeschrevenpersonen/999990901/",
         "detail": "These schema fields did not validate:",
-        "x-validation-errors": {
-            "naam": ["This field is required."],
-            "geboorte": ["This field is required."],
-            "leeftijd": ["This field is required."],
-            "verblijfplaats": ["This field is required."],
-            "burgerservicenummer": ["This field is required."],
-            "geslachtsaanduiding": ["This field is required."],
-        },
+        "x-validation-errors": {"burgerservicenummer": ["This field is required."]},
         "x-raw-response": {"foo": "bar"},
     }, response.data
 
