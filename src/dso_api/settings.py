@@ -4,6 +4,7 @@ import os
 
 import environ
 import sentry_sdk
+import sentry_sdk.utils
 from corsheaders.defaults import default_headers
 from sentry_sdk.integrations.django import DjangoIntegration
 from sentry_sdk.integrations.logging import LoggingIntegration
@@ -41,6 +42,7 @@ INITIALIZE_DYNAMIC_VIEWSETS = env.bool(
 
 INTERNAL_IPS = ("127.0.0.1", "0.0.0.0")
 
+TIME_ZONE = "Europe/Amsterdam"
 
 # -- Application definition
 
@@ -139,6 +141,7 @@ if SENTRY_DSN:
             DjangoIntegration(),
         ],
     )
+    sentry_sdk.utils.MAX_STRING_LENGTH = 2048  # for WFS FILTER exceptions
 
 
 LOGGING = {
