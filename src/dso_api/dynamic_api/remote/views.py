@@ -108,11 +108,12 @@ class RemoteViewSet(ViewSet):
                 "GET", url, headers=headers, timeout=60, retries=False,
             )
         except (TimeoutError, urllib3.exceptions.TimeoutError) as e:
-            logger.error("Proxy call failed: %s", e)
+            # Socket timeout
+            logger.error("Proxy call failed, timeout from remote server: %s", e)
             raise GatewayTimeout() from e
         except (OSError, urllib3.exceptions.HTTPError) as e:
-            # Any remaining socket / SSL error
-            logger.error("Proxy call failed: %s", e)
+            # Socket connect / SSL error (HTTPError is the base class for errors)
+            logger.error("Proxy call failed, error when connecting to server: %s", e)
             raise ServiceUnavailable(str(e)) from e
 
         if response.status == 200:
@@ -121,22 +122,38 @@ class RemoteViewSet(ViewSet):
         return self._raise_http_error(response)
 
     def _raise_http_error(self, response: HTTPResponse):  # noqa: C901
-        """Translate the remote HTTP error to the proper response."""
-        content_type = response.headers.get("content-type")
+        """Translate the remote HTTP error to the proper response.
+
+        This translates some errors into a 502 "Bad Gateway" or 503 "Gateway Timeout"
+        error to reflect the fact that this API is calling another service as backend.
+        """
+        # Generic logging
         level = logging.ERROR if response.status >= 500 else logging.DEBUG
-        logger.log(level, "Proxy call failed: %s", response.reason)
+        logger.log(
+            level, "Proxy call failed, status %s: %s", response.status, response.reason
+        )
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug("  Response body: %s", response.data)
 
-        if response.headers.get("content-type", "").startswith("text/html"):
+        content_type = response.headers.get("content-type", "")
+        if content_type.startswith("text/html"):
+            # HTML error, probably hit the completely wrong page.
             detail_message = None
         else:
+            # Consider the actual JSON response to be relevant here.
             detail_message = response.data.decode()
 
-        if response.status == 400:
+        if 300 <= response.status <= 399 and (
+            "/oauth/authorize" in response.headers.get("Location", "")
+        ):
+            raise NotAuthenticated("Invalid token")
+        elif response.status == 400:  # "bad request"
             if response.data == b"Missing required MKS headers":
+                # Didn't pass the MKS_APPLICATIE / MKS_GEBRUIKER headers.
+                # Shouldn't occur anymore since it's JWT-token based now.
                 raise NotAuthenticated("Internal credentials are missing")
             elif content_type == "application/problem+json":
+                # Translate proper "Bad Request" to REST response
                 raise RemoteAPIException(
                     title=ParseError.default_detail,
                     detail=orjson.loads(response.data),
@@ -145,10 +162,10 @@ class RemoteViewSet(ViewSet):
                 )
             else:
                 raise BadGateway(detail_message)
-        elif response.status == 403:
+        elif response.status == 403:  # "forbidden"
             # Return 403 to client as well
             raise NotAuthenticated(detail_message)
-        elif response.status == 404:
+        elif response.status == 404:  # "not found"
             # Return 404 to client (in DRF format)
             if content_type == "application/problem+json":
                 # Forward the problem-json details, but still in a 404:
@@ -160,7 +177,16 @@ class RemoteViewSet(ViewSet):
                 )
             raise NotFound(detail_message)
         else:
-            raise ServiceUnavailable(detail_message)
+            # Unexpected response, call it a "Bad Gateway"
+            logger.error(
+                "Proxy call failed, unexpected status code from endpoint: %s %s",
+                response.status,
+                detail_message,
+            )
+            raise BadGateway(
+                detail_message
+                or f"Unexpected HTTP {response.status} from internal endpoint"
+            )
 
     def get_headers(self):
         """Collect the headers to submit to the remote service."""
