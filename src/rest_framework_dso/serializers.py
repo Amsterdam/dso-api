@@ -148,7 +148,8 @@ class DSOSerializer(_SideloadMixin, serializers.Serializer):
 
     @property
     def fields(self):
-        request = self.context["request"]
+        # .get() is needed to print serializer fields during debugging
+        request = self.context.get("request")
         fields = super().fields
 
         # Adjust the serializer based on the request.
