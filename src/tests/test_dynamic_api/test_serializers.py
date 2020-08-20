@@ -1,3 +1,4 @@
+import unittest
 from collections import OrderedDict
 from datetime import date
 
@@ -583,8 +584,7 @@ class TestDynamicSerializer:
             identificatie='010001',
             volgnummer=1,
             naam='De Test',
-            ligtinstadsdeel__identificatie=stadsdeel_1.identificatie,
-            ligtinstadsdeel__volgnummer=stadsdeel_1.volgnummer,
+            ligtinstadsdeel=stadsdeel_1,
         )
 
         GGWGebidenSerializer = serializer_factory(ggwgebieden_model, 0)
@@ -598,6 +598,7 @@ class TestDynamicSerializer:
         assert result.data["ligtinstadsdeel"] == "http://testserver/v1/bagh/stadsdeel/03630000000002/?volgnummer=001", result.data
 
 
+    @unittest.skip("not finished yet")
     @staticmethod
     def test_gebieden_bestaatuitbuurten_rendered_correctly(
         api_request,
@@ -615,6 +616,7 @@ class TestDynamicSerializer:
         """
         api_request.dataset = ggwgebieden_schema
         api_request.versioned = True
+        api_request.dataset_temporal_slice = None
         stadsdeel_1 = bagh_stadsdeel_model.objects.create(
             id="03630000000002_001",
             code="H",
@@ -646,7 +648,11 @@ class TestDynamicSerializer:
 
         GGWGebidenSerializer = serializer_factory(ggwgebieden_model, 0)
 
-        filled_router.all_models['gebieden']['ggwgebied_buurt'].objects.create(buurt=buurt, ggwgebied=test_gebied, volgnummer=buurt.volgnummer, identificatie=buurt.identificatie)
+        filled_router.all_models['gebieden']['ggwgebied_buurt'].objects.create(
+            buurt=buurt,
+            ggwgebied=test_gebied,
+            volgnummer=buurt.volgnummer,
+            identificatie=buurt.identificatie)
 
         assert len(test_gebied.bestaatuitbuurten.all()) == 1
 

@@ -45,12 +45,12 @@ def bagh_stadsdeelen(bagh_models):
 
 
 @pytest.fixture()
-def bagh_gebieden(bagh_models, bagh_stadsdeelen):
+def bagh_wijk_1(bagh_models, bagh_stadsdeelen):
     """
     Creates gebied that is connected to Stadsdeel Zuidoost.
     """
-    Gebied = bagh_models["ggw_gebied"]
-    gebied = Gebied.objects.create(
+    Wijk = bagh_models["wijk"]
+    return Wijk.objects.create(
         id="03630950000019_001",
         identificatie="03630950000019",
         volgnummer=1,
@@ -59,7 +59,6 @@ def bagh_gebieden(bagh_models, bagh_stadsdeelen):
         naam="Bijlmer-Centrum",
         stadsdeel=bagh_stadsdeelen[1],
     )
-    return gebied
 
 
 @pytest.mark.django_db
@@ -154,31 +153,39 @@ class TestViews:
         ), response.data
 
     def test_serializer_contains_correct_link_to_stadsdeel(
-        self, api_client, filled_router, bagh_schema, bagh_gebieden
+        self, api_client, filled_router, bagh_schema, bagh_stadsdeelen, ggwgebieden_model
     ):
-        """ Prove that serializer contains link to correct version of gemeente."""
-        url = reverse("dynamic_api:bagh-ggw_gebied-list")
-        response = api_client.get("{}{}/".format(url, bagh_gebieden.id))
+        """ Prove that serializer contains link to correct version of stadsdeel."""
 
-        expected_url = "/{}/?volgnummer=002".format(
-            bagh_gebieden.stadsdeel.identificatie
+        test_gebied = ggwgebieden_model.objects.create(
+            identificatie='010001',
+            volgnummer=1,
+            naam='De Test',
+            ligtinstadsdeel=bagh_stadsdeelen[0],
         )
-        assert response.data["stadsdeel"].endswith(expected_url), response.data[
-            "stadsdeel"
+        url = reverse("dynamic_api:gebieden-ggwgebied-list")
+        response = api_client.get("{}{}/".format(url, test_gebied.identificatie))
+
+        expected_url = "/{}/?volgnummer={}".format(
+            test_gebied.ligtinstadsdeel.identificatie,
+            str(test_gebied.ligtinstadsdeel.volgnummer).zfill(3)
+        )
+        assert str(response.data["ligtinstadsdeel"]).endswith(expected_url), response.data[
+            "ligtinstadsdeel"
         ]
 
     def test_serializer_temporal_request_corrects_link_to_temporal(
-        self, api_client, filled_router, bagh_schema, bagh_gebieden
+        self, api_client, filled_router, bagh_schema, bagh_wijk_1
     ):
         """ Prove that in case of temporal request links to objects will have request date.
         Allowing follow up date filtering further."""
-        url = reverse("dynamic_api:bagh-ggw_gebied-list")
+        url = reverse("dynamic_api:bagh-wijk-list")
         response = api_client.get(
-            "{}{}/?geldigOp=2014-05-01".format(url, bagh_gebieden.id)
+            "{}{}/?geldigOp=2014-05-01".format(url, bagh_wijk_1.identificatie)
         )
 
         expected_url = "/{}/?geldigOp=2014-05-01".format(
-            bagh_gebieden.stadsdeel.identificatie
+            bagh_wijk_1.stadsdeel.identificatie
         )
         assert response.data["stadsdeel"].endswith(expected_url), response.data[
             "stadsdeel"
