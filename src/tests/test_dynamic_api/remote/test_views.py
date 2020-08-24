@@ -65,6 +65,11 @@ SUCCESS_TESTS = {
         DEFAULT_RESPONSE,
         {
             "schema": "https://schemas.data.amsterdam.nl/datasets/brp/brp#ingeschrevenpersonen",
+            "_links": {
+                "self": {
+                    "href": "http://testserver/v1/remote/brp/ingeschrevenpersonen/999990901/"
+                }
+            },
             **DEFAULT_RESPONSE,
         },
     ),
@@ -72,9 +77,11 @@ SUCCESS_TESTS = {
         SMALL_RESPONSE,
         {
             "schema": "https://schemas.data.amsterdam.nl/datasets/brp/brp#ingeschrevenpersonen",
-            "naam": None,
-            "geboorte": None,
-            "leeftijd": None,
+            "_links": {
+                "self": {
+                    "href": "http://testserver/v1/remote/brp/ingeschrevenpersonen/999990901/"
+                }
+            },
             "verblijfplaats": {
                 "postcode": "1060MB",
                 "huisnummer": "41",
@@ -84,8 +91,6 @@ SUCCESS_TESTS = {
                     "code": "0363",
                     "omschrijving": "Amsterdam",
                 },
-                "datumAanvangAdreshouding": None,
-                "datumInschrijvingInGemeente": None,
             },
             "burgerservicenummer": "230164419",
             "geslachtsaanduiding": "",
