@@ -24,6 +24,19 @@ logger = logging.getLogger(__name__)
 http_pool = urllib3.PoolManager(cert_reqs="CERT_REQUIRED", ca_certs=certifi.where())
 
 
+def del_none(d):
+    """
+    Delete keys with the value ``None`` in a dictionary, recursively.
+
+    This alters the input so you may wish to ``copy`` the dict first.
+    """
+    for key, value in list(d.items()):
+        if value is None:
+            del d[key]
+        elif isinstance(value, dict):
+            del_none(value)
+
+
 class RemoteViewSet(ViewSet):
     """Views for a remote serializer."""
 
@@ -71,9 +84,16 @@ class RemoteViewSet(ViewSet):
         """The GET request for detail"""
         data = self._call_remote(url=self.kwargs["pk"])
         serializer = self.get_serializer(data=data)
+        # Validate data. Throw exception if not valid
         self.validate(serializer, data)
-
-        return Response(serializer.data)
+        # Return original data
+        serialized_data = serializer.data
+        del_none(serialized_data)
+        # Add self url.
+        self_link = self.request.build_absolute_uri(self.request.path)
+        if "_links" not in serialized_data:
+            serialized_data["_links"] = {"self": {"href": self_link}}
+        return Response(serialized_data)
 
     def validate(self, serializer, raw_data):
         if not serializer.is_valid():
