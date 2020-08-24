@@ -86,7 +86,6 @@ class RemoteViewSet(ViewSet):
         serializer = self.get_serializer(data=data)
         # Validate data. Throw exception if not valid
         self.validate(serializer, data)
-        # Return original data
         serialized_data = serializer.data
         del_none(serialized_data)
         # Add self url.
