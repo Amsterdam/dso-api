@@ -9,7 +9,7 @@ def _get_unique_trace_id(request):
         "HTTP_X_UNIQUE_ID"
     )  # X-Unique-ID wordt in haproxy gezet
     if unique_id:
-        instance = f"unique_id:{unique_id}"
+        instance = f"X-Unique-ID:{unique_id}"
     else:
         instance = request.build_absolute_uri()
     return instance
