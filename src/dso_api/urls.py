@@ -2,7 +2,7 @@ import django_healthchecks.urls
 from django.conf import settings
 from django.urls import include, path, re_path
 from django.views.generic import RedirectView
-from rest_framework import exceptions
+from dso_api.dynamic_api import exceptions
 
 import dso_api.dynamic_api.urls
 from dso_api.dynamic_api.oas3 import get_openapi_yaml_view
@@ -17,6 +17,7 @@ urlpatterns = [
 ]
 
 handler400 = exceptions.bad_request
+handler404 = exceptions.not_found
 handler500 = exceptions.server_error
 
 
