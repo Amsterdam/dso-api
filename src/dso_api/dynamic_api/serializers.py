@@ -154,6 +154,8 @@ def serializer_factory(
 ) -> Type[DynamicSerializer]:
     """Generate the DRF serializer class for a specific dataset model."""
     fields = ["_links", "schema"]
+    if isinstance(model, str):
+        raise Exception(f"Model {model} could not be resolved.")
     if model.has_parent_table():
         # Inner tables have no schema or links defined.
         fields = []
@@ -225,7 +227,7 @@ def generate_field_serializer(  # noqa: C901
     camel_name = toCamelCase(model_field.name)
 
     # Add extra embedded part for foreign keys
-    if isinstance(model_field, models.ForeignKey):
+    if isinstance(model_field, models.ForeignKey):  # and False:
         if depth == 0:
             new_attrs[camel_name] = EmbeddedField(
                 serializer_class=serializer_factory(

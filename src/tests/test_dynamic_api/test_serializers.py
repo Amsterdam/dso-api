@@ -535,3 +535,11 @@ class TestDynamicSerializer:
 
         # Validation passes if outcome is None
         assert validate_uri(explosieven_serializer.data["pdf"]) is None
+
+    @staticmethod
+    def test_indirect_self_reference(
+        api_request, indirect_self_ref_schema, filled_router
+    ):
+        api_request.dataset = indirect_self_ref_schema
+        indirect_self_ref_model = filled_router.all_models["selfref"]
+        serializer_factory(indirect_self_ref_model, 0)
