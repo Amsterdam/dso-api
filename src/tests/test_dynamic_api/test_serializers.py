@@ -540,6 +540,10 @@ class TestDynamicSerializer:
     def test_indirect_self_reference(
         api_request, indirect_self_ref_schema, filled_router
     ):
+        """ Prove that a dataset with two tables that
+            are mutually related generates a serialize without any problems
+            (no infinite recursion)
+        """
         api_request.dataset = indirect_self_ref_schema
-        indirect_self_ref_model = filled_router.all_models["selfref"]
+        indirect_self_ref_model = filled_router.all_models["selfref"]["ligplaatsen"]
         serializer_factory(indirect_self_ref_model, 0)
