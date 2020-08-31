@@ -191,15 +191,15 @@ def generate_field_serializer(  # noqa: C901
     # create converted field names on the serializer construction.
     camel_name = toCamelCase(model_field.name)
     depth = extra_kwargs.get("depth", 0)
+    depth += 1
     if isinstance(model_field, models.ManyToOneRel):
         for name, relation in model._table_schema.relations.items():
             if (
-                depth <= 1
+                depth <= 2
                 and relation["table"]
                 == toCamelCase(model_field.related_model._meta.model_name)
                 and relation["field"] == toCamelCase(model_field.field.name)
             ):
-                depth += 1
                 format1 = relation.get("format", "summary")
                 att_name = model_field.name
                 if format1 == "embedded":
@@ -227,8 +227,8 @@ def generate_field_serializer(  # noqa: C901
     camel_name = toCamelCase(model_field.name)
 
     # Add extra embedded part for foreign keys
-    if isinstance(model_field, models.ForeignKey):  # and False:
-        if depth == 0:
+    if isinstance(model_field, models.ForeignKey):
+        if depth == 1:
             new_attrs[camel_name] = EmbeddedField(
                 serializer_class=serializer_factory(
                     model_field.related_model, depth=depth, flat=True

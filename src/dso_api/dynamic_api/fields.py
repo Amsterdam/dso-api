@@ -15,7 +15,7 @@ class TemporalHyperlinkedRelatedField(serializers.HyperlinkedRelatedField):
 
         # XXX temporary hack, when dataset is defined as temporal
         # but some tables are not (.e.g. dossiers in gob)
-        if request.versioned and (len(parts := split_on_separator(obj.pk)) > 2):
+        if request.versioned and (len(parts := split_on_separator(obj.pk)) > 1):
             # note that `obj` has only PK field.
             lookup_value, version = parts
             kwargs = {self.lookup_field: lookup_value}
