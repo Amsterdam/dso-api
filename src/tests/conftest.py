@@ -87,6 +87,7 @@ def filled_router(
     fietspaaltjes_dataset,
     fietspaaltjes_dataset_no_display,
     explosieven_dataset,
+    indirect_self_ref_dataset,
 ):
     # Prove that the router URLs are extended on adding a model
     router.reload()
@@ -105,6 +106,7 @@ def filled_router(
         fietspaaltjes_dataset: "fietsplaatjes_fietsplaatjes",
         fietspaaltjes_dataset_no_display: "fietspaaltjesnodisplay_fietspaaltjesnodisplay",
         explosieven_dataset: "explosieven_verdachtgebied",
+        indirect_self_ref_dataset: "selfref_selfref",
     }
 
     # Based on datasets, create test table if not exists
@@ -584,6 +586,24 @@ def explosieven_model(filled_router):
 def explosieven_data(explosieven_model):
     return explosieven_model.objects.create(
         id=1, pdf="https://host.domain/file.extension"
+    )
+
+
+@pytest.fixture()
+def indirect_self_ref_schema_json() -> dict():
+    path = HERE / "files/indirect-self-ref.json"
+    return json.loads(path.read_text())
+
+
+@pytest.fixture()
+def indirect_self_ref_schema(indirect_self_ref_schema_json) -> DatasetSchema:
+    return DatasetSchema.from_dict(indirect_self_ref_schema_json)
+
+
+@pytest.fixture()
+def indirect_self_ref_dataset(indirect_self_ref_schema_json) -> Dataset:
+    return Dataset.objects.create(
+        name="indirect_self_ref", schema_data=indirect_self_ref_schema_json
     )
 
 

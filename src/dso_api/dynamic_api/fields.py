@@ -13,9 +13,11 @@ class TemporalHyperlinkedRelatedField(serializers.HyperlinkedRelatedField):
         if hasattr(obj, "pk") and obj.pk in (None, ""):
             return None
 
-        if request.versioned:
+        # XXX temporary hack, when dataset is defined as temporal
+        # but some tables are not (.e.g. dossiers in gob)
+        if request.versioned and (len(parts := split_on_separator(obj.pk)) > 2):
             # note that `obj` has only PK field.
-            lookup_value, version = split_on_separator(obj.pk)
+            lookup_value, version = parts
             kwargs = {self.lookup_field: lookup_value}
 
             base_url = self.reverse(
