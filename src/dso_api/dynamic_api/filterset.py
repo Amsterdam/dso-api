@@ -6,8 +6,16 @@ from typing import Type
 import logging
 import re
 
+from django.contrib.gis.geos import Point
+from django.contrib.gis.measure import D
+from django.contrib.gis.db.models.functions import Distance
 from django.db import models
 from django.contrib.postgres.fields import ArrayField
+from django.contrib.gis.db.models.fields import (
+    PolygonField,
+    MultiPolygonField,
+)
+from django.http import Http404
 
 from rest_framework_dso import filters as dso_filters
 from schematools.contrib.django.models import DynamicModel
@@ -24,6 +32,7 @@ _identifier_lookups = [
     "not",
     "isnull",
 ]  # needs ForeignObject.register_lookup()
+_polygon_lookups = ["exact", "contains", "isnull", "not"]
 DEFAULT_LOOKUPS_BY_TYPE = {
     models.AutoField: _identifier_lookups,
     models.IntegerField: _comparison_lookups + ["in"],
@@ -36,6 +45,8 @@ DEFAULT_LOOKUPS_BY_TYPE = {
     models.OneToOneField: _identifier_lookups,
     models.OneToOneRel: _identifier_lookups,
     ArrayField: ["contains"],
+    PolygonField: _polygon_lookups,
+    MultiPolygonField: _polygon_lookups,
 }
 
 ADDITIONAL_FILTERS = {
@@ -67,6 +78,118 @@ class DynamicFilterSet(dso_filters.DSOFilterSet):
             filter_to_camel_case(attr_name): filter
             for attr_name, filter in filters.items()
         }
+
+
+def _valid_rd(x, y):
+
+    rd_x_min = 100000
+    rd_y_min = 450000
+    rd_x_max = 150000
+    rd_y_max = 500000
+
+    if not rd_x_min <= x <= rd_x_max:
+        return False
+
+    if not rd_y_min <= y <= rd_y_max:
+        return False
+
+    return True
+
+
+def _valid_lat_lon(lat, lon):
+
+    lat_min = 52.03560
+    lat_max = 52.48769
+    lon_min = 4.58565
+    lon_max = 5.31360
+
+    if not lat_min <= lat <= lat_max:
+        return False
+
+    if not lon_min <= lon <= lon_max:
+        return False
+
+    return True
+
+
+def _convert_input_to_float(value):
+    err = None
+
+    lvalues = value.split(",")
+    if len(lvalues) < 2:
+        return None, None, None, f"Not enough values x, y {value}"
+
+    x = lvalues[0]
+    y = lvalues[1]
+    radius = lvalues[2] if len(lvalues) > 2 else None
+
+    # Converting to float
+    try:
+        x = float(x)
+        y = float(y)
+        radius = None if radius is None else int(radius)
+    except ValueError:
+        return None, None, None, f"Invalid value {x} {y} {radius}"
+
+    # checking sane radius size
+    if radius is not None and radius > 1000:
+        return None, None, None, "radius too big"
+
+    return x, y, radius, err
+
+
+def _validate_x_y(value):
+    """
+    Check if we get valid values
+    """
+    point = None
+
+    x, y, radius, err = _convert_input_to_float(value)
+
+    if err:
+        return None, None, err
+
+    # Checking if the given coords are valid
+
+    if _valid_rd(x, y):
+        point = Point(x, y, srid=28992)
+    elif _valid_lat_lon(x, y):
+        point = Point(y, x, srid=4326).transform(28992, clone=True)
+    else:
+        err = "Coordinates received not within Amsterdam"
+
+    return point, radius, err
+
+
+def location_filter(queryset, _filter_name, value):
+    """
+    Filter based on the geolocation. This filter actually
+    expect 2 or 3 numerical values: x, y and optional radius
+    The value given is broken up by ',' and converted
+    to the value tuple
+    """
+
+    point, radius, err = _validate_x_y(value)
+
+    if err:
+        logger.exception(err)
+        # Creating one big queryset
+        raise Http404("Invalid filter") from None
+
+    # Creating one big queryset
+    (geo_field, geo_type) = _filter_name.split(":")
+
+    if geo_type.lower() == "polygon" and radius is None:
+        args = {"__".join([geo_field, "contains"]): point}
+        results = queryset.filter(**args)
+    elif radius is not None:
+        args = {"__".join([geo_field, "dwithin"]): (point, D(m=radius))}
+        results = queryset.filter(**args).annotate(afstand=Distance(geo_field, point))
+    else:
+        err = "Radius in argument expected"
+        logger.exception(err)
+        raise Http404(err)
+    return results
 
 
 def filterset_factory(model: Type[DynamicModel]) -> Type[DynamicFilterSet]:
@@ -151,7 +274,7 @@ def generate_additional_filters(model: Type[DynamicModel]):
         try:
             filter_class = ADDITIONAL_FILTERS[options.get("type", "range")]
         except KeyError:
-            logger.warn(f"Incorrect filter type: {options}")
+            logger.warning(f"Incorrect filter type: {options}")
         else:
             filters[filter_name] = filter_class(
                 label=filter_class.label,

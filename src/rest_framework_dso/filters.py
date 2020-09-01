@@ -3,11 +3,13 @@
 This implements the filtering and ordering spec.
 DSO 1.1 Spec: "2.6.6 Filteren, sorteren en zoeken"
 """
+import re
 from datetime import datetime
 from typing import Type
 
 from django import forms
 from django.contrib.gis.db import models as gis_models
+from django.contrib.gis.geos import GEOSGeometry
 from django.db import models
 from django.db.models import Q, expressions, lookups
 from django.utils.functional import cached_property
@@ -17,6 +19,7 @@ from django_filters.constants import EMPTY_VALUES
 from django_filters.rest_framework import DjangoFilterBackend, FilterSet, filters
 from django_postgres_unlimited_varchar import UnlimitedCharField
 from django.contrib.postgres.fields.array import ArrayField
+from django.contrib.gis.forms import fields as gisforms
 from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter
 from rest_framework_gis.filters import GeometryFilter
@@ -248,6 +251,22 @@ class CharArrayFilter(filters.BaseCSVFilter, filters.CharFilter):
     base_field_class = CharArrayField
 
 
+class StringGeometryField(gisforms.GeometryField):
+    def to_python(self, value):
+        if value not in self.empty_values and isinstance(value, str):
+            if m1 := re.match(r"(\d+\.\d+),(\d+\.\d+)(?:,(\d+\.\d+))?", value):
+                v1 = m1.group(1)
+                v2 = m1.group(2)
+                # v3 = m1.group(3)  # Prepare for radius searches
+                # POINT(long lat) in case of 4322
+                value = GEOSGeometry(f"POINT({v2} {v1})", 4326)
+        return super().to_python(value)
+
+
+class StringGeometryFilter(GeometryFilter):
+    field_class = StringGeometryField
+
+
 class DSOFilterSet(FilterSet):
     """Base class to create filter sets.
 
@@ -279,8 +298,8 @@ class DSOFilterSet(FilterSet):
             "filter_class": FlexDateTimeFilter,
         },
         gis_models.GeometryField: {
-            "filter_class": GeometryFilter,
-            "extra": lambda field: {"geom_type": field.geom_type},
+            "filter_class": StringGeometryFilter,
+            # "extra": lambda field: {"geom_type": field.geom_type},
         },
         # Unlike the base class, don't enforce ID value checking on foreign keys
         models.ForeignKey: {
