@@ -444,9 +444,13 @@ class DSOFilterSetBackend(DjangoFilterBackend):
     def get_filterset(self, request, queryset, view):
         filterset = super().get_filterset(request, queryset, view)
         for name, value in filterset.data.items():
-            if filterset.base_filters[name].__class__.__name__.endswith(
-                "GeometryFilter"
-            ) and name.endswith("[contains]"):
+            if (
+                name.endswith("[contains]")
+                and name in filterset.base_filters
+                and filterset.base_filters[name].__class__.__name__.endswith(
+                    "GeometryFilter"
+                )
+            ):
                 if value:
                     if m1 := re.match(
                         r"([-+]?\d*(?:\.\d+)?),([-+]?\d+(?:\.\d+)?)", value

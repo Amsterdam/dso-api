@@ -375,7 +375,7 @@ class TestDynamicSerializer:
                     "href": "http://testserver/v1/parkeervakken/parkeervakken/121138489047/",
                 }
             },
-            "geom": None,
+            "geometry": None,
             "id": "121138489047",
             "schema": "https://schemas.data.amsterdam.nl/datasets/parkeervakken/parkeervakken#parkeervakken",  # noqa: E501
             "type": "File",
@@ -457,7 +457,7 @@ class TestDynamicSerializer:
                     "href": "http://testserver/v1/parkeervakken/parkeervakken/121138489047/"
                 }
             },
-            "geom": None,
+            "geometry": None,
             "id": "121138489047",
             "schema": "https://schemas.data.amsterdam.nl/datasets/parkeervakken/parkeervakken#parkeervakken",  # noqa: E501
             "type": "File",

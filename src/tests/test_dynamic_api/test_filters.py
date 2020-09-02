@@ -1,5 +1,6 @@
 from django.apps import apps
 import pytest
+from django.contrib.gis.geos import GEOSGeometry
 from rest_framework.test import APIClient
 from dso_api.dynamic_api.filterset import filterset_factory
 
@@ -348,3 +349,48 @@ class TestDynamicFilterSet:
         assert (
             len(response.data["_embedded"]["parkeervakken"][0]["regimes"]) == 1
         ), response.data
+
+    @staticmethod
+    def test_geofilter_contains(parkeervakken_parkeervak_model):
+        """
+        Prove that geofilter contains filters work as expected.
+        """
+        parkeervakken_parkeervak_model.objects.create(
+            id="121138489006",
+            type="File",
+            soort="MULDER",
+            aantal=1.0,
+            e_type="E6b",
+            buurtcode="A05d",
+            straatnaam="Zoutkeetsgracht",
+            geometry=GEOSGeometry(
+                "POLYGON((121140.66 489048.21, 121140.72 489047.1, 121140.8 489046.9, 121140.94 "
+                "489046.74,121141.11 489046.62, 121141.31 489046.55, 121141.52 489046.53, "
+                "121134.67 489045.85, 121134.47 489047.87, 121140.66 489048.21))",
+                28992,
+            ),
+        )
+
+        from dso_api.dynamic_api.urls import router
+
+        router.reload()
+        response = APIClient().get(
+            "/v1/parkeervakken/parkeervakken/",
+            data={"geometry[contains]": "52.388231,4.8897865"},
+            headers={"Accept-CRS": 4326},
+        )
+        assert len(response.data["_embedded"]["parkeervakken"]) == 1
+
+        response = APIClient().get(
+            "/v1/parkeervakken/parkeervakken/",
+            data={"geometry[contains]": "52.3883019,4.8900356"},
+            headers={"Accept-CRS": 4326},
+        )
+        assert len(response.data["_embedded"]["parkeervakken"]) == 0
+
+        response = APIClient().get(
+            "/v1/parkeervakken/parkeervakken/",
+            data={"geometry[contains]": "121137.7,489046.9"},
+            headers={"Accept-CRS": 28992},
+        )
+        assert len(response.data["_embedded"]["parkeervakken"]) == 1
