@@ -8,21 +8,24 @@ class TemporalHyperlinkedRelatedField(serializers.HyperlinkedRelatedField):
 
     Usef for forward relations in serializers."""
 
+    def use_pk_only_optimization(self):
+        # disable, breaks obj.is_temporal()
+        return False
+
     def get_url(self, obj, view_name, request, format=None):
         # Unsaved objects will not yet have a valid URL.
         if hasattr(obj, "pk") and obj.pk in (None, ""):
             return None
 
-        # XXX temporary hack, when dataset is defined as temporal
-        # but some tables are not (.e.g. dossiers in gob)
-        if request.versioned and (len(parts := split_on_separator(obj.pk)) > 1):
+        if request.versioned and obj.is_temporal():
             # note that `obj` has only PK field.
-            lookup_value, version = parts
+            lookup_value, version = split_on_separator(obj.pk)
             kwargs = {self.lookup_field: lookup_value}
 
             base_url = self.reverse(
                 view_name, kwargs=kwargs, request=request, format=format
             )
+
             if request.dataset_temporal_slice is None:
                 key = request.dataset.temporal.get("identifier")
                 value = version
@@ -65,7 +68,7 @@ class TemporalLinksField(LinksField):
 
         kwargs = {self.lookup_field: obj.pk}
 
-        if request.dataset.temporal is None:
+        if request.dataset.temporal is None or not obj.is_temporal():
             return super().get_url(obj, view_name, request, format)
 
         lookup_value = getattr(obj, request.dataset.identifier)

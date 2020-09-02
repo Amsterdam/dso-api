@@ -173,7 +173,8 @@ class TestDynamicSerializer:
     @staticmethod
     def test_expand_broken_relation(api_request, afval_schema, afval_container_model):
         """Prove that expanding non-existing FK values values doesn't crash.
-
+           Cluster will not be expanded to a url, because the pk_only_optimization
+           has been switched off for hyperlinked related fields.
         The _embedded part has a None value instead.
         """
         api_request.dataset = afval_schema
@@ -196,7 +197,7 @@ class TestDynamicSerializer:
             "id": 4,
             "schema": "https://schemas.data.amsterdam.nl/datasets/afvalwegingen/afvalwegingen#containers",  # noqa: E501
             "clusterId": 99,
-            "cluster": "http://testserver/v1/afvalwegingen/clusters/99/",
+            "cluster": None,
             "serienummer": None,
             "datumCreatie": None,
             "datumLeegmaken": None,

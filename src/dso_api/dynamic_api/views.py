@@ -69,7 +69,7 @@ class TemporalRetrieveModelMixin:
     def get_queryset(self):
         queryset = super().get_queryset()
 
-        if self.request.versioned:
+        if self.request.versioned and self.model.is_temporal():
             if self.request.dataset_temporal_slice is not None:
                 temporal_value = self.request.dataset_temporal_slice["value"]
                 start_field, end_field = self.request.dataset_temporal_slice["fields"]
@@ -88,7 +88,7 @@ class TemporalRetrieveModelMixin:
         if queryset is None:
             queryset = self.get_queryset()
 
-        if not self.request.versioned:
+        if not self.request.versioned or not self.model.is_temporal():
             return super().get_object()
 
         pk = self.kwargs.get("pk")
