@@ -55,8 +55,8 @@
             "type": "number",
             "description": ""
           },
-          "geom": {
-            "$ref": "https://geojson.org/schema/Geometry.json"
+          "geometry": {
+            "$ref": "https://geojson.org/schema/Polygon.json"
           },
           "regimes": {
             "type": "array",

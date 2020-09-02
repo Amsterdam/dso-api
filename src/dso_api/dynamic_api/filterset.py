@@ -8,6 +8,10 @@ import re
 
 from django.db import models
 from django.contrib.postgres.fields import ArrayField
+from django.contrib.gis.db.models.fields import (
+    PolygonField,
+    MultiPolygonField,
+)
 
 from rest_framework_dso import filters as dso_filters
 from schematools.contrib.django.models import DynamicModel
@@ -24,6 +28,7 @@ _identifier_lookups = [
     "not",
     "isnull",
 ]  # needs ForeignObject.register_lookup()
+_polygon_lookups = ["exact", "contains", "isnull", "not"]
 DEFAULT_LOOKUPS_BY_TYPE = {
     models.AutoField: _identifier_lookups,
     models.IntegerField: _comparison_lookups + ["in"],
@@ -36,6 +41,8 @@ DEFAULT_LOOKUPS_BY_TYPE = {
     models.OneToOneField: _identifier_lookups,
     models.OneToOneRel: _identifier_lookups,
     ArrayField: ["contains"],
+    PolygonField: _polygon_lookups,
+    MultiPolygonField: _polygon_lookups,
 }
 
 ADDITIONAL_FILTERS = {
@@ -151,7 +158,7 @@ def generate_additional_filters(model: Type[DynamicModel]):
         try:
             filter_class = ADDITIONAL_FILTERS[options.get("type", "range")]
         except KeyError:
-            logger.warn(f"Incorrect filter type: {options}")
+            logger.warning(f"Incorrect filter type: {options}")
         else:
             filters[filter_name] = filter_class(
                 label=filter_class.label,

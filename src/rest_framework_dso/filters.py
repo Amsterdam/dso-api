@@ -3,11 +3,13 @@
 This implements the filtering and ordering spec.
 DSO 1.1 Spec: "2.6.6 Filteren, sorteren en zoeken"
 """
+import re
 from datetime import datetime
 from typing import Type
 
 from django import forms
 from django.contrib.gis.db import models as gis_models
+from django.contrib.gis.geos import GEOSGeometry
 from django.db import models
 from django.db.models import Q, expressions, lookups
 from django.utils.functional import cached_property
@@ -28,6 +30,67 @@ __all__ = [
     "DSOOrderingFilter",
     "RangeFilter",
 ]
+
+
+def _valid_rd(x, y):
+    """
+    Check valid RD x, y coordinates
+    """
+
+    rd_x_min = 0
+    rd_y_min = 300000
+    rd_x_max = 280000
+    rd_y_max = 625000
+
+    if not rd_x_min <= x <= rd_x_max:
+        return False
+
+    if not rd_y_min <= y <= rd_y_max:
+        return False
+
+    return True
+
+
+def _valid_lat_lon(lat, lon):
+    """
+    Check if lat/lon is in the Netherlands bounding box
+    """
+    lat_min = 50.803721015
+    lat_max = 53.5104033474
+    lon_min = 3.31497114423
+    lon_max = 7.09205325687
+
+    if not lat_min <= lat <= lat_max:
+        return False
+
+    if not lon_min <= lon <= lon_max:
+        return False
+
+    return True
+
+
+def _validate_convert_x_y(x, y, srid):
+    fx = float(x)
+    fy = float(y)
+    x_lon = y_lat = None
+    if not srid or srid == 4326:
+        if _valid_lat_lon(fx, fy):
+            x_lon = y
+            y_lat = x
+            srid = 4326
+        elif _valid_lat_lon(fy, fx):
+            x_lon = x
+            y_lat = y
+            srid = 4326
+    if not srid or srid == 28992:
+        if _valid_rd(fx, fy):
+            x_lon = x
+            y_lat = y
+            srid = 28992
+    elif srid not in (28992, 4326):
+        x_lon = x
+        y_lat = y
+    return x_lon, y_lat, srid
 
 
 @models.Field.register_lookup
@@ -278,10 +341,7 @@ class DSOFilterSet(FilterSet):
             # Only allow filtering on dates for now, ignore time component.
             "filter_class": FlexDateTimeFilter,
         },
-        gis_models.GeometryField: {
-            "filter_class": GeometryFilter,
-            "extra": lambda field: {"geom_type": field.geom_type},
-        },
+        gis_models.GeometryField: {"filter_class": GeometryFilter,},
         # Unlike the base class, don't enforce ID value checking on foreign keys
         models.ForeignKey: {
             **FilterSet.FILTER_DEFAULTS[models.ForeignKey],
@@ -328,16 +388,24 @@ class DSOFilterSet(FilterSet):
         filter_class, params = super().filter_for_lookup(field, lookup_type)
         if filter_class is not None and "label" not in params:
             # description for swagger:
-            params["label"] = cls.get_filter_help_text(filter_class, params)
+            params["label"] = cls.get_filter_help_text(
+                filter_class, lookup_type, params
+            )
 
         return filter_class, params
 
     @classmethod
-    def get_filter_help_text(cls, filter_class: Type[filters.Filter], params) -> str:
+    def get_filter_help_text(
+        cls, filter_class: Type[filters.Filter], lookup_type, params
+    ) -> str:
         """Get a brief default description for a filter in the API docs"""
         if issubclass(filter_class, GeometryFilter):
             geom_type = params.get("geom_type", "GEOMETRY")
-            return f"GeoJSON | {geom_type}(x y ...)"
+            if lookup_type == "contains":
+                help = "x,y | POINT(x y)"
+            else:
+                help = f"GeoJSON | {geom_type}(x y ...)"
+            return help
         elif issubclass(filter_class, filters.BaseInFilter):
             # Auto-generated "ConcreteInFilter" class, e.g. ModelIdChoiceFilterIn
             if issubclass(filter_class, filters.ModelChoiceFilter):
@@ -372,6 +440,42 @@ class DSOFilterSetBackend(DjangoFilterBackend):
         (which can be HUGE in our case)
         """
         return ""
+
+    def get_filterset(self, request, queryset, view):
+        filterset = super().get_filterset(request, queryset, view)
+        for name, value in filterset.data.items():
+            if (
+                name.endswith("[contains]")
+                and name in filterset.base_filters
+                and filterset.base_filters[name].__class__.__name__.endswith(
+                    "GeometryFilter"
+                )
+            ):
+                if value:
+                    if m1 := re.match(
+                        r"([-+]?\d*(?:\.\d+)?),([-+]?\d+(?:\.\d+)?)", value
+                    ):
+                        x = m1.group(1)
+                        y = m1.group(2)
+                    elif m1 := re.match(
+                        r"POINT\(([-+]?\d+(?:\.\d+))? ([-+]?\d+(?:\.\d+))\)", value
+                    ):
+                        x = m1.group(1)
+                        y = m1.group(2)
+                    else:
+                        continue
+                    if x and y:
+                        srid = request.accept_crs.srid if request.accept_crs else None
+                        x_lon, y_lat, srid = _validate_convert_x_y(x, y, srid)
+                        if srid in (4326, 28992) and (x_lon is None or y_lat is None):
+                            raise ValueError(f"Invalid x,y values : {x},{y}")
+                        # longitude, latitude for 4326 x,y otherwise
+                        value = GEOSGeometry(f"POINT({x_lon} {y_lat})", srid)
+                        new_data = filterset.data.copy()
+                        new_data[name] = value
+                        filterset.data = new_data
+
+        return filterset
 
 
 class DSOOrderingFilter(OrderingFilter):
