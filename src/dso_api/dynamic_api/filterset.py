@@ -12,6 +12,7 @@ from django.contrib.gis.db.models.fields import (
     PolygonField,
     MultiPolygonField,
 )
+from django_postgres_unlimited_varchar import UnlimitedCharField
 
 from rest_framework_dso import filters as dso_filters
 from schematools.contrib.django.models import DynamicModel
@@ -29,9 +30,13 @@ _identifier_lookups = [
     "isnull",
 ]  # needs ForeignObject.register_lookup()
 _polygon_lookups = ["exact", "contains", "isnull", "not"]
+_string_lookups = ["exact", "isnull", "not", "isempty"]
 DEFAULT_LOOKUPS_BY_TYPE = {
     models.AutoField: _identifier_lookups,
     models.IntegerField: _comparison_lookups + ["in"],
+    models.TextField: _string_lookups,
+    models.CharField: _string_lookups,
+    UnlimitedCharField: _string_lookups,
     models.FloatField: _comparison_lookups + ["in"],
     models.DecimalField: _comparison_lookups + ["in"],
     models.DateField: _comparison_lookups,

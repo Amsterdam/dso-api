@@ -394,3 +394,50 @@ class TestDynamicFilterSet:
             headers={"Accept-CRS": 28992},
         )
         assert len(response.data["_embedded"]["parkeervakken"]) == 1
+
+    @staticmethod
+    def test_filter_isempty(parkeervakken_parkeervak_model):
+        parkeervakken_parkeervak_model.objects.create(
+            id="121138489006",
+            type="File",
+            soort="MULDER",
+            aantal=1.0,
+            e_type="E6b",
+            buurtcode="A05d",
+            straatnaam="Zoutkeetsgracht",
+        )
+        parkeervakken_parkeervak_model.objects.create(
+            id="121138489007",
+            type="File",
+            soort="",
+            aantal=1.0,
+            e_type="E6b",
+            buurtcode="A05d",
+            straatnaam="Zoutkeetsgracht",
+        )
+        parkeervakken_parkeervak_model.objects.create(
+            id="121138489008",
+            type="File",
+            soort=None,
+            aantal=1.0,
+            e_type="E6b",
+            buurtcode="A05d",
+            straatnaam="Zoutkeetsgracht",
+        )
+        from dso_api.dynamic_api.urls import router
+
+        router.reload()
+        response = APIClient().get(
+            "/v1/parkeervakken/parkeervakken/", data={"soort[isempty]": "true"},
+        )
+        assert len(response.data["_embedded"]["parkeervakken"]) == 2
+        assert (
+            response.data["_embedded"]["parkeervakken"][0]["id"] == "121138489007"
+            or response.data["_embedded"]["parkeervakken"][0]["id"] == "121138489008"
+        )
+
+        response = APIClient().get(
+            "/v1/parkeervakken/parkeervakken/", data={"soort[isempty]": "false"},
+        )
+        assert len(response.data["_embedded"]["parkeervakken"]) == 1
+        assert response.data["_embedded"]["parkeervakken"][0]["id"] == "121138489006"
