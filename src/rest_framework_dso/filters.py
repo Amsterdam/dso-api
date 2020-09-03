@@ -93,6 +93,21 @@ def _validate_convert_x_y(x, y, srid):
     return x_lon, y_lat, srid
 
 
+@models.CharField.register_lookup
+@models.TextField.register_lookup
+class IsEmpty(lookups.Lookup):
+    lookup_name = "isempty"
+
+    def as_sql(self, compiler, connection):
+        lhs, lhs_params = self.process_lhs(compiler, connection)
+        rhs, rhs_params = self.process_rhs(compiler, connection)
+        params = []
+        not_negation = (
+            "NOT " if len(rhs_params) == 1 and rhs_params[0] == "True" else ""
+        )
+        return f"({lhs} = '') IS {not_negation}FALSE", params
+
+
 @models.Field.register_lookup
 @models.ForeignObject.register_lookup
 class NotEqual(lookups.Lookup):
@@ -386,6 +401,8 @@ class DSOFilterSet(FilterSet):
         This data is shown in the Swagger docs, and browsable API.
         """
         filter_class, params = super().filter_for_lookup(field, lookup_type)
+        if lookup_type == "isempty":
+            filter_class = filters.BooleanFilter
         if filter_class is not None and "label" not in params:
             # description for swagger:
             params["label"] = cls.get_filter_help_text(
