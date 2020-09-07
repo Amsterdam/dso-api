@@ -6,6 +6,7 @@ from functools import lru_cache
 from typing import Type
 
 from django.db import models
+from django.core.exceptions import ImproperlyConfigured
 
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
@@ -155,7 +156,7 @@ def serializer_factory(
     """Generate the DRF serializer class for a specific dataset model."""
     fields = ["_links", "schema"]
     if isinstance(model, str):
-        raise Exception(f"Model {model} could not be resolved.")
+        raise ImproperlyConfigured(f"Model {model} could not be resolved.")
     if model.has_parent_table():
         # Inner tables have no schema or links defined.
         fields = []
