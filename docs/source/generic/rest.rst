@@ -138,8 +138,15 @@ Naast een exacte match zijn er afhankelijk van het type veld ook andere operator
 * :samp:`?{veld}[gte]={x}` werkt als "greather then or equal to": :samp:`{veld} >= {x}`.
 * :samp:`?{veld}[in]={x},{y}` werkt als :samp:`{veld} IN ({x}, {y})`.
 * :samp:`?{veld}[contains]={x},{y}` werkt als :samp:`({x}, {y}) IN {veld}` (voor array velden).
+* :samp:`?{veld}[contains]={x},{y}|POINT(x y)` selecteert die objecten waarbij punt x,y in het
+  (multi-)polygon :samp:`veld` ligt. Afhankelijk van de waarde van header Accept-CRS wordt x,y
+  geinterpreteerd als longitude, latitude of x,y in RD of anderszins. Indien Accept-CRS niet wordt
+  meegegeven worden x en y, afhankelijk van de waardes, geinterpreteerd als longitude en latitude
+  in EPSG:4326 of EPSG:28992.
 * :samp:`?{veld}[not]={x}` werkt als :samp:`{veld} != {x}`.
 * :samp:`?{veld}[isnull]={true|false}` werkt als :samp:`{veld} IS NULL` of :samp:`{veld} IS NOT NULL`.
+* :samp:`?{veld}[isempty]={true|false}` werkt als :samp:`{veld} IS NULL OR {veld} = ''`
+  of :samp:`{veld} IS NOT NULL AND {veld} <> ''`.
 
 Tekstvelden ondersteunen wildcards, dus dit is ook mogelijk:
 
