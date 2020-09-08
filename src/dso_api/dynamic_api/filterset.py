@@ -27,18 +27,19 @@ _identifier_lookups = [
     "exact",
     "in",
     "not",
+    "notin",
     "isnull",
 ]  # needs ForeignObject.register_lookup()
 _polygon_lookups = ["exact", "contains", "isnull", "not"]
 _string_lookups = ["exact", "isnull", "not", "isempty"]
 DEFAULT_LOOKUPS_BY_TYPE = {
     models.AutoField: _identifier_lookups,
-    models.IntegerField: _comparison_lookups + ["in"],
+    models.IntegerField: _comparison_lookups + ["in", "notin"],
     models.TextField: _string_lookups,
     models.CharField: _string_lookups,
     UnlimitedCharField: _string_lookups,
-    models.FloatField: _comparison_lookups + ["in"],
-    models.DecimalField: _comparison_lookups + ["in"],
+    models.FloatField: _comparison_lookups + ["in", "notin"],
+    models.DecimalField: _comparison_lookups + ["in", "notin"],
     models.DateField: _comparison_lookups,
     models.DateTimeField: _comparison_lookups,
     models.TimeField: _comparison_lookups,

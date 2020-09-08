@@ -14,7 +14,7 @@ from django.db import models
 from django.db.models import Q, expressions, lookups
 from django.utils.functional import cached_property
 from django.utils.translation import ugettext_lazy as _
-from django_filters import fields
+from django_filters import fields, BaseInFilter
 from django_filters.constants import EMPTY_VALUES
 from django_filters.rest_framework import DjangoFilterBackend, FilterSet, filters
 from django_postgres_unlimited_varchar import UnlimitedCharField
@@ -91,6 +91,17 @@ def _validate_convert_x_y(x, y, srid):
         x_lon = x
         y_lat = y
     return x_lon, y_lat, srid
+
+
+@models.Field.register_lookup
+@models.ForeignObject.register_lookup
+class NotIn(lookups.In):
+    lookup_name = "notin"
+
+    def as_sql(self, compiler, connection):
+        sql, params = super().as_sql(compiler, connection)
+        sql = sql.replace(" IN", " NOT IN")
+        return sql, params
 
 
 @models.CharField.register_lookup
@@ -403,6 +414,15 @@ class DSOFilterSet(FilterSet):
         filter_class, params = super().filter_for_lookup(field, lookup_type)
         if lookup_type == "isempty":
             filter_class = filters.BooleanFilter
+        elif lookup_type == "notin":
+
+            class ConcreteInFilter(BaseInFilter, filter_class):
+                pass
+
+            ConcreteInFilter.__name__ = cls._csv_filter_class_name(
+                filter_class, lookup_type
+            )
+            filter_class = ConcreteInFilter
         if filter_class is not None and "label" not in params:
             # description for swagger:
             params["label"] = cls.get_filter_help_text(
@@ -425,7 +445,10 @@ class DSOFilterSet(FilterSet):
             return help
         elif issubclass(filter_class, filters.BaseInFilter):
             # Auto-generated "ConcreteInFilter" class, e.g. ModelIdChoiceFilterIn
-            if issubclass(filter_class, filters.ModelChoiceFilter):
+            if issubclass(filter_class, filters.ModelChoiceFilter) or lookup_type in (
+                "in",
+                "notin",
+            ):
                 return "id1,id2,...,idN"
 
         try:
