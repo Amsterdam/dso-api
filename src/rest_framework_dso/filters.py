@@ -98,10 +98,8 @@ def _validate_convert_x_y(x, y, srid):
 class NotIn(lookups.In):
     lookup_name = "notin"
 
-    def as_sql(self, compiler, connection):
-        sql, params = super().as_sql(compiler, connection)
-        sql = sql.replace(" IN", " NOT IN")
-        return sql, params
+    def get_rhs_op(self, connection, rhs):
+        return "NOT IN %s" % rhs
 
 
 @models.CharField.register_lookup
