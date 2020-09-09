@@ -3,9 +3,7 @@ services:
   database:
     image: amsterdam/postgres11
     ports:
-      - "5415:5432"
-    networks:
-      - some-net    
+      - "5415:5432"    
     environment:
       POSTGRES_DB: dataservices
       POSTGRES_USER: dataservices
@@ -32,9 +30,7 @@ services:
       args:
         PIP_REQUIREMENTS: requirements_dev.txt
     ports:
-      - "8000:8000"
-    networks:
-      - some-net    
+      - "8000:8000"    
     links:
       - database
       - owasp
@@ -59,9 +55,7 @@ services:
       - "./schemas/data/datasets:/usr/share/nginx/html/datasets"
       - "./schemas/conf/default.conf:/etc/nginx/conf.d/default.conf"
   docs:
-    build: docs
-    networks:
-      - some-net 
+    build: docs  
     environment:
       DATABASE_URL: "postgres://dataservices:insecure@database/dataservices"
     volumes:
@@ -70,13 +64,9 @@ services:
     ports:
       - "8081:80"
   owasp:
-    image: owasp/zap2docker-stable
-    networks:
-      - some-net
+    image: owasp/zap2docker-stable  
     ports:      
       - "8090:8090"
     command: zap.sh -daemon -port 8090 -host 0.0.0.0 -config api.disablekey=true -config api.addrs.addr.name=.* -config api.addrs.addr.regex=true
-networks:
-  some-net:
-    driver: bridge  
+
  

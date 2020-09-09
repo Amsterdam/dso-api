@@ -30,7 +30,7 @@ def test_owasp_check():
 
     print("Spider has completed!")
 
-    # wth active scanning, attacks are simulated on the target
+    # with active scanning, attacks are simulated on the target
     print("Active Scanning target {}".format(target))
     scanID = zap.ascan.scan(target)
     while int(zap.ascan.status(scanID)) < 100:
@@ -66,4 +66,4 @@ def test_owasp_check():
         if "High" in key:
             risk_bucket["High"] = True
 
-    assert risk_bucket["High"] is not None
+    assert risk_bucket["High"] is None
