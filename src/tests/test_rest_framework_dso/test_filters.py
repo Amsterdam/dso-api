@@ -2,6 +2,7 @@ from datetime import date
 
 import pytest
 from django.db.models import Value
+from django.http import QueryDict
 
 from rest_framework_dso.filters import DSOFilterSet, Wildcard
 from .models import Category, Movie
@@ -66,8 +67,9 @@ class TestDSOFilterSet:
             ({"date_added[gt]": "2020-2-10"}, {"movie2"}),
             ({"date_added[gt]": "2020-3-1"}, set()),
             ({"date_added[gte]": "2020-3-1"}, {"movie2"}),
-            # Not
+            # Not (can be repeated for "AND NOT" testing)
             ({"date_added[not]": "2020-2-1"}, {"movie2"}),
+            (QueryDict("date_added[not]=2020-2-1&date_added[not]=2020-3-1"), set()),
         ],
     )
     def test_filter_logic(self, movie1, movie2, comparison):

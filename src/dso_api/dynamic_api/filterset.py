@@ -21,22 +21,18 @@ from schematools.utils import to_snake_case, toCamelCase
 logger = logging.getLogger(__name__)
 
 
-# These extra lookups are available for specific data types:
+# These extra lookups are available for specific data types.
+# The identifier lookups needs ForeignObject.register_lookup()
 _comparison_lookups = ["exact", "gte", "gt", "lt", "lte", "not", "isnull"]
-_identifier_lookups = [
-    "exact",
-    "in",
-    "not",
-    "isnull",
-]  # needs ForeignObject.register_lookup()
+_identifier_lookups = ["exact", "in", "not", "isnull"]
 _polygon_lookups = ["exact", "contains", "isnull", "not"]
 _string_lookups = ["exact", "isnull", "not", "isempty"]
 DEFAULT_LOOKUPS_BY_TYPE = {
     models.AutoField: _identifier_lookups,
-    models.IntegerField: _comparison_lookups + ["in"],
     models.TextField: _string_lookups,
     models.CharField: _string_lookups,
     UnlimitedCharField: _string_lookups,
+    models.IntegerField: _comparison_lookups + ["in"],
     models.FloatField: _comparison_lookups + ["in"],
     models.DecimalField: _comparison_lookups + ["in"],
     models.DateField: _comparison_lookups,
@@ -145,13 +141,20 @@ def generate_relation_filters(model: Type[DynamicModel]):
                 subfilter_name = filter_name
                 if lookup_expr not in ["exact", "contains"]:
                     subfilter_name = f"{filter_name}[{lookup_expr}]"
-                filters[subfilter_name] = filter_class(
+
+                filter_instance = filter_class(
                     field_name="__".join([relation.name, model_field_name]),
                     lookup_expr=lookup_expr,
                     label=dso_filters.DSOFilterSet.FILTER_HELP_TEXT.get(
                         filter_class, lookup_expr
                     ),
                 )
+
+                if lookup_expr == "not":
+                    # Allow multiple NOT filters
+                    filter_instance = dso_filters.MultipleValueFilter(filter_instance)
+
+                filters[subfilter_name] = filter_instance
                 fields[subfilter_name] = filter_lookups
 
     return filters
@@ -164,12 +167,13 @@ def generate_additional_filters(model: Type[DynamicModel]):
             filter_class = ADDITIONAL_FILTERS[options.get("type", "range")]
         except KeyError:
             logger.warning(f"Incorrect filter type: {options}")
-        else:
-            filters[filter_name] = filter_class(
-                label=filter_class.label,
-                start_field=options.get("start"),
-                end_field=options.get("end"),
-            )
+            continue
+
+        filters[filter_name] = filter_class(
+            label=filter_class.label,
+            start_field=options.get("start"),
+            end_field=options.get("end"),
+        )
 
     return filters
 
