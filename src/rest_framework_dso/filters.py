@@ -4,14 +4,18 @@ This implements the filtering and ordering spec.
 DSO 1.1 Spec: "2.6.6 Filteren, sorteren en zoeken"
 """
 import re
+import operator
 from datetime import datetime
+from functools import reduce
 from typing import Type
 
 from django import forms
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.contrib.gis.db import models as gis_models
 from django.contrib.gis.geos import GEOSGeometry
 from django.db import models
 from django.db.models import Q, expressions, lookups
+from django.forms import widgets
 from django.utils.functional import cached_property
 from django.utils.translation import ugettext_lazy as _
 from django_filters import fields
@@ -189,6 +193,114 @@ class WildcardCharFilter(filters.CharFilter):
         if lookup_expr == "exact":
             lookup_expr = "wildcard"
         super().__init__(field_name, lookup_expr, **kwargs)
+
+
+class MultipleValueWidget(widgets.Input):
+    """Widget to retrieve all GET parameters instead of just a single value."""
+
+    def value_from_datadict(self, data, files, name):
+        try:
+            return data.getlist(name)
+        except AttributeError:
+            # Unit testing with dict input
+            value = data.get(name)
+            return [value] if value is not None else None
+
+
+class MultipleValueField(forms.Field):
+    """Form field that returns all values."""
+
+    default_error_messages = {"required": "Please specify one or more values."}
+    widget = MultipleValueWidget
+
+    def __init__(self, subfield: forms.Field, **kwargs):
+        safe_kwargs = {
+            k: kwargs.get(k, getattr(subfield, k, None))
+            for k in (
+                "required",
+                "widget",
+                "label",
+                "initial",
+                "help_text",
+                "error_messages",
+                "show_hidden_initial",
+                "validators",
+                "localize",
+                "disabled",
+                "label_suffix",
+            )
+        }
+        super().__init__(**safe_kwargs)
+        self.subfield = subfield
+
+        # Enforce the "getlist" retrieval, even when a different widget was used.
+        # The "__get__" is needed to retrieve the MethodType instead of the unbound function.
+        if not isinstance(self.widget, MultipleValueWidget):
+            self.widget.value_from_datadict = MultipleValueWidget.value_from_datadict.__get__(
+                self.widget
+            )
+
+    def clean(self, values):
+        if not values:
+            if self.required:
+                raise DjangoValidationError(self.error_messages["required"])
+            else:
+                return []
+
+        if not isinstance(values, list):
+            raise RuntimeError(
+                "MultipleValueField.widget does not return list of values"
+            )
+
+        result = []
+        errors = []
+        for i, value in enumerate(values):
+            try:
+                result.append(self.subfield.clean(value))
+            except DjangoValidationError as e:
+                errors.append(e)
+
+        if errors:
+            raise DjangoValidationError(errors)
+
+        return result
+
+
+class MultipleValueFilter(filters.Filter):
+    """Allow a value to be included multiple times"""
+
+    field_class = MultipleValueField
+    OPERATORS = {
+        "AND": operator.and_,
+        "OR": operator.or_,
+    }
+
+    def __init__(self, value_filter: filters.Filter, operator="AND"):
+        super().__init__(
+            # Copy settings from wrapped field
+            field_name=value_filter.field_name,
+            lookup_expr=value_filter.lookup_expr,
+            label=value_filter._label,
+            method=value_filter._method,
+            distinct=value_filter.distinct,
+            exclude=value_filter.exclude,
+            **value_filter.extra,  # includes 'required'
+            # Pass as **extra to the widget:
+            subfield=value_filter.field,
+        )
+        self.value_filter = value_filter
+        self.operator = operator
+
+    def filter(self, qs, value):
+        if value in EMPTY_VALUES:
+            return qs
+        if self.distinct:
+            qs = qs.distinct()
+
+        lookup = f"{self.field_name}__{self.lookup_expr}"
+        op = self.OPERATORS[self.operator]
+        q = reduce(op, (Q(**{lookup: subvalue}) for subvalue in value))
+        return self.get_method(qs)(q)
 
 
 class RangeFilter(filters.CharFilter):
@@ -394,6 +506,19 @@ class DSOFilterSet(FilterSet):
             return field_name
         else:
             return f"{field_name}[{lookup_expr}]"
+
+    @classmethod
+    def filter_for_field(cls, field, field_name, lookup_expr="exact"):
+        """Wrap the NOT filter in a multiple selector"""
+        filter_instance = super().filter_for_field(
+            field, field_name, lookup_expr=lookup_expr
+        )
+
+        if lookup_expr == "not":
+            # Allow &field[not]=...&field[not]=...
+            filter_instance = MultipleValueFilter(filter_instance)
+
+        return filter_instance
 
     @classmethod
     def filter_for_lookup(cls, field, lookup_type):
