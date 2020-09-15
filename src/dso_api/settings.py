@@ -176,7 +176,7 @@ CORS_ALLOW_HEADERS = list(default_headers) + [
 
 HEALTH_CHECKS = {
     "app": lambda request: True,
-    "database": "django_healthchecks.contrib.check_database",
+    # "database": "django_healthchecks.contrib.check_database",
     # 'cache': 'django_healthchecks.contrib.check_cache_default',
     # 'ip': 'django_healthchecks.contrib.check_remote_addr',
 }
