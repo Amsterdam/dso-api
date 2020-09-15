@@ -103,7 +103,7 @@ def filterset_factory(model: Type[DynamicModel]) -> Type[DynamicFilterSet]:
     )
 
 
-def generate_relation_filters(model: Type[DynamicModel]):
+def generate_relation_filters(model: Type[DynamicModel]):  # NoQA
     """
     Generates additional filters for relations, including sub items.
     """
