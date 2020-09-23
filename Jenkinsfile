@@ -87,6 +87,15 @@ if (BRANCH == "master") {
         }
     }
 
+    stage('OWASP check') {
+        tryStep "owasp_check", {
+            sh "docker-compose -p owasp_check -f src/.jenkins/test_owasp/docker-compose.yml build --pull && " +
+               "docker-compose -p owasp_check -f src/.jenkins/testtest_owasp/docker-compose.yml run -u root --rm owasp"
+        }, {
+            sh "docker-compose -p owasp_check -f src/.jenkins/test_owasp/docker-compose.yml down"
+        }
+    }
+
     stage('Waiting for approval') {
         slackSend channel: '#ci-channel', color: 'warning', message: 'DSO-API is waiting for Production Release - please confirm'
         input "Deploy to Production?"
