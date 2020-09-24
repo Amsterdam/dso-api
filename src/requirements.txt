@@ -65,15 +65,16 @@ pytest-cov==2.8.1         # via -r requirements.in
 pytest-django==3.8.0      # via -r requirements.in
 pytest==5.3.5             # via -r requirements.in, pytest-cov, pytest-django
 python-dateutil==2.8.1    # via amsterdam-schema-tools, pandas
+python-owasp-zap-v2.4==0.0.16  # via -r requirements.in
 python-string-utils==1.0.0  # via -r requirements.in, amsterdam-schema-tools
 pytz==2019.3              # via django, pandas
 pyyaml==5.3               # via drf-spectacular
 readerwriterlock==1.0.6   # via -r requirements.in
-requests==2.23.0          # via -r requirements.in, amsterdam-schema-tools, datapunt-authorization-django, django-healthchecks
+requests==2.23.0          # via -r requirements.in, amsterdam-schema-tools, datapunt-authorization-django, django-healthchecks, python-owasp-zap-v2.4
 rest-pandas==1.1.0        # via -r requirements.in
 sentry-sdk==0.14.2        # via -r requirements.in
 shapely==1.7.0            # via amsterdam-schema-tools
-six==1.14.0               # via cryptography, django-healthchecks, jsonpath-rw, jsonschema, packaging, pyrsistent, python-dateutil
+six==1.14.0               # via cryptography, django-healthchecks, jsonpath-rw, jsonschema, packaging, pyrsistent, python-dateutil, python-owasp-zap-v2.4
 sqlalchemy==1.3.16        # via geoalchemy2
 sqlparse==0.3.1           # via django
 typing-extensions==3.7.4.1  # via readerwriterlock
