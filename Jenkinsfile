@@ -27,16 +27,7 @@ node {
         }, {
             sh "docker-compose -p dso_api -f src/.jenkins/test/docker-compose.yml down"
         }
-    }
-
-    stage('OWASP vulnerability scan') {
-        tryStep "owasp vulnerability check", {
-            sh  "docker-compose -p owasp_check -f src/.jenkins/owasp_vulnerability_scan/docker-compose.yml build --pull && " +
-                "docker-compose -p owasp_check -f src/.jenkins/owasp_vulnerability_scan/docker-compose.yml run -u root --rm test"
-        }, {
-            sh  "docker-compose -p owasp_check -f src/.jenkins/owasp_vulnerability_scan/docker-compose.yml down"
-        }
-    }
+    }   
     
     // The rebuilding likely reuses the build cache from docker-compose.
     stage("Build API image") {
