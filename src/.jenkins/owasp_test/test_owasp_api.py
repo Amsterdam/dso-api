@@ -20,8 +20,8 @@ def test_owasp_check():
     # start spider to get URL's
     print("Spidering target {}".format(target))
     # The scan returns a scan id to support concurrent scanning
-    #zap.spider.set_option_max_children = 0
-    #zap.spider.set_option_max_depth = 0
+    # zap.spider.set_option_max_children = 0
+    # zap.spider.set_option_max_depth = 0
     scanID = zap.spider.scan(target)
     while int(zap.spider.status(scanID)) < 100:
         # Poll the status until it completes
@@ -32,7 +32,7 @@ def test_owasp_check():
 
     # with active scanning, attacks are simulated on the target
     print("Active Scanning target {}".format(target))
-    zap.core.set_mode('ATTACK')
+    zap.core.set_mode("ATTACK")
     scanID = zap.ascan.scan(target)
     while int(zap.ascan.status(scanID)) < 100:
         # Loop until the scanner has finished
