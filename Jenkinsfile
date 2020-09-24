@@ -90,10 +90,10 @@ if (BRANCH == "master") {
     node {
         stage('OWASP check') {
             tryStep "owasp vulnerability check", {
-                sh "docker-compose -p owasp_check -f src/.jenkins/test_owasp/docker-compose.yml build --pull && " +
-                    "docker-compose -p owasp_check -f src/.jenkins/testtest_owasp/docker-compose.yml run -u root --rm owasp"
+                sh "docker-compose -p owasp_check -f src/.jenkins/owasp_test/docker-compose.yml build --pull && " +
+                    "docker-compose -p owasp_check -f src/.jenkins/owasp_test/docker-compose.yml run -u root --rm owasp"
             }, {
-                sh "docker-compose -p owasp_check -f src/.jenkins/test_owasp/docker-compose.yml down"
+                sh "docker-compose -p owasp_check -f src/.jenkins/owasp_test/docker-compose.yml down"
         }
     }
 
