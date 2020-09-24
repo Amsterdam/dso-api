@@ -30,11 +30,11 @@ node {
     }
 
     stage('OWASP vulnerability scan') {
-            tryStep "owasp vulnerability check", {
-                sh "docker-compose -p owasp_check -f src/.jenkins/owasp_vulnerability_scan/docker-compose.yml build --pull && " +
-                    "docker-compose -p owasp_check -f src/.jenkins/owasp_vulnerability_scan/docker-compose.yml run -u root --rm owasp"
-            }, {
-                sh "docker-compose -p owasp_check -f src/.jenkins/owasp_vulnerability_scan/docker-compose.yml down"
+        tryStep "owasp vulnerability check", {
+            sh  "docker-compose -p owasp_check -f src/.jenkins/owasp_vulnerability_scan/docker-compose.yml build --pull && " +
+                "docker-compose -p owasp_check -f src/.jenkins/owasp_vulnerability_scan/docker-compose.yml run -u root --rm owasp"
+        }, {
+            sh  "docker-compose -p owasp_check -f src/.jenkins/owasp_vulnerability_scan/docker-compose.yml down"
         }
     }
     
@@ -99,10 +99,10 @@ if (BRANCH == "master") {
     node {
         stage('OWASP vulnerability scan') {
             tryStep "owasp vulnerability check", {
-                sh "docker-compose -p owasp_check -f src/.jenkins/owasp_vulnerability_scan/docker-compose.yml build --pull && " +
+                sh  "docker-compose -p owasp_check -f src/.jenkins/owasp_vulnerability_scan/docker-compose.yml build --pull && " +
                     "docker-compose -p owasp_check -f src/.jenkins/owasp_vulnerability_scan/docker-compose.yml run -u root --rm owasp"
             }, {
-                sh "docker-compose -p owasp_check -f src/.jenkins/owasp_vulnerability_scan/docker-compose.yml down"
+                sh  "docker-compose -p owasp_check -f src/.jenkins/owasp_vulnerability_scan/docker-compose.yml down"
             }
         }
     }
@@ -110,8 +110,7 @@ if (BRANCH == "master") {
     stage('Waiting for approval') {
         slackSend channel: '#ci-channel', color: 'warning', message: 'DSO-API is waiting for Production Release - please confirm'
         input "Deploy to Production?"
-    }
-    }
+    }    
 
     node {
         stage('Push production image') {
