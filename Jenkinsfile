@@ -32,7 +32,7 @@ node {
     stage('OWASP vulnerability scan') {
         tryStep "owasp vulnerability check", {
             sh  "docker-compose -p owasp_check -f src/.jenkins/owasp_vulnerability_scan/docker-compose.yml build --pull && " +
-                "docker-compose -p owasp_check -f src/.jenkins/owasp_vulnerability_scan/docker-compose.yml up"
+                "docker-compose -p owasp_check -f src/.jenkins/owasp_vulnerability_scan/docker-compose.yml run -u root --rm test"
         }, {
             sh  "docker-compose -p owasp_check -f src/.jenkins/owasp_vulnerability_scan/docker-compose.yml down"
         }
@@ -100,7 +100,7 @@ if (BRANCH == "master") {
         stage('OWASP vulnerability scan') {
             tryStep "owasp vulnerability check", {
                 sh  "docker-compose -p owasp_check -f src/.jenkins/owasp_vulnerability_scan/docker-compose.yml build --pull && " +
-                    "docker-compose -p owasp_check -f src/.jenkins/owasp_vulnerability_scan/docker-compose.yml up"
+                    "docker-compose -p owasp_check -f src/.jenkins/owasp_vulnerability_scan/docker-compose.yml run -u root --rm test"
             }, {
                 sh  "docker-compose -p owasp_check -f src/.jenkins/owasp_vulnerability_scan/docker-compose.yml down"
             }
