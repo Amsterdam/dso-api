@@ -47,6 +47,7 @@ TIME_ZONE = "Europe/Amsterdam"
 # -- Application definition
 
 INSTALLED_APPS = [
+    "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.staticfiles",
     "django.contrib.gis",
@@ -71,6 +72,11 @@ MIDDLEWARE = [
     "authorization_django.authorization_middleware",
     "dso_api.dynamic_api.middleware.DatasetMiddleware",
     "dso_api.dynamic_api.middleware.TemporalDatasetMiddleware",
+]
+
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",
+    "schematools.contrib.django.auth_backend.ProfileAuthorizationBackend"
 ]
 
 if DEBUG:
@@ -122,7 +128,7 @@ DATABASES = {
     ),
     "bag_v11": env.db_url(
         "BAG_V11_DATABASE_URL",
-        default="postgres://bag_v11_read:insecure@localhost:5434/bag_v11",
+        default="postgres://bag_v11:insecure@localhost:5434/bag_v11",
         engine="django.contrib.gis.db.backends.postgis",
     ),
 }
