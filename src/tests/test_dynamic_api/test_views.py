@@ -256,7 +256,7 @@ class TestAuth:
             with an auth scope connected to Profile that gives access to specific field."""
         models.Profile.objects.create(
             name="brk_readall",
-            scopes="BRK/RO,BRK/RSN",
+            scopes="BRK/RSN",
             schema_data={
                 "datasets": {
                     "afvalwegingen": {
