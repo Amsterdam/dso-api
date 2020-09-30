@@ -207,7 +207,7 @@ class RemoteViewSet(ViewSet):
                 or f"Unexpected HTTP {response.status} from internal endpoint"
             )
 
-    def get_headers(self):
+    def get_headers(self):  # noqa: C901
         """Collect the headers to submit to the remote service."""
         client_ip = self.request.META["REMOTE_ADDR"]
         if isinstance(client_ip, str):
@@ -224,6 +224,15 @@ class RemoteViewSet(ViewSet):
             **self.default_headers,
             "X-Forwarded-For": forward,
         }
+
+        # We check if we already have a X-Correlation-ID header
+        x_correlation_id = self.request.META.get("HTTP_X_CORRELATION_ID")
+        if not x_correlation_id:
+            # Otherwise we set it to the X-Unique-ID header
+            x_correlation_id = self.request.META.get("HTTP_X_UNIQUE_ID")
+        if x_correlation_id:
+            # And if defined pass on to the destination
+            headers["X-Correlation-ID"] = x_correlation_id.encode("iso-8859-1")
 
         for header in self.headers_passthrough:
             value = self.request.headers.get(header, "")
