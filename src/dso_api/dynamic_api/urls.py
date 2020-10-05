@@ -12,7 +12,6 @@ def get_patterns(router_urls):
         path("reload/", views.reload_patterns),
         path("wfs/", views.DatasetWFSIndexView.as_view()),
         path("wfs/<dataset_name>/", views.DatasetWFSView.as_view()),
-        path("csv/<dataset_name>/<table_name>/", views.DatasetCSVView.as_view()),
         path("", include(router_urls)),
     ]
 
