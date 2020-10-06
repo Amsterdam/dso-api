@@ -22,6 +22,7 @@ STATIC_ROOT = "/static/"
 
 DATAPUNT_API_URL = env.str("DATAPUNT_API_URL", "https://api.data.amsterdam.nl/")
 SCHEMA_URL = env.str("SCHEMA_URL", "https://schemas.data.amsterdam.nl/datasets/")
+PROFILES_URL = env.str("SCHEMA_URL", "https://schemas.data.amsterdam.nl/profiles/")
 SCHEMA_DEFS_URL = env.str("SCHEMA_DEFS_URL", "https://schemas.data.amsterdam.nl/schema")
 
 
@@ -75,8 +76,8 @@ MIDDLEWARE = [
 ]
 
 AUTHENTICATION_BACKENDS = [
+    "schematools.contrib.django.auth_backend.ProfileAuthorizationBackend",
     "django.contrib.auth.backends.ModelBackend",
-    "schematools.contrib.django.auth_backend.ProfileAuthorizationBackend"
 ]
 
 if DEBUG:
