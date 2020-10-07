@@ -61,10 +61,7 @@ def get_unauthorized_fields(request, model) -> set:
             if not scopes:
                 continue
 
-            permission_key = models.generate_permission_key(
-                model._meta.app_label,
-                model._meta.model_name,
-                model_field.name)
+            permission_key = get_permission_key_for_field(model_field)
             if not request.is_authorized_for(*scopes):
                 if not request_has_permission(request=request, perm=permission_key):
                     unauthorized_fields.add(snake_to_camel_case(model_field.name))
@@ -87,11 +84,11 @@ class HasOAuth2Scopes(permissions.BasePermission):
         return request.is_authorized_for(*scopes.table)
 
     def has_permission(self, request, view, models=None):
-        """ Based on the model that is associated with the view
-            the Dataset and DatasetTable (if available)
-            are check for their 'auth' field.
-            These auth fields could contain a komma-separated list
-            of claims. """
+        """Based on the model that is associated with the view
+        the Dataset and DatasetTable (if available)
+        are check for their 'auth' field.
+        These auth fields could contain a komma-separated list
+        of claims."""
         if models:
             for model in models:
                 if not self._has_permission(request, model):
@@ -111,9 +108,15 @@ class HasOAuth2Scopes(permissions.BasePermission):
         return self._has_permission(request, obj)
 
 
+def get_permission_key_for_field(model_field):
+    model = model_field.model
+    return models.generate_permission_key(
+        model._meta.app_label, model._meta.model_name, model_field.name
+    )
+
+
 def request_has_permission(request, perm, obj=None):
-    """Checks if request has permission by using authentication backend.
-    """
+    """Checks if request has permission by using authentication backend."""
     if not hasattr(request, "user") or request.user is None:
         request.user = AnonymousUser()
 
