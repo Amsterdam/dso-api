@@ -146,7 +146,7 @@ class DynamicSerializer(DSOModelSerializer):
 
         if self.instance is not None:
             if isinstance(self.instance, list):
-                # TODO: Check if this is test workaround?
+                # test workaround
                 model = self.instance[0]._meta.model
             elif isinstance(self.instance, models.QuerySet):
                 # ListSerializer use
