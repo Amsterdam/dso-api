@@ -565,7 +565,7 @@ class TestDynamicSerializer:
     def test_field_permissions_display_first_letter(
         api_request, fietspaaltjes_schema, fietspaaltjes_model, fietspaaltjes_data
     ):
-        """ Prove that title element shows display value if display field is specified """
+        """ Prove that only first letter is seen in Profile allows only it."""
 
         Profile.objects.create(
             name="test_1",
@@ -594,7 +594,7 @@ class TestDynamicSerializer:
     def test_field_permissions_display_first_letter_many(
         api_request, fietspaaltjes_schema, fietspaaltjes_model, fietspaaltjes_data
     ):
-        """ Prove that title element shows display value if display field is specified """
+        """ Prove that only first letter is seen in Profile allows only it in listing. """
 
         Profile.objects.create(
             name="test_1",
