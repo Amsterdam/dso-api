@@ -247,7 +247,40 @@ class TestAuth:
                 field_name
                 for field_name in response.data["_embedded"]["containers"][0].keys()
             ]
-        ), response.data
+        ), response.data["_embedded"]["containers"][0].keys()
+
+    def test_auth_on_individual_fields_with_token_for_valid_scope_per_profile(
+        self, api_client, filled_router, afval_schema, fetch_auth_token, afval_container
+    ):
+        """ Prove that protected fields are shown
+            with an auth scope connected to Profile that gives access to specific field."""
+        models.Profile.objects.create(
+            name="brk_readall",
+            scopes="BRK/RSN",
+            schema_data={
+                "datasets": {
+                    "afvalwegingen": {
+                        "tables": {
+                            "containers": {
+                                "fields": {
+                                    "eigenaarNaam": "read"
+                                }
+                            }
+                        }
+                    }
+                }
+            })
+        url = reverse("dynamic_api:afvalwegingen-containers-list")
+        models.DatasetField.objects.filter(name="eigenaar_naam").update(auth="BAG/R")
+        token = fetch_auth_token(["BRK/RO", "BRK/RSN"])
+        response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
+        assert response.status_code == 200, response.data
+        assert "eigenaarNaam" in set(
+            [
+                field_name
+                for field_name in response.data["_embedded"]["containers"][0].keys()
+            ]
+        ), response.data["_embedded"]["containers"][0].keys()
 
     def test_auth_on_individual_fields_without_token_for_valid_scope(
         self, api_client, filled_router, afval_schema, fetch_auth_token, afval_container

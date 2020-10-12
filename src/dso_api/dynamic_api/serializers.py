@@ -18,6 +18,7 @@ from rest_framework.serializers import Field
 from rest_framework.reverse import reverse
 from schematools.types import DatasetTableSchema
 from schematools.contrib.django.models import DynamicModel
+from schematools.contrib.django.auth_backend import RequestProfile
 from schematools.utils import to_snake_case, toCamelCase
 
 from dso_api.dynamic_api.fields import (
@@ -25,7 +26,10 @@ from dso_api.dynamic_api.fields import (
     TemporalReadOnlyField,
     TemporalLinksField,
 )
-from dso_api.dynamic_api.permissions import get_unauthorized_fields
+from dso_api.dynamic_api.permissions import (
+    get_unauthorized_fields,
+    get_permission_key_for_field,
+)
 
 
 class DynamicLinksField(TemporalLinksField):
@@ -137,6 +141,32 @@ class DynamicSerializer(DSOModelSerializer):
             field_class = TemporalReadOnlyField
 
         return field_class, field_kwargs
+
+    def to_representation(self, validated_data):
+        data = super().to_representation(validated_data)
+
+        if self.instance is not None:
+            if isinstance(self.instance, list):
+                # test workaround
+                model = self.instance[0]._meta.model
+            elif isinstance(self.instance, models.QuerySet):
+                # ListSerializer use
+                model = self.instance.model
+            else:
+                model = self.instance._meta.model
+            request = self.get_request()
+
+            if not hasattr(request, "auth_profile"):
+                request.auth_profile = RequestProfile(request)
+
+            for model_field in model._meta.get_fields():
+                permission_key = get_permission_key_for_field(model_field)
+                permission = request.auth_profile.get_read_permission(permission_key)
+                if permission is not None:
+                    key = toCamelCase(model_field.name)
+                    data[key] = mutate_value(permission, data[key])
+
+        return data
 
 
 def get_view_name(model: Type[DynamicModel], suffix: str):
@@ -256,3 +286,13 @@ def generate_embedded_relations(model, fields, new_attrs):
             related_serializer = serializer_factory(item.related_model, 0, flat=True)
             fields.append(item.name)
             new_attrs[item.name] = related_serializer(many=True)
+
+
+def mutate_value(permission, value):
+    params = None
+    if ":" in permission:
+        permission, params = permission.split(":")
+    return {
+        "letters": lambda data, count: data[0 : int(count)],
+        "read": lambda data, _: data,
+    }[permission](value, params)

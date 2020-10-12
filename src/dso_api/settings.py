@@ -22,6 +22,7 @@ STATIC_ROOT = "/static/"
 
 DATAPUNT_API_URL = env.str("DATAPUNT_API_URL", "https://api.data.amsterdam.nl/")
 SCHEMA_URL = env.str("SCHEMA_URL", "https://schemas.data.amsterdam.nl/datasets/")
+PROFILES_URL = env.str("PROFILES_URL", "https://schemas.data.amsterdam.nl/profiles/")
 SCHEMA_DEFS_URL = env.str("SCHEMA_DEFS_URL", "https://schemas.data.amsterdam.nl/schema")
 
 
@@ -47,6 +48,7 @@ TIME_ZONE = "Europe/Amsterdam"
 # -- Application definition
 
 INSTALLED_APPS = [
+    "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.staticfiles",
     "django.contrib.gis",
@@ -71,6 +73,11 @@ MIDDLEWARE = [
     "authorization_django.authorization_middleware",
     "dso_api.dynamic_api.middleware.DatasetMiddleware",
     "dso_api.dynamic_api.middleware.TemporalDatasetMiddleware",
+]
+
+AUTHENTICATION_BACKENDS = [
+    "schematools.contrib.django.auth_backend.ProfileAuthorizationBackend",
+    "django.contrib.auth.backends.ModelBackend",
 ]
 
 if DEBUG:
@@ -120,9 +127,9 @@ DATABASES = {
         default="postgres://dataservices:insecure@localhost:5415/dataservices",
         engine="django.contrib.gis.db.backends.postgis",
     ),
-    "bag_v11": env.db_url(
+    "bag_v11_read": env.db_url(
         "BAG_V11_DATABASE_URL",
-        default="postgres://bag_v11_read:insecure@localhost:5434/bag_v11",
+        default="postgres://bag_v11:insecure@localhost:5434/bag_v11",
         engine="django.contrib.gis.db.backends.postgis",
     ),
 }

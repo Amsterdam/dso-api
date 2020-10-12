@@ -2,6 +2,7 @@ import time
 import json
 from datetime import date
 from pathlib import Path
+from unittest import mock
 
 import pytest
 from jwcrypto.jwt import JWT
@@ -36,6 +37,8 @@ def api_request(api_rf) -> WSGIRequest:
     request = api_rf.get("/v1/dummy/")
     request.accept_crs = None  # for DSOSerializer, expects to be used with DSOViewMixin
     request.response_content_crs = None
+
+    request.user = mock.MagicMock()
 
     # Temporal modifications. Usually done via TemporalDatasetMiddleware
     request.versioned = False
