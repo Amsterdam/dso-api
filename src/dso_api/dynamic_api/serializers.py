@@ -18,6 +18,7 @@ from rest_framework.serializers import Field
 from rest_framework.reverse import reverse
 from schematools.types import DatasetTableSchema
 from schematools.contrib.django.models import DynamicModel
+from schematools.contrib.django.auth_backend import RequestProfile
 from schematools.utils import to_snake_case, toCamelCase
 
 from dso_api.dynamic_api.fields import (
@@ -155,15 +156,15 @@ class DynamicSerializer(DSOModelSerializer):
                 model = self.instance._meta.model
             request = self.get_request()
 
-            if hasattr(request, "auth_profile"):
-                for model_field in model._meta.get_fields():
-                    permission_key = get_permission_key_for_field(model_field)
-                    permission = request.auth_profile.get_read_permission(
-                        permission_key
-                    )
-                    if permission is not None:
-                        key = toCamelCase(model_field.name)
-                        data[key] = mutate_value(permission, data[key])
+            if not hasattr(request, "auth_profile"):
+                request.auth_profile = RequestProfile(request)
+
+            for model_field in model._meta.get_fields():
+                permission_key = get_permission_key_for_field(model_field)
+                permission = request.auth_profile.get_read_permission(permission_key)
+                if permission is not None:
+                    key = toCamelCase(model_field.name)
+                    data[key] = mutate_value(permission, data[key])
 
         return data
 
