@@ -4,6 +4,7 @@ from datetime import date
 
 from django.core.validators import URLValidator
 from django.core.validators import EmailValidator
+
 from rest_framework_dso.fields import EmbeddedField
 from schematools.contrib.django.auth_backend import RequestProfile
 from schematools.contrib.django.models import Profile
@@ -539,6 +540,42 @@ class TestDynamicSerializer:
         # Validation passes if outcome is None
         assert validate_uri(explosieven_serializer.data["pdf"]) is None
 
+     @staticmethod
+    def test_email_field_can_validate(
+        api_request, explosieven_schema, explosieven_model, explosieven_data
+    ):
+        """ Prove that a EmailField can be validated by the EmailValidator """
+
+        ExplosievenSerializer = serializer_factory(explosieven_model, 0, flat=True)
+
+        api_request.dataset = explosieven_schema
+
+        validate_email = EmailValidator()
+
+        explosieven_serializer = ExplosievenSerializer(
+            explosieven_data, context={"request": api_request}
+        )
+
+        # Validation passes if outcome is None
+        assert validate_email(explosieven_serializer.data["emailadres"]) is None
+
+    @staticmethod
+    def test_uri_field_is_URL_encoded(
+        api_request, explosieven_schema, explosieven_model, explosieven_data
+    ):
+        """ Prove that a URLfield content is URL encoded i.e. space to %20 """
+
+        ExplosievenSerializer = serializer_factory(explosieven_model, 0, flat=True)
+
+        api_request.dataset = explosieven_schema
+
+        explosieven_serializer = ExplosievenSerializer(
+            explosieven_data, context={"request": api_request}
+        )
+
+        # Validation passes if a space does not exists (translated to %20)
+        assert ' ' not in str(explosieven_serializer.data["pdf"]) and '%20' in str(explosieven_serializer.data["pdf"]) 
+    
     @staticmethod
     def test_email_field_can_validate(
         api_request, explosieven_schema, explosieven_model, explosieven_data
