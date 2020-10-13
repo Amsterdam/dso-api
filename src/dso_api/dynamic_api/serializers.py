@@ -31,6 +31,15 @@ from dso_api.dynamic_api.permissions import (
     get_permission_key_for_field,
 )
 
+class URLencodingURLfields():
+    """ URL encoding mechanism for URL content """
+    def to_representation(self, fields_to_be_encoded: list, data):
+        for field_name in fields_to_be_encoded:                       
+                protocol_uri = re.search('([a-z,A-z,0-9,:/]+)(.*)', data[field_name]) 
+                protocol = protocol_uri.group(1)
+                uri = protocol_uri.group(2)
+                data[field_name] = protocol + urllib.parse.quote(uri)         
+        return data
 
 class DynamicLinksField(TemporalLinksField):
     def to_representation(self, value: DynamicModel):
@@ -145,15 +154,9 @@ class DynamicSerializer(DSOModelSerializer):
     def to_representation(self, validated_data):
         data = super().to_representation(validated_data)
 
-        # URL encoding of URLfield content, i.e. spaces to %20
-        schema_fields = dict(self.fields)        
-        for field_name, field_value in schema_fields.items():
-            if 'URLField' in str(field_value):
-                protocol_uri = re.search('([a-z,A-z,0-9,:/]+)(.*)', data[field_name]) 
-                protocol = protocol_uri.group(1)
-                uri = protocol_uri.group(2)
-                data[field_name] = protocol + urllib.parse.quote(uri)         
-
+        # URL encoding of the data, i.e. spaces to %20, only if urlfield is present
+        if self._url_content_fields:
+            data = URLencodingURLfields().to_representation(self._url_content_fields, data)
 
         if self.instance is not None:
             if isinstance(self.instance, list):
