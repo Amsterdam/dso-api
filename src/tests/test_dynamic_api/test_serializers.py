@@ -572,7 +572,7 @@ class TestDynamicSerializer:
     def test_uri_field_is_URL_encoded(
         api_request, explosieven_schema, explosieven_model, explosieven_data
     ):
-        """ Prove that a URLfield can be validated by the URIValidator """
+        """ Prove that a URLfield content is URL encoded i.e. space to %20 """
 
         ExplosievenSerializer = serializer_factory(explosieven_model, 0, flat=True)
 
