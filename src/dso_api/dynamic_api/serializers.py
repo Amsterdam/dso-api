@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import re
+import re, urllib.parse
 from collections import OrderedDict
 from functools import lru_cache
 from typing import Type
@@ -144,6 +144,16 @@ class DynamicSerializer(DSOModelSerializer):
 
     def to_representation(self, validated_data):
         data = super().to_representation(validated_data)
+
+        # URL encoding of URLfield content, i.e. spaces to %20
+        schema_fields = dict(self.fields)        
+        for field_name, field_value in schema_fields.items():
+            if 'URLField' in str(field_value):
+                protocol_uri = re.search('([a-z,A-z,0-9,:/]+)(.*)', data[field_name]) 
+                protocol = protocol_uri.group(1)
+                uri = protocol_uri.group(2)
+                data[field_name] = protocol + urllib.parse.quote(uri)         
+
 
         if self.instance is not None:
             if isinstance(self.instance, list):
