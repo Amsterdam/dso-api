@@ -540,7 +540,7 @@ class TestDynamicSerializer:
         # Validation passes if outcome is None
         assert validate_uri(explosieven_serializer.data["pdf"]) is None
 
-     @staticmethod
+    @staticmethod
     def test_email_field_can_validate(
         api_request, explosieven_schema, explosieven_model, explosieven_data
     ):
