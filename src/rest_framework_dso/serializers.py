@@ -5,7 +5,7 @@ from django.db import models
 from django.utils.functional import cached_property
 from rest_framework import serializers
 from rest_framework.exceptions import ParseError, ValidationError
-from rest_framework.fields import empty
+from rest_framework.fields import empty, URLField
 from rest_framework.utils.serializer_helpers import ReturnDict, ReturnList
 from rest_framework_gis.fields import GeometryField
 
@@ -201,6 +201,15 @@ class DSOSerializer(_SideloadMixin, serializers.Serializer):
             for name, field in self.fields.items()
             if isinstance(field, GeometryField)
             and field.field_name not in exclude_crs_fields
+        ]
+    
+    @cached_property
+    def _url_content_fields(self) -> List[URLField]:    
+        """ indicates if model contains a URLField type so the content can be URL encoded """    
+        return [
+            field_name
+            for field_name, field_class in self.fields.items()            
+            if isinstance(field_class, URLField)
         ]
 
     def to_representation(self, instance):
