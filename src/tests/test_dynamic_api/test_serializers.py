@@ -2,7 +2,8 @@ import pytest
 from collections import OrderedDict
 from datetime import date
 
-from django.core.validators import URLValidator, EmailValidator
+from django.core.validators import URLValidator
+from django.core.validators import EmailValidator
 from rest_framework_dso.fields import EmbeddedField
 from schematools.contrib.django.auth_backend import RequestProfile
 from schematools.contrib.django.models import Profile

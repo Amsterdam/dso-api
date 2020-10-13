@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-import re, urllib.parse
+import re
+import urllib.parse
 from collections import OrderedDict
 from functools import lru_cache
 from typing import Type
@@ -31,15 +32,18 @@ from dso_api.dynamic_api.permissions import (
     get_permission_key_for_field,
 )
 
-class URLencodingURLfields():
+
+class URLencodingURLfields:
     """ URL encoding mechanism for URL content """
+
     def to_representation(self, fields_to_be_encoded: list, data):
-        for field_name in fields_to_be_encoded:                       
-                protocol_uri = re.search('([a-z,A-z,0-9,:/]+)(.*)', data[field_name]) 
-                protocol = protocol_uri.group(1)
-                uri = protocol_uri.group(2)
-                data[field_name] = protocol + urllib.parse.quote(uri)         
+        for field_name in fields_to_be_encoded:
+            protocol_uri = re.search("([a-z,A-z,0-9,:/]+)(.*)", data[field_name])
+            protocol = protocol_uri.group(1)
+            uri = protocol_uri.group(2)
+            data[field_name] = protocol + urllib.parse.quote(uri)
         return data
+
 
 class DynamicLinksField(TemporalLinksField):
     def to_representation(self, value: DynamicModel):
@@ -156,7 +160,9 @@ class DynamicSerializer(DSOModelSerializer):
 
         # URL encoding of the data, i.e. spaces to %20, only if urlfield is present
         if self._url_content_fields:
-            data = URLencodingURLfields().to_representation(self._url_content_fields, data)
+            data = URLencodingURLfields().to_representation(
+                self._url_content_fields, data
+            )
 
         if self.instance is not None:
             if isinstance(self.instance, list):
@@ -200,10 +206,9 @@ def serializer_factory(
     fields = ["_links", "schema"]
     if isinstance(model, str):
         raise ImproperlyConfigured(f"Model {model} could not be resolved.")
+    # Inner tables have no schema or links defined
     if model.has_parent_table():
-        # Inner tables have no schema or links defined.
         fields = []
-
     safe_dataset_id = to_snake_case(model.get_dataset_id())
     serializer_name = f"{safe_dataset_id.title()}{model.__name__}Serializer"
     new_attrs = {
