@@ -588,7 +588,9 @@ def explosieven_model(filled_router):
 @pytest.fixture()
 def explosieven_data(explosieven_model):
     return explosieven_model.objects.create(
-        id=1, pdf="https://host.domain/file space space.extension", emailadres="account@host.domain"
+        id=1,
+        pdf="https://host.domain/file space space.extension",
+        emailadres="account@host.domain",
     )
 
 
