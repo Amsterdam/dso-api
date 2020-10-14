@@ -135,7 +135,7 @@ DATABASES = {
 }
 
 DATABASE_SCHEMAS = {
-    "bag": "bag_v11",  # Important to have 'bag_v11' connection defined in DATABASES.
+    "bag": "bag_v11_read",  # Important to have 'bag_v11' connection defined in DATABASES.
 }
 DATABASE_DISABLE_MIGRATIONS = ["bag"]
 
