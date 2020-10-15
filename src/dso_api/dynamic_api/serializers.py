@@ -43,7 +43,7 @@ class URLencodingURLfields:
                 protocol = protocol_uri.group(1)
                 uri = protocol_uri.group(2)
                 data[field_name] = protocol + urllib.parse.quote(uri)
-            except TypeError:
+            except (TypeError, AttributeError):
                 data = data
         return data
 
