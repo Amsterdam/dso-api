@@ -144,7 +144,7 @@ Google Maps gebruikt. De toegestane projecties zijn:
     * - ``urn:ogc:def:crs:EPSG::3857``
       - Pseudo-Mercator (vergelijkbaar met Google Maps)
     * - ``urn:ogc:def:crs:EPSG::4326``
-      - WGS 84 latitude-longitude, wereldwijd.
+      - WGS 84 longitude-latitude, wereldwijd.
 
 Eenvoudige Filters
 ~~~~~~~~~~~~~~~~~~
