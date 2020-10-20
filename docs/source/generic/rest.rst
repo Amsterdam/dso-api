@@ -43,6 +43,9 @@ Paginering
 ----------
 
 De resultaten hebben een standaard paginagrootte van 1000 records.
+
+De paginagrootte kan aangepast worden door een `&page_size=n` query parameter toe te voegen aan de request url.
+
 In de response zijn de volgende elementen te vinden:
 
 .. code-block:: javascript
