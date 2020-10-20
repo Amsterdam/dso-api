@@ -3,8 +3,7 @@
 {{ schema.description or '' }}
 
 * **ID:** {{ schema_name }}
-* **Status:** {{ schema.status|default('beschikbaar') }}
-* **WFS:** {% if wfs_url %}{{ wfs_url }}{% else %}N.B.{% endif %}
+* **WFS:** {% if wfs_url %}{{ wfs_url }} (:doc:`documentatie <../wfs-datasets/{{ schema_name }}>`){% else %}N.B.{% endif %}
 
 .. contents:: Tabellen
    :local:

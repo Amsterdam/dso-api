@@ -3,7 +3,6 @@
 {{ schema.description or '' }}
 
 * **ID:** {{ schema_name }}
-* **Status:** {{ schema.status|default('beschikbaar') }}
 * **WFS:** {{ wfs_url }}
 
 .. contents:: Features
@@ -62,3 +61,5 @@ Je kan meerdere velden insluiten door te ze scheiden met een comma, bijvoorbeeld
 
 {% endif %}
 {% endfor %}
+
+.. seealso:: Bekijk ook de :doc:`algemene uitleg </generic/wfs>` over het uitlezen van WFS servers.
