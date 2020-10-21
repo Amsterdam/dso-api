@@ -235,7 +235,7 @@ Deze tags worden allemaal ondersteund:
      - :samp:`{a} LIKE {b}`
      - Voert een wildcard vergelijking uit.
    * - ``<PropertyIsNil>``
-     - :samp:`{a} IS  NULL`
+     - :samp:`{a} IS NULL`
      - Waarde moet ``NULL`` zijn (``xsi:nil="true"`` in XML).
    * - ``<PropertyIsNull>``
      - n.b.
@@ -265,7 +265,7 @@ Deze tags worden allemaal ondersteund:
      - :samp:`ST_Overlaps({a}, {b})`
      - Geometrie 1 en 2 overlappen elkaar.
    * - ``<Within>``
-     - :samp:`ST_Touches({a}, {b})`
+     - :samp:`ST_Within({a}, {b})`
      - Geometrie 1 ligt compleet in geometrie 2.
    * - ``<And>``
      - :samp:`{a} AND {b}`
@@ -284,6 +284,10 @@ Deze tags worden allemaal ondersteund:
 .. tip::
    Bij de ``<BBOX>`` operator mag het geometrieveld weggelaten worden.
    Het standaard geometrieveld wordt dan gebruikt (doorgaans het eerste veld).
+
+.. note::
+   Hoewel een aantal geometrie-operatoren dubbelop lijken voor vlakken (zoals ``<Intersects>``, ``<Crosses>`` en ``<Overlaps>``),
+   worden de onderlinge verschillen met name zichtbaar bij het vergelijken van punten met vlakken.
 
 
 Als waarde mogen diverse expressies gebruikt worden:
@@ -438,7 +442,7 @@ De volgende functies zijn beschikbaar in de server:
      - Arctangens; invere van tangens.
    * - ``atan2(x, y)``
      - ``ATAN2()``
-     - Arctangens buiten en circel.
+     - Arctangens, voor bereik buiten een circel.
    * - ``cos(radians)``
      - ``COS()``
      - Cosinus
@@ -462,7 +466,7 @@ De volgende functies zijn beschikbaar in de server:
      - Geometrie omzetten naar gebied.
    * - ``Centroid(features)``
      - ``ST_Centroid()``
-     - Geometrisch centrum als "zwaargekrachtpunt".
+     - Geometrisch centrum als "zwaartekrachtpunt" teruggeven.
    * - ``Difference(geometry1, geometry2)``
      - ``ST_Difference()``
      - Delen van geometrie 1 die niet overlappen met geometrie 2.
