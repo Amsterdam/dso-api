@@ -299,7 +299,7 @@ Als waarde mogen diverse expressies gebruikt worden:
      - Verwijzing naar een veld.
    * - ``<Literal>``
      - waarde
-     - Letterlijke waarde.
+     - Letterlijke waarde, mag ook een GML-object zijn.
    * - ``<Function>``
      - :samp:`{functienaam}(..)`
      - Uitvoer van een functie, zoals ``abs``, ``sin``, ``strLength``.
@@ -354,6 +354,131 @@ Dit maakt complexe filters mogelijk, bijvoorbeeld:
             </Or>
         </And>
     </Filter>
+
+Functies
+~~~~~~~~
+
+Functies worden uitgevoerd door met de tag ``<Function name="..">..</Function>``.
+Dit mag op iedere plek als expressie gebruikt worden in plaats van een ``<ValueReference>`` of ``<Literal>``.
+
+Binnen in de function worden de parameters tevens als expressie opgegeven:
+een ``<ValueReference>``, ``<Literal>`` of nieuwe ``<Function>``.
+Als simpel voorbeeld:
+
+.. code-block:: xml
+
+    <fes:Function name="sin">
+        <fes:ValueReference>fieldname</fes:ValueReference>
+    </fes:Function>
+
+De volgende functies zijn beschikbaar in de server:
+
+.. list-table::
+   :header-rows: 1
+
+   * - Functie
+     - SQL equivalent
+     - Omschrijving
+   * - ``strConcat(string)``
+     - ``CONCAT()``
+     - Combineert teksten
+   * - ``strToLowerCase(string)``
+     - ``LOWER()``
+     - Tekst omzetten naar kleine letters.
+   * - ``strToUpperCase(string)``
+     - ``UPPER()``
+     - Tekst omzetten naar hoofdletters
+   * - ``strTrim(string)``
+     - ``TRIM()``
+     - Witruimte aan het begin en einde verwijderen.
+   * - ``strLength(string)``
+     - ``LENGTH()`` / ``CHAR_LENGTH()``
+     - Tekstlengte bepalen.
+   * - ``length(string)``
+     - ``LENGTH()`` / ``CHAR_LENGTH()``
+     - Alias van ``strLength()``.
+   * - ``abs(number)``
+     - ``ABS()``
+     - Negatieve getallen omdraaien.
+   * - ``ceil(number)``
+     - ``CEIL()``
+     - Afronden naar boven.
+   * - ``floor(number)``
+     - ``FLOOR()``
+     - Afronden naar beneden.
+   * - ``round(value)``
+     - ``ROUND()``
+     - Afronden
+   * - ``min(value1, value2)``
+     - ``LEAST()``
+     - Kleinste getal gebruiken.
+   * - ``max(value1, value2)``
+     - ``GREATEST()``
+     - Grootste getal gebruiken.
+   * - ``pow(base, exponent)``
+     - ``POWER()``
+     - Machtsverheffing
+   * - ``exp(value)``
+     - ``EXP()``
+     - Exponent van 𝑒 (2,71828...; natuurlijke logaritme).
+   * - ``log(value)``
+     - ``LOG()``
+     - Logaritme; inverse van een exponent.
+   * - ``sqrt(value)``
+     - ``SQRT()``
+     - Worteltrekken; inverse van machtsverheffen.
+   * - ``acos(value)``
+     - ``ACOS()``
+     - Arccosinus; inverse van cosinus.
+   * - ``asin(value)``
+     - ``ASIN()``
+     - Arcsinus; inverse van sinus.
+   * - ``atan(value)``
+     - ``ATAN()``
+     - Arctangens; invere van tangens.
+   * - ``atan2(x, y)``
+     - ``ATAN2()``
+     - Arctangens buiten en circel.
+   * - ``cos(radians)``
+     - ``COS()``
+     - Cosinus
+   * - ``sin(radians)``
+     - ``SIN()``
+     - Sinus
+   * - ``tan(radians)``
+     - ``TAN()``
+     - Tanges
+   * - ``pi()``
+     - ``PI``
+     - De waarde van π (3,141592653...)
+   * - ``toDegrees(radians)``
+     - ``DEGREES()``
+     - Omzetting radialen naar graden.
+   * - ``toRadians(degree)``
+     - ``RADIANS()``
+     - Omzetting graden naar radialen.
+   * - ``Area(geometry)``
+     - ``ST_AREA()``
+     - Geometrie omzetten naar gebied.
+   * - ``Centroid(features)``
+     - ``ST_Centroid()``
+     - Geometrisch centrum als "zwaargekrachtpunt".
+   * - ``Difference(geometry1, geometry2)``
+     - ``ST_Difference()``
+     - Delen van geometrie 1 die niet overlappen met geometrie 2.
+   * - ``distance(geometry1, geometry2)``
+     - ``ST_Distance()``
+     - Minimale afstand tussen 2 geometrieën.
+   * - ``Envelope(geometry)``
+     - ``ST_Envelope()``
+     - Geometrie omzetten naar bounding box.
+   * - ``Intersection(geometry1, geometry2)``
+     - ``ST_Intersection()``
+     - Delen van geometrie 1 die overlappen met geometrie 2.
+   * - ``Union(geometry1, geometry2)``
+     - ``ST_Union()``
+     - Geometrie 1 en 2 samenvoegen.
+
 
 Filter compatibiliteit
 ~~~~~~~~~~~~~~~~~~~~~~
