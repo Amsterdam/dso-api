@@ -202,13 +202,13 @@ class DSOSerializer(_SideloadMixin, serializers.Serializer):
             if isinstance(field, GeometryField)
             and field.field_name not in exclude_crs_fields
         ]
-    
+
     @cached_property
-    def _url_content_fields(self) -> List[URLField]:    
-        """ indicates if model contains a URLField type so the content can be URL encoded """    
+    def _url_content_fields(self) -> List[URLField]:
+        """ indicates if model contains a URLField type so the content can be URL encoded """
         return [
             field_name
-            for field_name, field_class in self.fields.items()            
+            for field_name, field_class in self.fields.items()
             if isinstance(field_class, URLField)
         ]
 

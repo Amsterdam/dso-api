@@ -36,6 +36,7 @@ from dso_api.dynamic_api.permissions import (
 
 class URLencodingURLfields:
     """ URL encoding mechanism for URL content """
+
     def to_representation(self, fields_to_be_encoded: list, data):
         for field_name in fields_to_be_encoded:
             try:

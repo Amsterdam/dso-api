@@ -260,16 +260,11 @@ class TestAuth:
             schema_data={
                 "datasets": {
                     "afvalwegingen": {
-                        "tables": {
-                            "containers": {
-                                "fields": {
-                                    "eigenaarNaam": "read"
-                                }
-                            }
-                        }
+                        "tables": {"containers": {"fields": {"eigenaarNaam": "read"}}}
                     }
                 }
-            })
+            },
+        )
         url = reverse("dynamic_api:afvalwegingen-containers-list")
         models.DatasetField.objects.filter(name="eigenaar_naam").update(auth="BAG/R")
         token = fetch_auth_token(["BRK/RO", "BRK/RSN"])
