@@ -166,10 +166,42 @@ Dit wordt dan in de request verwerkt, bijvoorbeeld:
 
 * `...&TYPENAMES=buurt&OUTPUTFORMAT=geojson&FILTER=%3CFilter%3E%3CPropertyIsEqualTo%3E%3CValueReference... <https://api.data.amsterdam.nl/v1/wfs/bag/?expand=stadsdeel&SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=buurt&COUNT=10&OUTPUTFORMAT=geojson&FILTER=%3CFilter%3E%3CPropertyIsEqualTo%3E%3CValueReference%3Estadsdeel/naam%3C/ValueReference%3E%3CLiteral%3ECentrum%3C/Literal%3E%3C/PropertyIsEqualTo%3E%3C/Filter%3E>`_
 
+De ``FILTER`` parameter vervangt de losse parameters ``BBOX`` en ``RESOURCEID``.
+Als je deze parameters ook gebruikt, moet je deze opnemen in het filter:
+
+.. code-block:: xml
+
+    <Filter>
+        <And>
+            <BBOX>
+                <gml:Envelope srsName="EPSG:4326">
+                    <gml:lowerCorner>4.58565 52.03560</gml:lowerCorner>
+                    <gml:upperCorner>5.31360 52.48769</gml:upperCorner>
+                </gml:Envelope>
+            </BBOX>
+            <PropertyIsEqualTo>
+                <ValueReference>status</ValueReference>
+                <Literal>1</Literal>
+            </PropertyIsEqualTo>
+        </And>
+    </Filter>
+
+De ``RESOURCEID`` kan in het filter meermaals voorkomen:
+
+.. code-block:: xml
+
+    <Filter>
+        <ResourceId rid="TYPENAME.123" />
+        <ResourceId rid="TYPENAME.4325" />
+        <ResourceId rid="OTHERTYPE.567" />
+    </Filter>
+
+
 Complexe filters
 ~~~~~~~~~~~~~~~~
 
-De WFS Filter Encoding Standaard (FES) ondersteund veel operatoren, zoals:
+De WFS Filter Encoding Standaard (FES) ondersteund veel operatoren.
+Deze tags worden allemaal ondersteund:
 
 .. list-table::
    :header-rows: 1
@@ -249,6 +281,11 @@ De WFS Filter Encoding Standaard (FES) ondersteund veel operatoren, zoals:
      - Zoekt slechts een enkel element op "typenaam.identifier".
        Meerdere combineren tot een ``IN`` query.
 
+.. tip::
+   Bij de ``<BBOX>`` operator mag het geometrieveld weggelaten worden.
+   Het standaard geometrieveld wordt dan gebruikt (doorgaans het eerste veld).
+
+
 Als waarde mogen diverse expressies gebruikt worden:
 
 .. list-table::
@@ -257,7 +294,7 @@ Als waarde mogen diverse expressies gebruikt worden:
    * - Expressie
      - SQL equivalent
      - Omschrijving
-   * - ``<ValueReference>``.
+   * - ``<ValueReference>``
      - :samp:`{veldnaam}`
      - Verwijzing naar een veld.
    * - ``<Literal>``
