@@ -2,9 +2,12 @@ import azure.storage.blob
 from datetime import datetime
 from datetime import timedelta
 from django.conf import settings
+from schematools.utils import to_snake_case
 from rest_framework import serializers
 from rest_framework_dso.fields import LinksField
 from .utils import split_on_separator
+
+from rest_framework.reverse import reverse
 
 
 class TemporalHyperlinkedRelatedField(serializers.HyperlinkedRelatedField):
@@ -21,7 +24,7 @@ class TemporalHyperlinkedRelatedField(serializers.HyperlinkedRelatedField):
         if hasattr(obj, "pk") and obj.pk in (None, ""):
             return None
 
-        if request.versioned and obj.is_temporal():
+        if obj.is_temporal():
             # note that `obj` has only PK field.
             lookup_value, version = split_on_separator(obj.pk)
             kwargs = {self.lookup_field: lookup_value}
@@ -31,7 +34,7 @@ class TemporalHyperlinkedRelatedField(serializers.HyperlinkedRelatedField):
             )
 
             if request.dataset_temporal_slice is None:
-                key = request.dataset.temporal.get("identifier")
+                key = obj.get_dataset().temporal.get("identifier")
                 value = version
             else:
                 key = request.dataset_temporal_slice["key"]
@@ -72,23 +75,23 @@ class TemporalLinksField(LinksField):
 
         kwargs = {self.lookup_field: obj.pk}
 
-        if request.dataset.temporal is None or not obj.is_temporal():
+        if not obj.is_temporal():
             return super().get_url(obj, view_name, request, format)
 
-        lookup_value = getattr(obj, request.dataset.identifier)
+        dataset = obj.get_dataset()
+        lookup_value = getattr(obj, dataset.identifier)
         kwargs = {self.lookup_field: lookup_value}
         base_url = self.reverse(
             view_name, kwargs=kwargs, request=request, format=format
         )
 
-        temporal_identifier = request.dataset.temporal["identifier"]
+        temporal_identifier = dataset.temporal["identifier"]
         version = getattr(obj, temporal_identifier)
         return "{}?{}={}".format(base_url, temporal_identifier, version)
 
 
 class AzureBlobFileField(serializers.ReadOnlyField):
-    """Azure storage field.
-    """
+    """Azure storage field."""
 
     def __init__(self, account_name, *args, **kwargs):
         self.account_name = account_name
@@ -111,3 +114,29 @@ class AzureBlobFileField(serializers.ReadOnlyField):
         if sas_token is None:
             return value
         return f"{value}?{sas_token}"
+
+
+class LooseRelationUrlField(serializers.CharField):
+    """A url field for very loose relations to temporal datasets
+    The relation has to be defined as: "<dataset>:<table>:<column>" in the schema
+    The specific definition of the column signals that the relation is
+    very loose and a url is constructed without any checking.
+    """
+
+    def to_representation(self, value):
+        from .urls import app_name
+
+        request = self.context["request"]
+        view = self.context["view"]
+        relation = view.model._meta.get_field(self.field_name).relation
+        dataset_name, table_name, field_name = [
+            to_snake_case(part) for part in relation.split(":")
+        ]
+        # We force that the incoming value is interpreted as the
+        # pk, although this is not always the 'real' pk, e.g. for temporal relations
+        kwargs = {"pk": value}
+        return reverse(
+            f"{app_name}:{dataset_name}-{table_name}-detail",
+            kwargs=kwargs,
+            request=request,
+        )

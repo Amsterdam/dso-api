@@ -147,7 +147,8 @@ class TestDynamicSerializer:
         api_request.dataset = afval_schema
         ContainerSerializer = serializer_factory(afval_container_model, 0)
         container_without_cluster = afval_container_model.objects.create(
-            id=3, cluster=None,
+            id=3,
+            cluster=None,
         )
         container_serializer = ContainerSerializer(
             container_without_cluster,
@@ -183,7 +184,8 @@ class TestDynamicSerializer:
         api_request.dataset = afval_schema
         ContainerSerializer = serializer_factory(afval_container_model, 0)
         container_invalid_cluster = afval_container_model.objects.create(
-            id=4, cluster_id=99,
+            id=4,
+            cluster_id=99,
         )
         container_serializer = ContainerSerializer(
             container_invalid_cluster,
@@ -200,7 +202,7 @@ class TestDynamicSerializer:
             "id": 4,
             "schema": "https://schemas.data.amsterdam.nl/datasets/afvalwegingen/afvalwegingen#containers",  # noqa: E501
             "clusterId": 99,
-            "cluster": None,
+            "cluster": "http://testserver/v1/afvalwegingen/clusters/99/",
             "serienummer": None,
             "datumCreatie": None,
             "datumLeegmaken": None,
@@ -223,9 +225,11 @@ class TestDynamicSerializer:
         The _embedded part has a None value instead.
         """
         api_request.dataset = bagh_schema
+        api_request.dataset_temporal_slice = None
         GemeenteSerializer = serializer_factory(bagh_gemeente_model, 0)
         gemeente_serializer = GemeenteSerializer(
-            bagh_gemeente, context={"request": api_request},
+            bagh_gemeente,
+            context={"request": api_request},
         )
         assert gemeente_serializer.data == {
             "_links": {
@@ -235,7 +239,9 @@ class TestDynamicSerializer:
                 }
             },
             "schema": "https://schemas.data.amsterdam.nl/datasets/bagh/bagh#gemeente",
-            "stadsdelen": ["http://testserver/v1/bagh/stadsdeel/03630000000001_001/",],
+            "stadsdelen": [
+                "http://testserver/v1/bagh/stadsdeel/03630000000001/?volgnummer=001",
+            ],
             "id": "0363_001",
             "naam": "Amsterdam",
             "volgnummer": 1,
@@ -265,7 +271,8 @@ class TestDynamicSerializer:
         VestigingSerializer = serializer_factory(vestiging_vestiging_model, 0)
 
         vestiging_serializer = VestigingSerializer(
-            vestiging1, context={"request": api_request},
+            vestiging1,
+            context={"request": api_request},
         )
 
         assert vestiging_serializer.data == {
@@ -285,7 +292,8 @@ class TestDynamicSerializer:
         }
 
         vestiging_serializer = VestigingSerializer(
-            vestiging2, context={"request": api_request},
+            vestiging2,
+            context={"request": api_request},
         )
         assert vestiging_serializer.data == {
             "_links": {
@@ -305,7 +313,8 @@ class TestDynamicSerializer:
 
         AdresSerializer = serializer_factory(vestiging_adres_model, 0)
         adres_serializer = AdresSerializer(
-            post_adres1, context={"request": api_request},
+            post_adres1,
+            context={"request": api_request},
         )
         assert adres_serializer.data == {
             "_links": {
@@ -474,7 +483,10 @@ class TestDynamicSerializer:
 
     @staticmethod
     def test_display_title_present(
-        api_request, fietspaaltjes_schema, fietspaaltjes_model, fietspaaltjes_data,
+        api_request,
+        fietspaaltjes_schema,
+        fietspaaltjes_model,
+        fietspaaltjes_data,
     ):
         """ Prove that title element shows display value if display field is specified """
 
@@ -579,6 +591,44 @@ class TestDynamicSerializer:
         assert validate_email(explosieven_serializer.data["emailadres"]) is None
 
     @staticmethod
+    def test_email_field_can_validate(
+        api_request, explosieven_schema, explosieven_model, explosieven_data
+    ):
+        """ Prove that a EmailField can be validated by the EmailValidator """
+
+        ExplosievenSerializer = serializer_factory(explosieven_model, 0, flat=True)
+
+        api_request.dataset = explosieven_schema
+
+        validate_email = EmailValidator()
+
+        explosieven_serializer = ExplosievenSerializer(
+            explosieven_data, context={"request": api_request}
+        )
+
+        # Validation passes if outcome is None
+        assert validate_email(explosieven_serializer.data["emailadres"]) is None
+
+    @staticmethod
+    def test_uri_field_is_URL_encoded(
+        api_request, explosieven_schema, explosieven_model, explosieven_data
+    ):
+        """ Prove that a URLfield content is URL encoded i.e. space to %20 """
+
+        ExplosievenSerializer = serializer_factory(explosieven_model, 0, flat=True)
+
+        api_request.dataset = explosieven_schema
+
+        explosieven_serializer = ExplosievenSerializer(
+            explosieven_data, context={"request": api_request}
+        )
+
+        # Validation passes if a space does not exists (translated to %20)
+        assert " " not in str(explosieven_serializer.data["pdf"]) and "%20" in str(
+            explosieven_serializer.data["pdf"]
+        )
+
+    @staticmethod
     def test_indirect_self_reference(
         api_request, indirect_self_ref_schema, filled_router
     ):
@@ -680,3 +730,34 @@ class TestDynamicSerializer:
         assert "sp=" in dossiers_serializer.data["dossiers"][0]["url"]
         assert "sr=b" in dossiers_serializer.data["dossiers"][0]["url"]
         assert "sp=r" in dossiers_serializer.data["dossiers"][0]["url"]
+
+
+    def test_loose_relation_serialization(
+        api_request,
+        meldingen_schema,
+        statistieken_model,
+    ):
+        """Prove that the serializer factory generates the right link
+        for a loose relation field
+        """
+
+        class DummyView:
+            def __init__(self, model):
+                self.model = model
+
+        api_request.dataset = meldingen_schema
+        statistiek = statistieken_model.objects.create(
+            id=1,
+            buurt="03630000000078",
+        )
+        StatistiekenSerializer = serializer_factory(statistieken_model, 0)
+
+        statistieken_serializer = StatistiekenSerializer(
+            statistiek,
+            context={"request": api_request, "view": DummyView(statistieken_model)},
+        )
+
+        assert (
+            statistieken_serializer.data["buurt"]
+            == "http://testserver/v1/gebieden/buurten/03630000000078/"
+        ), statistieken_serializer.data

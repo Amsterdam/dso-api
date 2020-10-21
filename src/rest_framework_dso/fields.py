@@ -59,6 +59,11 @@ class AbstractEmbeddedField:
         """Return the Django model class"""
         return self.serializer_class.Meta.model
 
+    @cached_property
+    def parent_model(self) -> Type[models.Model]:
+        """Return the Django model class"""
+        return self.parent_serializer.Meta.model
+
 
 class EmbeddedField(AbstractEmbeddedField):
     """An embedded field for a foreign-key relation."""
@@ -78,7 +83,7 @@ class EmbeddedField(AbstractEmbeddedField):
         field_name = self.source or self.field_name
         try:
             # For ForeignKey/OneToOneField this resolves to "{field_name}_id"
-            return self.related_model._meta.get_field(field_name).attname
+            return self.parent_model._meta.get_field(field_name).attname
         except models.FieldDoesNotExist:
             # Allow non-FK relations, e.g. a "bag_id" to a completely different database
             if not field_name.endswith("_id"):

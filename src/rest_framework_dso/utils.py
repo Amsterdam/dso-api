@@ -22,6 +22,18 @@ class EmbeddedHelper:
         self.parent_serializer = parent_serializer
         self.embedded_fields = self._get_embedded_fields(expand) if expand else {}
 
+        self.id_based_fetcher = (
+            parent_serializer.id_based_fetcher or self._default_id_based_fetcher
+        )
+
+    def _default_id_based_fetcher(self, model):
+        """Default behaviour to fetch objects based on a set of ids is to use
+        Django's in_bulk manager method. This can be overridden by setting
+        a fetcher function on the parent_serializer. Doing it this way, we
+        do not pollute the rest_framework_dso package with too specific behaviour
+        """
+        return model.objects.in_bulk
+
     def _get_embedded_fields(self, expand: Union[list, bool]):  # noqa: C901
         allowed_names = getattr(self.parent_serializer.Meta, "embedded_fields", [])
         auth_checker = getattr(
@@ -88,7 +100,8 @@ class EmbeddedHelper:
 
         # Fetch model data
         fetched_per_model = {
-            model: model.objects.in_bulk(ids) for model, ids in ids_per_model.items()
+            model: self.id_based_fetcher(model)(ids)
+            for model, ids in ids_per_model.items()
         }
         _embedded = {}
         for name, embedded_field in self.embedded_fields.items():
@@ -123,8 +136,8 @@ class EmbeddedHelper:
 
             related_model = embedded_field.related_model
             try:
-                value = related_model.objects.get(pk=id_value)
-            except related_model.DoesNotExist:
+                value = self.id_based_fetcher(related_model)([id_value])[id_value]
+            except KeyError:
                 # Unclear in HAL-JSON: should the requested embed be mentioned or not?
                 ret[name] = None
                 continue

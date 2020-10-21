@@ -134,8 +134,7 @@ class TestAuth:
     def test_auth_on_dataset_schema_protects_containers(
         self, api_client, filled_router, afval_schema
     ):
-        """ Prove that auth protection at dataset level leads to a 403 on the container listview.
-        """
+        """Prove that auth protection at dataset level leads to a 403 on the container listview."""
         url = reverse("dynamic_api:afvalwegingen-containers-list")
         models.Dataset.objects.filter(name="afvalwegingen").update(auth="BAG/R")
         response = api_client.get(url)
@@ -144,8 +143,7 @@ class TestAuth:
     def test_auth_on_dataset_schema_protects_cluster(
         self, api_client, filled_router, afval_schema
     ):
-        """ Prove that auth protection at dataset level leads to a 403 on the cluster listview.
-        """
+        """Prove that auth protection at dataset level leads to a 403 on the cluster listview."""
         url = reverse("dynamic_api:afvalwegingen-clusters-list")
         models.Dataset.objects.filter(name="afvalwegingen").update(auth="BAG/R")
         response = api_client.get(url)
@@ -154,8 +152,8 @@ class TestAuth:
     def test_auth_on_table_schema_protects(
         self, api_client, filled_router, afval_schema
     ):
-        """ Prove that auth protection at table level (container) leads to a 403 on the container listview.
-        """
+        """Prove that auth protection at table level (container)
+        leads to a 403 on the container listview."""
         url = reverse("dynamic_api:afvalwegingen-containers-list")
         models.DatasetTable.objects.filter(name="containers").update(auth="BAG/R")
         response = api_client.get(url)
@@ -164,8 +162,8 @@ class TestAuth:
     def test_auth_on_table_schema_does_not_protect_sibling_tables(
         self, api_client, filled_router, afval_schema, fetch_auth_token
     ):
-        """ Prove that auth protection at table level (cluster) does not protect the container list view.
-        """
+        """Prove that auth protection at table level (cluster)
+        does not protect the container list view."""
         url = reverse("dynamic_api:afvalwegingen-containers-list")
         models.DatasetTable.objects.filter(name="clusters").update(auth="BAG/R")
         response = api_client.get(url)
@@ -174,8 +172,8 @@ class TestAuth:
     def test_auth_on_table_schema_with_token_for_valid_scope(
         self, api_client, filled_router, afval_schema, fetch_auth_token, afval_container
     ):
-        """ Prove that auth protected table (container) can be viewed with a token with the correct scope.
-        """
+        """Prove that auth protected table (container) can be
+        viewed with a token with the correct scope."""
         url = reverse("dynamic_api:afvalwegingen-containers-list")
         models.DatasetTable.objects.filter(name="containers").update(auth="BAG/R")
         token = fetch_auth_token(["BAG/R"])
@@ -185,8 +183,8 @@ class TestAuth:
     def test_auth_on_table_schema_with_token_for_invalid_scope(
         self, api_client, filled_router, afval_schema, fetch_auth_token
     ):
-        """ Prove that auth protected table (container) cannot be
-            viewed with a token with an incorrect scope.
+        """Prove that auth protected table (container) cannot be
+        viewed with a token with an incorrect scope.
         """
         url = reverse("dynamic_api:afvalwegingen-containers-list")
         models.DatasetTable.objects.filter(name="containers").update(auth="BAG/R")
@@ -197,8 +195,8 @@ class TestAuth:
     def test_auth_on_embedded_fields_with_token_for_valid_scope(
         self, api_client, filled_router, afval_schema, fetch_auth_token, afval_container
     ):
-        """ Prove that expanded fields are shown when a reference field is protected
-            with an auth scope and there is a valid token """
+        """Prove that expanded fields are shown when a reference field is protected
+        with an auth scope and there is a valid token"""
         url = reverse("dynamic_api:afvalwegingen-containers-list")
         url = f"{url}?_expand=true"
         models.DatasetTable.objects.filter(name="clusters").update(auth="BAG/R")
@@ -210,9 +208,9 @@ class TestAuth:
     def test_auth_on_embedded_fields_without_token_for_valid_scope(
         self, api_client, filled_router, afval_schema, fetch_auth_token, afval_container
     ):
-        """ Prove that expanded fields are *not* shown when a reference field is protected
-            with an auth scope. For expand=true, we return a result,
-            without the fields that are protected """
+        """Prove that expanded fields are *not* shown when a reference field is protected
+        with an auth scope. For expand=true, we return a result,
+        without the fields that are protected"""
         url = reverse("dynamic_api:afvalwegingen-containers-list")
         url = f"{url}?_expand=true"
         models.DatasetTable.objects.filter(name="clusters").update(auth="BAG/R")
@@ -223,8 +221,8 @@ class TestAuth:
     def test_auth_on_specified_embedded_fields_without_token_for_valid_scope(
         self, api_client, filled_router, afval_schema, fetch_auth_token, afval_container
     ):
-        """ Prove that a 403 is returned when asked for a specific expanded field that is protected
-            and there is no authorization in the token for that field.
+        """Prove that a 403 is returned when asked for a specific expanded field that is protected
+        and there is no authorization in the token for that field.
         """
         url = reverse("dynamic_api:afvalwegingen-containers-list")
         url = f"{url}?_expandScope=cluster"
@@ -235,8 +233,8 @@ class TestAuth:
     def test_auth_on_individual_fields_with_token_for_valid_scope(
         self, api_client, filled_router, afval_schema, fetch_auth_token, afval_container
     ):
-        """ Prove that protected fields are shown
-            with an auth scope and there is a valid token """
+        """Prove that protected fields are shown
+        with an auth scope and there is a valid token"""
         url = reverse("dynamic_api:afvalwegingen-containers-list")
         models.DatasetField.objects.filter(name="eigenaar_naam").update(auth="BAG/R")
         token = fetch_auth_token(["BAG/R"])
@@ -252,8 +250,8 @@ class TestAuth:
     def test_auth_on_individual_fields_with_token_for_valid_scope_per_profile(
         self, api_client, filled_router, afval_schema, fetch_auth_token, afval_container
     ):
-        """ Prove that protected fields are shown
-            with an auth scope connected to Profile that gives access to specific field."""
+        """Prove that protected fields are shown
+        with an auth scope connected to Profile that gives access to specific field."""
         models.Profile.objects.create(
             name="brk_readall",
             scopes="BRK/RSN",
@@ -280,8 +278,8 @@ class TestAuth:
     def test_auth_on_individual_fields_without_token_for_valid_scope(
         self, api_client, filled_router, afval_schema, fetch_auth_token, afval_container
     ):
-        """ Prove that protected fields are *not* shown
-            with an auth scope and there is not a valid token """
+        """Prove that protected fields are *not* shown
+        with an auth scope and there is not a valid token"""
         url = reverse("dynamic_api:afvalwegingen-containers-list")
         models.DatasetField.objects.filter(name="eigenaar_naam").update(auth="BAG/R")
         response = api_client.get(url)
@@ -301,8 +299,7 @@ class TestAuth:
         parkeervakken_parkeervak_model,
         parkeervakken_regime_model,
     ):
-        """ Prove that Auth is not cached.
-        """
+        """Prove that Auth is not cached."""
         # Router reload is needed to make sure that viewsets are using relations.
         from dso_api.dynamic_api.urls import router
 
@@ -385,8 +382,7 @@ class TestAuth:
     def test_auth_options_requests_are_not_protected(
         self, api_client, filled_router, afval_schema
     ):
-        """ Prove that options requests are not protected
-        """
+        """Prove that options requests are not protected"""
         url = reverse("dynamic_api:afvalwegingen-clusters-list")
         models.Dataset.objects.filter(name="afvalwegingen").update(auth="BAG/R")
         response = api_client.options(url)
@@ -395,8 +391,7 @@ class TestAuth:
     def test_sort_by_accepts_camel_case(
         self, api_client, filled_router, afval_schema, afval_container
     ):
-        """ Prove that _sort is accepting camelCase parameters.
-        """
+        """Prove that _sort is accepting camelCase parameters."""
         url = reverse("dynamic_api:afvalwegingen-containers-list")
         response = api_client.get(f"{url}?_sort=datumCreatie")
         assert response.status_code == 200, response.data
@@ -405,11 +400,51 @@ class TestAuth:
     def test_sort_by_not_accepting_db_column_names(
         self, api_client, filled_router, afval_schema, afval_container
     ):
-        """ Prove that _sort is not accepting db column names.
-        """
+        """Prove that _sort is not accepting db column names."""
         url = reverse("dynamic_api:afvalwegingen-containers-list")
         response = api_client.get(f"{url}?_sort=datum_creatie")
         assert response.status_code == 400, response.data
         assert response.data["x-validation-errors"] == [
             "Invalid sort fields: datum_creatie"
         ], response.data
+
+
+@pytest.mark.django_db
+class TestEmbedTemporalTables:
+    def test_detail_expand_true(
+        self,
+        api_client,
+        filled_router,
+        statistieken_model,
+        buurten_model,
+        statistieken_data,
+        buurten_data,
+    ):
+        """Prove that buurt shows up when expanded and uses the
+        latest volgnummer
+        """
+
+        url = reverse("dynamic_api:meldingen-statistieken-detail", args=[1])
+        url = f"{url}?_expand=true"
+        response = api_client.get(url)
+        assert response.status_code == 200, response.data
+        assert response.data["_embedded"]["buurt"]["id"] == "2"
+
+    def test_list_expand_true(
+        self,
+        api_client,
+        filled_router,
+        statistieken_model,
+        buurten_model,
+        statistieken_data,
+        buurten_data,
+    ):
+        """Prove that buurt shows up when listview is expanded and uses the
+        latest volgnummer
+        """
+
+        url = reverse("dynamic_api:meldingen-statistieken-list")
+        url = f"{url}?_expand=true"
+        response = api_client.get(url)
+        assert response.status_code == 200, response.data
+        assert response.data["_embedded"]["buurt"][0]["id"] == "2"

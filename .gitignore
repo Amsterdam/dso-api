@@ -117,6 +117,9 @@ ENV/
 # Testdata
 /data
 
+# Local experiments
+/scratch
+
 # Docs
 /docs/source/datasets/
 /docs/source/wfs-datasets/
