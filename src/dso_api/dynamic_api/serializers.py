@@ -27,6 +27,7 @@ from dso_api.dynamic_api.fields import (
     TemporalHyperlinkedRelatedField,
     TemporalReadOnlyField,
     TemporalLinksField,
+    AzureBlobFileField,
 )
 from dso_api.dynamic_api.permissions import (
     get_unauthorized_fields,
@@ -275,9 +276,13 @@ def generate_field_serializer(  # noqa: C901
         # Do not render PK and FK to parent on nested tables
         return
 
-    # Instead of having to apply camelize() on every response,
-    # create converted field names on the serializer construction.
-    camel_name = toCamelCase(model_field.name)
+    # Re-map file to correct serializer
+    field_schema = model._table_schema.get_field_by_id(model_field.name)
+    if field_schema is not None and field_schema.type == "blob":
+        if field_schema["storage"] == "azure-blob":
+            new_attrs[camel_name] = AzureBlobFileField(
+                account_name=field_schema["account_name"]
+            )
 
     # Add extra embedded part for foreign keys
     if isinstance(model_field, models.ForeignKey):
