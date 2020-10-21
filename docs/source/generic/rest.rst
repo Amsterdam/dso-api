@@ -44,7 +44,7 @@ Paginering
 
 De resultaten hebben een standaard paginagrootte van 1000 records.
 
-De paginagrootte kan aangepast worden door een `&page_size=n` query parameter toe te voegen aan de request url.
+De paginagrootte kan aangepast worden door een :samp:`&page_size={n}` query parameter toe te voegen aan de request URL.
 
 In de response zijn de volgende elementen te vinden:
 
