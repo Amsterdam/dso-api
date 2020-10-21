@@ -18,7 +18,11 @@ from schematools.contrib.django.models import Dataset
 from schematools.contrib.django.db import create_tables
 from schematools.types import DatasetSchema
 from rest_framework_dso.crs import RD_NEW
-from tests.test_rest_framework_dso.models import Category, Movie, Location
+from tests.test_rest_framework_dso.models import (
+    Category,
+    Movie,
+    Location,
+)
 
 HERE = Path(__file__).parent
 
@@ -92,6 +96,8 @@ def filled_router(
     explosieven_dataset,
     indirect_self_ref_dataset,
     download_url_dataset,
+    meldingen_dataset,
+    gebieden_dataset,
 ):
     # Prove that the router URLs are extended on adding a model
     router.reload()
@@ -112,6 +118,8 @@ def filled_router(
         explosieven_dataset: "explosieven_verdachtgebied",
         indirect_self_ref_dataset: "selfref_selfref",
         download_url_dataset: "download_url",
+        meldingen_dataset: "meldingen_statistieken",
+        gebieden_dataset: "gebieden_buurten",
     }
 
     # Based on datasets, create test table if not exists
@@ -570,7 +578,9 @@ def explosieven_schema_json() -> dict:
 
 
 @pytest.fixture()
-def explosieven_schema(explosieven_schema_json,) -> DatasetSchema:
+def explosieven_schema(
+    explosieven_schema_json,
+) -> DatasetSchema:
     return DatasetSchema.from_dict(explosieven_schema_json)
 
 
@@ -633,3 +643,59 @@ def download_url_dataset(download_url_schema_json) -> Dataset:
     return Dataset.objects.create(
         name="download_url", schema_data=download_url_schema_json
     )
+
+
+def meldingen_schema_json() -> dict:
+    """ Fixture to return the schema json """
+    path = HERE / "files/meldingen.json"
+    return json.loads(path.read_text())
+
+
+def meldingen_schema(meldingen_schema_json) -> DatasetSchema:
+    return DatasetSchema.from_dict(meldingen_schema_json)
+
+
+@pytest.fixture()
+def meldingen_dataset(meldingen_schema_json) -> Dataset:
+    return Dataset.objects.create(name="meldingen", schema_data=meldingen_schema_json)
+
+
+@pytest.fixture()
+def gebieden_schema_json() -> dict:
+    """ Fixture to return the schema json """
+    path = HERE / "files/gebieden.json"
+    return json.loads(path.read_text())
+
+
+@pytest.fixture()
+def gebieden_schema(gebieden_schema_json) -> DatasetSchema:
+    return DatasetSchema.from_dict(gebieden_schema_json)
+
+
+@pytest.fixture()
+def gebieden_dataset(gebieden_schema_json) -> Dataset:
+    return Dataset.objects.create(name="gebieden", schema_data=gebieden_schema_json)
+
+
+@pytest.fixture()
+def statistieken_model(filled_router):
+    return filled_router.all_models["meldingen"]["statistieken"]
+
+
+@pytest.fixture()
+def buurten_model(filled_router):
+    return filled_router.all_models["gebieden"]["buurten"]
+
+
+@pytest.fixture()
+def statistieken_data(statistieken_model):
+    statistieken_model.objects.create(
+        id=1,
+        buurt="03630000000078",
+    )
+
+
+@pytest.fixture()
+def buurten_data(buurten_model):
+    buurten_model.objects.create(id=1, identificatie="03630000000078", volgnummer=1)
+    buurten_model.objects.create(id=2, identificatie="03630000000078", volgnummer=2)

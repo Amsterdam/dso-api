@@ -29,6 +29,8 @@ class VirtualAppConfig(apps_config.AppConfig):
         except TypeError as e:
             logger.warning(f"Failed to disable migrations for {self.label}: {e}")
 
+        self.ready()
+
     def _path_from_module(self, module):
         """
         Disable OS loading for this App Config.
@@ -41,6 +43,15 @@ class VirtualAppConfig(apps_config.AppConfig):
         """
         self.apps.register_model(self.label, model)
         self.models = self.apps.all_models[self.label]
+
+
+def add_custom_serializers():
+    from rest_framework.serializers import ModelSerializer
+    from schematools.contrib.django.models import LooseRelationField
+    from dso_api.dynamic_api.fields import LooseRelationUrlField
+
+    field_mapping = ModelSerializer.serializer_field_mapping
+    field_mapping.update({LooseRelationField: LooseRelationUrlField},)
 
 
 def register_model(dataset, model):

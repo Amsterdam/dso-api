@@ -4,7 +4,7 @@ import re
 import urllib.parse
 
 from collections import OrderedDict
-from functools import lru_cache
+from functools import lru_cache, partial
 from typing import Type
 
 from django.db import models
@@ -21,6 +21,7 @@ from rest_framework.reverse import reverse
 from schematools.types import DatasetTableSchema
 from schematools.contrib.django.models import DynamicModel
 from schematools.contrib.django.auth_backend import RequestProfile
+from schematools.contrib.django.models import LooseRelationField
 from schematools.utils import to_snake_case, toCamelCase
 
 from dso_api.dynamic_api.fields import (
@@ -48,6 +49,38 @@ class URLencodingURLfields:
             except (TypeError, AttributeError):
                 data = data
         return data
+
+
+def temporal_id_based_fetcher(cls, model):
+    """Helper function to return a fetcher function. This function defaults
+    to Django's 'in_bulk'. However, for temporal data tables, that
+    need to be accessed by identifier only, we need to get the
+    objects with the highest sequence number.
+    """
+
+    def _fetch_by_ids(identifier, sequence_name, table_name, ids):
+        # Use a raw query, impossible to do this with ORM
+        # Short-circuit on empty ids
+        if not ids:
+            return {}
+        slots = ", ".join([" %s "] * len(ids))
+        query = f"""
+            SELECT DISTINCT ON ({identifier}) id, {identifier}, {sequence_name}
+            FROM {table_name} WHERE identificatie IN ({slots})
+            ORDER BY {identifier}, {sequence_name} DESC;
+        """
+        return {getattr(obj, identifier): obj for obj in model.objects.raw(query, ids)}
+
+    fetcher = model.objects.in_bulk
+    if model.is_temporal():
+        dataset = model.get_dataset()
+        # We assume temporal config is available in the dataset
+        identifier = dataset.identifier
+        sequence_name = dataset.temporal.get("identifier")
+        table_name = model._meta.db_table
+        fetcher = partial(_fetch_by_ids, identifier, sequence_name, table_name)
+
+    return fetcher
 
 
 class DynamicLinksField(TemporalLinksField):
@@ -92,6 +125,8 @@ class DynamicSerializer(DSOModelSerializer):
     schema = serializers.SerializerMethodField()
 
     table_schema: DatasetTableSchema = None
+
+    id_based_fetcher = temporal_id_based_fetcher
 
     def get_request(self):
         """
@@ -146,7 +181,11 @@ class DynamicSerializer(DSOModelSerializer):
             model_class = relation_info[1]
             field_kwargs["view_name"] = get_view_name(model_class, "detail")
 
-        if field_class == HyperlinkedRelatedField:
+        # Only make it a temporal field if model is from a temporal dataset
+        if (
+            field_class == HyperlinkedRelatedField
+            and model_class._table_schema.is_temporal
+        ):
             field_class = TemporalHyperlinkedRelatedField
         return field_class, field_kwargs
 
@@ -285,7 +324,7 @@ def generate_field_serializer(  # noqa: C901
             )
 
     # Add extra embedded part for foreign keys
-    if isinstance(model_field, models.ForeignKey):
+    if isinstance(model_field, (models.ForeignKey, LooseRelationField)):
         if depth <= 1:
             new_attrs[camel_name] = EmbeddedField(
                 serializer_class=serializer_factory(

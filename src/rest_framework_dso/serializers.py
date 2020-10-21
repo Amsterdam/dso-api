@@ -260,6 +260,9 @@ class DSOModelListSerializer(DSOListSerializer):
     https://tools.ietf.org/html/draft-kelly-json-hal-08
     """
 
+    # Fetcher function to be overridden by subclasses if needed
+    id_based_fetcher = None
+
     def get_embeds(self, instances: Iterable[models.Model], items: List[dict]) -> dict:
         """Generate the embed sections for this listing."""
         expand = self.get_fields_to_expand()
@@ -299,6 +302,9 @@ class DSOModelSerializer(DSOSerializer, serializers.HyperlinkedModelSerializer):
     # Make sure the _links bit is generated:
     url_field_name = "_links"
     serializer_url_field = LinksField
+
+    # Fetcher function to be overridden by subclasses if needed
+    id_based_fetcher = None
 
     def to_representation(self, instance):
         """Check whether the geofields need to be transformed."""
