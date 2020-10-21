@@ -34,3 +34,5 @@ pytest == 5.3.5
 pytest-django == 3.8.0
 pytest-cov == 2.8.1
 python-owasp-zap-v2.4 == 0.0.16
+
+azure-storage-blob == 12.5.0
