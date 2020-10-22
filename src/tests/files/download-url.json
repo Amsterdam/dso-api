@@ -26,8 +26,8 @@
             "description": "Landelijke identificerende sleutel."
           },
           "url": {
-            "type": "blob",
-            "storage": "azure-blob",
+            "type": "string",
+            "format": "blob-azure",
             "account_name": "ngdsodev",
             "description": "Dossier bestand."
           }

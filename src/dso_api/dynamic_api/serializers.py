@@ -278,8 +278,8 @@ def generate_field_serializer(  # noqa: C901
 
     # Re-map file to correct serializer
     field_schema = model._table_schema.get_field_by_id(model_field.name)
-    if field_schema is not None and field_schema.type == "blob":
-        if field_schema["storage"] == "azure-blob":
+    if field_schema is not None and field_schema.type == "string":
+        if field_schema.format == "blob-azure":
             new_attrs[camel_name] = AzureBlobFileField(
                 account_name=field_schema["account_name"]
             )

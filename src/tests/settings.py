@@ -20,3 +20,5 @@ CSRF_COOKIE_SECURE = False
 SESSION_COOKIE_SECURE = False
 
 PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
+
+AZURE_BLOB_NGDSODEV = "test"
