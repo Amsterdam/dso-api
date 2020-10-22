@@ -578,9 +578,7 @@ def explosieven_schema_json() -> dict:
 
 
 @pytest.fixture()
-def explosieven_schema(
-    explosieven_schema_json,
-) -> DatasetSchema:
+def explosieven_schema(explosieven_schema_json,) -> DatasetSchema:
     return DatasetSchema.from_dict(explosieven_schema_json)
 
 
@@ -645,12 +643,14 @@ def download_url_dataset(download_url_schema_json) -> Dataset:
     )
 
 
+@pytest.fixture()
 def meldingen_schema_json() -> dict:
     """ Fixture to return the schema json """
     path = HERE / "files/meldingen.json"
     return json.loads(path.read_text())
 
 
+@pytest.fixture()
 def meldingen_schema(meldingen_schema_json) -> DatasetSchema:
     return DatasetSchema.from_dict(meldingen_schema_json)
 
@@ -690,8 +690,7 @@ def buurten_model(filled_router):
 @pytest.fixture()
 def statistieken_data(statistieken_model):
     statistieken_model.objects.create(
-        id=1,
-        buurt="03630000000078",
+        id=1, buurt="03630000000078",
     )
 
 

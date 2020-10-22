@@ -684,7 +684,7 @@ class TestDynamicSerializer:
         assert "sr=b" in dossiers_serializer.data["dossiers"][0]["url"]
         assert "sp=r" in dossiers_serializer.data["dossiers"][0]["url"]
 
-
+    @staticmethod
     def test_loose_relation_serialization(
         api_request, meldingen_schema, statistieken_model,
     ):
