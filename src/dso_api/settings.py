@@ -248,3 +248,9 @@ DATAPUNT_AUTHZ = {
 # -- Local app settings
 
 AMSTERDAM_SCHEMA = {"geosearch_disabled_datasets": ["bag", "meetbouten"]}
+
+
+# Dynamicaly import Azure Blob connections from environment
+for key, value in env.ENVIRON.items():
+    if key.startswith("AZURE_BLOB_"):
+        locals()[key] = value

@@ -91,6 +91,7 @@ def filled_router(
     fietspaaltjes_dataset_no_display,
     explosieven_dataset,
     indirect_self_ref_dataset,
+    download_url_dataset,
 ):
     # Prove that the router URLs are extended on adding a model
     router.reload()
@@ -110,6 +111,7 @@ def filled_router(
         fietspaaltjes_dataset_no_display: "fietspaaltjesnodisplay_fietspaaltjesnodisplay",
         explosieven_dataset: "explosieven_verdachtgebied",
         indirect_self_ref_dataset: "selfref_selfref",
+        download_url_dataset: "download_url",
     }
 
     # Based on datasets, create test table if not exists
@@ -613,3 +615,21 @@ def indirect_self_ref_dataset(indirect_self_ref_schema_json) -> Dataset:
 
 
 # --| >> EINDE uri check>> EXPLOSIEVEN  >> uri check >> |--#
+
+
+@pytest.fixture()
+def download_url_schema_json() -> dict():
+    path = HERE / "files/download-url.json"
+    return json.loads(path.read_text())
+
+
+@pytest.fixture()
+def download_url_schema(download_url_schema_json) -> DatasetSchema:
+    return DatasetSchema.from_dict(download_url_schema_json)
+
+
+@pytest.fixture()
+def download_url_dataset(download_url_schema_json) -> Dataset:
+    return Dataset.objects.create(
+        name="download_url", schema_data=download_url_schema_json
+    )

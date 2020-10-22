@@ -8,7 +8,7 @@ django-postgres-unlimited-varchar == 1.1.0
 django-gisserver == 1.1.1
 djangorestframework == 3.11.0
 djangorestframework-gis == 0.15
-amsterdam-schema-tools[django] == 0.14.3
+amsterdam-schema-tools[django] == 0.14.4
 datapunt-authorization-django==1.0.0
 drf-spectacular == 0.8.5
 jsonschema == 3.2.0
@@ -34,3 +34,5 @@ pytest == 5.3.5
 pytest-django == 3.8.0
 pytest-cov == 2.8.1
 python-owasp-zap-v2.4 == 0.0.16
+
+azure-storage-blob == 12.5.0

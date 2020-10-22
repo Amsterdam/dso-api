@@ -1,3 +1,7 @@
+import azure.storage.blob
+from datetime import datetime
+from datetime import timedelta
+from django.conf import settings
 from rest_framework import serializers
 from rest_framework_dso.fields import LinksField
 from .utils import split_on_separator
@@ -80,3 +84,30 @@ class TemporalLinksField(LinksField):
         temporal_identifier = request.dataset.temporal["identifier"]
         version = getattr(obj, temporal_identifier)
         return "{}?{}={}".format(base_url, temporal_identifier, version)
+
+
+class AzureBlobFileField(serializers.ReadOnlyField):
+    """Azure storage field.
+    """
+
+    def __init__(self, account_name, *args, **kwargs):
+        self.account_name = account_name
+        super().__init__(*args, **kwargs)
+
+    def to_representation(self, value):
+        blob_client = azure.storage.blob.BlobClient.from_blob_url(value)
+        sas_token = azure.storage.blob.generate_blob_sas(
+            self.account_name,
+            blob_client.container_name,
+            blob_client.blob_name,
+            snapshot=blob_client.snapshot,
+            account_key=getattr(
+                settings, f"AZURE_BLOB_{self.account_name.upper()}", None
+            ),
+            permission=azure.storage.blob.BlobSasPermissions(read=True),
+            expiry=datetime.utcnow() + timedelta(hours=1),
+        )
+
+        if sas_token is None:
+            return value
+        return f"{value}?{sas_token}"

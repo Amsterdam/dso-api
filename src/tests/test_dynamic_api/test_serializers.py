@@ -541,25 +541,6 @@ class TestDynamicSerializer:
         assert validate_uri(explosieven_serializer.data["pdf"]) is None
 
     @staticmethod
-    def test_email_field_can_validate(
-        api_request, explosieven_schema, explosieven_model, explosieven_data
-    ):
-        """ Prove that a EmailField can be validated by the EmailValidator """
-
-        ExplosievenSerializer = serializer_factory(explosieven_model, 0, flat=True)
-
-        api_request.dataset = explosieven_schema
-
-        validate_email = EmailValidator()
-
-        explosieven_serializer = ExplosievenSerializer(
-            explosieven_data, context={"request": api_request}
-        )
-
-        # Validation passes if outcome is None
-        assert validate_email(explosieven_serializer.data["emailadres"]) is None
-
-    @staticmethod
     def test_uri_field_is_URL_encoded(
         api_request, explosieven_schema, explosieven_model, explosieven_data
     ):
@@ -577,6 +558,25 @@ class TestDynamicSerializer:
         assert " " not in str(explosieven_serializer.data["pdf"]) and "%20" in str(
             explosieven_serializer.data["pdf"]
         )
+
+    @staticmethod
+    def test_email_field_can_validate_with_validator(
+        api_request, explosieven_schema, explosieven_model, explosieven_data
+    ):
+        """ Prove that a EmailField can be validated by the EmailValidator """
+
+        ExplosievenSerializer = serializer_factory(explosieven_model, 0, flat=True)
+
+        api_request.dataset = explosieven_schema
+
+        validate_email = EmailValidator()
+
+        explosieven_serializer = ExplosievenSerializer(
+            explosieven_data, context={"request": api_request}
+        )
+
+        # Validation passes if outcome is None
+        assert validate_email(explosieven_serializer.data["emailadres"]) is None
 
     @staticmethod
     def test_indirect_self_reference(
@@ -651,3 +651,32 @@ class TestDynamicSerializer:
         assert (
             fietspaaltjes_serializer.data["fietspaaltjes"][0]["area"] == "A"
         ), fietspaaltjes_serializer.data
+
+    @staticmethod
+    def test_download_url_field(
+        api_request, filled_router, download_url_dataset, download_url_schema
+    ):
+        """ Prove that download url will contain correct identifier. """
+
+        dossier_model = filled_router.all_models["download"]["dossiers"]
+        dossier_model.objects.create(
+            id=1,
+            url=(
+                "https://ngdsodev.blob.core.windows.net/"
+                "quickstartb4e564a8-5071-4e41-9fc0-21a678f3815c/myblockblob"
+            ),
+        )
+        DossiersSerializer = serializer_factory(dossier_model, 0, flat=False)
+
+        api_request.dataset = download_url_schema
+
+        dossiers_serializer = DossiersSerializer(
+            dossier_model.objects.all(), context={"request": api_request}, many=True,
+        )
+
+        assert "sig=" in dossiers_serializer.data["dossiers"][0]["url"]
+        assert "se=" in dossiers_serializer.data["dossiers"][0]["url"]
+        assert "sv=" in dossiers_serializer.data["dossiers"][0]["url"]
+        assert "sp=" in dossiers_serializer.data["dossiers"][0]["url"]
+        assert "sr=b" in dossiers_serializer.data["dossiers"][0]["url"]
+        assert "sp=r" in dossiers_serializer.data["dossiers"][0]["url"]
