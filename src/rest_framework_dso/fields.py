@@ -1,6 +1,7 @@
 from typing import Type
 
 from django.db import models
+from django.db.models.fields.related import RelatedField
 from django.utils.functional import cached_property
 from rest_framework import serializers
 
@@ -63,6 +64,14 @@ class AbstractEmbeddedField:
     def parent_model(self) -> Type[models.Model]:
         """Return the Django model class"""
         return self.parent_serializer.Meta.model
+
+    @cached_property
+    def is_loose(self) -> bool:
+        """ Signals that the related field is not a real FK or M2M """
+        return not isinstance(
+            self.parent_model._meta.get_field(self.source or self.field_name),
+            RelatedField,
+        )
 
 
 class EmbeddedField(AbstractEmbeddedField):

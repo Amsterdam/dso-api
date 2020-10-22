@@ -411,7 +411,43 @@ class TestAuth:
 
 @pytest.mark.django_db
 class TestEmbedTemporalTables:
-    def test_detail_expand_true(
+    def test_detail_expand_true_for_fk_relation(
+        self,
+        api_client,
+        filled_router,
+        statistieken_model,
+        buurten_model,
+        buurten_data,
+        wijken_data,
+    ):
+        """Prove that ligtInWijk shows up when expanded"""
+
+        url = reverse("dynamic_api:gebieden-buurten-detail", args=["03630000000078.1"])
+        url = f"{url}?_expand=true"
+        response = api_client.get(url)
+        assert response.status_code == 200, response.data
+        assert response.data["_embedded"]["ligtInWijk"]["id"] == "03630012052035.1"
+
+    def test_list_expand_true_for_fk_relation(
+        self,
+        api_client,
+        filled_router,
+        statistieken_model,
+        buurten_model,
+        buurten_data,
+        wijken_data,
+    ):
+        """Prove that buurt shows up when listview is expanded and uses the
+        latest volgnummer
+        """
+
+        url = reverse("dynamic_api:gebieden-buurten-list")
+        url = f"{url}?_expand=true"
+        response = api_client.get(url)
+        assert response.status_code == 200, response.data
+        assert response.data["_embedded"]["ligtInWijk"][0]["id"] == "03630012052035.1"
+
+    def test_detail_expand_true_for_loose_relation(
         self,
         api_client,
         filled_router,
@@ -428,9 +464,9 @@ class TestEmbedTemporalTables:
         url = f"{url}?_expand=true"
         response = api_client.get(url)
         assert response.status_code == 200, response.data
-        assert response.data["_embedded"]["buurt"]["id"] == "2"
+        assert response.data["_embedded"]["buurt"]["id"] == "03630000000078.2"
 
-    def test_list_expand_true(
+    def test_list_expand_true_for_loose_relation(
         self,
         api_client,
         filled_router,
@@ -447,4 +483,4 @@ class TestEmbedTemporalTables:
         url = f"{url}?_expand=true"
         response = api_client.get(url)
         assert response.status_code == 200, response.data
-        assert response.data["_embedded"]["buurt"][0]["id"] == "2"
+        assert response.data["_embedded"]["buurt"][0]["id"] == "03630000000078.2"

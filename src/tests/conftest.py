@@ -688,6 +688,11 @@ def buurten_model(filled_router):
 
 
 @pytest.fixture()
+def wijken_model(filled_router):
+    return filled_router.all_models["gebieden"]["wijken"]
+
+
+@pytest.fixture()
 def statistieken_data(statistieken_model):
     statistieken_model.objects.create(
         id=1, buurt="03630000000078",
@@ -696,5 +701,19 @@ def statistieken_data(statistieken_model):
 
 @pytest.fixture()
 def buurten_data(buurten_model):
-    buurten_model.objects.create(id=1, identificatie="03630000000078", volgnummer=1)
-    buurten_model.objects.create(id=2, identificatie="03630000000078", volgnummer=2)
+    buurten_model.objects.create(
+        id="03630000000078.1",
+        identificatie="03630000000078",
+        volgnummer=1,
+        ligt_in_wijk_id="03630012052035.1",
+    )
+    buurten_model.objects.create(
+        id="03630000000078.2", identificatie="03630000000078", volgnummer=2
+    )
+
+
+@pytest.fixture()
+def wijken_data(wijken_model):
+    wijken_model.objects.create(
+        id="03630012052035.1", identificatie="03630012052035", volgnummer=1
+    )

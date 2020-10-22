@@ -26,12 +26,15 @@ class EmbeddedHelper:
             parent_serializer.id_based_fetcher or self._default_id_based_fetcher
         )
 
-    def _default_id_based_fetcher(self, model):
+    def _default_id_based_fetcher(self, model, is_loose=False):
         """Default behaviour to fetch objects based on a set of ids is to use
         Django's in_bulk manager method. This can be overridden by setting
         a fetcher function on the parent_serializer. Doing it this way, we
         do not pollute the rest_framework_dso package with too specific behaviour
         """
+        assert (
+            not is_loose
+        ), "Default in_bulk fetcher should not be used on loose relations"
         return model.objects.in_bulk
 
     def _get_embedded_fields(self, expand: Union[list, bool]):  # noqa: C901
@@ -90,9 +93,12 @@ class EmbeddedHelper:
         """
         ids_per_relation = {}
         ids_per_model = {}
+        loose_models = set()
         for name, embedded_field in self.embedded_fields.items():
             related_model = embedded_field.related_model
             object_ids = embedded_field.get_related_ids(instances)
+            if embedded_field.is_loose:
+                loose_models.add(related_model)
 
             # Collect all ID's to fetch
             ids_per_relation[name] = object_ids
@@ -100,7 +106,7 @@ class EmbeddedHelper:
 
         # Fetch model data
         fetched_per_model = {
-            model: self.id_based_fetcher(model)(ids)
+            model: self.id_based_fetcher(model, is_loose=model in loose_models)(ids)
             for model, ids in ids_per_model.items()
         }
         _embedded = {}
@@ -136,7 +142,9 @@ class EmbeddedHelper:
 
             related_model = embedded_field.related_model
             try:
-                value = self.id_based_fetcher(related_model)([id_value])[id_value]
+                value = self.id_based_fetcher(
+                    related_model, is_loose=embedded_field.is_loose
+                )([id_value])[id_value]
             except KeyError:
                 # Unclear in HAL-JSON: should the requested embed be mentioned or not?
                 ret[name] = None

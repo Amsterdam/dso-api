@@ -51,7 +51,7 @@ class URLencodingURLfields:
         return data
 
 
-def temporal_id_based_fetcher(cls, model):
+def temporal_id_based_fetcher(cls, model, is_loose=False):
     """Helper function to return a fetcher function. This function defaults
     to Django's 'in_bulk'. However, for temporal data tables, that
     need to be accessed by identifier only, we need to get the
@@ -72,7 +72,7 @@ def temporal_id_based_fetcher(cls, model):
         return {getattr(obj, identifier): obj for obj in model.objects.raw(query, ids)}
 
     fetcher = model.objects.in_bulk
-    if model.is_temporal():
+    if is_loose:
         dataset = model.get_dataset()
         # We assume temporal config is available in the dataset
         identifier = dataset.identifier
