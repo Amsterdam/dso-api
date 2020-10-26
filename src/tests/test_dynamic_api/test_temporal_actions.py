@@ -62,6 +62,31 @@ def bagh_gebieden(bagh_models, bagh_stadsdeelen):
     return gebied
 
 
+@pytest.fixture()
+def bagh_buurt(bagh_buurt_model, bagh_stadsdeelen, bagh_wijk):
+    return bagh_buurt_model.objects.create(
+        id="03630000000078_001",
+        identificatie="03630000000078",
+        volgnummer=1,
+        code="A00a",
+        naam="Kop Zeedijk",
+        stadsdeel=bagh_stadsdeelen[1],
+        wijk=bagh_wijk,
+    )
+
+
+@pytest.fixture()
+def bagh_wijk(bagh_wijk_model, bagh_stadsdeelen):
+    return bagh_wijk_model.objects.create(
+        id="03630012052022_001",
+        identificatie="03630012052022",
+        volgnummer=1,
+        code="H36",
+        naam="Sloterdijk",
+        stadsdeel=bagh_stadsdeelen[1],
+    )
+
+
 @pytest.mark.django_db
 class TestViews:
     def test_list_contains_all_objects(
@@ -77,9 +102,12 @@ class TestViews:
         ]["stadsdeel"]
 
     def test_filtered_list_contains_only_correct_objects(
-        self, api_client, filled_router, bagh_schema, bagh_stadsdeelen
+        self, api_client, filled_router, bagh_schema, bagh_stadsdeelen, bagh_buurt
     ):
-        """ Prove that date filter displays only active on that date objects.."""
+        """Prove that date filter displays only active-on-that-date objects,
+        and that the "summary" additionalRelation shows up in the result and
+        has a "geldigOp" link.
+        """
         url = reverse("dynamic_api:bagh-stadsdeel-list")
         response = api_client.get(f"{url}?geldigOp=2015-01-02")
 
@@ -91,11 +119,19 @@ class TestViews:
             response.data["_embedded"]["stadsdeel"][0]["volgnummer"] == 2
         ), response.data["_embedded"]["stadsdeel"][0]
 
-    def tets_details_record_can_be_requested_by_pk(
+        assert response.data["_embedded"]["stadsdeel"][0]["buurten"]["count"] == 1
+        assert (
+            "2015-01-02"
+            in response.data["_embedded"]["stadsdeel"][0]["buurten"]["href"]
+        )
+
+    def test_details_record_can_be_requested_by_pk(
         self, api_client, filled_router, bagh_schema, bagh_stadsdeelen
     ):
         """ Prove that request with PK (combined field) is allowed."""
-        url = reverse("dynamic_api:bagh-stadsdeel-detail", bagh_stadsdeelen[0].id)
+        url = reverse(
+            "dynamic_api:bagh-stadsdeel-detail", args=(bagh_stadsdeelen[0].id,)
+        )
         response = api_client.get(url)
 
         assert response.status_code == 200, response.data
@@ -106,7 +142,7 @@ class TestViews:
     def test_details_default_returns_latest_record(
         self, api_client, filled_router, bagh_schema, bagh_stadsdeelen
     ):
-        """ Prove that object can be requested by identification
+        """Prove that object can be requested by identification
         and response will contain only latest object."""
         url = reverse("dynamic_api:bagh-stadsdeel-list")
         response = api_client.get(
@@ -119,7 +155,7 @@ class TestViews:
     def test_details_can_be_requested_with_valid_date(
         self, api_client, filled_router, bagh_schema, bagh_stadsdeelen
     ):
-        """ Prove that object can be requested by identification and date,
+        """Prove that object can be requested by identification and date,
         resulting in correct for that date object."""
         url = reverse("dynamic_api:bagh-stadsdeel-list")
         response = api_client.get(
@@ -132,7 +168,7 @@ class TestViews:
     def test_details_can_be_requested_with_version(
         self, api_client, filled_router, bagh_schema, bagh_stadsdeelen
     ):
-        """ Prove that object can be requested by identification and version,
+        """Prove that object can be requested by identification and version,
         resulting in correct for that version object."""
         url = reverse("dynamic_api:bagh-stadsdeel-list")
         response = api_client.get(
@@ -170,7 +206,7 @@ class TestViews:
     def test_serializer_temporal_request_corrects_link_to_temporal(
         self, api_client, filled_router, bagh_schema, bagh_gebieden
     ):
-        """ Prove that in case of temporal request links to objects will have request date.
+        """Prove that in case of temporal request links to objects will have request date.
         Allowing follow up date filtering further."""
         url = reverse("dynamic_api:bagh-ggw_gebied-list")
         response = api_client.get(

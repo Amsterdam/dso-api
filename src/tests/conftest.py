@@ -333,6 +333,11 @@ def bagh_wijk_model(bagh_models):
 
 
 @pytest.fixture()
+def bagh_buurt_model(bagh_models):
+    return bagh_models["buurt"]
+
+
+@pytest.fixture()
 def bagh_gemeente(bagh_gemeente_model):
     return bagh_gemeente_model.objects.create(
         naam="Amsterdam", id="0363_001", identificatie="0363", volgnummer=1
@@ -348,18 +353,6 @@ def bagh_stadsdeel(bagh_stadsdeel_model, bagh_gemeente):
         gemeente=bagh_gemeente,
         identificatie="03630000000001",
         volgnummer=1,
-    )
-
-
-@pytest.fixture()
-def bagh_wijk(bagh_wijk_model, bagh_stadsdeel):
-    return bagh_wijk_model.objects.create(
-        id="03630012052022_001",
-        identificatie="03630012052022",
-        volgnummer=1,
-        code="H36",
-        naam="Sloterdijk",
-        stadsdeel=bagh_stadsdeel,
     )
 
 
