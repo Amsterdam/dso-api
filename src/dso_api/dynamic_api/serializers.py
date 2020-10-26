@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-import urllib.parse
+from urllib import parse
 
 from collections import OrderedDict
 from functools import lru_cache, partial
@@ -45,7 +45,7 @@ class URLencodingURLfields:
                 protocol_uri = re.search("([a-z,A-z,0-9,:/]+)(.*)", data[field_name])
                 protocol = protocol_uri.group(1)
                 uri = protocol_uri.group(2)
-                data[field_name] = protocol + urllib.parse.quote(uri)
+                data[field_name] = protocol + parse.quote(uri)
             except (TypeError, AttributeError):
                 data = data
         return data
@@ -105,15 +105,21 @@ class DynamicLinksField(TemporalLinksField):
 class _RelatedSummaryField(Field):
     def to_representation(self, value: DynamicModel):
         count = value.count()
-        url = reverse(
-            get_view_name(value.model, "list"), request=self.context["request"]
-        )
+        request = self.context["request"]
+        url = reverse(get_view_name(value.model, "list"), request=request)
+        url_parts = parse.urlparse(url)
         parent_pk = value.instance.pk
         filter_name = list(value.core_filters.keys())[0] + "Id"
-        separator = "&" if "?" in url else "?"
+        q_params = {parent_pk: filter_name}
+        # If this is a temporary slice, add the extra parameter to the qs.
+        if request.dataset_temporal_slice is not None:
+            key = request.dataset_temporal_slice["key"]
+            value = request.dataset_temporal_slice["value"]
+            q_params[key] = value
+        url_parts = url_parts._replace(params=parse.urlencode(q_params))
         return {
             "count": count,
-            "href": f"{url}{separator}{filter_name}={parent_pk}",
+            "href": parse.urlunparse(url_parts),
         }
 
 
