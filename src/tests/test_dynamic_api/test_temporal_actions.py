@@ -1,5 +1,6 @@
 from datetime import date, datetime
 import pytest
+from urllib import parse
 from django.urls import reverse
 
 
@@ -120,10 +121,9 @@ class TestViews:
         ), response.data["_embedded"]["stadsdeel"][0]
 
         assert response.data["_embedded"]["stadsdeel"][0]["buurten"]["count"] == 1
-        assert (
-            "2015-01-02"
-            in response.data["_embedded"]["stadsdeel"][0]["buurten"]["href"]
-        )
+        href = response.data["_embedded"]["stadsdeel"][0]["buurten"]["href"]
+        query_params = parse.parse_qs(parse.urlparse(href).query)
+        assert query_params["geldigOp"] == ["2015-01-02"]
 
     def test_details_record_can_be_requested_by_pk(
         self, api_client, filled_router, bagh_schema, bagh_stadsdeelen

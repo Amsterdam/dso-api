@@ -116,7 +116,7 @@ class _RelatedSummaryField(Field):
             key = request.dataset_temporal_slice["key"]
             value = request.dataset_temporal_slice["value"]
             q_params[key] = value
-        url_parts = url_parts._replace(params=parse.urlencode(q_params))
+        url_parts = url_parts._replace(query=parse.urlencode(q_params))
         return {
             "count": count,
             "href": parse.urlunparse(url_parts),
