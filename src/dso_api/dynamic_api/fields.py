@@ -98,6 +98,8 @@ class AzureBlobFileField(serializers.ReadOnlyField):
         super().__init__(*args, **kwargs)
 
     def to_representation(self, value):
+        if not value:
+            return value
         blob_client = azure.storage.blob.BlobClient.from_blob_url(value)
         sas_token = azure.storage.blob.generate_blob_sas(
             self.account_name,
