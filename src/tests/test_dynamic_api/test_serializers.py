@@ -685,6 +685,27 @@ class TestDynamicSerializer:
         assert "sp=r" in dossiers_serializer.data["dossiers"][0]["url"]
 
     @staticmethod
+    def test_download_url_field_empty_field(
+        api_request, filled_router, download_url_dataset, download_url_schema
+    ):
+        """ Prove that empty download url not crashing api. """
+
+        dossier_model = filled_router.all_models["download"]["dossiers"]
+        dossier_model.objects.create(
+            id=1,
+            url="",
+        )
+        DossiersSerializer = serializer_factory(dossier_model, 0, flat=False)
+
+        api_request.dataset = download_url_schema
+
+        dossiers_serializer = DossiersSerializer(
+            dossier_model.objects.all(), context={"request": api_request}, many=True,
+        )
+
+        assert dossiers_serializer.data["dossiers"][0]["url"] == ""
+
+    @staticmethod
     def test_loose_relation_serialization(
         api_request, meldingen_schema, statistieken_model,
     ):
