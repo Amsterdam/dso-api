@@ -228,8 +228,15 @@ class RemoteViewSet(ViewSet):
         # We check if we already have a X-Correlation-ID header
         x_correlation_id = self.request.META.get("HTTP_X_CORRELATION_ID")
         if not x_correlation_id:
-            # Otherwise we set it to the X-Unique-ID header
-            x_correlation_id = self.request.META.get("HTTP_X_UNIQUE_ID")
+            # Otherwise we set it to a part of the X-Unique-ID header
+            # The X-Correlation-ID cannot be longer then 40 characters because MKS suite
+            # cannot handle this. Therefore  we use only part of it.
+            # The X-Unique_ID is defined in Openstack with :
+            # [client_ip]:[client_port]_[bind_ip]:[bind_port]_[timestamp]_[request_counter]:[pid]
+            # But bind_ip and bind_port are always the same. So we can remove them
+            x_unique_id = self.request.META.get("HTTP_X_UNIQUE_ID")
+            if x_unique_id:
+                x_correlation_id = x_unique_id[:14] + x_unique_id[28:]
         if x_correlation_id:
             # And if defined pass on to the destination
             headers["X-Correlation-ID"] = x_correlation_id.encode("iso-8859-1")
