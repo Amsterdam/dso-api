@@ -10,7 +10,7 @@ from django.urls import NoReverseMatch, reverse
 from rest_framework import routers
 
 from schematools.contrib.django.models import Dataset
-from schematools.utils import to_snake_case, toCamelCase
+from schematools.utils import to_snake_case
 
 from dso_api.dynamic_api.app_config import register_model, add_custom_serializers
 from dso_api.dynamic_api.locking import lock_for_writing
@@ -151,7 +151,7 @@ class DynamicRouter(routers.DefaultRouter):
 
     def make_url(self, prefix, *parts):
         """Generate the URL for the viewset"""
-        parts = [toCamelCase(part) for part in parts]
+        parts = [to_snake_case(part) for part in parts]
 
         url_path = "/".join(parts)
 
