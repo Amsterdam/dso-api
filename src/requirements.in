@@ -1,38 +1,38 @@
-cachetools == 4.0.0
-Django == 3.0.7
+cachetools == 4.1.1
+Django == 3.0.11
 django-environ == 0.4.5
-django-cors-headers == 3.2.1
-django-filter == 2.2.0
+django-cors-headers == 3.5.0
+django-filter == 2.4.0
 django-healthchecks == 1.4.2
 django-postgres-unlimited-varchar == 1.1.0
 django-gisserver == 1.1.1
-djangorestframework == 3.11.0
-djangorestframework-gis == 0.15
-amsterdam-schema-tools[django] == 0.14.5
+djangorestframework == 3.12.1
+djangorestframework-gis == 0.16
+amsterdam-schema-tools[django] == 0.15.0
 datapunt-authorization-django==1.0.0
-drf-spectacular == 0.8.5
+drf-spectacular == 0.10.0
 jsonschema == 3.2.0
-psycopg2-binary == 2.8.4
+psycopg2-binary == 2.8.6
 python-string-utils == 1.0.0
-readerwriterlock == 1.0.6
-orjson == 2.5.1
-requests == 2.23.0
-sentry-sdk == 0.14.2
-urllib3 == 1.25.8
+readerwriterlock == 1.0.7
+orjson == 3.4.3
+requests == 2.24.0
+sentry-sdk == 0.19.2
+urllib3 == 1.25.11
 urllib3-mock == 0.3.3
 
 # When installed, it's used for API doc markup:
-markdown == 3.2.1
+markdown == 3.3.3
 
 # Testing
-flake8 == 3.7.9
+flake8 == 3.8.4
 flake8-blind-except == 0.1.1
 flake8-colors == 0.1.6
 flake8-debugger == 3.2.1
 flake8-raise == 0.0.5
-pytest == 5.3.5
-pytest-django == 3.8.0
-pytest-cov == 2.8.1
-python-owasp-zap-v2.4 == 0.0.16
+pytest == 6.1.2
+pytest-django == 4.1.0
+pytest-cov == 2.10.1
+python-owasp-zap-v2.4 == 0.0.17
 
 azure-storage-blob == 12.5.0
