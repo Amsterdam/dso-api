@@ -133,6 +133,27 @@ class TestDSOViewMixin:
 class TestAuth:
     """ Test authorization """
 
+    def test_mandatory_filters(
+        self,
+        api_client,
+        parkeervakken_schema,
+        parkeerwacht_profile,
+        parkeervakken_parkeervak_model,
+    ):
+        """Test that use of mandatory filter leads to a 200 and not using it leads to a 403"""
+        from dso_api.dynamic_api.urls import router
+
+        router.reload()
+        # need to reload router, regimes is a nested table
+        # and router will not know of it's existence
+        base_url = reverse("dynamic_api:parkeervakken-parkeervakken-list")
+        assert api_client.get(base_url).status_code == 403
+        assert api_client.get(f"{base_url}?buurtcode=A05d").status_code == 403
+        assert api_client.get(f"{base_url}?buurtcode=A05d&type=E9").status_code == 200
+        assert (
+            api_client.get(f"{base_url}?regimes.InWerkingOp=20:05").status_code == 200
+        )
+
     def test_auth_on_dataset_schema_protects_containers(
         self, api_client, filled_router, afval_schema
     ):

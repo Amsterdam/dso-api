@@ -1,0 +1,16 @@
+{
+  "name": "parkeerwacht",
+  "scopes": [],
+  "datasets": {
+    "parkeervakken": {
+      "tables": {
+        "parkeervakken": {
+          "mandatoryFilterSets": [
+            ["buurtcode", "type"],
+            ["regimes.InWerkingOp"]
+          ]
+        }
+      }
+    }
+  }
+}
