@@ -1,3 +1,7 @@
+from django.core.cache import cache
+from schematools.contrib.django.auth_backend import RequestProfile
+
+
 class BaseMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
@@ -50,5 +54,18 @@ class TemporalDatasetMiddleware(BaseMiddleware):
                     request.dataset_temporal_slice = dict(
                         key=key, value=request.GET.get(key), fields=fields
                     )
+
+        return None
+
+
+class AuthProfileMiddleware(BaseMiddleware):
+    """
+    Assign `auth_profile` list to request.
+    """
+
+    def process_view(self, request, view_func, view_args, view_kwargs):
+
+        if not hasattr(request, "auth_profile"):
+            request.auth_profile = RequestProfile(request)
 
         return None
