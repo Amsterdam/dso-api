@@ -133,7 +133,8 @@ def generate_relation_filters(model: Type[DynamicModel]):  # NoQA
 
             # Filter name presented in API
             filter_name = "{}.{}".format(
-                toCamelCase(relation.name), toCamelCase(field_name),
+                toCamelCase(relation.name),
+                toCamelCase(field_name),
             )
             filter_lookups = _get_field_lookups(model_field)
             for lookup_expr in filter_lookups:
@@ -170,9 +171,7 @@ def generate_additional_filters(model: Type[DynamicModel]):
             continue
 
         filters[filter_name] = filter_class(
-            label=filter_class.label,
-            start_field=options.get("start"),
-            end_field=options.get("end"),
+            label=filter_class.label, **options.get("kwargs")
         )
 
     return filters

@@ -14,9 +14,9 @@ from rest_framework.request import Request
 from rest_framework.test import APIClient, APIRequestFactory
 from authorization_django import jwks
 
-from schematools.contrib.django.models import Dataset
+from schematools.contrib.django.models import Dataset, Profile
 from schematools.contrib.django.db import create_tables
-from schematools.types import DatasetSchema
+from schematools.types import DatasetSchema, ProfileSchema
 from rest_framework_dso.crs import RD_NEW
 from tests.test_rest_framework_dso.models import (
     Category,
@@ -571,7 +571,9 @@ def explosieven_schema_json() -> dict:
 
 
 @pytest.fixture()
-def explosieven_schema(explosieven_schema_json,) -> DatasetSchema:
+def explosieven_schema(
+    explosieven_schema_json,
+) -> DatasetSchema:
     return DatasetSchema.from_dict(explosieven_schema_json)
 
 
@@ -688,7 +690,8 @@ def wijken_model(filled_router):
 @pytest.fixture()
 def statistieken_data(statistieken_model):
     statistieken_model.objects.create(
-        id=1, buurt="03630000000078",
+        id=1,
+        buurt="03630000000078",
     )
 
 
@@ -710,3 +713,10 @@ def wijken_data(wijken_model):
     wijken_model.objects.create(
         id="03630012052035.1", identificatie="03630012052035", volgnummer=1
     )
+
+
+@pytest.fixture()
+def parkeerwacht_profile() -> ProfileSchema:
+    path = HERE / "files/profiles/parkeerwacht.json"
+    schema = ProfileSchema.from_dict(json.loads(path.read_text()))
+    return Profile.create_for_schema(schema)
