@@ -130,6 +130,16 @@ def filled_router(
 
 
 @pytest.fixture()
+def reloadrouter(filled_router):
+    """The filled_router, but reloaded before being used.
+    this is the Nick-trick :-)  Needed when schemas
+    with relations are used.
+    """
+    filled_router.reload()
+    return filled_router
+
+
+@pytest.fixture()
 def afval_schema_json() -> dict:
     path = HERE / "files/afval.json"
     return json.loads(path.read_text())
@@ -686,6 +696,11 @@ def wijken_model(filled_router):
 
 
 @pytest.fixture()
+def ggwgebieden_model(filled_router):
+    return filled_router.all_models["gebieden"]["ggwgebieden"]
+
+
+@pytest.fixture()
 def statistieken_data(statistieken_model):
     statistieken_model.objects.create(
         id=1, buurt="03630000000078",
@@ -709,4 +724,14 @@ def buurten_data(buurten_model):
 def wijken_data(wijken_model):
     wijken_model.objects.create(
         id="03630012052035.1", identificatie="03630012052035", volgnummer=1
+    )
+
+
+@pytest.fixture()
+def ggwgebieden_data(ggwgebieden_model):
+    ggwgebieden_model.objects.create(
+        id="03630950000000.1", identificatie="03630950000000", volgnummer=1
+    )
+    ggwgebieden_model.bestaat_uit_buurten.through.objects.create(
+        ggwgebieden_id="03630950000000.1", bestaat_uit_buurten_id="03630000000078.1"
     )

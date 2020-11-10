@@ -409,16 +409,11 @@ class TestAuth:
         ], response.data
 
 
+# @pytest.mark.usefixtures("reloadrouter")
 @pytest.mark.django_db
 class TestEmbedTemporalTables:
     def test_detail_expand_true_for_fk_relation(
-        self,
-        api_client,
-        filled_router,
-        statistieken_model,
-        buurten_model,
-        buurten_data,
-        wijken_data,
+        self, api_client, reloadrouter, buurten_model, buurten_data, wijken_data,
     ):
         """Prove that ligtInWijk shows up when expanded"""
 
@@ -431,7 +426,7 @@ class TestEmbedTemporalTables:
     def test_list_expand_true_for_fk_relation(
         self,
         api_client,
-        filled_router,
+        reloadrouter,
         statistieken_model,
         buurten_model,
         buurten_data,
@@ -447,10 +442,53 @@ class TestEmbedTemporalTables:
         assert response.status_code == 200, response.data
         assert response.data["_embedded"]["ligtInWijk"][0]["id"] == "03630012052035.1"
 
+    def test_detail_expand_true_for_nm_relation(
+        self,
+        api_client,
+        reloadrouter,
+        buurten_model,
+        buurten_data,
+        ggwgebieden_model,
+        ggwgebieden_data,
+    ):
+        """Prove that bestaatUitBuurten shows up when expanded"""
+
+        url = reverse(
+            "dynamic_api:gebieden-ggwgebieden-detail", args=["03630950000000.1"]
+        )
+        url = f"{url}?_expand=true"
+        response = api_client.get(url)
+        assert response.status_code == 200, response.data
+        assert (
+            response.data["_embedded"]["bestaatUitBuurten"]["id"] == "03630000000078.1"
+        )
+
+    def test_list_expand_true_for_nm_relation(
+        self,
+        api_client,
+        reloadrouter,
+        buurten_model,
+        buurten_data,
+        ggwgebieden_model,
+        ggwgebieden_data,
+    ):
+        """Prove that buurt shows up when listview is expanded and uses the
+        latest volgnummer
+        """
+
+        url = reverse("dynamic_api:gebieden-ggwgebieden-list")
+        url = f"{url}?_expand=true"
+        response = api_client.get(url)
+        assert response.status_code == 200, response.data
+        assert (
+            response.data["_embedded"]["bestaatUitBuurten"][0]["id"]
+            == "03630000000078.1"
+        )
+
     def test_detail_expand_true_for_loose_relation(
         self,
         api_client,
-        filled_router,
+        reloadrouter,
         statistieken_model,
         buurten_model,
         statistieken_data,
@@ -469,7 +507,7 @@ class TestEmbedTemporalTables:
     def test_list_expand_true_for_loose_relation(
         self,
         api_client,
-        filled_router,
+        reloadrouter,
         statistieken_model,
         buurten_model,
         statistieken_data,

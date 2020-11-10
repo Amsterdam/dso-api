@@ -14,7 +14,7 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 from rest_framework.relations import HyperlinkedRelatedField
-from rest_framework_dso.fields import EmbeddedField
+from rest_framework_dso.fields import EmbeddedField, EmbeddedManyToManyField
 from rest_framework_dso.serializers import DSOModelSerializer
 from rest_framework.serializers import Field
 from rest_framework.reverse import reverse
@@ -329,10 +329,16 @@ def generate_field_serializer(  # noqa: C901
                 account_name=field_schema["account_name"]
             )
 
-    # Add extra embedded part for foreign keys
-    if isinstance(model_field, (models.ForeignKey, LooseRelationField)):
+    # Add extra embedded part for related fields
+    # For NM relations, we need another type of EmbeddedField
+    if isinstance(
+        model_field, (models.ForeignKey, models.ManyToManyField, LooseRelationField)
+    ):
+        EmbeddedFieldClass = EmbeddedField
+        if isinstance(model_field, models.ManyToManyField):
+            EmbeddedFieldClass = EmbeddedManyToManyField
         if depth <= 1:
-            new_attrs[camel_name] = EmbeddedField(
+            new_attrs[camel_name] = EmbeddedFieldClass(
                 serializer_class=serializer_factory(
                     model_field.related_model, depth=depth, flat=True
                 ),

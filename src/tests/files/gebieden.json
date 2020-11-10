@@ -103,6 +103,53 @@
           }
         }
       }
+    },
+    {
+      "id": "ggwgebieden",
+      "type": "table",
+      "schema": {
+        "$id": "https://github.com/Amsterdam/schemas/gebieden/ggwgebieden.json",
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "additionalProperties": false,
+        "mainGeometry": "geometrie",
+        "identifier": ["identificatie", "volgnummer"],
+        "required": ["schema", "identificatie", "volgnummer"],
+        "display": "id",
+        "properties": {
+          "schema": {
+            "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.1#/definitions/schema"
+          },
+          "identificatie": {
+            "type": "string",
+            "description": "Unieke identificatie van het object."
+          },
+          "volgnummer": {
+            "type": "integer",
+            "description": "Uniek volgnummer van de toestand van het object."
+          },
+          "bestaatUitBuurten": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "identificatie": {
+                  "type": "string"
+                },
+                "volgnummer": {
+                  "type": "integer"
+                }
+              }
+            },
+            "relation": "gebieden:buurten",
+            "description": "De buurten waaruit het object bestaat."
+          },
+          "geometrie": {
+            "$ref": "https://geojson.org/schema/Geometry.json",
+            "description": "Geometrische beschrijving van een object."
+          }
+        }
+      }
     }
   ]
 }
