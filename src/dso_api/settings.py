@@ -76,6 +76,8 @@ MIDDLEWARE = [
     "dso_api.dynamic_api.middleware.AuthProfileMiddleware",
 ]
 
+CACHE_AUTH_PROFILES_ON_START = True
+
 AUTHENTICATION_BACKENDS = [
     "schematools.contrib.django.auth_backend.ProfileAuthorizationBackend",
     "django.contrib.auth.backends.ModelBackend",

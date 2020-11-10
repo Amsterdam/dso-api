@@ -16,6 +16,7 @@ from authorization_django import jwks
 
 from schematools.contrib.django.models import Dataset
 from schematools.contrib.django.db import create_tables
+from schematools.contrib.django.auth_backend import RequestProfile
 from schematools.types import DatasetSchema
 from rest_framework_dso.crs import RD_NEW
 from tests.test_rest_framework_dso.models import (
@@ -43,6 +44,8 @@ def api_request(api_rf) -> WSGIRequest:
     request.response_content_crs = None
 
     request.user = mock.MagicMock()
+
+    request.auth_profile = RequestProfile(request)
 
     # Temporal modifications. Usually done via TemporalDatasetMiddleware
     request.versioned = False

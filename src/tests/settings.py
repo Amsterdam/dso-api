@@ -22,3 +22,4 @@ SESSION_COOKIE_SECURE = False
 PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
 
 AZURE_BLOB_NGDSODEV = "test"
+CACHE_AUTH_PROFILES_ON_START = False
