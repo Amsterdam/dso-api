@@ -41,12 +41,14 @@ class AbstractEmbeddedField:
             meta.embedded_fields = []
         meta.embedded_fields.append(name)
 
-    def get_related_id(self, instance):
-        """Return the "ID" value that is referenced to."""
+    def get_related_detail_ids(self, instance):
+        """Return the "ID" values that are referenced from a single instance
+        This can be a FK or an NM relationship.
+        """
         raise NotImplementedError()
 
-    def get_related_ids(self, instances) -> list:
-        """Return the "ID" values that is referenced to."""
+    def get_related_list_ids(self, instances) -> list:
+        """Return the "ID" values that are referenced from a list of instances."""
         raise NotImplementedError()
 
     def get_serializer(self, parent: serializers.Serializer) -> serializers.Serializer:
@@ -73,20 +75,6 @@ class AbstractEmbeddedField:
             RelatedField,
         )
 
-
-class EmbeddedField(AbstractEmbeddedField):
-    """An embedded field for a foreign-key relation."""
-
-    def get_related_id(self, instance):
-        """Find the _id field value"""
-        return getattr(instance, self.attname, None)
-
-    def get_related_ids(self, instances) -> list:
-        """Find the object IDs of the instances."""
-        return list(
-            filter(None, [getattr(instance, self.attname) for instance in instances])
-        )
-
     @cached_property
     def attname(self):
         field_name = self.source or self.field_name
@@ -99,6 +87,44 @@ class EmbeddedField(AbstractEmbeddedField):
                 return f"{field_name}_id"
             else:
                 return field_name
+
+
+class EmbeddedField(AbstractEmbeddedField):
+    """An embedded field for a foreign-key relation."""
+
+    def get_related_detail_ids(self, instance):
+        """Find the _id field value(s)"""
+        id_value = getattr(instance, self.attname, None)
+        return [] if id_value is None else [id_value]
+
+    def get_related_list_ids(self, instances) -> list:
+        """Find the object IDs of the instances."""
+        return list(
+            filter(None, [getattr(instance, self.attname) for instance in instances])
+        )
+
+
+class EmbeddedManyToManyField(AbstractEmbeddedField):
+    """An embedded field for a n-m relation."""
+
+    def get_related_detail_ids(self, instance):
+        """Find the _id field value(s)"""
+        related_mgr = getattr(instance, self.attname, None)
+        if related_mgr is None:
+            return []
+        # I guess, as long as it is Django we can use pk,
+        # because Django needs it
+        return [r.pk for r in related_mgr.all()]
+
+    def get_related_list_ids(self, instances) -> list:
+        """Find the object IDs of the instances."""
+        ids = set()
+        for instance in instances:
+            related_mgr = getattr(instance, self.attname, None)
+            if related_mgr is None:
+                continue
+            ids |= set(r.pk for r in related_mgr.all())
+        return list(ids)
 
 
 class LinksField(serializers.HyperlinkedIdentityField):

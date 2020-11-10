@@ -16,7 +16,7 @@ class EmbeddedHelper:
     ):
         """Find all serializers that are configured for the sideloading feature.
 
-        This returns a dictionary with the all serializer classes.
+        This returns a dictionary with the serializer classes.
         The dictionary only contains the items for which sideloading is requested.
         """
         self.parent_serializer = parent_serializer
@@ -96,7 +96,7 @@ class EmbeddedHelper:
         loose_models = set()
         for name, embedded_field in self.embedded_fields.items():
             related_model = embedded_field.related_model
-            object_ids = embedded_field.get_related_ids(instances)
+            object_ids = embedded_field.get_related_list_ids(instances)
             if embedded_field.is_loose:
                 loose_models.add(related_model)
 
@@ -134,17 +134,20 @@ class EmbeddedHelper:
         ret = {}
         for name, embedded_field in self.embedded_fields.items():
             # Note: this currently assumes a detail view only references other models once:
-            id_value = embedded_field.get_related_id(instance)
-            if id_value is None:
+            id_values = embedded_field.get_related_detail_ids(instance)
+            if not id_values:
                 # Unclear in HAL-JSON: should the requested embed be mentioned or not?
                 ret[name] = None
                 continue
 
             related_model = embedded_field.related_model
             try:
-                value = self.id_based_fetcher(
-                    related_model, is_loose=embedded_field.is_loose
-                )([id_value])[id_value]
+                values = [
+                    self.id_based_fetcher(
+                        related_model, is_loose=embedded_field.is_loose
+                    )([id_value])[id_value]
+                    for id_value in id_values
+                ]
             except KeyError:
                 # Unclear in HAL-JSON: should the requested embed be mentioned or not?
                 ret[name] = None
@@ -153,5 +156,9 @@ class EmbeddedHelper:
             embedded_serializer = embedded_field.get_serializer(
                 parent=self.parent_serializer
             )
-            ret[name] = embedded_serializer.to_representation(value)
+            serialized = [
+                embedded_serializer.to_representation(value) for value in values
+            ]
+            # When we have a one-size list, we unpack it
+            ret[name] = serialized if len(serialized) > 1 else serialized[0]
         return ret
