@@ -128,12 +128,10 @@ class CheckMandatoryFiltersMixin(object):
             query_params, mandatory_filtersets
         ):
             return  # no mandatory filters or mandatory filter was used, may continue
-        from django.core.exceptions import PermissionDenied
-
         raise PermissionDenied("Mandatory filters not used")
 
     def _get_mandatory_filtersets(self, auth_profile):
-        """Get the mandatory filteresets that are relevant
+        """Get the mandatory filtersets that are relevant
         to the queried dataset from the auth_profile"""
         dataset_name = self.model._dataset_schema["id"]
         table_name = self.model._table_schema["id"]

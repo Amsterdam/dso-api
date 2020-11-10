@@ -7,7 +7,7 @@
         "parkeervakken": {
           "mandatoryFilterSets": [
             ["buurtcode", "type"],
-            ["regimes.InWerkingOp"]
+            ["regimes.inWerkingOp"]
           ]
         }
       }

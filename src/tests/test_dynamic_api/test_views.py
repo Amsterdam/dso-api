@@ -150,8 +150,10 @@ class TestAuth:
         assert api_client.get(base_url).status_code == 403
         assert api_client.get(f"{base_url}?buurtcode=A05d").status_code == 403
         assert api_client.get(f"{base_url}?buurtcode=A05d&type=E9").status_code == 200
+        assert api_client.get(f"{base_url}?regimes.inWerkingOp=").status_code == 403
+        assert api_client.get(f"{base_url}?regimes.inWerkingOp").status_code == 403
         assert (
-            api_client.get(f"{base_url}?regimes.InWerkingOp=20:05").status_code == 200
+            api_client.get(f"{base_url}?regimes.inWerkingOp=20:05").status_code == 200
         )
 
     def test_auth_on_dataset_schema_protects_containers(

@@ -17,7 +17,7 @@
           "schema"
         ],
         "additionalFilters": {
-          "regimes.InWerkingOp": {
+          "regimes.inWerkingOp": {
             "type": "range",
             "kwargs": {
               "start_field": "regimes.begin tijd",
