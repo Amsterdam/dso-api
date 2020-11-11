@@ -69,6 +69,48 @@ def get_unauthorized_fields(request, model) -> set:
     return unauthorized_fields
 
 
+class MandatoryFiltersQueried(permissions.BasePermission):
+    """
+    Custom permission to check if there are any mandatory queries that need to be queried
+    """
+
+    def _mandatory_filtersets_queried(self, request, mandatory_filtersets):
+        """Checks if any of the mandatory filtersets was used in the query paramaters"""
+        valid_query_params = [
+            param for param, value in request.query_params.items() if value
+        ]
+
+        def _mandatory_filterset_was_queried(mandatory_filterset, query_params):
+            return all(
+                mandatory_filter in query_params
+                for mandatory_filter in mandatory_filterset
+            )
+
+        return any(
+            _mandatory_filterset_was_queried(mandatory_filterset, valid_query_params)
+            for mandatory_filterset in mandatory_filtersets
+        )
+
+    def has_permission(self, request, view):
+        if request.method == "OPTIONS":
+            return True
+        scopes = fetch_scopes_for_dataset_table(view.dataset_id, view.table_id)
+        authorized_by_scope = request.is_authorized_for(*scopes.table)
+        if authorized_by_scope:
+            return True
+        mandatory_filtersets = []
+        # TODO: remove RequestProfile initialization after auth_profile_middleware merge
+        from schematools.contrib.django.auth_backend import RequestProfile
+
+        auth_profile = RequestProfile(request)
+        mandatory_filtersets += auth_profile.get_mandatory_filtersets(
+            view.dataset_id, view.table_id
+        )
+        if mandatory_filtersets:
+            return self._mandatory_filtersets_queried(request, mandatory_filtersets)
+        return True
+
+
 class HasOAuth2Scopes(permissions.BasePermission):
     """
     Custom permission to check auth scopes from Amsterdam schema.
@@ -78,7 +120,17 @@ class HasOAuth2Scopes(permissions.BasePermission):
         if request.method == "OPTIONS":
             return True
         scopes = fetch_scopes_for_dataset_table(dataset_id, table_id)
-        return request.is_authorized_for(*scopes.table)
+        if request.is_authorized_for(*scopes.table):
+            return True  # authorized by scope
+        else:
+            # TODO: remove RequestProfile initialization after auth_profile_middleware merge
+            from schematools.contrib.django.auth_backend import RequestProfile
+
+            auth_profile = RequestProfile(request)
+            relevant_profiles = auth_profile.get_relevant_profiles(dataset_id, table_id)
+            if relevant_profiles:
+                return True
+        return False
 
     def has_permission(self, request, view, models=None):
         """Based on the model that is associated with the view

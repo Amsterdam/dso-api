@@ -118,63 +118,7 @@ class TemporalRetrieveModelMixin:
         return obj
 
 
-class CheckMandatoryFiltersMixin(object):
-    def initial(self, request, *args, **kwargs):
-        super().initial(request, *args, **kwargs)
-        auth_profile = self._get_auth_profile(request)
-        mandatory_filtersets = self._get_mandatory_filtersets(auth_profile)
-        query_params = request.query_params.keys()
-        if not mandatory_filtersets or self._mandatory_filtersets_queried(
-            query_params, mandatory_filtersets
-        ):
-            return  # no mandatory filters or mandatory filter was used, may continue
-        raise PermissionDenied("Mandatory filters not used")
-
-    def _get_mandatory_filtersets(self, auth_profile):
-        """Get the mandatory filtersets that are relevant
-        to the queried dataset from the auth_profile"""
-        dataset_name = self.model._dataset_schema["id"]
-        table_name = self.model._table_schema["id"]
-        mandatory_filtersets = []
-        for profile in auth_profile.get_profiles():
-            profile_relevant_to_this_dataset = profile.schema.datasets.get(
-                dataset_name, None
-            )
-            if profile_relevant_to_this_dataset:
-                table_configuration = profile_relevant_to_this_dataset.tables.get(
-                    table_name, None
-                )
-                if table_configuration:
-                    mandatory_filters = table_configuration.get(
-                        "mandatoryFilterSets", None
-                    )
-                    if mandatory_filters:
-                        mandatory_filtersets += mandatory_filters
-        return mandatory_filtersets
-
-    def _get_auth_profile(self, request):
-        """Get auth_profile from request """
-        from schematools.contrib.django.auth_backend import RequestProfile
-
-        return RequestProfile(request)
-
-    def _mandatory_filtersets_queried(self, query_params, mandatory_filtersets):
-        """Checks if any of the mandatory filtersets was used in the query paramaters"""
-
-        def _mandatory_filterset_was_queried(mandatory_filterset, query_params):
-            return all(
-                mandatory_filter in query_params
-                for mandatory_filter in mandatory_filterset
-            )
-
-        return any(
-            _mandatory_filterset_was_queried(mandatory_filterset, query_params)
-            for mandatory_filterset in mandatory_filtersets
-        )
-
-
 class DynamicApiViewSet(
-    CheckMandatoryFiltersMixin,
     TemporalRetrieveModelMixin,
     locking.ReadLockMixin,
     DSOViewMixin,
@@ -196,7 +140,10 @@ class DynamicApiViewSet(
     model: Type[DynamicModel] = None
 
     #: Custom permission that checks amsterdam schema auth settings
-    permission_classes = [permissions.HasOAuth2Scopes]
+    permission_classes = [
+        permissions.HasOAuth2Scopes,
+        permissions.MandatoryFiltersQueried,
+    ]
 
 
 def _get_viewset_api_docs(

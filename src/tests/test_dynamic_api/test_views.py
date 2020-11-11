@@ -136,8 +136,8 @@ class TestAuth:
     def test_mandatory_filters(
         self,
         api_client,
+        fetch_auth_token,
         parkeervakken_schema,
-        parkeerwacht_profile,
         parkeervakken_parkeervak_model,
     ):
         """Test that use of mandatory filter leads to a 200 and not using it leads to a 403"""
@@ -146,14 +146,107 @@ class TestAuth:
         router.reload()
         # need to reload router, regimes is a nested table
         # and router will not know of it's existence
+        models.Profile.objects.create(
+            name="parkeerwacht",
+            scopes=["PROFIEL/SCOPE"],
+            schema_data={
+                "datasets": {
+                    "parkeervakken": {
+                        "tables": {
+                            "parkeervakken": {
+                                "mandatoryFilterSets": [
+                                    ["buurtcode", "type"],
+                                    ["regimes.inWerkingOp"],
+                                ]
+                            }
+                        }
+                    }
+                }
+            },
+        )
+        models.Profile.objects.create(
+            name="parkeerwacht",
+            scopes=["PROFIEL2/SCOPE"],
+            schema_data={
+                "datasets": {
+                    "parkeervakken": {
+                        "tables": {
+                            "parkeervakken": {
+                                "mandatoryFilterSets": [["regimes.aantal[gte]"]]
+                            }
+                        }
+                    }
+                }
+            },
+        )
+
+        models.DatasetTable.objects.filter(name="parkeervakken").update(
+            auth="DATASET/SCOPE"
+        )
+        token = fetch_auth_token(["PROFIEL/SCOPE"])
         base_url = reverse("dynamic_api:parkeervakken-parkeervakken-list")
         assert api_client.get(base_url).status_code == 403
-        assert api_client.get(f"{base_url}?buurtcode=A05d").status_code == 403
-        assert api_client.get(f"{base_url}?buurtcode=A05d&type=E9").status_code == 200
-        assert api_client.get(f"{base_url}?regimes.inWerkingOp=").status_code == 403
-        assert api_client.get(f"{base_url}?regimes.inWerkingOp").status_code == 403
         assert (
-            api_client.get(f"{base_url}?regimes.inWerkingOp=20:05").status_code == 200
+            api_client.get(base_url, HTTP_AUTHORIZATION=f"Bearer {token}").status_code
+            == 403
+        )
+        assert (
+            api_client.get(
+                f"{base_url}?buurtcode=A05d", HTTP_AUTHORIZATION=f"Bearer {token}"
+            ).status_code
+            == 403
+        )
+        assert (
+            api_client.get(
+                f"{base_url}?buurtcode=A05d&type=E9",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            ).status_code
+            == 200
+        )
+        assert (
+            api_client.get(
+                f"{base_url}?regimes.inWerkingOp=20:05",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            ).status_code
+            == 200
+        )
+        assert (
+            api_client.get(
+                f"{base_url}?regimes.inWerkingOp=", HTTP_AUTHORIZATION=f"Bearer {token}"
+            ).status_code
+            == 403
+        )
+        assert (
+            api_client.get(
+                f"{base_url}?regimes.inWerkingOp", HTTP_AUTHORIZATION=f"Bearer {token}"
+            ).status_code
+            == 403
+        )
+
+        token = fetch_auth_token(["DATASET/SCOPE", "PROFIEL/SCOPE"])
+        assert (
+            api_client.get(base_url, HTTP_AUTHORIZATION=f"Bearer {token}").status_code
+            == 200
+        )
+        token = fetch_auth_token(["DATASET/SCOPE"])
+        assert (
+            api_client.get(base_url, HTTP_AUTHORIZATION=f"Bearer {token}").status_code
+            == 200
+        )
+        token = fetch_auth_token(["PROFIEL/SCOPE", "PROFIEL2/SCOPE"])
+        assert (
+            api_client.get(
+                f"{base_url}?regimes.inWerkingOp=20:05",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            ).status_code
+            == 200
+        )
+        assert (
+            api_client.get(
+                f"{base_url}?regimes.aantal[gte]=2",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            ).status_code
+            == 200
         )
 
     def test_auth_on_dataset_schema_protects_containers(
@@ -279,7 +372,7 @@ class TestAuth:
         with an auth scope connected to Profile that gives access to specific field."""
         models.Profile.objects.create(
             name="brk_readall",
-            scopes="BRK/RSN",
+            scopes=["BRK/RSN"],
             schema_data={
                 "datasets": {
                     "afvalwegingen": {
