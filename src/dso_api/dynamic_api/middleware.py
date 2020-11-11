@@ -1,4 +1,3 @@
-from django.core.cache import cache
 from schematools.contrib.django.auth_backend import RequestProfile
 
 
