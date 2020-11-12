@@ -80,6 +80,7 @@ class AbstractEmbeddedField:
         field_name = self.source or self.field_name
         try:
             # For ForeignKey/OneToOneField this resolves to "{field_name}_id"
+            # For ManyToManyField this resolves to a manager object
             return self.parent_model._meta.get_field(field_name).attname
         except models.FieldDoesNotExist:
             # Allow non-FK relations, e.g. a "bag_id" to a completely different database
