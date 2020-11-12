@@ -178,8 +178,11 @@ LOGGING = {
 
 # -- Third party app settings
 
-CORS_ORIGIN_ALLOW_ALL = True
-
+# Do not set CORS_ALLOW_ALL_ORIGINS to True
+# The Access-Control-Allow-Origin should  ot de set to *
+# That will conflict with the  Access-Control-Allow-Credentials: true
+# set by HAProxy. If Access-Control-Allow-Origin is not set here it will
+# be set correctly  to the Origin by HAProxy
 
 CORS_ALLOW_HEADERS = list(default_headers) + [
     "Accept-Crs",
