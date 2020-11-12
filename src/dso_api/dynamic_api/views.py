@@ -126,9 +126,10 @@ class DynamicApiViewSet(
 ):
     """Viewset for an API, that is DSO-compatible and dynamically generated.
     Each dynamically generated model in this server will receive a viewset.
-
     """
 
+    dataset_id = None
+    table_id = None
     pagination_class = DSOPageNumberPagination
 
     #: Make sure composed keys like (112740.024|487843.078) are allowed.
