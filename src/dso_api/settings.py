@@ -178,9 +178,6 @@ LOGGING = {
 
 # -- Third party app settings
 
-CORS_ORIGIN_ALLOW_ALL = True
-
-
 CORS_ALLOW_HEADERS = list(default_headers) + [
     "Accept-Crs",
     "Content-Crs",
