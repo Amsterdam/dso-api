@@ -601,7 +601,7 @@ class TestDynamicSerializer:
 
         Profile.objects.create(
             name="test_1",
-            scopes="",
+            scopes="[]",
             schema_data={
                 "datasets": {
                     "fietspaaltjes": {
@@ -630,7 +630,7 @@ class TestDynamicSerializer:
 
         Profile.objects.create(
             name="test_1",
-            scopes="",
+            scopes="[]",
             schema_data={
                 "datasets": {
                     "fietspaaltjes": {
