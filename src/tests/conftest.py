@@ -47,6 +47,7 @@ def api_request(api_rf) -> WSGIRequest:
     request.user = mock.MagicMock()
 
     request.auth_profile = RequestProfile(request)
+    request.is_authorized_for = lambda scopes=None: True
 
     # Temporal modifications. Usually done via TemporalDatasetMiddleware
     request.versioned = False
@@ -649,9 +650,7 @@ def download_url_schema(download_url_schema_json) -> DatasetSchema:
 
 @pytest.fixture()
 def download_url_dataset(download_url_schema_json) -> Dataset:
-    return Dataset.objects.create(
-        name="download_url", schema_data=download_url_schema_json
-    )
+    return Dataset.objects.create(name="download", schema_data=download_url_schema_json)
 
 
 @pytest.fixture()

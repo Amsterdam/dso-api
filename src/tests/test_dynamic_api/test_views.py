@@ -140,7 +140,10 @@ class TestAuth:
         parkeervakken_schema,
         parkeervakken_parkeervak_model,
     ):
-        """Test that use of mandatory filter leads to a 200 and not using it leads to a 403"""
+        """
+        Tests that profile permissions with are activated
+        through querying with of the mandatoryFilterSets
+        """
         from dso_api.dynamic_api.urls import router
 
         router.reload()
@@ -248,6 +251,102 @@ class TestAuth:
             ).status_code
             == 200
         )
+
+    def test_profile_field_permissions(
+        self,
+        api_client,
+        fetch_auth_token,
+        parkeervakken_schema,
+        parkeervakken_parkeervak_model,
+    ):
+        """
+        Tests combination of profiles with auth scopes on dataset level.
+        Profiles should be activated only when one of it's mandatoryFilterSet
+        is queried. And field permissions should be inherited from dataset scope first.
+        """
+        from dso_api.dynamic_api.urls import router
+
+        router.reload()
+        models.Profile.objects.create(
+            name="parkeerwacht",
+            scopes=["PROFIEL/SCOPE"],
+            schema_data={
+                "datasets": {
+                    "parkeervakken": {
+                        "tables": {
+                            "parkeervakken": {
+                                "mandatoryFilterSets": [
+                                    ["id"],
+                                ],
+                                "fields": {"type": "read", "soort": "letters:1"},
+                            }
+                        }
+                    }
+                }
+            },
+        )
+        models.Profile.objects.create(
+            name="parkeerwacht2",
+            scopes=["PROFIEL2/SCOPE"],
+            schema_data={
+                "datasets": {
+                    "parkeervakken": {
+                        "tables": {
+                            "parkeervakken": {
+                                "mandatoryFilterSets": [
+                                    ["id", "type"],
+                                ],
+                                "fields": {"type": "letters:1", "soort": "read"},
+                            }
+                        }
+                    }
+                }
+            },
+        )
+        models.Dataset.objects.filter(name="parkeervakken").update(auth="DATASET/SCOPE")
+        parkeervak = parkeervakken_parkeervak_model.objects.create(
+            id=1,
+            type="Langs",
+            soort="NIET FISCA",
+            aantal="1.0",
+        )
+        # 1) profile scope only
+        token = fetch_auth_token(["PROFIEL/SCOPE"])
+        base_url = reverse("dynamic_api:parkeervakken-parkeervakken-list")
+        response = api_client.get(
+            f"{base_url}?id=1", HTTP_AUTHORIZATION=f"Bearer {token}"
+        )
+        parkeervak_data = response.data["_embedded"]["parkeervakken"][0]
+        # assert that a single profile is activated
+        assert parkeervak_data["type"] == parkeervak.type
+        assert parkeervak_data["soort"] == parkeervak.soort[:1]
+        # assert that there is no table scope
+        assert "id" not in parkeervak_data.keys()
+        # 2) profile and dataset scope
+        token = fetch_auth_token(["PROFIEL/SCOPE", "DATASET/SCOPE"])
+        response = api_client.get(
+            f"{base_url}?id=1", HTTP_AUTHORIZATION=f"Bearer {token}"
+        )
+        parkeervak_data = response.data["_embedded"]["parkeervakken"][0]
+        # assert that dataset scope permissions overrules lower profile permission
+        assert parkeervak_data["soort"] == parkeervak.soort
+        assert "id" in parkeervak_data.keys()
+        # 3) two profile scopes
+        token = fetch_auth_token(["PROFIEL/SCOPE", "PROFIEL2/SCOPE"])
+        # trigger one profile
+        response = api_client.get(
+            f"{base_url}?id=1", HTTP_AUTHORIZATION=f"Bearer {token}"
+        )
+        parkeervak_data = response.data["_embedded"]["parkeervakken"][0]
+        # assert that only the profile is used that passed it's mandatory filterset restrictions
+        assert parkeervak_data["soort"] == parkeervak.soort[:1]
+        # trigger both profiles
+        response = api_client.get(
+            f"{base_url}?id=1&type=Langs", HTTP_AUTHORIZATION=f"Bearer {token}"
+        )
+        parkeervak_data = response.data["_embedded"]["parkeervakken"][0]
+        # assert that both profiles are triggered and the highest permission reigns
+        assert parkeervak_data["type"] == parkeervak.type
 
     def test_auth_on_dataset_schema_protects_containers(
         self, api_client, filled_router, afval_schema

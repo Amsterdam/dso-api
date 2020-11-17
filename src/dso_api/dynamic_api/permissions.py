@@ -51,16 +51,14 @@ def fetch_scopes_for_model(model) -> TableScopes:
 
 def get_unauthorized_fields(request, model) -> set:
     """Check which field names should be excluded"""
-    scope_data = fetch_scopes_for_model(model).fields
-
+    field_scopes = fetch_scopes_for_model(model).fields
+    table_scopes = fetch_scopes_for_model(model).table
     unauthorized_fields = set()
     # is_authorized_for is added by authorization_django middleware
     if hasattr(request, "is_authorized_for"):
         for model_field in model._meta.get_fields():
-            scopes = scope_data.get(model_field.name)
-            if not scopes:
-                continue
-
+            scopes = field_scopes.get(model_field.name)
+            scopes = scopes.union(table_scopes) if scopes else table_scopes
             permission_key = get_permission_key_for_field(model_field)
             if not request.is_authorized_for(*scopes):
                 if not request_has_permission(request=request, perm=permission_key):
@@ -98,17 +96,13 @@ class MandatoryFiltersQueried(permissions.BasePermission):
         authorized_by_scope = request.is_authorized_for(*scopes.table)
         if authorized_by_scope:
             return True
-        mandatory_filtersets = []
         # TODO: remove RequestProfile initialization after auth_profile_middleware merge
         from schematools.contrib.django.auth_backend import RequestProfile
 
         auth_profile = RequestProfile(request)
-        mandatory_filtersets += auth_profile.get_mandatory_filtersets(
-            view.dataset_id, view.table_id
-        )
-        if mandatory_filtersets:
-            return self._mandatory_filtersets_queried(request, mandatory_filtersets)
-        return True
+        if auth_profile.get_active_profiles(view.dataset_id, view.table_id):
+            return True  # there is an active profile, so you may continue
+        return False
 
 
 class HasOAuth2Scopes(permissions.BasePermission):
@@ -127,7 +121,7 @@ class HasOAuth2Scopes(permissions.BasePermission):
             from schematools.contrib.django.auth_backend import RequestProfile
 
             auth_profile = RequestProfile(request)
-            relevant_profiles = auth_profile.get_relevant_profiles(dataset_id, table_id)
+            relevant_profiles = auth_profile.get_active_profiles(dataset_id, table_id)
             if relevant_profiles:
                 return True
         return False

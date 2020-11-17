@@ -620,7 +620,10 @@ class TestDynamicSerializer:
             },
         )
         api_request.auth_profile = RequestProfile(api_request)
-        api_request.is_authorized_for = lambda scopes: True
+
+        # does not have scope for Dataset or Table
+        api_request.is_authorized_for = lambda scopes=None: False
+
         FietspaaltjesSerializer = serializer_factory(fietspaaltjes_model, 0, flat=False)
 
         api_request.dataset = fietspaaltjes_schema
@@ -649,7 +652,9 @@ class TestDynamicSerializer:
             },
         )
         api_request.auth_profile = RequestProfile(api_request)
-        api_request.is_authorized_for = lambda scopes: True
+
+        # does not have scope for Dataset or Table
+        api_request.is_authorized_for = lambda scopes=None: False
         FietspaaltjesSerializer = serializer_factory(fietspaaltjes_model, 0, flat=False)
 
         api_request.dataset = fietspaaltjes_schema
