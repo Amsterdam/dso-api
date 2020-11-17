@@ -126,9 +126,10 @@ class DynamicApiViewSet(
 ):
     """Viewset for an API, that is DSO-compatible and dynamically generated.
     Each dynamically generated model in this server will receive a viewset.
-
     """
 
+    dataset_id = None
+    table_id = None
     pagination_class = DSOPageNumberPagination
 
     #: Make sure composed keys like (112740.024|487843.078) are allowed.
@@ -204,6 +205,8 @@ def viewset_factory(model: Type[DynamicModel]) -> Type[DynamicApiViewSet]:
         "serializer_class": serializer_class,
         "filterset_class": filterset_class,
         "ordering_fields": ordering_fields,
+        "dataset_id": model._dataset_schema["id"],
+        "table_id": model._table_schema["id"],
     }
     return type(f"{model.__name__}ViewSet", (DynamicApiViewSet,), attrs)
 
