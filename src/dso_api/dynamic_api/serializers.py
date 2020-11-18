@@ -20,7 +20,6 @@ from rest_framework.serializers import Field
 from rest_framework.reverse import reverse
 from schematools.types import DatasetTableSchema
 from schematools.contrib.django.models import DynamicModel
-from schematools.contrib.django.auth_backend import RequestProfile
 from schematools.contrib.django.models import LooseRelationField
 from schematools.utils import to_snake_case, toCamelCase
 
@@ -224,9 +223,6 @@ class DynamicSerializer(DSOModelSerializer):
             else:
                 model = self.instance._meta.model
             request = self.get_request()
-
-            if not hasattr(request, "auth_profile"):
-                request.auth_profile = RequestProfile(request)
 
             for model_field in model._meta.get_fields():
                 permission_key = get_permission_key_for_field(model_field)

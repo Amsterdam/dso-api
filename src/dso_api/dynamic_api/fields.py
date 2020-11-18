@@ -130,7 +130,7 @@ class LooseRelationUrlField(serializers.CharField):
 
         request = self.context["request"]
         view = self.context["view"]
-        relation = view.model._meta.get_field(self.field_name).relation
+        relation = view.model._meta.get_field(to_snake_case(self.field_name)).relation
         dataset_name, table_name, field_name = [
             to_snake_case(part) for part in relation.split(":")
         ]
