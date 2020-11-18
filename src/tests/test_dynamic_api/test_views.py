@@ -347,6 +347,7 @@ class TestAuth:
         parkeervak_data = response.data["_embedded"]["parkeervakken"][0]
         # assert that both profiles are triggered and the highest permission reigns
         assert parkeervak_data["type"] == parkeervak.type
+        assert parkeervak_data["soort"] == parkeervak.soort
 
     def test_auth_on_dataset_schema_protects_containers(
         self, api_client, filled_router, afval_schema
