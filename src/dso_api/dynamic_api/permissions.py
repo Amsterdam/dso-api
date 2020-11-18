@@ -74,10 +74,13 @@ class HasOAuth2Scopes(permissions.BasePermission):
     Custom permission to check auth scopes from Amsterdam schema.
     """
 
-    def _has_permission(self, request, dataset_id=None, table_id=None):
+    def _has_permission(self, request, model=None, dataset_id=None, table_id=None):
         if request.method == "OPTIONS":
             return True
-        scopes = fetch_scopes_for_dataset_table(dataset_id, table_id)
+        if model:
+            scopes = fetch_scopes_for_model(model)
+        elif dataset_id and table_id:
+            scopes = fetch_scopes_for_dataset_table(dataset_id, table_id)
         return request.is_authorized_for(*scopes.table)
 
     def has_permission(self, request, view, models=None):
@@ -88,15 +91,16 @@ class HasOAuth2Scopes(permissions.BasePermission):
         of claims."""
         if models:
             for model in models:
-                if not self._has_permission(
-                    request,
-                    dataset_id=model._dataset_schema["id"],
-                    table_id=model._table_schema["id"],
-                ):
+                if not self._has_permission(request, model):
                     return False
-        return self._has_permission(
-            request, dataset_id=view.dataset_id, table_id=view.table_id
-        )
+            return True
+        elif hasattr(view, "dataset_id") and hasattr(view, "table_id"):
+            return self._has_permission(
+                request, dataset_id=view.dataset_id, table_id=view.table_id
+            )
+        else:
+            model = view.get_serializer_class().Meta.model
+            return self._has_permission(request, model=model)
 
     def has_object_permission(self, request, view, obj):
         """ This method is not called for list views """

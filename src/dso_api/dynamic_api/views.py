@@ -205,8 +205,6 @@ def viewset_factory(model: Type[DynamicModel]) -> Type[DynamicApiViewSet]:
         "serializer_class": serializer_class,
         "filterset_class": filterset_class,
         "ordering_fields": ordering_fields,
-        "dataset_id": model._dataset_schema["id"],
-        "table_id": model._table_schema["id"],
     }
     return type(f"{model.__name__}ViewSet", (DynamicApiViewSet,), attrs)
 
