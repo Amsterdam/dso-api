@@ -164,7 +164,7 @@ LOGGING = {
     "formatters": {
         "console": {"format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"},
         "structured_console": {
-            "format": '{"time": "%(asctime)s", "name": "%(name)s", "level": "%(levelname)s", "message": %(message)s}'
+            "format": ('{"time": "%(asctime)s", "name": "%(name)s", "level": "%(levelname)s", "message": %(message)s}')
         }
     },
     "handlers": {
