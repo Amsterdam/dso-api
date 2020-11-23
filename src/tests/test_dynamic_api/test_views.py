@@ -1,4 +1,6 @@
+import json
 import pytest
+from unittest import mock
 from django.db import connection
 from django.urls import reverse
 
@@ -408,6 +410,47 @@ class TestAuth:
             "Invalid sort fields: datum_creatie"
         ], response.data
 
+    def test_api_request_audit_logging(
+            self, api_client, filled_router, afval_schema, afval_container
+    ):
+        """Prove that every request is logged into audit log.
+        """
+
+        base_url = reverse("dynamic_api:afvalwegingen-containers-list")
+        url = f"{base_url}?_sort=datumCreatie"
+        with mock.patch('dso_api.dynamic_api.middleware.audit_log') as log_mock:
+            api_client.get(url)
+
+        assert len(log_mock.mock_calls) == 1
+
+        log_data = json.loads(log_mock.mock_calls[0].args[0])
+        assert log_data['path'] == base_url
+        assert log_data['method'] == 'GET'
+        assert log_data['data'] == {'_sort': 'datumCreatie'}
+        assert log_data['subject'] is None
+        assert 'request_headers' in log_data
+
+    def test_api_authorized_request_audit_logging(
+            self, api_client, filled_router, afval_schema, afval_container, fetch_auth_token
+    ):
+        """Prove that every authorized request is logged into audit log.
+        """
+
+        token = fetch_auth_token(["BAG/R"])
+        base_url = reverse("dynamic_api:afvalwegingen-containers-list")
+        url = f"{base_url}?_sort=datumCreatie"
+        with mock.patch('dso_api.dynamic_api.middleware.audit_log') as log_mock:
+            api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
+
+        assert len(log_mock.mock_calls) == 1
+
+        log_data = json.loads(log_mock.mock_calls[0].args[0])
+        assert log_data['path'] == base_url
+        assert log_data['method'] == 'GET'
+        assert log_data['data'] == {'_sort': 'datumCreatie'}
+        assert log_data['subject'] == 'test@tester.nl'
+        assert 'request_headers' in log_data
+
 
 # @pytest.mark.usefixtures("reloadrouter")
 @pytest.mark.django_db
@@ -522,13 +565,3 @@ class TestEmbedTemporalTables:
         response = api_client.get(url)
         assert response.status_code == 200, response.data
         assert response.data["_embedded"]["buurt"][0]["id"] == "03630000000078.2"
-
-    def test_api_request_audit_logging(self, api_client, reloadrouter, statistieken_model, buurten_model, statustieken_data, buurten_data):
-        """Prove that every request is logged into audit log.
-        """
-
-        url = reverse("dynamic_api:meldingen-statistieken-list")
-        url = f"{url}?_expand=true"
-        response = api_client.get(url)
-
-        

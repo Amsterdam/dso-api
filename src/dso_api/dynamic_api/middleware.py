@@ -89,11 +89,15 @@ class RequestAuditLoggingMiddleware(BaseMiddleware):
                 data = request.POST
         except UnreadablePostError:
             pass
+        subject = None
+        if hasattr(request, "get_token_subject"):
+            subject = request.get_token_subject
+
         log = dict(
             path=request.path,
             method=request.method,
             request_headers=repr(request.META),
-            subject=request.get_token_subject(),
+            subject=subject,
             data=data)
 
         audit_log.info(json.dumps(log))
