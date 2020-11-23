@@ -1,4 +1,9 @@
+import json
+import logging
+from django.http import UnreadablePostError
 from schematools.contrib.django.auth_backend import RequestProfile
+
+audit_log = logging.getLogger("dso_api.audit")
 
 
 class BaseMiddleware:
@@ -68,3 +73,27 @@ class AuthProfileMiddleware(BaseMiddleware):
             request.auth_profile = RequestProfile(request)
 
         return None
+
+
+class RequestAuditLoggingMiddleware(BaseMiddleware):
+    def process_view(self, request, view_func, view_args, view_kwargs):
+        data = None
+        try:
+            data = json.loads(request.body)
+            if data is None:
+                raise ValueError
+        except ValueError:
+            if request.method == 'GET':
+                data = request.GET
+            else:
+                data = request.POST
+        except UnreadablePostError:
+            pass
+        log = dict(
+            path=request.path,
+            method=request.method,
+            request_headers=repr(request.META),
+            subject=request.get_token_subject(),
+            data=data)
+
+        audit_log.info(json.dumps(log))

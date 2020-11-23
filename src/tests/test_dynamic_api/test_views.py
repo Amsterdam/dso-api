@@ -522,3 +522,13 @@ class TestEmbedTemporalTables:
         response = api_client.get(url)
         assert response.status_code == 200, response.data
         assert response.data["_embedded"]["buurt"][0]["id"] == "03630000000078.2"
+
+    def test_api_request_audit_logging(self, api_client, reloadrouter, statistieken_model, buurten_model, statustieken_data, buurten_data):
+        """Prove that every request is logged into audit log.
+        """
+
+        url = reverse("dynamic_api:meldingen-statistieken-list")
+        url = f"{url}?_expand=true"
+        response = api_client.get(url)
+
+        
