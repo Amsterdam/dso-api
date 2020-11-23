@@ -1,4 +1,6 @@
+import json
 import pytest
+from unittest import mock
 from django.db import connection
 from django.urls import reverse
 
@@ -407,6 +409,47 @@ class TestAuth:
         assert response.data["x-validation-errors"] == [
             "Invalid sort fields: datum_creatie"
         ], response.data
+
+    def test_api_request_audit_logging(
+            self, api_client, filled_router, afval_schema, afval_container
+    ):
+        """Prove that every request is logged into audit log.
+        """
+
+        base_url = reverse("dynamic_api:afvalwegingen-containers-list")
+        url = f"{base_url}?_sort=datumCreatie"
+        with mock.patch('dso_api.dynamic_api.middleware.audit_log') as log_mock:
+            api_client.get(url)
+
+        assert len(log_mock.mock_calls) == 1
+
+        log_data = json.loads(log_mock.mock_calls[0].args[0])
+        assert log_data['path'] == base_url
+        assert log_data['method'] == 'GET'
+        assert log_data['data'] == {'_sort': 'datumCreatie'}
+        assert log_data['subject'] is None
+        assert 'request_headers' in log_data
+
+    def test_api_authorized_request_audit_logging(
+            self, api_client, filled_router, afval_schema, afval_container, fetch_auth_token
+    ):
+        """Prove that every authorized request is logged into audit log.
+        """
+
+        token = fetch_auth_token(["BAG/R"])
+        base_url = reverse("dynamic_api:afvalwegingen-containers-list")
+        url = f"{base_url}?_sort=datumCreatie"
+        with mock.patch('dso_api.dynamic_api.middleware.audit_log') as log_mock:
+            api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
+
+        assert len(log_mock.mock_calls) == 1
+
+        log_data = json.loads(log_mock.mock_calls[0].args[0])
+        assert log_data['path'] == base_url
+        assert log_data['method'] == 'GET'
+        assert log_data['data'] == {'_sort': 'datumCreatie'}
+        assert log_data['subject'] == 'test@tester.nl'
+        assert 'request_headers' in log_data
 
 
 # @pytest.mark.usefixtures("reloadrouter")

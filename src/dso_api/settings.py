@@ -74,6 +74,7 @@ MIDDLEWARE = [
     "dso_api.dynamic_api.middleware.DatasetMiddleware",
     "dso_api.dynamic_api.middleware.TemporalDatasetMiddleware",
     "dso_api.dynamic_api.middleware.AuthProfileMiddleware",
+    "dso_api.dynamic_api.middleware.RequestAuditLoggingMiddleware"
 ]
 
 AUTHENTICATION_BACKENDS = [
@@ -162,6 +163,14 @@ LOGGING = {
     "disable_existing_loggers": False,
     "formatters": {
         "console": {"format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"},
+        "structured_console": {
+            "format": (
+                '{"time": "%(asctime)s", '
+                '"name": "%(name)s", '
+                '"level": "%(levelname)s", '
+                '"message": %(message)s}'
+            )
+        }
     },
     "handlers": {
         "console": {
@@ -169,11 +178,17 @@ LOGGING = {
             "class": "logging.StreamHandler",
             "formatter": "console",
         },
+        "structured_console": {
+            "level": "DEBUG",
+            "class": "logging.StreamHandler",
+            "formatter": "structured_console"
+        },
     },
     "root": {"level": "INFO", "handlers": ["console"]},
     "loggers": {
         # "django.db.backends": {"level": "DEBUG", "handlers": ["console"]},
         "dso_api": {"handlers": ["console"], "level": "DEBUG", "propagate": False},
+        "dso_api.audit": {"handlers": ["structured_console"], "level": "DEBUG", "propagate": False}
     },
 }
 
