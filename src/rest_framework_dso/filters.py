@@ -155,7 +155,7 @@ class NotEqual(lookups.Lookup):
 class Wildcard(lookups.Lookup):
     """Allow fieldname__wildcard=... lookups in querysets."""
 
-    lookup_name = "wildcard"
+    lookup_name = "like"
 
     def as_sql(self, compiler, connection):
         """Generate the required SQL."""
@@ -184,7 +184,7 @@ class Wildcard(lookups.Lookup):
 
 
 class ExactCharFilter(filters.CharFilter):
-    """Explicitly naming filter the ExactCharFilter"""
+    """Explicitly naming filters.CharFilter the ExactCharFilter"""
 
     pass
 
