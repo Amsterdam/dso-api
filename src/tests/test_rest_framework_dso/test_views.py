@@ -119,13 +119,13 @@ class TestListFilters:
 
     @staticmethod
     def test_list_filter_wildcard(api_client):
-        """Prove that ?name=foo also works with wildcards"""
+        """Prove that ?name=foo doesn't works with wildcards"""
         Movie.objects.create(name="foo123")
         Movie.objects.create(name="test")
 
         response = api_client.get("/v1/movies", data={"name": "foo1?3"})
         assert response.status_code == 200, response
-        assert response.data["page"]["totalElements"] == 1
+        assert response.data["page"]["totalElements"] == 0
         assert response["Content-Type"] == "application/hal+json"
 
     @staticmethod
