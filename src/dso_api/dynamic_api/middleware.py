@@ -102,13 +102,3 @@ class RequestAuditLoggingMiddleware(BaseMiddleware):
         )
 
         audit_log.info(json.dumps(log))
-
-
-class QueryParamLegalityCheckMiddleware(BaseMiddleware):
-    def process_view(self, request, *args, **kwargs):
-        """Removes query params from the .GET if there is a falsy parameter value"""
-        get = request.GET.copy()
-        for query_type, param in request.GET.items():
-            if not param:
-                get.pop(query_type)
-        request.GET = get

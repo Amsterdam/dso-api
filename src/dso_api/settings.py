@@ -75,7 +75,6 @@ MIDDLEWARE = [
     "dso_api.dynamic_api.middleware.TemporalDatasetMiddleware",
     "dso_api.dynamic_api.middleware.AuthProfileMiddleware",
     "dso_api.dynamic_api.middleware.RequestAuditLoggingMiddleware",
-    "dso_api.dynamic_api.middleware.QueryParamLegalityCheckMiddleware",
 ]
 
 AUTHENTICATION_BACKENDS = [
