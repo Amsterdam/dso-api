@@ -27,7 +27,7 @@ class TestWildcard:
         with django_assert_num_queries(1) as context:
             # using str(qs.query) doesn't apply database-level escaping,
             # so running the query instead to get the actual executed query.
-            list(Category.objects.filter(name__wildcard="foo*bar?"))
+            list(Category.objects.filter(name__like="foo*bar?"))
 
         sql = context.captured_queries[0]["sql"]
         assert r"""."name" LIKE 'foo%bar_'""" in sql

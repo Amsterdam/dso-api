@@ -151,13 +151,13 @@ Naast een exacte match zijn er afhankelijk van het type veld ook andere operator
 * :samp:`?{veld}[isempty]={true|false}` werkt als :samp:`{veld} IS NULL OR {veld} = ''`
   of :samp:`{veld} IS NOT NULL AND {veld} <> ''`.
 
-Tekstvelden ondersteunen wildcards, dus dit is ook mogelijk:
+Tekstvelden ondersteunen wildcards. Maak daarvoor gebruik van de :samp:`?{veld}[like]` operator:
 
 .. code-block:: bash
 
-    curl 'https://api.data.amsterdam.nl/v1/bag/stadsdeel/?naam=West*'
+    curl 'https://api.data.amsterdam.nl/v1/bag/stadsdeel/?naam[like]=West*'
 
-    curl 'https://api.data.amsterdam.nl/v1/bag/stadsdeel/?naam=Westp??rt'
+    curl 'https://api.data.amsterdam.nl/v1/bag/stadsdeel/?naam[like]=Westp??rt'
 
 De namen van de velden en mogelijke operatoren zijn te vinden op
 de :doc:`datasets <../datasets/index>` pagina.

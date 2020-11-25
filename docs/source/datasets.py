@@ -16,7 +16,8 @@ BASE_URL = "https://api.data.amsterdam.nl"
 BASE_PATH = Path("./source/")
 TEMPLATE_PATH = BASE_PATH.joinpath("_templates")
 TEMPLATE_ENV = jinja2.Environment(
-    loader=jinja2.FileSystemLoader(searchpath=TEMPLATE_PATH), autoescape=False,
+    loader=jinja2.FileSystemLoader(searchpath=TEMPLATE_PATH),
+    autoescape=False,
 )
 
 re_camel_case = re.compile(
@@ -31,7 +32,7 @@ _identifier_lookups = [
     "isnull",
 ]
 VALUE_EXAMPLES = {
-    "string": ("Tekst met wildcard", []),
+    "string": ("Tekst exacte match", []),
     "boolean": ("``true`` | ``false``", []),
     "integer": ("Geheel getal", _integer_lookups),
     "number": ("Getal", _integer_lookups),
@@ -147,7 +148,10 @@ def _get_feature_type_context(table: DatasetTableSchema):
         "uri": uri,
         "fields": [_get_field_context(field) for field in fields],
         "embeds": [
-            {"id": relation_name, "snake_name": to_snake_case(relation_name),}
+            {
+                "id": relation_name,
+                "snake_name": to_snake_case(relation_name),
+            }
             for relation_name, field in table["schema"]["properties"].items()
             if field.get("relation") is not None
         ],

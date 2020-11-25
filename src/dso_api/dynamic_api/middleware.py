@@ -83,7 +83,7 @@ class RequestAuditLoggingMiddleware(BaseMiddleware):
             if data is None:
                 raise ValueError
         except ValueError:
-            if request.method == 'GET':
+            if request.method == "GET":
                 data = request.GET
             else:
                 data = request.POST
@@ -98,6 +98,7 @@ class RequestAuditLoggingMiddleware(BaseMiddleware):
             method=request.method,
             request_headers=repr(request.META),
             subject=subject,
-            data=data)
+            data=data,
+        )
 
         audit_log.info(json.dumps(log))

@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 _comparison_lookups = ["exact", "gte", "gt", "lt", "lte", "not", "isnull"]
 _identifier_lookups = ["exact", "in", "not", "isnull"]
 _polygon_lookups = ["exact", "contains", "isnull", "not"]
-_string_lookups = ["exact", "isnull", "not", "isempty"]
+_string_lookups = ["exact", "isnull", "not", "isempty", "like"]
 DEFAULT_LOOKUPS_BY_TYPE = {
     models.AutoField: _identifier_lookups,
     models.TextField: _string_lookups,
@@ -133,7 +133,8 @@ def generate_relation_filters(model: Type[DynamicModel]):  # NoQA
 
             # Filter name presented in API
             filter_name = "{}.{}".format(
-                toCamelCase(relation.name), toCamelCase(field_name),
+                toCamelCase(relation.name),
+                toCamelCase(field_name),
             )
             filter_lookups = _get_field_lookups(model_field)
             for lookup_expr in filter_lookups:

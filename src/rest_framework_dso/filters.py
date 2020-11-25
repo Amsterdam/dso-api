@@ -155,7 +155,7 @@ class NotEqual(lookups.Lookup):
 class Wildcard(lookups.Lookup):
     """Allow fieldname__wildcard=... lookups in querysets."""
 
-    lookup_name = "wildcard"
+    lookup_name = "like"
 
     def as_sql(self, compiler, connection):
         """Generate the required SQL."""
@@ -181,6 +181,12 @@ class Wildcard(lookups.Lookup):
             .replace("?", "_")
         )
         return "%s", [value]
+
+
+class ExactCharFilter(filters.CharFilter):
+    """Explicitly naming filters.CharFilter the ExactCharFilter"""
+
+    pass
 
 
 class WildcardCharFilter(filters.CharFilter):
@@ -236,8 +242,8 @@ class MultipleValueField(forms.Field):
         # Enforce the "getlist" retrieval, even when a different widget was used.
         # The "__get__" is needed to retrieve the MethodType instead of the unbound function.
         if not isinstance(self.widget, MultipleValueWidget):
-            self.widget.value_from_datadict = MultipleValueWidget.value_from_datadict.__get__(
-                self.widget
+            self.widget.value_from_datadict = (
+                MultipleValueWidget.value_from_datadict.__get__(self.widget)
             )
 
     def clean(self, values):
@@ -462,13 +468,15 @@ class DSOFilterSet(FilterSet):
         **FilterSet.FILTER_DEFAULTS,
         # Unlike **GeoFilterSet.GEOFILTER_FOR_DBFIELD_DEFAULTS,
         # also enforce the geom_type for the input:
-        models.CharField: {"filter_class": WildcardCharFilter},
-        models.TextField: {"filter_class": WildcardCharFilter},
+        models.CharField: {"filter_class": ExactCharFilter},
+        models.TextField: {"filter_class": ExactCharFilter},
         models.DateTimeField: {
             # Only allow filtering on dates for now, ignore time component.
             "filter_class": FlexDateTimeFilter,
         },
-        gis_models.GeometryField: {"filter_class": GeometryFilter,},
+        gis_models.GeometryField: {
+            "filter_class": GeometryFilter,
+        },
         # Unlike the base class, don't enforce ID value checking on foreign keys
         models.ForeignKey: {
             **FilterSet.FILTER_DEFAULTS[models.ForeignKey],
@@ -482,7 +490,7 @@ class DSOFilterSet(FilterSet):
             **FilterSet.FILTER_DEFAULTS[models.OneToOneRel],
             "filter_class": ModelIdChoiceFilter,
         },
-        UnlimitedCharField: {"filter_class": WildcardCharFilter},
+        UnlimitedCharField: {"filter_class": ExactCharFilter},
         ArrayField: {"filter_class": CharArrayFilter},
     }
 
