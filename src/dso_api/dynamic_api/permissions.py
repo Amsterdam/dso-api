@@ -133,7 +133,11 @@ class HasOAuth2Scopes(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         """ This method is not called for list views """
         # XXX For now, this is OK, later on we need to add row-level permissions
-        return self._has_permission(request, obj)
+        return self._has_permission(
+            request,
+            dataset_id=obj._dataset_schema["id"],
+            table_id=obj._table_schema["id"],
+        )
 
 
 def get_permission_key_for_field(model_field):

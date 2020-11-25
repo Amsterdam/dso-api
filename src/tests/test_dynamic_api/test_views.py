@@ -142,7 +142,7 @@ class TestAuth:
     ):
         """
         Tests that profile permissions with are activated
-        through querying with of the mandatoryFilterSets
+        through querying with the right mandatoryFilterSets
         """
         from dso_api.dynamic_api.urls import router
 
@@ -595,6 +595,62 @@ class TestAuth:
         models.Dataset.objects.filter(name="afvalwegingen").update(auth="BAG/R")
         token = fetch_auth_token(["BAG/R"])
         response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
+        assert response.status_code == 200, response.data
+
+    def test_auth_on_dataset_detail_has_profile_field_permission(
+        self,
+        api_client,
+        filled_router,
+        fetch_auth_token,
+        parkeervakken_schema,
+        parkeervakken_parkeervak_model,
+    ):
+        """Prove that having no scope on the dataset, but a
+        mandatory query on ['id'] gives access to its detailview.
+        """
+        parkeervakken_parkeervak_model.objects.create(id="121138489047")
+        models.Dataset.objects.filter(name="parkeervakken").update(auth="DATASET/SCOPE")
+        models.Profile.objects.create(
+            name="mag_niet",
+            scopes=["MAY/NOT"],
+            schema_data={
+                "datasets": {
+                    "parkeervakken": {
+                        "tables": {
+                            "parkeervakken": {
+                                "mandatoryFilterSets": [["buurtcode", "type"]]
+                            }
+                        }
+                    }
+                }
+            },
+        )
+        models.Profile.objects.create(
+            name="mag_wel",
+            scopes=["MAY/ENTER"],
+            schema_data={
+                "datasets": {
+                    "parkeervakken": {
+                        "tables": {
+                            "parkeervakken": {
+                                "mandatoryFilterSets": [["buurtcode", "type"], ["id"]]
+                            }
+                        }
+                    }
+                }
+            },
+        )
+        detail = reverse(
+            "dynamic_api:parkeervakken-parkeervakken-detail", args=["121138489047"]
+        )
+        may_not = fetch_auth_token(["MAY/NOT"])
+        may_enter = fetch_auth_token(["MAY/ENTER"])
+        dataset_scope = fetch_auth_token(["DATASET/SCOPE"])
+        response = api_client.get(detail, HTTP_AUTHORIZATION=f"Bearer {may_not}")
+        assert response.status_code == 403, response.data
+        response = api_client.get(detail, HTTP_AUTHORIZATION=f"Bearer {may_enter}")
+        assert response.status_code == 200, response.data
+        response = api_client.get(detail, HTTP_AUTHORIZATION=f"Bearer {dataset_scope}")
         assert response.status_code == 200, response.data
 
     def test_auth_options_requests_are_not_protected(
