@@ -5,6 +5,7 @@ from cachetools.func import ttl_cache
 from django.contrib.auth.models import AnonymousUser, _user_has_perm
 from rest_framework import permissions
 from schematools.contrib.django import models
+from schematools.permissions import get_active_profiles
 from dso_api.dynamic_api.utils import snake_to_camel_case
 
 
@@ -79,7 +80,8 @@ class MandatoryFiltersQueried(permissions.BasePermission):
         authorized_by_scope = request.is_authorized_for(*scopes.table)
         if authorized_by_scope:
             return True
-        if request.auth_profile.get_active_profiles(view.dataset_id, view.table_id):
+        active_profiles = get_active_profiles(request, view.dataset_id, view.table_id)
+        if active_profiles:
             return True  # there is an active profile, so you may continue
         return False
 
@@ -96,11 +98,10 @@ class HasOAuth2Scopes(permissions.BasePermission):
         if request.is_authorized_for(*scopes.table):
             return True  # authorized by scope
         else:
-            relevant_profiles = request.auth_profile.get_active_profiles(
-                dataset_id, table_id
-            )
-            if relevant_profiles:
+            active_profiles = get_active_profiles(request, dataset_id, table_id)
+            if active_profiles:
                 return True
+
         return False
 
     def has_permission(self, request, view, models=None):
