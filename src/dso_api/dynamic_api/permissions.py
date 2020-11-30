@@ -80,7 +80,9 @@ class MandatoryFiltersQueried(permissions.BasePermission):
         if authorized_by_scope:
             return True
         if view.action_map["get"] == "retrieve":
-            request.auth_profile.valid_query_params = ["id"]
+            request.auth_profile.valid_query_params = (
+                view.model._table_schema.identifier
+            )
         active_profiles = request.auth_profile.get_active_profiles(
             view.dataset_id, view.table_id
         )
@@ -102,7 +104,9 @@ class HasOAuth2Scopes(permissions.BasePermission):
             return True  # authorized by scope
         else:
             if view.action_map["get"] == "retrieve":
-                request.auth_profile.valid_query_params = ["id"]
+                request.auth_profile.valid_query_params = (
+                    view.model._table_schema.identifier
+                )
             active_profiles = request.auth_profile.get_active_profiles(
                 dataset_id, table_id
             )
