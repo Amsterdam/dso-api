@@ -113,14 +113,20 @@ def urllib3_mocker() -> Responses:
 @pytest.mark.django_db
 @pytest.mark.parametrize("test_name", list(SUCCESS_TESTS.keys()))
 def test_remote_detail_view_with_profile_scope(
-    api_client, fetch_auth_token, router, brp_dataset, urllib3_mocker, test_name
+    api_client,
+    fetch_auth_token,
+    router,
+    urllib3_mocker,
+    test_name,
+    brp_schema_json,
+    brp_endpoint_url,
 ):
     models.Profile.objects.create(
         name="profiel",
         scopes=["PROFIEL/SCOPE"],
         schema_data={
             "datasets": {
-                "brp": {
+                "brp2": {
                     "tables": {
                         "ingeschrevenpersonen": {
                             "mandatoryFilterSets": [
@@ -131,6 +137,16 @@ def test_remote_detail_view_with_profile_scope(
                 }
             }
         },
+    )
+    # creating custom brp2 copy, as ttl_cache will keep auth value after this test
+    # which breaks the other tests
+    models.Dataset.objects.create(
+        name="brp2",
+        schema_data=brp_schema_json,
+        enable_db=False,
+        endpoint_url=brp_endpoint_url,
+        url_prefix="remote",
+        auth="DATASET/SCOPE",
     )
     remote_response, local_response = SUCCESS_TESTS[test_name]
     router.reload()
@@ -144,7 +160,6 @@ def test_remote_detail_view_with_profile_scope(
     url = reverse(
         "dynamic_api:brp-ingeschrevenpersonen-detail", kwargs={"pk": "999990901"}
     )
-    models.Dataset.objects.filter(name="brp").update(auth="DATASET/SCOPE")
     token = fetch_auth_token(["PROFIEL/SCOPE"])
     response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
     assert response.status_code == 200, response.data
