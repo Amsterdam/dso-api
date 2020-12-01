@@ -7,6 +7,7 @@ from rest_framework import status
 from rest_framework.exceptions import NotAuthenticated, NotFound, ParseError
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
+from schematools.contrib.django.auth_backend import RequestProfile
 from typing import Type, Union
 from urllib.parse import urljoin
 from urllib3 import HTTPResponse
@@ -44,6 +45,7 @@ class RemoteViewSet(ViewSet):
     endpoint_url = None
     dataset_id = None
     table_id = None
+    table_schema = None
 
     default_headers = {
         "Accept": "application/json; charset=utf-8",
@@ -54,6 +56,10 @@ class RemoteViewSet(ViewSet):
 
     #: Custom permission that checks amsterdam schema auth settings
     permission_classes = [permissions.HasOAuth2Scopes]
+
+    def initial(self, request, *args, **kwargs):
+        request.auth_profile = RequestProfile(request)
+        super().initial(request, *args, **kwargs)
 
     def get_serializer(self, *args, **kwargs) -> serializers.RemoteSerializer:
         """Instantiate the serializer that validates the remote data."""
@@ -260,7 +266,7 @@ class RemoteViewSet(ViewSet):
 
 
 def remote_viewset_factory(
-    endpoint_url, serializer_class, dataset_id, table_id
+    endpoint_url, serializer_class, dataset_id, table_id, table_schema
 ) -> Type[RemoteViewSet]:
     """Construct the viewset class that handles the remote serializer."""
     return type(
@@ -272,5 +278,6 @@ def remote_viewset_factory(
             "serializer_class": serializer_class,
             "dataset_id": dataset_id,
             "table_id": table_id,
+            "table_schema": table_schema,
         },
     )

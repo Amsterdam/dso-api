@@ -152,6 +152,10 @@ class DSOViewMixin:
         request.accept_crs = self._parse_accept_crs(request.META.get("HTTP_ACCEPT_CRS"))
         request.response_content_crs = None
 
+    @property
+    def table_schema(self):
+        return self.model._table_schema
+
     def _parse_accept_crs(self, http_value) -> Optional[crs.CRS]:
         """Parse the HTTP Accept-Crs header.
 

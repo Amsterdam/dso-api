@@ -3,6 +3,7 @@ import pytest
 import urllib3
 from urllib3_mock import Responses
 from django.urls import reverse
+from schematools.contrib.django import models
 
 DEFAULT_RESPONSE = {
     "naam": {
@@ -107,6 +108,47 @@ def urllib3_mocker() -> Responses:
     responses = Responses()
     with responses:
         yield responses
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("test_name", list(SUCCESS_TESTS.keys()))
+def test_remote_detail_view_with_profile_scope(
+    api_client, fetch_auth_token, router, brp_dataset, urllib3_mocker, test_name
+):
+    models.Profile.objects.create(
+        name="profiel",
+        scopes=["PROFIEL/SCOPE"],
+        schema_data={
+            "datasets": {
+                "brp": {
+                    "tables": {
+                        "ingeschrevenpersonen": {
+                            "mandatoryFilterSets": [
+                                ["id"],
+                            ],
+                        }
+                    }
+                }
+            }
+        },
+    )
+    remote_response, local_response = SUCCESS_TESTS[test_name]
+    router.reload()
+    urllib3_mocker.add(
+        "GET",
+        "/unittest/brp/ingeschrevenpersonen/999990901",
+        body=orjson.dumps(remote_response),
+        content_type="application/json",
+    )
+    # Prove that URLs can now be resolved.
+    url = reverse(
+        "dynamic_api:brp-ingeschrevenpersonen-detail", kwargs={"pk": "999990901"}
+    )
+    models.Dataset.objects.filter(name="brp").update(auth="DATASET/SCOPE")
+    token = fetch_auth_token(["PROFIEL/SCOPE"])
+    response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
+    assert response.status_code == 200, response.data
+    assert response.json() == local_response, response.data
 
 
 @pytest.mark.django_db
