@@ -143,7 +143,7 @@ def test_remote_detail_view_with_profile_scope(
         name="brp_test",
         schema_data=brp_schema_json,
         enable_db=False,
-        # endpoint_url=brp_endpoint_url.replace('brp', 'brp_test'),
+        endpoint_url=brp_endpoint_url.replace("brp", "brp_test"),
         auth=["DATASET/SCOPE"],
     )
     remote_response, local_response = SUCCESS_TESTS["default"]
