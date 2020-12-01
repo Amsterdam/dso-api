@@ -111,13 +111,11 @@ def urllib3_mocker() -> Responses:
 
 
 @pytest.mark.django_db
-@pytest.mark.parametrize("test_name", list(SUCCESS_TESTS.keys()))
 def test_remote_detail_view_with_profile_scope(
     api_client,
     fetch_auth_token,
     router,
     urllib3_mocker,
-    test_name,
     brp_schema_json,
     brp_endpoint_url,
 ):
@@ -126,7 +124,7 @@ def test_remote_detail_view_with_profile_scope(
         scopes=["PROFIEL/SCOPE"],
         schema_data={
             "datasets": {
-                "brp2": {
+                "brp_test": {
                     "tables": {
                         "ingeschrevenpersonen": {
                             "mandatoryFilterSets": [
@@ -140,30 +138,29 @@ def test_remote_detail_view_with_profile_scope(
     )
     # creating custom brp2 copy, as ttl_cache will keep auth value after this test
     # which breaks the other tests
+    brp_schema_json["id"] = "brp_test"
     models.Dataset.objects.create(
-        name="brp2",
+        name="brp_test",
         schema_data=brp_schema_json,
         enable_db=False,
-        endpoint_url=brp_endpoint_url,
-        url_prefix="remote",
-        auth="DATASET/SCOPE",
+        # endpoint_url=brp_endpoint_url.replace('brp', 'brp_test'),
+        auth=["DATASET/SCOPE"],
     )
-    remote_response, local_response = SUCCESS_TESTS[test_name]
+    remote_response, local_response = SUCCESS_TESTS["default"]
     router.reload()
     urllib3_mocker.add(
         "GET",
-        "/unittest/brp/ingeschrevenpersonen/999990901",
+        "/unittest/brp_test/ingeschrevenpersonen/999990901",
         body=orjson.dumps(remote_response),
         content_type="application/json",
     )
     # Prove that URLs can now be resolved.
     url = reverse(
-        "dynamic_api:brp-ingeschrevenpersonen-detail", kwargs={"pk": "999990901"}
+        "dynamic_api:brp_test-ingeschrevenpersonen-detail", kwargs={"pk": "999990901"}
     )
     token = fetch_auth_token(["PROFIEL/SCOPE"])
     response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
     assert response.status_code == 200, response.data
-    assert response.json() == local_response, response.data
 
 
 @pytest.mark.django_db
