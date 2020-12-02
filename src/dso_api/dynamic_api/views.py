@@ -140,10 +140,7 @@ class DynamicApiViewSet(
     model: Type[DynamicModel] = None
 
     #: Custom permission that checks amsterdam schema auth settings
-    permission_classes = [
-        permissions.HasOAuth2Scopes,
-        permissions.MandatoryFiltersQueried,
-    ]
+    permission_classes = [permissions.HasOAuth2Scopes]
 
 
 def _get_viewset_api_docs(

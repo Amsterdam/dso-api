@@ -67,28 +67,6 @@ def get_unauthorized_fields(request, model) -> set:
     return unauthorized_fields
 
 
-class MandatoryFiltersQueried(permissions.BasePermission):
-    """
-    Custom permission to check if any mandatory queries have been queried
-    """
-
-    def has_permission(self, request, view):
-        if request.method == "OPTIONS":
-            return True
-        scopes = fetch_scopes_for_dataset_table(view.dataset_id, view.table_id)
-        authorized_by_scope = request.is_authorized_for(*scopes.table)
-        if authorized_by_scope:
-            return True
-        if view.action_map["get"] == "retrieve":
-            request.auth_profile.valid_query_params = view.table_schema.identifier
-        active_profiles = request.auth_profile.get_active_profiles(
-            view.dataset_id, view.table_id
-        )
-        if active_profiles:
-            return True  # there is an active profile, so you may continue
-        return False
-
-
 class HasOAuth2Scopes(permissions.BasePermission):
     """
     Custom permission to check auth scopes from Amsterdam schema.
