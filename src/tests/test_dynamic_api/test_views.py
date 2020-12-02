@@ -640,17 +640,46 @@ class TestAuth:
                 }
             },
         )
+        models.Profile.objects.create(
+            name="alleen_volgnummer",
+            scopes=["ONLY/VOLGNUMMER"],
+            schema_data={
+                "datasets": {
+                    "parkeervakken": {
+                        "tables": {
+                            "parkeervakken": {
+                                "mandatoryFilterSets": [["id", "volgnummer"]]
+                            }
+                        }
+                    }
+                }
+            },
+        )
         detail = reverse(
             "dynamic_api:parkeervakken-parkeervakken-detail", args=["121138489047"]
         )
+        detail_met_volgnummer = detail + "?volgnummer=3"
         may_not = fetch_auth_token(["MAY/NOT"])
         may_enter = fetch_auth_token(["MAY/ENTER"])
         dataset_scope = fetch_auth_token(["DATASET/SCOPE"])
+        profiel_met_volgnummer = fetch_auth_token(["ONLY/VOLGNUMMER"])
         response = api_client.get(detail, HTTP_AUTHORIZATION=f"Bearer {may_not}")
         assert response.status_code == 403, response.data
         response = api_client.get(detail, HTTP_AUTHORIZATION=f"Bearer {may_enter}")
         assert response.status_code == 200, response.data
+        response = api_client.get(
+            detail_met_volgnummer, HTTP_AUTHORIZATION=f"Bearer {may_enter}"
+        )
+        assert response.status_code == 200, response.data
         response = api_client.get(detail, HTTP_AUTHORIZATION=f"Bearer {dataset_scope}")
+        assert response.status_code == 200, response.data
+        response = api_client.get(
+            detail, HTTP_AUTHORIZATION=f"Bearer {profiel_met_volgnummer}"
+        )
+        assert response.status_code == 403, response.data
+        response = api_client.get(
+            detail_met_volgnummer, HTTP_AUTHORIZATION=f"Bearer {profiel_met_volgnummer}"
+        )
         assert response.status_code == 200, response.data
 
     def test_auth_options_requests_are_not_protected(

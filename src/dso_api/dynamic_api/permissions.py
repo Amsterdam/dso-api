@@ -80,7 +80,10 @@ class HasOAuth2Scopes(permissions.BasePermission):
             return True  # authorized by scope
         else:
             if view.action_map["get"] == "retrieve":  # is a detailview
-                request.auth_profile.valid_query_params = view.table_schema.identifier
+                request.auth_profile.valid_query_params = (
+                    request.auth_profile.get_valid_query_params()
+                    + view.table_schema.identifier
+                )
             active_profiles = request.auth_profile.get_active_profiles(
                 dataset_id, table_id
             )
