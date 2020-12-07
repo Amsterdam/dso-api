@@ -411,52 +411,55 @@ class TestAuth:
         ], response.data
 
     def test_api_request_audit_logging(
-            self, api_client, filled_router, afval_schema, afval_container
+        self, api_client, filled_router, afval_schema, afval_container
     ):
-        """Prove that every request is logged into audit log.
-        """
+        """Prove that every request is logged into audit log."""
 
         base_url = reverse("dynamic_api:afvalwegingen-containers-list")
         url = f"{base_url}?_sort=datumCreatie"
-        with mock.patch('dso_api.dynamic_api.middleware.audit_log') as log_mock:
+        with mock.patch("dso_api.dynamic_api.middleware.audit_log") as log_mock:
             api_client.get(url)
 
         assert len(log_mock.mock_calls) == 1
 
         log_data = json.loads(log_mock.mock_calls[0].args[0])
-        assert log_data['path'] == base_url
-        assert log_data['method'] == 'GET'
-        assert log_data['data'] == {'_sort': 'datumCreatie'}
-        assert log_data['subject'] is None
-        assert 'request_headers' in log_data
+        assert log_data["path"] == base_url
+        assert log_data["method"] == "GET"
+        assert log_data["data"] == {"_sort": "datumCreatie"}
+        assert log_data["subject"] is None
+        assert "request_headers" in log_data
 
     def test_api_authorized_request_audit_logging(
-            self, api_client, filled_router, afval_schema, afval_container, fetch_auth_token
+        self, api_client, filled_router, afval_schema, afval_container, fetch_auth_token
     ):
-        """Prove that every authorized request is logged into audit log.
-        """
+        """Prove that every authorized request is logged into audit log."""
 
         token = fetch_auth_token(["BAG/R"])
         base_url = reverse("dynamic_api:afvalwegingen-containers-list")
         url = f"{base_url}?_sort=datumCreatie"
-        with mock.patch('dso_api.dynamic_api.middleware.audit_log') as log_mock:
+        with mock.patch("dso_api.dynamic_api.middleware.audit_log") as log_mock:
             api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
 
         assert len(log_mock.mock_calls) == 1
 
         log_data = json.loads(log_mock.mock_calls[0].args[0])
-        assert log_data['path'] == base_url
-        assert log_data['method'] == 'GET'
-        assert log_data['data'] == {'_sort': 'datumCreatie'}
-        assert log_data['subject'] == 'test@tester.nl'
-        assert 'request_headers' in log_data
+        assert log_data["path"] == base_url
+        assert log_data["method"] == "GET"
+        assert log_data["data"] == {"_sort": "datumCreatie"}
+        assert log_data["subject"] == "test@tester.nl"
+        assert "request_headers" in log_data
 
 
 # @pytest.mark.usefixtures("reloadrouter")
 @pytest.mark.django_db
 class TestEmbedTemporalTables:
     def test_detail_expand_true_for_fk_relation(
-        self, api_client, reloadrouter, buurten_model, buurten_data, wijken_data,
+        self,
+        api_client,
+        reloadrouter,
+        buurten_model,
+        buurten_data,
+        wijken_data,
     ):
         """Prove that ligtInWijk shows up when expanded"""
 

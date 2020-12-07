@@ -124,7 +124,11 @@ class RemoteViewSet(ViewSet):
         headers = self.get_headers()
         try:
             response: HTTPResponse = http_pool.request(
-                "GET", url, headers=headers, timeout=60, retries=False,
+                "GET",
+                url,
+                headers=headers,
+                timeout=60,
+                retries=False,
             )
         except (TimeoutError, urllib3.exceptions.TimeoutError) as e:
             # Socket timeout

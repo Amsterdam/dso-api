@@ -169,7 +169,9 @@ def test_location(api_request, location):
     """Prove that the serializer recorgnizes crs"""
 
     serializer = LocationSerializer(
-        instance=location, fields_to_expand=[], context={"request": api_request},
+        instance=location,
+        fields_to_expand=[],
+        context={"request": api_request},
     )
     data = serializer.data
     assert data["geometry"]["coordinates"] == [10.0, 10.0]
@@ -184,7 +186,9 @@ def test_location_transform(api_request, location):
 
     api_request.accept_crs = WGS84
     serializer = LocationSerializer(
-        instance=location, fields_to_expand=[], context={"request": api_request},
+        instance=location,
+        fields_to_expand=[],
+        context={"request": api_request},
     )
     data = serializer.data
     rounder = lambda p: [round(c, 6) for c in p]
