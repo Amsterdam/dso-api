@@ -548,6 +548,10 @@ class TestEmbedTemporalTables:
         url = f"{url}?_expand=true"
         response = api_client.get(url)
         assert response.status_code == 200, response.data
+        assert (
+            response.data["buurt"]
+            == "http://testserver/v1/gebieden/buurten/03630000000078/"
+        )
         assert response.data["_embedded"]["buurt"]["id"] == "03630000000078.2"
 
     def test_list_expand_true_for_loose_relation(
@@ -568,3 +572,51 @@ class TestEmbedTemporalTables:
         response = api_client.get(url)
         assert response.status_code == 200, response.data
         assert response.data["_embedded"]["buurt"][0]["id"] == "03630000000078.2"
+
+    def test_groundup_list(
+        self,
+        api_client,
+        reloadrouter,
+        buurten_model,
+        buurten_data,
+        woningbouwplan_model,
+        woningbouwplannen_data,
+    ):
+        """use funtioning nm-relation as starting point"""
+
+        url = reverse("dynamic_api:woningbouwplannen-woningbouwplan-list")
+        url = f"{url}?_expand=true"
+        response = api_client.get(url)
+        assert response.status_code == 200, response.data
+
+        #  _embedded must contain for each FK or MN relation a key (with camelCased fieldname)
+        #  containing a list of all records that are being referred to
+        #  for loose relations, these must be resolved to the latest 'volgnummer'
+        #  _embedded must also contain a key (with table name)
+        #    containing a (filtered) list of items.
+        # the FK or NM relation keys in those items are urls without volgnummer
+
+        assert response.data["_embedded"]["buurten"][0]["id"] == "03630000000078.2"
+        assert response.data["_embedded"]["woningbouwplan"][0]["buurten"] == [
+            "http://testserver/v1/gebieden/buurten/03630000000078/",
+        ]  # check of juiste functie wordt aangeroepen
+
+    def test_groundup_detail(
+        self,
+        api_client,
+        reloadrouter,
+        buurten_model,
+        buurten_data,
+        woningbouwplan_model,
+        woningbouwplannen_data,
+    ):
+        """use funtioning nm-relation as starting point"""
+        url = reverse("dynamic_api:woningbouwplannen-woningbouwplan-detail", args=[1])
+        url = f"{url}?_expand=true"
+        response = api_client.get(url)
+        assert response.status_code == 200, response.data
+        # Waarom is bestaatUitBuurten nu opeens geen list?
+        assert response.data["buurten"] == [
+            "http://testserver/v1/gebieden/buurten/03630000000078/",
+        ]
+        assert response.data["_embedded"]["buurten"]["id"] == "03630000000078.2"

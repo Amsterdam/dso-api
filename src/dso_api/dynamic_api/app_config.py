@@ -47,12 +47,22 @@ class VirtualAppConfig(apps_config.AppConfig):
 
 def add_custom_serializers():
     from rest_framework.serializers import ModelSerializer
-    from schematools.contrib.django.models import LooseRelationField
-    from dso_api.dynamic_api.fields import LooseRelationUrlField
+    from schematools.contrib.django.models import (
+        LooseRelationField,
+        LooseRelationManyToManyField,
+    )
+    from dso_api.dynamic_api.fields import (
+        LooseRelationUrlField,
+        LooseRelationUrlListField,
+    )
 
     field_mapping = ModelSerializer.serializer_field_mapping
     field_mapping.update(
         {LooseRelationField: LooseRelationUrlField},
+    )
+
+    field_mapping.update(
+        {LooseRelationManyToManyField: LooseRelationUrlListField},
     )
 
 

@@ -101,6 +101,7 @@ def filled_router(
     download_url_dataset,
     meldingen_dataset,
     gebieden_dataset,
+    woningbouwplannen_dataset,
 ):
     # Prove that the router URLs are extended on adding a model
     router.reload()
@@ -123,6 +124,7 @@ def filled_router(
         download_url_dataset: "download_url",
         meldingen_dataset: "meldingen_statistieken",
         gebieden_dataset: "gebieden_buurten",
+        woningbouwplannen_dataset: "woningbouwplannen_woningbouwplan",
     }
 
     # Based on datasets, create test table if not exists
@@ -686,6 +688,25 @@ def gebieden_dataset(gebieden_schema_json) -> Dataset:
 
 
 @pytest.fixture()
+def woningbouwplannen_schema_json() -> dict:
+    """ Fixture to return the schema json """
+    path = HERE / "files/woningbouwplannen.json"
+    return json.loads(path.read_text())
+
+
+@pytest.fixture()
+def woningbouwplannen_schema(woningbouwplannen_schema_json) -> DatasetSchema:
+    return DatasetSchema.from_dict(woningbouwplannen_schema_json)
+
+
+@pytest.fixture()
+def woningbouwplannen_dataset(woningbouwplannen_schema_json) -> Dataset:
+    return Dataset.objects.create(
+        name="woningbouwplannen", schema_data=woningbouwplannen_schema_json
+    )
+
+
+@pytest.fixture()
 def statistieken_model(filled_router):
     return filled_router.all_models["meldingen"]["statistieken"]
 
@@ -703,6 +724,11 @@ def wijken_model(filled_router):
 @pytest.fixture()
 def ggwgebieden_model(filled_router):
     return filled_router.all_models["gebieden"]["ggwgebieden"]
+
+
+@pytest.fixture()
+def woningbouwplan_model(filled_router):
+    return filled_router.all_models["woningbouwplannen"]["woningbouwplan"]
 
 
 @pytest.fixture()
@@ -741,3 +767,17 @@ def ggwgebieden_data(ggwgebieden_model):
     ggwgebieden_model.bestaat_uit_buurten.through.objects.create(
         ggwgebieden_id="03630950000000.1", bestaat_uit_buurten_id="03630000000078.1"
     )
+
+
+@pytest.fixture()
+def woningbouwplannen_data(woningbouwplan_model):
+    woningbouwplan_model.objects.create(
+        id="1",
+    )
+    woningbouwplan_model.buurten.through.objects.create(
+        woningbouwplan_id="1", buurten_id="03630000000078"
+    )
+    # woningbouwplan_model.objects.create(id="2", testbuurt="03630000000078")
+    # woningbouwplan_model.bestaat_uit_buurten.through.objects.create(
+    #    woningbouwplan_id="2", bestaat_uit_buurten_id="03630000000078"
+    # )
