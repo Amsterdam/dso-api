@@ -147,7 +147,8 @@ class TestDynamicSerializer:
         api_request.dataset = afval_schema
         ContainerSerializer = serializer_factory(afval_container_model, 0)
         container_without_cluster = afval_container_model.objects.create(
-            id=3, cluster=None,
+            id=3,
+            cluster=None,
         )
         container_serializer = ContainerSerializer(
             container_without_cluster,
@@ -183,7 +184,8 @@ class TestDynamicSerializer:
         api_request.dataset = afval_schema
         ContainerSerializer = serializer_factory(afval_container_model, 0)
         container_invalid_cluster = afval_container_model.objects.create(
-            id=4, cluster_id=99,
+            id=4,
+            cluster_id=99,
         )
         container_serializer = ContainerSerializer(
             container_invalid_cluster,
@@ -226,7 +228,8 @@ class TestDynamicSerializer:
         api_request.dataset_temporal_slice = None
         GemeenteSerializer = serializer_factory(bagh_gemeente_model, 0)
         gemeente_serializer = GemeenteSerializer(
-            bagh_gemeente, context={"request": api_request},
+            bagh_gemeente,
+            context={"request": api_request},
         )
         assert gemeente_serializer.data == {
             "_links": {
@@ -268,7 +271,8 @@ class TestDynamicSerializer:
         VestigingSerializer = serializer_factory(vestiging_vestiging_model, 0)
 
         vestiging_serializer = VestigingSerializer(
-            vestiging1, context={"request": api_request},
+            vestiging1,
+            context={"request": api_request},
         )
 
         assert vestiging_serializer.data == {
@@ -288,7 +292,8 @@ class TestDynamicSerializer:
         }
 
         vestiging_serializer = VestigingSerializer(
-            vestiging2, context={"request": api_request},
+            vestiging2,
+            context={"request": api_request},
         )
         assert vestiging_serializer.data == {
             "_links": {
@@ -308,7 +313,8 @@ class TestDynamicSerializer:
 
         AdresSerializer = serializer_factory(vestiging_adres_model, 0)
         adres_serializer = AdresSerializer(
-            post_adres1, context={"request": api_request},
+            post_adres1,
+            context={"request": api_request},
         )
         assert adres_serializer.data == {
             "_links": {
@@ -477,7 +483,10 @@ class TestDynamicSerializer:
 
     @staticmethod
     def test_display_title_present(
-        api_request, fietspaaltjes_schema, fietspaaltjes_model, fietspaaltjes_data,
+        api_request,
+        fietspaaltjes_schema,
+        fietspaaltjes_model,
+        fietspaaltjes_data,
     ):
         """ Prove that title element shows display value if display field is specified """
 
@@ -674,7 +683,9 @@ class TestDynamicSerializer:
         api_request.dataset = download_url_schema
 
         dossiers_serializer = DossiersSerializer(
-            dossier_model.objects.all(), context={"request": api_request}, many=True,
+            dossier_model.objects.all(),
+            context={"request": api_request},
+            many=True,
         )
 
         assert "sig=" in dossiers_serializer.data["dossiers"][0]["url"]
@@ -700,14 +711,18 @@ class TestDynamicSerializer:
         api_request.dataset = download_url_schema
 
         dossiers_serializer = DossiersSerializer(
-            dossier_model.objects.all(), context={"request": api_request}, many=True,
+            dossier_model.objects.all(),
+            context={"request": api_request},
+            many=True,
         )
 
         assert dossiers_serializer.data["dossiers"][0]["url"] == ""
 
     @staticmethod
     def test_loose_relation_serialization(
-        api_request, meldingen_schema, statistieken_model,
+        api_request,
+        meldingen_schema,
+        statistieken_model,
     ):
         """Prove that the serializer factory generates the right link
         for a loose relation field
@@ -718,7 +733,10 @@ class TestDynamicSerializer:
                 self.model = model
 
         api_request.dataset = meldingen_schema
-        statistiek = statistieken_model.objects.create(id=1, buurt="03630000000078",)
+        statistiek = statistieken_model.objects.create(
+            id=1,
+            buurt="03630000000078",
+        )
         StatistiekenSerializer = serializer_factory(statistieken_model, 0)
 
         statistieken_serializer = StatistiekenSerializer(

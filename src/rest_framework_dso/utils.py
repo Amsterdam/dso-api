@@ -12,7 +12,9 @@ EmbeddedFieldDict = Dict[str, AbstractEmbeddedField]
 
 class EmbeddedHelper:
     def __init__(
-        self, parent_serializer: serializers.ModelSerializer, expand: Union[list, bool],
+        self,
+        parent_serializer: serializers.ModelSerializer,
+        expand: Union[list, bool],
     ):
         """Find all serializers that are configured for the sideloading feature.
 

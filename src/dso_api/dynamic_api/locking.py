@@ -93,7 +93,8 @@ class ReadLockMixin:
         # Trying to call super() on this view risks using old serializers/filtersets.
         # Instead, re-resolve the newly generated view class, and call that instead.
         logger.debug(
-            "Re-fetching view for updated model %s", request.get_full_path(),
+            "Re-fetching view for updated model %s",
+            request.get_full_path(),
         )
 
         # Fetch the newly generated view.

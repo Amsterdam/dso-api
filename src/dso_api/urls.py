@@ -11,9 +11,17 @@ from rest_framework_dso.views import multiple_slashes
 urlpatterns = [
     path("status/health/", include(django_healthchecks.urls)),
     path("v1/", include(dso_api.dynamic_api.urls)),
-    path("v1/openapi.yaml", get_openapi_yaml_view(), name="openapi.yaml",),
+    path(
+        "v1/openapi.yaml",
+        get_openapi_yaml_view(),
+        name="openapi.yaml",
+    ),
     path("", RedirectView.as_view(url="/v1/"), name="root-redirect"),
-    re_path(r"^.*/{2,}.*$", multiple_slashes, name="error-trailing-slashes",),
+    re_path(
+        r"^.*/{2,}.*$",
+        multiple_slashes,
+        name="error-trailing-slashes",
+    ),
 ]
 
 handler400 = exceptions.bad_request

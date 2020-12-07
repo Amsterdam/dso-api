@@ -19,7 +19,10 @@ DEFAULT_RESPONSE = {
         "huisnummer": "6",
         "straatnaam": "Anjelierstraat",
         "functieAdres": "woonadres",
-        "gemeenteVanInschrijving": {"code": "1900", "omschrijving": "Súdwest-Fryslân",},
+        "gemeenteVanInschrijving": {
+            "code": "1900",
+            "omschrijving": "Súdwest-Fryslân",
+        },
         "datumAanvangAdreshouding": {
             "dag": 1,
             "jaar": 2011,

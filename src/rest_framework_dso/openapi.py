@@ -43,8 +43,15 @@ class DSOSchemaGenerator(openapi.SchemaGenerator):
                 "self": {
                     "type": "object",
                     "properties": {
-                        "href": {"type": "string", "readOnly": True,},
-                        "title": {"type": "string", "format": "uri", "readOnly": True,},
+                        "href": {
+                            "type": "string",
+                            "readOnly": True,
+                        },
+                        "title": {
+                            "type": "string",
+                            "format": "uri",
+                            "readOnly": True,
+                        },
                     },
                 }
             },

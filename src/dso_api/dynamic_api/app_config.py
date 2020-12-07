@@ -51,7 +51,9 @@ def add_custom_serializers():
     from dso_api.dynamic_api.fields import LooseRelationUrlField
 
     field_mapping = ModelSerializer.serializer_field_mapping
-    field_mapping.update({LooseRelationField: LooseRelationUrlField},)
+    field_mapping.update(
+        {LooseRelationField: LooseRelationUrlField},
+    )
 
 
 def register_model(dataset, model):

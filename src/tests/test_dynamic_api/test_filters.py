@@ -428,7 +428,8 @@ class TestDynamicFilterSet:
 
         router.reload()
         response = APIClient().get(
-            "/v1/parkeervakken/parkeervakken/", data={"soort[isempty]": "true"},
+            "/v1/parkeervakken/parkeervakken/",
+            data={"soort[isempty]": "true"},
         )
         assert len(response.data["_embedded"]["parkeervakken"]) == 2
         assert (
@@ -437,7 +438,8 @@ class TestDynamicFilterSet:
         )
 
         response = APIClient().get(
-            "/v1/parkeervakken/parkeervakken/", data={"soort[isempty]": "false"},
+            "/v1/parkeervakken/parkeervakken/",
+            data={"soort[isempty]": "false"},
         )
         assert len(response.data["_embedded"]["parkeervakken"]) == 1
         assert response.data["_embedded"]["parkeervakken"][0]["id"] == "121138489006"
