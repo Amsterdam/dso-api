@@ -20,7 +20,10 @@ from rest_framework.serializers import Field
 from rest_framework.reverse import reverse
 from schematools.types import DatasetTableSchema
 from schematools.contrib.django.models import DynamicModel
-from schematools.contrib.django.models import LooseRelationField
+from schematools.contrib.django.models import (
+    LooseRelationField,
+    LooseRelationManyToManyField,
+)
 from schematools.utils import to_snake_case, toCamelCase
 
 from dso_api.dynamic_api.fields import (
@@ -207,31 +210,74 @@ class DynamicSerializer(DSOModelSerializer):
     def to_representation(self, validated_data):
         data = super().to_representation(validated_data)
 
+        request = self.get_request()
+        from .urls import app_name
+
         # URL encoding of the data, i.e. spaces to %20, only if urlfield is present
         if self._url_content_fields:
             data = URLencodingURLfields().to_representation(
                 self._url_content_fields, data
             )
 
-        if self.instance is not None:
-            if isinstance(self.instance, list):
-                # test workaround
-                model = self.instance[0]._meta.model
-            elif isinstance(self.instance, models.QuerySet):
-                # ListSerializer use
-                model = self.instance.model
-            else:
-                model = self.instance._meta.model
-            request = self.get_request()
+        loose_relation_many_to_many_fields = [
+            f.attname
+            for f in self.Meta.model._meta.many_to_many
+            if isinstance(f, LooseRelationManyToManyField)
+        ]
 
-            for model_field in model._meta.get_fields():
-                permission_key = get_permission_key_for_field(model_field)
-                permission = request.auth_profile.get_read_permission(permission_key)
-                if permission is not None:
-                    key = toCamelCase(model_field.name)
-                    data[key] = mutate_value(permission, data[key])
+        for loose_relation_field_name in loose_relation_many_to_many_fields:
+            if not data[toCamelCase(loose_relation_field_name)]:
+                relation = self.Meta.model._meta.get_field(
+                    loose_relation_field_name
+                ).relation
+                dataset_name, table_name, relation_field_name = [
+                    to_snake_case(part) for part in relation.split(":")
+                ]
+                related_mgr = getattr(validated_data, loose_relation_field_name)
+                source_field_name = related_mgr.source_field_name
+                source_id = validated_data.id
+                tussentabel_filter_params = {source_field_name: source_id}
+                target_id_field = f"{related_mgr.target_field_name}_id"
+                tussentabel_items = [
+                    getattr(item, target_id_field, None)
+                    for item in related_mgr.through.objects.filter(
+                        **tussentabel_filter_params
+                    )
+                ]
+                result_list = [
+                    reverse(
+                        f"{app_name}:{dataset_name}-{table_name}-detail",
+                        kwargs={"pk": item},
+                        request=request,
+                    )
+                    for item in tussentabel_items
+                ]
+                data[toCamelCase(loose_relation_field_name)] = result_list
+
+        if self.instance is not None:
+            data = self._profile_based_authorization_and_mutation(data)
 
         return data
+
+    def _profile_based_authorization_and_mutation(self, data):
+        authorized_data = data.copy()
+        if isinstance(self.instance, list):
+            # test workaround
+            model = self.instance[0]._meta.model
+        elif isinstance(self.instance, models.QuerySet):
+            # ListSerializer use
+            model = self.instance.model
+        else:
+            model = self.instance._meta.model
+        request = self.get_request()
+
+        for model_field in model._meta.get_fields():
+            permission_key = get_permission_key_for_field(model_field)
+            permission = request.auth_profile.get_read_permission(permission_key)
+            if permission is not None:
+                key = toCamelCase(model_field.name)
+                authorized_data[key] = mutate_value(permission, data[key])
+        return authorized_data
 
 
 def get_view_name(model: Type[DynamicModel], suffix: str):
@@ -275,7 +321,10 @@ def serializer_factory(
     new_attrs["Meta"] = type(
         "Meta", (), {"model": model, "fields": fields, "extra_kwargs": extra_kwargs}
     )
-    return type(serializer_name, (DynamicSerializer,), new_attrs)
+
+    dynamic_serializer = type(serializer_name, (DynamicSerializer,), new_attrs)
+
+    return dynamic_serializer
 
 
 def generate_field_serializer(  # noqa: C901
@@ -287,6 +336,9 @@ def generate_field_serializer(  # noqa: C901
     camel_name = toCamelCase(model_field.name)
     depth = extra_kwargs.get("depth", 0)
     depth += 1
+
+    # model_name = repr(model)
+
     if isinstance(model_field, models.ManyToOneRel):
         for name, relation in model._table_schema.relations.items():
             if (
@@ -328,9 +380,18 @@ def generate_field_serializer(  # noqa: C901
     # Add extra embedded part for related fields
     # For NM relations, we need another type of EmbeddedField
     if isinstance(
-        model_field, (models.ForeignKey, models.ManyToManyField, LooseRelationField)
+        model_field,
+        (
+            models.ForeignKey,
+            models.ManyToManyField,
+            LooseRelationField,
+            LooseRelationManyToManyField,
+        ),
     ):
+
         EmbeddedFieldClass = EmbeddedField
+        if isinstance(model_field, LooseRelationManyToManyField):
+            pass
         if isinstance(model_field, models.ManyToManyField):
             EmbeddedFieldClass = EmbeddedManyToManyField
         if depth <= 1:

@@ -115,7 +115,13 @@ class EmbeddedManyToManyField(AbstractEmbeddedField):
             return []
         # I guess, as long as it is Django we can use pk,
         # because Django needs it
-        return [r.pk for r in related_mgr.all()]
+        source_is_temporal = self.parent_model.is_temporal()
+        target_is_temporal = related_mgr.model.is_temporal()
+        if not source_is_temporal and target_is_temporal:
+            ids = self._get_temporal_ids(instance, related_mgr)
+        else:
+            ids = [r.pk for r in related_mgr.all()]
+        return ids
 
     def get_related_list_ids(self, instances) -> list:
         """Find the object IDs of the instances."""
@@ -124,8 +130,38 @@ class EmbeddedManyToManyField(AbstractEmbeddedField):
             related_mgr = getattr(instance, self.attname, None)
             if related_mgr is None:
                 continue
-            ids |= set(r.pk for r in related_mgr.all())
+            source_is_temporal = self.parent_model.is_temporal()
+            target_is_temporal = related_mgr.model.is_temporal()
+            if not source_is_temporal and target_is_temporal:
+
+                ids |= set(self._get_temporal_ids(instance, related_mgr))
+            else:
+                ids |= set(r.pk for r in related_mgr.all())
         return list(ids)
+
+    def _get_temporal_ids(self, instance, related_mgr):
+        (
+            identificatie_fieldname,
+            volgnummer_fieldname,
+        ) = related_mgr.model._table_schema.identifier
+        source_field_name = related_mgr.source_field_name
+        source_id = instance.id
+        tussentabel_filter_params = {source_field_name: source_id}
+        target_id_field = f"{related_mgr.target_field_name}_id"
+        tussentabel_items = [
+            getattr(item, target_id_field, None)
+            for item in related_mgr.through.objects.filter(**tussentabel_filter_params)
+        ]  # de items uit de tussen tabel.
+        target_filter_params = {f"{identificatie_fieldname}__in": tussentabel_items}
+        order_param = f"-{volgnummer_fieldname}"
+        ids = [
+            item.pk
+            for item in related_mgr.model.objects.filter(
+                **target_filter_params
+            ).order_by(order_param)[:1]
+        ]  # de items uit de buurten tabel.
+        # ids |= set(r.pk for r in related_mgr.model.objects.all())
+        return ids
 
 
 class LinksField(serializers.HyperlinkedIdentityField):
