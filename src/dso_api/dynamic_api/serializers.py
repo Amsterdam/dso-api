@@ -388,8 +388,7 @@ def generate_field_serializer(  # noqa: C901
     ):
 
         EmbeddedFieldClass = EmbeddedField
-        if isinstance(model_field, LooseRelationManyToManyField):
-            pass
+
         if isinstance(model_field, models.ManyToManyField):
             EmbeddedFieldClass = EmbeddedManyToManyField
         if depth <= 1:
