@@ -236,12 +236,12 @@ class DynamicSerializer(DSOModelSerializer):
                 related_mgr = getattr(validated_data, loose_relation_field_name)
                 source_field_name = related_mgr.source_field_name
                 source_id = validated_data.id
-                tussentabel_filter_params = {source_field_name: source_id}
+                through_tabel_filter_params = {source_field_name: source_id}
                 target_id_field = f"{related_mgr.target_field_name}_id"
-                tussentabel_items = [
+                through_tabel_items = [
                     getattr(item, target_id_field, None)
                     for item in related_mgr.through.objects.filter(
-                        **tussentabel_filter_params
+                        **through_tabel_filter_params
                     )
                 ]
                 result_list = [
@@ -250,7 +250,7 @@ class DynamicSerializer(DSOModelSerializer):
                         kwargs={"pk": item},
                         request=request,
                     )
-                    for item in tussentabel_items
+                    for item in through_tabel_items
                 ]
                 data[toCamelCase(loose_relation_field_name)] = result_list
 
