@@ -4,13 +4,6 @@
   "title": "Woningbouwplannen en Strategische ruimtes",
   "status": "beschikbaar",
   "version": "0.0.1",
-  "identifierX": "identificatie",
-  "temporalX": {
-    "identifier": "volgnummer",
-    "dimensions": {
-      "geldigOp": ["beginGeldigheid", "eindGeldigheid"]
-    }
-  },
   "crs": "EPSG:28992",
   "tables": [
     {
