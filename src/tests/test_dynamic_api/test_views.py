@@ -573,7 +573,7 @@ class TestEmbedTemporalTables:
         assert response.status_code == 200, response.data
         assert response.data["_embedded"]["buurt"][0]["id"] == "03630000000078.2"
 
-    def test_groundup_list(
+    def test_list_expand_true_non_tempooral_many_to_many_to_temporal(
         self,
         api_client,
         reloadrouter,
@@ -582,7 +582,6 @@ class TestEmbedTemporalTables:
         woningbouwplan_model,
         woningbouwplannen_data,
     ):
-        """use funtioning nm-relation as starting point"""
 
         url = reverse("dynamic_api:woningbouwplannen-woningbouwplan-list")
         url = f"{url}?_expand=true"
@@ -599,9 +598,9 @@ class TestEmbedTemporalTables:
         assert response.data["_embedded"]["buurten"][0]["id"] == "03630000000078.2"
         assert response.data["_embedded"]["woningbouwplan"][0]["buurten"] == [
             "http://testserver/v1/gebieden/buurten/03630000000078/",
-        ]  # check of juiste functie wordt aangeroepen
+        ]
 
-    def test_groundup_detail(
+    def test_detail_expand_true_non_temporal_many_to_many_to_temporal(
         self,
         api_client,
         reloadrouter,
@@ -610,12 +609,10 @@ class TestEmbedTemporalTables:
         woningbouwplan_model,
         woningbouwplannen_data,
     ):
-        """use funtioning nm-relation as starting point"""
         url = reverse("dynamic_api:woningbouwplannen-woningbouwplan-detail", args=[1])
         url = f"{url}?_expand=true"
         response = api_client.get(url)
         assert response.status_code == 200, response.data
-        # Waarom is bestaatUitBuurten nu opeens geen list?
         assert response.data["buurten"] == [
             "http://testserver/v1/gebieden/buurten/03630000000078/",
         ]
