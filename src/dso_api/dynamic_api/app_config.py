@@ -58,11 +58,10 @@ def add_custom_serializers():
 
     field_mapping = ModelSerializer.serializer_field_mapping
     field_mapping.update(
-        {LooseRelationField: LooseRelationUrlField},
-    )
-
-    field_mapping.update(
-        {LooseRelationManyToManyField: LooseRelationUrlListField},
+        {
+            LooseRelationField: LooseRelationUrlField,
+            LooseRelationManyToManyField: LooseRelationUrlListField,
+        }
     )
 
 

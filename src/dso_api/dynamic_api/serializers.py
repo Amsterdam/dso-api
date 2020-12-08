@@ -255,12 +255,12 @@ class DynamicSerializer(DSOModelSerializer):
                 data[toCamelCase(loose_relation_field_name)] = result_list
 
         if self.instance is not None:
-            data = self._profile_based_authorization_and_mutation(data)
+            data.update(self._profile_based_authorization_and_mutation(data))
 
         return data
 
     def _profile_based_authorization_and_mutation(self, data):
-        authorized_data = data.copy()
+        authorized_data = dict()
         if isinstance(self.instance, list):
             # test workaround
             model = self.instance[0]._meta.model
@@ -334,8 +334,6 @@ def generate_field_serializer(  # noqa: C901
     camel_name = toCamelCase(model_field.name)
     depth = extra_kwargs.get("depth", 0)
     depth += 1
-
-    # model_name = repr(model)
 
     if isinstance(model_field, models.ManyToOneRel):
         for name, relation in model._table_schema.relations.items():

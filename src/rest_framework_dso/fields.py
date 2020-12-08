@@ -133,7 +133,6 @@ class EmbeddedManyToManyField(AbstractEmbeddedField):
             source_is_temporal = self.parent_model.is_temporal()
             target_is_temporal = related_mgr.model.is_temporal()
             if not source_is_temporal and target_is_temporal:
-
                 ids |= set(self._get_temporal_ids(instance, related_mgr))
             else:
                 ids |= set(r.pk for r in related_mgr.all())
@@ -146,21 +145,18 @@ class EmbeddedManyToManyField(AbstractEmbeddedField):
         ) = related_mgr.model._table_schema.identifier
         source_field_name = related_mgr.source_field_name
         source_id = instance.id
-        tussentabel_filter_params = {source_field_name: source_id}
+        through_tabel_filter_params = {source_field_name: source_id}
         target_id_field = f"{related_mgr.target_field_name}_id"
-        tussentabel_items = [
-            getattr(item, target_id_field, None)
-            for item in related_mgr.through.objects.filter(**tussentabel_filter_params)
-        ]  # de items uit de tussen tabel.
-        target_filter_params = {f"{identificatie_fieldname}__in": tussentabel_items}
+        through_tabel_items = related_mgr.through.objects.filter(
+            **through_tabel_filter_params
+        ).values_list(target_id_field, flat=True)
+        target_filter_params = {f"{identificatie_fieldname}__in": through_tabel_items}
         order_param = f"-{volgnummer_fieldname}"
-        ids = [
-            item.pk
-            for item in related_mgr.model.objects.filter(
-                **target_filter_params
-            ).order_by(order_param)[:1]
-        ]  # de items uit de buurten tabel.
-        # ids |= set(r.pk for r in related_mgr.model.objects.all())
+        ids = (
+            related_mgr.model.objects.filter(**target_filter_params)
+            .order_by(order_param)
+            .values_list("pk", flat=True)[:1]
+        )
         return ids
 
 
