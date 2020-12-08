@@ -771,9 +771,7 @@ def ggwgebieden_data(ggwgebieden_model):
 
 @pytest.fixture()
 def woningbouwplannen_data(woningbouwplan_model):
-    woningbouwplan_model.objects.create(
-        id="1",
-    )
+    woningbouwplan_model.objects.create(id="1")
     woningbouwplan_model.buurten.through.objects.create(
         woningbouwplan_id="1", buurten_id="03630000000078"
     )
