@@ -322,9 +322,7 @@ def serializer_factory(
         "Meta", (), {"model": model, "fields": fields, "extra_kwargs": extra_kwargs}
     )
 
-    dynamic_serializer = type(serializer_name, (DynamicSerializer,), new_attrs)
-
-    return dynamic_serializer
+    return type(serializer_name, (DynamicSerializer,), new_attrs)
 
 
 def generate_field_serializer(  # noqa: C901
