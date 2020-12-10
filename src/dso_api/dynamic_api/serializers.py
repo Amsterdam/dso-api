@@ -238,12 +238,10 @@ class DynamicSerializer(DSOModelSerializer):
                 source_id = validated_data.id
                 through_tabel_filter_params = {source_field_name: source_id}
                 target_id_field = f"{related_mgr.target_field_name}_id"
-                through_tabel_items = [
-                    getattr(item, target_id_field, None)
-                    for item in related_mgr.through.objects.filter(
-                        **through_tabel_filter_params
-                    )
-                ]
+                through_tabel_items = related_mgr.through.objects.filter(
+                    **through_tabel_filter_params
+                ).values_list(target_id_field, flat=True)
+
                 result_list = [
                     reverse(
                         f"{app_name}:{dataset_name}-{table_name}-detail",
