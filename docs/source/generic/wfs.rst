@@ -277,7 +277,7 @@ Deze tags worden allemaal ondersteund:
      - :samp:`NOT {a}`
      - Negatie van het geneste element.
    * - ``<ResourceId>``
-     - :samp:`table.id={value}`
+     - :samp:`table.id == {value}`
      - Zoekt slechts een enkel element op "typenaam.identifier".
        Meerdere combineren tot een ``IN`` query.
 
