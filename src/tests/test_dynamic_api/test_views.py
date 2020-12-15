@@ -617,3 +617,48 @@ class TestEmbedTemporalTables:
             "http://testserver/v1/gebieden/buurten/03630000000078/",
         ]
         assert response.data["_embedded"]["buurten"]["id"] == "03630000000078.2"
+
+    def test_independence_of_m2m_through_id_field(
+        self,
+        api_client,
+        reloadrouter,
+        buurten_model,
+        buurten_data,
+        woningbouwplan_model,
+        woningbouwplannen_data,
+    ):
+        """Prove that the many-to-many relation from a non-temporal to temporal dataset
+        works without using the 'id' column in the though table.
+        """
+        cursor = connection.cursor()
+        cursor.execute(
+            """SELECT column_name FROM information_schema.columns
+            WHERE table_schema = 'public'
+            AND table_name = 'woningbouwplannen_woningbouwplan_buurten';
+            """
+        )
+        column_names_before = set([column_name for (column_name,) in cursor.fetchall()])
+        assert "id" in column_names_before
+        """ renaming the 'id' column to 'wbw_rel_woningbouwplan_buurt_id'
+        to mimick the woningbouwplannen dataset"""
+        cursor.execute(
+            """ALTER TABLE woningbouwplannen_woningbouwplan_buurten
+            RENAME COLUMN id TO wbw_rel_woningbouwplan_buurt_id;
+            """
+        )
+        cursor.execute(
+            """SELECT column_name FROM information_schema.columns
+            WHERE table_schema = 'public'
+            AND table_name = 'woningbouwplannen_woningbouwplan_buurten';
+            """
+        )
+        column_names_after = set([column_name for (column_name,) in cursor.fetchall()])
+        assert "wbw_rel_woningbouwplan_buurt_id" in column_names_after
+        assert "id" not in column_names_after
+        url = reverse("dynamic_api:woningbouwplannen-woningbouwplan-detail", args=[1])
+        url = f"{url}?_expand=true"
+        response = api_client.get(url)
+        # check that "buurten" still contains the correct list
+        assert response.data["buurten"] == [
+            "http://testserver/v1/gebieden/buurten/03630000000078/",
+        ]
