@@ -276,3 +276,5 @@ AMSTERDAM_SCHEMA = {"geosearch_disabled_datasets": ["bag", "meetbouten"]}
 for key, value in env.ENVIRON.items():
     if key.startswith("AZURE_BLOB_"):
         locals()[key] = value
+
+HAAL_CENTRAAL_API_KEY = os.getenv("HAAL_CENTRAAL_API_KEY", "UNKNOWN")

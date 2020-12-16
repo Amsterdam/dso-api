@@ -108,6 +108,11 @@ def remote_field_factory(field: DatasetFieldSchema, **kwargs) -> serializers.Fie
         # Generate a serializer class for the object
         return _remote_object_field_factory(field, **kwargs)
     else:
+        if type_ == "array":
+            if field["items"]["type"] == "object":
+                kwargs["child"] = _remote_object_field_factory(field, **kwargs)
+            else:
+                kwargs["child"] = JSON_TYPE_TO_DRF[field["items"]["type"]](**kwargs)
         field_cls = JSON_TYPE_TO_DRF[type_]
         return field_cls(**kwargs)
 

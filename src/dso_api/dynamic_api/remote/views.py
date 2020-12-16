@@ -18,6 +18,9 @@ from dso_api.lib.exceptions import (
     RemoteAPIException,
     ServiceUnavailable,
 )
+from django.conf import settings
+
+from rest_framework_dso.views import DSOViewMixin
 from . import serializers
 from .. import permissions
 
@@ -38,7 +41,7 @@ def del_none(d):
             del_none(value)
 
 
-class RemoteViewSet(ViewSet):
+class RemoteViewSet(DSOViewMixin, ViewSet):
     """Views for a remote serializer."""
 
     serializer_class = None
@@ -124,6 +127,9 @@ class RemoteViewSet(ViewSet):
             url = self.endpoint_url
         else:
             url = urljoin(self.endpoint_url, url)
+
+        if "{table_id}" in url:
+            url = url.replace("{table_id}", self.table_id)
 
         # Using urllib directly instead of requests for performance
         logger.debug("Forwarding call to %s", url)
@@ -261,6 +267,11 @@ class RemoteViewSet(ViewSet):
                 # Work around django test client oddness
                 value = value.encode("iso-8859-1")
             headers[header] = value
+
+        if "kadaster.nl" in self.endpoint_url:
+            headers["X-Api-Key"] = settings.HAAL_CENTRAAL_API_KEY
+            headers["accept"] = "application/hal+json"
+            headers["Accept-Crs"] = "epsg:28992"
 
         return headers
 
