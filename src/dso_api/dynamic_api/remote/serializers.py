@@ -8,7 +8,7 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from dso_api.dynamic_api.utils import snake_to_camel_case
 from rest_framework import serializers
-from rest_framework_dso.serializers import DSOSerializer
+from rest_framework_dso.serializers import DSOSerializer, DSOListSerializer
 from rest_framework_gis.fields import GeometryField
 from schematools.types import DatasetFieldSchema, DatasetTableSchema
 from schematools.utils import to_snake_case
@@ -31,12 +31,22 @@ JSON_TYPE_TO_DRF = {
 }
 
 
+class RemoteListSerializer(DSOListSerializer):
+    """ListSerializer that takes remote data"""
+
+    def get_embeds(self, instances, items: List[dict]) -> dict:
+        """Generate the embed sections for this listing. To be defined"""
+        return {}
+
+
 class RemoteSerializer(DSOSerializer):
     """Serializer that takes remote data"""
 
     table_schema = None  # defined by factory
 
     schema = serializers.SerializerMethodField()
+
+    _default_list_serializer_class = RemoteListSerializer
 
     @extend_schema_field(OpenApiTypes.URI)
     def get_schema(self, instance):
@@ -66,7 +76,14 @@ def remote_serializer_factory(table_schema: DatasetTableSchema):
 
     # Generate Meta section and serializer class
     new_attrs.update(declared_fields)
-    new_attrs["Meta"] = type("Meta", (), {"fields": list(declared_fields.keys())})
+    new_attrs["Meta"] = type(
+        "Meta",
+        (),
+        {
+            "fields": list(declared_fields.keys()),
+            "many_results_field": table_schema.id.title(),
+        },
+    )
     return type(serializer_name, (RemoteSerializer,), new_attrs)
 
 
