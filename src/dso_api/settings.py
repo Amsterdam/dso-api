@@ -265,6 +265,7 @@ JWKS_TEST_KEY = """
 DATAPUNT_AUTHZ = {
     "JWKS": os.getenv("PUB_JWKS", JWKS_TEST_KEY),
     "JWKS_URL": os.getenv("KEYCLOAK_JWKS_URL"),
+    # "ALWAYS_OK": True if DEBUG else False,
     "ALWAYS_OK": False,
 }
 

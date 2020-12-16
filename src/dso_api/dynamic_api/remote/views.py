@@ -74,7 +74,9 @@ class RemoteViewSet(DSOViewMixin, ViewSet):
 
     def list(self, request, *args, **kwargs):
         """The GET request for listings"""
-        data = self._call_remote()
+        data = self._call_remote(query_params=request.query_params)
+        if "_embedded" in data and isinstance(data["_embedded"], dict):
+            data = next(iter(data["_embedded"].values()))
         serializer = self.get_serializer(data=data, many=True)
         self.validate(serializer, data)
 
@@ -110,7 +112,7 @@ class RemoteViewSet(DSOViewMixin, ViewSet):
                 status_code=status.HTTP_502_BAD_GATEWAY,
             )
 
-    def _call_remote(self, url="") -> Union[dict, list]:
+    def _call_remote(self, url="", query_params={}) -> Union[dict, list]:  # noqa: C901
         """Make a request to the remote server"""
         if not self.endpoint_url:
             raise ImproperlyConfigured(
@@ -121,6 +123,12 @@ class RemoteViewSet(DSOViewMixin, ViewSet):
             url = self.endpoint_url
         else:
             url = urljoin(self.endpoint_url, url)
+
+        if query_params:
+            url = urljoin(
+                self.endpoint_url,
+                "?" + "&".join(f"{k}={v}" for k, v in query_params.items()),
+            )
 
         if "{table_id}" in url:
             url = url.replace("{table_id}", self.table_id)
@@ -265,6 +273,7 @@ class RemoteViewSet(DSOViewMixin, ViewSet):
         if "kadaster.nl" in self.endpoint_url:
             headers["X-Api-Key"] = settings.HAAL_CENTRAAL_API_KEY
             headers["accept"] = "application/hal+json"
+            # Currently for kadaster HaalCentraal only RD (epsg:28992) is supported
             headers["Accept-Crs"] = "epsg:28992"
 
         return headers
