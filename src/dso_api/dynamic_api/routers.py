@@ -12,7 +12,7 @@ from rest_framework import routers
 from schematools.contrib.django.models import Dataset
 from schematools.utils import to_snake_case
 
-from dso_api.dynamic_api.app_config import register_model, add_custom_serializers
+from dso_api.dynamic_api.app_config import register_model
 from dso_api.dynamic_api.locking import lock_for_writing
 from dso_api.dynamic_api.oas3 import get_openapi_json_view
 from dso_api.dynamic_api.remote import remote_serializer_factory, remote_viewset_factory
@@ -75,8 +75,6 @@ class DynamicRouter(routers.DefaultRouter):
         """Initialize viewsets that are linked to Django database models."""
         tmp_router = routers.SimpleRouter()
         generated_models = []
-
-        add_custom_serializers()
         datasets = {}
         for dataset in Dataset.objects.db_enabled():  # type: Dataset
             dataset_id = dataset.schema.id  # not dataset.name!

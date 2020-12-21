@@ -31,7 +31,11 @@ from dso_api.dynamic_api.fields import (
     TemporalReadOnlyField,
     TemporalLinksField,
     AzureBlobFileField,
+    LooseRelationUrlField,
+    LooseRelationUrlListField,
 )
+
+
 from dso_api.dynamic_api.permissions import (
     get_unauthorized_fields,
     get_permission_key_for_field,
@@ -135,6 +139,15 @@ class DynamicSerializer(DSOModelSerializer):
     table_schema: DatasetTableSchema = None
 
     id_based_fetcher = temporal_id_based_fetcher
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.serializer_field_mapping.update(
+            {
+                LooseRelationField: LooseRelationUrlField,
+                LooseRelationManyToManyField: LooseRelationUrlListField,
+            }
+        )
 
     def get_request(self):
         """
