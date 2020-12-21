@@ -45,26 +45,6 @@ class VirtualAppConfig(apps_config.AppConfig):
         self.models = self.apps.all_models[self.label]
 
 
-def add_custom_serializers():
-    from rest_framework.serializers import ModelSerializer
-    from schematools.contrib.django.models import (
-        LooseRelationField,
-        LooseRelationManyToManyField,
-    )
-    from dso_api.dynamic_api.fields import (
-        LooseRelationUrlField,
-        LooseRelationUrlListField,
-    )
-
-    field_mapping = ModelSerializer.serializer_field_mapping
-    field_mapping.update(
-        {
-            LooseRelationField: LooseRelationUrlField,
-            LooseRelationManyToManyField: LooseRelationUrlListField,
-        }
-    )
-
-
 def register_model(dataset, model):
     """
     Register model in django.apps
