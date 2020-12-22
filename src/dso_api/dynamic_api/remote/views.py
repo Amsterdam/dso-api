@@ -76,7 +76,7 @@ class RemoteViewSet(DSOViewMixin, ViewSet):
         """The GET request for listings"""
         data = self._call_remote(query_params=request.query_params)
         if "_embedded" in data and isinstance(data["_embedded"], dict):
-            data = next(iter(data["_embedded"].values()))
+            data = next(iter(data["_embedded"].values())) if data["_embedded"] else []
         serializer = self.get_serializer(data=data, many=True)
         self.validate(serializer, data)
 
