@@ -47,8 +47,15 @@ These are located at:
                     "type": "oauth2",
                     "flows": {
                         "implicit": {
-                            "authorizationUrl": "https://api.data.amsterdam.nl/oauth2/authorize",
-                            "scopes": {"HR/R": "Toegang HR"},
+                            "authorizationUrl": f"{settings.DATAPUNT_API_URL}oauth2/authorize",
+                            "scopes": {
+                                "HR/R": "Toegang HR",
+                                "BRK/RSN": "Bevragen Natuurlijke Kadastrale Subjecten.",
+                                "BRK/RS": "Bevragen Kadastrale Subjecten.",
+                                "BRK/RO": "Read kadastraal object",
+                                "BRP/R": "Basisregister personen",
+                                "FP/MDW": "Functieprofiel medewerker",
+                            },
                         }
                     },
                 }
