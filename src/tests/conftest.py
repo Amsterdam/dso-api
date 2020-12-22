@@ -47,7 +47,7 @@ def api_request(api_rf) -> WSGIRequest:
     request.user = mock.MagicMock()
 
     request.auth_profile = RequestProfile(request)
-    request.is_authorized_for = lambda scopes=None: True
+    request.is_authorized_for = lambda *scopes: True
 
     # Temporal modifications. Usually done via TemporalDatasetMiddleware
     request.versioned = False
