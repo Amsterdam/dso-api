@@ -138,6 +138,7 @@ class DynamicRouter(routers.DefaultRouter):
                     serializer_class=serializer_class,
                     dataset_id=dataset_id,
                     table_id=table.id,
+                    table_schema=table,
                 )
                 tmp_router.register(
                     prefix=url_prefix,

@@ -9,10 +9,10 @@ from rest_framework.exceptions import ErrorDetail, NotAcceptable, ValidationErro
 from rest_framework.views import exception_handler as drf_exception_handler
 from rest_framework_dso import crs, filters, parsers
 from rest_framework_dso.exceptions import PreconditionFailed
+from schematools.contrib.django.auth_backend import RequestProfile
 
 
 def multiple_slashes(request):
-    response_data = {}
     response_data = {
         "type": "error",
         "code": "HTTP_404_NOT_FOUND",
@@ -147,9 +147,14 @@ class DSOViewMixin:
     parser_classes = [parsers.DSOJsonParser]
 
     def initial(self, request, *args, **kwargs):
+        request.auth_profile = RequestProfile(request)
         super().initial(request, *args, **kwargs)
         request.accept_crs = self._parse_accept_crs(request.META.get("HTTP_ACCEPT_CRS"))
         request.response_content_crs = None
+
+    @property
+    def table_schema(self):
+        return self.model._table_schema
 
     def _parse_accept_crs(self, http_value) -> Optional[crs.CRS]:
         """Parse the HTTP Accept-Crs header.

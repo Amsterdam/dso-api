@@ -133,6 +133,222 @@ class TestDSOViewMixin:
 class TestAuth:
     """ Test authorization """
 
+    def test_mandatory_filters(
+        self,
+        api_client,
+        fetch_auth_token,
+        parkeervakken_schema,
+        parkeervakken_parkeervak_model,
+    ):
+        """
+        Tests that profile permissions with are activated
+        through querying with the right mandatoryFilterSets
+        """
+        from dso_api.dynamic_api.urls import router
+
+        router.reload()
+        # need to reload router, regimes is a nested table
+        # and router will not know of it's existence
+        models.Profile.objects.create(
+            name="parkeerwacht",
+            scopes=["PROFIEL/SCOPE"],
+            schema_data={
+                "datasets": {
+                    "parkeervakken": {
+                        "tables": {
+                            "parkeervakken": {
+                                "mandatoryFilterSets": [
+                                    ["buurtcode", "type"],
+                                    ["regimes.inWerkingOp"],
+                                ]
+                            }
+                        }
+                    }
+                }
+            },
+        )
+        models.Profile.objects.create(
+            name="parkeerwacht",
+            scopes=["PROFIEL2/SCOPE"],
+            schema_data={
+                "datasets": {
+                    "parkeervakken": {
+                        "tables": {
+                            "parkeervakken": {
+                                "mandatoryFilterSets": [["regimes.aantal[gte]"]]
+                            }
+                        }
+                    }
+                }
+            },
+        )
+
+        models.DatasetTable.objects.filter(name="parkeervakken").update(
+            auth="DATASET/SCOPE"
+        )
+        token = fetch_auth_token(["PROFIEL/SCOPE"])
+        base_url = reverse("dynamic_api:parkeervakken-parkeervakken-list")
+        assert api_client.get(base_url).status_code == 403
+        assert (
+            api_client.get(base_url, HTTP_AUTHORIZATION=f"Bearer {token}").status_code
+            == 403
+        )
+        assert (
+            api_client.get(
+                f"{base_url}?buurtcode=A05d", HTTP_AUTHORIZATION=f"Bearer {token}"
+            ).status_code
+            == 403
+        )
+        assert (
+            api_client.get(
+                f"{base_url}?buurtcode=A05d&type=E9",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            ).status_code
+            == 200
+        )
+        assert (
+            api_client.get(
+                f"{base_url}?regimes.inWerkingOp=20:05",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            ).status_code
+            == 200
+        )
+        assert (
+            api_client.get(
+                f"{base_url}?regimes.inWerkingOp=", HTTP_AUTHORIZATION=f"Bearer {token}"
+            ).status_code
+            == 403
+        )
+        assert (
+            api_client.get(
+                f"{base_url}?regimes.inWerkingOp", HTTP_AUTHORIZATION=f"Bearer {token}"
+            ).status_code
+            == 403
+        )
+
+        token = fetch_auth_token(["DATASET/SCOPE", "PROFIEL/SCOPE"])
+        assert (
+            api_client.get(base_url, HTTP_AUTHORIZATION=f"Bearer {token}").status_code
+            == 200
+        )
+        token = fetch_auth_token(["DATASET/SCOPE"])
+        assert (
+            api_client.get(base_url, HTTP_AUTHORIZATION=f"Bearer {token}").status_code
+            == 200
+        )
+        token = fetch_auth_token(["PROFIEL/SCOPE", "PROFIEL2/SCOPE"])
+        assert (
+            api_client.get(
+                f"{base_url}?regimes.inWerkingOp=20:05",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            ).status_code
+            == 200
+        )
+        assert (
+            api_client.get(
+                f"{base_url}?regimes.aantal[gte]=2",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
+            ).status_code
+            == 200
+        )
+
+    def test_profile_field_permissions(
+        self,
+        api_client,
+        fetch_auth_token,
+        parkeervakken_schema,
+        parkeervakken_parkeervak_model,
+    ):
+        """
+        Tests combination of profiles with auth scopes on dataset level.
+        Profiles should be activated only when one of it's mandatoryFilterSet
+        is queried. And field permissions should be inherited from dataset scope first.
+        """
+        from dso_api.dynamic_api.urls import router
+
+        router.reload()
+        models.Profile.objects.create(
+            name="parkeerwacht",
+            scopes=["PROFIEL/SCOPE"],
+            schema_data={
+                "datasets": {
+                    "parkeervakken": {
+                        "tables": {
+                            "parkeervakken": {
+                                "mandatoryFilterSets": [
+                                    ["id"],
+                                ],
+                                "fields": {"type": "read", "soort": "letters:1"},
+                            }
+                        }
+                    }
+                }
+            },
+        )
+        models.Profile.objects.create(
+            name="parkeerwacht2",
+            scopes=["PROFIEL2/SCOPE"],
+            schema_data={
+                "datasets": {
+                    "parkeervakken": {
+                        "tables": {
+                            "parkeervakken": {
+                                "mandatoryFilterSets": [
+                                    ["id", "type"],
+                                ],
+                                "fields": {"type": "letters:1", "soort": "read"},
+                            }
+                        }
+                    }
+                }
+            },
+        )
+        models.Dataset.objects.filter(name="parkeervakken").update(auth="DATASET/SCOPE")
+        parkeervak = parkeervakken_parkeervak_model.objects.create(
+            id=1,
+            type="Langs",
+            soort="NIET FISCA",
+            aantal="1.0",
+        )
+        # 1) profile scope only
+        token = fetch_auth_token(["PROFIEL/SCOPE"])
+        base_url = reverse("dynamic_api:parkeervakken-parkeervakken-list")
+        response = api_client.get(
+            f"{base_url}?id=1", HTTP_AUTHORIZATION=f"Bearer {token}"
+        )
+        parkeervak_data = response.data["_embedded"]["parkeervakken"][0]
+        # assert that a single profile is activated
+        assert parkeervak_data["type"] == parkeervak.type
+        assert parkeervak_data["soort"] == parkeervak.soort[:1]
+        # assert that there is no table scope
+        assert "id" not in parkeervak_data.keys()
+        # 2) profile and dataset scope
+        token = fetch_auth_token(["PROFIEL/SCOPE", "DATASET/SCOPE"])
+        response = api_client.get(
+            f"{base_url}?id=1", HTTP_AUTHORIZATION=f"Bearer {token}"
+        )
+        parkeervak_data = response.data["_embedded"]["parkeervakken"][0]
+        # assert that dataset scope permissions overrules lower profile permission
+        assert parkeervak_data["soort"] == parkeervak.soort
+        assert "id" in parkeervak_data.keys()
+        # 3) two profile scopes
+        token = fetch_auth_token(["PROFIEL/SCOPE", "PROFIEL2/SCOPE"])
+        # trigger one profile
+        response = api_client.get(
+            f"{base_url}?id=1", HTTP_AUTHORIZATION=f"Bearer {token}"
+        )
+        parkeervak_data = response.data["_embedded"]["parkeervakken"][0]
+        # assert that only the profile is used that passed it's mandatory filterset restrictions
+        assert parkeervak_data["soort"] == parkeervak.soort[:1]
+        # trigger both profiles
+        response = api_client.get(
+            f"{base_url}?id=1&type=Langs", HTTP_AUTHORIZATION=f"Bearer {token}"
+        )
+        parkeervak_data = response.data["_embedded"]["parkeervakken"][0]
+        # assert that both profiles are triggered and the highest permission reigns
+        assert parkeervak_data["type"] == parkeervak.type
+        assert parkeervak_data["soort"] == parkeervak.soort
+
     def test_auth_on_dataset_schema_protects_containers(
         self, api_client, filled_router, afval_schema
     ):
@@ -256,7 +472,7 @@ class TestAuth:
         with an auth scope connected to Profile that gives access to specific field."""
         models.Profile.objects.create(
             name="brk_readall",
-            scopes="BRK/RSN",
+            scopes=["BRK/RSN"],
             schema_data={
                 "datasets": {
                     "afvalwegingen": {
@@ -379,6 +595,91 @@ class TestAuth:
         models.Dataset.objects.filter(name="afvalwegingen").update(auth="BAG/R")
         token = fetch_auth_token(["BAG/R"])
         response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
+        assert response.status_code == 200, response.data
+
+    def test_auth_on_dataset_detail_has_profile_field_permission(
+        self,
+        api_client,
+        filled_router,
+        fetch_auth_token,
+        parkeervakken_schema,
+        parkeervakken_parkeervak_model,
+    ):
+        """Prove that having no scope on the dataset, but a
+        mandatory query on ['id'] gives access to its detailview.
+        """
+        parkeervakken_parkeervak_model.objects.create(id="121138489047")
+        models.Dataset.objects.filter(name="parkeervakken").update(auth="DATASET/SCOPE")
+        models.Profile.objects.create(
+            name="mag_niet",
+            scopes=["MAY/NOT"],
+            schema_data={
+                "datasets": {
+                    "parkeervakken": {
+                        "tables": {
+                            "parkeervakken": {
+                                "mandatoryFilterSets": [["buurtcode", "type"]]
+                            }
+                        }
+                    }
+                }
+            },
+        )
+        models.Profile.objects.create(
+            name="mag_wel",
+            scopes=["MAY/ENTER"],
+            schema_data={
+                "datasets": {
+                    "parkeervakken": {
+                        "tables": {
+                            "parkeervakken": {
+                                "mandatoryFilterSets": [["buurtcode", "type"], ["id"]]
+                            }
+                        }
+                    }
+                }
+            },
+        )
+        models.Profile.objects.create(
+            name="alleen_volgnummer",
+            scopes=["ONLY/VOLGNUMMER"],
+            schema_data={
+                "datasets": {
+                    "parkeervakken": {
+                        "tables": {
+                            "parkeervakken": {
+                                "mandatoryFilterSets": [["id", "volgnummer"]]
+                            }
+                        }
+                    }
+                }
+            },
+        )
+        detail = reverse(
+            "dynamic_api:parkeervakken-parkeervakken-detail", args=["121138489047"]
+        )
+        detail_met_volgnummer = detail + "?volgnummer=3"
+        may_not = fetch_auth_token(["MAY/NOT"])
+        may_enter = fetch_auth_token(["MAY/ENTER"])
+        dataset_scope = fetch_auth_token(["DATASET/SCOPE"])
+        profiel_met_volgnummer = fetch_auth_token(["ONLY/VOLGNUMMER"])
+        response = api_client.get(detail, HTTP_AUTHORIZATION=f"Bearer {may_not}")
+        assert response.status_code == 403, response.data
+        response = api_client.get(detail, HTTP_AUTHORIZATION=f"Bearer {may_enter}")
+        assert response.status_code == 200, response.data
+        response = api_client.get(
+            detail_met_volgnummer, HTTP_AUTHORIZATION=f"Bearer {may_enter}"
+        )
+        assert response.status_code == 200, response.data
+        response = api_client.get(detail, HTTP_AUTHORIZATION=f"Bearer {dataset_scope}")
+        assert response.status_code == 200, response.data
+        response = api_client.get(
+            detail, HTTP_AUTHORIZATION=f"Bearer {profiel_met_volgnummer}"
+        )
+        assert response.status_code == 403, response.data
+        response = api_client.get(
+            detail_met_volgnummer, HTTP_AUTHORIZATION=f"Bearer {profiel_met_volgnummer}"
+        )
         assert response.status_code == 200, response.data
 
     def test_auth_options_requests_are_not_protected(

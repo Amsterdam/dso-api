@@ -14,10 +14,11 @@ from rest_framework.request import Request
 from rest_framework.test import APIClient, APIRequestFactory
 from authorization_django import jwks
 
-from schematools.contrib.django.models import Dataset
+from schematools.contrib.django.models import Dataset, Profile
 from schematools.contrib.django.db import create_tables
 from schematools.contrib.django.auth_backend import RequestProfile
-from schematools.types import DatasetSchema
+from schematools.types import DatasetSchema, ProfileSchema
+
 from rest_framework_dso.crs import RD_NEW
 from tests.test_rest_framework_dso.models import (
     Category,
@@ -46,6 +47,7 @@ def api_request(api_rf) -> WSGIRequest:
     request.user = mock.MagicMock()
 
     request.auth_profile = RequestProfile(request)
+    request.is_authorized_for = lambda scopes=None: True
 
     # Temporal modifications. Usually done via TemporalDatasetMiddleware
     request.versioned = False
@@ -648,9 +650,7 @@ def download_url_schema(download_url_schema_json) -> DatasetSchema:
 
 @pytest.fixture()
 def download_url_dataset(download_url_schema_json) -> Dataset:
-    return Dataset.objects.create(
-        name="download_url", schema_data=download_url_schema_json
-    )
+    return Dataset.objects.create(name="download", schema_data=download_url_schema_json)
 
 
 @pytest.fixture()
@@ -779,3 +779,10 @@ def woningbouwplannen_data(woningbouwplan_model):
     # woningbouwplan_model.bestaat_uit_buurten.through.objects.create(
     #    woningbouwplan_id="2", bestaat_uit_buurten_id="03630000000078"
     # )
+
+
+@pytest.fixture()
+def parkeerwacht_profile() -> ProfileSchema:
+    path = HERE / "files/profiles/parkeerwacht.json"
+    schema = ProfileSchema.from_dict(json.loads(path.read_text()))
+    return Profile.create_for_schema(schema)

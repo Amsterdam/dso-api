@@ -51,16 +51,14 @@ def fetch_scopes_for_model(model) -> TableScopes:
 
 def get_unauthorized_fields(request, model) -> set:
     """Check which field names should be excluded"""
-    scope_data = fetch_scopes_for_model(model).fields
-
+    field_scopes = fetch_scopes_for_model(model).fields
+    table_scopes = fetch_scopes_for_model(model).table
     unauthorized_fields = set()
     # is_authorized_for is added by authorization_django middleware
     if hasattr(request, "is_authorized_for"):
         for model_field in model._meta.get_fields():
-            scopes = scope_data.get(model_field.name)
-            if not scopes:
-                continue
-
+            scopes = field_scopes.get(model_field.name)
+            scopes = scopes.union(table_scopes) if scopes else table_scopes
             permission_key = get_permission_key_for_field(model_field)
             if not request.is_authorized_for(*scopes):
                 if not request_has_permission(request=request, perm=permission_key):
@@ -74,11 +72,24 @@ class HasOAuth2Scopes(permissions.BasePermission):
     Custom permission to check auth scopes from Amsterdam schema.
     """
 
-    def _has_permission(self, request, dataset_id=None, table_id=None):
+    def _has_permission(self, request, view, dataset_id=None, table_id=None):
         if request.method == "OPTIONS":
             return True
         scopes = fetch_scopes_for_dataset_table(dataset_id, table_id)
-        return request.is_authorized_for(*scopes.table)
+        if request.is_authorized_for(*scopes.table):
+            return True  # authorized by scope
+        else:
+            if view.action_map["get"] == "retrieve":  # is a detailview
+                request.auth_profile.valid_query_params = (
+                    request.auth_profile.get_valid_query_params()
+                    + view.table_schema.identifier
+                )
+            active_profiles = request.auth_profile.get_active_profiles(
+                dataset_id, table_id
+            )
+            if active_profiles:
+                return True
+        return False
 
     def has_permission(self, request, view, models=None):
         """Based on the model that is associated with the view
@@ -90,6 +101,7 @@ class HasOAuth2Scopes(permissions.BasePermission):
             for model in models:
                 if not self._has_permission(
                     request,
+                    view,
                     dataset_id=model._dataset_schema["id"],
                     table_id=model._table_schema["id"],
                 ):
@@ -97,12 +109,13 @@ class HasOAuth2Scopes(permissions.BasePermission):
             return True
         elif hasattr(view, "dataset_id") and hasattr(view, "table_id"):
             return self._has_permission(
-                request, dataset_id=view.dataset_id, table_id=view.table_id
+                request, view, dataset_id=view.dataset_id, table_id=view.table_id
             )
         else:
             model = view.get_serializer_class().Meta.model
             return self._has_permission(
                 request,
+                view,
                 dataset_id=model._dataset_schema["id"],
                 table_id=model._table_schema["id"],
             )
@@ -110,7 +123,12 @@ class HasOAuth2Scopes(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         """ This method is not called for list views """
         # XXX For now, this is OK, later on we need to add row-level permissions
-        return self._has_permission(request, obj)
+        return self._has_permission(
+            request,
+            view,
+            dataset_id=obj._dataset_schema["id"],
+            table_id=obj._table_schema["id"],
+        )
 
 
 def get_permission_key_for_field(model_field):

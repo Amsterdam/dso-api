@@ -73,7 +73,6 @@ MIDDLEWARE = [
     "authorization_django.authorization_middleware",
     "dso_api.dynamic_api.middleware.DatasetMiddleware",
     "dso_api.dynamic_api.middleware.TemporalDatasetMiddleware",
-    "dso_api.dynamic_api.middleware.AuthProfileMiddleware",
     "dso_api.dynamic_api.middleware.RequestAuditLoggingMiddleware",
 ]
 

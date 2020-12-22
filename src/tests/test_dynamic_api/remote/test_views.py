@@ -3,6 +3,7 @@ import pytest
 import urllib3
 from urllib3_mock import Responses
 from django.urls import reverse
+from schematools.contrib.django import models
 
 DEFAULT_RESPONSE = {
     "naam": {
@@ -107,6 +108,59 @@ def urllib3_mocker() -> Responses:
     responses = Responses()
     with responses:
         yield responses
+
+
+@pytest.mark.django_db
+def test_remote_detail_view_with_profile_scope(
+    api_client,
+    fetch_auth_token,
+    router,
+    urllib3_mocker,
+    brp_schema_json,
+    brp_endpoint_url,
+):
+    models.Profile.objects.create(
+        name="profiel",
+        scopes=["PROFIEL/SCOPE"],
+        schema_data={
+            "datasets": {
+                "brp_test": {
+                    "tables": {
+                        "ingeschrevenpersonen": {
+                            "mandatoryFilterSets": [
+                                ["id"],
+                            ],
+                        }
+                    }
+                }
+            }
+        },
+    )
+    # creating custom brp2 copy, as ttl_cache will keep auth value after this test
+    # which breaks the other tests
+    brp_schema_json["id"] = "brp_test"
+    models.Dataset.objects.create(
+        name="brp_test",
+        schema_data=brp_schema_json,
+        enable_db=False,
+        endpoint_url=brp_endpoint_url.replace("brp", "brp_test"),
+        auth=["DATASET/SCOPE"],
+    )
+    remote_response, local_response = SUCCESS_TESTS["default"]
+    router.reload()
+    urllib3_mocker.add(
+        "GET",
+        "/unittest/brp_test/ingeschrevenpersonen/999990901",
+        body=orjson.dumps(remote_response),
+        content_type="application/json",
+    )
+    # Prove that URLs can now be resolved.
+    url = reverse(
+        "dynamic_api:brp_test-ingeschrevenpersonen-detail", kwargs={"pk": "999990901"}
+    )
+    token = fetch_auth_token(["PROFIEL/SCOPE"])
+    response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
+    assert response.status_code == 200, response.data
 
 
 @pytest.mark.django_db

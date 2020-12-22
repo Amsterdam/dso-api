@@ -19,8 +19,10 @@
         "additionalFilters": {
           "regimes.inWerkingOp": {
             "type": "range",
-            "start": "regimes.begin tijd",
-            "end": "regimes.eind tijd"
+            "kwargs": {
+              "start_field": "regimes.begin tijd",
+              "end_field": "regimes.eind tijd"
+            }
           }
         },
         "properties": {
