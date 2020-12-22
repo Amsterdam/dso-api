@@ -51,14 +51,13 @@ def fetch_scopes_for_model(model) -> TableScopes:
 
 def get_unauthorized_fields(request, model) -> set:
     """Check which field names should be excluded"""
-    field_scopes = fetch_scopes_for_model(model).fields
-    table_scopes = fetch_scopes_for_model(model).table
+    model_scopes = fetch_scopes_for_model(model)
     unauthorized_fields = set()
     # is_authorized_for is added by authorization_django middleware
     if hasattr(request, "is_authorized_for"):
         for model_field in model._meta.get_fields():
-            scopes = field_scopes.get(model_field.name)
-            scopes = scopes.union(table_scopes) if scopes else table_scopes
+            scopes = model_scopes.fields.get(model_field.name)
+            scopes = scopes.union(model_scopes.table) if scopes else model_scopes.table
             permission_key = get_permission_key_for_field(model_field)
             if not request.is_authorized_for(*scopes):
                 if not request_has_permission(request=request, perm=permission_key):
