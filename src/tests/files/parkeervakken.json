@@ -12,17 +12,12 @@
         "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "additionalProperties": false,
-        "required": [
-          "id",
-          "schema"
-        ],
+        "required": ["id", "schema"],
         "additionalFilters": {
           "regimes.inWerkingOp": {
             "type": "range",
-            "kwargs": {
-              "start_field": "regimes.begin tijd",
-              "end_field": "regimes.eind tijd"
-            }
+            "start": "regimes.begin tijd",
+            "end": "regimes.eind tijd"
           }
         },
         "properties": {
@@ -108,8 +103,8 @@
                   }
                 },
                 "opmerking": {
-                    "type": "string",
-                    "description": ""
+                  "type": "string",
+                  "description": ""
                 }
               }
             }

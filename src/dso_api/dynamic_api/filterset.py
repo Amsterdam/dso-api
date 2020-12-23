@@ -171,7 +171,9 @@ def generate_additional_filters(model: Type[DynamicModel]):
             continue
 
         filters[filter_name] = filter_class(
-            label=filter_class.label, **options.get("kwargs")
+            start_field=options.get("start"),
+            end_field=options.get("end"),
+            label=filter_class.label,
         )
 
     return filters
