@@ -18,7 +18,7 @@ JSON_TYPE_TO_DRF = {
     "integer": serializers.IntegerField,
     "number": serializers.FloatField,
     "boolean": serializers.BooleanField,
-    "array": serializers.ListSerializer,
+    "array": serializers.ListField,
     "/definitions/id": serializers.IntegerField,
     "https://geojson.org/schema/Geometry.json": GeometryField,
     "https://geojson.org/schema/Point.json": GeometryField,
