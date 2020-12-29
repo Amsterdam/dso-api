@@ -265,6 +265,7 @@ DATAPUNT_AUTHZ = {
     "JWKS": os.getenv("PUB_JWKS", JWKS_TEST_KEY),
     "JWKS_URL": os.getenv("KEYCLOAK_JWKS_URL"),
     "ALWAYS_OK": False,
+    "MIN_INTERVAL_KEYSET_UPDATE": 30 * 60,  # 30 minutes
 }
 
 # -- Local app settings
