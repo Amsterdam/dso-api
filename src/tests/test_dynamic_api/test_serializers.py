@@ -1,6 +1,7 @@
 from datetime import date
 
 import pytest
+from django.apps import apps
 from django.core.validators import EmailValidator, URLValidator
 from schematools.contrib.django.auth_backend import RequestProfile
 from schematools.contrib.django.models import Profile
@@ -8,7 +9,7 @@ from schematools.contrib.django.models import Profile
 from dso_api.dynamic_api.serializers import serializer_factory
 from rest_framework_dso.fields import EmbeddedField
 from rest_framework_dso.views import DSOViewMixin
-from tests.utils import normalize_data
+from tests.utils import normalize_data, unlazy
 
 
 @pytest.fixture(autouse=True)
@@ -32,17 +33,26 @@ class TestDynamicSerializer:
 
     @staticmethod
     def test_basic_factory_logic(
-        reloadrouter,
         drf_request,
         afval_schema,
         afval_cluster_model,
         afval_container_model,
         afval_cluster,
+        filled_router,
     ):
         """Prove that the serializer factory properly generates the embedded fields.
 
         This checks whether the factory generates the proper FK/embedded fields.
         """
+        # Access real models to perform 'is' test below.
+        afval_cluster_model = unlazy(afval_cluster_model)
+        afval_container_model = unlazy(afval_container_model)
+
+        # Confirm that the model is the object that Django also has registered
+        # (if this differs, create_tables() might be called twice).
+        assert afval_cluster_model is apps.get_model("afvalwegingen.clusters")
+        assert afval_container_model is apps.get_model("afvalwegingen.containers")
+
         drf_request.dataset = afval_schema
         afval_container = afval_container_model.objects.create(
             id=2,
@@ -58,10 +68,19 @@ class TestDynamicSerializer:
         # not allowing relations to resolve.
         ClusterSerializer = serializer_factory(afval_cluster_model, flat=True)
 
-        # Prove that EmbeddedField is created, as it should be.
+        # Prove that EmbeddedField is created.
         assert ContainerSerializer.Meta.embedded_fields == ["cluster"]
         assert isinstance(ContainerSerializer.cluster, EmbeddedField)
-        assert ContainerSerializer.cluster.related_model is afval_cluster_model
+
+        # Prove that the EmbeddedField references the proper models and serializers.
+        # This also tests whether there aren't any old references left.
+        assert ContainerSerializer.cluster.related_model is afval_cluster_model, (
+            "Old Django models were still referenced: "
+            f"id {id(ContainerSerializer.cluster.related_model)} vs "
+            f"id {id(afval_cluster_model)} "
+            f"(creation counter {ContainerSerializer.cluster.related_model.CREATION_COUNTER}"
+            f" vs {afval_cluster_model.CREATION_COUNTER})",
+        )
         assert ContainerSerializer.cluster.serializer_class.__name__ == ClusterSerializer.__name__
 
         # Prove that data is serialized with relations.
@@ -214,11 +233,11 @@ class TestDynamicSerializer:
     @staticmethod
     def test_dataset_url_prefix(
         drf_request,
-        filled_router,
         afval_dataset,
         afval_container_model,
         afval_cluster,
         afval_cluster_model,
+        filled_router,
     ):
         """Prove dataset url_prefix works.
 
@@ -668,14 +687,12 @@ class TestDynamicSerializer:
         assert validate_email(explosieven_serializer.data["emailadres"]) is None
 
     @staticmethod
-    def test_indirect_self_reference(drf_request, indirect_self_ref_schema, filled_router):
+    def test_indirect_self_reference(ligplaatsen_model, filled_router):
         """Prove that a dataset with two tables that
         are mutually related generates a serialize without any problems
         (no infinite recursion)
         """
-        drf_request.dataset = indirect_self_ref_schema
-        indirect_self_ref_model = filled_router.all_models["selfref"]["ligplaatsen"]
-        serializer_factory(indirect_self_ref_model)
+        serializer_factory(ligplaatsen_model)
 
     @staticmethod
     def test_field_permissions_display_first_letter(
@@ -745,7 +762,7 @@ class TestDynamicSerializer:
 
     @staticmethod
     def test_download_url_field(
-        drf_request, filled_router, download_url_dataset, download_url_schema
+        drf_request, download_url_dataset, download_url_schema, filled_router
     ):
         """ Prove that download url will contain correct identifier. """
 
@@ -778,7 +795,7 @@ class TestDynamicSerializer:
 
     @staticmethod
     def test_download_url_field_empty_field(
-        drf_request, filled_router, download_url_dataset, download_url_schema
+        drf_request, download_url_dataset, download_url_schema, filled_router
     ):
         """ Prove that empty download url not crashing api. """
 

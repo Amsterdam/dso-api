@@ -161,10 +161,9 @@ def test_remote_detail_view_with_profile_scope(
 
 @pytest.mark.django_db
 @pytest.mark.parametrize("test_name", list(SUCCESS_TESTS.keys()))
-def test_remote_detail_view(api_client, router, brp_dataset, urllib3_mocker, test_name):
+def test_remote_detail_view(api_client, brp_dataset, urllib3_mocker, test_name, filled_router):
     """Prove that the remote router can proxy the other service."""
     remote_response, local_response = SUCCESS_TESTS[test_name]
-    router.reload()
     urllib3_mocker.add(
         "GET",
         "/unittest/brp/ingeschrevenpersonen/999990901",
@@ -181,9 +180,8 @@ def test_remote_detail_view(api_client, router, brp_dataset, urllib3_mocker, tes
 
 
 @pytest.mark.django_db
-def test_remote_schema_validation(api_client, router, brp_dataset, urllib3_mocker):
+def test_remote_schema_validation(api_client, router, brp_dataset, urllib3_mocker, filled_router):
     """Prove that the schema is validated."""
-    router.reload()
     urllib3_mocker.add(
         "GET",
         "/unittest/brp/ingeschrevenpersonen/999990901",

@@ -105,7 +105,7 @@ class TestViews:
         assert stadsdelen[0]["_links"]["self"]["volgnummer"] == 2, stadsdelen[0]
 
     def test_additionalrelations_works_and_has_temporary_param(
-        self, api_client, stadsdelen, wijk, buurt
+        self, api_client, stadsdelen, wijk, buurt, router
     ):
         """Prove that the "summary" additionalRelation shows up in the result and
         has a "geldigOp" link.
@@ -164,7 +164,7 @@ class TestViews:
         assert data["_links"]["self"]["volgnummer"] == 1, response.data
 
     def test_serializer_temporal_request_corrects_link_to_temporal(
-        self, api_client, reloadrouter, gebied, buurt
+        self, api_client, gebied, buurt, filled_router
     ):
         """Prove that in case of temporal request links to objects will have request date.
         Allowing follow up date filtering further."""
@@ -180,7 +180,7 @@ class TestViews:
         ]
 
     def test_correct_handling_of_extra_url_params(
-        self, api_client, reloadrouter, stadsdelen, buurt
+        self, api_client, stadsdelen, buurt, filled_router
     ):
         """Prove that extra url parameters do not interfere with the existing
         url parameters for temporality."""

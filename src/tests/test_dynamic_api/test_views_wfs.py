@@ -16,7 +16,7 @@ def clear_caches():
 class TestDatasetWFSView:
     """Prove that the WFS server logic is properly integrated in the dynamic models."""
 
-    def test_wfs_view(self, api_client, filled_router, afval_dataset, afval_container):
+    def test_wfs_view(self, api_client, afval_dataset, afval_container):
         wfs_url = (
             "/v1/wfs/afvalwegingen/"
             "?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=app:containers"
@@ -26,7 +26,7 @@ class TestDatasetWFSView:
         assert response.status_code == 200
 
     def test_wfs_field_public(
-        self, api_client, reloadrouter, parkeervakken_schema, parkeervakken_parkeervak_model
+        self, api_client, parkeervakken_schema, parkeervakken_parkeervak_model
     ):
         parkeervakken_parkeervak_model.objects.create(
             id=1,
@@ -59,7 +59,7 @@ class TestDatasetWFSView:
         }
 
     def test_wfs_field_auth(
-        self, api_client, reloadrouter, parkeervakken_schema, parkeervakken_parkeervak_model
+        self, api_client, parkeervakken_schema, parkeervakken_parkeervak_model
     ):
         models.DatasetField.objects.filter(table__name="parkeervakken", name="e_type").update(
             auth="TEST/SCOPE"
@@ -93,9 +93,7 @@ class TestDatasetWFSView:
             "straatnaam": None,
         }
 
-    def test_wfs_feature_name(
-        self, api_client, filled_router, afval_dataset, afval_adresloopafstand
-    ):
+    def test_wfs_feature_name(self, api_client, afval_dataset, afval_adresloopafstand):
         """Prove that if feature name contains non-letters like underscore,
         it can be useds find the correct table name and data
         """

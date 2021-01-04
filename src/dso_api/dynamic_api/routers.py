@@ -60,6 +60,10 @@ class DynamicRouter(routers.DefaultRouter):
         """Show the OpenAPI specification as root view."""
         return get_openapi_json_view()
 
+    def is_initialized(self) -> bool:
+        """Tell whether the router initialization was used to create viewsets."""
+        return len(self.registry) > len(self.static_routes)
+
     def initialize(self):
         """Initialize all dynamic routes on startup.
 

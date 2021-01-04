@@ -75,7 +75,9 @@ class TestDynamicFilterSet:
         assert result.count() == 1, result
 
     @staticmethod
-    def test_additional_filters(parkeervakken_parkeervak_model, parkeervakken_regime_model):
+    def test_additional_filters(
+        parkeervakken_parkeervak_model, parkeervakken_regime_model, filled_router
+    ):
         """
         Prove that additional filters work as expected.
 
@@ -225,10 +227,6 @@ class TestDynamicFilterSet:
             begin_datum=None,
         )
 
-        # Router reload is needed to make sure that viewsets are using relations.
-        from dso_api.dynamic_api.urls import router
-
-        router.reload()
         response = APIClient().get(
             "/v1/parkeervakken/parkeervakken/",
             data={"regimes.inWerkingOp": "08:00", "regimes.eType": "E6b"},
@@ -241,7 +239,7 @@ class TestDynamicFilterSet:
 
     @staticmethod
     def test_additional_filters_with_null_start_value(
-        parkeervakken_parkeervak_model, parkeervakken_regime_model
+        parkeervakken_parkeervak_model, parkeervakken_regime_model, filled_router
     ):
         """
         Prove that additional filters work as expected.
@@ -279,10 +277,6 @@ class TestDynamicFilterSet:
             begin_datum=None,
         )
 
-        # Router reload is needed to make sure that viewsets are using relations.
-        from dso_api.dynamic_api.urls import router
-
-        router.reload()
         response = APIClient().get(
             "/v1/parkeervakken/parkeervakken/",
             data={"regimes.inWerkingOp": "09:00", "regimes.eType": "E6b"},
@@ -295,7 +289,7 @@ class TestDynamicFilterSet:
 
     @staticmethod
     def test_additional_filters_with_null_end_value(
-        parkeervakken_parkeervak_model, parkeervakken_regime_model
+        parkeervakken_parkeervak_model, parkeervakken_regime_model, filled_router
     ):
         """
         Prove that additional filters work as expected.
@@ -333,10 +327,6 @@ class TestDynamicFilterSet:
             begin_datum=None,
         )
 
-        # Router reload is needed to make sure that viewsets are using relations.
-        from dso_api.dynamic_api.urls import router
-
-        router.reload()
         response = APIClient().get(
             "/v1/parkeervakken/parkeervakken/",
             data={"regimes.inWerkingOp": "09:00", "regimes.eType": "E6b"},
@@ -348,7 +338,7 @@ class TestDynamicFilterSet:
         assert len(data["_embedded"]["parkeervakken"][0]["regimes"]) == 1, data
 
     @staticmethod
-    def test_geofilter_contains(parkeervakken_parkeervak_model):
+    def test_geofilter_contains(parkeervakken_parkeervak_model, filled_router):
         """
         Prove that geofilter contains filters work as expected.
         """
@@ -368,9 +358,6 @@ class TestDynamicFilterSet:
             ),
         )
 
-        from dso_api.dynamic_api.urls import router
-
-        router.reload()
         response = APIClient().get(
             "/v1/parkeervakken/parkeervakken/",
             data={"geometry[contains]": "52.388231,4.8897865"},
@@ -396,7 +383,7 @@ class TestDynamicFilterSet:
         assert len(data["_embedded"]["parkeervakken"]) == 1
 
     @staticmethod
-    def test_filter_isempty(parkeervakken_parkeervak_model):
+    def test_filter_isempty(parkeervakken_parkeervak_model, filled_router):
         parkeervakken_parkeervak_model.objects.create(
             id="121138489006",
             type="File",
@@ -424,9 +411,6 @@ class TestDynamicFilterSet:
             buurtcode="A05d",
             straatnaam="Zoutkeetsgracht",
         )
-        from dso_api.dynamic_api.urls import router
-
-        router.reload()
         response = APIClient().get(
             "/v1/parkeervakken/parkeervakken/",
             data={"soort[isempty]": "true"},

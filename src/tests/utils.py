@@ -6,6 +6,7 @@ from xml.etree import ElementTree as ET
 
 import orjson
 from django.http.response import HttpResponseBase
+from django.utils.functional import SimpleLazyObject
 
 
 def read_response(response: HttpResponseBase) -> str:
@@ -55,3 +56,11 @@ def normalize_data(data):
 
     # Using the Python JSON encoder, since it follows dictionary ordering.
     return orjson.loads(json.dumps(data, default=_default))
+
+
+def unlazy(value: SimpleLazyObject):
+    """Extract the original object from a SimpleLazyObject()
+    so it can be used for 'is' reference comparisons.
+    """
+    bool(value)
+    return value._wrapped

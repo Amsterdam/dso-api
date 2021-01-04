@@ -28,3 +28,6 @@ SESSION_COOKIE_SECURE = False
 PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
 
 AZURE_BLOB_NGDSODEV = "test"
+
+# Make sure the router is empty on start
+INITIALIZE_DYNAMIC_VIEWSETS = False
