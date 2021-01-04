@@ -133,21 +133,17 @@ class DynamicSerializer(DSOModelSerializer):
     """Base class for all generic serializers of this package."""
 
     serializer_url_field = DynamicLinksField
+    serializer_field_mapping = {
+        **DSOModelSerializer.serializer_field_mapping,
+        LooseRelationField: LooseRelationUrlField,
+        LooseRelationManyToManyField: LooseRelationUrlListField,
+    }
 
     schema = serializers.SerializerMethodField()
 
     table_schema: DatasetTableSchema = None
 
     id_based_fetcher = temporal_id_based_fetcher
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.serializer_field_mapping.update(
-            {
-                LooseRelationField: LooseRelationUrlField,
-                LooseRelationManyToManyField: LooseRelationUrlListField,
-            }
-        )
 
     def get_request(self):
         """
