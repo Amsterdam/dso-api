@@ -76,7 +76,7 @@ def test_list_dynamic_view(api_client, api_rf, router, bommen_dataset):
 
 
 @pytest.mark.django_db
-def test_filled_router(api_client, filled_router):
+def test_filled_router(api_client, bommen_dataset, filled_router):
     """Prove that building the router also creates the available viewsets."""
     url = reverse("dynamic_api:bommen-bommen-list")
     response = api_client.get(url)
@@ -84,7 +84,7 @@ def test_filled_router(api_client, filled_router):
 
 
 @pytest.mark.django_db
-def test_list_dynamic_view_unregister(api_client, api_rf, filled_router):
+def test_list_dynamic_view_unregister(api_client, api_rf, bommen_dataset, filled_router):
     """Prove that unregistering"""
     url = reverse("dynamic_api:bommen-bommen-list")
     viewset = filled_router.registry[0][1]
@@ -111,19 +111,19 @@ def test_list_dynamic_view_unregister(api_client, api_rf, filled_router):
 class TestDSOViewMixin:
     """Prove that the DSO view mixin logic is used within the dynamic API."""
 
-    def test_not_supported_crs(self, api_client, filled_router):
+    def test_not_supported_crs(self, api_client, afval_dataset, filled_router):
         """Prove that invalid CRS leads to a 406 status """
         url = reverse("dynamic_api:afvalwegingen-containers-list")
         response = api_client.get(url, HTTP_ACCEPT_CRS="EPSG:2000")
         assert response.status_code == 406, response.data
 
-    def test_bogus_crs(self, api_client, filled_router):
+    def test_bogus_crs(self, api_client, afval_dataset, filled_router):
         """Prove that invalid CRS leads to a 406 status """
         url = reverse("dynamic_api:afvalwegingen-containers-list")
         response = api_client.get(url, HTTP_ACCEPT_CRS="nonsense")
         assert response.status_code == 406, response.data
 
-    def test_response_has_crs_from_accept_crs(self, api_client, filled_router):
+    def test_response_has_crs_from_accept_crs(self, api_client, afval_dataset, filled_router):
         """Prove that response has a CRS header taken from the Accept-Crs header """
         url = reverse("dynamic_api:afvalwegingen-containers-list")
         response = api_client.get(url, HTTP_ACCEPT_CRS="EPSG:4258")
@@ -131,7 +131,9 @@ class TestDSOViewMixin:
         assert response.has_header("Content-Crs"), dict(response.items())
         assert CRS.from_string("EPSG:4258") == CRS.from_string(response["Content-Crs"])
 
-    def test_response_has_crs_from_accept_crs_empty_data(self, api_client, filled_router):
+    def test_response_has_crs_from_accept_crs_empty_data(
+        self, api_client, afval_dataset, filled_router
+    ):
         """Prove that response has a CRS header taken from the Accept-Crs header """
         url = reverse("dynamic_api:afvalwegingen-containers-list")
         response = api_client.get(url, HTTP_ACCEPT_CRS="EPSG:4258")
@@ -139,7 +141,7 @@ class TestDSOViewMixin:
         assert response.has_header("Content-Crs"), dict(response.items())
         assert CRS.from_string("EPSG:4258") == CRS.from_string(response["Content-Crs"])
 
-    def test_response_has_crs_from_content(self, api_client, filled_router, afval_container):
+    def test_response_has_crs_from_content(self, api_client, afval_container, filled_router):
         """Prove that response has a CRS header taken from the Accept-Crs header """
         url = reverse("dynamic_api:afvalwegingen-containers-list")
         response = api_client.get(url)
@@ -154,19 +156,12 @@ class TestAuth:
     """ Test authorization """
 
     def test_mandatory_filters(
-        self,
-        api_client,
-        fetch_auth_token,
-        parkeervakken_schema,
-        parkeervakken_parkeervak_model,
+        self, api_client, fetch_auth_token, parkeervakken_parkeervak_model, filled_router
     ):
         """
         Tests that profile permissions with are activated
         through querying with the right mandatoryFilterSets
         """
-        from dso_api.dynamic_api.urls import router
-
-        router.reload()
         # need to reload router, regimes is a nested table
         # and router will not know of it's existence
         models.Profile.objects.create(
@@ -260,20 +255,13 @@ class TestAuth:
         )
 
     def test_profile_field_permissions(
-        self,
-        api_client,
-        fetch_auth_token,
-        parkeervakken_schema,
-        parkeervakken_parkeervak_model,
+        self, api_client, fetch_auth_token, parkeervakken_parkeervak_model, filled_router
     ):
         """
         Tests combination of profiles with auth scopes on dataset level.
         Profiles should be activated only when one of it's mandatoryFilterSet
         is queried. And field permissions should be inherited from dataset scope first.
         """
-        from dso_api.dynamic_api.urls import router
-
-        router.reload()
         models.Profile.objects.create(
             name="parkeerwacht",
             scopes=["PROFIEL/SCOPE"],
@@ -361,7 +349,7 @@ class TestAuth:
         assert parkeervak_data["soort"] == parkeervak.soort
 
     def test_auth_on_dataset_schema_protects_containers(
-        self, api_client, filled_router, afval_schema
+        self, api_client, afval_dataset, filled_router
     ):
         """Prove that auth protection at dataset level leads to a 403 on the container listview."""
         url = reverse("dynamic_api:afvalwegingen-containers-list")
@@ -370,7 +358,7 @@ class TestAuth:
         assert response.status_code == 403, response.data
 
     def test_auth_on_dataset_schema_protects_cluster(
-        self, api_client, filled_router, afval_schema
+        self, api_client, afval_dataset, filled_router
     ):
         """Prove that auth protection at dataset level leads to a 403 on the cluster listview."""
         url = reverse("dynamic_api:afvalwegingen-clusters-list")
@@ -378,7 +366,7 @@ class TestAuth:
         response = api_client.get(url)
         assert response.status_code == 403, response.data
 
-    def test_auth_on_table_schema_protects(self, api_client, filled_router, afval_schema):
+    def test_auth_on_table_schema_protects(self, api_client, afval_dataset, filled_router):
         """Prove that auth protection at table level (container)
         leads to a 403 on the container listview."""
         url = reverse("dynamic_api:afvalwegingen-containers-list")
@@ -387,7 +375,7 @@ class TestAuth:
         assert response.status_code == 403, response.data
 
     def test_auth_on_table_schema_does_not_protect_sibling_tables(
-        self, api_client, filled_router, afval_schema, fetch_auth_token
+        self, api_client, fetch_auth_token, afval_dataset, filled_router
     ):
         """Prove that auth protection at table level (cluster)
         does not protect the container list view."""
@@ -397,7 +385,7 @@ class TestAuth:
         assert response.status_code == 200, response.data
 
     def test_auth_on_table_schema_with_token_for_valid_scope(
-        self, api_client, filled_router, afval_schema, fetch_auth_token, afval_container
+        self, api_client, fetch_auth_token, afval_container, filled_router
     ):
         """Prove that auth protected table (container) can be
         viewed with a token with the correct scope."""
@@ -408,7 +396,7 @@ class TestAuth:
         assert response.status_code == 200, response.data
 
     def test_auth_on_table_schema_with_token_for_invalid_scope(
-        self, api_client, filled_router, afval_schema, fetch_auth_token
+        self, api_client, fetch_auth_token, afval_dataset, filled_router
     ):
         """Prove that auth protected table (container) cannot be
         viewed with a token with an incorrect scope.
@@ -420,7 +408,7 @@ class TestAuth:
         assert response.status_code == 403, response.data
 
     def test_auth_on_embedded_fields_with_token_for_valid_scope(
-        self, api_client, filled_router, afval_schema, fetch_auth_token, afval_container
+        self, api_client, fetch_auth_token, afval_container, filled_router
     ):
         """Prove that expanded fields are shown when a reference field is protected
         with an auth scope and there is a valid token"""
@@ -434,7 +422,7 @@ class TestAuth:
         assert "cluster" in data["_embedded"], data
 
     def test_auth_on_embedded_fields_without_token_for_valid_scope(
-        self, api_client, filled_router, afval_schema, fetch_auth_token, afval_container
+        self, api_client, fetch_auth_token, afval_container, filled_router
     ):
         """Prove that expanded fields are *not* shown when a reference field is protected
         with an auth scope. For expand=true, we return a result,
@@ -448,7 +436,7 @@ class TestAuth:
         assert "cluster" not in data["_embedded"], data
 
     def test_auth_on_specified_embedded_fields_without_token_for_valid_scope(
-        self, api_client, filled_router, afval_schema, fetch_auth_token, afval_container
+        self, api_client, fetch_auth_token, afval_container, filled_router
     ):
         """Prove that a 403 is returned when asked for a specific expanded field that is protected
         and there is no authorization in the token for that field.
@@ -460,7 +448,7 @@ class TestAuth:
         assert response.status_code == 403, response.data
 
     def test_auth_on_individual_fields_with_token_for_valid_scope(
-        self, api_client, filled_router, afval_schema, fetch_auth_token, afval_container
+        self, api_client, fetch_auth_token, afval_container, filled_router
     ):
         """Prove that protected fields are shown
         with an auth scope and there is a valid token"""
@@ -476,7 +464,7 @@ class TestAuth:
         ), data["_embedded"]["containers"][0].keys()
 
     def test_auth_on_individual_fields_with_token_for_valid_scope_per_profile(
-        self, api_client, filled_router, afval_schema, fetch_auth_token, afval_container
+        self, api_client, fetch_auth_token, afval_container, filled_router
     ):
         """Prove that protected fields are shown
         with an auth scope connected to Profile that gives access to specific field."""
@@ -503,7 +491,7 @@ class TestAuth:
         ), data["_embedded"]["containers"][0].keys()
 
     def test_auth_on_individual_fields_without_token_for_valid_scope(
-        self, api_client, filled_router, afval_schema, fetch_auth_token, afval_container
+        self, api_client, fetch_auth_token, afval_container, filled_router
     ):
         """Prove that protected fields are *not* shown
         with an auth scope and there is not a valid token"""
@@ -520,17 +508,12 @@ class TestAuth:
     def test_auth_on_field_level_is_not_cached(
         self,
         api_client,
-        filled_router,
         fetch_auth_token,
         parkeervakken_parkeervak_model,
         parkeervakken_regime_model,
+        filled_router,
     ):
         """Prove that Auth is not cached."""
-        # Router reload is needed to make sure that viewsets are using relations.
-        from dso_api.dynamic_api.urls import router
-
-        router.reload()
-
         url = reverse("dynamic_api:parkeervakken-parkeervakken-list")
 
         models.DatasetField.objects.filter(name="dagen").update(auth="BAG/R")
@@ -572,7 +555,7 @@ class TestAuth:
         assert "dagen" not in public_data["_embedded"]["parkeervakken"][0]["regimes"][0].keys()
 
     def test_auth_on_dataset_protects_detail_view(
-        self, api_client, filled_router, afval_schema, fetch_auth_token, afval_container
+        self, api_client, fetch_auth_token, afval_container, filled_router
     ):
         """ Prove that protection at datasets level protects detail views """
         url = reverse("dynamic_api:afvalwegingen-containers-detail", args=[1])
@@ -581,7 +564,7 @@ class TestAuth:
         assert response.status_code == 403, response.data
 
     def test_auth_on_datasettable_protects_detail_view(
-        self, api_client, filled_router, afval_schema, fetch_auth_token, afval_container
+        self, api_client, fetch_auth_token, afval_container, filled_router
     ):
         """ Prove that protection at datasets level protects detail views """
         url = reverse("dynamic_api:afvalwegingen-containers-detail", args=[1])
@@ -590,7 +573,7 @@ class TestAuth:
         assert response.status_code == 403, response.data
 
     def test_auth_on_dataset_detail_with_token_for_valid_scope(
-        self, api_client, filled_router, afval_schema, fetch_auth_token, afval_container
+        self, api_client, fetch_auth_token, afval_container, filled_router
     ):
         """ Prove that protection at datasets level protects detail views """
         url = reverse("dynamic_api:afvalwegingen-containers-detail", args=[1])
@@ -602,10 +585,10 @@ class TestAuth:
     def test_auth_on_dataset_detail_has_profile_field_permission(
         self,
         api_client,
-        filled_router,
         fetch_auth_token,
         parkeervakken_schema,
         parkeervakken_parkeervak_model,
+        filled_router,
     ):
         """Prove that having no scope on the dataset, but a
         mandatory query on ['id'] gives access to its detailview.
@@ -675,7 +658,7 @@ class TestAuth:
         assert response.status_code == 200, response.data
 
     def test_auth_options_requests_are_not_protected(
-        self, api_client, filled_router, afval_schema
+        self, api_client, afval_dataset, filled_router
     ):
         """Prove that options requests are not protected"""
         url = reverse("dynamic_api:afvalwegingen-clusters-list")
@@ -683,9 +666,7 @@ class TestAuth:
         response = api_client.options(url)
         assert response.status_code == 200, response.data
 
-    def test_sort_by_accepts_camel_case(
-        self, api_client, filled_router, afval_schema, afval_container
-    ):
+    def test_sort_by_accepts_camel_case(self, api_client, afval_container, filled_router):
         """Prove that _sort is accepting camelCase parameters."""
         url = reverse("dynamic_api:afvalwegingen-containers-list")
         response = api_client.get(f"{url}?_sort=datumCreatie")
@@ -695,7 +676,7 @@ class TestAuth:
         assert len(data["_embedded"]["containers"]) == 1, data
 
     def test_sort_by_not_accepting_db_column_names(
-        self, api_client, filled_router, afval_schema, afval_container
+        self, api_client, afval_container, filled_router
     ):
         """Prove that _sort is not accepting db column names."""
         url = reverse("dynamic_api:afvalwegingen-containers-list")
@@ -704,9 +685,7 @@ class TestAuth:
         assert response.status_code == 400, data
         assert data["x-validation-errors"] == ["Invalid sort fields: datum_creatie"], data
 
-    def test_api_request_audit_logging(
-        self, api_client, filled_router, afval_schema, afval_container
-    ):
+    def test_api_request_audit_logging(self, api_client, afval_container, filled_router):
         """Prove that every request is logged into audit log."""
 
         base_url = reverse("dynamic_api:afvalwegingen-containers-list")
@@ -724,7 +703,7 @@ class TestAuth:
         assert "request_headers" in log_data
 
     def test_api_authorized_request_audit_logging(
-        self, api_client, filled_router, afval_schema, afval_container, fetch_auth_token
+        self, api_client, afval_container, fetch_auth_token, filled_router
     ):
         """Prove that every authorized request is logged into audit log."""
 
@@ -744,7 +723,7 @@ class TestAuth:
         assert "request_headers" in log_data
 
     def test_auth_on_table_schema_protects_camel_case(
-        self, api_client, filled_router, afval_schema
+        self, api_client, afval_schema, afval_dataset, filled_router
     ):
         """Prove that auth protection at table level (adresLoopafstand)
         leads to a 403 on the adresLoopafstand listview even if table name
@@ -762,13 +741,10 @@ class TestAuth:
 # @pytest.mark.usefixtures("reloadrouter")
 @pytest.mark.django_db
 class TestEmbedTemporalTables:
+    """NOTE: the 'data' fixtures are """
+
     def test_detail_expand_true_for_fk_relation(
-        self,
-        api_client,
-        reloadrouter,
-        buurten_model,
-        buurten_data,
-        wijken_data,
+        self, api_client, buurten_data, wijken_data, filled_router
     ):
         """Prove that ligtInWijk shows up when expanded"""
 
@@ -784,12 +760,7 @@ class TestEmbedTemporalTables:
         }
 
     def test_detail_no_expand_for_temporal_fk_relation(
-        self,
-        api_client,
-        reloadrouter,
-        buurten_model,
-        buurten_data,
-        wijken_data,
+        self, api_client, buurten_data, wijken_data, filled_router
     ):
         """Prove that temporal identifier fields have been removed from the body
         and only appear in the respective HAL envelopes"""
@@ -826,13 +797,7 @@ class TestEmbedTemporalTables:
         }
 
     def test_list_expand_true_for_fk_relation(
-        self,
-        api_client,
-        reloadrouter,
-        statistieken_model,
-        buurten_model,
-        buurten_data,
-        wijken_data,
+        self, api_client, buurten_data, wijken_data, filled_router
     ):
         """Prove that buurt shows up when listview is expanded and uses the
         latest volgnummer
@@ -853,13 +818,7 @@ class TestEmbedTemporalTables:
         }
 
     def test_detail_expand_true_for_nm_relation(
-        self,
-        api_client,
-        reloadrouter,
-        buurten_model,
-        buurten_data,
-        ggwgebieden_model,
-        ggwgebieden_data,
+        self, api_client, buurten_data, ggwgebieden_data, filled_router
     ):
         """Prove that bestaatUitBuurten shows up when expanded"""
 
@@ -871,13 +830,7 @@ class TestEmbedTemporalTables:
         assert data["_embedded"]["bestaatUitBuurten"][0]["id"] == "03630000000078.1"
 
     def test_list_expand_true_for_nm_relation(
-        self,
-        api_client,
-        reloadrouter,
-        buurten_model,
-        buurten_data,
-        ggwgebieden_model,
-        ggwgebieden_data,
+        self, api_client, buurten_data, ggwgebieden_data, woningbouwplannen_data, filled_router
     ):
         """Prove that buurt shows up when listview is expanded and uses the
         latest volgnummer
@@ -942,13 +895,7 @@ class TestEmbedTemporalTables:
         }
 
     def test_detail_no_expand_for_loose_relation(
-        self,
-        api_client,
-        reloadrouter,
-        statistieken_model,
-        buurten_model,
-        statistieken_data,
-        buurten_data,
+        self, api_client, statistieken_data, buurten_data, filled_router
     ):
         """Without _expand=true there is no _embedded field.
         The buurt link must appear in the _links field inside an HAL envelope.
@@ -980,13 +927,7 @@ class TestEmbedTemporalTables:
         }
 
     def test_detail_expand_true_for_loose_relation(
-        self,
-        api_client,
-        reloadrouter,
-        statistieken_model,
-        buurten_model,
-        statistieken_data,
-        buurten_data,
+        self, api_client, statistieken_data, buurten_data, filled_router
     ):
         """Prove that buurt shows up when expanded and uses the
         latest volgnummer
@@ -1029,13 +970,7 @@ class TestEmbedTemporalTables:
         }
 
     def test_list_expand_true_for_loose_relation(
-        self,
-        api_client,
-        reloadrouter,
-        statistieken_model,
-        buurten_model,
-        statistieken_data,
-        buurten_data,
+        self, api_client, statistieken_data, buurten_data, filled_router
     ):
         """Prove that buurt shows up when listview is expanded and uses the
         latest volgnummer
@@ -1063,13 +998,7 @@ class TestEmbedTemporalTables:
         assert "_embedded" not in data["_embedded"]["statistieken"][0]
 
     def test_list_expand_true_non_tempooral_many_to_many_to_temporal(
-        self,
-        api_client,
-        reloadrouter,
-        buurten_model,
-        buurten_data,
-        woningbouwplan_model,
-        woningbouwplannen_data,
+        self, api_client, buurten_data, woningbouwplannen_data, filled_router
     ):
         """_embedded must contain for each FK or MN relation a key (with camelCased fieldname)
         containing a list of all records that are being referred to
@@ -1118,11 +1047,9 @@ class TestEmbedTemporalTables:
     def test_detail_expand_true_non_temporal_many_to_many_to_temporal(
         self,
         api_client,
-        reloadrouter,
-        buurten_model,
-        buurten_data,
         woningbouwplan_model,
         woningbouwplannen_data,
+        filled_router,
     ):
         url = reverse("dynamic_api:woningbouwplannen-woningbouwplan-detail", args=[1])
         url = f"{url}?_expand=true"
@@ -1139,11 +1066,9 @@ class TestEmbedTemporalTables:
     def test_independence_of_m2m_through_id_field(
         self,
         api_client,
-        reloadrouter,
-        buurten_model,
         buurten_data,
-        woningbouwplan_model,
         woningbouwplannen_data,
+        filled_router,
     ):
         """Prove that the many-to-many relation from a non-temporal to temporal dataset
         works without using the 'id' column in the though table.
@@ -1381,7 +1306,7 @@ class TestExportFormats:
     }
 
     @pytest.mark.parametrize("format", sorted(EMPTY_FORMATS.keys()))
-    def test_empty_list(self, format, api_client, filled_router):
+    def test_empty_list(self, format, api_client, afval_dataset, filled_router):
         """Prove that empty list pages are properly serialized."""
         decoder, expected_type, expected_data = self.EMPTY_FORMATS[format]
         url = reverse("dynamic_api:afvalwegingen-containers-list")
@@ -1396,7 +1321,7 @@ class TestExportFormats:
         assert response["Content-Type"] == expected_type  # And test after reading
 
     def test_csv_expand_inline(
-        self, api_client, api_rf, afval_container, filled_router, fetch_auth_token
+        self, api_client, api_rf, afval_container, fetch_auth_token, filled_router
     ):
         """Prove that the expand logic works, which is implemented inline for CSV"""
         url = reverse("dynamic_api:afvalwegingen-containers-list")
@@ -1504,7 +1429,7 @@ class TestExportFormats:
         assert "X-Pagination-Page" not in response
 
     @pytest.mark.parametrize("format", sorted(DETAIL_FORMATS.keys()))
-    def test_detail_404(self, format, api_client, filled_router):
+    def test_detail_404(self, format, api_client, afval_dataset, filled_router):
         """Prove that error pages are also properly rendered.
         These are not rendered in the output format, but get a generic exception.
         """

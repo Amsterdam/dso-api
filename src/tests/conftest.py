@@ -1,7 +1,10 @@
+from __future__ import annotations
+
 import json
 import time
 from datetime import date, datetime
 from pathlib import Path
+from typing import Type, cast
 
 import pytest
 from authorization_django import jwks
@@ -9,13 +12,13 @@ from django.contrib.auth.models import AnonymousUser
 from django.contrib.gis.geos import GEOSGeometry, Point
 from django.core.handlers.wsgi import WSGIRequest
 from django.db import connection
+from django.utils.functional import SimpleLazyObject
 from django.utils.timezone import get_current_timezone
 from jwcrypto.jwt import JWT
 from rest_framework.request import Request
 from rest_framework.test import APIClient, APIRequestFactory
 from schematools.contrib.django.auth_backend import RequestProfile
-from schematools.contrib.django.db import create_tables
-from schematools.contrib.django.models import Dataset, Profile
+from schematools.contrib.django.models import Dataset, DynamicModel, Profile
 from schematools.types import DatasetSchema, ProfileSchema
 
 from rest_framework_dso.crs import RD_NEW
@@ -81,66 +84,146 @@ def router():
     yield router
 
     # Only any changes that tests may have done to the router
-    if router.registry:
+    if router.is_initialized():
         router.clear_urls()
 
 
 @pytest.fixture()
 def filled_router(
     router,
-    afval_dataset,
-    bommen_dataset,
-    parkeervakken_dataset,
-    vestiging_dataset,
-    fietspaaltjes_dataset,
-    fietspaaltjes_dataset_no_display,
-    explosieven_dataset,
-    indirect_self_ref_dataset,
-    download_url_dataset,
-    meldingen_dataset,
-    gebieden_dataset,
-    woningbouwplannen_dataset,
-    bag_dataset,
+    dynamic_models,
+    # afval_dataset,
+    # bommen_dataset,
+    # parkeervakken_dataset,
+    # vestiging_dataset,
+    # fietspaaltjes_dataset,
+    # fietspaaltjes_dataset_no_display,
+    # explosieven_dataset,
+    # indirect_self_ref_dataset,
+    # download_url_dataset,
+    # meldingen_dataset,
+    # gebieden_dataset,
+    # woningbouwplannen_dataset,
+    # bag_dataset,
 ):
-    # Prove that the router URLs are extended on adding a model
-    router.reload()
-    router_urls = [p.name for p in router.urls]
-    assert len(router_urls) > 1, router_urls
+    """The fixture to add when dynamic viewsets are needed in the test.
+    Without this fixture, the viewsets are not generated, and hence ``reverse()`` won't work.
 
-    # Make sure the tables are created too
-    table_names = connection.introspection.table_names()
-
-    datasets = {
-        afval_dataset: "afval_clusters",
-        bommen_dataset: "bommen_bommen",
-        parkeervakken_dataset: "parkeervakken_parkeervakken",
-        vestiging_dataset: "vestiging_vestiging",
-        fietspaaltjes_dataset: "fietsplaatjes_fietsplaatjes",
-        fietspaaltjes_dataset_no_display: "fietspaaltjesnodisplay_fietspaaltjesnodisplay",
-        explosieven_dataset: "explosieven_verdachtgebied",
-        indirect_self_ref_dataset: "selfref_selfref",
-        download_url_dataset: "download_url",
-        meldingen_dataset: "meldingen_statistieken",
-        gebieden_dataset: "gebieden_buurten",
-        woningbouwplannen_dataset: "woningbouwplannen_woningbouwplan",
-        bag_dataset: "bag_panden",
-    }
-
-    # Based on datasets, create test table if not exists
-    for dataset, table in datasets.items():
-        if table not in table_names:
-            create_tables(dataset, base_app_name="dso_api.dynamic_api")
+    Note that ``pytest_runtest_call()`` performs post-fixture collection logic on this.
+    """
     return router
 
 
+class _LazyDynamicModels:
+    """Create models on demand on retrieval."""
+
+    def __init__(self, router):
+        self.router = router
+        self.datasets = None
+
+    def _get_model(self, dataset_name, model_name):
+        if not self.router.all_models:
+            _initialize_router(self.router)
+
+        try:
+            app = self.router.all_models[dataset_name]
+        except KeyError:
+            loaded = sorted(self.router.all_models.keys())
+            later = set(ds.schema.id for ds in Dataset.objects.db_enabled()).difference(loaded)
+            if dataset_name in later:
+                raise KeyError(
+                    "New dataset fixtures were loaded after the router "
+                    f"was initialized: {','.join(sorted(later))}"
+                ) from None
+            else:
+                raise KeyError(
+                    f"Dataset app '{dataset_name}' not found. Loaded are: {','.join(loaded)}"
+                ) from None
+
+        try:
+            return app[model_name]
+        except KeyError:
+            if Dataset.objects.filter(name=dataset_name).exists():
+                # Check if was created later.
+                raise KeyError(
+                    f"The dataset tables were already created before "
+                    f"model '{model_name}' was requested. Please update "
+                    f"the fixture order (e.g. place 'data' fixtures at the end)."
+                ) from None
+            else:
+                raise KeyError(
+                    f"Model {model_name} does not exist in dataset '{dataset_name}'"
+                ) from None
+
+    def __getitem__(self, dataset_name) -> _LazyDynamicModels._LazyApp:
+        return self._LazyApp(self, dataset_name)
+
+    class _LazyApp:
+        def __init__(self, parent: _LazyDynamicModels, dataset_name):
+            self.parent = parent
+            self.dataset_name = dataset_name
+
+        def __getitem__(self, model_name) -> Type[DynamicModel]:
+            # Delay model creation as much as possible. Only when the attributes are read,
+            # the actual model is constructed. This avoids early router reloads.
+            return cast(
+                Type[DynamicModel],
+                SimpleLazyObject(lambda: self.parent._get_model(self.dataset_name, model_name)),
+            )
+
+
 @pytest.fixture()
-def reloadrouter(filled_router):
-    """The filled_router, but reloaded before being used.
-    this is the Nick-trick :-)  Needed when schemas
-    with relations are used.
+def dynamic_models(router):
+    """Generated models from the router.
+    Note that ``pytest_runtest_call()`` performs post-fixture collection logic on this.
     """
-    filled_router.reload()
-    return filled_router
+    # This uses a class to generate the models on demand.
+    return _LazyDynamicModels(router)
+
+
+def pytest_runtest_call(item):
+    """Make sure tables of remaining dataset fixtures are also created."""
+    if "dynamic_models" in item.fixturenames or "filled_router" in item.fixturenames:
+        from dso_api.dynamic_api.urls import router
+
+        # Perform late initialization if this didn't happen yet on demand.
+        if not router.is_initialized():
+            _initialize_router(router)
+            if not router.is_initialized():
+                raise RuntimeError(
+                    "The 'filled_router' or 'dynamic_models' fixture was requested, "
+                    "but no dataset fixtures were defined for this test."
+                )
+
+        datasets = {ds.schema.id for ds in Dataset.objects.db_enabled()}
+        if len(datasets) > len(router.all_models):
+            added = datasets - set(router.all_models.keys())
+            raise RuntimeError(
+                f"More dataset fixtures were defined after 'filled_router':"
+                f" {','.join(sorted(added))}"
+            )
+
+
+def _initialize_router(router):
+    # Model creation on demand, always create viewsets too.
+    # It's very hard to reliably determine whether these are needed or not.
+    # Optimizing this would risk breaking various reverse() calls in tests.
+    router.reload()
+    _create_tables_if_missing(router.all_models)
+
+
+def _create_tables_if_missing(dynamic_models):
+    """Create the database tables for dynamic models"""
+    table_names = connection.introspection.table_names()
+
+    with connection.schema_editor() as schema_editor:
+        for dataset_id, models in dynamic_models.items():
+            for model in models.values():
+                if model._meta.db_table not in table_names:
+                    print("CREATING ", model._meta.db_table)
+                    schema_editor.create_model(model)
+                else:
+                    print("SKIP     ", model._meta.db_table)
 
 
 @pytest.fixture()
@@ -186,9 +269,8 @@ def afval_dataset(afval_schema_json) -> Dataset:
 
 
 @pytest.fixture()
-def afval_cluster_model(filled_router):
-    # Using filled_router so all urls can be generated too.
-    return filled_router.all_models["afvalwegingen"]["clusters"]
+def afval_cluster_model(afval_dataset, dynamic_models):
+    return dynamic_models["afvalwegingen"]["clusters"]
 
 
 @pytest.fixture()
@@ -197,15 +279,13 @@ def afval_cluster(afval_cluster_model):
 
 
 @pytest.fixture()
-def afval_container_model(filled_router):
-    # Using filled_router so all urls can be generated too.
-    return filled_router.all_models["afvalwegingen"]["containers"]
+def afval_container_model(afval_dataset, dynamic_models):
+    return dynamic_models["afvalwegingen"]["containers"]
 
 
 @pytest.fixture()
-def afval_adresloopafstand_model(filled_router):
-    # Using filled_router so all urls can be generated too.
-    return filled_router.all_models["afvalwegingen"]["adres_loopafstand"]
+def afval_adresloopafstand_model(afval_dataset, dynamic_models):
+    return dynamic_models["afvalwegingen"]["adres_loopafstand"]
 
 
 @pytest.fixture()
@@ -311,15 +391,13 @@ def parkeervakken_dataset(parkeervakken_schema_json) -> Dataset:
 
 
 @pytest.fixture()
-def parkeervakken_parkeervak_model(filled_router):
-    # Using filled_router so all urls can be generated too.
-    return filled_router.all_models["parkeervakken"]["parkeervakken"]
+def parkeervakken_parkeervak_model(parkeervakken_dataset, dynamic_models):
+    return dynamic_models["parkeervakken"]["parkeervakken"]
 
 
 @pytest.fixture()
-def parkeervakken_regime_model(filled_router):
-    # Using filled_router so all urls can be generated too.
-    return filled_router.all_models["parkeervakken"]["parkeervakken_regimes"]
+def parkeervakken_regime_model(parkeervakken_dataset, dynamic_models):
+    return dynamic_models["parkeervakken"]["parkeervakken_regimes"]
 
 
 @pytest.fixture()
@@ -384,9 +462,8 @@ def vestiging_dataset(vestiging_schema_json) -> Dataset:
 
 
 @pytest.fixture()
-def vestiging_models(filled_router):
-    # Using filled_router so all urls can be generated too.
-    return filled_router.all_models["vestiging"]
+def vestiging_models(vestiging_dataset, dynamic_models):
+    return dynamic_models["vestiging"]
 
 
 @pytest.fixture
@@ -428,9 +505,8 @@ def fietspaaltjes_schema(fietspaaltjes_schema_json) -> DatasetSchema:
 
 
 @pytest.fixture()
-def fietspaaltjes_model(filled_router):
-    # Using filled_router so all urls can be generated too.
-    return filled_router.all_models["fietspaaltjes"]["fietspaaltjes"]
+def fietspaaltjes_model(fietspaaltjes_dataset, dynamic_models):
+    return dynamic_models["fietspaaltjes"]["fietspaaltjes"]
 
 
 @pytest.fixture()
@@ -478,9 +554,8 @@ def fietspaaltjes_schema_no_display(
 
 
 @pytest.fixture()
-def fietspaaltjes_model_no_display(filled_router):
-    # Using filled_router so all urls can be generated too.
-    return filled_router.all_models["fietspaaltjesnodisplay"]["fietspaaltjesnodisplay"]
+def fietspaaltjes_model_no_display(fietspaaltjes_dataset_no_display, dynamic_models):
+    return dynamic_models["fietspaaltjesnodisplay"]["fietspaaltjesnodisplay"]
 
 
 @pytest.fixture()
@@ -547,9 +622,8 @@ def explosieven_dataset(explosieven_schema_json) -> Dataset:
 
 
 @pytest.fixture()
-def explosieven_model(filled_router):
-    # Using filled_router so all urls can be generated too.
-    return filled_router.all_models["explosieven"]["verdachtgebied"]
+def explosieven_model(explosieven_dataset, dynamic_models):
+    return dynamic_models["explosieven"]["verdachtgebied"]
 
 
 @pytest.fixture()
@@ -577,6 +651,11 @@ def indirect_self_ref_dataset(indirect_self_ref_schema_json) -> Dataset:
     return Dataset.objects.create(
         name="indirect_self_ref", schema_data=indirect_self_ref_schema_json
     )
+
+
+@pytest.fixture()
+def ligplaatsen_model(indirect_self_ref_dataset, dynamic_models):
+    return dynamic_models["selfref"]["ligplaatsen"]
 
 
 # --| >> EINDE uri check>> EXPLOSIEVEN  >> uri check >> |--#
@@ -611,13 +690,19 @@ def meldingen_schema(meldingen_schema_json) -> DatasetSchema:
 
 
 @pytest.fixture()
-def meldingen_dataset(meldingen_schema_json) -> Dataset:
+def meldingen_dataset(
+    gebieden_dataset,  # dependency in schema
+    meldingen_schema_json,
+) -> Dataset:
     return Dataset.objects.create(name="meldingen", schema_data=meldingen_schema_json)
 
 
 @pytest.fixture()
-def gebieden_models(filled_router):
-    return filled_router.all_models["gebieden"]
+def gebieden_models(
+    gebieden_dataset,
+    dynamic_models,
+):
+    return dynamic_models["gebieden"]
 
 
 @pytest.fixture()
@@ -633,8 +718,18 @@ def gebieden_schema(gebieden_schema_json) -> DatasetSchema:
 
 
 @pytest.fixture()
-def gebieden_dataset(gebieden_schema_json) -> Dataset:
+def _gebieden_dataset(gebieden_schema_json) -> Dataset:
+    """Internal"""
     return Dataset.objects.create(name="gebieden", schema_data=gebieden_schema_json)
+
+
+@pytest.fixture()
+def gebieden_dataset(_gebieden_dataset, woningbouwplannen_dataset) -> Dataset:
+    """Make sure gebieden + woningbouwplannen is always combined,
+    because woningbouwplannen has a reverse dependency on 'gebieden'.
+    This avoids accidentally leaving out the reverse dependency.
+    """
+    return _gebieden_dataset
 
 
 @pytest.fixture()
@@ -667,49 +762,51 @@ def woningbouwplannen_schema(woningbouwplannen_schema_json) -> DatasetSchema:
 
 
 @pytest.fixture()
-def woningbouwplannen_dataset(woningbouwplannen_schema_json) -> Dataset:
+def woningbouwplannen_dataset(woningbouwplannen_schema_json, _gebieden_dataset) -> Dataset:
+    # Woningbouwplannen has a dependency on gebieden,
+    # so this fixture makes sure it's always loaded.
     return Dataset.objects.create(
         name="woningbouwplannen", schema_data=woningbouwplannen_schema_json
     )
 
 
 @pytest.fixture()
-def statistieken_model(filled_router):
-    return filled_router.all_models["meldingen"]["statistieken"]
+def statistieken_model(meldingen_dataset, gebieden_dataset, dynamic_models):
+    return dynamic_models["meldingen"]["statistieken"]
 
 
 @pytest.fixture()
-def panden_model(filled_router):
-    return filled_router.all_models["bag"]["panden"]
+def panden_model(bag_dataset, dynamic_models):
+    return dynamic_models["bag"]["panden"]
 
 
 @pytest.fixture()
-def dossiers_model(filled_router):
-    return filled_router.all_models["bag"]["dossiers"]
+def dossiers_model(bag_dataset, dynamic_models):
+    return dynamic_models["bag"]["dossiers"]
 
 
 @pytest.fixture()
-def buurten_model(filled_router):
-    return filled_router.all_models["gebieden"]["buurten"]
+def buurten_model(gebieden_dataset, dynamic_models):
+    return dynamic_models["gebieden"]["buurten"]
 
 
 @pytest.fixture()
-def wijken_model(filled_router):
-    return filled_router.all_models["gebieden"]["wijken"]
+def wijken_model(gebieden_dataset, dynamic_models):
+    return dynamic_models["gebieden"]["wijken"]
 
 
 @pytest.fixture()
-def ggwgebieden_model(filled_router):
-    return filled_router.all_models["gebieden"]["ggwgebieden"]
+def ggwgebieden_model(gebieden_dataset, dynamic_models):
+    return dynamic_models["gebieden"]["ggwgebieden"]
 
 
 @pytest.fixture()
-def woningbouwplan_model(filled_router):
-    return filled_router.all_models["woningbouwplannen"]["woningbouwplan"]
+def woningbouwplan_model(woningbouwplannen_dataset, dynamic_models):
+    return dynamic_models["woningbouwplannen"]["woningbouwplan"]
 
 
 @pytest.fixture()
-def statistieken_data(statistieken_model):
+def statistieken_data(statistieken_model, buurten_data):
     statistieken_model.objects.create(
         id=1,
         buurt="03630000000078",
@@ -749,7 +846,7 @@ def wijken_data(wijken_model):
 
 
 @pytest.fixture()
-def ggwgebieden_data(ggwgebieden_model):
+def ggwgebieden_data(ggwgebieden_model, buurten_data):
     ggwgebieden_model.objects.create(
         id="03630950000000.1", identificatie="03630950000000", volgnummer=1
     )
@@ -759,7 +856,7 @@ def ggwgebieden_data(ggwgebieden_model):
 
 
 @pytest.fixture()
-def woningbouwplannen_data(woningbouwplan_model):
+def woningbouwplannen_data(woningbouwplan_model, buurten_data):
     woningbouwplan_model.objects.create(id="1")
     woningbouwplan_model.buurten.through.objects.create(
         woningbouwplan_id="1", buurten_id="03630000000078"

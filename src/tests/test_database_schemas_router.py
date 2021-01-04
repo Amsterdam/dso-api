@@ -11,7 +11,7 @@ class TestDatabaseSchemasRouter:
         db_router = DatabaseSchemasRouter()
         assert db_router.db_for_read(gebieden_models["buurten"]) is None
 
-    def test_db_for_read_returns_schema_name_if_set(self, gebieden_schema, gebieden_models):
+    def test_db_for_read_returns_schema_name_if_set(self, gebieden_models):
         default_settings = settings.DATABASE_SCHEMAS.copy()
         settings.DATABASE_SCHEMAS["gebieden"] = "test"
         db_router = DatabaseSchemasRouter()

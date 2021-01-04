@@ -5,7 +5,7 @@ from django.urls import reverse
 
 
 @pytest.mark.django_db
-def test_openapi_json(api_client, filled_router, caplog):
+def test_openapi_json(api_client, afval_dataset, filled_router, caplog):
     """Prove that the OpenAPI page can be rendered."""
     caplog.set_level(logging.WARNING)
 
@@ -56,7 +56,7 @@ def test_openapi_json(api_client, filled_router, caplog):
 
 
 @pytest.mark.django_db
-def test_openapi_yaml(api_client, filled_router):
+def test_openapi_yaml(api_client, afval_dataset, filled_router):
     """Prove that the OpenAPI page can be rendered."""
     url = reverse("openapi.yaml")
     response = api_client.get(url)
