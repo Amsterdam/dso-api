@@ -133,8 +133,7 @@ class RemoteViewSet(DSOViewMixin, ViewSet):
         if query_params:
             url = urljoin(self.endpoint_url, "?" + urlencode(query_params))
 
-        if "{table_id}" in url:
-            url = url.replace("{table_id}", self.table_id)
+        url = url.replace("{table_id}", self.table_id)
 
         # Using urllib directly instead of requests for performance
         logger.debug("Forwarding call to %s", url)
