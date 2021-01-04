@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 from schematools.contrib.django.auth_backend import RequestProfile
 from typing import Type, Union
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlencode
 from urllib3 import HTTPResponse
 
 from dso_api.lib.exceptions import (
@@ -131,10 +131,7 @@ class RemoteViewSet(DSOViewMixin, ViewSet):
             url = urljoin(self.endpoint_url, url)
 
         if query_params:
-            url = urljoin(
-                self.endpoint_url,
-                "?" + "&".join(f"{k}={v}" for k, v in query_params.items()),
-            )
+            url = urljoin(self.endpoint_url, "?" + urlencode(query_params))
 
         if "{table_id}" in url:
             url = url.replace("{table_id}", self.table_id)
