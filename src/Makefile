@@ -1,5 +1,6 @@
 .PHONY: install
 install:
+	pip install wheel
 	pip install -r requirements_dev.txt
 	pre-commit install
 
