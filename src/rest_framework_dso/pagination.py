@@ -14,7 +14,10 @@ class DSOPageNumberPagination(pagination.PageNumberPagination):
     https://tools.ietf.org/html/draft-kelly-json-hal-08
     """
 
-    page_size_query_param = "page_size"
+    # Using underscore as "escape" for DSO compliance.
+    page_query_param = "page"  # standard still maintains this format..
+    page_size_query_param = "_pageSize"
+
     #: The field name for the results envelope
     results_field = None
 
