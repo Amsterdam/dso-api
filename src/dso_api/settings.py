@@ -264,6 +264,7 @@ JWKS_TEST_KEY = """
 DATAPUNT_AUTHZ = {
     "JWKS": os.getenv("PUB_JWKS", JWKS_TEST_KEY),
     "JWKS_URL": os.getenv("KEYCLOAK_JWKS_URL"),
+    # "ALWAYS_OK": True if DEBUG else False,
     "ALWAYS_OK": False,
     "MIN_INTERVAL_KEYSET_UPDATE": 30 * 60,  # 30 minutes
 }
@@ -277,3 +278,5 @@ AMSTERDAM_SCHEMA = {"geosearch_disabled_datasets": ["bag", "meetbouten"]}
 for key, value in env.ENVIRON.items():
     if key.startswith("AZURE_BLOB_"):
         locals()[key] = value
+
+HAAL_CENTRAAL_API_KEY = os.getenv("HAAL_CENTRAAL_API_KEY", "UNKNOWN")

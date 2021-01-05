@@ -1,6 +1,6 @@
 """Improve the OpenAPI schema output """
 from typing import List
-
+import logging
 from django.core.exceptions import FieldDoesNotExist
 from django.db import models
 from drf_spectacular import openapi
@@ -11,6 +11,8 @@ from rest_framework.fields import ReadOnlyField
 from rest_framework_gis.fields import GeometryField
 
 from rest_framework_dso.fields import LinksField
+
+logger = logging.getLogger(__name__)
 
 __all__ = ["DSOSchemaGenerator", "DSOAutoSchema"]
 
@@ -222,7 +224,7 @@ class DSOAutoSchema(openapi.AutoSchema):
         else:
             return tokenized_path[:1]
 
-    def _map_serializer_field(self, method, field) -> dict:
+    def _map_serializer_field(self, method, field) -> dict:  # noqa: C901
         """Transform the serializer field into a OpenAPI definition.
         This method is overwritten to fix some missing field types.
         """
@@ -237,10 +239,13 @@ class DSOAutoSchema(openapi.AutoSchema):
             if isinstance(field, GeometryField):
                 # or use $ref when examples are included.
                 # model_field.geom_type is uppercase
-                model_field = field.parent.Meta.model._meta.get_field(field.source)
-                geojson_type = GEOM_TYPES_TO_GEOJSON.get(
-                    model_field.geom_type, "Geometry"
-                )
+                if hasattr(field.parent.Meta, "model"):
+                    model_field = field.parent.Meta.model._meta.get_field(field.source)
+                    geojson_type = GEOM_TYPES_TO_GEOJSON.get(
+                        model_field.geom_type, "Geometry"
+                    )
+                else:
+                    geojson_type = "Geometry"
                 return {"$ref": f"#/components/schemas/{geojson_type}"}
 
             if isinstance(field, ReadOnlyField):

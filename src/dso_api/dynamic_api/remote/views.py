@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 from schematools.contrib.django.auth_backend import RequestProfile
 from typing import Type, Union
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlencode
 from urllib3 import HTTPResponse
 
 from dso_api.lib.exceptions import (
@@ -18,6 +18,9 @@ from dso_api.lib.exceptions import (
     RemoteAPIException,
     ServiceUnavailable,
 )
+from django.conf import settings
+
+from rest_framework_dso.views import DSOViewMixin
 from . import serializers
 from .. import permissions
 
@@ -38,7 +41,7 @@ def del_none(d):
             del_none(value)
 
 
-class RemoteViewSet(ViewSet):
+class RemoteViewSet(DSOViewMixin, ViewSet):
     """Views for a remote serializer."""
 
     serializer_class = None
@@ -77,7 +80,9 @@ class RemoteViewSet(ViewSet):
 
     def list(self, request, *args, **kwargs):
         """The GET request for listings"""
-        data = self._call_remote()
+        data = self._call_remote(query_params=request.query_params)
+        if "_embedded" in data and isinstance(data["_embedded"], dict):
+            data = next(iter(data["_embedded"].values())) if data["_embedded"] else []
         serializer = self.get_serializer(data=data, many=True)
         self.validate(serializer, data)
 
@@ -113,7 +118,7 @@ class RemoteViewSet(ViewSet):
                 status_code=status.HTTP_502_BAD_GATEWAY,
             )
 
-    def _call_remote(self, url="") -> Union[dict, list]:
+    def _call_remote(self, url="", query_params={}) -> Union[dict, list]:  # noqa: C901
         """Make a request to the remote server"""
         if not self.endpoint_url:
             raise ImproperlyConfigured(
@@ -124,6 +129,11 @@ class RemoteViewSet(ViewSet):
             url = self.endpoint_url
         else:
             url = urljoin(self.endpoint_url, url)
+
+        if query_params:
+            url = urljoin(self.endpoint_url, "?" + urlencode(query_params))
+
+        url = url.replace("{table_id}", self.table_id)
 
         # Using urllib directly instead of requests for performance
         logger.debug("Forwarding call to %s", url)
@@ -261,6 +271,12 @@ class RemoteViewSet(ViewSet):
                 # Work around django test client oddness
                 value = value.encode("iso-8859-1")
             headers[header] = value
+
+        if "kadaster.nl" in self.endpoint_url:
+            headers["X-Api-Key"] = settings.HAAL_CENTRAAL_API_KEY
+            headers["accept"] = "application/hal+json"
+            # Currently for kadaster HaalCentraal only RD (epsg:28992) is supported
+            headers["Accept-Crs"] = "epsg:28992"
 
         return headers
 
