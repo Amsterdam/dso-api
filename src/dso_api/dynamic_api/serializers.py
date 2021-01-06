@@ -320,7 +320,7 @@ def serializer_factory(
     # Parse fields for serializer
     extra_kwargs = {"depth": depth}
     for model_field in model._meta.get_fields():
-        generate_field_serializer(model, model_field, new_attrs, fields, extra_kwargs)
+        _build_serializer_field(model, model_field, new_attrs, fields, extra_kwargs)
 
     # Generate embedded relations
     if not flat:
@@ -334,7 +334,7 @@ def serializer_factory(
     return type(serializer_name, (DynamicSerializer,), new_attrs)
 
 
-def generate_field_serializer(  # noqa: C901
+def _build_serializer_field(  # noqa: C901
     model, model_field, new_attrs, fields, extra_kwargs
 ):
     orig_name = model_field.name

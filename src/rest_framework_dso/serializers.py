@@ -1,6 +1,7 @@
 from collections import OrderedDict
 from typing import Iterable, List, Optional, Union, cast
 
+from django.contrib.gis.db import models as gis_models
 from django.db import models
 from django.utils.functional import cached_property
 from rest_framework import serializers
@@ -10,7 +11,7 @@ from rest_framework.utils.serializer_helpers import ReturnDict, ReturnList
 from rest_framework_gis.fields import GeometryField
 
 from rest_framework_dso.crs import CRS
-from rest_framework_dso.fields import LinksField
+from rest_framework_dso.fields import DSOGeometryField, LinksField
 from rest_framework_dso.utils import EmbeddedHelper
 
 
@@ -88,7 +89,9 @@ class DSOListSerializer(_SideloadMixin, serializers.ListSerializer):
 
         # Only when we're the root structure, consider returning a dictionary.
         # When acting as a child list somewhere, embedding never happens.
-        if self.root is self:
+        # Can't output check for the context['format'] as that's only used for URL resolving.
+        accepted_renderer = self.context["request"].accepted_renderer
+        if self.root is self and accepted_renderer.format != "csv":
             # DSO always mandates a dict structure: {"objectname": [...]}
             # Add any HAL-style sideloading if these were requested
             embeds = self.get_embeds(iterable, items)
@@ -298,6 +301,18 @@ class DSOModelSerializer(DSOSerializer, serializers.HyperlinkedModelSerializer):
     """
 
     _default_list_serializer_class = DSOModelListSerializer
+    serializer_field_mapping = {
+        **serializers.HyperlinkedModelSerializer.serializer_field_mapping,
+        # Override what django_rest_framework_gis installs in the app ready() signal:
+        gis_models.GeometryField: DSOGeometryField,
+        gis_models.PointField: DSOGeometryField,
+        gis_models.LineStringField: DSOGeometryField,
+        gis_models.PolygonField: DSOGeometryField,
+        gis_models.MultiPointField: DSOGeometryField,
+        gis_models.MultiLineStringField: DSOGeometryField,
+        gis_models.MultiPolygonField: DSOGeometryField,
+        gis_models.GeometryCollectionField: DSOGeometryField,
+    }
 
     # Make sure the _links bit is generated:
     url_field_name = "_links"
@@ -311,7 +326,11 @@ class DSOModelSerializer(DSOSerializer, serializers.HyperlinkedModelSerializer):
         ret = super().to_representation(instance)
 
         # See if any HAL-style sideloading was requested
-        if not hasattr(self, "parent") or self.root is self:
+        # This serializer needs to be the top-serializer,
+        # nor use a custom export format (e.g. CSV).
+        is_root = not hasattr(self, "parent") or self.root is self
+        accepted_renderer = self.context["request"].accepted_renderer
+        if is_root and accepted_renderer.format != "csv":
             expand = self.get_fields_to_expand()
             if expand:
                 embed_helper = EmbeddedHelper(self, expand=expand)

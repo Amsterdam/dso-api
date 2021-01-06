@@ -229,6 +229,7 @@ REST_FRAMEWORK = dict(
     DEFAULT_SCHEMA_CLASS="rest_framework_dso.openapi.DSOAutoSchema",
     DEFAULT_RENDERER_CLASSES=[
         "rest_framework_dso.renderers.HALJSONRenderer",
+        "dso_api.dynamic_api.renderers.DynamicCSVRenderer",
         "dso_api.lib.renderers.PatchedBrowsableAPIRenderer",
     ],
     DEFAULT_FILTER_BACKENDS=[
@@ -236,6 +237,7 @@ REST_FRAMEWORK = dict(
     ],
     EXCEPTION_HANDLER="rest_framework_dso.views.exception_handler",
     COERCE_DECIMAL_TO_STRING=True,
+    URL_FORMAT_OVERRIDE="_format",  # use ?_format=.. instead of ?format=..
 )
 
 # -- Amsterdam oauth settings

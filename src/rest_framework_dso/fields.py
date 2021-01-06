@@ -4,6 +4,7 @@ from django.db import models
 from django.db.models.fields.related import RelatedField
 from django.utils.functional import cached_property
 from rest_framework import serializers
+from rest_framework_gis.fields import GeometryField
 
 
 class AbstractEmbeddedField:
@@ -173,3 +174,21 @@ class LinksField(serializers.HyperlinkedIdentityField):
             output["self"].update({"title": str(value)})
 
         return output
+
+
+class DSOGeometryField(GeometryField):
+    """Extended geometry field to properly handle export formats."""
+
+    def to_representation(self, value):
+        """Avoid GeoJSON export format for e.g. CSV exports"""
+        if value is None:
+            return None
+
+        request = self.context.get("request")
+        output_format = None if request is None else request.accepted_renderer.format
+        if output_format == "csv":
+            # Extended well-known text for CSV format.
+            return value.ewkt
+        else:
+            # Return GeoJSON for json/html/api formats
+            return super().to_representation(value)
