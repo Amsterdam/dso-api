@@ -1,8 +1,10 @@
+import inspect
 import json
 import pytest
 from unittest import mock
 from django.db import connection
 from django.urls import reverse
+from rest_framework.response import Response
 
 from rest_framework_dso.crs import CRS, RD_NEW
 from schematools.contrib.django import models
@@ -49,6 +51,10 @@ def test_list_dynamic_view(api_client, api_rf, router, bommen_dataset):
         "_embedded": {"bommen": []},
         "page": {"number": 1, "size": 20, "totalElements": 0, "totalPages": 1},
     }
+    assert response["X-Pagination-Page"] == "1"
+    assert response["X-Pagination-Limit"] == "20"
+    assert response["X-Pagination-Count"] == "1"
+    assert response["X-Total-Count"] == "0"
 
 
 @pytest.mark.django_db
@@ -963,3 +969,62 @@ class TestEmbedTemporalTables:
         assert response.data["buurten"] == [
             "http://testserver/v1/gebieden/buurten/03630000000078/",
         ]
+
+
+@pytest.mark.django_db
+class TestExportFormats:
+    """Prove that other rendering formats also work as expected"""
+
+    def test_csv_format(self, api_client, api_rf, afval_container, filled_router):
+        """Prove that the CSV export format generates proper data."""
+        url = reverse("dynamic_api:afvalwegingen-containers-list")
+
+        # Prove that the view is available and works
+        response = api_client.get(url, {"_format": "csv"})
+        assert isinstance(response, Response)  # still wrapped in DRF response!
+        assert response.status_code == 200, response.getvalue()
+        assert inspect.isgenerator(response.rendered_content)
+        data = response.getvalue()
+        assert data == (
+            b"Id,Clusterid,Geometry,Serienummer,Datumcreatie,Eigenaarnaam,Datumleegmaken\r\n"
+            b"1,c1,SRID=28992;POINT (10 10),foobar-123,2021-01-03,Dataservices,"
+            b"2021-01-03T12:13:14\r\n"
+        )
+
+        # Paginator was not triggered
+        assert "X-Pagination-Page" not in response
+        assert "X-Pagination-Limit" not in response
+        assert "X-Pagination-Count" not in response
+        assert "X-Total-Count" not in response
+
+    def test_csv_pagination(self, api_client, api_rf, afval_container, filled_router):
+        """Prove that the pagination still works if explicitly requested."""
+        url = reverse("dynamic_api:afvalwegingen-containers-list")
+
+        for i in range(2, 10):
+            afval_container.id = i
+            afval_container.save()
+
+        # Prove that the view is available and works
+        response = api_client.get(url, {"_format": "csv", "_pageSize": "4"})
+        assert isinstance(response, Response)  # still wrapped in DRF response!
+        assert response.status_code == 200, response.getvalue()
+        assert inspect.isgenerator(response.rendered_content)
+        data = response.getvalue()
+        assert data == (
+            b"Id,Clusterid,Geometry,Serienummer,Datumcreatie,Eigenaarnaam,Datumleegmaken\r\n"
+            b"1,c1,SRID=28992;POINT (10 10),foobar-123,2021-01-03,Dataservices,"
+            b"2021-01-03T12:13:14\r\n"
+            b"2,c1,SRID=28992;POINT (10 10),foobar-123,2021-01-03,Dataservices,"
+            b"2021-01-03T12:13:14\r\n"
+            b"3,c1,SRID=28992;POINT (10 10),foobar-123,2021-01-03,Dataservices,"
+            b"2021-01-03T12:13:14\r\n"
+            b"4,c1,SRID=28992;POINT (10 10),foobar-123,2021-01-03,Dataservices,"
+            b"2021-01-03T12:13:14\r\n"
+        )
+
+        # Paginator was triggered
+        assert response["X-Pagination-Page"] == "1"
+        assert response["X-Pagination-Limit"] == "4"
+        assert response["X-Pagination-Count"] == "3"
+        assert response["X-Total-Count"] == "9"

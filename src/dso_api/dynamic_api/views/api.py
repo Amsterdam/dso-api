@@ -124,6 +124,18 @@ class DynamicApiViewSet(
     #: Custom permission that checks amsterdam schema auth settings
     permission_classes = [permissions.HasOAuth2Scopes]
 
+    @property
+    def paginator(self):
+        if (
+            self.request.accepted_renderer.format == "csv"
+            and self.pagination_class.page_size_query_param not in self.request.GET
+        ):
+            # Avoid expensive COUNT(*) for CSV formats,
+            # return all pages by default, unless an explicit page size is requested.
+            return None
+
+        return super().paginator
+
 
 def _get_viewset_api_docs(
     serializer_class: Type[serializers.DynamicSerializer],

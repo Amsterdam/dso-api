@@ -32,7 +32,7 @@ class TestDynamicSerializer:
 
     @staticmethod
     def test_basic_factory_logic(
-        api_request,
+        drf_request,
         afval_schema,
         afval_cluster_model,
         afval_container_model,
@@ -42,7 +42,7 @@ class TestDynamicSerializer:
 
         This checks whether the factory generates the proper FK/embedded fields.
         """
-        api_request.dataset = afval_schema
+        drf_request.dataset = afval_schema
         afval_container = afval_container_model.objects.create(
             id=2,
             cluster=afval_cluster,
@@ -69,7 +69,7 @@ class TestDynamicSerializer:
         # Prove that data is serialized with relations.
         # Both the cluster_id field and 'cluster' field are generated.
         container_serializer = ContainerSerializer(
-            afval_container, context={"request": api_request}
+            afval_container, context={"request": drf_request}
         )
         assert container_serializer.data == {
             "_links": {
@@ -90,12 +90,12 @@ class TestDynamicSerializer:
         }
 
     @staticmethod
-    def test_expand(api_request, afval_schema, afval_container_model, afval_cluster):
+    def test_expand(drf_request, afval_schema, afval_container_model, afval_cluster):
         """Prove expanding works.
 
         The _embedded section is generated, using the cluster serializer.
         """
-        api_request.dataset = afval_schema
+        drf_request.dataset = afval_schema
         ContainerSerializer = serializer_factory(afval_container_model, 0)
         afval_container = afval_container_model.objects.create(
             id=2, cluster=afval_cluster
@@ -104,7 +104,7 @@ class TestDynamicSerializer:
         # Prove that expands work on object-detail level
         container_serializer = ContainerSerializer(
             afval_container,
-            context={"request": api_request},
+            context={"request": drf_request},
             fields_to_expand=["cluster"],
         )
         assert container_serializer.data == {
@@ -139,12 +139,12 @@ class TestDynamicSerializer:
         }
 
     @staticmethod
-    def test_expand_none(api_request, afval_schema, afval_container_model):
+    def test_expand_none(drf_request, afval_schema, afval_container_model):
         """Prove that expanding None values doesn't crash.
 
         The _embedded part has a None value instead.
         """
-        api_request.dataset = afval_schema
+        drf_request.dataset = afval_schema
         ContainerSerializer = serializer_factory(afval_container_model, 0)
         container_without_cluster = afval_container_model.objects.create(
             id=3,
@@ -152,7 +152,7 @@ class TestDynamicSerializer:
         )
         container_serializer = ContainerSerializer(
             container_without_cluster,
-            context={"request": api_request},
+            context={"request": drf_request},
             fields_to_expand=["cluster"],
         )
         assert container_serializer.data == {
@@ -175,13 +175,13 @@ class TestDynamicSerializer:
         }
 
     @staticmethod
-    def test_expand_broken_relation(api_request, afval_schema, afval_container_model):
+    def test_expand_broken_relation(drf_request, afval_schema, afval_container_model):
         """Prove that expanding non-existing FK values values doesn't crash.
            Cluster will not be expanded to a url, because the pk_only_optimization
            has been switched off for hyperlinked related fields.
         The _embedded part has a None value instead.
         """
-        api_request.dataset = afval_schema
+        drf_request.dataset = afval_schema
         ContainerSerializer = serializer_factory(afval_container_model, 0)
         container_invalid_cluster = afval_container_model.objects.create(
             id=4,
@@ -189,7 +189,7 @@ class TestDynamicSerializer:
         )
         container_serializer = ContainerSerializer(
             container_invalid_cluster,
-            context={"request": api_request},
+            context={"request": drf_request},
             fields_to_expand=["cluster"],
         )
         assert container_serializer.data == {
@@ -213,7 +213,7 @@ class TestDynamicSerializer:
 
     @staticmethod
     def test_backwards_relation(
-        api_request,
+        drf_request,
         bagh_schema,
         bagh_gemeente_model,
         bagh_stadsdeel_model,
@@ -224,12 +224,12 @@ class TestDynamicSerializer:
 
         The _embedded part has a None value instead.
         """
-        api_request.dataset = bagh_schema
-        api_request.dataset_temporal_slice = None
+        drf_request.dataset = bagh_schema
+        drf_request.dataset_temporal_slice = None
         GemeenteSerializer = serializer_factory(bagh_gemeente_model, 0)
         gemeente_serializer = GemeenteSerializer(
             bagh_gemeente,
-            context={"request": api_request},
+            context={"request": drf_request},
         )
         assert gemeente_serializer.data == {
             "_links": {
@@ -254,7 +254,7 @@ class TestDynamicSerializer:
 
     @staticmethod
     def test_multiple_backwards_relations(
-        api_request,
+        drf_request,
         vestiging_schema,
         vestiging_adres_model,
         vestiging_vestiging_model,
@@ -266,13 +266,13 @@ class TestDynamicSerializer:
 
         The _embedded part has a None value instead.
         """
-        api_request.dataset = vestiging_schema
+        drf_request.dataset = vestiging_schema
 
         VestigingSerializer = serializer_factory(vestiging_vestiging_model, 0)
 
         vestiging_serializer = VestigingSerializer(
             vestiging1,
-            context={"request": api_request},
+            context={"request": drf_request},
         )
 
         assert vestiging_serializer.data == {
@@ -293,7 +293,7 @@ class TestDynamicSerializer:
 
         vestiging_serializer = VestigingSerializer(
             vestiging2,
-            context={"request": api_request},
+            context={"request": drf_request},
         )
         assert vestiging_serializer.data == {
             "_links": {
@@ -314,7 +314,7 @@ class TestDynamicSerializer:
         AdresSerializer = serializer_factory(vestiging_adres_model, 0)
         adres_serializer = AdresSerializer(
             post_adres1,
-            context={"request": api_request},
+            context={"request": drf_request},
         )
         assert adres_serializer.data == {
             "_links": {
@@ -338,7 +338,7 @@ class TestDynamicSerializer:
 
     @staticmethod
     def test_serializer_has_nested_table(
-        api_request,
+        drf_request,
         parkeervakken_schema,
         parkeervakken_parkeervak_model,
         parkeervakken_regime_model,
@@ -346,7 +346,7 @@ class TestDynamicSerializer:
         """Prove that the serializer factory properly generates nested tables.
         Serialiser should contain reverse relations.
         """
-        api_request.dataset = parkeervakken_schema
+        drf_request.dataset = parkeervakken_schema
         parkeervak = parkeervakken_parkeervak_model.objects.create(
             id="121138489047",
             type="File",
@@ -380,7 +380,7 @@ class TestDynamicSerializer:
         # Prove that data is serialized with relations.
         # Both the cluster_id field and 'cluster' field are generated.
         parkeervaak_serializer = ParkeervaakSerializer(
-            parkeervak, context={"request": api_request}
+            parkeervak, context={"request": drf_request}
         )
         assert parkeervaak_serializer.data == {
             "_links": {
@@ -416,7 +416,7 @@ class TestDynamicSerializer:
 
     @staticmethod
     def test_flat_serializer_has_no_nested_table(
-        api_request,
+        drf_request,
         parkeervakken_schema,
         parkeervakken_parkeervak_model,
         parkeervakken_regime_model,
@@ -426,7 +426,7 @@ class TestDynamicSerializer:
         Flat serialiser should not contain any reverse relations,
         as flat serializers are used to represet instances of sub-serializers.
         """
-        api_request.dataset = parkeervakken_schema
+        drf_request.dataset = parkeervakken_schema
         parkeervak = parkeervakken_parkeervak_model.objects.create(
             type="File",
             soort="MULDER",
@@ -462,7 +462,7 @@ class TestDynamicSerializer:
         # Prove that data is serialized with relations.
         # Both the cluster_id field and 'cluster' field are generated.
         parkeervaak_serializer = ParkeervaakSerializer(
-            parkeervak, context={"request": api_request}
+            parkeervak, context={"request": drf_request}
         )
         assert parkeervaak_serializer.data == {
             "_links": {
@@ -483,7 +483,7 @@ class TestDynamicSerializer:
 
     @staticmethod
     def test_display_title_present(
-        api_request,
+        drf_request,
         fietspaaltjes_schema,
         fietspaaltjes_model,
         fietspaaltjes_data,
@@ -492,10 +492,10 @@ class TestDynamicSerializer:
 
         FietsplaatjesSerializer = serializer_factory(fietspaaltjes_model, 0, flat=False)
 
-        api_request.dataset = fietspaaltjes_schema
+        drf_request.dataset = fietspaaltjes_schema
 
         fietsplaatjes_serializer = FietsplaatjesSerializer(
-            fietspaaltjes_data, context={"request": api_request}
+            fietspaaltjes_data, context={"request": drf_request}
         )
 
         assert "'title': 'reference for DISPLAY FIELD'" in str(
@@ -504,7 +504,7 @@ class TestDynamicSerializer:
 
     @staticmethod
     def test_no_display_title_present(
-        api_request,
+        drf_request,
         fietspaaltjes_schema_no_display,
         fietspaaltjes_model_no_display,
         fietspaaltjes_data_no_display,
@@ -515,10 +515,10 @@ class TestDynamicSerializer:
             fietspaaltjes_model_no_display, 0, flat=True
         )
 
-        api_request.dataset = fietspaaltjes_schema_no_display
+        drf_request.dataset = fietspaaltjes_schema_no_display
 
         fietsplaatjes_serializer = FietsplaatjesSerializer(
-            fietspaaltjes_data_no_display, context={"request": api_request}
+            fietspaaltjes_data_no_display, context={"request": drf_request}
         )
 
         assert "'title': 'reference for DISPLAY FIELD'" not in str(
@@ -535,18 +535,18 @@ class TestDynamicSerializer:
 
     @staticmethod
     def test_uri_field_can_validate(
-        api_request, explosieven_schema, explosieven_model, explosieven_data
+        drf_request, explosieven_schema, explosieven_model, explosieven_data
     ):
         """ Prove that a URLfield can be validated by the URIValidator """
 
         ExplosievenSerializer = serializer_factory(explosieven_model, 0, flat=True)
 
-        api_request.dataset = explosieven_schema
+        drf_request.dataset = explosieven_schema
 
         validate_uri = URLValidator()
 
         explosieven_serializer = ExplosievenSerializer(
-            explosieven_data, context={"request": api_request}
+            explosieven_data, context={"request": drf_request}
         )
 
         # Validation passes if outcome is None
@@ -554,16 +554,16 @@ class TestDynamicSerializer:
 
     @staticmethod
     def test_uri_field_is_URL_encoded(
-        api_request, explosieven_schema, explosieven_model, explosieven_data
+        drf_request, explosieven_schema, explosieven_model, explosieven_data
     ):
         """ Prove that a URLfield content is URL encoded i.e. space to %20 """
 
         ExplosievenSerializer = serializer_factory(explosieven_model, 0, flat=True)
 
-        api_request.dataset = explosieven_schema
+        drf_request.dataset = explosieven_schema
 
         explosieven_serializer = ExplosievenSerializer(
-            explosieven_data, context={"request": api_request}
+            explosieven_data, context={"request": drf_request}
         )
 
         # Validation passes if a space does not exists (translated to %20)
@@ -573,18 +573,18 @@ class TestDynamicSerializer:
 
     @staticmethod
     def test_email_field_can_validate_with_validator(
-        api_request, explosieven_schema, explosieven_model, explosieven_data
+        drf_request, explosieven_schema, explosieven_model, explosieven_data
     ):
         """ Prove that a EmailField can be validated by the EmailValidator """
 
         ExplosievenSerializer = serializer_factory(explosieven_model, 0, flat=True)
 
-        api_request.dataset = explosieven_schema
+        drf_request.dataset = explosieven_schema
 
         validate_email = EmailValidator()
 
         explosieven_serializer = ExplosievenSerializer(
-            explosieven_data, context={"request": api_request}
+            explosieven_data, context={"request": drf_request}
         )
 
         # Validation passes if outcome is None
@@ -592,19 +592,19 @@ class TestDynamicSerializer:
 
     @staticmethod
     def test_indirect_self_reference(
-        api_request, indirect_self_ref_schema, filled_router
+        drf_request, indirect_self_ref_schema, filled_router
     ):
         """Prove that a dataset with two tables that
         are mutually related generates a serialize without any problems
         (no infinite recursion)
         """
-        api_request.dataset = indirect_self_ref_schema
+        drf_request.dataset = indirect_self_ref_schema
         indirect_self_ref_model = filled_router.all_models["selfref"]["ligplaatsen"]
         serializer_factory(indirect_self_ref_model, 0)
 
     @staticmethod
     def test_field_permissions_display_first_letter(
-        api_request, fietspaaltjes_schema, fietspaaltjes_model, fietspaaltjes_data
+        drf_request, fietspaaltjes_schema, fietspaaltjes_model, fietspaaltjes_data
     ):
         """ Prove that only first letter is seen in Profile allows only it."""
 
@@ -619,24 +619,24 @@ class TestDynamicSerializer:
                 }
             },
         )
-        api_request.auth_profile = RequestProfile(api_request)
+        drf_request.auth_profile = RequestProfile(drf_request)
 
         # does not have scope for Dataset or Table
-        api_request.is_authorized_for = lambda scopes=None: False
+        drf_request.is_authorized_for = lambda scopes=None: False
 
         FietspaaltjesSerializer = serializer_factory(fietspaaltjes_model, 0, flat=False)
 
-        api_request.dataset = fietspaaltjes_schema
+        drf_request.dataset = fietspaaltjes_schema
 
         fietspaaltjes_serializer = FietspaaltjesSerializer(
-            fietspaaltjes_data, context={"request": api_request}
+            fietspaaltjes_data, context={"request": drf_request}
         )
 
         assert fietspaaltjes_serializer.data["area"] == "A"
 
     @staticmethod
     def test_field_permissions_display_first_letter_many(
-        api_request, fietspaaltjes_schema, fietspaaltjes_model, fietspaaltjes_data
+        drf_request, fietspaaltjes_schema, fietspaaltjes_model, fietspaaltjes_data
     ):
         """ Prove that only first letter is seen in Profile allows only it in listing. """
 
@@ -651,17 +651,17 @@ class TestDynamicSerializer:
                 }
             },
         )
-        api_request.auth_profile = RequestProfile(api_request)
+        drf_request.auth_profile = RequestProfile(drf_request)
 
         # does not have scope for Dataset or Table
-        api_request.is_authorized_for = lambda scopes=None: False
+        drf_request.is_authorized_for = lambda scopes=None: False
         FietspaaltjesSerializer = serializer_factory(fietspaaltjes_model, 0, flat=False)
 
-        api_request.dataset = fietspaaltjes_schema
+        drf_request.dataset = fietspaaltjes_schema
 
         fietspaaltjes_serializer = FietspaaltjesSerializer(
             fietspaaltjes_model.objects.all(),
-            context={"request": api_request},
+            context={"request": drf_request},
             many=True,
         )
 
@@ -671,7 +671,7 @@ class TestDynamicSerializer:
 
     @staticmethod
     def test_download_url_field(
-        api_request, filled_router, download_url_dataset, download_url_schema
+        drf_request, filled_router, download_url_dataset, download_url_schema
     ):
         """ Prove that download url will contain correct identifier. """
 
@@ -685,11 +685,11 @@ class TestDynamicSerializer:
         )
         DossiersSerializer = serializer_factory(dossier_model, 0, flat=False)
 
-        api_request.dataset = download_url_schema
+        drf_request.dataset = download_url_schema
 
         dossiers_serializer = DossiersSerializer(
             dossier_model.objects.all(),
-            context={"request": api_request},
+            context={"request": drf_request},
             many=True,
         )
 
@@ -702,7 +702,7 @@ class TestDynamicSerializer:
 
     @staticmethod
     def test_download_url_field_empty_field(
-        api_request, filled_router, download_url_dataset, download_url_schema
+        drf_request, filled_router, download_url_dataset, download_url_schema
     ):
         """ Prove that empty download url not crashing api. """
 
@@ -713,11 +713,11 @@ class TestDynamicSerializer:
         )
         DossiersSerializer = serializer_factory(dossier_model, 0, flat=False)
 
-        api_request.dataset = download_url_schema
+        drf_request.dataset = download_url_schema
 
         dossiers_serializer = DossiersSerializer(
             dossier_model.objects.all(),
-            context={"request": api_request},
+            context={"request": drf_request},
             many=True,
         )
 
@@ -725,7 +725,7 @@ class TestDynamicSerializer:
 
     @staticmethod
     def test_loose_relation_serialization(
-        api_request,
+        drf_request,
         meldingen_schema,
         statistieken_model,
     ):
@@ -737,7 +737,7 @@ class TestDynamicSerializer:
             def __init__(self, model):
                 self.model = model
 
-        api_request.dataset = meldingen_schema
+        drf_request.dataset = meldingen_schema
         statistiek = statistieken_model.objects.create(
             id=1,
             buurt="03630000000078",
@@ -746,7 +746,7 @@ class TestDynamicSerializer:
 
         statistieken_serializer = StatistiekenSerializer(
             statistiek,
-            context={"request": api_request, "view": DummyView(statistieken_model)},
+            context={"request": drf_request, "view": DummyView(statistieken_model)},
         )
 
         assert (

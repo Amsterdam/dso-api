@@ -26,7 +26,10 @@ class DSOPageNumberPagination(pagination.PageNumberPagination):
             self.results_field = results_field
 
     def get_paginated_response(self, data):
-        data = self._get_paginated_data(data)
+        accepted_renderer = self.request.accepted_renderer
+        if accepted_renderer.format != "csv":
+            data = self._get_paginated_data(data)
+
         response = Response(data)
         response["X-Pagination-Page"] = self.page.number
 

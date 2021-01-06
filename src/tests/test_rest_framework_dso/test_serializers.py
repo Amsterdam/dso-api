@@ -6,6 +6,7 @@ from rest_framework.request import Request
 from rest_framework_dso.crs import RD_NEW, WGS84
 from rest_framework_dso.fields import EmbeddedField
 from rest_framework_dso.pagination import DSOPageNumberPagination
+from rest_framework_dso.renderers import HALJSONRenderer
 from rest_framework_dso.serializers import DSOModelSerializer
 
 from .models import Category, Location, Movie
@@ -32,10 +33,10 @@ class LocationSerializer(DSOModelSerializer):
 
 
 @pytest.mark.django_db
-def test_serializer_single(api_request, movie):
+def test_serializer_single(drf_request, movie):
     """Prove that the serializer can embed data (for the detail page)"""
     serializer = MovieSerializer(
-        instance=movie, fields_to_expand=["category"], context={"request": api_request}
+        instance=movie, fields_to_expand=["category"], context={"request": drf_request}
     )
     assert serializer.data == {
         "name": "foo123",
@@ -45,13 +46,13 @@ def test_serializer_single(api_request, movie):
 
 
 @pytest.mark.django_db
-def test_serializer_many(api_request, movie):
+def test_serializer_many(drf_request, movie):
     """Prove that the serializer can embed data (for the detail page)"""
     serializer = MovieSerializer(
         many=True,
         instance=[movie],
         fields_to_expand=["category"],
-        context={"request": api_request},
+        context={"request": drf_request},
     )
     assert serializer.data == {
         "movie": [{"name": "foo123", "category_id": movie.category_id}],
@@ -60,7 +61,7 @@ def test_serializer_many(api_request, movie):
 
 
 @pytest.mark.django_db
-def test_serializer_embed_with_missing_relations(api_request):
+def test_serializer_embed_with_missing_relations(drf_request):
     """Prove that the serializer can embed data (for the detail page)"""
 
     cursor = connection.cursor()
@@ -73,7 +74,7 @@ def test_serializer_embed_with_missing_relations(api_request):
         many=True,
         instance=[movie],
         fields_to_expand=["category"],
-        context={"request": api_request},
+        context={"request": drf_request},
     )
     assert serializer.data == {
         "movie": [{"name": "Test", "category_id": movie.category_id}],
@@ -122,8 +123,9 @@ def test_fields_limit_works(api_rf, movie):
     """Prove that serializer can limit output fields."""
     django_request = api_rf.get("/", {"fields": "name"})
     request = Request(django_request)
-    queryset = Movie.objects.all()
+    request.accepted_renderer = HALJSONRenderer()
 
+    queryset = Movie.objects.all()
     serializer = MovieSerializer(
         many=True, instance=queryset, context={"request": request}
     )
@@ -165,30 +167,30 @@ def test_fields_limit_by_incorrect_field_gives_error(api_rf, movie):
 
 
 @pytest.mark.django_db
-def test_location(api_request, location):
+def test_location(drf_request, location):
     """Prove that the serializer recorgnizes crs"""
 
     serializer = LocationSerializer(
         instance=location,
         fields_to_expand=[],
-        context={"request": api_request},
+        context={"request": drf_request},
     )
     data = serializer.data
     assert data["geometry"]["coordinates"] == [10.0, 10.0]
 
     # Serializer assigned 'response_content_crs' (auto detected)
-    assert api_request.response_content_crs == RD_NEW
+    assert drf_request.response_content_crs == RD_NEW
 
 
 @pytest.mark.django_db
-def test_location_transform(api_request, location):
+def test_location_transform(drf_request, location):
     """Prove that the serializer transforms crs"""
 
-    api_request.accept_crs = WGS84
+    drf_request.accept_crs = WGS84
     serializer = LocationSerializer(
         instance=location,
         fields_to_expand=[],
-        context={"request": api_request},
+        context={"request": drf_request},
     )
     data = serializer.data
     rounder = lambda p: [round(c, 6) for c in p]
@@ -197,4 +199,4 @@ def test_location_transform(api_request, location):
     )
 
     # Serializer assigned 'response_content_crs' (used accept_crs)
-    assert api_request.response_content_crs == WGS84
+    assert drf_request.response_content_crs == WGS84

@@ -8,8 +8,8 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from dso_api.dynamic_api.utils import snake_to_camel_case
 from rest_framework import serializers
+from rest_framework_dso.fields import DSOGeometryField
 from rest_framework_dso.serializers import DSOSerializer, DSOListSerializer
-from rest_framework_gis.fields import GeometryField
 from schematools.types import DatasetFieldSchema, DatasetTableSchema
 from schematools.utils import to_snake_case
 
@@ -20,14 +20,14 @@ JSON_TYPE_TO_DRF = {
     "boolean": serializers.BooleanField,
     "array": serializers.ListField,
     "/definitions/id": serializers.IntegerField,
-    "https://geojson.org/schema/Geometry.json": GeometryField,
-    "https://geojson.org/schema/Point.json": GeometryField,
-    "https://geojson.org/schema/MultiPoint.json": GeometryField,
-    "https://geojson.org/schema/Polygon.json": GeometryField,
-    "https://geojson.org/schema/MultiPolygon.json": GeometryField,
-    "https://geojson.org/schema/LineString.json": GeometryField,
-    "https://geojson.org/schema/MultiLineString.json": GeometryField,
-    "https://geojson.org/schema/GeometryCollection.json": GeometryField,
+    "https://geojson.org/schema/Geometry.json": DSOGeometryField,
+    "https://geojson.org/schema/Point.json": DSOGeometryField,
+    "https://geojson.org/schema/MultiPoint.json": DSOGeometryField,
+    "https://geojson.org/schema/Polygon.json": DSOGeometryField,
+    "https://geojson.org/schema/MultiPolygon.json": DSOGeometryField,
+    "https://geojson.org/schema/LineString.json": DSOGeometryField,
+    "https://geojson.org/schema/MultiLineString.json": DSOGeometryField,
+    "https://geojson.org/schema/GeometryCollection.json": DSOGeometryField,
 }
 
 
