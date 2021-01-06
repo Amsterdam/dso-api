@@ -9,6 +9,7 @@ from rest_framework.exceptions import ErrorDetail, NotAcceptable, ValidationErro
 from rest_framework.views import exception_handler as drf_exception_handler
 from rest_framework_dso import crs, filters, parsers
 from rest_framework_dso.exceptions import PreconditionFailed
+from schematools.types import DatasetTableSchema
 from schematools.contrib.django.auth_backend import RequestProfile
 
 
@@ -153,7 +154,7 @@ class DSOViewMixin:
         request.response_content_crs = None
 
     @property
-    def table_schema(self):
+    def table_schema(self) -> DatasetTableSchema:
         return self.model._table_schema
 
     def _parse_accept_crs(self, http_value) -> Optional[crs.CRS]:
