@@ -8,6 +8,7 @@ from drf_spectacular.types import OpenApiTypes, resolve_basic_type
 from drf_spectacular.utils import ExtraParameter
 from rest_framework import serializers
 from rest_framework.fields import ReadOnlyField
+from rest_framework.settings import api_settings
 from rest_framework_gis.fields import GeometryField
 
 from rest_framework_dso.fields import LinksField
@@ -286,4 +287,18 @@ class DSOAutoSchema(openapi.AutoSchema):
                 description="Content-Crs header for Geo queries",
                 required=False,
             ).to_schema(),
+            {
+                "in": ExtraParameter.QUERY,
+                "name": api_settings.URL_FORMAT_OVERRIDE,
+                "schema": {
+                    "type": "string",
+                    "enum": [
+                        renderer.format
+                        for renderer in self.view.renderer_classes
+                        if renderer.format != "api"  # Exclude browser view
+                    ],
+                },
+                "description": "Select the export format",
+                "required": False,
+            },
         ]
