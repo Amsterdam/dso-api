@@ -1,3 +1,4 @@
+import inspect
 from collections import OrderedDict
 from typing import Iterable, List, Optional, Union, cast
 
@@ -12,6 +13,7 @@ from rest_framework_gis.fields import GeometryField
 
 from rest_framework_dso.crs import CRS
 from rest_framework_dso.fields import DSOGeometryField, LinksField
+from rest_framework_dso.serializer_helpers import ReturnGenerator
 from rest_framework_dso.utils import EmbeddedHelper
 
 
@@ -76,21 +78,30 @@ class DSOListSerializer(_SideloadMixin, serializers.ListSerializer):
         if isinstance(ret, dict):
             # Override to make sure dict is preserved
             return ReturnDict(ret, serializer=self)
+        elif inspect.isgenerator(ret):
+            # Override to make sure the generator is preserved
+            return ReturnGenerator(ret, serializer=self)
         else:
             # Normal behavior
             return ReturnList(ret, serializer=self)
 
     def to_representation(self, data):
-        # Taken this part from ListSerializer.to_representation()
-        # to avoid  accessing 'data.all()' twice, causing double evaluations.
-        iterable = data.all() if isinstance(data, models.Manager) else data
+        accepted_renderer = self.context["request"].accepted_renderer
+        is_stream = inspect.isgeneratorfunction(accepted_renderer.render)
 
-        items = [self.child.to_representation(item) for item in iterable]
+        if is_stream and self.root is self:
+            # Trick DRF into generating the response bit by bit, without
+            # caching the whole queryset into memory.
+            items = (self.child.to_representation(item) for item in data.iterator())
+        else:
+            # Taken this part from ListSerializer.to_representation()
+            # to avoid  accessing 'data.all()' twice, causing double evaluations.
+            iterable = data.all() if isinstance(data, models.Manager) else data
+            items = [self.child.to_representation(item) for item in iterable]
 
         # Only when we're the root structure, consider returning a dictionary.
         # When acting as a child list somewhere, embedding never happens.
         # Can't output check for the context['format'] as that's only used for URL resolving.
-        accepted_renderer = self.context["request"].accepted_renderer
         if self.root is self and accepted_renderer.format != "csv":
             # DSO always mandates a dict structure: {"objectname": [...]}
             # Add any HAL-style sideloading if these were requested

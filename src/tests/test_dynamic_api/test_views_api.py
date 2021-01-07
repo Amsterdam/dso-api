@@ -997,6 +997,14 @@ class TestExportFormats:
         assert "X-Pagination-Count" not in response
         assert "X-Total-Count" not in response
 
+        # proves middleware detected streaming response, and didn't break it:
+        assert "Content-Length" not in response
+
+        # Check that the response is streaming:
+        assert response.streaming
+        assert inspect.isgeneratorfunction(response.accepted_renderer.render)
+        assert inspect.isgenerator(response.rendered_content)
+
     def test_csv_pagination(self, api_client, api_rf, afval_container, filled_router):
         """Prove that the pagination still works if explicitly requested."""
         url = reverse("dynamic_api:afvalwegingen-containers-list")
@@ -1009,7 +1017,6 @@ class TestExportFormats:
         response = api_client.get(url, {"_format": "csv", "_pageSize": "4"})
         assert isinstance(response, Response)  # still wrapped in DRF response!
         assert response.status_code == 200, response.getvalue()
-        assert inspect.isgenerator(response.rendered_content)
         data = response.getvalue()
         assert data == (
             b"Id,Clusterid,Geometry,Serienummer,Datumcreatie,Eigenaarnaam,Datumleegmaken\r\n"
@@ -1028,3 +1035,11 @@ class TestExportFormats:
         assert response["X-Pagination-Limit"] == "4"
         assert response["X-Pagination-Count"] == "3"
         assert response["X-Total-Count"] == "9"
+
+        # proves middleware detected streaming response, and didn't break it:
+        assert "Content-Length" not in response
+
+        # Check that the response is streaming:
+        assert response.streaming
+        assert inspect.isgeneratorfunction(response.accepted_renderer.render)
+        assert inspect.isgenerator(response.rendered_content)
