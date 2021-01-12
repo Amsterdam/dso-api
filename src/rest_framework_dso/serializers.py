@@ -89,7 +89,7 @@ class DSOListSerializer(_SideloadMixin, serializers.ListSerializer):
         accepted_renderer = self.context["request"].accepted_renderer
         is_stream = inspect.isgeneratorfunction(accepted_renderer.render)
 
-        if is_stream and self.root is self:
+        if is_stream and self.root is self and isinstance(data, models.QuerySet):
             # Trick DRF into generating the response bit by bit, without
             # caching the whole queryset into memory.
             items = (self.child.to_representation(item) for item in data.iterator())
