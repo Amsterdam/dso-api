@@ -7,6 +7,7 @@ django-healthchecks == 1.4.2
 django-postgres-unlimited-varchar == 1.1.0
 django-gisserver == 1.1.1
 djangorestframework == 3.11.0
+djangorestframework-csv == 2.1.0
 djangorestframework-gis == 0.15
 amsterdam-schema-tools[django] == 0.16.4
 datapunt-authorization-django==1.0.0
