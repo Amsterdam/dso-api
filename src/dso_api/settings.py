@@ -229,7 +229,7 @@ REST_FRAMEWORK = dict(
     DEFAULT_SCHEMA_CLASS="rest_framework_dso.openapi.DSOAutoSchema",
     DEFAULT_RENDERER_CLASSES=[
         "rest_framework_dso.renderers.HALJSONRenderer",
-        "dso_api.dynamic_api.renderers.DynamicCSVRenderer",
+        "rest_framework_dso.renderers.CSVRenderer",
         "dso_api.lib.renderers.PatchedBrowsableAPIRenderer",
     ],
     DEFAULT_FILTER_BACKENDS=[
