@@ -41,10 +41,17 @@ def test_openapi_json(api_client, filled_router, caplog):
     # Prove that DSOOrderingFilter exposes parameters
     assert "_sort" in afval_parameters, ", ".join(afval_parameters.keys())
 
+    # Prove that general page parameters are exposed
+    assert "_pageSize" in afval_parameters, ", ".join(afval_parameters.keys())
+
     # Prove that the lookups of LOOKUPS_BY_TYPE are parsed
     # ([lt] for dates, [in] for keys)
     assert "datumCreatie[lt]" in afval_parameters, ", ".join(afval_parameters.keys())
     assert "clusterId[in]" in afval_parameters, ", ".join(afval_parameters.keys())
+
+    # Prove that the extra headers are included
+    assert "Accept-Crs" in afval_parameters, ", ".join(afval_parameters.keys())
+    assert afval_parameters["Accept-Crs"]["in"] == "header"
 
     assert not caplog.messages
 

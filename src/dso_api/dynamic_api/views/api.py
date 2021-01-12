@@ -16,8 +16,6 @@ import inspect
 from django.db import models
 from django.http import Http404, JsonResponse
 from django.utils.translation import gettext as _
-from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import ExtraParameter, extend_schema
 from rest_framework import viewsets
 from typing import List, Type
 
@@ -139,27 +137,6 @@ class DynamicApiViewSet(
             return None
 
         return super().paginator
-
-    @extend_schema(
-        extra_parameters=[
-            ExtraParameter(
-                pagination_class.page_query_param,  # page=...
-                type=OpenApiTypes.INT,
-                location=ExtraParameter.QUERY,
-                description="Request a specific page",
-                required=False,
-            ).to_schema(),
-            ExtraParameter(
-                pagination_class.page_size_query_param,  # _pageSize
-                type=OpenApiTypes.INT,
-                location=ExtraParameter.QUERY,
-                description="Provide a custom page size, to deviate from the default",
-                required=False,
-            ).to_schema(),
-        ]
-    )
-    def list(self, request, *args, **kwargs):
-        return super().list(request, *args, **kwargs)
 
     def finalize_response(self, request, response, *args, **kwargs):
         response = super().finalize_response(request, response, *args, **kwargs)

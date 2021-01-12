@@ -8,6 +8,7 @@ from drf_spectacular.types import OpenApiTypes, resolve_basic_type
 from drf_spectacular.utils import ExtraParameter
 from rest_framework import serializers
 from rest_framework.fields import ReadOnlyField
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.settings import api_settings
 from rest_framework_gis.fields import GeometryField
 
@@ -272,7 +273,7 @@ class DSOAutoSchema(openapi.AutoSchema):
 
     def get_extra_parameters(self, path, method):
         """Expose the DSO-specific HTTP headers in all API methods."""
-        return [
+        extra = [
             ExtraParameter(
                 "Accept-Crs",
                 type=OpenApiTypes.STR,
@@ -302,3 +303,30 @@ class DSOAutoSchema(openapi.AutoSchema):
                 "required": False,
             },
         ]
+
+        # Instead of exposing the extra parameters via drf-spectacular's @extend_schema,
+        # the pagination settings are exposed here in a general form. This also makes
+        # sure that the superclass logic is not ignored.
+        action = getattr(self.view, "action", method.lower())
+        pagination_class = getattr(self.view, "pagination_class", None)
+
+        if action == "list" and pagination_class is not None:
+            if issubclass(pagination_class, PageNumberPagination):
+                extra += [
+                    ExtraParameter(
+                        pagination_class.page_query_param,  # page=...
+                        type=OpenApiTypes.INT,
+                        location=ExtraParameter.QUERY,
+                        description="Request a specific page",
+                        required=False,
+                    ).to_schema(),
+                    ExtraParameter(
+                        pagination_class.page_size_query_param,  # _pageSize
+                        type=OpenApiTypes.INT,
+                        location=ExtraParameter.QUERY,
+                        description="Provide a custom page size, to deviate from the default",
+                        required=False,
+                    ).to_schema(),
+                ]
+
+        return extra
