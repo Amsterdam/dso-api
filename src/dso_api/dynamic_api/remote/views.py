@@ -45,6 +45,7 @@ class RemoteViewSet(DSOViewMixin, ViewSet):
     """Views for a remote serializer."""
 
     serializer_class = None
+    pagination_class = None
     endpoint_url = None
     dataset_id = None
     table_id = None

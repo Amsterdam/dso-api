@@ -9,6 +9,7 @@ from rest_framework.exceptions import ErrorDetail, NotAcceptable, ValidationErro
 from rest_framework.views import exception_handler as drf_exception_handler
 from rest_framework_dso import crs, filters, parsers
 from rest_framework_dso.exceptions import PreconditionFailed
+from rest_framework_dso.pagination import DSOPageNumberPagination
 from schematools.types import DatasetTableSchema
 from schematools.contrib.django.auth_backend import RequestProfile
 
@@ -117,6 +118,26 @@ def get_invalid_params(
     return result
 
 
+class AutoSelectPaginationClass:
+    """An @classproperty for the pagination"""
+
+    def __init__(self, default=None):
+        self.default = default
+
+    def __get__(self, instance, owner):
+        if instance is not None:
+            # Automatically select a paginator class that matches the rendered format.
+            # After all, it's not possible to output CSV or GeoJSON pagination using the
+            # standard DSOPageNumberPagination class.
+            request = instance.request  # instance == view
+            accepted_renderer = getattr(request, "accepted_renderer", None)
+            allowed = getattr(accepted_renderer, "compatible_paginator_classes", None)
+            if allowed is not None:
+                return allowed[0]
+
+        return self.default
+
+
 class DSOViewMixin:
     """View/Viewset mixin that adds DSO-compatible API's
 
@@ -146,6 +167,9 @@ class DSOViewMixin:
 
     #: Enforce parsing Content-Crs for POST requests:
     parser_classes = [parsers.DSOJsonParser]
+
+    #: Paginator class
+    pagination_class = AutoSelectPaginationClass(default=DSOPageNumberPagination)
 
     def initial(self, request, *args, **kwargs):
         request.auth_profile = RequestProfile(request)

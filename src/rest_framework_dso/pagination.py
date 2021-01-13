@@ -6,12 +6,10 @@ from rest_framework.serializers import ListSerializer
 from rest_framework.utils.serializer_helpers import ReturnList
 
 
-class DSOPageNumberPagination(pagination.PageNumberPagination):
-    """
-    Implement pagination as the DSO requires.
-
-    This is essentially HAL-JSON style pagination as described in:
-    https://tools.ietf.org/html/draft-kelly-json-hal-08
+class DSOHTTPHeaderPageNumberPagination(pagination.PageNumberPagination):
+    """Pagination style for non-JSON exports.
+    This doesn't add next/previous content to the CSV file.
+    Instead, only HTTP headers are added.
     """
 
     # Using underscore as "escape" for DSO compliance.
@@ -26,11 +24,7 @@ class DSOPageNumberPagination(pagination.PageNumberPagination):
             self.results_field = results_field
 
     def get_paginated_response(self, data):
-        accepted_renderer = self.request.accepted_renderer
-        if accepted_renderer.format != "csv":
-            data = self._get_paginated_data(data)
-
-        response = Response(data)
+        response = Response(data)  # no content added!
         response["X-Pagination-Page"] = self.page.number
 
         paginator = self.page.paginator
@@ -39,6 +33,27 @@ class DSOPageNumberPagination(pagination.PageNumberPagination):
         response["X-Pagination-Count"] = paginator.num_pages
         response["X-Total-Count"] = paginator.count
         return response
+
+
+class DSOPageNumberPagination(DSOHTTPHeaderPageNumberPagination):
+    """
+    Implement pagination as the DSO requires.
+
+    This is essentially HAL-JSON style pagination as described in:
+    https://tools.ietf.org/html/draft-kelly-json-hal-08
+    """
+
+    #: The field name for the results envelope
+    results_field = None
+
+    def __init__(self, results_field=None):
+        if results_field:
+            self.results_field = results_field
+
+    def get_paginated_response(self, data):
+        # Add the _links, and add the HTTP headers.
+        data = self._get_paginated_data(data)
+        return super().get_paginated_response(data)
 
     def _get_paginated_data(self, data: ReturnList) -> dict:
         # Avoid adding ?_expand=.. and other parameters in the 'self' url.

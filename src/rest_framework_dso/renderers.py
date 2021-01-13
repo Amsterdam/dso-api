@@ -6,10 +6,14 @@ from rest_framework.utils.serializer_helpers import ReturnDict, ReturnList
 from rest_framework_csv.renderers import CSVStreamingRenderer
 
 from rest_framework_dso.serializer_helpers import ReturnGenerator
+from rest_framework_dso import pagination
 
 
 class HALJSONRenderer(JSONRenderer):
     media_type = "application/hal+json"
+
+    # Define the paginator per media type.
+    compatible_paginator_classes = [pagination.DSOPageNumberPagination]
 
 
 class CSVRenderer(CSVStreamingRenderer):
@@ -19,6 +23,8 @@ class CSVRenderer(CSVStreamingRenderer):
     layout is not accessible. Hence the header is reformatted within a custom
     output renderer.
     """
+
+    compatible_paginator_classes = [pagination.DSOHTTPHeaderPageNumberPagination]
 
     def render(self, data, media_type=None, renderer_context=None):
         if isinstance(data, ReturnDict):
