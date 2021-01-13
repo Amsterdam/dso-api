@@ -21,7 +21,6 @@ from typing import List, Type
 
 from dso_api.dynamic_api import filterset, locking, permissions, serializers
 from rest_framework_dso import fields
-from rest_framework_dso.pagination import DSOPageNumberPagination
 from rest_framework_dso.views import DSOViewMixin
 from schematools.contrib.django.models import DynamicModel
 
@@ -114,7 +113,6 @@ class DynamicApiViewSet(
 
     dataset_id = None
     table_id = None
-    pagination_class = DSOPageNumberPagination
 
     #: Make sure composed keys like (112740.024|487843.078) are allowed.
     #: The DefaultRouter won't allow '.' in URLs because it's used as format-type.
