@@ -134,11 +134,9 @@ DATABASES = {
         engine="django.contrib.gis.db.backends.postgis",
     ),
 }
-
-DATABASE_SCHEMAS = {
-    "bag": "bag_v11_read",  # Important to have 'bag_v11' connection defined in DATABASES.
-}
-DATABASE_DISABLE_MIGRATIONS = ["bag"]
+# Important to have keys define in DATABASE_SCHEMAS available as in DATABASES.
+DATABASE_SCHEMAS = {}
+DATABASE_DISABLE_MIGRATIONS = []
 
 DATABASE_ROUTERS = ["dso_api.dbrouters.DatabaseSchemasRouter"]
 
