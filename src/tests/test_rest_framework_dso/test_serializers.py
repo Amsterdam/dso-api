@@ -1,5 +1,6 @@
 import pytest
 from django.db import connection
+from django.contrib.gis.gdal import GDAL_VERSION
 from rest_framework.exceptions import ValidationError
 from rest_framework.request import Request
 
@@ -193,10 +194,22 @@ def test_location_transform(drf_request, location):
         context={"request": drf_request},
     )
     data = serializer.data
+
+    # The lat/lon ordering that is used by the underlying GDAL library
+    #
+
+    expected = [3.313687692711974, 47.97485812241689]
+
+    # From: https://gdal.org/tutorials/osr_api_tut.html
+    # Starting with GDAL 3.0, the axis order mandated by the authority
+    # defining a CRS is by default honoured by the OGRCoordinateTransformation class,
+    # and always exported in WKT1.
+    # Consequently CRS created with the “EPSG:4326” or “WGS84”
+    # strings use the latitude first, longitude second axis order.
+    if GDAL_VERSION >= (3, 0):
+        expected = expected[::-1]
     rounder = lambda p: [round(c, 6) for c in p]
-    assert rounder(data["geometry"]["coordinates"]) == rounder(
-        [3.313687692711974, 47.97485812241689]
-    )
+    assert rounder(data["geometry"]["coordinates"]) == rounder(expected)
 
     # Serializer assigned 'response_content_crs' (used accept_crs)
     assert drf_request.response_content_crs == WGS84
