@@ -35,6 +35,15 @@ class DSOHTTPHeaderPageNumberPagination(pagination.PageNumberPagination):
         return response
 
 
+class DelegatedPageNumberPagination(DSOHTTPHeaderPageNumberPagination):
+    """Delegate the pagination rendering to the output renderer."""
+
+    def get_paginated_response(self, data):
+        # Inform the renderer about the known pagination details.
+        self.request.accepted_renderer.setup_pagination(self)
+        return super().get_paginated_response(data)
+
+
 class DSOPageNumberPagination(DSOHTTPHeaderPageNumberPagination):
     """
     Implement pagination as the DSO requires.

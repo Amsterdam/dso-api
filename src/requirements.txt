@@ -53,7 +53,7 @@ more-itertools==8.2.0     # via pytest
 msrest==0.6.19            # via azure-storage-blob
 ndjson==0.3.1             # via amsterdam-schema-tools
 oauthlib==3.1.0           # via requests-oauthlib
-orjson==2.5.1             # via -r requirements.in, django-gisserver
+orjson==3.4.6             # via -r requirements.in, django-gisserver
 packaging==20.1           # via pytest
 pg-grant==0.3.2           # via amsterdam-schema-tools
 pluggy==0.13.1            # via pytest

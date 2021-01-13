@@ -102,7 +102,7 @@ class DSOListSerializer(_SideloadMixin, serializers.ListSerializer):
         # Only when we're the root structure, consider returning a dictionary.
         # When acting as a child list somewhere, embedding never happens.
         # Can't output check for the context['format'] as that's only used for URL resolving.
-        if self.root is self and accepted_renderer.format != "csv":
+        if self.root is self and accepted_renderer.format not in ("csv", "geojson"):
             # DSO always mandates a dict structure: {"objectname": [...]}
             # Add any HAL-style sideloading if these were requested
             embeds = self.get_embeds(iterable, items)

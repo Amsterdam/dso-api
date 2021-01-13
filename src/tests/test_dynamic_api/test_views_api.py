@@ -1,5 +1,7 @@
 import inspect
 import json
+
+import orjson
 import pytest
 from unittest import mock
 from django.db import connection
@@ -975,21 +977,61 @@ class TestEmbedTemporalTables:
 class TestExportFormats:
     """Prove that other rendering formats also work as expected"""
 
-    def test_csv_format(self, api_client, api_rf, afval_container, filled_router):
-        """Prove that the CSV export format generates proper data."""
+    as_is = lambda data: data
+
+    UNPAGINATED_FORMATS = {
+        "csv": (
+            as_is,
+            b"Id,Clusterid,Geometry,Serienummer,Datumcreatie,Eigenaarnaam,Datumleegmaken\r\n"
+            b"1,c1,SRID=28992;POINT (10 10),foobar-123,2021-01-03,Dataservices,"
+            b"2021-01-03T12:13:14\r\n",
+        ),
+        "geojson": (
+            orjson.loads,
+            {
+                "type": "FeatureCollection",
+                "crs": {
+                    "properties": {"name": "urn:ogc:def:crs:EPSG::28992"},
+                    "type": "name",
+                },
+                "features": [
+                    {
+                        "type": "Feature",
+                        "geometry": {"type": "Point", "coordinates": [10.0, 10.0]},
+                        "properties": {
+                            "id": 1,
+                            "clusterId": "c1",
+                            "cluster": (
+                                "http://testserver"
+                                "/v1/afvalwegingen/clusters/c1/?_format=geojson"
+                            ),
+                            "serienummer": "foobar-123",
+                            "datumCreatie": "2021-01-03",
+                            "eigenaarNaam": "Dataservices",
+                            "datumLeegmaken": "2021-01-03T12:13:14",
+                        },
+                    }
+                ],
+                "_links": [],
+            },
+        ),
+    }
+
+    @pytest.mark.parametrize("format", sorted(UNPAGINATED_FORMATS.keys()))
+    def test_unpaginated_list(
+        self, format, api_client, api_rf, afval_container, filled_router
+    ):
+        """Prove that the export formats generate proper data."""
+        decoder, expected_data = self.UNPAGINATED_FORMATS[format]
         url = reverse("dynamic_api:afvalwegingen-containers-list")
 
         # Prove that the view is available and works
-        response = api_client.get(url, {"_format": "csv"})
+        response = api_client.get(url, {"_format": format})
         assert isinstance(response, Response)  # still wrapped in DRF response!
         assert response.status_code == 200, response.getvalue()
         assert inspect.isgenerator(response.rendered_content)
-        data = response.getvalue()
-        assert data == (
-            b"Id,Clusterid,Geometry,Serienummer,Datumcreatie,Eigenaarnaam,Datumleegmaken\r\n"
-            b"1,c1,SRID=28992;POINT (10 10),foobar-123,2021-01-03,Dataservices,"
-            b"2021-01-03T12:13:14\r\n"
-        )
+        data = decoder(response.getvalue())
+        assert data == expected_data
 
         # Paginator was not triggered
         assert "X-Pagination-Page" not in response
@@ -1005,20 +1047,9 @@ class TestExportFormats:
         assert inspect.isgeneratorfunction(response.accepted_renderer.render)
         assert inspect.isgenerator(response.rendered_content)
 
-    def test_csv_pagination(self, api_client, api_rf, afval_container, filled_router):
-        """Prove that the pagination still works if explicitly requested."""
-        url = reverse("dynamic_api:afvalwegingen-containers-list")
-
-        for i in range(2, 10):
-            afval_container.id = i
-            afval_container.save()
-
-        # Prove that the view is available and works
-        response = api_client.get(url, {"_format": "csv", "_pageSize": "4"})
-        assert isinstance(response, Response)  # still wrapped in DRF response!
-        assert response.status_code == 200, response.getvalue()
-        data = response.getvalue()
-        assert data == (
+    PAGINATED_FORMATS = {
+        "csv": (
+            as_is,
             b"Id,Clusterid,Geometry,Serienummer,Datumcreatie,Eigenaarnaam,Datumleegmaken\r\n"
             b"1,c1,SRID=28992;POINT (10 10),foobar-123,2021-01-03,Dataservices,"
             b"2021-01-03T12:13:14\r\n"
@@ -1027,8 +1058,68 @@ class TestExportFormats:
             b"3,c1,SRID=28992;POINT (10 10),foobar-123,2021-01-03,Dataservices,"
             b"2021-01-03T12:13:14\r\n"
             b"4,c1,SRID=28992;POINT (10 10),foobar-123,2021-01-03,Dataservices,"
-            b"2021-01-03T12:13:14\r\n"
-        )
+            b"2021-01-03T12:13:14\r\n",
+        ),
+        "geojson": (
+            orjson.loads,
+            {
+                "type": "FeatureCollection",
+                "crs": {
+                    "properties": {"name": "urn:ogc:def:crs:EPSG::28992"},
+                    "type": "name",
+                },
+                "features": [
+                    {
+                        "type": "Feature",
+                        "geometry": {"type": "Point", "coordinates": [10.0, 10.0]},
+                        "properties": {
+                            "id": i,
+                            "clusterId": "c1",
+                            "cluster": (
+                                "http://testserver"
+                                "/v1/afvalwegingen/clusters/c1/?_format=geojson"
+                            ),
+                            "serienummer": "foobar-123",
+                            "datumCreatie": "2021-01-03",
+                            "eigenaarNaam": "Dataservices",
+                            "datumLeegmaken": "2021-01-03T12:13:14",
+                        },
+                    }
+                    for i in range(1, 5)
+                ],
+                "_links": [
+                    {
+                        "href": (
+                            "http://testserver"
+                            "/v1/afvalwegingen/containers/?_format=geojson&_pageSize=4&page=2"
+                        ),
+                        "rel": "next",
+                        "type": "application/geo+json",
+                        "title": "next page",
+                    }
+                ],
+            },
+        ),
+    }
+
+    @pytest.mark.parametrize("format", sorted(PAGINATED_FORMATS.keys()))
+    def test_paginated_list(
+        self, format, api_client, api_rf, afval_container, filled_router
+    ):
+        """Prove that the pagination still works if explicitly requested."""
+        decoder, expected_data = self.PAGINATED_FORMATS[format]
+        url = reverse("dynamic_api:afvalwegingen-containers-list")
+
+        for i in range(2, 10):
+            afval_container.id = i
+            afval_container.save()
+
+        # Prove that the view is available and works
+        response = api_client.get(url, {"_format": format, "_pageSize": "4"})
+        assert isinstance(response, Response)  # still wrapped in DRF response!
+        assert response.status_code == 200, response.getvalue()
+        data = decoder(response.getvalue())
+        assert data == expected_data
 
         # Paginator was triggered
         assert response["X-Pagination-Page"] == "1"
@@ -1043,3 +1134,80 @@ class TestExportFormats:
         assert response.streaming
         assert inspect.isgeneratorfunction(response.accepted_renderer.render)
         assert inspect.isgenerator(response.rendered_content)
+
+    EMPTY_FORMATS = {
+        "csv": (
+            as_is,
+            b"Id,Clusterid,Geometry,Serienummer,Datumcreatie,Eigenaarnaam,Datumleegmaken\r\n",
+        ),
+        "geojson": (
+            orjson.loads,
+            {
+                "type": "FeatureCollection",
+                "features": [],
+                "_links": [],
+            },
+        ),
+    }
+
+    @pytest.mark.parametrize("format", sorted(EMPTY_FORMATS.keys()))
+    def test_empty_list(self, format, api_client, api_rf, filled_router):
+        """Prove that empty list pages are properly serialized."""
+        decoder, expected_data = self.EMPTY_FORMATS[format]
+        url = reverse("dynamic_api:afvalwegingen-containers-list")
+
+        # Prove that the view is available and works
+        response = api_client.get(url, {"_format": format})
+        assert isinstance(response, Response)  # still wrapped in DRF response!
+        assert response.status_code == 200, response.getvalue()
+        assert inspect.isgenerator(response.rendered_content)
+        data = decoder(response.getvalue())
+        assert data == expected_data
+
+    DETAIL_FORMATS = {
+        "csv": (
+            as_is,
+            b"Id,Clusterid,Geometry,Serienummer,Datumcreatie,Eigenaarnaam,Datumleegmaken\r\n"
+            b"1,c1,SRID=28992;POINT (10 10),foobar-123,2021-01-03,Dataservices,"
+            b"2021-01-03T12:13:14\r\n",
+        ),
+        "geojson": (
+            orjson.loads,
+            {
+                "type": "Feature",
+                "geometry": {"coordinates": [10.0, 10.0], "type": "Point"},
+                "properties": {
+                    "cluster": "http://testserver/v1/afvalwegingen/clusters/c1/?_format=geojson",
+                    "clusterId": "c1",
+                    "datumCreatie": "2021-01-03",
+                    "datumLeegmaken": "2021-01-03T12:13:14",
+                    "eigenaarNaam": "Dataservices",
+                    "id": 1,
+                    "serienummer": "foobar-123",
+                },
+                "crs": {
+                    "properties": {"name": "urn:ogc:def:crs:EPSG::28992"},
+                    "type": "name",
+                },
+            },
+        ),
+    }
+
+    @pytest.mark.parametrize("format", sorted(DETAIL_FORMATS.keys()))
+    def test_detail(self, format, api_client, api_rf, afval_container, filled_router):
+        """Prove that the detail view also returns an export of a single feature."""
+        decoder, expected_data = self.DETAIL_FORMATS[format]
+        url = reverse(
+            "dynamic_api:afvalwegingen-containers-detail",
+            kwargs={"pk": afval_container.pk},
+        )
+
+        # Prove that the view is available and works
+        response = api_client.get(url, {"_format": format})
+        assert isinstance(response, Response)  # still wrapped in DRF response!
+        assert response.status_code == 200, response.getvalue()
+        data = decoder(response.getvalue())
+        assert data == expected_data
+
+        # Paginator was NOT triggered
+        assert "X-Pagination-Page" not in response

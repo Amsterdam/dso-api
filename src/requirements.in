@@ -16,7 +16,7 @@ jsonschema == 3.2.0
 psycopg2-binary == 2.8.4
 python-string-utils == 1.0.0
 readerwriterlock == 1.0.6
-orjson == 2.5.1
+orjson == 3.4.6
 requests == 2.23.0
 sentry-sdk == 0.14.2
 urllib3 == 1.25.8
