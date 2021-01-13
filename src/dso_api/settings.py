@@ -230,6 +230,7 @@ REST_FRAMEWORK = dict(
     DEFAULT_RENDERER_CLASSES=[
         "rest_framework_dso.renderers.HALJSONRenderer",
         "rest_framework_dso.renderers.CSVRenderer",
+        "rest_framework_dso.renderers.GeoJSONRenderer",
         "dso_api.lib.renderers.PatchedBrowsableAPIRenderer",
     ],
     DEFAULT_FILTER_BACKENDS=[
