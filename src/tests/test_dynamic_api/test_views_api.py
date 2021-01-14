@@ -1,9 +1,12 @@
 import inspect
 import json
+import math
 
 import orjson
 import pytest
 from unittest import mock
+
+from django.contrib.gis.geos import Point
 from django.db import connection
 from django.urls import reverse
 from rest_framework.response import Response
@@ -15,6 +18,20 @@ from dso_api.dynamic_api.permissions import (
     fetch_scopes_for_dataset_table,
     fetch_scopes_for_model,
 )
+
+
+class AproxFloat(float):
+    def __eq__(self, other):
+        # allow minor differences in comparing the floats. This makes sure that the
+        # precise float deserialization of orjson.loads() doesn't cause any
+        # comparison issues. The first 14 decimals must be the same:
+        return math.isclose(self, other, rel_tol=1e-14, abs_tol=1e-14)
+
+
+GEOJSON_POINT = [
+    AproxFloat(c)
+    for c in Point(10, 10, srid=RD_NEW.srid).transform("EPSG:4326", clone=True)
+]
 
 
 @pytest.fixture(autouse=True)
@@ -979,6 +996,17 @@ class TestExportFormats:
 
     as_is = lambda data: data
 
+    def test_point_wgs84(self):
+        """See that our WGS84_POINT is indeed a lon/lat coordinate.
+        This only compares a rounded version, as there can be subtle differences
+        in the actual value depending on your GDAL/libproj version.
+        """
+        wgs84_point = [round(GEOJSON_POINT[0], 2), round(GEOJSON_POINT[1], 2)]
+        # GeoJSON should always be longitude and latitude,
+        # even though GDAL 2 vs 3 have different behavior:
+        # https://gdal.org/tutorials/osr_api_tut.html#crs-and-axis-order
+        assert wgs84_point == [3.31, 47.97]
+
     UNPAGINATED_FORMATS = {
         "csv": (
             as_is,
@@ -991,13 +1019,16 @@ class TestExportFormats:
             {
                 "type": "FeatureCollection",
                 "crs": {
-                    "properties": {"name": "urn:ogc:def:crs:EPSG::28992"},
+                    "properties": {"name": "urn:ogc:def:crs:EPSG::4326"},
                     "type": "name",
                 },
                 "features": [
                     {
                         "type": "Feature",
-                        "geometry": {"type": "Point", "coordinates": [10.0, 10.0]},
+                        "geometry": {
+                            "type": "Point",
+                            "coordinates": GEOJSON_POINT,
+                        },
                         "properties": {
                             "id": 1,
                             "clusterId": "c1",
@@ -1065,13 +1096,16 @@ class TestExportFormats:
             {
                 "type": "FeatureCollection",
                 "crs": {
-                    "properties": {"name": "urn:ogc:def:crs:EPSG::28992"},
+                    "properties": {"name": "urn:ogc:def:crs:EPSG::4326"},
                     "type": "name",
                 },
                 "features": [
                     {
                         "type": "Feature",
-                        "geometry": {"type": "Point", "coordinates": [10.0, 10.0]},
+                        "geometry": {
+                            "type": "Point",
+                            "coordinates": GEOJSON_POINT,
+                        },
                         "properties": {
                             "id": i,
                             "clusterId": "c1",
@@ -1144,6 +1178,10 @@ class TestExportFormats:
             orjson.loads,
             {
                 "type": "FeatureCollection",
+                "crs": {
+                    "properties": {"name": "urn:ogc:def:crs:EPSG::4326"},
+                    "type": "name",
+                },
                 "features": [],
                 "_links": [],
             },
@@ -1175,7 +1213,10 @@ class TestExportFormats:
             orjson.loads,
             {
                 "type": "Feature",
-                "geometry": {"coordinates": [10.0, 10.0], "type": "Point"},
+                "geometry": {
+                    "coordinates": GEOJSON_POINT,
+                    "type": "Point",
+                },
                 "properties": {
                     "cluster": "http://testserver/v1/afvalwegingen/clusters/c1/?_format=geojson",
                     "clusterId": "c1",
@@ -1186,7 +1227,7 @@ class TestExportFormats:
                     "serienummer": "foobar-123",
                 },
                 "crs": {
-                    "properties": {"name": "urn:ogc:def:crs:EPSG::28992"},
+                    "properties": {"name": "urn:ogc:def:crs:EPSG::4326"},
                     "type": "name",
                 },
             },

@@ -200,7 +200,7 @@ def test_location_transform(drf_request, location):
 
     expected = [3.313687692711974, 47.97485812241689]
 
-    # From: https://gdal.org/tutorials/osr_api_tut.html
+    # From: https://gdal.org/tutorials/osr_api_tut.html#crs-and-axis-order
     # Starting with GDAL 3.0, the axis order mandated by the authority
     # defining a CRS is by default honoured by the OGRCoordinateTransformation class,
     # and always exported in WKT1.
