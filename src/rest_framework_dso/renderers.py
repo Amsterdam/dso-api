@@ -11,14 +11,26 @@ from rest_framework_dso.serializer_helpers import ReturnGenerator
 from rest_framework_dso import pagination
 
 
-class HALJSONRenderer(JSONRenderer):
+class RendererMixin:
+    """Extra attributes on renderers in this project."""
+
+    compatible_paginator_classes = None
+    default_crs = None
+    paginator = None
+
+    def setup_pagination(self, paginator: pagination.DelegatedPageNumberPagination):
+        """Used by DelegatedPageNumberPagination"""
+        self.paginator = paginator
+
+
+class HALJSONRenderer(RendererMixin, JSONRenderer):
     media_type = "application/hal+json"
 
     # Define the paginator per media type.
     compatible_paginator_classes = [pagination.DSOPageNumberPagination]
 
 
-class CSVRenderer(CSVStreamingRenderer):
+class CSVRenderer(RendererMixin, CSVStreamingRenderer):
     """Overwritten CSV renderer to provide proper headers.
 
     In the view methods (e.g. ``get_renderer_context()``), the serializer
@@ -61,18 +73,14 @@ class CSVRenderer(CSVStreamingRenderer):
         yield from _chunked_output(output)
 
 
-class GeoJSONRenderer(JSONRenderer):
+class GeoJSONRenderer(RendererMixin, JSONRenderer):
     """Convert the output into GeoJSON notation."""
 
     media_type = "application/geo+json"
     format = "geojson"
-    paginator = None
 
+    default_crs = "EPSG:4326"  # GeoJSON always defaults to WGS84.
     compatible_paginator_classes = [pagination.DelegatedPageNumberPagination]
-
-    def setup_pagination(self, paginator: pagination.DelegatedPageNumberPagination):
-        """Used by DelegatedPageNumberPagination"""
-        self.paginator = paginator
 
     def render(self, data, accepted_media_type=None, renderer_context=None):
         """
