@@ -1,3 +1,6 @@
+.. vim:noswapfile:nobackup:nowritebackup:
+.. highlight:: console
+
 # DSO API
 
 A new generic API that exposes datasets.
@@ -34,6 +37,11 @@ to the DSO API database container of the Airflow project.
     pip install -U wheel pip
     cd src
     make install  # installs src/requirements_dev.txt
+    
+Should the above fail with errors related to ``orjson`` and/or ``maturin``
+and you are running FreeBSD,
+then please see the 
+[FreeBSD Installation Instructions](#FreeBSD-Installation-Instructions)
 
 If you are not running Docker locally (eg in Linux)
 but in a virtual machine (eg MacOS, FreeBSD, Windows)
@@ -142,6 +150,45 @@ Point to this server as schema server with :
 Then it will import the schemafiles in **_schemas/data/datasets_** with :
 
     python manage.py import_schemas
+    
+#FreeBSD Installation Instructions
+
+Installing the DSO API under FreeBSD should be largely similar to installing it under Linux or MacOS.
+However, some extra work will be required to build packages that rely on code written in other languages
+and for which the package authors did not provide FreeBSD specific wheels.
+
+## Maturin
+
+``Maturin`` by default, 
+and not easily overideable,
+strips all symbols from the binaries that the Rust compiler produces.
+For some reason this confuses the LLVM linker.
+The easiest solution is to install GCC9 
+and use its linker during ``maturin`` build process:
+
+    % sudo pkg install gcc9
+    % CARGO_BUILD_RUSTFLAGS='-C linker=/usr/local/bin/gcc9' pip install maturin
+
+## Orjson
+
+``Orjson`,
+depending on its version,
+requires a different nightly build of the Rust compiler.
+At the time of writing,
+the version of ``orjson`` used,
+version 3.4.6,
+requires the rust nightly compiler from 2021-01-02.
+Hence before attempting to run:
+
+    % pip install orjson==3.4.6
+
+or:
+
+    % make -C src install
+
+one needs to install that specific nightly version of the rust compiler by:
+
+   % curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain nightly-2021-01-02 --profile minimal -y
 
 # Testing OpenAPI schema on localhost
 
