@@ -5,6 +5,21 @@ It uses the "Amsterdam Schema" to define the datasets,
 and exposes these in a DSO (Digitaal Stelsel Omgevingswet) compatible API.
 Part of that means that the API follows the HAL-JSON style.
 
+These instructions will get the DSO API up and running locally
+with its database running in a Docker container.
+If that's what you are after, 
+by all means go ahead
+However, in practice the DSO API is developed in tandem with Airflow.
+The Airflow project has instructions to run its two dependent database in Docker containers as well.
+One of these dependent databases is the DSO API database.
+Should you follow the installation instructions of both projects separately,
+you will end up with two instances of the DSO API database in two separate Docker containers.
+That is likely not what you intended. 
+Hence the best way to setup both projects
+is to follow the Airflow setup instructions
+and point the ``DATABASE_URL`` environment variable for this project 
+to the DSO API database container of the Airflow project.
+
 # Requirements
 
     Python >= 3.8
