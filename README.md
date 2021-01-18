@@ -63,20 +63,9 @@ Or in a single call: `make upgrade install test`
 Django will only be upgraded with patch-level versions.
 To change from e.g. Django 3.0 to 3.1, update the version in `requirements.in` yourself.
 
+# Development details
 
-# Importing the latest backup
-
-To import the latest database from acceptance (replace `<username>` with your
-username, assumes your public SSH key is known and you have appropriate level of access.
-
-This command expects the private SSH key to be found in the ~/.ssh folder,
-in a file with the name datapunt.key (chmod 600):
-
-    docker-compose exec database update-db.sh dataservices
-    
-To import the bag database do the following :
-
-    docker-compose exec bag_v11_database update-db.sh  bag_v11
+Extra information on how to develop DSO-API locally can be found in [DEVELOPMENT.md](DEVELOPMENT)
     
 # Using a local version for schema import
 
