@@ -15,6 +15,7 @@ from rest_framework_dso.serializer_helpers import ReturnGenerator
 class RendererMixin:
     """Extra attributes on renderers in this project."""
 
+    unlimited_page_size = False
     compatible_paginator_classes = None
     default_crs = None
     paginator = None
@@ -39,6 +40,7 @@ class CSVRenderer(RendererMixin, CSVStreamingRenderer):
     output renderer.
     """
 
+    unlimited_page_size = True
     compatible_paginator_classes = [pagination.DSOHTTPHeaderPageNumberPagination]
 
     def render(self, data, media_type=None, renderer_context=None):
@@ -73,6 +75,7 @@ class CSVRenderer(RendererMixin, CSVStreamingRenderer):
 class GeoJSONRenderer(RendererMixin, JSONRenderer):
     """Convert the output into GeoJSON notation."""
 
+    unlimited_page_size = True
     media_type = "application/geo+json"
     format = "geojson"
 
