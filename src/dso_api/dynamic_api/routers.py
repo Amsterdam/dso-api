@@ -75,6 +75,12 @@ class DynamicRouter(routers.DefaultRouter):
         tmp_router = routers.SimpleRouter()
         generated_models = []
         datasets = {}
+
+        # Because dataset are related, we need to 'prewarm'
+        # the datatasets cache (in schematools)
+        for dataset in Dataset.objects.db_enabled():
+            dataset.schema
+
         for dataset in Dataset.objects.db_enabled():  # type: Dataset
             dataset_id = dataset.schema.id  # not dataset.name!
             datasets[dataset_id] = dataset
