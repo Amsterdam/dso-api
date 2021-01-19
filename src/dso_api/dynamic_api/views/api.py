@@ -125,7 +125,7 @@ class DynamicApiViewSet(
     @property
     def paginator(self):
         if (
-            self.request.accepted_renderer.format in ("csv", "geojson")
+            self.request.accepted_renderer.unlimited_page_size
             and self.pagination_class.page_size_query_param not in self.request.GET
         ):
             # Avoid expensive COUNT(*) for CSV and GeoJSON formats,
