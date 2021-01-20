@@ -283,3 +283,5 @@ for key, value in env.ENVIRON.items():
         locals()[key] = value
 
 HAAL_CENTRAAL_API_KEY = os.getenv("HAAL_CENTRAAL_API_KEY", "UNKNOWN")
+HAAL_CENTRAAL_KEYFILE = os.getenv("HC_KEYFILE")
+HAAL_CENTRAAL_CERTFILE = os.getenv("HC_CERTFILE")
