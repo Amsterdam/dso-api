@@ -325,26 +325,44 @@ class DSOModelSerializer(DSOSerializer, serializers.HyperlinkedModelSerializer):
         gis_models.GeometryCollectionField: DSOGeometryField,
     }
 
-    # Make sure the _links bit is generated:
-    url_field_name = "_links"
+    url_field_name = "self"
     serializer_url_field = LinksField
 
     # Fetcher function to be overridden by subclasses if needed
     id_based_fetcher = None
+
+    def _include_embedded(self):
+        """Determines if the _embedded field must be generated.
+        - The "_links" field never contains an "_embedded", so if this function is called
+        from within a LinksSerializer instance, return False. (Because LinksSerializer is a
+        subclass and inaccessible from here, we check this instead by the presence of the
+        "self" field.)
+        - If there is a view context, do not generate the _embedded field for the objects in
+        a list view.
+        - If there is no view context, only generate the _embedded field if the object is root and
+        output is not used for CSV.
+        """
+
+        is_root = not hasattr(self, "parent") or self.root is self
+        accepted_renderer = self.context["request"].accepted_renderer
+        if "self" in self.fields:
+            return False
+        if (
+            "view" in self.context
+            and hasattr(self.context["view"], "detail")
+            and self.context["view"].detail is False
+        ):
+            return False
+        return is_root and accepted_renderer.format != "csv"
 
     def to_representation(self, instance):
         """Check whether the geofields need to be transformed."""
         ret = super().to_representation(instance)
 
         # See if any HAL-style sideloading was requested
-        # This serializer needs to be the top-serializer,
-        # nor use a custom export format (e.g. CSV).
-        is_root = not hasattr(self, "parent") or self.root is self
-        accepted_renderer = self.context["request"].accepted_renderer
-        if is_root and accepted_renderer.format != "csv":
+        if self._include_embedded():
             expand = self.get_fields_to_expand()
             if expand:
                 embed_helper = EmbeddedHelper(self, expand=expand)
                 ret[self.expand_field] = embed_helper.get_embedded(instance)
-
         return ret

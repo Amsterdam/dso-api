@@ -14,9 +14,12 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 from rest_framework.relations import HyperlinkedRelatedField
-from rest_framework_dso.fields import EmbeddedField, EmbeddedManyToManyField
+from rest_framework_dso.fields import (
+    EmbeddedField,
+    EmbeddedManyToManyField,
+)
 from rest_framework_dso.serializers import DSOModelSerializer
-from rest_framework.serializers import Field
+from rest_framework.serializers import Field, ManyRelatedField
 from rest_framework.reverse import reverse
 from schematools.types import DatasetTableSchema
 from schematools.contrib.django.models import DynamicModel
@@ -28,11 +31,13 @@ from schematools.utils import to_snake_case, toCamelCase
 
 from dso_api.dynamic_api.fields import (
     TemporalHyperlinkedRelatedField,
+    HALTemporalHyperlinkedRelatedField,
     TemporalReadOnlyField,
     TemporalLinksField,
     AzureBlobFileField,
     LooseRelationUrlField,
     LooseRelationUrlListField,
+    HALLooseRelationUrlField,
 )
 
 
@@ -135,11 +140,13 @@ class DynamicSerializer(DSOModelSerializer):
     serializer_url_field = DynamicLinksField
     serializer_field_mapping = {
         **DSOModelSerializer.serializer_field_mapping,
-        LooseRelationField: LooseRelationUrlField,
+        LooseRelationField: HALLooseRelationUrlField,
         LooseRelationManyToManyField: LooseRelationUrlListField,
     }
 
     schema = serializers.SerializerMethodField()
+
+    _links = serializers.SerializerMethodField()
 
     table_schema: DatasetTableSchema = None
 
@@ -173,6 +180,11 @@ class DynamicSerializer(DSOModelSerializer):
     def get_auth_checker(self):
         request = self.get_request()
         return getattr(request, "is_authorized_for", None) if request else None
+
+    def get__links(self, instance):
+        return self.hal_relations_serializer(
+            instance, context=self.context, fields_to_expand=self.fields_to_expand
+        ).data
 
     @extend_schema_field(OpenApiTypes.URI)
     def get_schema(self, instance):
@@ -254,18 +266,20 @@ class DynamicSerializer(DSOModelSerializer):
                 )
 
                 result_list = [
-                    reverse(
-                        f"{app_name}:{dataset_name}-{table_name}-detail",
-                        kwargs={"pk": item},
-                        request=request,
-                    )
+                    {
+                        "href": reverse(
+                            f"{app_name}:{dataset_name}-{table_name}-detail",
+                            kwargs={"pk": item},
+                            request=request,
+                        ),
+                        "title": item,
+                    }
                     for item in through_tabel_items
                 ]
                 data[toCamelCase(loose_relation_field_name)] = result_list
 
         if self.instance is not None:
             data.update(self._profile_based_authorization_and_mutation(data))
-
         return data
 
     def _profile_based_authorization_and_mutation(self, data):
@@ -285,8 +299,107 @@ class DynamicSerializer(DSOModelSerializer):
             permission = request.auth_profile.get_read_permission(permission_key)
             if permission is not None:
                 key = toCamelCase(model_field.name)
-                authorized_data[key] = mutate_value(permission, data[key])
+                if key in data:
+                    authorized_data[key] = mutate_value(permission, data[key])
         return authorized_data
+
+
+class DynamicBodySerializer(DynamicSerializer):
+    """Following DSO/HAL guidelines, objects are serialized with _links and _embedded fields,
+    but without relational fields at the top level. The relational fields appear either in
+    _links or in expanded form in _embedded; depending on the _expand and _expandScope URL
+    parameters
+    """
+
+    def get_output_fields(self):
+        """The list of fields to include in the serialization"""
+        fields = self.fields
+        output_fields = OrderedDict(
+            [
+                (field_name, field)
+                for field_name, field in fields.items()
+                if field_name in ["_links", "_embedded"]
+                or not isinstance(
+                    field,
+                    (HyperlinkedRelatedField, ManyRelatedField, LooseRelationUrlField),
+                )
+            ]
+        )
+        return output_fields
+
+    def to_representation(self, validated_data):
+        """Restrict the output from the DynamicSerializer"""
+        data = super().to_representation(validated_data)
+        output_fields = self.get_output_fields()
+        output_data = OrderedDict(
+            [
+                (field_name, field)
+                for field_name, field in data.items()
+                if field_name in output_fields or field_name == "_embedded"
+            ]
+        )
+        return output_data
+
+
+class DynamicLinksSerializer(DynamicSerializer):
+    """The serializer for the _links field. Following DSO/HAL guidelines, it contains "self",
+    "schema", and all relational fields that have not been expanded. This depends on the
+    _expand and _expandScope URL parameters. When expanded, they move to "_embedded".
+    In case of a list-view, keep the relational fields. The resources in "_embedded" are
+    grouped together for deduplication purposes and this will allow the user to know which
+    embed belongs to which object.
+    """
+
+    serializer_related_field = HALTemporalHyperlinkedRelatedField
+
+    def get_output_fields(self):
+        """The list of fields to include in the serialization"""
+        fields = self.fields
+        embedded_fields = self.get_fields_to_expand()
+        link_fields = ["self", "schema"]
+        relation_fields = [
+            field_name
+            for field_name, field in fields.items()
+            if isinstance(
+                field,
+                (HyperlinkedRelatedField, ManyRelatedField, LooseRelationUrlField),
+            )
+        ]
+        # add the relation_fields to _links if there is not going to be an _embedded
+        # or if we are part of a list-view
+        if embedded_fields is False or (
+            "view" in self.context
+            and hasattr(self.context["view"], "detail")
+            and self.context["view"].detail is False
+        ):
+            link_fields += relation_fields
+        elif isinstance(embedded_fields, list):
+            link_fields += [
+                field_name
+                for field_name in relation_fields
+                if field_name not in embedded_fields
+            ]
+        output_fields = OrderedDict(
+            [
+                (field_name, field)
+                for field_name, field in fields.items()
+                if field_name in link_fields
+            ]
+        )
+        return output_fields
+
+    def to_representation(self, validated_data):
+        """Restrict the output from the DynamicSerializer"""
+        data = super().to_representation(validated_data)
+        output_fields = self.get_output_fields()
+        output_data = OrderedDict(
+            [
+                (field_name, field)
+                for field_name, field in data.items()
+                if field_name in output_fields
+            ]
+        )
+        return output_data
 
 
 def get_view_name(model: Type[DynamicModel], suffix: str):
@@ -301,17 +414,34 @@ def get_view_name(model: Type[DynamicModel], suffix: str):
 
 @lru_cache()
 def serializer_factory(
-    model: Type[DynamicModel], depth: int, flat=None
+    model: Type[DynamicModel], depth: int, flat=None, links_serializer=False
 ) -> Type[DynamicSerializer]:
-    """Generate the DRF serializer class for a specific dataset model."""
-    fields = ["_links", "schema"]
+    """Generate the DRF serializer class for a specific dataset model.
+    It can generate the serializer for both the body as well as for the _links field,
+    depending on links_serializer being False or True."""
+
+    if links_serializer:
+        fields = [
+            "schema",
+            "self",
+        ]
+    elif depth <= 1:
+        fields = [
+            "_links",
+        ]
+    else:
+        fields = []
+
     if isinstance(model, str):
         raise ImproperlyConfigured(f"Model {model} could not be resolved.")
     # Inner tables have no schema or links defined
     if model.has_parent_table():
         fields = []
     safe_dataset_id = to_snake_case(model.get_dataset_id())
-    serializer_name = f"{safe_dataset_id.title()}{model.__name__}Serializer"
+    serializer_name_ext = "Links" if links_serializer else ""
+    serializer_name = (
+        f"{safe_dataset_id.title()}{model.__name__}{serializer_name_ext}Serializer"
+    )
     new_attrs = {
         "table_schema": model._table_schema,
         "__module__": f"dso_api.dynamic_api.serializers.{safe_dataset_id}",
@@ -326,12 +456,23 @@ def serializer_factory(
     if not flat:
         generate_embedded_relations(model, fields, new_attrs)
 
+    if depth <= 1 and not links_serializer:
+        # Generate the serializer for the _links field containing the relations according to HAL
+        hal_relations_serializer = serializer_factory(
+            model, depth, flat=True, links_serializer=True
+        )
+        new_attrs["hal_relations_serializer"] = hal_relations_serializer
+
     # Generate Meta section and serializer class
     new_attrs["Meta"] = type(
         "Meta", (), {"model": model, "fields": fields, "extra_kwargs": extra_kwargs}
     )
 
-    return type(serializer_name, (DynamicSerializer,), new_attrs)
+    serializer_class = (
+        DynamicLinksSerializer if links_serializer else DynamicBodySerializer
+    )
+
+    return type(serializer_name, (serializer_class,), new_attrs)
 
 
 def _build_serializer_field(  # noqa: C901
@@ -359,7 +500,7 @@ def _build_serializer_field(  # noqa: C901
                         to_snake_case(model._table_schema.dataset.id),
                         to_snake_case(model_field.related_model._table_schema.id),
                     )
-                    new_attrs[name] = TemporalHyperlinkedRelatedField(
+                    new_attrs[name] = HALTemporalHyperlinkedRelatedField(
                         many=True,
                         view_name=view_name,
                         queryset=getattr(model, att_name),

@@ -124,7 +124,6 @@ class EmbeddedHelper:
                 for id in ids_per_relation[name]
                 if id in data
             ]
-
         return _embedded
 
     def get_embedded(self, instance: models.Model) -> dict:
