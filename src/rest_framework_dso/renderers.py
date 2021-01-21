@@ -6,6 +6,7 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.utils.serializer_helpers import ReturnDict, ReturnList
 from rest_framework_csv.renderers import CSVStreamingRenderer
 from rest_framework_gis.fields import GeoJsonDict
+from rest_framework.serializers import SerializerMethodField
 
 from rest_framework_dso.serializer_helpers import ReturnGenerator
 from rest_framework_dso import pagination
@@ -56,7 +57,9 @@ class CSVRenderer(RendererMixin, CSVStreamingRenderer):
                     name
                     for name, field in serializer.fields.items()
                     if name != "schema"
-                    and not isinstance(field, HyperlinkedRelatedField)
+                    and not isinstance(
+                        field, (HyperlinkedRelatedField, SerializerMethodField)
+                    )
                 ],
                 "labels": {
                     name: field.label for name, field in serializer.fields.items()
@@ -232,14 +235,24 @@ class GeoJSONRenderer(RendererMixin, JSONRenderer):
 
     def _item_to_feature(self, item: dict, geometry_field):
         """Reorganize the dict of a single item"""
+
+        #  get the foreign key relations from the _links field and unpack from its HAL envelope.
+        link_properties = {
+            key: value["href"]
+            for key, value in item["_links"].items()
+            if key not in ("self", "schema") and "href" in value
+        }
         return {
             "type": "Feature",
             # "id": item
             "geometry": item.pop(geometry_field),
             "properties": {
-                key: value
-                for key, value in item.items()
-                if key not in ("schema", "_links")
+                **link_properties,
+                **{
+                    key: value
+                    for key, value in item.items()
+                    if key not in ("schema", "_links")
+                },
             },
         }
 
