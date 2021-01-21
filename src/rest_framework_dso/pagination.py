@@ -115,7 +115,6 @@ class DSOPageNumberPagination(DSOHTTPHeaderPageNumberPagination):
                 if isinstance(data.serializer, ListSerializer):
                     serializer = serializer.child
                 results_field = serializer.Meta.model._meta.model_name
-
             return {
                 "_links": _links,
                 "_embedded": {results_field: data},

@@ -12,7 +12,7 @@ from rest_framework.reverse import reverse
 class TemporalHyperlinkedRelatedField(serializers.HyperlinkedRelatedField):
     """Temporal Hyperlinked Related Field
 
-    Usef for forward relations in serializers."""
+    Used for forward relations in serializers."""
 
     def use_pk_only_optimization(self):
         # disable, breaks obj.is_temporal()
@@ -28,7 +28,9 @@ class TemporalHyperlinkedRelatedField(serializers.HyperlinkedRelatedField):
             lookup_value, version = split_on_separator(obj.pk)
             kwargs = {self.lookup_field: lookup_value}
 
-            base_url = self.reverse(view_name, kwargs=kwargs, request=request, format=format)
+            base_url = self.reverse(
+                view_name, kwargs=kwargs, request=request, format=format
+            )
 
             if request.dataset_temporal_slice is None:
                 key = obj.get_dataset().temporal.get("identifier")
@@ -39,8 +41,18 @@ class TemporalHyperlinkedRelatedField(serializers.HyperlinkedRelatedField):
             base_url = "{}?{}={}".format(base_url, key, value)
         else:
             kwargs = {self.lookup_field: obj.pk}
-            base_url = self.reverse(view_name, kwargs=kwargs, request=request, format=format)
+            base_url = self.reverse(
+                view_name, kwargs=kwargs, request=request, format=format
+            )
         return base_url
+
+
+class HALTemporalHyperlinkedRelatedField(TemporalHyperlinkedRelatedField):
+    """Wrap the url from the HyperlinkedRelatedField according to HAL specs"""
+
+    def to_representation(self, value):
+        href = super().to_representation(value)
+        return {"href": href, "title": str(value.pk)}
 
 
 class TemporalReadOnlyField(serializers.ReadOnlyField):
@@ -50,7 +62,10 @@ class TemporalReadOnlyField(serializers.ReadOnlyField):
     """
 
     def to_representation(self, value):
-        if "request" in self.parent.context and self.parent.context["request"].versioned:
+        if (
+            "request" in self.parent.context
+            and self.parent.context["request"].versioned
+        ):
             value = split_on_separator(value)[0]
         return value
 
@@ -73,7 +88,9 @@ class TemporalLinksField(LinksField):
         dataset = obj.get_dataset()
         lookup_value = getattr(obj, dataset.identifier)
         kwargs = {self.lookup_field: lookup_value}
-        base_url = self.reverse(view_name, kwargs=kwargs, request=request, format=format)
+        base_url = self.reverse(
+            view_name, kwargs=kwargs, request=request, format=format
+        )
 
         temporal_identifier = dataset.temporal["identifier"]
         version = getattr(obj, temporal_identifier)
@@ -96,7 +113,9 @@ class AzureBlobFileField(serializers.ReadOnlyField):
             blob_client.container_name,
             blob_client.blob_name,
             snapshot=blob_client.snapshot,
-            account_key=getattr(settings, f"AZURE_BLOB_{self.account_name.upper()}", None),
+            account_key=getattr(
+                settings, f"AZURE_BLOB_{self.account_name.upper()}", None
+            ),
             permission=azure.storage.blob.BlobSasPermissions(read=True),
             expiry=datetime.utcnow() + timedelta(hours=1),
         )
@@ -130,6 +149,14 @@ class LooseRelationUrlField(serializers.CharField):
             kwargs=kwargs,
             request=request,
         )
+
+
+class HALLooseRelationUrlField(LooseRelationUrlField):
+    """Wrap the URL from LooseRelationUrlField according to HAL specs."""
+
+    def to_representation(self, value):
+        href = super().to_representation(value)
+        return {"href": href, "title": str(value)}
 
 
 class LooseRelationUrlListField(serializers.ListField):

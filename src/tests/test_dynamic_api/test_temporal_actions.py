@@ -199,9 +199,9 @@ class TestViews:
         expected_url = "/{}/?volgnummer=002".format(
             bagh_gebieden.stadsdeel.identificatie
         )
-        assert response.data["stadsdeel"].endswith(expected_url), response.data[
-            "stadsdeel"
-        ]
+        assert response.data["_links"]["stadsdeel"]["href"].endswith(
+            expected_url
+        ), response.data["_links"]["stadsdeel"]["href"]
 
     def test_serializer_temporal_request_corrects_link_to_temporal(
         self, api_client, filled_router, bagh_schema, bagh_gebieden
@@ -216,6 +216,6 @@ class TestViews:
         expected_url = "/{}/?geldigOp=2014-05-01".format(
             bagh_gebieden.stadsdeel.identificatie
         )
-        assert response.data["stadsdeel"].endswith(expected_url), response.data[
-            "stadsdeel"
-        ]
+        assert response.data["_links"]["stadsdeel"]["href"].endswith(
+            expected_url
+        ), response.data["stadsdeel"]

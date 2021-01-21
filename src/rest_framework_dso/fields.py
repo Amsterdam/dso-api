@@ -167,11 +167,11 @@ class LinksField(serializers.HyperlinkedIdentityField):
     def to_representation(self, value):
         request = self.context.get("request")
 
-        output = {"self": {"href": self.get_url(value, self.view_name, request, None)}}
+        output = {"href": self.get_url(value, self.view_name, request, None)}
 
         # if no display field, ommit the title element from output
         if value._display_field:
-            output["self"].update({"title": str(value)})
+            output.update({"title": str(value)})
 
         return output
 
@@ -192,3 +192,11 @@ class DSOGeometryField(GeometryField):
         else:
             # Return GeoJSON for json/html/api formats
             return super().to_representation(value)
+
+
+class HALHyperlinkedRelatedField(serializers.HyperlinkedRelatedField):
+    """Wrap the url from the HyperlinkedRelatedField according to HAL specs"""
+
+    def to_representation(self, value):
+        href = super().to_representation(value)
+        return {"href": href, "title": str(value.pk)}

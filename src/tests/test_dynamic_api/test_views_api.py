@@ -852,10 +852,82 @@ class TestEmbedTemporalTables:
         url = f"{url}?_expand=true"
         response = api_client.get(url)
         assert response.status_code == 200, response.data
-        assert (
-            response.data["_embedded"]["bestaatUitBuurten"][0]["id"]
-            == "03630000000078.1"
-        )
+        assert response.data["_embedded"]["bestaatUitBuurten"][0] == {
+            "_links": {
+                "bestaatUitBuurtenGgwgebieden": [
+                    {
+                        "href": "http://testserver/v1/gebieden/ggwgebieden/03630950000000/?volgnummer=1",  # noqa: E501
+                        "title": "03630950000000.1",
+                    }
+                ],
+                "buurtenWoningbouwplan": [],
+                "ligtInWijk": None,
+                "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/gebieden#buurten",
+                "self": {
+                    "href": "http://testserver/v1/gebieden/buurten/03630000000078/?volgnummer=1",
+                    "title": "03630000000078.1",
+                },
+            },
+            "geometrie": None,
+            "ligtInWijkVolgnummer": None,
+            "ligtInWijkIdentificatie": None,
+            "volgnummer": 1,
+            "identificatie": "03630000000078",
+            "eindGeldigheid": None,
+            "beginGeldigheid": None,
+            "id": "03630000000078.1",
+        }
+        assert response.data["_embedded"]["ggwgebieden"][0] == {
+            "_links": {
+                "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/gebieden#ggwgebieden",  # noqa: E501
+                "self": {
+                    "href": "http://testserver/v1/gebieden/ggwgebieden/03630950000000/?volgnummer=1",  # noqa: E501
+                    "title": "03630950000000.1",
+                },
+                "bestaatUitBuurten": [
+                    {
+                        "href": "http://testserver/v1/gebieden/buurten/03630000000078/?volgnummer=1",  # noqa: E501
+                        "title": "03630000000078.1",
+                    },
+                ],
+            },
+            "geometrie": None,
+            "volgnummer": 1,
+            "identificatie": "03630950000000",
+            "id": "03630950000000.1",
+        }
+
+    def test_detail_no_expand_for_loose_relation(
+        self,
+        api_client,
+        reloadrouter,
+        statistieken_model,
+        buurten_model,
+        statistieken_data,
+        buurten_data,
+    ):
+        """Without _expand=true there is no _embedded field.
+        The buurt link must appear in the _links field inside an HAL envelope.
+        The buurt link is not resolved to the latest volgnummer.
+        """
+
+        url = reverse("dynamic_api:meldingen-statistieken-detail", args=[1])
+        response = api_client.get(url)
+        assert response.status_code == 200, response.data
+        assert response.data == {
+            "_links": {
+                "buurt": {
+                    "href": "http://testserver/v1/gebieden/buurten/03630000000078/",
+                    "title": "03630000000078",
+                },
+                "schema": "https://schemas.data.amsterdam.nl/datasets/meldingen/meldingen#statistieken",  # noqa: E501
+                "self": {
+                    "href": "http://testserver/v1/meldingen/statistieken/1/",
+                    "title": "1",
+                },
+            },
+            "id": 1,
+        }
 
     def test_detail_expand_true_for_loose_relation(
         self,
@@ -874,11 +946,35 @@ class TestEmbedTemporalTables:
         url = f"{url}?_expand=true"
         response = api_client.get(url)
         assert response.status_code == 200, response.data
-        assert (
-            response.data["buurt"]
-            == "http://testserver/v1/gebieden/buurten/03630000000078/"
-        )
-        assert response.data["_embedded"]["buurt"]["id"] == "03630000000078.2"
+        assert response.data == {
+            "_links": {
+                "schema": "https://schemas.data.amsterdam.nl/datasets/meldingen/meldingen#statistieken",  # noqa: E501
+                "self": {
+                    "href": "http://testserver/v1/meldingen/statistieken/1/",
+                    "title": "1",
+                },
+            },
+            "id": 1,
+            "_embedded": {
+                "buurt": {
+                    "_links": {
+                        "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/gebieden#buurten",  # noqa: E501
+                        "self": {
+                            "href": "http://testserver/v1/gebieden/buurten/03630000000078/?volgnummer=2",  # noqa: E501
+                            "title": "03630000000078.2",
+                        },
+                    },
+                    "geometrie": None,
+                    "ligtInWijkVolgnummer": None,
+                    "ligtInWijkIdentificatie": None,
+                    "volgnummer": 2,
+                    "identificatie": "03630000000078",
+                    "eindGeldigheid": None,
+                    "beginGeldigheid": None,
+                    "id": "03630000000078.2",
+                }
+            },
+        }
 
     def test_list_expand_true_for_loose_relation(
         self,
@@ -898,6 +994,16 @@ class TestEmbedTemporalTables:
         response = api_client.get(url)
         assert response.status_code == 200, response.data
         assert response.data["_embedded"]["buurt"][0]["id"] == "03630000000078.2"
+        assert (
+            response.data["_embedded"]["buurt"][0]["_links"]["self"]["href"]
+            == "http://testserver/v1/gebieden/buurten/03630000000078/?volgnummer=2"
+        )
+        assert response.data["_embedded"]["statistieken"][0]["id"] == 1
+        assert (
+            response.data["_embedded"]["statistieken"][0]["_links"]["buurt"]["href"]
+            == "http://testserver/v1/gebieden/buurten/03630000000078/"
+        )
+        assert "_embedded" not in response.data["_embedded"]["statistieken"][0]
 
     def test_list_expand_true_non_tempooral_many_to_many_to_temporal(
         self,
@@ -922,8 +1028,11 @@ class TestEmbedTemporalTables:
         # the FK or NM relation keys in those items are urls without volgnummer
 
         assert response.data["_embedded"]["buurten"][0]["id"] == "03630000000078.2"
-        assert response.data["_embedded"]["woningbouwplan"][0]["buurten"] == [
-            "http://testserver/v1/gebieden/buurten/03630000000078/",
+        assert response.data["_embedded"]["woningbouwplan"][0]["_links"]["buurten"] == [
+            {
+                "href": "http://testserver/v1/gebieden/buurten/03630000000078/",
+                "title": "03630000000078",
+            }
         ]
 
     def test_detail_expand_true_non_temporal_many_to_many_to_temporal(
@@ -939,10 +1048,15 @@ class TestEmbedTemporalTables:
         url = f"{url}?_expand=true"
         response = api_client.get(url)
         assert response.status_code == 200, response.data
-        assert response.data["buurten"] == [
-            "http://testserver/v1/gebieden/buurten/03630000000078/",
-        ]
+        assert "buurten" not in response.data  # because it must be in  "_embedded"
+        # Note that "buurten" is a ManyToMany, but upacked here because the
+        # list contained only 1 item
+        # (previous design choice, see EmbedHelper.get_embedded in utils.py)
         assert response.data["_embedded"]["buurten"]["id"] == "03630000000078.2"
+        assert (
+            response.data["_embedded"]["buurten"]["_links"]["self"]["href"]
+            == "http://testserver/v1/gebieden/buurten/03630000000078/?volgnummer=2"
+        )
 
     def test_independence_of_m2m_through_id_field(
         self,
@@ -982,12 +1096,12 @@ class TestEmbedTemporalTables:
         assert "wbw_rel_woningbouwplan_buurt_id" in column_names_after
         assert "id" not in column_names_after
         url = reverse("dynamic_api:woningbouwplannen-woningbouwplan-detail", args=[1])
-        url = f"{url}?_expand=true"
         response = api_client.get(url)
         # check that "buurten" still contains the correct list
-        assert response.data["buurten"] == [
-            "http://testserver/v1/gebieden/buurten/03630000000078/",
-        ]
+        assert (
+            response.data["_links"]["buurten"][0]["href"]
+            == "http://testserver/v1/gebieden/buurten/03630000000078/"
+        )
 
 
 @pytest.mark.django_db

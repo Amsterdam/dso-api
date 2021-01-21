@@ -73,20 +73,23 @@ class TestDynamicSerializer:
         )
         assert container_serializer.data == {
             "_links": {
+                "cluster": {
+                    "href": "http://testserver/v1/afvalwegingen/clusters/123.456/",
+                    "title": "123.456",
+                },
+                "schema": "https://schemas.data.amsterdam.nl/datasets/afvalwegingen/afvalwegingen#containers",  # noqa: E501
                 "self": {
                     "href": "http://testserver/v1/afvalwegingen/containers/2/",
                     "title": "2",
-                }
+                },
             },
-            "id": 2,
-            "schema": "https://schemas.data.amsterdam.nl/datasets/afvalwegingen/afvalwegingen#containers",  # noqa: E501
             "clusterId": "123.456",
-            "cluster": "http://testserver/v1/afvalwegingen/clusters/123.456/",
-            "serienummer": "serie123",
             "datumCreatie": "2020-02-03",
             "datumLeegmaken": None,
-            "geometry": None,
             "eigenaarNaam": "datapunt",
+            "geometry": None,
+            "id": 2,
+            "serienummer": "serie123",
         }
 
     @staticmethod
@@ -109,15 +112,14 @@ class TestDynamicSerializer:
         )
         assert container_serializer.data == {
             "_links": {
+                "schema": "https://schemas.data.amsterdam.nl/datasets/afvalwegingen/afvalwegingen#containers",  # noqa: E501
                 "self": {
                     "href": "http://testserver/v1/afvalwegingen/containers/2/",
                     "title": "2",
-                }
+                },
             },
             "id": 2,
-            "schema": "https://schemas.data.amsterdam.nl/datasets/afvalwegingen/afvalwegingen#containers",  # noqa: E501
             "clusterId": "123.456",
-            "cluster": "http://testserver/v1/afvalwegingen/clusters/123.456/",
             "serienummer": None,
             "datumCreatie": None,
             "datumLeegmaken": None,
@@ -129,10 +131,10 @@ class TestDynamicSerializer:
                         "self": {
                             "href": "http://testserver/v1/afvalwegingen/clusters/123.456/",
                             "title": "123.456",
-                        }
+                        },
+                        "schema": "https://schemas.data.amsterdam.nl/datasets/afvalwegingen/afvalwegingen#clusters",  # noqa: E501
                     },
                     "id": "123.456",
-                    "schema": "https://schemas.data.amsterdam.nl/datasets/afvalwegingen/afvalwegingen#clusters",  # noqa: E501
                     "status": "open",
                 }
             },
@@ -157,15 +159,14 @@ class TestDynamicSerializer:
         )
         assert container_serializer.data == {
             "_links": {
+                "schema": "https://schemas.data.amsterdam.nl/datasets/afvalwegingen/afvalwegingen#containers",  # noqa: E501
                 "self": {
                     "href": "http://testserver/v1/afvalwegingen/containers/3/",
                     "title": "3",
-                }
+                },
             },
             "id": 3,
-            "schema": "https://schemas.data.amsterdam.nl/datasets/afvalwegingen/afvalwegingen#containers",  # noqa: E501
             "clusterId": None,
-            "cluster": None,
             "serienummer": None,
             "datumCreatie": None,
             "datumLeegmaken": None,
@@ -197,12 +198,11 @@ class TestDynamicSerializer:
                 "self": {
                     "href": "http://testserver/v1/afvalwegingen/containers/4/",
                     "title": "4",
-                }
+                },
+                "schema": "https://schemas.data.amsterdam.nl/datasets/afvalwegingen/afvalwegingen#containers",  # noqa: E501
             },
             "id": 4,
-            "schema": "https://schemas.data.amsterdam.nl/datasets/afvalwegingen/afvalwegingen#containers",  # noqa: E501
             "clusterId": 99,
-            "cluster": "http://testserver/v1/afvalwegingen/clusters/99/",
             "serienummer": None,
             "datumCreatie": None,
             "datumLeegmaken": None,
@@ -236,12 +236,15 @@ class TestDynamicSerializer:
                 "self": {
                     "href": "http://testserver/v1/bagh/gemeente/0363/?volgnummer=1",
                     "title": "0363_001",
-                }
+                },
+                "schema": "https://schemas.data.amsterdam.nl/datasets/bagh/bagh#gemeente",
+                "stadsdelen": [
+                    {
+                        "href": "http://testserver/v1/bagh/stadsdeel/03630000000001/?volgnummer=001",  # noqa: E501
+                        "title": "03630000000001_001",
+                    }
+                ],
             },
-            "schema": "https://schemas.data.amsterdam.nl/datasets/bagh/bagh#gemeente",
-            "stadsdelen": [
-                "http://testserver/v1/bagh/stadsdeel/03630000000001/?volgnummer=001",
-            ],
             "id": "0363_001",
             "naam": "Amsterdam",
             "volgnummer": 1,
@@ -280,15 +283,21 @@ class TestDynamicSerializer:
                 "self": {
                     "href": "http://testserver/v1/vestiging/vestiging/1/",
                     "title": "1",
-                }
+                },
+                "schema": "https://schemas.data.amsterdam.nl/datasets/vestiging/vestiging#vestiging",  # noqa: E501
+                "postAdres": {
+                    "href": "http://testserver/v1/vestiging/adres/3/",
+                    "title": "3",
+                },
+                "bezoekAdres": {
+                    "href": "http://testserver/v1/vestiging/adres/1/",
+                    "title": "1",
+                },
             },
-            "schema": "https://schemas.data.amsterdam.nl/datasets/vestiging/vestiging#vestiging",
             "id": 1,
             "naam": "Snake Oil",
             "postAdresId": 3,
-            "postAdres": "http://testserver/v1/vestiging/adres/3/",
             "bezoekAdresId": 1,
-            "bezoekAdres": "http://testserver/v1/vestiging/adres/1/",
         }
 
         vestiging_serializer = VestigingSerializer(
@@ -300,15 +309,21 @@ class TestDynamicSerializer:
                 "self": {
                     "href": "http://testserver/v1/vestiging/vestiging/2/",
                     "title": "2",
-                }
+                },
+                "schema": "https://schemas.data.amsterdam.nl/datasets/vestiging/vestiging#vestiging",  # noqa: E501
+                "postAdres": {
+                    "href": "http://testserver/v1/vestiging/adres/3/",
+                    "title": "3",
+                },
+                "bezoekAdres": {
+                    "href": "http://testserver/v1/vestiging/adres/2/",
+                    "title": "2",
+                },
             },
-            "schema": "https://schemas.data.amsterdam.nl/datasets/vestiging/vestiging#vestiging",
             "id": 2,
             "naam": "Haarlemmer olie",
             "postAdresId": 3,
-            "postAdres": "http://testserver/v1/vestiging/adres/3/",
             "bezoekAdresId": 2,
-            "bezoekAdres": "http://testserver/v1/vestiging/adres/2/",
         }
 
         AdresSerializer = serializer_factory(vestiging_adres_model, 0)
@@ -318,22 +333,28 @@ class TestDynamicSerializer:
         )
         assert adres_serializer.data == {
             "_links": {
+                "schema": "https://schemas.data.amsterdam.nl/datasets/vestiging/vestiging#adres",
                 "self": {
                     "href": "http://testserver/v1/vestiging/adres/3/",
                     "title": "3",
-                }
+                },
+                "vestigingenBezoek": [],
+                "vestigingenPost": [
+                    {
+                        "href": "http://testserver/v1/vestiging/vestiging/1/",
+                        "title": "1",
+                    },
+                    {
+                        "href": "http://testserver/v1/vestiging/vestiging/2/",
+                        "title": "2",
+                    },
+                ],
             },
-            "schema": "https://schemas.data.amsterdam.nl/datasets/vestiging/vestiging#adres",
-            "vestigingenBezoek": [],
-            "vestigingenPost": [
-                "http://testserver/v1/vestiging/vestiging/1/",
-                "http://testserver/v1/vestiging/vestiging/2/",
-            ],
             "id": 3,
             "nummer": 1,
             "plaats": "Amsterdam",
-            "straat": "Dam",
             "postcode": "1000AA",
+            "straat": "Dam",
         }
 
     @staticmethod
@@ -372,25 +393,26 @@ class TestDynamicSerializer:
             begin_datum=None,
         )
 
-        ParkeervaakSerializer = serializer_factory(parkeervakken_parkeervak_model, 0)
+        ParkeervakSerializer = serializer_factory(parkeervakken_parkeervak_model, 0)
 
         # Prove that no reverse relation to containers here.
-        assert "regimes" in ParkeervaakSerializer._declared_fields
+        assert "regimes" in ParkeervakSerializer._declared_fields
 
         # Prove that data is serialized with relations.
         # Both the cluster_id field and 'cluster' field are generated.
-        parkeervaak_serializer = ParkeervaakSerializer(
+
+        parkeervak_serializer = ParkeervakSerializer(
             parkeervak, context={"request": drf_request}
         )
-        assert parkeervaak_serializer.data == {
+        assert parkeervak_serializer.data == {
             "_links": {
                 "self": {
                     "href": "http://testserver/v1/parkeervakken/parkeervakken/121138489047/",
-                }
+                },
+                "schema": "https://schemas.data.amsterdam.nl/datasets/parkeervakken/parkeervakken#parkeervakken",  # noqa: E501
             },
             "geometry": None,
             "id": "121138489047",
-            "schema": "https://schemas.data.amsterdam.nl/datasets/parkeervakken/parkeervakken#parkeervakken",  # noqa: E501
             "type": "File",
             "soort": "MULDER",
             "aantal": 1.0,
@@ -452,27 +474,28 @@ class TestDynamicSerializer:
             begin_datum=None,
         )
 
-        ParkeervaakSerializer = serializer_factory(
+        ParkeervakSerializer = serializer_factory(
             parkeervakken_parkeervak_model, 0, flat=True
         )
 
         # Prove that no reverse relation to containers here.
-        assert "regimes" not in ParkeervaakSerializer._declared_fields
+        assert "regimes" not in ParkeervakSerializer._declared_fields
 
         # Prove that data is serialized with relations.
         # Both the cluster_id field and 'cluster' field are generated.
-        parkeervaak_serializer = ParkeervaakSerializer(
+
+        parkeervak_serializer = ParkeervakSerializer(
             parkeervak, context={"request": drf_request}
         )
-        assert parkeervaak_serializer.data == {
+        assert parkeervak_serializer.data == {
             "_links": {
                 "self": {
                     "href": "http://testserver/v1/parkeervakken/parkeervakken/121138489047/"
-                }
+                },
+                "schema": "https://schemas.data.amsterdam.nl/datasets/parkeervakken/parkeervakken#parkeervakken",  # noqa: E501
             },
             "geometry": None,
             "id": "121138489047",
-            "schema": "https://schemas.data.amsterdam.nl/datasets/parkeervakken/parkeervakken#parkeervakken",  # noqa: E501
             "type": "File",
             "soort": "MULDER",
             "aantal": 1.0,
@@ -750,6 +773,6 @@ class TestDynamicSerializer:
         )
 
         assert (
-            statistieken_serializer.data["buurt"]
+            statistieken_serializer.data["_links"]["buurt"]["href"]
             == "http://testserver/v1/gebieden/buurten/03630000000078/"
         ), statistieken_serializer.data
