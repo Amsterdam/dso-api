@@ -11,4 +11,4 @@ echo "Running style checks"
 flake8 --config=.flake8 ./dso_api
 
 # echo "Running unit tests"
-DJANGO_DEBUG=false pytest --nomigrations -vs --ds=tests.settings
+DJANGO_DEBUG=false pytest --nomigrations -vs --ds=tests.settings --show-capure=no

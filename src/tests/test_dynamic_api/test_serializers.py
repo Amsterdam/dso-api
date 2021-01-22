@@ -208,45 +208,56 @@ class TestDynamicSerializer:
     @staticmethod
     def test_backwards_relation(
         drf_request,
-        bagh_schema,
-        bagh_gemeente_model,
-        bagh_stadsdeel_model,
-        bagh_gemeente,
-        bagh_stadsdeel,
+        gebieden_schema,
+        gebieden_models,
     ):
         """Show backwards
 
         The _embedded part has a None value instead.
         """
-        drf_request.dataset = bagh_schema
+        drf_request.dataset = gebieden_schema
         drf_request.dataset_temporal_slice = None
-        GemeenteSerializer = serializer_factory(bagh_gemeente_model, 0)
-        gemeente_serializer = GemeenteSerializer(
-            bagh_gemeente,
+        stadsdelen_model = gebieden_models["stadsdelen"]
+        wijken_model = gebieden_models["wijken"]
+        stadsdeel = stadsdelen_model.objects.create(
+            id="0363.1", identificatie="0363", naam="Stadsdeel", volgnummer=1
+        )
+        wijken_model.objects.create(
+            id="03630000000001.1",
+            identificatie="03630000000001",
+            volgnummer=1,
+            ligt_in_stadsdeel=stadsdeel,
+        )
+        StadsdelenSerializer = serializer_factory(stadsdelen_model, 0)
+        stadsdelen_serializer = StadsdelenSerializer(
+            stadsdeel,
             context={"request": drf_request},
         )
-        assert gemeente_serializer.data == {
+        assert stadsdelen_serializer.data == {
             "_links": {
                 "self": {
-                    "href": "http://testserver/v1/bagh/gemeente/0363/?volgnummer=1",
-                    "title": "0363_001",
+                    "href": "http://testserver/v1/gebieden/stadsdelen/0363/?volgnummer=1",
+                    "title": "0363.1",
                 },
-                "schema": "https://schemas.data.amsterdam.nl/datasets/bagh/bagh#gemeente",
-                "stadsdelen": [
+                "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/gebieden#stadsdelen",  # NoQA
+                "wijk": [
                     {
-                        "href": "http://testserver/v1/bagh/stadsdeel/03630000000001/?volgnummer=001",  # noqa: E501
-                        "title": "03630000000001_001",
+                        "href": "http://testserver/v1/gebieden/wijken/03630000000001/?volgnummer=1",  # NoQA
+                        "title": "03630000000001.1",
                     }
                 ],
             },
-            "id": "0363_001",
-            "naam": "Amsterdam",
+            "id": "0363.1",
+            "naam": "Stadsdeel",
+            "code": None,
             "volgnummer": 1,
             "identificatie": "0363",
             "eindGeldigheid": None,
             "beginGeldigheid": None,
             "registratiedatum": None,
-            "verzorgingsgebied": None,
+            "documentdatum": None,
+            "documentnummer": None,
+            "geometrie": None,
         }
 
     @staticmethod
