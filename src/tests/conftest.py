@@ -91,7 +91,6 @@ def filled_router(
     afval_dataset,
     bommen_dataset,
     parkeervakken_dataset,
-    bagh_dataset,
     vestiging_dataset,
     fietspaaltjes_dataset,
     fietspaaltjes_dataset_no_display,
@@ -114,7 +113,6 @@ def filled_router(
         afval_dataset: "afval_containers",
         bommen_dataset: "bommen_bommen",
         parkeervakken_dataset: "parkeervakken_parkeervakken",
-        bagh_dataset: "bagh_buurt",
         vestiging_dataset: "vestiging_vestiging",
         fietspaaltjes_dataset: "fietsplaatjes_fietsplaatjes",
         fietspaaltjes_dataset_no_display: "fietspaaltjesnodisplay_fietspaaltjesnodisplay",
@@ -281,7 +279,7 @@ def location() -> Location:
 
 
 @pytest.fixture()
-def parkeervakken_schema_json() -> dict():
+def parkeervakken_schema_json() -> dict:
     path = HERE / "files/parkeervakken.json"
     return json.loads(path.read_text())
 
@@ -309,68 +307,7 @@ def parkeervakken_regime_model(filled_router):
 
 
 @pytest.fixture()
-def bagh_schema_json() -> dict():
-    path = HERE / "files/bagh.json"
-    return json.loads(path.read_text())
-
-
-@pytest.fixture()
-def bagh_schema(bagh_schema_json) -> DatasetSchema:
-    return DatasetSchema.from_dict(bagh_schema_json)
-
-
-@pytest.fixture()
-def bagh_dataset(bagh_schema_json) -> Dataset:
-    return Dataset.objects.create(name="bagh", schema_data=bagh_schema_json)
-
-
-@pytest.fixture()
-def bagh_models(filled_router):
-    # Using filled_router so all urls can be generated too.
-    return filled_router.all_models["bagh"]
-
-
-@pytest.fixture()
-def bagh_gemeente_model(bagh_models):
-    return bagh_models["gemeente"]
-
-
-@pytest.fixture()
-def bagh_stadsdeel_model(bagh_models):
-    return bagh_models["stadsdeel"]
-
-
-@pytest.fixture()
-def bagh_wijk_model(bagh_models):
-    return bagh_models["wijk"]
-
-
-@pytest.fixture()
-def bagh_buurt_model(bagh_models):
-    return bagh_models["buurt"]
-
-
-@pytest.fixture()
-def bagh_gemeente(bagh_gemeente_model):
-    return bagh_gemeente_model.objects.create(
-        naam="Amsterdam", id="0363_001", identificatie="0363", volgnummer=1
-    )
-
-
-@pytest.fixture()
-def bagh_stadsdeel(bagh_stadsdeel_model, bagh_gemeente):
-    return bagh_stadsdeel_model.objects.create(
-        id="03630000000001_001",
-        code="H",
-        naam="Bos en Lommer",
-        gemeente=bagh_gemeente,
-        identificatie="03630000000001",
-        volgnummer=1,
-    )
-
-
-@pytest.fixture()
-def vestiging_schema_json() -> dict():
+def vestiging_schema_json() -> dict:
     path = HERE / "files/vestiging.json"
     return json.loads(path.read_text())
 
@@ -609,7 +546,7 @@ def explosieven_data(explosieven_model):
 
 
 @pytest.fixture()
-def indirect_self_ref_schema_json() -> dict():
+def indirect_self_ref_schema_json() -> dict:
     path = HERE / "files/indirect-self-ref.json"
     return json.loads(path.read_text())
 
@@ -630,7 +567,7 @@ def indirect_self_ref_dataset(indirect_self_ref_schema_json) -> Dataset:
 
 
 @pytest.fixture()
-def download_url_schema_json() -> dict():
+def download_url_schema_json() -> dict:
     path = HERE / "files/download-url.json"
     return json.loads(path.read_text())
 
@@ -660,6 +597,11 @@ def meldingen_schema(meldingen_schema_json) -> DatasetSchema:
 @pytest.fixture()
 def meldingen_dataset(meldingen_schema_json) -> Dataset:
     return Dataset.objects.create(name="meldingen", schema_data=meldingen_schema_json)
+
+
+@pytest.fixture()
+def gebieden_models(filled_router):
+    return filled_router.all_models["gebieden"]
 
 
 @pytest.fixture()

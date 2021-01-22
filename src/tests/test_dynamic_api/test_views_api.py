@@ -794,7 +794,7 @@ class TestEmbedTemporalTables:
         url = f"{url}?_expand=true"
         response = api_client.get(url)
         assert response.status_code == 200, response.data
-        assert response.data["_embedded"]["bestaatUitBuurten"][0] == {
+        assert dict(response.data["_embedded"]["bestaatUitBuurten"][0]) == {
             "_links": {
                 "bestaatUitBuurtenGgwgebieden": [
                     {
@@ -814,12 +814,14 @@ class TestEmbedTemporalTables:
             "ligtInWijkVolgnummer": None,
             "ligtInWijkIdentificatie": None,
             "volgnummer": 1,
+            "naam": None,
+            "code": None,
             "identificatie": "03630000000078",
             "eindGeldigheid": None,
             "beginGeldigheid": None,
             "id": "03630000000078.1",
         }
-        assert response.data["_embedded"]["ggwgebieden"][0] == {
+        assert dict(response.data["_embedded"]["ggwgebieden"][0]) == {
             "_links": {
                 "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/gebieden#ggwgebieden",  # noqa: E501
                 "self": {
@@ -837,6 +839,10 @@ class TestEmbedTemporalTables:
             "volgnummer": 1,
             "identificatie": "03630950000000",
             "id": "03630950000000.1",
+            "eindGeldigheid": None,
+            "beginGeldigheid": None,
+            "naam": None,
+            "registratiedatum": None,
         }
 
     def test_detail_no_expand_for_loose_relation(
@@ -908,6 +914,8 @@ class TestEmbedTemporalTables:
                             "title": "03630000000078.2",
                         },
                     },
+                    "code": None,
+                    "naam": None,
                     "geometrie": None,
                     "ligtInWijkVolgnummer": None,
                     "ligtInWijkIdentificatie": None,

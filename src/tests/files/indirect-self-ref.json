@@ -5,12 +5,6 @@
   "status": "niet_beschikbaar",
   "version": "0.0.1",
   "crs": "EPSG:28992",
-  "temporal": {
-    "identifier": "volgnummer",
-    "dimensions": {
-      "geldigOp": ["beginGeldigheid", "eindGeldigheid"]
-    }
-  },
   "tables": [
     {
       "id": "nummeraanduidingen",

@@ -230,9 +230,7 @@ class DynamicSerializer(DSOModelSerializer):
         for loose_relation_field_name in loose_relation_many_to_many_fields:
             if not data[toCamelCase(loose_relation_field_name)]:
                 relation = self.Meta.model._meta.get_field(loose_relation_field_name).relation
-                dataset_name, table_name, relation_field_name = [
-                    to_snake_case(part) for part in relation.split(":")
-                ]
+                dataset_name, table_name = [to_snake_case(part) for part in relation.split(":")]
                 related_mgr = getattr(validated_data, loose_relation_field_name)
                 source_field_name = related_mgr.source_field_name
                 source_id = validated_data.id
