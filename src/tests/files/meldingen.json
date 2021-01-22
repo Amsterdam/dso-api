@@ -26,7 +26,7 @@
           },
           "buurt": {
             "type": "string",
-            "relation": "gebieden:buurten:identificatie",
+            "relation": "gebieden:buurten",
             "description": "Buurt identificatie waaronder de melding valt."
           }
         }
@@ -34,4 +34,3 @@
     }
   ]
 }
-

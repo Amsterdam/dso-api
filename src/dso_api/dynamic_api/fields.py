@@ -129,9 +129,7 @@ class LooseRelationUrlField(serializers.CharField):
         request = self.context["request"]
         view = self.context["view"]
         relation = view.model._meta.get_field(to_snake_case(self.field_name)).relation
-        dataset_name, table_name, field_name = [
-            to_snake_case(part) for part in relation.split(":")
-        ]
+        dataset_name, table_name = [to_snake_case(part) for part in relation.split(":")]
         # We force that the incoming value is interpreted as the
         # pk, although this is not always the 'real' pk, e.g. for temporal relations
         kwargs = {"pk": value}
