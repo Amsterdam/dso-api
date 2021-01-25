@@ -367,10 +367,10 @@ class DynamicLinksSerializer(DynamicSerializer):
         ]
         # add the relation_fields to _links if there is not going to be an _embedded
         # or if we are part of a list-view
-        if embedded_fields is False or (
+        if not embedded_fields or (
             "view" in self.context
             and hasattr(self.context["view"], "detail")
-            and self.context["view"].detail is False
+            and not self.context["view"].detail
         ):
             link_fields += relation_fields
         elif isinstance(embedded_fields, list):

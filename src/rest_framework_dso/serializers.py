@@ -349,8 +349,7 @@ class DSOModelSerializer(DSOSerializer, serializers.HyperlinkedModelSerializer):
             return False
         if (
             "view" in self.context
-            and hasattr(self.context["view"], "detail")
-            and self.context["view"].detail is False
+            and not getattr(self.context["view"], "detail", True)
         ):
             return False
         return is_root and accepted_renderer.format != "csv"
