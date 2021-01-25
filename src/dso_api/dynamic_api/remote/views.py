@@ -86,44 +86,14 @@ class RemoteViewSet(DSOViewMixin, ViewSet):
         """The GET request for listings"""
         data = self._call_remote(query_params=request.query_params)
         if "_embedded" in data and isinstance(data["_embedded"], dict):
-            if data["_embedded"]:
-                ldata = None
-                for k, v in data["_embedded"].items():
-                    if not ldata:
-                        ldata = v
-                        if (
-                            self.dataset_id == "hcbrk"
-                            and self.table_id == "kadasternatuurlijkpersonen"
-                            and k.lower() == "kadasternatuurlijkpersonen"
-                        ):
-                            new_ldata = []
-                            for element in ldata:
-                                new_ldata.append(
-                                    self.filter_sensitive_data(request, element)
-                                )
-                            data["_embedded"][k] = new_ldata
-            else:
-                ldata = []
-        serializer = self.get_serializer(data=ldata, many=True)
-        self.validate(serializer, ldata)
+            data = next(iter(data["_embedded"].values())) if data["_embedded"] else []
+        serializer = self.get_serializer(data=data, many=True)
+        self.validate(serializer, data)
 
-        if self.dataset_id == "hcbrk":
-            return Response(data)
-        else:
-            # TODO: add pagination:
-            # paginator = self.pagination_class()
-            # paginator.get_paginated_response(serializer.data)
-            return Response(serializer.data)
-
-    def filter_sensitive_data(self, request, data):
-        if request.method != "OPTIONS" and not request.is_authorized_for("BRK/RSN"):
-            filtered_data = dict(data)
-            filtered_data.pop("kadastraalOnroerendeZaakIdentificaties")
-            filtered_data["_links"].pop("kadastraalOnroerendeZaken")
-            filtered_data["_links"].pop("zakelijkGerechtigden")
-            return filtered_data
-        else:
-            return data
+        # TODO: add pagination:
+        # paginator = self.pagination_class()
+        # paginator.get_paginated_response(serializer.data)
+        return Response(serializer.data)
 
     def retrieve(self, request, *args, **kwargs):
         """The GET request for detail"""
@@ -137,13 +107,7 @@ class RemoteViewSet(DSOViewMixin, ViewSet):
         self_link = self.request.build_absolute_uri(self.request.path)
         if "_links" not in serialized_data:
             serialized_data["_links"] = {"self": {"href": self_link}}
-        if self.dataset_id == "hcbrk":
-            if self.table_id == "kadasternatuurlijkpersonen":
-                data = self.filter_sensitive_data(request, data)
-
-            return Response(data)
-        else:
-            return Response(serializer.data)
+        return Response(serialized_data)
 
     def validate(self, serializer, raw_data):
         if not serializer.is_valid():
