@@ -14,6 +14,7 @@ from schematools.contrib.django.db import create_tables
 
 from dso_api.dynamic_api.permissions import fetch_scopes_for_dataset_table, fetch_scopes_for_model
 from rest_framework_dso.crs import CRS, RD_NEW
+from rest_framework_dso.response import StreamingResponse
 
 
 class AproxFloat(float):
@@ -1122,9 +1123,8 @@ class TestExportFormats:
 
         # Prove that the view is available and works
         response = api_client.get(url, {"_format": format})
-        assert isinstance(response, Response)  # still wrapped in DRF response!
+        assert isinstance(response, StreamingResponse)  # still wrapped in DRF response!
         assert response.status_code == 200, response.getvalue()
-        assert inspect.isgenerator(response.rendered_content)
         data = decoder(response.getvalue())
         assert data == expected_data
 
@@ -1140,7 +1140,6 @@ class TestExportFormats:
         # Check that the response is streaming:
         assert response.streaming
         assert inspect.isgeneratorfunction(response.accepted_renderer.render)
-        assert inspect.isgenerator(response.rendered_content)
 
     PAGINATED_FORMATS = {
         "csv": (
@@ -1212,7 +1211,7 @@ class TestExportFormats:
 
         # Prove that the view is available and works
         response = api_client.get(url, {"_format": format, "_pageSize": "4"})
-        assert isinstance(response, Response)  # still wrapped in DRF response!
+        assert isinstance(response, StreamingResponse)
         assert response.status_code == 200, response.getvalue()
         data = decoder(response.getvalue())
         assert data == expected_data
@@ -1229,7 +1228,6 @@ class TestExportFormats:
         # Check that the response is streaming:
         assert response.streaming
         assert inspect.isgeneratorfunction(response.accepted_renderer.render)
-        assert inspect.isgenerator(response.rendered_content)
 
     EMPTY_FORMATS = {
         "csv": (
@@ -1258,9 +1256,8 @@ class TestExportFormats:
 
         # Prove that the view is available and works
         response = api_client.get(url, {"_format": format})
-        assert isinstance(response, Response)  # still wrapped in DRF response!
+        assert isinstance(response, StreamingResponse)
         assert response.status_code == 200, response.getvalue()
-        assert inspect.isgenerator(response.rendered_content)
         data = decoder(response.getvalue())
         assert data == expected_data
 
