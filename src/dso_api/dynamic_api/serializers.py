@@ -225,6 +225,7 @@ class DynamicSerializer(DSOModelSerializer):
             f.attname
             for f in self.Meta.model._meta.many_to_many
             if isinstance(f, LooseRelationManyToManyField)
+            and toCamelCase(f.attname) in data
         ]
 
         for loose_relation_field_name in loose_relation_many_to_many_fields:
@@ -290,9 +291,9 @@ class DynamicBodySerializer(DynamicSerializer):
     parameters
     """
 
-    def get_output_fields(self):
-        """The list of fields to include in the serialization"""
-        fields = self.fields
+    @property
+    def fields(self):
+        fields = super().fields
         output_fields = OrderedDict(
             [
                 (field_name, field)
@@ -306,19 +307,6 @@ class DynamicBodySerializer(DynamicSerializer):
         )
         return output_fields
 
-    def to_representation(self, validated_data):
-        """Restrict the output from the DynamicSerializer"""
-        data = super().to_representation(validated_data)
-        output_fields = self.get_output_fields()
-        output_data = OrderedDict(
-            [
-                (field_name, field)
-                for field_name, field in data.items()
-                if field_name in output_fields or field_name == "_embedded"
-            ]
-        )
-        return output_data
-
 
 class DynamicLinksSerializer(DynamicSerializer):
     """The serializer for the _links field. Following DSO/HAL guidelines, it contains "self",
@@ -331,9 +319,9 @@ class DynamicLinksSerializer(DynamicSerializer):
 
     serializer_related_field = HALTemporalHyperlinkedRelatedField
 
-    def get_output_fields(self):
-        """The list of fields to include in the serialization"""
-        fields = self.fields
+    @property
+    def fields(self):
+        fields = super().fields
         embedded_fields = self.get_fields_to_expand()
         link_fields = ["self", "schema"]
         relation_fields = [
@@ -364,19 +352,6 @@ class DynamicLinksSerializer(DynamicSerializer):
             ]
         )
         return output_fields
-
-    def to_representation(self, validated_data):
-        """Restrict the output from the DynamicSerializer"""
-        data = super().to_representation(validated_data)
-        output_fields = self.get_output_fields()
-        output_data = OrderedDict(
-            [
-                (field_name, field)
-                for field_name, field in data.items()
-                if field_name in output_fields
-            ]
-        )
-        return output_data
 
 
 def get_view_name(model: Type[DynamicModel], suffix: str):
