@@ -35,17 +35,12 @@ from django.http import Http404
 from django.utils.functional import cached_property
 from django.views.generic import TemplateView
 from gisserver.exceptions import InvalidParameterValue, PermissionDenied
-from gisserver.features import (
-    ComplexFeatureField,
-    FeatureField,
-    FeatureType,
-    ServiceDescription,
-)
+from gisserver.features import ComplexFeatureField, FeatureField, FeatureType, ServiceDescription
 from gisserver.views import WFSView
-from rest_framework_dso import crs
 from schematools.contrib.django.models import Dataset
 
 from dso_api.dynamic_api import permissions
+from rest_framework_dso import crs
 
 FieldDef = Union[str, FeatureField]
 RE_SIMPLE_NAME = re.compile(

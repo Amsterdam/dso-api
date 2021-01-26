@@ -1,15 +1,17 @@
-import certifi
 import logging
+from typing import Type, Union
+from urllib.parse import urlencode, urljoin
+
+import certifi
 import orjson
 import urllib3
+from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from rest_framework import status
 from rest_framework.exceptions import NotAuthenticated, NotFound, ParseError
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 from schematools.contrib.django.auth_backend import RequestProfile
-from typing import Type, Union
-from urllib.parse import urljoin, urlencode
 from urllib3 import HTTPResponse
 
 from dso_api.lib.exceptions import (
@@ -18,11 +20,10 @@ from dso_api.lib.exceptions import (
     RemoteAPIException,
     ServiceUnavailable,
 )
-from django.conf import settings
-
 from rest_framework_dso.views import DSOViewMixin
-from . import serializers
+
 from .. import permissions
+from . import serializers
 
 logger = logging.getLogger(__name__)
 http_pool = urllib3.PoolManager(cert_reqs="CERT_REQUIRED", ca_certs=certifi.where())

@@ -1,6 +1,7 @@
 from datetime import date, datetime
-import pytest
 from urllib import parse
+
+import pytest
 from django.urls import reverse
 
 

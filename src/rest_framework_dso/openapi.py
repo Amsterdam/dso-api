@@ -1,6 +1,7 @@
 """Improve the OpenAPI schema output """
-from typing import List
 import logging
+from typing import List
+
 from django.core.exceptions import FieldDoesNotExist
 from django.db import models
 from drf_spectacular import openapi

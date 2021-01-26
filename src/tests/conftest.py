@@ -20,7 +20,7 @@ from schematools.types import DatasetSchema, ProfileSchema
 
 from rest_framework_dso.crs import RD_NEW
 from rest_framework_dso.renderers import HALJSONRenderer
-from tests.test_rest_framework_dso.models import Category, Movie, Location
+from tests.test_rest_framework_dso.models import Category, Location, Movie
 
 HERE = Path(__file__).parent
 

@@ -1,23 +1,19 @@
 import inspect
 import json
 import math
+from unittest import mock
 
 import orjson
 import pytest
-from unittest import mock
-
 from django.contrib.gis.geos import Point
 from django.db import connection
 from django.urls import reverse
 from rest_framework.response import Response
-
-from rest_framework_dso.crs import CRS, RD_NEW
 from schematools.contrib.django import models
 from schematools.contrib.django.db import create_tables
-from dso_api.dynamic_api.permissions import (
-    fetch_scopes_for_dataset_table,
-    fetch_scopes_for_model,
-)
+
+from dso_api.dynamic_api.permissions import fetch_scopes_for_dataset_table, fetch_scopes_for_model
+from rest_framework_dso.crs import CRS, RD_NEW
 
 
 class AproxFloat(float):

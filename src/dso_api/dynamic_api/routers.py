@@ -8,7 +8,6 @@ from django.conf import settings
 from django.db import connection
 from django.urls import NoReverseMatch, reverse
 from rest_framework import routers
-
 from schematools.contrib.django.models import Dataset
 from schematools.utils import to_snake_case
 

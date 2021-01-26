@@ -12,17 +12,17 @@ two-step logic can be found in the serializer and model layer of this applicatio
 from __future__ import annotations
 
 import inspect
+from typing import List, Type
 
 from django.db import models
 from django.http import Http404, JsonResponse
 from django.utils.translation import gettext as _
 from rest_framework import viewsets
-from typing import List, Type
+from schematools.contrib.django.models import DynamicModel
 
 from dso_api.dynamic_api import filterset, locking, permissions, serializers
 from rest_framework_dso import fields
 from rest_framework_dso.views import DSOViewMixin
-from schematools.contrib.django.models import DynamicModel
 
 
 def reload_patterns(request):

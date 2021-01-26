@@ -1,5 +1,4 @@
-from rest_framework import exceptions
-from rest_framework import status
+from rest_framework import exceptions, status
 
 
 class PreconditionFailed(exceptions.APIException):

@@ -1,12 +1,14 @@
+from datetime import datetime, timedelta
+
 import azure.storage.blob
-from datetime import datetime
-from datetime import timedelta
 from django.conf import settings
-from schematools.utils import to_snake_case
 from rest_framework import serializers
-from rest_framework_dso.fields import LinksField
-from .utils import split_on_separator
 from rest_framework.reverse import reverse
+from schematools.utils import to_snake_case
+
+from rest_framework_dso.fields import LinksField
+
+from .utils import split_on_separator
 
 
 class TemporalHyperlinkedRelatedField(serializers.HyperlinkedRelatedField):

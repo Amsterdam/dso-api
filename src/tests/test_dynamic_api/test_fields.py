@@ -1,4 +1,5 @@
 import pytest
+
 from dso_api.dynamic_api.utils import split_on_separator
 
 

@@ -4,8 +4,8 @@ from django.db import models
 from rest_framework import serializers
 from rest_framework.exceptions import ParseError, PermissionDenied
 
-from rest_framework_dso.fields import AbstractEmbeddedField
 from dso_api.dynamic_api.permissions import fetch_scopes_for_model
+from rest_framework_dso.fields import AbstractEmbeddedField
 
 EmbeddedFieldDict = Dict[str, AbstractEmbeddedField]
 

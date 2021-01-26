@@ -1,7 +1,8 @@
-from django.apps import apps
 import pytest
+from django.apps import apps
 from django.contrib.gis.geos import GEOSGeometry
 from rest_framework.test import APIClient
+
 from dso_api.dynamic_api.filterset import filterset_factory
 
 

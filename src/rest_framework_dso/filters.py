@@ -3,16 +3,17 @@
 This implements the filtering and ordering spec.
 DSO 1.1 Spec: "2.6.6 Filteren, sorteren en zoeken"
 """
-import re
 import operator
+import re
 from datetime import datetime
 from functools import reduce
 from typing import Type
 
 from django import forms
-from django.core.exceptions import ValidationError as DjangoValidationError
 from django.contrib.gis.db import models as gis_models
 from django.contrib.gis.geos import GEOSGeometry
+from django.contrib.postgres.fields.array import ArrayField
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import models
 from django.db.models import Q, expressions, lookups
 from django.forms import widgets
@@ -22,7 +23,6 @@ from django_filters import fields
 from django_filters.constants import EMPTY_VALUES
 from django_filters.rest_framework import DjangoFilterBackend, FilterSet, filters
 from django_postgres_unlimited_varchar import UnlimitedCharField
-from django.contrib.postgres.fields.array import ArrayField
 from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter
 from rest_framework_gis.filters import GeometryFilter

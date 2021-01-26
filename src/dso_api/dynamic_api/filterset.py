@@ -2,21 +2,18 @@
 Creating filters for the dynamic model fields.
 This uses the django-filter logic to process the GET parameters.
 """
-from typing import Type
 import logging
 import re
+from typing import Type
 
-from django.db import models
+from django.contrib.gis.db.models.fields import MultiPolygonField, PolygonField
 from django.contrib.postgres.fields import ArrayField
-from django.contrib.gis.db.models.fields import (
-    PolygonField,
-    MultiPolygonField,
-)
+from django.db import models
 from django_postgres_unlimited_varchar import UnlimitedCharField
-
-from rest_framework_dso import filters as dso_filters
 from schematools.contrib.django.models import DynamicModel
 from schematools.utils import to_snake_case, toCamelCase
+
+from rest_framework_dso import filters as dso_filters
 
 logger = logging.getLogger(__name__)
 

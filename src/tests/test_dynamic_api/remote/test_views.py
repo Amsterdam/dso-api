@@ -1,9 +1,9 @@
 import orjson
 import pytest
 import urllib3
-from urllib3_mock import Responses
 from django.urls import reverse
 from schematools.contrib.django import models
+from urllib3_mock import Responses
 
 DEFAULT_RESPONSE = {
     "naam": {

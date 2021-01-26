@@ -5,6 +5,7 @@ from cachetools.func import ttl_cache
 from django.contrib.auth.models import AnonymousUser, _user_has_perm
 from rest_framework import permissions
 from schematools.contrib.django import models
+
 from dso_api.dynamic_api.utils import snake_to_camel_case
 
 

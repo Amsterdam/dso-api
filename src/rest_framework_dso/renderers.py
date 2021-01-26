@@ -3,13 +3,13 @@ from io import BytesIO
 import orjson
 from rest_framework.relations import HyperlinkedRelatedField
 from rest_framework.renderers import JSONRenderer
+from rest_framework.serializers import SerializerMethodField
 from rest_framework.utils.serializer_helpers import ReturnDict, ReturnList
 from rest_framework_csv.renderers import CSVStreamingRenderer
 from rest_framework_gis.fields import GeoJsonDict
-from rest_framework.serializers import SerializerMethodField
 
-from rest_framework_dso.serializer_helpers import ReturnGenerator
 from rest_framework_dso import pagination
+from rest_framework_dso.serializer_helpers import ReturnGenerator
 
 
 class RendererMixin:

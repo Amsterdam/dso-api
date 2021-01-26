@@ -1,6 +1,6 @@
 """All views for the dynamically generated API, split by protocol type."""
-from .api import DynamicApiViewSet, viewset_factory, reload_patterns
-from .wfs import DatasetWFSView, DatasetWFSIndexView
+from .api import DynamicApiViewSet, reload_patterns, viewset_factory
+from .wfs import DatasetWFSIndexView, DatasetWFSView
 
 __all__ = (
     "DynamicApiViewSet",

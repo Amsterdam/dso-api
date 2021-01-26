@@ -4,12 +4,13 @@ from datetime import datetime
 import pytest
 from django.urls import path
 from rest_framework import generics
-from rest_framework.exceptions import ValidationError, ErrorDetail
+from rest_framework.exceptions import ErrorDetail, ValidationError
 
 from rest_framework_dso.fields import EmbeddedField
 from rest_framework_dso.filters import DSOFilterSet
 from rest_framework_dso.serializers import DSOModelSerializer
 from rest_framework_dso.views import DSOViewMixin, get_invalid_params
+
 from .models import Category, Movie
 
 

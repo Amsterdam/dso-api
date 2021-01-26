@@ -7,7 +7,7 @@ from django.db import models
 from django.utils.functional import cached_property
 from rest_framework import serializers
 from rest_framework.exceptions import ParseError, ValidationError
-from rest_framework.fields import empty, URLField
+from rest_framework.fields import URLField, empty
 from rest_framework.utils.serializer_helpers import ReturnDict, ReturnList
 from rest_framework_gis.fields import GeometryField
 

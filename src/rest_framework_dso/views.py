@@ -1,17 +1,16 @@
 import json
-
-from django.http import HttpResponseNotFound
-
 from typing import Optional, Type, Union
 
-from dso_api.lib.exceptions import RemoteAPIException
+from django.http import HttpResponseNotFound
 from rest_framework.exceptions import ErrorDetail, NotAcceptable, ValidationError
 from rest_framework.views import exception_handler as drf_exception_handler
+from schematools.contrib.django.auth_backend import RequestProfile
+from schematools.types import DatasetTableSchema
+
+from dso_api.lib.exceptions import RemoteAPIException
 from rest_framework_dso import crs, filters, parsers
 from rest_framework_dso.exceptions import PreconditionFailed
 from rest_framework_dso.pagination import DSOPageNumberPagination
-from schematools.types import DatasetTableSchema
-from schematools.contrib.django.auth_backend import RequestProfile
 
 
 def multiple_slashes(request):

@@ -1,14 +1,13 @@
-import pytest
 from collections import OrderedDict
 from datetime import date
 
-from django.core.validators import URLValidator
-from django.core.validators import EmailValidator
-
-from rest_framework_dso.fields import EmbeddedField
+import pytest
+from django.core.validators import EmailValidator, URLValidator
 from schematools.contrib.django.auth_backend import RequestProfile
 from schematools.contrib.django.models import Profile
+
 from dso_api.dynamic_api.serializers import serializer_factory
+from rest_framework_dso.fields import EmbeddedField
 
 
 @pytest.fixture(autouse=True)

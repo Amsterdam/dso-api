@@ -1,9 +1,6 @@
 import pytest
 
-from dso_api.dynamic_api.permissions import (
-    fetch_scopes_for_dataset_table,
-    fetch_scopes_for_model,
-)
+from dso_api.dynamic_api.permissions import fetch_scopes_for_dataset_table, fetch_scopes_for_model
 
 
 @pytest.fixture(autouse=True)

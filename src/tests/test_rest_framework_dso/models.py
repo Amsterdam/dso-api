@@ -1,5 +1,5 @@
-from django.db import models
 from django.contrib.gis.db import models as gis_models
+from django.db import models
 
 from rest_framework_dso.crs import RD_NEW
 

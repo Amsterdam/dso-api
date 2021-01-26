@@ -3,15 +3,15 @@ from typing import Dict, List
 from urllib.parse import urlparse
 
 from django.conf import settings
-
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
-from dso_api.dynamic_api.utils import snake_to_camel_case
 from rest_framework import serializers
-from rest_framework_dso.fields import DSOGeometryField
-from rest_framework_dso.serializers import DSOSerializer, DSOListSerializer
 from schematools.types import DatasetFieldSchema, DatasetTableSchema
 from schematools.utils import to_snake_case
+
+from dso_api.dynamic_api.utils import snake_to_camel_case
+from rest_framework_dso.fields import DSOGeometryField
+from rest_framework_dso.serializers import DSOListSerializer, DSOSerializer
 
 JSON_TYPE_TO_DRF = {
     "string": serializers.CharField,

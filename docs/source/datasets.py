@@ -1,14 +1,13 @@
 #!/usr/bin/env python
-from typing import List
-
 import os
 import re
 from pathlib import Path
+from typing import List
 
 import jinja2
-from string_utils import slugify
 from schematools.types import DatasetFieldSchema, DatasetSchema, DatasetTableSchema
 from schematools.utils import schema_defs_from_url
+from string_utils import slugify
 
 SCHEMA_URL = os.getenv("SCHEMA_URL", "https://schemas.data.amsterdam.nl/datasets/")
 BASE_URL = "https://api.data.amsterdam.nl"

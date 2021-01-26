@@ -5,6 +5,7 @@ from django.db.models import Value
 from django.http import QueryDict
 
 from rest_framework_dso.filters import DSOFilterSet, Wildcard
+
 from .models import Category, Movie
 
 

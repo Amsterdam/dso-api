@@ -1,5 +1,4 @@
 import pytest
-
 from schematools.contrib.django.models import Dataset
 
 

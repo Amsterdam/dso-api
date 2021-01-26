@@ -4,7 +4,6 @@ from rest_framework.schemas import get_schema_view
 
 from rest_framework_dso.openapi import DSOSchemaGenerator
 
-
 __all__ = (
     "get_openapi_json_view",
     "get_openapi_yaml_view",

@@ -1,50 +1,40 @@
 from __future__ import annotations
 
 import re
-from urllib import parse
-
 from collections import OrderedDict
 from functools import lru_cache, partial
 from typing import Type
+from urllib import parse
 
-from django.db import models
 from django.core.exceptions import ImproperlyConfigured
-
+from django.db import models
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 from rest_framework.relations import HyperlinkedRelatedField
-from rest_framework_dso.fields import (
-    EmbeddedField,
-    EmbeddedManyToManyField,
-)
-from rest_framework_dso.serializers import DSOModelSerializer
-from rest_framework.serializers import Field, ManyRelatedField
 from rest_framework.reverse import reverse
-from schematools.types import DatasetTableSchema
-from schematools.contrib.django.models import DynamicModel
+from rest_framework.serializers import Field, ManyRelatedField
 from schematools.contrib.django.models import (
+    DynamicModel,
     LooseRelationField,
     LooseRelationManyToManyField,
 )
+from schematools.types import DatasetTableSchema
 from schematools.utils import to_snake_case, toCamelCase
 
 from dso_api.dynamic_api.fields import (
-    TemporalHyperlinkedRelatedField,
-    HALTemporalHyperlinkedRelatedField,
-    TemporalReadOnlyField,
-    TemporalLinksField,
     AzureBlobFileField,
+    HALLooseRelationUrlField,
+    HALTemporalHyperlinkedRelatedField,
     LooseRelationUrlField,
     LooseRelationUrlListField,
-    HALLooseRelationUrlField,
+    TemporalHyperlinkedRelatedField,
+    TemporalLinksField,
+    TemporalReadOnlyField,
 )
-
-
-from dso_api.dynamic_api.permissions import (
-    get_unauthorized_fields,
-    get_permission_key_for_field,
-)
+from dso_api.dynamic_api.permissions import get_permission_key_for_field, get_unauthorized_fields
+from rest_framework_dso.fields import EmbeddedField, EmbeddedManyToManyField
+from rest_framework_dso.serializers import DSOModelSerializer
 
 
 class URLencodingURLfields:

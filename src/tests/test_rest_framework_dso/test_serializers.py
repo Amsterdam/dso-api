@@ -1,6 +1,6 @@
 import pytest
-from django.db import connection
 from django.contrib.gis.gdal import GDAL_VERSION
+from django.db import connection
 from rest_framework.exceptions import ValidationError
 from rest_framework.request import Request
 
