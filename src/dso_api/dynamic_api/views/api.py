@@ -134,18 +134,6 @@ class DynamicApiViewSet(
 
         return super().paginator
 
-    def finalize_response(self, request, response, *args, **kwargs):
-        response = super().finalize_response(request, response, *args, **kwargs)
-
-        # Workaround for DRF bug. When the response produces a generator, make sure the
-        # Django middleware doesn't concat the stream. Unfortunately, it's not safe to
-        # check what 'response.rendered_content' returns as that invokes the rendering.
-        if inspect.isgeneratorfunction(response.accepted_renderer.render):
-            response.streaming = True
-            response.streaming_content = response.__class__.rendered_content
-
-        return response
-
 
 def _get_viewset_api_docs(
     serializer_class: Type[serializers.DynamicSerializer],
