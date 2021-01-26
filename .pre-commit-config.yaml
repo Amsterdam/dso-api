@@ -18,6 +18,12 @@ repos:
           - flake8-colors == 0.1.6
           - flake8-raise == 0.0.5
 
+  - repo: https://github.com/pycqa/isort
+    rev: 5.7.0
+    hooks:
+      - id: isort
+        args: ["--filter-files"]
+
 #  - repo: https://github.com/prettier/prettier
 #    rev: "1.19.1"
 #    hooks:

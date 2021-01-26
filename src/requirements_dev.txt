@@ -10,7 +10,7 @@ black == 20.8b1
 isort == 5.7.0
 pytest-sugar == 0.9.2
 termcolor >= 1.1.0  # for pytest-sugar
-pre-commit == 2.1.1
+pre-commit == 2.9.3
 
 # Debugging
 django-debug-toolbar == 2.2
