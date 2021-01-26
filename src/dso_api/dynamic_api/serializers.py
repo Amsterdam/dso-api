@@ -224,8 +224,7 @@ class DynamicSerializer(DSOModelSerializer):
         loose_relation_many_to_many_fields = [
             f.attname
             for f in self.Meta.model._meta.many_to_many
-            if isinstance(f, LooseRelationManyToManyField)
-            and toCamelCase(f.attname) in data
+            if isinstance(f, LooseRelationManyToManyField) and toCamelCase(f.attname) in data
         ]
 
         for loose_relation_field_name in loose_relation_many_to_many_fields:
