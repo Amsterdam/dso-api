@@ -1,4 +1,6 @@
 import json
+from inspect import isgeneratorfunction
+from types import GeneratorType
 from typing import Optional, Type, Union
 
 from django.http import HttpResponseNotFound
@@ -11,6 +13,8 @@ from dso_api.lib.exceptions import RemoteAPIException
 from rest_framework_dso import crs, filters, parsers
 from rest_framework_dso.exceptions import PreconditionFailed
 from rest_framework_dso.pagination import DSOPageNumberPagination
+from rest_framework_dso.response import StreamingResponse
+from rest_framework_dso.serializer_helpers import ReturnGenerator
 
 
 def multiple_slashes(request):
@@ -209,14 +213,28 @@ class DSOViewMixin:
         return accept_crs
 
     def finalize_response(self, request, response, *args, **kwargs):
-        """Set the Content-Crs header if there was a geometry field."""
+        """Set the Content-Crs header if there was a geometry field.
+
+        Also restore streaming support if the output media uses generators.
+        """
         # The logic from initial() won't be executed if there is an early parser exception.
         accept_crs = getattr(request, "accept_crs", None)
         content_crs = getattr(request, "response_content_crs", None) or accept_crs
         if content_crs is not None:
             response["Content-Crs"] = str(content_crs)
 
-        return super().finalize_response(request, response, *args, **kwargs)
+        response = super().finalize_response(request, response, *args, **kwargs)
+
+        # Workaround for DRF bug. When the response produces a generator, make sure the
+        # Django middleware doesn't concat the stream. Unfortunately, it's not safe to
+        # check what 'response.rendered_content' returns as that invokes the rendering.
+        data = response.data
+        if isinstance(data, (ReturnGenerator, GeneratorType)) and isgeneratorfunction(
+            response.accepted_renderer.render
+        ):
+            response = StreamingResponse.from_response(response)
+
+        return response
 
     def get_view_description(self, **kwargs):
         if self.action == "retrieve":
