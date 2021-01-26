@@ -194,9 +194,7 @@ class DSOSerializer(_SideloadMixin, serializers.Serializer):
         if invalid_fields:
             # Some of `display_fields` are not in result.
             raise ValidationError(
-                "'{}' is not one of available options".format(
-                    "', '".join(sorted(invalid_fields))
-                ),
+                "'{}' is not one of available options".format("', '".join(sorted(invalid_fields))),
                 code="fields",
             )
         return display_fields
@@ -213,8 +211,7 @@ class DSOSerializer(_SideloadMixin, serializers.Serializer):
         return [
             field
             for name, field in self.fields.items()
-            if isinstance(field, GeometryField)
-            and field.field_name not in exclude_crs_fields
+            if isinstance(field, GeometryField) and field.field_name not in exclude_crs_fields
         ]
 
     @cached_property
@@ -347,10 +344,7 @@ class DSOModelSerializer(DSOSerializer, serializers.HyperlinkedModelSerializer):
         accepted_renderer = self.context["request"].accepted_renderer
         if "self" in self.fields:
             return False
-        if (
-            "view" in self.context
-            and not getattr(self.context["view"], "detail", True)
-        ):
+        if "view" in self.context and not getattr(self.context["view"], "detail", True):
             return False
         return is_root and accepted_renderer.format != "csv"
 

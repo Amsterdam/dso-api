@@ -31,9 +31,7 @@ class DSOJsonParser(JSONParser):
         request = parser_context["view"].request
         content_crs = self._get_content_crs(request)
 
-        json_data = super().parse(
-            stream, media_type=media_type, parser_context=parser_context
-        )
+        json_data = super().parse(stream, media_type=media_type, parser_context=parser_context)
 
         # Store this value for usage by the serializer classes.
         if isinstance(json_data, dict):

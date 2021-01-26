@@ -210,9 +210,7 @@ def afval_container(afval_container_model, afval_cluster):
         eigenaar_naam="Dataservices",
         # set to fixed dates to the CSV export can also check for desired formatting
         datum_creatie=date(2021, 1, 3),
-        datum_leegmaken=get_current_timezone().localize(
-            datetime(2021, 1, 3, 12, 13, 14)
-        ),
+        datum_leegmaken=get_current_timezone().localize(datetime(2021, 1, 3, 12, 13, 14)),
         cluster=afval_cluster,
         geometry=Point(10, 10),  # no SRID on purpose, should use django model field.
     )
@@ -295,9 +293,7 @@ def parkeervakken_schema(parkeervakken_schema_json) -> DatasetSchema:
 
 @pytest.fixture()
 def parkeervakken_dataset(parkeervakken_schema_json) -> Dataset:
-    return Dataset.objects.create(
-        name="parkeervakken", schema_data=parkeervakken_schema_json
-    )
+    return Dataset.objects.create(name="parkeervakken", schema_data=parkeervakken_schema_json)
 
 
 @pytest.fixture()
@@ -493,9 +489,7 @@ def fietspaaltjes_schema_json() -> dict:
 
 @pytest.fixture()
 def fietspaaltjes_dataset(fietspaaltjes_schema_json) -> Dataset:
-    return Dataset.objects.create(
-        name="fietspaaltjes", schema_data=fietspaaltjes_schema_json
-    )
+    return Dataset.objects.create(name="fietspaaltjes", schema_data=fietspaaltjes_schema_json)
 
 
 @pytest.fixture()
@@ -596,9 +590,7 @@ def explosieven_schema(
 
 @pytest.fixture()
 def explosieven_dataset(explosieven_schema_json) -> Dataset:
-    return Dataset.objects.create(
-        name="explosieven", schema_data=explosieven_schema_json
-    )
+    return Dataset.objects.create(name="explosieven", schema_data=explosieven_schema_json)
 
 
 @pytest.fixture()

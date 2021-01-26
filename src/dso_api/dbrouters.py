@@ -25,9 +25,7 @@ class DatabaseSchemasRouter(DisableMigrationsRouter):
             schema_name = settings.DATABASE_SCHEMAS[model._meta.app_label]
             if schema_name not in connections.databases:
                 new_connection = connections.databases["default"]
-                new_connection["OPTIONS"] = {
-                    "options": f"-c search_path={schema_name},public"
-                }
+                new_connection["OPTIONS"] = {"options": f"-c search_path={schema_name},public"}
                 connections.databases[schema_name] = new_connection
             return schema_name
         return None

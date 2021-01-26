@@ -26,10 +26,7 @@ class TestDatabaseSchemasRotuer:
 
         db_router.db_for_read(bagh_models["buurt"])
         assert "test" in connections.databases
-        assert (
-            connections.databases["test"]["OPTIONS"]["options"]
-            == "-c search_path=test,public"
-        )
+        assert connections.databases["test"]["OPTIONS"]["options"] == "-c search_path=test,public"
 
         settings.DATABASE_SCHEMAS = default_settings
 

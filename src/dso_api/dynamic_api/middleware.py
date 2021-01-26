@@ -47,9 +47,7 @@ class TemporalDatasetMiddleware(BaseMiddleware):
 
         request.versioned = True
         if request.GET.get(request.dataset.temporal["identifier"]):
-            request.dataset_version = request.GET.get(
-                request.dataset.temporal["identifier"]
-            )
+            request.dataset_version = request.GET.get(request.dataset.temporal["identifier"])
 
         if "dimensions" in request.dataset.temporal:
             for key, fields in request.dataset.temporal["dimensions"].items():

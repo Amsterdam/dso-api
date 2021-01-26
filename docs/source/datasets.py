@@ -242,9 +242,7 @@ def render_datasets():
     for name, dataset in schemas.items():
         documents.append(render_dataset_docs(dataset))
 
-    render_template(
-        "datasets/index.rst.j2", "datasets/index.rst", {"documents": documents}
-    )
+    render_template("datasets/index.rst.j2", "datasets/index.rst", {"documents": documents})
 
     wfs_documents = []
     for name, dataset in schemas.items():
@@ -272,9 +270,7 @@ def render_template(template_name, output_file, context_data: dict):
 
 
 def underline(text, symbol):
-    return "{text}\n{underline}".format(
-        text=text.capitalize(), underline=symbol * len(text)
-    )
+    return "{text}\n{underline}".format(text=text.capitalize(), underline=symbol * len(text))
 
 
 def toCamelCase(name):

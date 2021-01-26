@@ -57,18 +57,12 @@ class CSVRenderer(RendererMixin, CSVStreamingRenderer):
                     name
                     for name, field in serializer.fields.items()
                     if name != "schema"
-                    and not isinstance(
-                        field, (HyperlinkedRelatedField, SerializerMethodField)
-                    )
+                    and not isinstance(field, (HyperlinkedRelatedField, SerializerMethodField))
                 ],
-                "labels": {
-                    name: field.label for name, field in serializer.fields.items()
-                },
+                "labels": {name: field.label for name, field in serializer.fields.items()},
             }
 
-        output = super().render(
-            data, media_type=media_type, renderer_context=renderer_context
-        )
+        output = super().render(data, media_type=media_type, renderer_context=renderer_context)
 
         # This method must have a "yield" statement so finalize_response() can
         # recognize this renderer returns a generator/stream, and patch the
@@ -111,9 +105,7 @@ class GeoJSONRenderer(RendererMixin, JSONRenderer):
         elif isinstance(data, (list, ReturnGenerator)):
             collections = {"gen": data}
         else:
-            raise NotImplementedError(
-                f"Unsupported GeoJSON format: {data.__class__.__name__}"
-            )
+            raise NotImplementedError(f"Unsupported GeoJSON format: {data.__class__.__name__}")
 
         yield from self._render_geojson_list(collections, request=request)
 
@@ -248,22 +240,14 @@ class GeoJSONRenderer(RendererMixin, JSONRenderer):
             "geometry": item.pop(geometry_field),
             "properties": {
                 **link_properties,
-                **{
-                    key: value
-                    for key, value in item.items()
-                    if key not in ("schema", "_links")
-                },
+                **{key: value for key, value in item.items() if key not in ("schema", "_links")},
             },
         }
 
     def _find_geometry_field(self, properties: dict):
         """Find the first field which contains the geometry of a feature."""
         return next(
-            (
-                key
-                for key, value in properties.items()
-                if isinstance(value, GeoJsonDict)
-            ),
+            (key for key, value in properties.items() if isinstance(value, GeoJsonDict)),
             None,
         )
 

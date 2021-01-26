@@ -5,9 +5,7 @@ W3HTMLREF = "https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.5.1"
 
 
 def _get_unique_trace_id(request):
-    unique_id = request.META.get(
-        "HTTP_X_UNIQUE_ID"
-    )  # X-Unique-ID wordt in haproxy gezet
+    unique_id = request.META.get("HTTP_X_UNIQUE_ID")  # X-Unique-ID wordt in haproxy gezet
     if unique_id:
         instance = f"X-Unique-ID:{unique_id}"
     else:

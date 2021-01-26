@@ -106,9 +106,7 @@ class DynamicRouter(routers.DefaultRouter):
                 dataset = datasets[dataset_id]
 
                 # Determine the URL prefix for the model
-                url_prefix = self.make_url(
-                    dataset.url_prefix, dataset_id, model.get_table_id()
-                )
+                url_prefix = self.make_url(dataset.url_prefix, dataset_id, model.get_table_id())
 
                 logger.debug("Created viewset %s", url_prefix)
                 viewset = viewset_factory(model)

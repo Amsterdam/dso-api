@@ -31,9 +31,7 @@ def test_openapi_json(api_client, filled_router, caplog):
     # Prove that the filter help text is exposed as description
     afval_parameters = {
         param["name"]: param
-        for param in schema["paths"]["/v1/afvalwegingen/containers/"]["get"][
-            "parameters"
-        ]
+        for param in schema["paths"]["/v1/afvalwegingen/containers/"]["get"]["parameters"]
     }
     assert "datumCreatie" in afval_parameters, ", ".join(afval_parameters.keys())
     assert afval_parameters["datumCreatie"]["description"] == "yyyy-mm-dd"

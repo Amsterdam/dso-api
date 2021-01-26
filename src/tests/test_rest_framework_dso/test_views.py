@@ -82,8 +82,7 @@ def test_detail_expand_unknown_field(api_client, movie):
         "type": "urn:apiexception:parse_error",
         "title": "Malformed request.",
         "detail": (
-            "Eager loading is not supported for field 'foobar', "
-            "available options are: category"
+            "Eager loading is not supported for field 'foobar', " "available options are: category"
         ),
     }
 
@@ -103,9 +102,7 @@ def test_list_expand_true(api_client, movie, params):
             "previous": {"href": None},
         },
         "_embedded": {
-            "movie": [
-                {"name": "foo123", "category_id": movie.category_id, "date_added": None}
-            ],
+            "movie": [{"name": "foo123", "category_id": movie.category_id, "date_added": None}],
             "category": [{"name": "bar"}],
         },
         "page": {"number": 1, "size": 20, "totalElements": 1, "totalPages": 1},

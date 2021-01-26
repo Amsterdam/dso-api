@@ -61,10 +61,7 @@ class TestDynamicSerializer:
         assert ContainerSerializer.Meta.embedded_fields == ["cluster"]
         assert isinstance(ContainerSerializer.cluster, EmbeddedField)
         assert ContainerSerializer.cluster.related_model is afval_cluster_model
-        assert (
-            ContainerSerializer.cluster.serializer_class.__name__
-            == ClusterSerializer.__name__
-        )
+        assert ContainerSerializer.cluster.serializer_class.__name__ == ClusterSerializer.__name__
 
         # Prove that data is serialized with relations.
         # Both the cluster_id field and 'cluster' field are generated.
@@ -100,9 +97,7 @@ class TestDynamicSerializer:
         """
         drf_request.dataset = afval_schema
         ContainerSerializer = serializer_factory(afval_container_model, 0)
-        afval_container = afval_container_model.objects.create(
-            id=2, cluster=afval_cluster
-        )
+        afval_container = afval_container_model.objects.create(id=2, cluster=afval_cluster)
 
         # Prove that expands work on object-detail level
         container_serializer = ContainerSerializer(
@@ -401,9 +396,7 @@ class TestDynamicSerializer:
         # Prove that data is serialized with relations.
         # Both the cluster_id field and 'cluster' field are generated.
 
-        parkeervak_serializer = ParkeervakSerializer(
-            parkeervak, context={"request": drf_request}
-        )
+        parkeervak_serializer = ParkeervakSerializer(parkeervak, context={"request": drf_request})
         assert parkeervak_serializer.data == {
             "_links": {
                 "self": {
@@ -474,9 +467,7 @@ class TestDynamicSerializer:
             begin_datum=None,
         )
 
-        ParkeervakSerializer = serializer_factory(
-            parkeervakken_parkeervak_model, 0, flat=True
-        )
+        ParkeervakSerializer = serializer_factory(parkeervakken_parkeervak_model, 0, flat=True)
 
         # Prove that no reverse relation to containers here.
         assert "regimes" not in ParkeervakSerializer._declared_fields
@@ -484,14 +475,10 @@ class TestDynamicSerializer:
         # Prove that data is serialized with relations.
         # Both the cluster_id field and 'cluster' field are generated.
 
-        parkeervak_serializer = ParkeervakSerializer(
-            parkeervak, context={"request": drf_request}
-        )
+        parkeervak_serializer = ParkeervakSerializer(parkeervak, context={"request": drf_request})
         assert parkeervak_serializer.data == {
             "_links": {
-                "self": {
-                    "href": "http://testserver/v1/parkeervakken/parkeervakken/121138489047/"
-                },
+                "self": {"href": "http://testserver/v1/parkeervakken/parkeervakken/121138489047/"},
                 "schema": "https://schemas.data.amsterdam.nl/datasets/parkeervakken/parkeervakken#parkeervakken",  # noqa: E501
             },
             "geometry": None,
@@ -521,9 +508,7 @@ class TestDynamicSerializer:
             fietspaaltjes_data, context={"request": drf_request}
         )
 
-        assert "'title': 'reference for DISPLAY FIELD'" in str(
-            fietsplaatjes_serializer.data
-        )
+        assert "'title': 'reference for DISPLAY FIELD'" in str(fietsplaatjes_serializer.data)
 
     @staticmethod
     def test_no_display_title_present(
@@ -534,9 +519,7 @@ class TestDynamicSerializer:
     ):
         """ Prove that title element is omitted if display field is not specified """
 
-        FietsplaatjesSerializer = serializer_factory(
-            fietspaaltjes_model_no_display, 0, flat=True
-        )
+        FietsplaatjesSerializer = serializer_factory(fietspaaltjes_model_no_display, 0, flat=True)
 
         drf_request.dataset = fietspaaltjes_schema_no_display
 
@@ -544,16 +527,12 @@ class TestDynamicSerializer:
             fietspaaltjes_data_no_display, context={"request": drf_request}
         )
 
-        assert "'title': 'reference for DISPLAY FIELD'" not in str(
-            fietsplaatjes_serializer.data
-        )
+        assert "'title': 'reference for DISPLAY FIELD'" not in str(fietsplaatjes_serializer.data)
 
     @staticmethod
     def test_uri_field_present(explosieven_model):
         """ Prove that a URLfield is stored as a charfield and default 200 in length """
-        assert (
-            explosieven_model._meta.get_field("pdf").get_internal_type() == "CharField"
-        )
+        assert explosieven_model._meta.get_field("pdf").get_internal_type() == "CharField"
         assert explosieven_model._meta.get_field("pdf").max_length == 200
 
     @staticmethod
@@ -614,9 +593,7 @@ class TestDynamicSerializer:
         assert validate_email(explosieven_serializer.data["emailadres"]) is None
 
     @staticmethod
-    def test_indirect_self_reference(
-        drf_request, indirect_self_ref_schema, filled_router
-    ):
+    def test_indirect_self_reference(drf_request, indirect_self_ref_schema, filled_router):
         """Prove that a dataset with two tables that
         are mutually related generates a serialize without any problems
         (no infinite recursion)

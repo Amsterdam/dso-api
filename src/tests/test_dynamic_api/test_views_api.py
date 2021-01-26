@@ -29,8 +29,7 @@ class AproxFloat(float):
 
 
 GEOJSON_POINT = [
-    AproxFloat(c)
-    for c in Point(10, 10, srid=RD_NEW.srid).transform("EPSG:4326", clone=True)
+    AproxFloat(c) for c in Point(10, 10, srid=RD_NEW.srid).transform("EPSG:4326", clone=True)
 ]
 
 
@@ -132,9 +131,7 @@ class TestDSOViewMixin:
         assert response.has_header("Content-Crs"), dict(response.items())
         assert CRS.from_string("EPSG:4258") == CRS.from_string(response["Content-Crs"])
 
-    def test_response_has_crs_from_accept_crs_empty_data(
-        self, api_client, filled_router
-    ):
+    def test_response_has_crs_from_accept_crs_empty_data(self, api_client, filled_router):
         """Prove that response has a CRS header taken from the Accept-Crs header """
         url = reverse("dynamic_api:afvalwegingen-containers-list")
         response = api_client.get(url, HTTP_ACCEPT_CRS="EPSG:4258")
@@ -142,9 +139,7 @@ class TestDSOViewMixin:
         assert response.has_header("Content-Crs"), dict(response.items())
         assert CRS.from_string("EPSG:4258") == CRS.from_string(response["Content-Crs"])
 
-    def test_response_has_crs_from_content(
-        self, api_client, filled_router, afval_container
-    ):
+    def test_response_has_crs_from_content(self, api_client, filled_router, afval_container):
         """Prove that response has a CRS header taken from the Accept-Crs header """
         url = reverse("dynamic_api:afvalwegingen-containers-list")
         response = api_client.get(url)
@@ -199,25 +194,18 @@ class TestAuth:
                 "datasets": {
                     "parkeervakken": {
                         "tables": {
-                            "parkeervakken": {
-                                "mandatoryFilterSets": [["regimes.aantal[gte]"]]
-                            }
+                            "parkeervakken": {"mandatoryFilterSets": [["regimes.aantal[gte]"]]}
                         }
                     }
                 }
             },
         )
 
-        models.DatasetTable.objects.filter(name="parkeervakken").update(
-            auth="DATASET/SCOPE"
-        )
+        models.DatasetTable.objects.filter(name="parkeervakken").update(auth="DATASET/SCOPE")
         token = fetch_auth_token(["PROFIEL/SCOPE"])
         base_url = reverse("dynamic_api:parkeervakken-parkeervakken-list")
         assert api_client.get(base_url).status_code == 403
-        assert (
-            api_client.get(base_url, HTTP_AUTHORIZATION=f"Bearer {token}").status_code
-            == 403
-        )
+        assert api_client.get(base_url, HTTP_AUTHORIZATION=f"Bearer {token}").status_code == 403
         assert (
             api_client.get(
                 f"{base_url}?buurtcode=A05d", HTTP_AUTHORIZATION=f"Bearer {token}"
@@ -252,15 +240,9 @@ class TestAuth:
         )
 
         token = fetch_auth_token(["DATASET/SCOPE", "PROFIEL/SCOPE"])
-        assert (
-            api_client.get(base_url, HTTP_AUTHORIZATION=f"Bearer {token}").status_code
-            == 200
-        )
+        assert api_client.get(base_url, HTTP_AUTHORIZATION=f"Bearer {token}").status_code == 200
         token = fetch_auth_token(["DATASET/SCOPE"])
-        assert (
-            api_client.get(base_url, HTTP_AUTHORIZATION=f"Bearer {token}").status_code
-            == 200
-        )
+        assert api_client.get(base_url, HTTP_AUTHORIZATION=f"Bearer {token}").status_code == 200
         token = fetch_auth_token(["PROFIEL/SCOPE", "PROFIEL2/SCOPE"])
         assert (
             api_client.get(
@@ -338,9 +320,7 @@ class TestAuth:
         # 1) profile scope only
         token = fetch_auth_token(["PROFIEL/SCOPE"])
         base_url = reverse("dynamic_api:parkeervakken-parkeervakken-list")
-        response = api_client.get(
-            f"{base_url}?id=1", HTTP_AUTHORIZATION=f"Bearer {token}"
-        )
+        response = api_client.get(f"{base_url}?id=1", HTTP_AUTHORIZATION=f"Bearer {token}")
         parkeervak_data = response.data["_embedded"]["parkeervakken"][0]
         # assert that a single profile is activated
         assert parkeervak_data["type"] == parkeervak.type
@@ -349,9 +329,7 @@ class TestAuth:
         assert "id" not in parkeervak_data.keys()
         # 2) profile and dataset scope
         token = fetch_auth_token(["PROFIEL/SCOPE", "DATASET/SCOPE"])
-        response = api_client.get(
-            f"{base_url}?id=1", HTTP_AUTHORIZATION=f"Bearer {token}"
-        )
+        response = api_client.get(f"{base_url}?id=1", HTTP_AUTHORIZATION=f"Bearer {token}")
         parkeervak_data = response.data["_embedded"]["parkeervakken"][0]
         # assert that dataset scope permissions overrules lower profile permission
         assert parkeervak_data["soort"] == parkeervak.soort
@@ -359,9 +337,7 @@ class TestAuth:
         # 3) two profile scopes
         token = fetch_auth_token(["PROFIEL/SCOPE", "PROFIEL2/SCOPE"])
         # trigger one profile
-        response = api_client.get(
-            f"{base_url}?id=1", HTTP_AUTHORIZATION=f"Bearer {token}"
-        )
+        response = api_client.get(f"{base_url}?id=1", HTTP_AUTHORIZATION=f"Bearer {token}")
         parkeervak_data = response.data["_embedded"]["parkeervakken"][0]
         # assert that only the profile is used that passed it's mandatory filterset restrictions
         assert parkeervak_data["soort"] == parkeervak.soort[:1]
@@ -392,9 +368,7 @@ class TestAuth:
         response = api_client.get(url)
         assert response.status_code == 403, response.data
 
-    def test_auth_on_table_schema_protects(
-        self, api_client, filled_router, afval_schema
-    ):
+    def test_auth_on_table_schema_protects(self, api_client, filled_router, afval_schema):
         """Prove that auth protection at table level (container)
         leads to a 403 on the container listview."""
         url = reverse("dynamic_api:afvalwegingen-containers-list")
@@ -484,10 +458,7 @@ class TestAuth:
         response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
         assert response.status_code == 200, response.data
         assert "eigenaarNaam" in set(
-            [
-                field_name
-                for field_name in response.data["_embedded"]["containers"][0].keys()
-            ]
+            [field_name for field_name in response.data["_embedded"]["containers"][0].keys()]
         ), response.data["_embedded"]["containers"][0].keys()
 
     def test_auth_on_individual_fields_with_token_for_valid_scope_per_profile(
@@ -512,10 +483,7 @@ class TestAuth:
         response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
         assert response.status_code == 200, response.data
         assert "eigenaarNaam" in set(
-            [
-                field_name
-                for field_name in response.data["_embedded"]["containers"][0].keys()
-            ]
+            [field_name for field_name in response.data["_embedded"]["containers"][0].keys()]
         ), response.data["_embedded"]["containers"][0].keys()
 
     def test_auth_on_individual_fields_without_token_for_valid_scope(
@@ -528,10 +496,7 @@ class TestAuth:
         response = api_client.get(url)
         assert response.status_code == 200, response.data
         assert "eigenaarNaam" not in set(
-            [
-                field_name
-                for field_name in response.data["_embedded"]["containers"][0].keys()
-            ]
+            [field_name for field_name in response.data["_embedded"]["containers"][0].keys()]
         ), response.data
 
     def test_auth_on_field_level_is_not_cached(
@@ -580,18 +545,13 @@ class TestAuth:
         token = fetch_auth_token(["BAG/R"])
         response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
 
-        assert (
-            "dagen"
-            in response.data["_embedded"]["parkeervakken"][0]["regimes"][0].keys()
-        )
+        assert "dagen" in response.data["_embedded"]["parkeervakken"][0]["regimes"][0].keys()
 
         public_response = api_client.get(url)
 
         assert (
             "dagen"
-            not in public_response.data["_embedded"]["parkeervakken"][0]["regimes"][
-                0
-            ].keys()
+            not in public_response.data["_embedded"]["parkeervakken"][0]["regimes"][0].keys()
         )
 
     def test_auth_on_dataset_protects_detail_view(
@@ -642,9 +602,7 @@ class TestAuth:
                 "datasets": {
                     "parkeervakken": {
                         "tables": {
-                            "parkeervakken": {
-                                "mandatoryFilterSets": [["buurtcode", "type"]]
-                            }
+                            "parkeervakken": {"mandatoryFilterSets": [["buurtcode", "type"]]}
                         }
                     }
                 }
@@ -672,17 +630,13 @@ class TestAuth:
                 "datasets": {
                     "parkeervakken": {
                         "tables": {
-                            "parkeervakken": {
-                                "mandatoryFilterSets": [["id", "volgnummer"]]
-                            }
+                            "parkeervakken": {"mandatoryFilterSets": [["id", "volgnummer"]]}
                         }
                     }
                 }
             },
         )
-        detail = reverse(
-            "dynamic_api:parkeervakken-parkeervakken-detail", args=["121138489047"]
-        )
+        detail = reverse("dynamic_api:parkeervakken-parkeervakken-detail", args=["121138489047"])
         detail_met_volgnummer = detail + "?volgnummer=3"
         may_not = fetch_auth_token(["MAY/NOT"])
         may_enter = fetch_auth_token(["MAY/ENTER"])
@@ -692,15 +646,11 @@ class TestAuth:
         assert response.status_code == 403, response.data
         response = api_client.get(detail, HTTP_AUTHORIZATION=f"Bearer {may_enter}")
         assert response.status_code == 200, response.data
-        response = api_client.get(
-            detail_met_volgnummer, HTTP_AUTHORIZATION=f"Bearer {may_enter}"
-        )
+        response = api_client.get(detail_met_volgnummer, HTTP_AUTHORIZATION=f"Bearer {may_enter}")
         assert response.status_code == 200, response.data
         response = api_client.get(detail, HTTP_AUTHORIZATION=f"Bearer {dataset_scope}")
         assert response.status_code == 200, response.data
-        response = api_client.get(
-            detail, HTTP_AUTHORIZATION=f"Bearer {profiel_met_volgnummer}"
-        )
+        response = api_client.get(detail, HTTP_AUTHORIZATION=f"Bearer {profiel_met_volgnummer}")
         assert response.status_code == 403, response.data
         response = api_client.get(
             detail_met_volgnummer, HTTP_AUTHORIZATION=f"Bearer {profiel_met_volgnummer}"
@@ -825,15 +775,11 @@ class TestEmbedTemporalTables:
     ):
         """Prove that bestaatUitBuurten shows up when expanded"""
 
-        url = reverse(
-            "dynamic_api:gebieden-ggwgebieden-detail", args=["03630950000000.1"]
-        )
+        url = reverse("dynamic_api:gebieden-ggwgebieden-detail", args=["03630950000000.1"])
         url = f"{url}?_expand=true"
         response = api_client.get(url)
         assert response.status_code == 200, response.data
-        assert (
-            response.data["_embedded"]["bestaatUitBuurten"]["id"] == "03630000000078.1"
-        )
+        assert response.data["_embedded"]["bestaatUitBuurten"]["id"] == "03630000000078.1"
 
     def test_list_expand_true_for_nm_relation(
         self,
@@ -1163,9 +1109,7 @@ class TestExportFormats:
     }
 
     @pytest.mark.parametrize("format", sorted(UNPAGINATED_FORMATS.keys()))
-    def test_unpaginated_list(
-        self, format, api_client, api_rf, afval_container, filled_router
-    ):
+    def test_unpaginated_list(self, format, api_client, api_rf, afval_container, filled_router):
         """Prove that the export formats generate proper data."""
         decoder, expected_data = self.UNPAGINATED_FORMATS[format]
         url = reverse("dynamic_api:afvalwegingen-containers-list")
@@ -1251,9 +1195,7 @@ class TestExportFormats:
     }
 
     @pytest.mark.parametrize("format", sorted(PAGINATED_FORMATS.keys()))
-    def test_paginated_list(
-        self, format, api_client, api_rf, afval_container, filled_router
-    ):
+    def test_paginated_list(self, format, api_client, api_rf, afval_container, filled_router):
         """Prove that the pagination still works if explicitly requested."""
         decoder, expected_data = self.PAGINATED_FORMATS[format]
         url = reverse("dynamic_api:afvalwegingen-containers-list")

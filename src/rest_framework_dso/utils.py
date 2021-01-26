@@ -34,16 +34,12 @@ class EmbeddedHelper:
         a fetcher function on the parent_serializer. Doing it this way, we
         do not pollute the rest_framework_dso package with too specific behaviour
         """
-        assert (
-            not is_loose
-        ), "Default in_bulk fetcher should not be used on loose relations"
+        assert not is_loose, "Default in_bulk fetcher should not be used on loose relations"
         return model.objects.in_bulk
 
     def _get_embedded_fields(self, expand: Union[list, bool]):  # noqa: C901
         allowed_names = getattr(self.parent_serializer.Meta, "embedded_fields", [])
-        auth_checker = getattr(
-            self.parent_serializer, "get_auth_checker", lambda: None
-        )()
+        auth_checker = getattr(self.parent_serializer, "get_auth_checker", lambda: None)()
         embedded_fields = {}
 
         # ?_expand=true should expand all names
@@ -57,9 +53,7 @@ class EmbeddedHelper:
             if field_name not in allowed_names:
                 available = ", ".join(sorted(allowed_names))
                 if not available:
-                    raise ParseError(
-                        "Eager loading is not supported for this endpoint"
-                    ) from None
+                    raise ParseError("Eager loading is not supported for this endpoint") from None
                 else:
                     raise ParseError(
                         f"Eager loading is not supported for field '{field_name}', "
@@ -116,9 +110,7 @@ class EmbeddedHelper:
             related_model = embedded_field.related_model
             data = fetched_per_model[related_model]
 
-            embedded_serializer = embedded_field.get_serializer(
-                parent=self.parent_serializer
-            )
+            embedded_serializer = embedded_field.get_serializer(parent=self.parent_serializer)
             _embedded[name] = [
                 embedded_serializer.to_representation(data[id])
                 for id in ids_per_relation[name]
@@ -144,9 +136,9 @@ class EmbeddedHelper:
             related_model = embedded_field.related_model
             try:
                 values = [
-                    self.id_based_fetcher(
-                        related_model, is_loose=embedded_field.is_loose
-                    )([id_value])[id_value]
+                    self.id_based_fetcher(related_model, is_loose=embedded_field.is_loose)(
+                        [id_value]
+                    )[id_value]
                     for id_value in id_values
                 ]
             except KeyError:
@@ -154,12 +146,8 @@ class EmbeddedHelper:
                 ret[name] = None
                 continue
 
-            embedded_serializer = embedded_field.get_serializer(
-                parent=self.parent_serializer
-            )
-            serialized = [
-                embedded_serializer.to_representation(value) for value in values
-            ]
+            embedded_serializer = embedded_field.get_serializer(parent=self.parent_serializer)
+            serialized = [embedded_serializer.to_representation(value) for value in values]
             # When we have a one-size list, we unpack it
             ret[name] = serialized if len(serialized) > 1 else serialized[0]
         return ret

@@ -64,9 +64,9 @@ class RemoteObjectSerializer(DSOSerializer):
 def remote_serializer_factory(table_schema: DatasetTableSchema):
     """Generate the DRF serializer class for a specific dataset model."""
     dataset = table_schema._parent_schema
-    serializer_name = (
-        f"{dataset.id.title()}{table_schema.id.title()}Serializer"
-    ).replace(" ", "_")
+    serializer_name = (f"{dataset.id.title()}{table_schema.id.title()}Serializer").replace(
+        " ", "_"
+    )
     new_attrs = {
         "table_schema": table_schema,
         "__module__": f"dso_api.dynamic_api.remote.serializers.{dataset.id}",
@@ -134,16 +134,13 @@ def remote_field_factory(field: DatasetFieldSchema, **kwargs) -> serializers.Fie
         return field_cls(**kwargs)
 
 
-def _remote_object_field_factory(
-    field: DatasetFieldSchema, **kwargs
-) -> RemoteObjectSerializer:
+def _remote_object_field_factory(field: DatasetFieldSchema, **kwargs) -> RemoteObjectSerializer:
     """Generate a serializer for an sub-object field"""
     table_schema = field.table
     dataset = table_schema.dataset
     safe_dataset_id = to_snake_case(dataset.id)
     serializer_name = (
-        f"{dataset.id.title()}{table_schema.id.title()}"
-        f"_{field.name.title()}Serializer"
+        f"{dataset.id.title()}{table_schema.id.title()}_{field.name.title()}Serializer"
     ).replace(" ", "_")
     new_attrs = {
         "table_schema": table_schema,

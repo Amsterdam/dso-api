@@ -45,9 +45,7 @@ class TestDSOFilterSet:
 
     @pytest.fixture
     def movie1(self, category):
-        return Movie.objects.create(
-            name="movie1", category=category, date_added=date(2020, 2, 1)
-        )
+        return Movie.objects.create(name="movie1", category=category, date_added=date(2020, 2, 1))
 
     @pytest.fixture
     def movie2(self):
@@ -97,8 +95,7 @@ class TestDSOFilterSet:
     def test_foreignkey(self, movie1, movie2, category, comparison):
         filter_data, expect = comparison
         filter_data = {
-            field: value.format(cat_id=category.pk)
-            for field, value in filter_data.items()
+            field: value.format(cat_id=category.pk) for field, value in filter_data.items()
         }
 
         filterset = self.MovieFilterSet(filter_data)

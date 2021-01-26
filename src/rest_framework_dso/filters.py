@@ -106,9 +106,7 @@ class IsEmpty(lookups.Lookup):
         lhs, lhs_params = self.process_lhs(compiler, connection)
         rhs, rhs_params = self.process_rhs(compiler, connection)
         params = []
-        not_negation = (
-            "NOT " if len(rhs_params) == 1 and rhs_params[0] == "True" else ""
-        )
+        not_negation = "NOT " if len(rhs_params) == 1 and rhs_params[0] == "True" else ""
         return f"({lhs} = '') IS {not_negation}FALSE", params
 
 
@@ -242,8 +240,8 @@ class MultipleValueField(forms.Field):
         # Enforce the "getlist" retrieval, even when a different widget was used.
         # The "__get__" is needed to retrieve the MethodType instead of the unbound function.
         if not isinstance(self.widget, MultipleValueWidget):
-            self.widget.value_from_datadict = (
-                MultipleValueWidget.value_from_datadict.__get__(self.widget)
+            self.widget.value_from_datadict = MultipleValueWidget.value_from_datadict.__get__(
+                self.widget
             )
 
     def clean(self, values):
@@ -254,9 +252,7 @@ class MultipleValueField(forms.Field):
                 return []
 
         if not isinstance(values, list):
-            raise RuntimeError(
-                "MultipleValueField.widget does not return list of values"
-            )
+            raise RuntimeError("MultipleValueField.widget does not return list of values")
 
         result = []
         errors = []
@@ -324,21 +320,13 @@ class RangeFilter(filters.CharFilter):
         if value.strip() == "":
             return qs
         return qs.filter(
-            (
-                Q(**{f"{self.start_field}__lte": value})
-                | Q(**{f"{self.start_field}__isnull": True})
-            )
-            & (
-                Q(**{f"{self.end_field}__gt": value})
-                | Q(**{f"{self.end_field}__isnull": True})
-            )
+            (Q(**{f"{self.start_field}__lte": value}) | Q(**{f"{self.start_field}__isnull": True}))
+            & (Q(**{f"{self.end_field}__gt": value}) | Q(**{f"{self.end_field}__isnull": True}))
         )
 
     def convert_field_name(self, field_name):
         if "." in field_name:
-            return "__".join(
-                [self.convert_field_name(part) for part in field_name.split(".")]
-            )
+            return "__".join([self.convert_field_name(part) for part in field_name.split(".")])
         return to_snake_case(field_name)
 
 
@@ -432,9 +420,7 @@ class CharArrayField(forms.CharField):
         elif isinstance(value, str):
             value = value.split(",")
         elif not isinstance(value, (list, tuple)):
-            raise ValidationError(
-                self.error_messages["invalid_list"], code="invalid_list"
-            )
+            raise ValidationError(self.error_messages["invalid_list"], code="invalid_list")
         return [str(val) for val in value]
 
 
@@ -518,9 +504,7 @@ class DSOFilterSet(FilterSet):
     @classmethod
     def filter_for_field(cls, field, field_name, lookup_expr="exact"):
         """Wrap the NOT filter in a multiple selector"""
-        filter_instance = super().filter_for_field(
-            field, field_name, lookup_expr=lookup_expr
-        )
+        filter_instance = super().filter_for_field(field, field_name, lookup_expr=lookup_expr)
 
         if lookup_expr == "not":
             # Allow &field[not]=...&field[not]=...
@@ -538,16 +522,12 @@ class DSOFilterSet(FilterSet):
             filter_class = filters.BooleanFilter
         if filter_class is not None and "label" not in params:
             # description for swagger:
-            params["label"] = cls.get_filter_help_text(
-                filter_class, lookup_type, params
-            )
+            params["label"] = cls.get_filter_help_text(filter_class, lookup_type, params)
 
         return filter_class, params
 
     @classmethod
-    def get_filter_help_text(
-        cls, filter_class: Type[filters.Filter], lookup_type, params
-    ) -> str:
+    def get_filter_help_text(cls, filter_class: Type[filters.Filter], lookup_type, params) -> str:
         """Get a brief default description for a filter in the API docs"""
         if issubclass(filter_class, GeometryFilter):
             geom_type = params.get("geom_type", "GEOMETRY")
@@ -597,14 +577,10 @@ class DSOFilterSetBackend(DjangoFilterBackend):
             if (
                 name.endswith("[contains]")
                 and name in filterset.base_filters
-                and filterset.base_filters[name].__class__.__name__.endswith(
-                    "GeometryFilter"
-                )
+                and filterset.base_filters[name].__class__.__name__.endswith("GeometryFilter")
             ):
                 if value:
-                    if m1 := re.match(
-                        r"([-+]?\d*(?:\.\d+)?),([-+]?\d+(?:\.\d+)?)", value
-                    ):
+                    if m1 := re.match(r"([-+]?\d*(?:\.\d+)?),([-+]?\d+(?:\.\d+)?)", value):
                         x = m1.group(1)
                         y = m1.group(2)
                     elif m1 := re.match(
@@ -654,9 +630,7 @@ class DSOOrderingFilter(OrderingFilter):
             return ordering
 
         # convert to snake_case, preserving `-` if needed
-        correct_ordering = [
-            "-".join([to_snake_case(y) for y in x.split("-")]) for x in ordering
-        ]
+        correct_ordering = ["-".join([to_snake_case(y) for y in x.split("-")]) for x in ordering]
         return correct_ordering
 
     def remove_invalid_fields(self, queryset, fields, view, request):

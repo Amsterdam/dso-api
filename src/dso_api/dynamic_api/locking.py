@@ -36,8 +36,7 @@ def lock_for_writing(func):
         # Avoid deadlocks when the same thread/request tries to lock for read+write.
         if in_read_thread():
             raise RuntimeError(
-                "Can't lock for writing within a read thread, "
-                "this would deadlock the thread."
+                "Can't lock for writing within a read thread, " "this would deadlock the thread."
             )
 
         with reload_lock.gen_wlock():
@@ -73,9 +72,7 @@ class ReadLockMixin:
                 except LookupError:
                     # Using handle_exception() directly instead of raising the error,
                     # as the super().dispatch() is the point where DRF exceptions are handled.
-                    response = self.handle_exception(
-                        NotFound("API endpoint no longer exists")
-                    )
+                    response = self.handle_exception(NotFound("API endpoint no longer exists"))
                     self.headers = {}
                     self.finalize_response(request, response, *args, **kwargs)
                     return response

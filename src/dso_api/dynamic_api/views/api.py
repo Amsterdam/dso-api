@@ -53,9 +53,7 @@ class TemporalRetrieveModelMixin:
             if self.request.dataset_temporal_slice is not None:
                 temporal_value = self.request.dataset_temporal_slice["value"]
                 start_field, end_field = self.request.dataset_temporal_slice["fields"]
-                queryset = queryset.filter(
-                    **{f"{start_field}__lte": temporal_value}
-                ).filter(
+                queryset = queryset.filter(**{f"{start_field}__lte": temporal_value}).filter(
                     models.Q(**{f"{end_field}__gte": temporal_value})
                     | models.Q(**{f"{end_field}__isnull": True})
                 )
@@ -159,9 +157,7 @@ def _get_viewset_api_docs(
     """
     lines = []
     if filterset_class and filterset_class.base_filters:
-        lines.append(
-            "The following fields can be used as filter with `?FIELDNAME=...`:\n"
-        )
+        lines.append("The following fields can be used as filter with `?FIELDNAME=...`:\n")
         for name, filter_field in filterset_class.base_filters.items():
             description = filter_field.label  # other kwarg appear in .extra[".."]
             lines.append(f"* {name}=*{description}*")
@@ -203,9 +199,7 @@ def viewset_factory(model: Type[DynamicModel]) -> Type[DynamicApiViewSet]:
     ordering_fields = _get_ordering_fields(serializer_class)
 
     attrs = {
-        "__doc__": _get_viewset_api_docs(
-            serializer_class, filterset_class, ordering_fields
-        ),
+        "__doc__": _get_viewset_api_docs(serializer_class, filterset_class, ordering_fields),
         "model": model,
         "queryset": model.objects.all(),  # also for OpenAPI schema parsing.
         "serializer_class": serializer_class,

@@ -178,9 +178,7 @@ class DatasetWFSView(WFSView):
                 RE_SIMPLE_NAME.sub(r"\g<name>", name) for name in typenames.split(",")
             )
             subset = {
-                name: model
-                for name, model in self.models.items()
-                if name in requested_names
+                name: model for name, model in self.models.items() if name in requested_names
             }
 
             if not subset:
@@ -267,10 +265,7 @@ class DatasetWFSView(WFSView):
             else:
                 field_name = model_field.name
 
-            if (
-                isinstance(model_field, GeometryField)
-                and field_name != main_geometry_field_name
-            ):
+            if isinstance(model_field, GeometryField) and field_name != main_geometry_field_name:
                 # The other geometry fields are moved to the end, so the main geometryfield
                 # is listed as first value in a feature. This makes sure QGis and friends
                 # render that particular field.
@@ -321,9 +316,7 @@ class DatasetWFSView(WFSView):
         """
         for permission in self.get_permissions():
             if not permission.has_permission(request, self, models):
-                self.permission_denied(
-                    request, message=getattr(permission, "message", None)
-                )
+                self.permission_denied(request, message=getattr(permission, "message", None))
 
     def get_permissions(self):
         """

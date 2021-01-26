@@ -127,9 +127,7 @@ def test_fields_limit_works(api_rf, movie):
     request.accepted_renderer = HALJSONRenderer()
 
     queryset = Movie.objects.all()
-    serializer = MovieSerializer(
-        many=True, instance=queryset, context={"request": request}
-    )
+    serializer = MovieSerializer(many=True, instance=queryset, context={"request": request})
     paginator = DSOPageNumberPagination()
     paginator.paginate_queryset(queryset, request)
     response = paginator.get_paginated_response(serializer.data)
@@ -156,9 +154,7 @@ def test_fields_limit_by_incorrect_field_gives_error(api_rf, movie):
     request = Request(django_request)
     queryset = Movie.objects.all()
 
-    serializer = MovieSerializer(
-        many=True, instance=queryset, context={"request": request}
-    )
+    serializer = MovieSerializer(many=True, instance=queryset, context={"request": request})
     with pytest.raises(ValidationError) as exec_info:
         # Error is delayed until serialier is evaulated,
         #  as fields limit is performed on Single serializer level.

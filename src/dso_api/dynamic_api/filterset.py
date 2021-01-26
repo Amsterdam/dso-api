@@ -62,19 +62,14 @@ class DynamicFilterSet(dso_filters.DSOFilterSet):
             """
             Convert filters to camelCase, not including [lookups].
             """
-            match = re.match(
-                r"^(?P<key>[a-zA-Z0-9\_\.\-]+)(?P<lookup>[\[\]a-zA-Z0-9\.]+|)", value
-            )
+            match = re.match(r"^(?P<key>[a-zA-Z0-9\_\.\-]+)(?P<lookup>[\[\]a-zA-Z0-9\.]+|)", value)
             if match is not None:
                 return "".join([toCamelCase(match["key"]), match["lookup"]])
             return toCamelCase(value)
 
         # Apply camelCase to the filter names, after they've been initialized
         # using the model fields snake_case as input.
-        return {
-            filter_to_camel_case(attr_name): filter
-            for attr_name, filter in filters.items()
-        }
+        return {filter_to_camel_case(attr_name): filter for attr_name, filter in filters.items()}
 
 
 def filterset_factory(model: Type[DynamicModel]) -> Type[DynamicFilterSet]:
@@ -98,9 +93,7 @@ def filterset_factory(model: Type[DynamicModel]) -> Type[DynamicFilterSet]:
         "fields": fields,
     }
     meta = type("Meta", (), meta_attrs)
-    return type(
-        f"{model.__name__}FilterSet", (DynamicFilterSet,), {"Meta": meta, **filters}
-    )
+    return type(f"{model.__name__}FilterSet", (DynamicFilterSet,), {"Meta": meta, **filters})
 
 
 def generate_relation_filters(model: Type[DynamicModel]):  # NoQA
@@ -123,9 +116,7 @@ def generate_relation_filters(model: Type[DynamicModel]):  # NoQA
             # contert space separated property name into snake_case name
             model_field_name = to_snake_case(field_name)
             model_field = getattr(relation.related_model, model_field_name).field
-            filter_class = dso_filters.DSOFilterSet.FILTER_DEFAULTS.get(
-                model_field.__class__
-            )
+            filter_class = dso_filters.DSOFilterSet.FILTER_DEFAULTS.get(model_field.__class__)
             if filter_class is None:
                 # No mapping found for this model field, skip it.
                 continue
@@ -146,9 +137,7 @@ def generate_relation_filters(model: Type[DynamicModel]):  # NoQA
                 filter_instance = filter_class(
                     field_name="__".join([relation.name, model_field_name]),
                     lookup_expr=lookup_expr,
-                    label=dso_filters.DSOFilterSet.FILTER_HELP_TEXT.get(
-                        filter_class, lookup_expr
-                    ),
+                    label=dso_filters.DSOFilterSet.FILTER_HELP_TEXT.get(filter_class, lookup_expr),
                 )
 
                 if lookup_expr == "not":

@@ -28,9 +28,7 @@ class AbstractEmbeddedField:
         from .serializers import _SideloadMixin
 
         if not issubclass(owner, _SideloadMixin):
-            raise TypeError(
-                f"{owner} does not extend from DSO serializer classes"
-            ) from None
+            raise TypeError(f"{owner} does not extend from DSO serializer classes") from None
 
         self.parent_serializer = owner
         self.field_name = name
@@ -101,9 +99,7 @@ class EmbeddedField(AbstractEmbeddedField):
 
     def get_related_list_ids(self, instances) -> list:
         """Find the object IDs of the instances."""
-        return list(
-            filter(None, [getattr(instance, self.attname) for instance in instances])
-        )
+        return list(filter(None, [getattr(instance, self.attname) for instance in instances]))
 
 
 class EmbeddedManyToManyField(AbstractEmbeddedField):

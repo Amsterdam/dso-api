@@ -98,9 +98,9 @@ class TestViews:
         response = api_client.get(url)
 
         assert response.status_code == 200, response.data
-        assert len(response.data["_embedded"]["stadsdeel"]) == 2, response.data[
-            "_embedded"
-        ]["stadsdeel"]
+        assert len(response.data["_embedded"]["stadsdeel"]) == 2, response.data["_embedded"][
+            "stadsdeel"
+        ]
 
     def test_filtered_list_contains_only_correct_objects(
         self, api_client, filled_router, bagh_schema, bagh_stadsdeelen, bagh_buurt
@@ -113,12 +113,12 @@ class TestViews:
         response = api_client.get(f"{url}?geldigOp=2015-01-02")
 
         assert response.status_code == 200, response.data
-        assert len(response.data["_embedded"]["stadsdeel"]) == 1, response.data[
+        assert len(response.data["_embedded"]["stadsdeel"]) == 1, response.data["_embedded"][
+            "stadsdeel"
+        ]
+        assert response.data["_embedded"]["stadsdeel"][0]["volgnummer"] == 2, response.data[
             "_embedded"
-        ]["stadsdeel"]
-        assert (
-            response.data["_embedded"]["stadsdeel"][0]["volgnummer"] == 2
-        ), response.data["_embedded"]["stadsdeel"][0]
+        ]["stadsdeel"][0]
 
         assert response.data["_embedded"]["stadsdeel"][0]["buurten"]["count"] == 1
         href = response.data["_embedded"]["stadsdeel"][0]["buurten"]["href"]
@@ -129,15 +129,11 @@ class TestViews:
         self, api_client, filled_router, bagh_schema, bagh_stadsdeelen
     ):
         """ Prove that request with PK (combined field) is allowed."""
-        url = reverse(
-            "dynamic_api:bagh-stadsdeel-detail", args=(bagh_stadsdeelen[0].id,)
-        )
+        url = reverse("dynamic_api:bagh-stadsdeel-detail", args=(bagh_stadsdeelen[0].id,))
         response = api_client.get(url)
 
         assert response.status_code == 200, response.data
-        assert (
-            response.data["volgnummer"] == bagh_stadsdeelen[0].volgnummer
-        ), response.data
+        assert response.data["volgnummer"] == bagh_stadsdeelen[0].volgnummer, response.data
 
     def test_details_default_returns_latest_record(
         self, api_client, filled_router, bagh_schema, bagh_stadsdeelen
@@ -145,9 +141,7 @@ class TestViews:
         """Prove that object can be requested by identification
         and response will contain only latest object."""
         url = reverse("dynamic_api:bagh-stadsdeel-list")
-        response = api_client.get(
-            "{}{}/".format(url, bagh_stadsdeelen[0].identificatie)
-        )
+        response = api_client.get("{}{}/".format(url, bagh_stadsdeelen[0].identificatie))
 
         assert response.status_code == 200, response.data
         assert response.data["volgnummer"] == 2, response.data
@@ -196,12 +190,10 @@ class TestViews:
         url = reverse("dynamic_api:bagh-ggw_gebied-list")
         response = api_client.get("{}{}/".format(url, bagh_gebieden.id))
 
-        expected_url = "/{}/?volgnummer=002".format(
-            bagh_gebieden.stadsdeel.identificatie
-        )
-        assert response.data["_links"]["stadsdeel"]["href"].endswith(
-            expected_url
-        ), response.data["_links"]["stadsdeel"]["href"]
+        expected_url = "/{}/?volgnummer=002".format(bagh_gebieden.stadsdeel.identificatie)
+        assert response.data["_links"]["stadsdeel"]["href"].endswith(expected_url), response.data[
+            "_links"
+        ]["stadsdeel"]["href"]
 
     def test_serializer_temporal_request_corrects_link_to_temporal(
         self, api_client, filled_router, bagh_schema, bagh_gebieden
@@ -209,13 +201,9 @@ class TestViews:
         """Prove that in case of temporal request links to objects will have request date.
         Allowing follow up date filtering further."""
         url = reverse("dynamic_api:bagh-ggw_gebied-list")
-        response = api_client.get(
-            "{}{}/?geldigOp=2014-05-01".format(url, bagh_gebieden.id)
-        )
+        response = api_client.get("{}{}/?geldigOp=2014-05-01".format(url, bagh_gebieden.id))
 
-        expected_url = "/{}/?geldigOp=2014-05-01".format(
-            bagh_gebieden.stadsdeel.identificatie
-        )
-        assert response.data["_links"]["stadsdeel"]["href"].endswith(
-            expected_url
-        ), response.data["stadsdeel"]
+        expected_url = "/{}/?geldigOp=2014-05-01".format(bagh_gebieden.stadsdeel.identificatie)
+        assert response.data["_links"]["stadsdeel"]["href"].endswith(expected_url), response.data[
+            "stadsdeel"
+        ]

@@ -73,9 +73,7 @@ class TestDynamicFilterSet:
         assert result.count() == 1, result
 
     @staticmethod
-    def test_additional_filters(
-        parkeervakken_parkeervak_model, parkeervakken_regime_model
-    ):
+    def test_additional_filters(parkeervakken_parkeervak_model, parkeervakken_regime_model):
         """
         Prove that additional filters work as expected.
 
@@ -236,9 +234,7 @@ class TestDynamicFilterSet:
 
         assert len(response.data["_embedded"]["parkeervakken"]) == 1, response.data
         assert response.data["_embedded"]["parkeervakken"][0]["id"] == parkeervak.pk
-        assert (
-            len(response.data["_embedded"]["parkeervakken"][0]["regimes"]) == 3
-        ), response.data
+        assert len(response.data["_embedded"]["parkeervakken"][0]["regimes"]) == 3, response.data
 
     @staticmethod
     def test_additional_filters_with_null_start_value(
@@ -291,9 +287,7 @@ class TestDynamicFilterSet:
 
         assert len(response.data["_embedded"]["parkeervakken"]) == 1, response.data
         assert response.data["_embedded"]["parkeervakken"][0]["id"] == parkeervak.pk
-        assert (
-            len(response.data["_embedded"]["parkeervakken"][0]["regimes"]) == 1
-        ), response.data
+        assert len(response.data["_embedded"]["parkeervakken"][0]["regimes"]) == 1, response.data
 
     @staticmethod
     def test_additional_filters_with_null_end_value(
@@ -346,9 +340,7 @@ class TestDynamicFilterSet:
 
         assert len(response.data["_embedded"]["parkeervakken"]) == 1, response.data
         assert response.data["_embedded"]["parkeervakken"][0]["id"] == parkeervak.pk
-        assert (
-            len(response.data["_embedded"]["parkeervakken"][0]["regimes"]) == 1
-        ), response.data
+        assert len(response.data["_embedded"]["parkeervakken"][0]["regimes"]) == 1, response.data
 
     @staticmethod
     def test_geofilter_contains(parkeervakken_parkeervak_model):

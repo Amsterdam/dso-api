@@ -87,11 +87,7 @@ class DSOSchemaGenerator(openapi.SchemaGenerator):
             "description": "GeoJSON geometry",
             "allOf": [
                 {"$ref": "#/components/schemas/Geometry"},
-                {
-                    "properties": {
-                        "coordinates": {"$ref": "#/components/schemas/Point3D"}
-                    }
-                },
+                {"properties": {"coordinates": {"$ref": "#/components/schemas/Point3D"}}},
             ],
         },
         "LineString": {
@@ -243,9 +239,7 @@ class DSOAutoSchema(openapi.AutoSchema):
                 # model_field.geom_type is uppercase
                 if hasattr(field.parent.Meta, "model"):
                     model_field = field.parent.Meta.model._meta.get_field(field.source)
-                    geojson_type = GEOM_TYPES_TO_GEOJSON.get(
-                        model_field.geom_type, "Geometry"
-                    )
+                    geojson_type = GEOM_TYPES_TO_GEOJSON.get(model_field.geom_type, "Geometry")
                 else:
                     geojson_type = "Geometry"
                 return {"$ref": f"#/components/schemas/{geojson_type}"}

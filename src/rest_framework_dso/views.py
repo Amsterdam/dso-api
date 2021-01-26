@@ -23,9 +23,7 @@ def multiple_slashes(request):
         "instance": request.path,
     }
 
-    return HttpResponseNotFound(
-        json.dumps(response_data), content_type="application/json"
-    )
+    return HttpResponseNotFound(json.dumps(response_data), content_type="application/json")
 
 
 def exception_handler(exc, context):

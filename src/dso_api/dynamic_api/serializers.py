@@ -203,25 +203,18 @@ class DynamicSerializer(DSOModelSerializer):
         return field_class, field_kwargs
 
     def build_relational_field(self, field_name, relation_info):
-        field_class, field_kwargs = super().build_relational_field(
-            field_name, relation_info
-        )
+        field_class, field_kwargs = super().build_relational_field(field_name, relation_info)
         if "view_name" in field_kwargs:
             model_class = relation_info[1]
             field_kwargs["view_name"] = get_view_name(model_class, "detail")
 
         # Only make it a temporal field if model is from a temporal dataset
-        if (
-            field_class == HyperlinkedRelatedField
-            and model_class._table_schema.is_temporal
-        ):
+        if field_class == HyperlinkedRelatedField and model_class._table_schema.is_temporal:
             field_class = TemporalHyperlinkedRelatedField
         return field_class, field_kwargs
 
     def build_property_field(self, field_name, model_class):
-        field_class, field_kwargs = super().build_property_field(
-            field_name, model_class
-        )
+        field_class, field_kwargs = super().build_property_field(field_name, model_class)
         forward_map = model_class._meta._forward_fields_map.get(field_name)
         if forward_map and isinstance(forward_map, models.fields.related.ForeignKey):
             field_class = TemporalReadOnlyField
@@ -236,9 +229,7 @@ class DynamicSerializer(DSOModelSerializer):
 
         # URL encoding of the data, i.e. spaces to %20, only if urlfield is present
         if self._url_content_fields:
-            data = URLencodingURLfields().to_representation(
-                self._url_content_fields, data
-            )
+            data = URLencodingURLfields().to_representation(self._url_content_fields, data)
 
         loose_relation_many_to_many_fields = [
             f.attname
@@ -248,9 +239,7 @@ class DynamicSerializer(DSOModelSerializer):
 
         for loose_relation_field_name in loose_relation_many_to_many_fields:
             if not data[toCamelCase(loose_relation_field_name)]:
-                relation = self.Meta.model._meta.get_field(
-                    loose_relation_field_name
-                ).relation
+                relation = self.Meta.model._meta.get_field(loose_relation_field_name).relation
                 dataset_name, table_name, relation_field_name = [
                     to_snake_case(part) for part in relation.split(":")
                 ]
@@ -375,9 +364,7 @@ class DynamicLinksSerializer(DynamicSerializer):
             link_fields += relation_fields
         elif isinstance(embedded_fields, list):
             link_fields += [
-                field_name
-                for field_name in relation_fields
-                if field_name not in embedded_fields
+                field_name for field_name in relation_fields if field_name not in embedded_fields
             ]
         output_fields = OrderedDict(
             [
@@ -439,9 +426,7 @@ def serializer_factory(
         fields = []
     safe_dataset_id = to_snake_case(model.get_dataset_id())
     serializer_name_ext = "Links" if links_serializer else ""
-    serializer_name = (
-        f"{safe_dataset_id.title()}{model.__name__}{serializer_name_ext}Serializer"
-    )
+    serializer_name = f"{safe_dataset_id.title()}{model.__name__}{serializer_name_ext}Serializer"
     new_attrs = {
         "table_schema": model._table_schema,
         "__module__": f"dso_api.dynamic_api.serializers.{safe_dataset_id}",
@@ -468,16 +453,12 @@ def serializer_factory(
         "Meta", (), {"model": model, "fields": fields, "extra_kwargs": extra_kwargs}
     )
 
-    serializer_class = (
-        DynamicLinksSerializer if links_serializer else DynamicBodySerializer
-    )
+    serializer_class = DynamicLinksSerializer if links_serializer else DynamicBodySerializer
 
     return type(serializer_name, (serializer_class,), new_attrs)
 
 
-def _build_serializer_field(  # noqa: C901
-    model, model_field, new_attrs, fields, extra_kwargs
-):
+def _build_serializer_field(model, model_field, new_attrs, fields, extra_kwargs):  # noqa: C901
     orig_name = model_field.name
     # Instead of having to apply camelize() on every response,
     # create converted field names on the serializer construction.
@@ -489,8 +470,7 @@ def _build_serializer_field(  # noqa: C901
         for name, relation in model._table_schema.relations.items():
             if (
                 depth <= 2
-                and relation["table"]
-                == toCamelCase(model_field.related_model._meta.model_name)
+                and relation["table"] == toCamelCase(model_field.related_model._meta.model_name)
                 and relation["field"] == toCamelCase(model_field.field.name)
             ):
                 format1 = relation.get("format", "summary")
@@ -519,9 +499,7 @@ def _build_serializer_field(  # noqa: C901
     field_schema = model._table_schema.get_field_by_id(model_field.name)
     if field_schema is not None and field_schema.type == "string":
         if field_schema.format == "blob-azure":
-            new_attrs[camel_name] = AzureBlobFileField(
-                account_name=field_schema["account_name"]
-            )
+            new_attrs[camel_name] = AzureBlobFileField(account_name=field_schema["account_name"])
 
     # Add extra embedded part for related fields
     # For NM relations, we need another type of EmbeddedField
@@ -572,7 +550,10 @@ def mutate_value(permission, value):
     params = None
     if ":" in permission:
         permission, params = permission.split(":")
-    return {
-        "letters": lambda data, count: data[0 : int(count)],
-        "read": lambda data, _: data,
-    }[permission](value, params)
+
+    if permission == "letters":
+        return value[0 : int(params)]
+    elif permission == "read":
+        return value
+    else:
+        raise NotImplementedError(f"Invalid permission {permission}")

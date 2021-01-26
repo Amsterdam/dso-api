@@ -28,9 +28,7 @@ def test_model_factory_fields(afval_schema):
     assert meta.app_label == afval_schema.id
 
     table_with_id_as_string = afval_schema.tables[1]
-    model_cls = model_factory(
-        table_with_id_as_string, base_app_name="dso_api.dynamic_api"
-    )
+    model_cls = model_factory(table_with_id_as_string, base_app_name="dso_api.dynamic_api")
     meta = model_cls._meta
     assert meta.get_field("id").primary_key
     assert isinstance(meta.get_field("id"), UnlimitedCharField)
@@ -40,12 +38,8 @@ def test_model_factory_relations(afval_schema):
     """Prove that relations between models can be resolved"""
     models = {
         cls._meta.model_name: cls
-        for cls in schema_models_factory(
-            afval_schema, base_app_name="dso_api.dynamic_api"
-        )
+        for cls in schema_models_factory(afval_schema, base_app_name="dso_api.dynamic_api")
     }
     cluster_fk = models["containers"]._meta.get_field("cluster")
     # Cannot compare using identity for dynamically generated classes
-    assert (
-        cluster_fk.related_model._table_schema.id == models["clusters"]._table_schema.id
-    )
+    assert cluster_fk.related_model._table_schema.id == models["clusters"]._table_schema.id

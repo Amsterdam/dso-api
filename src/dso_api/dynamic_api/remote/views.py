@@ -68,9 +68,7 @@ class RemoteViewSet(DSOViewMixin, ViewSet):
     def get_serializer(self, *args, **kwargs) -> serializers.RemoteSerializer:
         """Instantiate the serializer that validates the remote data."""
         if self.serializer_class is None:
-            raise ImproperlyConfigured(
-                f"{self.__class__.__name__}.serializer_class is not set"
-            )
+            raise ImproperlyConfigured(f"{self.__class__.__name__}.serializer_class is not set")
 
         kwargs["context"] = self.get_serializer_context()
         return self.serializer_class(*args, **kwargs)
@@ -122,9 +120,7 @@ class RemoteViewSet(DSOViewMixin, ViewSet):
     def _call_remote(self, url="", query_params={}) -> Union[dict, list]:  # noqa: C901
         """Make a request to the remote server"""
         if not self.endpoint_url:
-            raise ImproperlyConfigured(
-                f"{self.__class__.__name__}.endpoint_url is not set"
-            )
+            raise ImproperlyConfigured(f"{self.__class__.__name__}.endpoint_url is not set")
 
         if not url:
             url = self.endpoint_url
@@ -169,9 +165,7 @@ class RemoteViewSet(DSOViewMixin, ViewSet):
         """
         # Generic logging
         level = logging.ERROR if response.status >= 500 else logging.DEBUG
-        logger.log(
-            level, "Proxy call failed, status %s: %s", response.status, response.reason
-        )
+        logger.log(level, "Proxy call failed, status %s: %s", response.status, response.reason)
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug("  Response body: %s", response.data)
 
@@ -224,8 +218,7 @@ class RemoteViewSet(DSOViewMixin, ViewSet):
                 detail_message,
             )
             raise BadGateway(
-                detail_message
-                or f"Unexpected HTTP {response.status} from internal endpoint"
+                detail_message or f"Unexpected HTTP {response.status} from internal endpoint"
             )
 
     def get_headers(self):  # noqa: C901

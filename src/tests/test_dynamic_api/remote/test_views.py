@@ -70,9 +70,7 @@ SUCCESS_TESTS = {
         {
             "schema": "https://schemas.data.amsterdam.nl/datasets/brp/brp#ingeschrevenpersonen",
             "_links": {
-                "self": {
-                    "href": "http://testserver/v1/remote/brp/ingeschrevenpersonen/999990901/"
-                }
+                "self": {"href": "http://testserver/v1/remote/brp/ingeschrevenpersonen/999990901/"}
             },
             **DEFAULT_RESPONSE,
         },
@@ -82,9 +80,7 @@ SUCCESS_TESTS = {
         {
             "schema": "https://schemas.data.amsterdam.nl/datasets/brp/brp#ingeschrevenpersonen",
             "_links": {
-                "self": {
-                    "href": "http://testserver/v1/remote/brp/ingeschrevenpersonen/999990901/"
-                }
+                "self": {"href": "http://testserver/v1/remote/brp/ingeschrevenpersonen/999990901/"}
             },
             "verblijfplaats": {
                 "postcode": "1060MB",
@@ -155,9 +151,7 @@ def test_remote_detail_view_with_profile_scope(
         content_type="application/json",
     )
     # Prove that URLs can now be resolved.
-    url = reverse(
-        "dynamic_api:brp_test-ingeschrevenpersonen-detail", kwargs={"pk": "999990901"}
-    )
+    url = reverse("dynamic_api:brp_test-ingeschrevenpersonen-detail", kwargs={"pk": "999990901"})
     token = fetch_auth_token(["PROFIEL/SCOPE"])
     response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
     assert response.status_code == 200, response.data
@@ -177,9 +171,7 @@ def test_remote_detail_view(api_client, router, brp_dataset, urllib3_mocker, tes
     )
 
     # Prove that URLs can now be resolved.
-    url = reverse(
-        "dynamic_api:brp-ingeschrevenpersonen-detail", kwargs={"pk": "999990901"}
-    )
+    url = reverse("dynamic_api:brp-ingeschrevenpersonen-detail", kwargs={"pk": "999990901"})
     response = api_client.get(url)
 
     # To test: print(json.dumps(response.json(), indent=2))
@@ -199,9 +191,7 @@ def test_remote_schema_validation(api_client, router, brp_dataset, urllib3_mocke
     )
 
     # Prove that URLs can now be resolved.
-    url = reverse(
-        "dynamic_api:brp-ingeschrevenpersonen-detail", kwargs={"pk": "999990901"}
-    )
+    url = reverse("dynamic_api:brp-ingeschrevenpersonen-detail", kwargs={"pk": "999990901"})
     response = api_client.get(url)
 
     assert response.status_code == 502, response.data
@@ -250,9 +240,7 @@ def test_remote_400_problem_json(api_client, router, brp_dataset, urllib3_mocker
     )
 
     # Prove that URLs can now be resolved.
-    url = reverse(
-        "dynamic_api:brp-ingeschrevenpersonen-detail", kwargs={"pk": "999990901342"}
-    )
+    url = reverse("dynamic_api:brp-ingeschrevenpersonen-detail", kwargs={"pk": "999990901342"})
     response = api_client.get(url)
 
     assert response.status_code == 400, response.data
@@ -299,9 +287,7 @@ def test_remote_404_problem_json(api_client, router, brp_dataset, urllib3_mocker
     )
 
     # Prove that URLs can now be resolved.
-    url = reverse(
-        "dynamic_api:brp-ingeschrevenpersonen-detail", kwargs={"pk": "119990901"}
-    )
+    url = reverse("dynamic_api:brp-ingeschrevenpersonen-detail", kwargs={"pk": "119990901"})
     response = api_client.get(url)
 
     assert response.status_code == 404, response.data
@@ -332,9 +318,7 @@ def test_remote_timeout(api_client, router, brp_dataset, urllib3_mocker):
     )
 
     # Prove that URLs can now be resolved.
-    url = reverse(
-        "dynamic_api:brp-ingeschrevenpersonen-detail", kwargs={"pk": "999990901"}
-    )
+    url = reverse("dynamic_api:brp-ingeschrevenpersonen-detail", kwargs={"pk": "999990901"})
     response = api_client.get(url)
 
     assert response.status_code == 504, response.data
