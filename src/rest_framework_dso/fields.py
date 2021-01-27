@@ -175,14 +175,21 @@ class LinksField(serializers.HyperlinkedIdentityField):
 class DSOGeometryField(GeometryField):
     """Extended geometry field to properly handle export formats."""
 
+    @cached_property
+    def _output_format(self):
+        # caching this object retrieval helps performance in CSV exports.
+        # no need to resolve the root serializer all the time.
+        request = self.context.get("request")
+        if request is None:
+            return None
+
+        return request.accepted_renderer.format
+
     def to_representation(self, value):
         """Avoid GeoJSON export format for e.g. CSV exports"""
         if value is None:
             return None
-
-        request = self.context.get("request")
-        output_format = None if request is None else request.accepted_renderer.format
-        if output_format == "csv":
+        elif self._output_format == "csv":
             # Extended well-known text for CSV format.
             return value.ewkt
         else:
