@@ -170,6 +170,8 @@ class DSOViewMixin:
 
     def initial(self, request, *args, **kwargs):
         request.auth_profile = RequestProfile(request)
+        request.accept_crs = None
+        request.response_content_crs = None
         super().initial(request, *args, **kwargs)
 
         # DSO spec allows clients to define the desired CRS.
@@ -178,9 +180,10 @@ class DSOViewMixin:
             # Allow the output format to overrule the default CRS.
             # e.g. GeoJSON defaults to WGS84, but we still allow the override.
             accept_crs = getattr(request.accepted_renderer, "default_crs", None)
-
-        request.accept_crs = self._parse_accept_crs(accept_crs)
-        request.response_content_crs = None
+            if accept_crs:
+                request.accept_crs = self._parse_accept_crs(accept_crs)
+        else:
+            request.accept_crs = self._parse_accept_crs(accept_crs)
 
     @property
     def table_schema(self) -> DatasetTableSchema:

@@ -2,19 +2,12 @@ import json
 import logging
 
 from django.http import UnreadablePostError
+from django.utils.deprecation import MiddlewareMixin
 
 audit_log = logging.getLogger("dso_api.audit")
 
 
-class BaseMiddleware:
-    def __init__(self, get_response):
-        self.get_response = get_response
-
-    def __call__(self, request):
-        return self.get_response(request)
-
-
-class DatasetMiddleware(BaseMiddleware):
+class DatasetMiddleware(MiddlewareMixin):
     """
     Assign `dataset` to request, for easy access.
     """
@@ -32,21 +25,21 @@ class DatasetMiddleware(BaseMiddleware):
         return None
 
 
-class TemporalDatasetMiddleware(BaseMiddleware):
+class TemporalDatasetMiddleware(MiddlewareMixin):
     """
     Assign `versioned`, `dateset_verison` and `temporal_slice` to request.
     """
 
-    def process_view(self, request, view_func, view_args, view_kwargs):
-
+    def process_request(self, request):
         request.versioned = False
-        request.dataset_version = None
-        request.dataset_temporal_slice = None
 
+    def process_view(self, request, view_func, view_args, view_kwargs):
         if not hasattr(request, "dataset") or request.dataset.temporal is None:
             return None
 
         request.versioned = True
+        request.dataset_version = None
+        request.dataset_temporal_slice = None
         if request.GET.get(request.dataset.temporal["identifier"]):
             request.dataset_version = request.GET.get(request.dataset.temporal["identifier"])
 
@@ -60,7 +53,7 @@ class TemporalDatasetMiddleware(BaseMiddleware):
         return None
 
 
-class RequestAuditLoggingMiddleware(BaseMiddleware):
+class RequestAuditLoggingMiddleware(MiddlewareMixin):
     def process_view(self, request, view_func, view_args, view_kwargs):
         data = None
         try:
