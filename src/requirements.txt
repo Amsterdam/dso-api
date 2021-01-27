@@ -4,7 +4,7 @@
 #
 #    pip-compile --output-file=requirements.txt requirements.in
 #
-amsterdam-schema-tools[django]==0.16.4
+amsterdam-schema-tools[django]==0.17.0
     # via -r requirements.in
 asgiref==3.2.3
     # via django
@@ -240,6 +240,5 @@ urllib3==1.25.8
     #   sentry-sdk
 wcwidth==0.1.8
     # via pytest
-
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools
