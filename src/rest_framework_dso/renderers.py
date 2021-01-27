@@ -51,15 +51,20 @@ class CSVRenderer(RendererMixin, CSVStreamingRenderer):
 
         if serializer is not None:
             # Serializer type is known, introduce better CSV header column.
+            csv_fields = {
+                name: field
+                for name, field in serializer.fields.items()
+                if name != "schema"
+                and not isinstance(field, (HyperlinkedRelatedField, SerializerMethodField))
+            }
+
+            # Also adjust serializer not to render URL fields, giving a huge performance win.
+            serializer.__dict__["fields"] = csv_fields
+
             renderer_context = {
                 **(renderer_context or {}),
-                "header": [
-                    name
-                    for name, field in serializer.fields.items()
-                    if name != "schema"
-                    and not isinstance(field, (HyperlinkedRelatedField, SerializerMethodField))
-                ],
-                "labels": {name: field.label for name, field in serializer.fields.items()},
+                "header": list(csv_fields.keys()),
+                "labels": {name: field.label for name, field in csv_fields.items()},
             }
 
         output = super().render(data, media_type=media_type, renderer_context=renderer_context)
