@@ -1077,12 +1077,14 @@ class TestExportFormats:
     UNPAGINATED_FORMATS = {
         "csv": (
             as_is,
+            "text/csv; charset=utf-8",
             b"Id,Clusterid,Geometry,Serienummer,Datumcreatie,Eigenaarnaam,Datumleegmaken\r\n"
             b"1,c1,SRID=28992;POINT (10 10),foobar-123,2021-01-03,Dataservices,"
             b"2021-01-03T12:13:14\r\n",
         ),
         "geojson": (
             orjson.loads,
+            "application/geo+json; charset=utf-8",
             {
                 "type": "FeatureCollection",
                 "crs": {
@@ -1118,7 +1120,7 @@ class TestExportFormats:
     @pytest.mark.parametrize("format", sorted(UNPAGINATED_FORMATS.keys()))
     def test_unpaginated_list(self, format, api_client, api_rf, afval_container, filled_router):
         """Prove that the export formats generate proper data."""
-        decoder, expected_data = self.UNPAGINATED_FORMATS[format]
+        decoder, expected_type, expected_data = self.UNPAGINATED_FORMATS[format]
         url = reverse("dynamic_api:afvalwegingen-containers-list")
 
         # Prove that the view is available and works
@@ -1127,6 +1129,7 @@ class TestExportFormats:
         assert response.status_code == 200, response.getvalue()
         data = decoder(response.getvalue())
         assert data == expected_data
+        assert response["Content-Type"] == expected_type
 
         # Paginator was not triggered
         assert "X-Pagination-Page" not in response
@@ -1144,6 +1147,7 @@ class TestExportFormats:
     PAGINATED_FORMATS = {
         "csv": (
             as_is,
+            "text/csv; charset=utf-8",
             b"Id,Clusterid,Geometry,Serienummer,Datumcreatie,Eigenaarnaam,Datumleegmaken\r\n"
             b"1,c1,SRID=28992;POINT (10 10),foobar-123,2021-01-03,Dataservices,"
             b"2021-01-03T12:13:14\r\n"
@@ -1156,6 +1160,7 @@ class TestExportFormats:
         ),
         "geojson": (
             orjson.loads,
+            "application/geo+json; charset=utf-8",
             {
                 "type": "FeatureCollection",
                 "crs": {
@@ -1202,7 +1207,7 @@ class TestExportFormats:
     @pytest.mark.parametrize("format", sorted(PAGINATED_FORMATS.keys()))
     def test_paginated_list(self, format, api_client, api_rf, afval_container, filled_router):
         """Prove that the pagination still works if explicitly requested."""
-        decoder, expected_data = self.PAGINATED_FORMATS[format]
+        decoder, expected_type, expected_data = self.PAGINATED_FORMATS[format]
         url = reverse("dynamic_api:afvalwegingen-containers-list")
 
         for i in range(2, 10):
@@ -1215,6 +1220,7 @@ class TestExportFormats:
         assert response.status_code == 200, response.getvalue()
         data = decoder(response.getvalue())
         assert data == expected_data
+        assert response["Content-Type"] == expected_type
 
         # Paginator was triggered
         assert response["X-Pagination-Page"] == "1"
@@ -1232,10 +1238,12 @@ class TestExportFormats:
     EMPTY_FORMATS = {
         "csv": (
             as_is,
+            "text/csv; charset=utf-8",
             b"Id,Clusterid,Geometry,Serienummer,Datumcreatie,Eigenaarnaam,Datumleegmaken\r\n",
         ),
         "geojson": (
             orjson.loads,
+            "application/geo+json; charset=utf-8",
             {
                 "type": "FeatureCollection",
                 "crs": {
@@ -1251,7 +1259,7 @@ class TestExportFormats:
     @pytest.mark.parametrize("format", sorted(EMPTY_FORMATS.keys()))
     def test_empty_list(self, format, api_client, api_rf, filled_router):
         """Prove that empty list pages are properly serialized."""
-        decoder, expected_data = self.EMPTY_FORMATS[format]
+        decoder, expected_type, expected_data = self.EMPTY_FORMATS[format]
         url = reverse("dynamic_api:afvalwegingen-containers-list")
 
         # Prove that the view is available and works
@@ -1260,16 +1268,19 @@ class TestExportFormats:
         assert response.status_code == 200, response.getvalue()
         data = decoder(response.getvalue())
         assert data == expected_data
+        assert response["Content-Type"] == expected_type
 
     DETAIL_FORMATS = {
         "csv": (
             as_is,
+            "text/csv; charset=utf-8",
             b"Id,Clusterid,Geometry,Serienummer,Datumcreatie,Eigenaarnaam,Datumleegmaken\r\n"
             b"1,c1,SRID=28992;POINT (10 10),foobar-123,2021-01-03,Dataservices,"
             b"2021-01-03T12:13:14\r\n",
         ),
         "geojson": (
             orjson.loads,
+            "application/geo+json; charset=utf-8",
             {
                 "type": "Feature",
                 "geometry": {
@@ -1296,7 +1307,7 @@ class TestExportFormats:
     @pytest.mark.parametrize("format", sorted(DETAIL_FORMATS.keys()))
     def test_detail(self, format, api_client, api_rf, afval_container, filled_router):
         """Prove that the detail view also returns an export of a single feature."""
-        decoder, expected_data = self.DETAIL_FORMATS[format]
+        decoder, expected_type, expected_data = self.DETAIL_FORMATS[format]
         url = reverse(
             "dynamic_api:afvalwegingen-containers-detail",
             kwargs={"pk": afval_container.pk},
@@ -1308,6 +1319,33 @@ class TestExportFormats:
         assert response.status_code == 200, response.getvalue()
         data = decoder(response.getvalue())
         assert data == expected_data
+        assert response["Content-Type"] == expected_type
+
+        # Paginator was NOT triggered
+        assert "X-Pagination-Page" not in response
+
+    @pytest.mark.parametrize("format", sorted(DETAIL_FORMATS.keys()))
+    def test_detail_404(self, format, api_client, api_rf, filled_router):
+        """Prove that error pages are also properly rendered.
+        These are not rendered in the output format, but get a generic exception.
+        """
+        url = reverse(
+            "dynamic_api:afvalwegingen-containers-detail",
+            kwargs={"pk": 9999999999},
+        )
+
+        # Prove that the view is available and works
+        response = api_client.get(url, {"_format": format})
+        assert isinstance(response, Response)  # still wrapped in DRF response!
+        assert response.status_code == 404, response.getvalue()
+        assert response["Content-Type"] == "application/problem+json"
+        data = json.loads(response.getvalue())
+        assert data == {
+            "type": "urn:apiexception:not_found",
+            "title": "No containers matches the given query.",
+            "detail": "Not found.",
+            "status": 404,
+        }
 
         # Paginator was NOT triggered
         assert "X-Pagination-Page" not in response

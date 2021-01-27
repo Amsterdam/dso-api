@@ -5,6 +5,8 @@ from typing import Optional, Type, Union
 
 from django.http import HttpResponseNotFound
 from rest_framework.exceptions import ErrorDetail, NotAcceptable, ValidationError
+from rest_framework.renderers import JSONRenderer
+from rest_framework.request import Request
 from rest_framework.views import exception_handler as drf_exception_handler
 from schematools.contrib.django.auth_backend import RequestProfile
 from schematools.types import DatasetTableSchema
@@ -39,6 +41,20 @@ def exception_handler(exc, context):
     if response is None:
         return None
 
+    # Instead of implementing output formats for all media types (e.g. CSV/GeoJSON/Shapefile),
+    # all these exotic formats get the same generic error page (e.g. 404),
+    # as not every format can provide a proper error page.
+    if isinstance(request, Request) and request.accepted_renderer.media_type != "text/html":
+        # The accepted_renderer is assigned to the response in finalize_response()
+        request.accepted_renderer = JSONRenderer()
+
+    # For HAL-JSON responses (and browsable HTML), the content-type should be changed.
+    # Instead of "application/hal+json", the content type becomes "application/problem+json".
+    #
+    # Only response.content_type is set, and response['content-type'] is untouched,
+    # so it remains text/html for the browsable API. It would break browsing otherwise.
+    response.content_type = "application/problem+json"
+
     if isinstance(exc, ValidationError):
         # response.data are the fields
         response.data = {
@@ -50,8 +66,6 @@ def exception_handler(exc, context):
             # Also include the whole tree of recursive errors that DRF generates
             "x-validation-errors": response.data,
         }
-
-        response.content_type = "application/problem+json"
     elif isinstance(exc, RemoteAPIException):
         # Raw problem json response forwarded (for RemoteViewSet)
         # Normalize the problem+json fields to be identical to how
@@ -67,7 +81,6 @@ def exception_handler(exc, context):
         response.data = {**normalized_fields, **response.data}
         response.data.update(normalized_fields)
         response.status_code = int(exc.status_code)
-        response.content_type = "application/problem+json"
     elif isinstance(response.data.get("detail"), ErrorDetail):
         # DRF parsed the exception as API
         detail = response.data["detail"]
@@ -77,12 +90,10 @@ def exception_handler(exc, context):
             "detail": str(detail),
             "status": response.status_code,
         }
-
-        # Returning a response with explicit content_type breaks the browsable API,
-        # as that only returns text/html as it's default type.
-        response.content_type = "application/problem+json"
     else:
-        response.content_type = "application/json"  # Avoid being hal-json
+        # Unknown exception format, pass native JSON what DRF has generated. Make sure
+        # neither application/hal+json nor application/problem+json is returned here.
+        response.content_type = "application/json; charset=utf-8"
 
     return response
 
