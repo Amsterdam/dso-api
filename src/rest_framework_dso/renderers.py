@@ -80,6 +80,7 @@ class GeoJSONRenderer(RendererMixin, JSONRenderer):
 
     media_type = "application/geo+json"
     format = "geojson"
+    charset = "utf-8"
 
     default_crs = "EPSG:4326"  # GeoJSON always defaults to WGS84.
     compatible_paginator_classes = [pagination.DelegatedPageNumberPagination]
