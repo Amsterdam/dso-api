@@ -305,5 +305,4 @@ class DSOAutoSchema(openapi.AutoSchema):
         if schema.get("format") == "uri" and "pattern" in schema:
             # In Python, the token \Z does what \z does in other engines.
             # https://stackoverflow.com/questions/53283160
-            # Fixed in DRF 3.12.0
             schema["pattern"] = schema["pattern"].replace("\\Z", "\\z")
