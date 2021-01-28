@@ -1,0 +1,8 @@
+version: "3.0"
+services:
+
+  test:
+    image: stoplight/spectral
+    volumes:
+      - ${PWD}/run_validator.sh:/var/run_validator.sh
+    command: /var/run_validator.sh

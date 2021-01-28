@@ -9,7 +9,6 @@ from drf_spectacular.types import OpenApiTypes, resolve_basic_type
 from drf_spectacular.utils import ExtraParameter
 from rest_framework import serializers
 from rest_framework.fields import ReadOnlyField
-from rest_framework.pagination import PageNumberPagination
 from rest_framework.settings import api_settings
 from rest_framework_gis.fields import GeometryField
 
@@ -66,7 +65,7 @@ class DSOSchemaGenerator(openapi.SchemaGenerator):
         "Geometry": {
             "type": "object",
             "description": "GeoJSON geometry",
-            "discriminator": "type",
+            "discriminator": {"propertyName": "type"},
             "required": ["type"],
             "properties": {
                 "type": {
@@ -299,29 +298,12 @@ class DSOAutoSchema(openapi.AutoSchema):
             },
         ]
 
-        # Instead of exposing the extra parameters via drf-spectacular's @extend_schema,
-        # the pagination settings are exposed here in a general form. This also makes
-        # sure that the superclass logic is not ignored.
-        action = getattr(self.view, "action", method.lower())
-        pagination_class = getattr(self.view, "pagination_class", None)
-
-        if action == "list" and pagination_class is not None:
-            if issubclass(pagination_class, PageNumberPagination):
-                extra += [
-                    ExtraParameter(
-                        pagination_class.page_query_param,  # page=...
-                        type=OpenApiTypes.INT,
-                        location=ExtraParameter.QUERY,
-                        description="Request a specific page",
-                        required=False,
-                    ).to_schema(),
-                    ExtraParameter(
-                        pagination_class.page_size_query_param,  # _pageSize
-                        type=OpenApiTypes.INT,
-                        location=ExtraParameter.QUERY,
-                        description="Provide a custom page size, to deviate from the default",
-                        required=False,
-                    ).to_schema(),
-                ]
-
         return extra
+
+    def _map_field_validators(self, field, schema):
+        super()._map_field_validators(field, schema)
+        if schema.get("format") == "uri" and "pattern" in schema:
+            # In Python, the token \Z does what \z does in other engines.
+            # https://stackoverflow.com/questions/53283160
+            # Fixed in DRF 3.12.0
+            schema["pattern"] = schema["pattern"].replace("\\Z", "\\z")
