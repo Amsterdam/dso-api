@@ -86,3 +86,10 @@ Then it will import the schemafiles in **_schemas/data/datasets_** with :
 
     python manage.py import_schemas
 
+# Testing OpenAPI schema on localhost
+
+OpenAPI schema can be verified on localhost using following command:
+
+    OPENAPI_HOST=http://localhost:8000 ./.jenkins/openapi_validator/run_validator.sh
+
+Do not forget to replace `OPENAPI_HOST` with address of running DSO api, if it differs from `http://localhost:8000`.
