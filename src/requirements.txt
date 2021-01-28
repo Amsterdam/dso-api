@@ -4,7 +4,7 @@
 #
 #    pip-compile --output-file=requirements.txt requirements.in
 #
-amsterdam-schema-tools[django]==0.17.0
+amsterdam-schema-tools[django]==0.17.1
     # via -r requirements.in
 asgiref==3.2.3
     # via django
@@ -44,6 +44,8 @@ datapunt-authorization-django==1.0.0
     # via -r requirements.in
 decorator==4.4.2
     # via jsonpath-rw
+deepdiff==5.2.2
+    # via amsterdam-schema-tools
 defusedxml==0.6.0
     # via django-gisserver
 django-cors-headers==3.2.1
@@ -139,6 +141,8 @@ ndjson==0.3.1
     # via amsterdam-schema-tools
 oauthlib==3.1.0
     # via requests-oauthlib
+ordered-set==4.0.2
+    # via deepdiff
 orjson==3.4.6
     # via
     #   -r requirements.in
@@ -208,6 +212,8 @@ sentry-sdk==0.14.2
     # via -r requirements.in
 shapely==1.7.0
     # via amsterdam-schema-tools
+simple-singleton==1.1
+    # via amsterdam-schema-tools
 six==1.14.0
     # via
     #   azure-core
@@ -240,5 +246,6 @@ urllib3==1.25.8
     #   sentry-sdk
 wcwidth==0.1.8
     # via pytest
+
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools
