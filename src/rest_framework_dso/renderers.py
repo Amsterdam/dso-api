@@ -1,6 +1,7 @@
 from io import BytesIO
 
 import orjson
+from gisserver.geometries import WGS84
 from rest_framework.relations import HyperlinkedRelatedField
 from rest_framework.renderers import JSONRenderer
 from rest_framework.serializers import SerializerMethodField
@@ -79,7 +80,7 @@ class GeoJSONRenderer(RendererMixin, JSONRenderer):
     media_type = "application/geo+json"
     format = "geojson"
 
-    default_crs = "EPSG:4326"  # GeoJSON always defaults to WGS84.
+    default_crs = WGS84  # GeoJSON always defaults to WGS84 (EPSG:4326).
     compatible_paginator_classes = [pagination.DelegatedPageNumberPagination]
 
     def render(self, data, accepted_media_type=None, renderer_context=None):

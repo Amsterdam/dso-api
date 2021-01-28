@@ -181,7 +181,7 @@ class DSOViewMixin:
             # e.g. GeoJSON defaults to WGS84, but we still allow the override.
             accept_crs = getattr(request.accepted_renderer, "default_crs", None)
             if accept_crs:
-                request.accept_crs = self._parse_accept_crs(accept_crs)
+                request.accept_crs = accept_crs
         else:
             request.accept_crs = self._parse_accept_crs(accept_crs)
 
