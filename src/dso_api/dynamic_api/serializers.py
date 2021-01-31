@@ -290,6 +290,11 @@ class DynamicBodySerializer(DynamicSerializer):
     parameters
     """
 
+    serializer_field_mapping = {
+        **DynamicSerializer.serializer_field_mapping,
+        LooseRelationField: serializers.CharField,
+    }
+
     @property
     def fields(self):
         fields = super().fields
