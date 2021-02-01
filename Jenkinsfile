@@ -96,14 +96,14 @@ if (BRANCH == "master") {
                 sh  "docker-compose -p owasp_check -f src/.jenkins/owasp_vulnerability_scan/docker-compose.yml down"
             }
         }
-        stage('OpenAPI specification check') {
-            tryStep "openapi specification check", {
-                sh  "docker-compose -p openapi_validator -f src/.jenkins/openapi_validator/docker-compose.yml build --pull && " +
-                    "docker-compose -p openapi_validator -f src/.jenkins/openapi_validator/docker-compose.yml run -u root --rm --entrypoint='' test /var/run_validator.sh"
-            }, {
-                sh  "docker-compose -p openapi_validator -f src/.jenkins/openapi_validator/docker-compose.yml down"
-            }
-        }
+        /* stage('OpenAPI specification check') { */
+        /*     tryStep "openapi specification check", { */
+        /*         sh  "docker-compose -p openapi_validator -f src/.jenkins/openapi_validator/docker-compose.yml build --pull && " + */
+        /*             "docker-compose -p openapi_validator -f src/.jenkins/openapi_validator/docker-compose.yml run -u root --rm --entrypoint='' test /var/run_validator.sh" */
+        /*     }, { */
+        /*         sh  "docker-compose -p openapi_validator -f src/.jenkins/openapi_validator/docker-compose.yml down" */
+        /*     } */
+        /* } */
     }
 
     stage('Waiting for approval') {
