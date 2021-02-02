@@ -46,12 +46,23 @@ class StreamingResponse(StreamingHttpResponse):
     @classmethod
     def from_response(cls, response: Response):
         """Convert a regular DRF Response into this streaming response."""
+        content_type = response.content_type
+
+        # Make sure the content-type is properly set. Normally this happens inside
+        # Response.rendered_content, but this is too late for streaming: the HTTP
+        # headers are already copied before the .streaming_content generator is read.
+        if content_type is None and hasattr(response, "accepted_renderer"):
+            media_type = response.accepted_renderer.media_type
+            charset = response.accepted_renderer.charset
+            content_type = f"{media_type}; charset={charset}" if charset else media_type
+            response["Content-Type"] = content_type
+
         streaming_response = cls(
             response.data,
             status=response.status_code,
             template_name=response.template_name,
             headers=dict(response.items()),
-            content_type=response.content_type,
+            content_type=content_type,
         )
 
         # Copy DRF attributes from finalize_response()

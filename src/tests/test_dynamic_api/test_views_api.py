@@ -1126,10 +1126,11 @@ class TestExportFormats:
         # Prove that the view is available and works
         response = api_client.get(url, {"_format": format})
         assert isinstance(response, StreamingResponse)  # still wrapped in DRF response!
+        assert response["Content-Type"] == expected_type  # Test before reading stream
         assert response.status_code == 200, response.getvalue()
         data = decoder(response.getvalue())
         assert data == expected_data
-        assert response["Content-Type"] == expected_type
+        assert response["Content-Type"] == expected_type  # And test after reading
 
         # Paginator was not triggered
         assert "X-Pagination-Page" not in response
@@ -1217,10 +1218,11 @@ class TestExportFormats:
         # Prove that the view is available and works
         response = api_client.get(url, {"_format": format, "_pageSize": "4"})
         assert isinstance(response, StreamingResponse)
+        assert response["Content-Type"] == expected_type  # Test before reading stream
         assert response.status_code == 200, response.getvalue()
         data = decoder(response.getvalue())
         assert data == expected_data
-        assert response["Content-Type"] == expected_type
+        assert response["Content-Type"] == expected_type  # And test after reading
 
         # Paginator was triggered
         assert response["X-Pagination-Page"] == "1"
@@ -1265,10 +1267,11 @@ class TestExportFormats:
         # Prove that the view is available and works
         response = api_client.get(url, {"_format": format})
         assert isinstance(response, StreamingResponse)
+        assert response["Content-Type"] == expected_type  # Test before reading stream
         assert response.status_code == 200, response.getvalue()
         data = decoder(response.getvalue())
         assert data == expected_data
-        assert response["Content-Type"] == expected_type
+        assert response["Content-Type"] == expected_type  # And test after reading
 
     DETAIL_FORMATS = {
         "csv": (
@@ -1316,10 +1319,11 @@ class TestExportFormats:
         # Prove that the view is available and works
         response = api_client.get(url, {"_format": format})
         assert isinstance(response, Response)  # still wrapped in DRF response!
+        assert response["Content-Type"] == expected_type  # Test before reading stream
         assert response.status_code == 200, response.getvalue()
         data = decoder(response.getvalue())
         assert data == expected_data
-        assert response["Content-Type"] == expected_type
+        assert response["Content-Type"] == expected_type  # And test after reading
 
         # Paginator was NOT triggered
         assert "X-Pagination-Page" not in response
