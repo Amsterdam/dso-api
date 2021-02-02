@@ -875,7 +875,7 @@ class TestEmbedTemporalTables:
                 },
             },
             "id": 1,
-            "buurt": "03630000000078",
+            "buurtId": "03630000000078",
         }
 
     def test_detail_expand_true_for_loose_relation(
@@ -904,7 +904,7 @@ class TestEmbedTemporalTables:
                 },
             },
             "id": 1,
-            "buurt": "03630000000078",
+            "buurtId": "03630000000078",
             "_embedded": {
                 "buurt": {
                     "_links": {
