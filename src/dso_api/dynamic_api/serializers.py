@@ -288,11 +288,6 @@ class DynamicBodySerializer(DynamicSerializer):
     parameters
     """
 
-    serializer_field_mapping = {
-        **DynamicSerializer.serializer_field_mapping,
-        LooseRelationField: serializers.CharField,
-    }
-
     @property
     def fields(self):
         fields = super().fields
@@ -402,7 +397,9 @@ def serializer_factory(
     # Parse fields for serializer
     extra_kwargs = {"depth": depth}
     for model_field in model._meta.get_fields():
-        _build_serializer_field(model, model_field, new_attrs, fields, extra_kwargs)
+        _build_serializer_field(
+            model, model_field, new_attrs, fields, extra_kwargs, links_serializer
+        )
 
     # Generate embedded relations
     if not flat:
@@ -421,11 +418,12 @@ def serializer_factory(
     )
 
     serializer_class = DynamicLinksSerializer if links_serializer else DynamicBodySerializer
-
     return type(serializer_name, (serializer_class,), new_attrs)
 
 
-def _build_serializer_field(model, model_field, new_attrs, fields, extra_kwargs):  # noqa: C901
+def _build_serializer_field(  # noqa: C901
+    model, model_field, new_attrs, fields, extra_kwargs, links_serializer
+):
     orig_name = model_field.name
     # Instead of having to apply camelize() on every response,
     # create converted field names on the serializer construction.
@@ -501,6 +499,12 @@ def _build_serializer_field(model, model_field, new_attrs, fields, extra_kwargs)
     fields.append(camel_name)
     if orig_name != camel_name:
         extra_kwargs[camel_name] = {"source": model_field.name}
+
+    if not links_serializer and isinstance(model_field, LooseRelationField):
+        # add a loose relation id char field
+        loose_id_field_name = f"{camel_name}Id"
+        new_attrs[loose_id_field_name] = serializers.CharField(source=model_field.name)
+        fields.append(loose_id_field_name)
 
 
 def generate_embedded_relations(model, fields, new_attrs):
