@@ -8,7 +8,6 @@ from rest_framework.exceptions import ErrorDetail, NotAcceptable, ValidationErro
 from rest_framework.renderers import JSONRenderer
 from rest_framework.request import Request
 from rest_framework.views import exception_handler as drf_exception_handler
-from schematools.contrib.django.auth_backend import RequestProfile
 from schematools.types import DatasetTableSchema
 
 from dso_api.lib.exceptions import RemoteAPIException
@@ -184,7 +183,6 @@ class DSOViewMixin:
     pagination_class = AutoSelectPaginationClass(default=DSOPageNumberPagination)
 
     def initial(self, request, *args, **kwargs):
-        request.auth_profile = RequestProfile(request)
         request.accept_crs = None
         request.response_content_crs = None
         super().initial(request, *args, **kwargs)

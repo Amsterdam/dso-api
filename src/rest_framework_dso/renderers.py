@@ -4,7 +4,7 @@ import orjson
 from gisserver.geometries import WGS84
 from rest_framework.relations import HyperlinkedRelatedField
 from rest_framework.renderers import JSONRenderer
-from rest_framework.serializers import SerializerMethodField
+from rest_framework.serializers import ListSerializer, SerializerMethodField
 from rest_framework.utils.serializer_helpers import ReturnDict, ReturnList
 from rest_framework_csv.renderers import CSVStreamingRenderer
 from rest_framework_gis.fields import GeoJsonDict
@@ -54,15 +54,18 @@ class CSVRenderer(RendererMixin, CSVStreamingRenderer):
 
         if serializer is not None:
             # Serializer type is known, introduce better CSV header column.
+            # Avoid M2M content, and skip HAL URL fields as this improves performance.
             csv_fields = {
                 name: field
                 for name, field in serializer.fields.items()
                 if name != "schema"
-                and not isinstance(field, (HyperlinkedRelatedField, SerializerMethodField))
+                and not isinstance(
+                    field,
+                    (HyperlinkedRelatedField, SerializerMethodField, ListSerializer),
+                )
             }
 
-            # Also adjust serializer not to render URL fields, giving a huge performance win.
-            serializer.__dict__["fields"] = csv_fields
+            serializer.fields = csv_fields
 
             renderer_context = {
                 **(renderer_context or {}),

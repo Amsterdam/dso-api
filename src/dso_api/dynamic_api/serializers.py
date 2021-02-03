@@ -149,23 +149,21 @@ class DynamicSerializer(DSOModelSerializer):
         """
         return self.context["request"]
 
-    @property
-    def fields(self):
-        fields = super().fields
+    def get_fields(self):
+        fields = super().get_fields()
         request = self.get_request()
 
         # Adjust the serializer based on the request.
         # request can be None for get_schema_view(public=True)
-        if request is not None:
-            unauthorized_fields = get_unauthorized_fields(request, self.Meta.model)
-            if unauthorized_fields:
-                fields = OrderedDict(
-                    [
-                        (field_name, field)
-                        for field_name, field in fields.items()
-                        if field_name not in unauthorized_fields
-                    ]
-                )
+        unauthorized_fields = get_unauthorized_fields(request, self.Meta.model)
+        if unauthorized_fields:
+            fields = OrderedDict(
+                [
+                    (field_name, field)
+                    for field_name, field in fields.items()
+                    if field_name not in unauthorized_fields
+                ]
+            )
         return fields
 
     def get_auth_checker(self):
@@ -293,9 +291,8 @@ class DynamicBodySerializer(DynamicSerializer):
     parameters
     """
 
-    @property
-    def fields(self):
-        fields = super().fields
+    def get_fields(self):
+        fields = super().get_fields()
         output_fields = OrderedDict(
             [
                 (field_name, field)
@@ -321,9 +318,8 @@ class DynamicLinksSerializer(DynamicSerializer):
 
     serializer_related_field = HALTemporalHyperlinkedRelatedField
 
-    @property
-    def fields(self):
-        fields = super().fields
+    def get_fields(self):
+        fields = super().get_fields()
         embedded_fields = self.get_fields_to_expand()
         link_fields = ["self", "schema"]
         relation_fields = [

@@ -3,6 +3,7 @@ import logging
 
 from django.http import UnreadablePostError
 from django.utils.deprecation import MiddlewareMixin
+from schematools.contrib.django.auth_backend import RequestProfile
 
 audit_log = logging.getLogger("dso_api.audit")
 
@@ -16,6 +17,8 @@ class DatasetMiddleware(MiddlewareMixin):
         """
         Make current dataset available across whole application.
         """
+        request.auth_profile = RequestProfile(request)  # for OAS views
+
         if not hasattr(request, "dataset"):
             try:
                 request.dataset = view_func.cls.model._dataset_schema
