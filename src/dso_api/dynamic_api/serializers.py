@@ -8,6 +8,7 @@ from urllib import parse
 
 from django.core.exceptions import ImproperlyConfigured
 from django.db import models
+from django.utils.functional import cached_property
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
@@ -211,49 +212,53 @@ class DynamicSerializer(DSOModelSerializer):
 
         return field_class, field_kwargs
 
+    @cached_property
+    def _loose_relation_m2m_fields(self):
+        """The M2M field metadata, retrieved once for this serializer.
+        The caching makes sure this is only calculated once in a list serializer.
+        """
+        from .urls import app_name
+
+        result = []
+        for f in self.Meta.model._meta.many_to_many:
+            field = self.Meta.model._meta.get_field(f.attname)
+            if isinstance(field, LooseRelationManyToManyField):
+                dataset_name, table_name = [
+                    to_snake_case(part) for part in field.relation.split(":")
+                ]
+                url_name = f"{app_name}:{dataset_name}-{table_name}-detail"
+                result.append((f.attname, toCamelCase(f.attname), url_name))
+
+        return result
+
     def to_representation(self, validated_data):
         data = super().to_representation(validated_data)
 
         request = self.get_request()
-        from .urls import app_name
 
         # URL encoding of the data, i.e. spaces to %20, only if urlfield is present
         if self._url_content_fields:
             data = URLencodingURLfields().to_representation(self._url_content_fields, data)
 
-        loose_relation_many_to_many_fields = [
-            f.attname
-            for f in self.Meta.model._meta.many_to_many
-            if isinstance(f, LooseRelationManyToManyField) and toCamelCase(f.attname) in data
-        ]
-
-        for loose_relation_field_name in loose_relation_many_to_many_fields:
-            if not data[toCamelCase(loose_relation_field_name)]:
-                relation = self.Meta.model._meta.get_field(loose_relation_field_name).relation
-                dataset_name, table_name = [to_snake_case(part) for part in relation.split(":")]
-                related_mgr = getattr(validated_data, loose_relation_field_name)
-                source_field_name = related_mgr.source_field_name
-                source_id = validated_data.id
-                through_tabel_filter_params = {source_field_name: source_id}
-                target_id_field = f"{related_mgr.target_field_name}_id"
-                through_tabel_items = (
-                    related_mgr.through.objects.filter(**through_tabel_filter_params)
+        for attname, camel_name, url_name in self._loose_relation_m2m_fields:
+            if attname in data and not data[camel_name]:
+                # TODO: N-query issue, which needs to be addressed later.
+                related_mgr = getattr(validated_data, attname)
+                related_ids = (
+                    related_mgr.through.objects.filter(
+                        **{related_mgr.source_field_name: validated_data.id}
+                    )
                     .order_by()
-                    .values_list(target_id_field, flat=True)
+                    .values_list(f"{related_mgr.target_field_name}_id", flat=True)
                 )
 
-                result_list = [
+                data[camel_name] = [
                     {
-                        "href": reverse(
-                            f"{app_name}:{dataset_name}-{table_name}-detail",
-                            kwargs={"pk": item},
-                            request=request,
-                        ),
+                        "href": reverse(url_name, kwargs={"pk": item}, request=request),
                         "title": item,
                     }
-                    for item in through_tabel_items
+                    for item in related_ids
                 ]
-                data[toCamelCase(loose_relation_field_name)] = result_list
 
         if self.instance is not None:
             data.update(self._profile_based_authorization_and_mutation(data))
