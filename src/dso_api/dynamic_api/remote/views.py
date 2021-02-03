@@ -11,7 +11,6 @@ from rest_framework import status
 from rest_framework.exceptions import NotAuthenticated, NotFound, ParseError
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
-from schematools.contrib.django.auth_backend import RequestProfile
 from urllib3 import HTTPResponse
 
 from dso_api.lib.exceptions import (
@@ -61,10 +60,6 @@ class RemoteViewSet(DSOViewMixin, ViewSet):
 
     #: Custom permission that checks amsterdam schema auth settings
     permission_classes = [permissions.HasOAuth2Scopes]
-
-    def initial(self, request, *args, **kwargs):
-        request.auth_profile = RequestProfile(request)
-        super().initial(request, *args, **kwargs)
 
     def get_serializer(self, *args, **kwargs) -> serializers.RemoteSerializer:
         """Instantiate the serializer that validates the remote data."""

@@ -160,30 +160,34 @@ class DSOSerializer(_SideloadMixin, serializers.Serializer):
 
         return list_serializer_class(*args, **list_kwargs)
 
-    @property
-    def fields(self):
+    def get_fields(self):
         # .get() is needed to print serializer fields during debugging
         request = self.context.get("request")
-        fields = super().fields
+        fields = super().get_fields()
+
+        if request is None:
+            # request would be be None for get_schema_view(public=True),
+            # any other situation could be the basis for an information leak, hence abort here.
+            raise RuntimeError(
+                "Request object should be provided to serializer to apply security-restrictions"
+            )
 
         # Adjust the serializer based on the request.
-        # request can be None for get_schema_view(public=True)
-        if request is not None:
-            request_fields = request.GET.get(self.fields_param)
-            if not request_fields and "fields" in request.GET:
-                request_fields = request.GET["fields"]  # DSO 1.0
+        request_fields = request.GET.get(self.fields_param)
+        if not request_fields and "fields" in request.GET:
+            request_fields = request.GET["fields"]  # DSO 1.0
 
-            if request_fields:
-                display_fields = self.get_fields_to_display(fields, request_fields)
+        if request_fields:
+            display_fields = self.get_fields_to_display(fields, request_fields)
 
-                # Limit result to requested fields only
-                fields = OrderedDict(
-                    [
-                        (field_name, field)
-                        for field_name, field in fields.items()
-                        if field_name in display_fields
-                    ]
-                )
+            # Limit result to requested fields only
+            fields = OrderedDict(
+                [
+                    (field_name, field)
+                    for field_name, field in fields.items()
+                    if field_name in display_fields
+                ]
+            )
         return fields
 
     def get_fields_to_display(self, fields, request_fields) -> set:

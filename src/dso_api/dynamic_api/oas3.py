@@ -68,7 +68,6 @@ These are located at:
 
 def _get_openapi_view(renderer_classes=None):
     return get_schema_view(
-        public=True,
         renderer_classes=renderer_classes,
         generator_class=ExtendedSchemaGenerator,
         permission_classes=(permissions.AllowAny,),
