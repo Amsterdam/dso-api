@@ -32,14 +32,14 @@ class TemporalDatasetMiddleware(MiddlewareMixin):
 
     def process_request(self, request):
         request.versioned = False
+        request.dataset_version = None
+        request.dataset_temporal_slice = None
 
     def process_view(self, request, view_func, view_args, view_kwargs):
         if not hasattr(request, "dataset") or request.dataset.temporal is None:
             return None
 
         request.versioned = True
-        request.dataset_version = None
-        request.dataset_temporal_slice = None
         if request.GET.get(request.dataset.temporal["identifier"]):
             request.dataset_version = request.GET.get(request.dataset.temporal["identifier"])
 
