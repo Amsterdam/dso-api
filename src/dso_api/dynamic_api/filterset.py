@@ -110,9 +110,15 @@ def generate_relation_filters(model: Type[DynamicModel]):  # NoQA
 
         relation_properties = schema_fields[relation.name]["items"]["properties"]
         for field_name, field_schema in relation_properties.items():
-            # contert space separated property name into snake_case name
+            # getattr() retrieved a DeferredAttribute here, hence the .field.
             model_field_name = to_snake_case(field_name)
-            model_field = getattr(relation.related_model, model_field_name).field
+            try:
+                model_field = getattr(relation.related_model, model_field_name).field
+            except AttributeError as e:
+                raise AttributeError(
+                    f"Unable to initialize dataset {model.get_dataset_id()}: {e}"
+                ) from e
+
             filter_class = dso_filters.DSOFilterSet.FILTER_DEFAULTS.get(model_field.__class__)
             if filter_class is None:
                 # No mapping found for this model field, skip it.
