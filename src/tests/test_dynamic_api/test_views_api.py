@@ -1101,10 +1101,6 @@ class TestExportFormats:
                         "properties": {
                             "id": 1,
                             "clusterId": "c1",
-                            "cluster": (
-                                "http://testserver"
-                                "/v1/afvalwegingen/clusters/c1/?_format=geojson"
-                            ),
                             "serienummer": "foobar-123",
                             "datumCreatie": "2021-01-03",
                             "eigenaarNaam": "Dataservices",
@@ -1178,10 +1174,6 @@ class TestExportFormats:
                         "properties": {
                             "id": i,
                             "clusterId": "c1",
-                            "cluster": (
-                                "http://testserver"
-                                "/v1/afvalwegingen/clusters/c1/?_format=geojson"
-                            ),
                             "serienummer": "foobar-123",
                             "datumCreatie": "2021-01-03",
                             "eigenaarNaam": "Dataservices",
@@ -1291,7 +1283,6 @@ class TestExportFormats:
                     "type": "Point",
                 },
                 "properties": {
-                    "cluster": "http://testserver/v1/afvalwegingen/clusters/c1/?_format=geojson",
                     "clusterId": "c1",
                     "datumCreatie": "2021-01-03",
                     "datumLeegmaken": "2021-01-03T12:13:14",

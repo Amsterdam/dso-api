@@ -1,16 +1,27 @@
 from io import BytesIO
+from typing import Optional
 
 import orjson
 from gisserver.geometries import WGS84
 from rest_framework.relations import HyperlinkedRelatedField
 from rest_framework.renderers import JSONRenderer
-from rest_framework.serializers import ListSerializer, SerializerMethodField
+from rest_framework.serializers import ListSerializer, Serializer, SerializerMethodField
 from rest_framework.utils.serializer_helpers import ReturnDict, ReturnList
 from rest_framework_csv.renderers import CSVStreamingRenderer
 from rest_framework_gis.fields import GeoJsonDict
 
 from rest_framework_dso import pagination
 from rest_framework_dso.serializer_helpers import ReturnGenerator
+
+
+def get_data_serializer(data) -> Optional[Serializer]:
+    """Find the serializer associated with the incoming 'data'"""
+    if isinstance(data, ReturnDict):
+        return data.serializer
+    elif isinstance(data, (ReturnList, ReturnGenerator)):
+        return data.serializer.child
+    else:
+        return None
 
 
 class RendererMixin:
@@ -45,14 +56,7 @@ class CSVRenderer(RendererMixin, CSVStreamingRenderer):
     compatible_paginator_classes = [pagination.DSOHTTPHeaderPageNumberPagination]
 
     def render(self, data, media_type=None, renderer_context=None):
-        if isinstance(data, ReturnDict):
-            serializer = data.serializer
-        elif isinstance(data, (ReturnList, ReturnGenerator)):
-            serializer = data.serializer.child
-        else:
-            serializer = None
-
-        if serializer is not None:
+        if (serializer := get_data_serializer(data)) is not None:
             # Serializer type is known, introduce better CSV header column.
             # Avoid M2M content, and skip HAL URL fields as this improves performance.
             csv_fields = {
@@ -99,6 +103,12 @@ class GeoJSONRenderer(RendererMixin, JSONRenderer):
         if data is None:
             return b""
 
+        # Remove unused fields from the serializer:
+        if (serializer := get_data_serializer(data)) is not None:
+            serializer.fields = {
+                name: field for name, field in serializer.fields.items() if name != "_links"
+            }
+
         request = renderer_context.get("request") if renderer_context else None
         yield from _chunked_output(self._render_geojson(data, request))
 
@@ -106,7 +116,8 @@ class GeoJSONRenderer(RendererMixin, JSONRenderer):
         # Detect what kind of data is actually provided:
         if isinstance(data, dict):
             if len(data) > 4:
-                # Must be a detail page
+                # Must be a detail page. Data is already read
+                data.pop("_links")
                 yield self._render_geojson_detail(data, request=request)
                 return
 
@@ -240,21 +251,11 @@ class GeoJSONRenderer(RendererMixin, JSONRenderer):
 
     def _item_to_feature(self, item: dict, geometry_field):
         """Reorganize the dict of a single item"""
-
-        #  get the foreign key relations from the _links field and unpack from its HAL envelope.
-        link_properties = {
-            key: value["href"]
-            for key, value in item["_links"].items()
-            if key not in ("self", "schema") and "href" in value
-        }
         return {
             "type": "Feature",
             # "id": item
             "geometry": item.pop(geometry_field),
-            "properties": {
-                **link_properties,
-                **{key: value for key, value in item.items() if key not in ("schema", "_links")},
-            },
+            "properties": item,
         }
 
     def _find_geometry_field(self, properties: dict):
