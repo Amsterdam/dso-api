@@ -13,12 +13,13 @@ class DatasetMiddleware(MiddlewareMixin):
     Assign `dataset` to request, for easy access.
     """
 
+    def process_request(self, request):
+        request.auth_profile = RequestProfile(request)  # for OAS views
+
     def process_view(self, request, view_func, view_args, view_kwargs):
         """
         Make current dataset available across whole application.
         """
-        request.auth_profile = RequestProfile(request)  # for OAS views
-
         if not hasattr(request, "dataset"):
             try:
                 request.dataset = view_func.cls.model._dataset_schema
@@ -35,10 +36,10 @@ class TemporalDatasetMiddleware(MiddlewareMixin):
 
     def process_request(self, request):
         request.versioned = False
-
-    def process_view(self, request, view_func, view_args, view_kwargs):
         request.dataset_version = None
         request.dataset_temporal_slice = None
+
+    def process_view(self, request, view_func, view_args, view_kwargs):
         if not hasattr(request, "dataset") or request.dataset.temporal is None:
             return None
 
