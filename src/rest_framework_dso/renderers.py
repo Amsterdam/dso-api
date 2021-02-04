@@ -161,7 +161,7 @@ class GeoJSONRenderer(RendererMixin, JSONRenderer):
 
                 # Now that the CRS can be detected, write out the header.
                 yield orjson.dumps(self._get_header(request))[:-1]
-                yield b',\n  "features": [\n'
+                yield b',\n  "features": [\n    '
             else:
                 # Add separator between feature collections.
                 yield b",\n"
@@ -172,7 +172,7 @@ class GeoJSONRenderer(RendererMixin, JSONRenderer):
             # Output all features, with separator in between.
             yield orjson.dumps(self._item_to_feature(first_feature, geometry_field))
             yield from (
-                b",\n%b" % orjson.dumps(self._item_to_feature(feature, geometry_field))
+                b",\n    %b" % orjson.dumps(self._item_to_feature(feature, geometry_field))
                 for feature in features_iter
             )
 
