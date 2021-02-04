@@ -571,7 +571,18 @@ class DSOFilterSetBackend(DjangoFilterBackend):
         """
         return ""
 
-    def get_filterset(self, request, queryset, view):
+    def is_unfiltered(self, request):
+        # If there are request parameters (except for this hard-coded exclude list),
+        # they are assumed to be filters.
+        return {"_format", "_sort", "_pageSize", "_page_size"}.issuperset(request.GET.keys())
+
+    def get_filterset(self, request, queryset, view):  # noqa: C901
+        # Optimization: avoid creating the whole filterset, when nothing will be filtered.
+        # This also avoids a deepcopy of the form fields.
+        if self.is_unfiltered(request):
+            return None
+
+        # TODO: this needs to be moved to proper FilterField classes!
         filterset = super().get_filterset(request, queryset, view)
         for name, value in filterset.data.items():
             if (
