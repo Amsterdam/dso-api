@@ -142,6 +142,7 @@ class DynamicSerializer(DSOModelSerializer):
     table_schema: DatasetTableSchema = None
 
     id_based_fetcher = temporal_id_based_fetcher
+    hal_relations_serializer_class = None
 
     def get_request(self):
         """
@@ -170,10 +171,16 @@ class DynamicSerializer(DSOModelSerializer):
         request = self.get_request()
         return getattr(request, "is_authorized_for", None) if request else None
 
+    @cached_property
+    def hal_relations_serializer(self):
+        # Serializer needs to be instantiated once, so it also determines it's .fields once.
+        # Otherwise, the cached properties on that class are recalculated per object in a list.
+        return self.hal_relations_serializer_class(
+            context=self.context, fields_to_expand=self.fields_to_expand
+        )
+
     def get__links(self, instance):
-        return self.hal_relations_serializer(
-            instance, context=self.context, fields_to_expand=self.fields_to_expand
-        ).data
+        return self.hal_relations_serializer.to_representation(instance)
 
     @extend_schema_field(OpenApiTypes.URI)
     def get_schema(self, instance):
@@ -408,10 +415,10 @@ def serializer_factory(
 
     if depth <= 1 and not links_serializer:
         # Generate the serializer for the _links field containing the relations according to HAL
-        hal_relations_serializer = serializer_factory(
+        hal_relations_serializer_class = serializer_factory(
             model, depth, flat=True, links_serializer=True
         )
-        new_attrs["hal_relations_serializer"] = hal_relations_serializer
+        new_attrs["hal_relations_serializer_class"] = hal_relations_serializer_class
 
     # Generate Meta section and serializer class
     new_attrs["Meta"] = type(
