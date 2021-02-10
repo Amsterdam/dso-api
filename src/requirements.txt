@@ -36,7 +36,7 @@ click==7.1.2
     #   mappyfile
 coverage==5.0.3
     # via pytest-cov
-cryptography==3.2
+cryptography==3.3.2
     # via
     #   azure-storage-blob
     #   jwcrypto
