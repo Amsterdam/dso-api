@@ -37,7 +37,7 @@ docker-compose exec airflow airflow create_user -r Admin -u admin -e admin@examp
 
 DSO API can be used locally, inside python virtual environment. All commands related to `dso-api` will be assumed to be executed inside virtual environment.
 
-Install `requirements_dev.txt`: `pip install src/requirements_dev.txt` (Note: local development packages need to be installed before running this step) 
+Install `requirements_dev.txt`: `pip install -r src/requirements_dev.txt` (Note: local development packages need to be installed before running this step) 
 
 Next step will require `DATABASE_URL` environment variable to be present that is pointing to DSO database inside `dataservices-airflow` docker-compose setup:
 
