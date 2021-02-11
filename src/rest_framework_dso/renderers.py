@@ -4,6 +4,7 @@ from typing import Optional
 import orjson
 from gisserver.geometries import WGS84
 from rest_framework import renderers
+from rest_framework.exceptions import ValidationError
 from rest_framework.relations import HyperlinkedRelatedField
 from rest_framework.serializers import ListSerializer, Serializer, SerializerMethodField
 from rest_framework.utils.serializer_helpers import ReturnDict, ReturnList
@@ -12,6 +13,8 @@ from rest_framework_gis.fields import GeoJsonDict
 
 from rest_framework_dso import pagination
 from rest_framework_dso.serializer_helpers import ReturnGenerator
+
+BROWSABLE_MAX_PAGE_SIZE = 1000
 
 
 def get_data_serializer(data) -> Optional[Serializer]:
@@ -49,6 +52,16 @@ class BrowsableAPIRenderer(RendererMixin, renderers.BrowsableAPIRenderer):
         return context
 
     def render(self, data, accepted_media_type=None, renderer_context=None):
+        # Protect the browsable API from being used as DOS (Denial of Service) attack vector.
+        # While we allow infinitely large pages in our streaming responses, the browsable API
+        # still has to render that in-memory as part of the HTML template response.
+        request = renderer_context["request"]
+        view = renderer_context["view"]
+        if view.paginator.get_page_size(request) > BROWSABLE_MAX_PAGE_SIZE:
+            raise ValidationError(
+                "Browsable HTML API does not support this page size.", code="_pageSize"
+            )
+
         ret = super().render(
             data,
             accepted_media_type=accepted_media_type,
