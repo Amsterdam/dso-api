@@ -1,11 +1,12 @@
 import json
+import sys
 from inspect import isgeneratorfunction
 from types import GeneratorType
 from typing import Optional, Type, Union
 
 from django.http import HttpResponseNotFound, JsonResponse
 from rest_framework import status
-from rest_framework.exceptions import ErrorDetail, NotAcceptable, ValidationError
+from rest_framework.exceptions import APIException, ErrorDetail, NotAcceptable, ValidationError
 from rest_framework.renderers import JSONRenderer
 from rest_framework.request import Request
 from rest_framework.views import exception_handler as drf_exception_handler
@@ -46,6 +47,20 @@ def server_error(request, *args, **kwargs):
     """
     Generic 500 error handler.
     """
+    # If this is an API error (e.g. due to delayed rendering by streaming)
+    # redirect the handling back to the DRF exception handler.
+    type, value, traceback = sys.exc_info()
+    if issubclass(type, APIException):
+        # DRF responses follow the logic of TemplateResponse, with delegates rendering
+        # to separate classes. At this level, avoid such complexity:
+        drf_response = exception_handler(value, context={"request": request})
+        return JsonResponse(
+            drf_response.data,
+            status=drf_response.status_code,
+            reason=drf_response.reason_phrase,
+            content_type=drf_response.content_type,
+        )
+
     data = {
         "type": f"{W3HTMLREF} 500 Server Error",
         "title": "Server Error (500)",
