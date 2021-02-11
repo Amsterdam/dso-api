@@ -6,10 +6,10 @@ from django.urls import path
 from rest_framework import generics
 from rest_framework.exceptions import ErrorDetail, ValidationError
 
+from rest_framework_dso import views
 from rest_framework_dso.fields import EmbeddedField
 from rest_framework_dso.filters import DSOFilterSet
 from rest_framework_dso.serializers import DSOModelSerializer
-from rest_framework_dso.views import DSOViewMixin, get_invalid_params
 
 from .models import Category, Movie
 
@@ -39,7 +39,7 @@ class MovieDetailAPIView(generics.RetrieveAPIView):
     queryset = Movie.objects.all()
 
 
-class MovieListAPIView(DSOViewMixin, generics.ListAPIView):
+class MovieListAPIView(views.DSOViewMixin, generics.ListAPIView):
     serializer_class = MovieSerializer
     queryset = Movie.objects.all()
     filterset_class = MovieFilterSet
@@ -49,6 +49,7 @@ urlpatterns = [
     path("v1/movies", MovieListAPIView.as_view(), name="movies-list"),
     path("v1/movies/<pk>", MovieDetailAPIView.as_view(), name="movies-detail"),
 ]
+handler500 = views.server_error
 
 pytestmark = [pytest.mark.urls(__name__)]  # enable for all tests in this file
 
@@ -287,7 +288,7 @@ class TestExceptionHandler:
         exception = ValidationError(
             {"date_field": [ErrorDetail("Enter a valid date/time.", code="invalid")]}
         )
-        result = get_invalid_params(exception, exception.detail)
+        result = views.get_invalid_params(exception, exception.detail)
         assert result == [
             {
                 "type": "urn:apiexception:invalid:invalid",
@@ -311,7 +312,7 @@ class TestExceptionHandler:
                 ]
             }
         )
-        result = get_invalid_params(exception, exception.detail)
+        result = views.get_invalid_params(exception, exception.detail)
         assert result == [
             {
                 "type": "urn:apiexception:invalid:unique",
@@ -324,3 +325,33 @@ class TestExceptionHandler:
                 "reason": "Invalid domain",
             },
         ]
+
+    @staticmethod
+    @pytest.mark.django_db
+    def test_extreme_page_size(api_client, api_rf):
+        """Prove that the browser-based view protects against a DOS attack vector"""
+        # First see that the API actually raises the exception
+        with pytest.raises(ValidationError):
+            api_client.get("/v1/movies", data={"_pageSize": "1001"}, HTTP_ACCEPT="text/html")
+
+        # See that the 'handler500' of our local "urls.py" also kicks in.
+        api_client.raise_request_exception = False
+        response = api_client.get(
+            "/v1/movies", data={"_pageSize": "1001"}, HTTP_ACCEPT="text/html"
+        )
+        assert response.status_code == ValidationError.status_code, response
+        assert response["content-type"] == "application/problem+json"
+        assert response.json() == {
+            "instance": "http://testserver/v1/movies?_pageSize=1001",
+            "invalid-params": [
+                {
+                    "name": "_pageSize",
+                    "reason": "Browsable HTML API does not support this page size.",
+                    "type": "urn:apiexception:invalid:_pageSize",
+                }
+            ],
+            "status": 400,
+            "title": "Invalid input.",
+            "type": "urn:apiexception:invalid",
+            "x-validation-errors": ["Browsable HTML API does not support this page size."],
+        }
