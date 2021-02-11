@@ -1,7 +1,6 @@
 import json
 import sys
 from inspect import isgeneratorfunction
-from types import GeneratorType
 from typing import Optional, Type, Union
 
 from django.http import HttpResponseNotFound, JsonResponse
@@ -9,6 +8,7 @@ from rest_framework import status
 from rest_framework.exceptions import APIException, ErrorDetail, NotAcceptable, ValidationError
 from rest_framework.renderers import JSONRenderer
 from rest_framework.request import Request
+from rest_framework.serializers import ListSerializer
 from rest_framework.views import exception_handler as drf_exception_handler
 from schematools.types import DatasetTableSchema
 
@@ -17,7 +17,6 @@ from rest_framework_dso import crs, filters, parsers
 from rest_framework_dso.exceptions import PreconditionFailed
 from rest_framework_dso.pagination import DSOPageNumberPagination
 from rest_framework_dso.response import StreamingResponse
-from rest_framework_dso.serializer_helpers import ReturnGenerator
 
 W3HTMLREF = "https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.5.1"
 
@@ -293,6 +292,19 @@ class DSOViewMixin:
             raise NotAcceptable(f"Chosen CRS is not supported: {accept_crs}")
         return accept_crs
 
+    def get_serializer(self, *args, **kwargs):
+        """Updated to allow extra modifications to the serializer"""
+        serializer = super().get_serializer(*args, **kwargs)
+
+        if hasattr(self.request.accepted_renderer, "tune_serializer"):
+            if isinstance(serializer, ListSerializer):
+                object_serializer = serializer.child
+            else:
+                object_serializer = serializer
+            self.request.accepted_renderer.tune_serializer(object_serializer)
+
+        return serializer
+
     def finalize_response(self, request, response, *args, **kwargs):
         """Set the Content-Crs header if there was a geometry field.
 
@@ -309,10 +321,7 @@ class DSOViewMixin:
         # Workaround for DRF bug. When the response produces a generator, make sure the
         # Django middleware doesn't concat the stream. Unfortunately, it's not safe to
         # check what 'response.rendered_content' returns as that invokes the rendering.
-        data = response.data
-        if isinstance(data, (ReturnGenerator, GeneratorType)) and isgeneratorfunction(
-            response.accepted_renderer.render
-        ):
+        if isgeneratorfunction(response.accepted_renderer.render):
             response = StreamingResponse.from_response(response)
 
         return response

@@ -1,4 +1,3 @@
-import json
 from datetime import datetime
 
 import pytest
@@ -10,6 +9,7 @@ from rest_framework_dso import views
 from rest_framework_dso.fields import EmbeddedField
 from rest_framework_dso.filters import DSOFilterSet
 from rest_framework_dso.serializers import DSOModelSerializer
+from tests.utils import read_response_json
 
 from .models import Category, Movie
 
@@ -62,7 +62,8 @@ def test_detail_expand_true(api_client, movie, params):
     This also tests the parameter expansion within the view logic.
     """
     response = api_client.get(f"/v1/movies/{movie.pk}", data=params)
-    assert response.data == {
+    data = read_response_json(response)
+    assert data == {
         "name": "foo123",
         "category_id": movie.category_id,
         "date_added": None,
@@ -78,8 +79,10 @@ def test_detail_expand_unknown_field(api_client, movie):
     This also tests the parameter expansion within the view logic.
     """
     response = api_client.get(f"/v1/movies/{movie.pk}", data={"_expandScope": "foobar"})
-    assert response.status_code == 400, response.data
-    assert response.json() == {
+    data = read_response_json(response)
+
+    assert response.status_code == 400, data
+    assert data == {
         "status": 400,
         "type": "urn:apiexception:parse_error",
         "title": "Malformed request.",
@@ -97,7 +100,8 @@ def test_list_expand_true(api_client, movie, params):
     This also tests the parameter expansion within the view logic.
     """
     response = api_client.get("/v1/movies", data=params)
-    assert response.data == {
+    data = read_response_json(response)
+    assert data == {
         "_links": {
             "self": {"href": "http://testserver/v1/movies"},
             "next": {"href": None},
@@ -123,8 +127,9 @@ class TestListFilters:
         Movie.objects.create(name="test")
 
         response = api_client.get("/v1/movies", data={"name": "foo1?3"})
+        data = read_response_json(response)
         assert response.status_code == 200, response
-        assert response.data["page"]["totalElements"] == 0
+        assert data["page"]["totalElements"] == 0
         assert response["Content-Type"] == "application/hal+json"
 
     @staticmethod
@@ -134,9 +139,10 @@ class TestListFilters:
         Movie.objects.create(name="test", date_added=datetime(2020, 2, 2, 13, 15))
 
         response = api_client.get("/v1/movies", data={"date_added": "2020-01-01"})
+        data = read_response_json(response)
         assert response.status_code == 200, response
-        names = [movie["name"] for movie in response.data["_embedded"]["movie"]]
-        assert response.data["page"]["totalElements"] == 1, names
+        names = [movie["name"] for movie in data["_embedded"]["movie"]]
+        assert data["page"]["totalElements"] == 1, names
         assert names == ["foo123"]
         assert response["Content-Type"] == "application/hal+json"
 
@@ -145,8 +151,10 @@ class TestListFilters:
         """Prove that invalid input is captured, and returns a proper error response."""
         response = api_client.get("/v1/movies", data={"date_added": "2020-01-fubar"})
         assert response.status_code == 400, response
-        assert response["Content-Type"] == "application/problem+json", response
-        assert response.json() == {
+        assert response["Content-Type"] == "application/problem+json", response  # check first
+        data = read_response_json(response)
+        assert response["Content-Type"] == "application/problem+json", response  # and after
+        assert data == {
             "type": "urn:apiexception:invalid",
             "title": "Invalid input.",
             "status": 400,
@@ -176,8 +184,10 @@ class TestListOrdering:
 
         # Sort descending by name
         response = api_client.get("/v1/movies", data={"_sort": "-name"})
-        assert response.status_code == 200, response.json()
-        names = [movie["name"] for movie in response.data["_embedded"]["movie"]]
+        data = read_response_json(response)
+
+        assert response.status_code == 200, data
+        names = [movie["name"] for movie in data["_embedded"]["movie"]]
         assert names == ["test", "foo123"]
 
     @staticmethod
@@ -188,8 +198,10 @@ class TestListOrdering:
 
         # Sort descending by name
         response = api_client.get("/v1/movies", data={"sorteer": "-name"})
-        assert response.status_code == 200, response.json()
-        names = [movie["name"] for movie in response.data["_embedded"]["movie"]]
+        data = read_response_json(response)
+
+        assert response.status_code == 200, data
+        names = [movie["name"] for movie in data["_embedded"]["movie"]]
         assert names == ["test", "foo123"]
 
     @staticmethod
@@ -200,16 +212,19 @@ class TestListOrdering:
 
         # Sort descending by name
         response = api_client.get("/v1/movies", data={"_sort": "-date_added"})
-        assert response.status_code == 200, response.json()
-        names = [movie["name"] for movie in response.data["_embedded"]["movie"]]
+        data = read_response_json(response)
+        assert response.status_code == 200, data
+        names = [movie["name"] for movie in data["_embedded"]["movie"]]
         assert names == ["test", "foo123"]
 
     @staticmethod
     def test_list_ordering_invalid(api_client, category, django_assert_num_queries):
         """Prove that ?_sort=... only works on a fixed set of fields (e.g. not on FK's)."""
         response = api_client.get("/v1/movies", data={"_sort": "category"})
-        assert response.status_code == 400, response.json()
-        assert response.json() == {
+        data = read_response_json(response)
+
+        assert response.status_code == 400, data
+        assert data == {
             "type": "urn:apiexception:invalid",
             "title": "Invalid input.",
             "status": 400,
@@ -235,10 +250,9 @@ class TestLimitFields:
         Movie.objects.create(name="foo123")
 
         response = api_client.get("/v1/movies", data={"_fields": "name"})
-        assert response.status_code == 200, response.json()
-        assert json.dumps(response.data["_embedded"]["movie"]) == json.dumps(
-            [{"name": "foo123"}, {"name": "test"}]
-        )
+        data = read_response_json(response)
+        assert response.status_code == 200, data
+        assert data["_embedded"]["movie"] == [{"name": "foo123"}, {"name": "test"}]
 
     def test_limit_multiple_fields(self, api_client):
         """Prove that ?_fields=name,date results in result with only names and dates"""
@@ -246,22 +260,24 @@ class TestLimitFields:
         Movie.objects.create(name="foo123")
 
         response = api_client.get("/v1/movies", data={"_fields": "name,date_added"})
-        assert response.status_code == 200, response.json()
-        assert json.dumps(response.data["_embedded"]["movie"]) == json.dumps(
-            [
-                {"name": "foo123", "date_added": None},
-                {"name": "test", "date_added": None},
-            ]
-        )
+        data = read_response_json(response)
+        assert response.status_code == 200, data
+        assert data["_embedded"]["movie"] == [
+            {"name": "foo123", "date_added": None},
+            {"name": "test", "date_added": None},
+        ]
 
     def test_incorrect_field_in_fields_results_in_error(self, api_client):
         """Prove that adding invalid name to ?_fields will result in error"""
         Movie.objects.create(name="test")
         Movie.objects.create(name="foo123")
 
+        api_client.raise_request_exception = False
         response = api_client.get("/v1/movies", data={"_fields": "name,date"})
-        assert response.status_code == 400, response.json()
-        assert response.json() == {
+        data = read_response_json(response)
+
+        assert response.status_code == 400, data
+        assert data == {
             "type": "urn:apiexception:invalid",
             "title": "Invalid input.",
             "status": 400,
@@ -339,9 +355,13 @@ class TestExceptionHandler:
         response = api_client.get(
             "/v1/movies", data={"_pageSize": "1001"}, HTTP_ACCEPT="text/html"
         )
+
         assert response.status_code == ValidationError.status_code, response
-        assert response["content-type"] == "application/problem+json"
-        assert response.json() == {
+        assert response["content-type"] == "application/problem+json"  # check before reading
+        data = read_response_json(response)
+
+        assert response["content-type"] == "application/problem+json"  # and after
+        assert data == {
             "instance": "http://testserver/v1/movies?_pageSize=1001",
             "invalid-params": [
                 {

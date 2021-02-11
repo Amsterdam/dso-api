@@ -15,6 +15,7 @@ from schematools.contrib.django.db import create_tables
 from dso_api.dynamic_api.permissions import fetch_scopes_for_dataset_table, fetch_scopes_for_model
 from rest_framework_dso.crs import CRS, RD_NEW
 from rest_framework_dso.response import StreamingResponse
+from tests.utils import read_response_json
 
 
 class AproxFloat(float):
@@ -56,8 +57,10 @@ def test_list_dynamic_view(api_client, api_rf, router, bommen_dataset):
 
     # Prove that the view is available and works
     response = api_client.get(url)
-    assert response.status_code == 200, response.data
-    assert response.json() == {
+    data = read_response_json(response)
+
+    assert response.status_code == 200, data
+    assert data == {
         "_links": {
             "self": {"href": "http://testserver/v1/bommen/bommen/"},
             "next": {"href": None},
@@ -314,35 +317,45 @@ class TestAuth:
             soort="NIET FISCA",
             aantal="1.0",
         )
+
         # 1) profile scope only
         token = fetch_auth_token(["PROFIEL/SCOPE"])
         base_url = reverse("dynamic_api:parkeervakken-parkeervakken-list")
         response = api_client.get(f"{base_url}?id=1", HTTP_AUTHORIZATION=f"Bearer {token}")
-        parkeervak_data = response.data["_embedded"]["parkeervakken"][0]
+        data = read_response_json(response)
+        parkeervak_data = data["_embedded"]["parkeervakken"][0]
+
         # assert that a single profile is activated
         assert parkeervak_data["type"] == parkeervak.type
         assert parkeervak_data["soort"] == parkeervak.soort[:1]
         # assert that there is no table scope
         assert "id" not in parkeervak_data.keys()
+
         # 2) profile and dataset scope
         token = fetch_auth_token(["PROFIEL/SCOPE", "DATASET/SCOPE"])
         response = api_client.get(f"{base_url}?id=1", HTTP_AUTHORIZATION=f"Bearer {token}")
-        parkeervak_data = response.data["_embedded"]["parkeervakken"][0]
+        data = read_response_json(response)
+        parkeervak_data = data["_embedded"]["parkeervakken"][0]
         # assert that dataset scope permissions overrules lower profile permission
         assert parkeervak_data["soort"] == parkeervak.soort
         assert "id" in parkeervak_data.keys()
+
         # 3) two profile scopes
         token = fetch_auth_token(["PROFIEL/SCOPE", "PROFIEL2/SCOPE"])
         # trigger one profile
         response = api_client.get(f"{base_url}?id=1", HTTP_AUTHORIZATION=f"Bearer {token}")
-        parkeervak_data = response.data["_embedded"]["parkeervakken"][0]
+        data = read_response_json(response)
+
+        parkeervak_data = data["_embedded"]["parkeervakken"][0]
         # assert that only the profile is used that passed it's mandatory filterset restrictions
         assert parkeervak_data["soort"] == parkeervak.soort[:1]
         # trigger both profiles
         response = api_client.get(
             f"{base_url}?id=1&type=Langs", HTTP_AUTHORIZATION=f"Bearer {token}"
         )
-        parkeervak_data = response.data["_embedded"]["parkeervakken"][0]
+        data = read_response_json(response)
+
+        parkeervak_data = data["_embedded"]["parkeervakken"][0]
         # assert that both profiles are triggered and the highest permission reigns
         assert parkeervak_data["type"] == parkeervak.type
         assert parkeervak_data["soort"] == parkeervak.soort
@@ -416,8 +429,9 @@ class TestAuth:
         models.DatasetTable.objects.filter(name="clusters").update(auth="BAG/R")
         token = fetch_auth_token(["BAG/R"])
         response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
-        assert response.status_code == 200, response.data
-        assert "cluster" in response.json()["_embedded"], response.data
+        data = read_response_json(response)
+        assert response.status_code == 200, data
+        assert "cluster" in data["_embedded"], data
 
     def test_auth_on_embedded_fields_without_token_for_valid_scope(
         self, api_client, filled_router, afval_schema, fetch_auth_token, afval_container
@@ -429,8 +443,9 @@ class TestAuth:
         url = f"{url}?_expand=true"
         models.DatasetTable.objects.filter(name="clusters").update(auth="BAG/R")
         response = api_client.get(url)
-        assert response.status_code == 200, response.data
-        assert "cluster" not in response.json()["_embedded"], response.data
+        data = read_response_json(response)
+        assert response.status_code == 200, data
+        assert "cluster" not in data["_embedded"], data
 
     def test_auth_on_specified_embedded_fields_without_token_for_valid_scope(
         self, api_client, filled_router, afval_schema, fetch_auth_token, afval_container
@@ -453,10 +468,12 @@ class TestAuth:
         models.DatasetField.objects.filter(name="eigenaar_naam").update(auth="BAG/R")
         token = fetch_auth_token(["BAG/R"])
         response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
-        assert response.status_code == 200, response.data
+        data = read_response_json(response)
+
+        assert response.status_code == 200, data
         assert "eigenaarNaam" in set(
-            [field_name for field_name in response.data["_embedded"]["containers"][0].keys()]
-        ), response.data["_embedded"]["containers"][0].keys()
+            field_name for field_name in data["_embedded"]["containers"][0].keys()
+        ), data["_embedded"]["containers"][0].keys()
 
     def test_auth_on_individual_fields_with_token_for_valid_scope_per_profile(
         self, api_client, filled_router, afval_schema, fetch_auth_token, afval_container
@@ -478,10 +495,12 @@ class TestAuth:
         models.DatasetField.objects.filter(name="eigenaar_naam").update(auth="BAG/R")
         token = fetch_auth_token(["BRK/RO", "BRK/RSN"])
         response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
-        assert response.status_code == 200, response.data
+        data = read_response_json(response)
+
+        assert response.status_code == 200, data
         assert "eigenaarNaam" in set(
-            [field_name for field_name in response.data["_embedded"]["containers"][0].keys()]
-        ), response.data["_embedded"]["containers"][0].keys()
+            field_name for field_name in data["_embedded"]["containers"][0].keys()
+        ), data["_embedded"]["containers"][0].keys()
 
     def test_auth_on_individual_fields_without_token_for_valid_scope(
         self, api_client, filled_router, afval_schema, fetch_auth_token, afval_container
@@ -491,10 +510,12 @@ class TestAuth:
         url = reverse("dynamic_api:afvalwegingen-containers-list")
         models.DatasetField.objects.filter(name="eigenaar_naam").update(auth="BAG/R")
         response = api_client.get(url)
-        assert response.status_code == 200, response.data
+        data = read_response_json(response)
+
+        assert response.status_code == 200, data
         assert "eigenaarNaam" not in set(
-            [field_name for field_name in response.data["_embedded"]["containers"][0].keys()]
-        ), response.data
+            field_name for field_name in data["_embedded"]["containers"][0].keys()
+        ), data
 
     def test_auth_on_field_level_is_not_cached(
         self,
@@ -541,15 +562,14 @@ class TestAuth:
 
         token = fetch_auth_token(["BAG/R"])
         response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
+        data = read_response_json(response)
 
-        assert "dagen" in response.data["_embedded"]["parkeervakken"][0]["regimes"][0].keys()
+        assert "dagen" in data["_embedded"]["parkeervakken"][0]["regimes"][0].keys()
 
         public_response = api_client.get(url)
+        public_data = read_response_json(public_response)
 
-        assert (
-            "dagen"
-            not in public_response.data["_embedded"]["parkeervakken"][0]["regimes"][0].keys()
-        )
+        assert "dagen" not in public_data["_embedded"]["parkeervakken"][0]["regimes"][0].keys()
 
     def test_auth_on_dataset_protects_detail_view(
         self, api_client, filled_router, afval_schema, fetch_auth_token, afval_container
@@ -669,8 +689,10 @@ class TestAuth:
         """Prove that _sort is accepting camelCase parameters."""
         url = reverse("dynamic_api:afvalwegingen-containers-list")
         response = api_client.get(f"{url}?_sort=datumCreatie")
-        assert response.status_code == 200, response.data
-        assert len(response.data["_embedded"]["containers"]) == 1, response.data
+        data = read_response_json(response)
+
+        assert response.status_code == 200, data
+        assert len(data["_embedded"]["containers"]) == 1, data
 
     def test_sort_by_not_accepting_db_column_names(
         self, api_client, filled_router, afval_schema, afval_container
@@ -678,10 +700,9 @@ class TestAuth:
         """Prove that _sort is not accepting db column names."""
         url = reverse("dynamic_api:afvalwegingen-containers-list")
         response = api_client.get(f"{url}?_sort=datum_creatie")
-        assert response.status_code == 400, response.data
-        assert response.data["x-validation-errors"] == [
-            "Invalid sort fields: datum_creatie"
-        ], response.data
+        data = read_response_json(response)
+        assert response.status_code == 400, data
+        assert data["x-validation-errors"] == ["Invalid sort fields: datum_creatie"], data
 
     def test_api_request_audit_logging(
         self, api_client, filled_router, afval_schema, afval_container
@@ -739,9 +760,10 @@ class TestEmbedTemporalTables:
         url = reverse("dynamic_api:gebieden-buurten-detail", args=["03630000000078.1"])
         url = f"{url}?_expand=true"
         response = api_client.get(url)
-        assert response.status_code == 200, response.data
-        assert response.data["_embedded"]["ligtInWijk"]["id"] == "03630012052035.1"
-        assert response.data["_embedded"]["ligtInWijk"]["buurt"] == {
+        data = read_response_json(response)
+        assert response.status_code == 200, data
+        assert data["_embedded"]["ligtInWijk"]["id"] == "03630012052035.1"
+        assert data["_embedded"]["ligtInWijk"]["buurt"] == {
             "count": 1,
             "href": "http://testserver/v1/gebieden/buurten/?ligtInWijkId=03630012052035.1",
         }
@@ -762,9 +784,10 @@ class TestEmbedTemporalTables:
         url = reverse("dynamic_api:gebieden-buurten-list")
         url = f"{url}?_format=json&_expand=true"
         response = api_client.get(url)
-        assert response.status_code == 200, response.data
-        assert response.data["_embedded"]["ligtInWijk"][0]["id"] == "03630012052035.1"
-        assert response.data["_embedded"]["ligtInWijk"][0]["buurt"] == {
+        data = read_response_json(response)
+        assert response.status_code == 200, data
+        assert data["_embedded"]["ligtInWijk"][0]["id"] == "03630012052035.1"
+        assert data["_embedded"]["ligtInWijk"][0]["buurt"] == {
             "count": 1,
             "href": (
                 "http://testserver/v1/gebieden/buurten/"
@@ -786,8 +809,9 @@ class TestEmbedTemporalTables:
         url = reverse("dynamic_api:gebieden-ggwgebieden-detail", args=["03630950000000.1"])
         url = f"{url}?_expand=true"
         response = api_client.get(url)
-        assert response.status_code == 200, response.data
-        assert response.data["_embedded"]["bestaatUitBuurten"]["id"] == "03630000000078.1"
+        data = read_response_json(response)
+        assert response.status_code == 200, data
+        assert data["_embedded"]["bestaatUitBuurten"]["id"] == "03630000000078.1"
 
     def test_list_expand_true_for_nm_relation(
         self,
@@ -805,8 +829,9 @@ class TestEmbedTemporalTables:
         url = reverse("dynamic_api:gebieden-ggwgebieden-list")
         url = f"{url}?_expand=true"
         response = api_client.get(url)
-        assert response.status_code == 200, response.data
-        assert dict(response.data["_embedded"]["bestaatUitBuurten"][0]) == {
+        data = read_response_json(response)
+        assert response.status_code == 200, data
+        assert dict(data["_embedded"]["bestaatUitBuurten"][0]) == {
             "_links": {
                 "bestaatUitBuurtenGgwgebieden": [
                     {
@@ -833,7 +858,7 @@ class TestEmbedTemporalTables:
             "beginGeldigheid": None,
             "id": "03630000000078.1",
         }
-        assert dict(response.data["_embedded"]["ggwgebieden"][0]) == {
+        assert dict(data["_embedded"]["ggwgebieden"][0]) == {
             "_links": {
                 "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/gebieden#ggwgebieden",  # noqa: E501
                 "self": {
@@ -873,8 +898,9 @@ class TestEmbedTemporalTables:
 
         url = reverse("dynamic_api:meldingen-statistieken-detail", args=[1])
         response = api_client.get(url)
-        assert response.status_code == 200, response.data
-        assert response.data == {
+        data = read_response_json(response)
+        assert response.status_code == 200, data
+        assert data == {
             "_links": {
                 "buurt": {
                     "href": "http://testserver/v1/gebieden/buurten/03630000000078/",
@@ -906,8 +932,9 @@ class TestEmbedTemporalTables:
         url = reverse("dynamic_api:meldingen-statistieken-detail", args=[1])
         url = f"{url}?_expand=true"
         response = api_client.get(url)
-        assert response.status_code == 200, response.data
-        assert response.data == {
+        data = read_response_json(response)
+        assert response.status_code == 200, data
+        assert data == {
             "_links": {
                 "schema": "https://schemas.data.amsterdam.nl/datasets/meldingen/meldingen#statistieken",  # noqa: E501
                 "self": {
@@ -956,18 +983,19 @@ class TestEmbedTemporalTables:
         url = reverse("dynamic_api:meldingen-statistieken-list")
         url = f"{url}?_expand=true"
         response = api_client.get(url)
-        assert response.status_code == 200, response.data
-        assert response.data["_embedded"]["buurt"][0]["id"] == "03630000000078.2"
+        data = read_response_json(response)
+        assert response.status_code == 200, data
+        assert data["_embedded"]["buurt"][0]["id"] == "03630000000078.2"
         assert (
-            response.data["_embedded"]["buurt"][0]["_links"]["self"]["href"]
+            data["_embedded"]["buurt"][0]["_links"]["self"]["href"]
             == "http://testserver/v1/gebieden/buurten/03630000000078/?volgnummer=2"
         )
-        assert response.data["_embedded"]["statistieken"][0]["id"] == 1
+        assert data["_embedded"]["statistieken"][0]["id"] == 1
         assert (
-            response.data["_embedded"]["statistieken"][0]["_links"]["buurt"]["href"]
+            data["_embedded"]["statistieken"][0]["_links"]["buurt"]["href"]
             == "http://testserver/v1/gebieden/buurten/03630000000078/"
         )
-        assert "_embedded" not in response.data["_embedded"]["statistieken"][0]
+        assert "_embedded" not in data["_embedded"]["statistieken"][0]
 
     def test_list_expand_true_non_tempooral_many_to_many_to_temporal(
         self,
@@ -982,7 +1010,8 @@ class TestEmbedTemporalTables:
         url = reverse("dynamic_api:woningbouwplannen-woningbouwplan-list")
         url = f"{url}?_expand=true"
         response = api_client.get(url)
-        assert response.status_code == 200, response.data
+        data = read_response_json(response)
+        assert response.status_code == 200, data
 
         #  _embedded must contain for each FK or MN relation a key (with camelCased fieldname)
         #  containing a list of all records that are being referred to
@@ -991,8 +1020,8 @@ class TestEmbedTemporalTables:
         #    containing a (filtered) list of items.
         # the FK or NM relation keys in those items are urls without volgnummer
 
-        assert response.data["_embedded"]["buurten"][0]["id"] == "03630000000078.2"
-        assert response.data["_embedded"]["woningbouwplan"][0]["_links"]["buurten"] == [
+        assert data["_embedded"]["buurten"][0]["id"] == "03630000000078.2"
+        assert data["_embedded"]["woningbouwplan"][0]["_links"]["buurten"] == [
             {
                 "href": "http://testserver/v1/gebieden/buurten/03630000000078/",
                 "title": "03630000000078",
@@ -1011,14 +1040,15 @@ class TestEmbedTemporalTables:
         url = reverse("dynamic_api:woningbouwplannen-woningbouwplan-detail", args=[1])
         url = f"{url}?_expand=true"
         response = api_client.get(url)
-        assert response.status_code == 200, response.data
-        assert "buurten" not in response.data  # because it must be in  "_embedded"
+        data = read_response_json(response)
+        assert response.status_code == 200, data
+        assert "buurten" not in data  # because it must be in  "_embedded"
         # Note that "buurten" is a ManyToMany, but upacked here because the
         # list contained only 1 item
         # (previous design choice, see EmbedHelper.get_embedded in utils.py)
-        assert response.data["_embedded"]["buurten"]["id"] == "03630000000078.2"
+        assert data["_embedded"]["buurten"]["id"] == "03630000000078.2"
         assert (
-            response.data["_embedded"]["buurten"]["_links"]["self"]["href"]
+            data["_embedded"]["buurten"]["_links"]["self"]["href"]
             == "http://testserver/v1/gebieden/buurten/03630000000078/?volgnummer=2"
         )
 
@@ -1061,9 +1091,11 @@ class TestEmbedTemporalTables:
         assert "id" not in column_names_after
         url = reverse("dynamic_api:woningbouwplannen-woningbouwplan-detail", args=[1])
         response = api_client.get(url)
+        data = read_response_json(response)
+
         # check that "buurten" still contains the correct list
         assert (
-            response.data["_links"]["buurten"][0]["href"]
+            data["_links"]["buurten"][0]["href"]
             == "http://testserver/v1/gebieden/buurten/03630000000078/"
         )
 
@@ -1320,7 +1352,7 @@ class TestExportFormats:
 
         # Prove that the view is available and works
         response = api_client.get(url, {"_format": format})
-        assert isinstance(response, Response)  # still wrapped in DRF response!
+        assert isinstance(response, StreamingResponse)
         assert response["Content-Type"] == expected_type  # Test before reading stream
         assert response.status_code == 200, response.getvalue()
         data = decoder(response.getvalue())

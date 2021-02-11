@@ -9,6 +9,7 @@ from rest_framework_dso.fields import EmbeddedField
 from rest_framework_dso.pagination import DSOPageNumberPagination
 from rest_framework_dso.renderers import HALJSONRenderer
 from rest_framework_dso.serializers import DSOModelSerializer
+from tests.utils import normalize_data, read_response_json
 
 from .models import Category, Location, Movie
 
@@ -39,7 +40,9 @@ def test_serializer_single(drf_request, movie):
     serializer = MovieSerializer(
         instance=movie, fields_to_expand=["category"], context={"request": drf_request}
     )
-    assert serializer.data == {
+
+    data = normalize_data(serializer.data)
+    assert data == {
         "name": "foo123",
         "category_id": movie.category_id,
         "_embedded": {"category": {"name": "bar"}},
@@ -55,7 +58,9 @@ def test_serializer_many(drf_request, movie):
         fields_to_expand=["category"],
         context={"request": drf_request},
     )
-    assert serializer.data == {
+
+    data = normalize_data(serializer.data)
+    assert data == {
         "movie": [{"name": "foo123", "category_id": movie.category_id}],
         "category": [{"name": "bar"}],
     }
@@ -77,7 +82,9 @@ def test_serializer_embed_with_missing_relations(drf_request):
         fields_to_expand=["category"],
         context={"request": drf_request},
     )
-    assert serializer.data == {
+
+    data = normalize_data(serializer.data)
+    assert data == {
         "movie": [{"name": "Test", "category_id": movie.category_id}],
         "category": [],
     }
@@ -101,7 +108,13 @@ def test_pagination_many(drf_request, movie):
     paginator.paginate_queryset(queryset, drf_request)
     response = paginator.get_paginated_response(serializer.data)
 
-    assert response.data == {
+    # Since response didn't to through APIView.finalize_response(), fix that:
+    response.accepted_renderer = drf_request.accepted_renderer
+    response.accepted_media_type = drf_request.accepted_renderer.media_type
+    response.renderer_context = {"request": drf_request}
+    data = read_response_json(response.render())
+
+    assert data == {
         "_links": {
             "self": {"href": "http://testserver/v1/dummy/"},
             "next": {"href": None},
@@ -123,16 +136,22 @@ def test_pagination_many(drf_request, movie):
 def test_fields_limit_works(api_rf, movie):
     """Prove that serializer can limit output fields."""
     django_request = api_rf.get("/", {"fields": "name"})
-    request = Request(django_request)
-    request.accepted_renderer = HALJSONRenderer()
+    drf_request = Request(django_request)
+    drf_request.accepted_renderer = HALJSONRenderer()
 
     queryset = Movie.objects.all()
-    serializer = MovieSerializer(many=True, instance=queryset, context={"request": request})
+    serializer = MovieSerializer(many=True, instance=queryset, context={"request": drf_request})
     paginator = DSOPageNumberPagination()
-    paginator.paginate_queryset(queryset, request)
+    paginator.paginate_queryset(queryset, drf_request)
     response = paginator.get_paginated_response(serializer.data)
 
-    assert response.data == {
+    # Since response didn't to through APIView.finalize_response(), fix that:
+    response.accepted_renderer = drf_request.accepted_renderer
+    response.accepted_media_type = drf_request.accepted_renderer.media_type
+    response.renderer_context = {"request": drf_request}
+    data = read_response_json(response.render())
+
+    assert data == {
         "_links": {
             "self": {"href": "http://testserver/"},
             "next": {"href": None},
@@ -172,7 +191,7 @@ def test_location(drf_request, location):
         fields_to_expand=[],
         context={"request": drf_request},
     )
-    data = serializer.data
+    data = normalize_data(serializer.data)
     assert data["geometry"]["coordinates"] == [10.0, 10.0]
 
     # Serializer assigned 'response_content_crs' (auto detected)
@@ -189,7 +208,7 @@ def test_location_transform(drf_request, location):
         fields_to_expand=[],
         context={"request": drf_request},
     )
-    data = serializer.data
+    data = normalize_data(serializer.data)
 
     # The lat/lon ordering that is used by the underlying GDAL library
     #

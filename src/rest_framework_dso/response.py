@@ -4,8 +4,6 @@ from inspect import isgenerator
 from django.http import StreamingHttpResponse
 from rest_framework.response import Response
 
-from rest_framework_dso.serializer_helpers import ReturnGenerator
-
 
 class StreamingResponse(StreamingHttpResponse):
     """A reimplementation of the DRF 'Response' class
@@ -25,11 +23,6 @@ class StreamingResponse(StreamingHttpResponse):
         exception=False,
         content_type=None,
     ):
-        if not isgenerator(data) and not isinstance(data, ReturnGenerator):
-            raise ValueError(
-                f"Expected generator for StreamingResponse, not type {data.__class__.__name__}"
-            )
-
         # Note that StreamingHttpResponse.__init__() sets .streaming_content
         super().__init__(self._read_rendered_content(), status=status)
 
