@@ -4,9 +4,8 @@ from django.urls import include, path, re_path
 from django.views.generic import RedirectView
 
 import dso_api.dynamic_api.urls
-from dso_api.dynamic_api import exceptions
 from dso_api.dynamic_api.oas3 import get_openapi_yaml_view
-from rest_framework_dso.views import multiple_slashes
+from rest_framework_dso import views
 
 urlpatterns = [
     path("status/health/", include(django_healthchecks.urls)),
@@ -19,14 +18,14 @@ urlpatterns = [
     path("", RedirectView.as_view(url="/v1/"), name="root-redirect"),
     re_path(
         r"^.*/{2,}.*$",
-        multiple_slashes,
+        views.multiple_slashes,
         name="error-trailing-slashes",
     ),
 ]
 
-handler400 = exceptions.bad_request
-handler404 = exceptions.not_found
-handler500 = exceptions.server_error
+handler400 = views.bad_request
+handler404 = views.not_found
+handler500 = views.server_error
 
 
 if "debug_toolbar" in settings.INSTALLED_APPS:
