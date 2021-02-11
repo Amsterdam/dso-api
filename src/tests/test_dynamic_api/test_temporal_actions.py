@@ -4,6 +4,8 @@ from urllib import parse
 import pytest
 from django.urls import reverse
 
+from tests.utils import read_response_json
+
 
 @pytest.fixture()
 def stadsdelen(gebieden_models):
@@ -86,24 +88,22 @@ class TestViews:
         """ Prove that default API response contains ALL versions."""
         url = reverse("dynamic_api:gebieden-stadsdelen-list")
         response = api_client.get(url)
+        data = read_response_json(response)
 
-        assert response.status_code == 200, response.data
-        assert len(response.data["_embedded"]["stadsdelen"]) == 2, response.data["_embedded"][
-            "stadsdelen"
-        ]
+        assert response.status_code == 200, data
+        assert len(data["_embedded"]["stadsdelen"]) == 2, data["_embedded"]["stadsdelen"]
 
     def test_filtered_list_contains_only_correct_objects(self, api_client, stadsdelen, buurt):
         """Prove that date filter displays only active-on-that-date objects."""
         url = reverse("dynamic_api:gebieden-stadsdelen-list")
         response = api_client.get(f"{url}?geldigOp=2015-01-02")
+        data = read_response_json(response)
 
-        assert response.status_code == 200, response.data
-        assert len(response.data["_embedded"]["stadsdelen"]) == 1, response.data["_embedded"][
+        assert response.status_code == 200, data
+        assert len(data["_embedded"]["stadsdelen"]) == 1, data["_embedded"]["stadsdelen"]
+        assert data["_embedded"]["stadsdelen"][0]["volgnummer"] == 2, data["_embedded"][
             "stadsdelen"
-        ]
-        assert response.data["_embedded"]["stadsdelen"][0]["volgnummer"] == 2, response.data[
-            "_embedded"
-        ]["stadsdelen"][0]
+        ][0]
 
     def test_additionalrelations_works_and_has_temporary_param(
         self, api_client, stadsdelen, wijk, buurt
@@ -113,15 +113,14 @@ class TestViews:
         """
         url = reverse("dynamic_api:gebieden-wijken-list")
         response = api_client.get(f"{url}?geldigOp=2015-01-02")
+        data = read_response_json(response)
 
-        assert response.status_code == 200, response.data
-        assert len(response.data["_embedded"]["wijken"]) == 1, response.data["_embedded"]["wijken"]
-        assert response.data["_embedded"]["wijken"][0]["volgnummer"] == 1, response.data[
-            "_embedded"
-        ]["wijken"][0]
+        assert response.status_code == 200, data
+        assert len(data["_embedded"]["wijken"]) == 1, data["_embedded"]["wijken"]
+        assert data["_embedded"]["wijken"][0]["volgnummer"] == 1, data["_embedded"]["wijken"][0]
 
-        assert response.data["_embedded"]["wijken"][0]["buurt"]["count"] == 1
-        href = response.data["_embedded"]["wijken"][0]["buurt"]["href"]
+        assert data["_embedded"]["wijken"][0]["buurt"]["count"] == 1
+        href = data["_embedded"]["wijken"][0]["buurt"]["href"]
         query_params = parse.parse_qs(parse.urlparse(href).query)
         assert query_params["geldigOp"] == ["2015-01-02"]
 
@@ -129,18 +128,20 @@ class TestViews:
         """ Prove that request with PK (combined field) is allowed."""
         url = reverse("dynamic_api:gebieden-stadsdelen-detail", args=(stadsdelen[0].id,))
         response = api_client.get(url)
+        data = read_response_json(response)
 
-        assert response.status_code == 200, response.data
-        assert response.data["volgnummer"] == stadsdelen[0].volgnummer, response.data
+        assert response.status_code == 200, data
+        assert data["volgnummer"] == stadsdelen[0].volgnummer, data
 
     def test_details_default_returns_latest_record(self, api_client, stadsdelen):
         """Prove that object can be requested by identification
         and response will contain only latest object."""
         url = reverse("dynamic_api:gebieden-stadsdelen-list")
         response = api_client.get("{}{}/".format(url, stadsdelen[0].identificatie))
+        data = read_response_json(response)
 
-        assert response.status_code == 200, response.data
-        assert response.data["volgnummer"] == 2, response.data
+        assert response.status_code == 200, data
+        assert data["volgnummer"] == 2, data
 
     def test_details_can_be_requested_with_valid_date(self, api_client, stadsdelen):
         """Prove that object can be requested by identification and date,
@@ -149,18 +150,20 @@ class TestViews:
         response = api_client.get(
             "{}{}/?geldigOp=2014-12-12".format(url, stadsdelen[0].identificatie)
         )
+        data = read_response_json(response)
 
-        assert response.status_code == 200, response.data
-        assert response.data["volgnummer"] == 1, response.data
+        assert response.status_code == 200, data
+        assert data["volgnummer"] == 1, data
 
     def test_details_can_be_requested_with_version(self, api_client, stadsdelen):
         """Prove that object can be requested by identification and version,
         resulting in correct for that version object."""
         url = reverse("dynamic_api:gebieden-stadsdelen-list")
         response = api_client.get("{}{}/?volgnummer=1".format(url, stadsdelen[0].identificatie))
+        data = read_response_json(response)
 
-        assert response.status_code == 200, response.data
-        assert response.data["volgnummer"] == 1, response.data
+        assert response.status_code == 200, data
+        assert data["volgnummer"] == 1, data
 
     def test_serializer_temporal_request_corrects_link_to_temporal(
         self, api_client, reloadrouter, gebied, buurt
@@ -170,9 +173,10 @@ class TestViews:
         url = reverse("dynamic_api:gebieden-ggwgebieden-list")
         # response = api_client.get(url)
         response = api_client.get("{}{}/?geldigOp=2014-05-01".format(url, gebied.id))
+        data = read_response_json(response)
 
         buurt = gebied.bestaat_uit_buurten.all()[0]
         expected_url = "/{}/?geldigOp=2014-05-01".format(buurt.identificatie)
-        assert response.data["_links"]["bestaatUitBuurten"][0]["href"].endswith(
-            expected_url
-        ), response.data["bestaatUitBuurten"]
+        assert data["_links"]["bestaatUitBuurten"][0]["href"].endswith(expected_url), data[
+            "bestaatUitBuurten"
+        ]

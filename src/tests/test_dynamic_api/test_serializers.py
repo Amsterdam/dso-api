@@ -1,4 +1,3 @@
-from collections import OrderedDict
 from datetime import date
 
 import pytest
@@ -8,6 +7,7 @@ from schematools.contrib.django.models import Profile
 
 from dso_api.dynamic_api.serializers import serializer_factory
 from rest_framework_dso.fields import EmbeddedField
+from tests.utils import normalize_data
 
 
 @pytest.fixture(autouse=True)
@@ -104,7 +104,8 @@ class TestDynamicSerializer:
             context={"request": drf_request},
             fields_to_expand=["cluster"],
         )
-        assert container_serializer.data == {
+        data = normalize_data(container_serializer.data)
+        assert data == {
             "_links": {
                 "schema": "https://schemas.data.amsterdam.nl/datasets/afvalwegingen/afvalwegingen#containers",  # noqa: E501
                 "self": {
@@ -151,7 +152,8 @@ class TestDynamicSerializer:
             context={"request": drf_request},
             fields_to_expand=["cluster"],
         )
-        assert container_serializer.data == {
+        data = normalize_data(container_serializer.data)
+        assert data == {
             "_links": {
                 "schema": "https://schemas.data.amsterdam.nl/datasets/afvalwegingen/afvalwegingen#containers",  # noqa: E501
                 "self": {
@@ -187,7 +189,8 @@ class TestDynamicSerializer:
             context={"request": drf_request},
             fields_to_expand=["cluster"],
         )
-        assert container_serializer.data == {
+        data = normalize_data(container_serializer.data)
+        assert data == {
             "_links": {
                 "self": {
                     "href": "http://testserver/v1/afvalwegingen/containers/4/",
@@ -211,10 +214,7 @@ class TestDynamicSerializer:
         gebieden_schema,
         gebieden_models,
     ):
-        """Show backwards
-
-        The _embedded part has a None value instead.
-        """
+        """Show backwards"""
         drf_request.dataset = gebieden_schema
         drf_request.dataset_temporal_slice = None
         stadsdelen_model = gebieden_models["stadsdelen"]
@@ -270,10 +270,7 @@ class TestDynamicSerializer:
         vestiging2,
         post_adres1,
     ):
-        """Show backwards
-
-        The _embedded part has a None value instead.
-        """
+        """Show backwards"""
         drf_request.dataset = vestiging_schema
 
         VestigingSerializer = serializer_factory(vestiging_vestiging_model, 0)
@@ -407,7 +404,8 @@ class TestDynamicSerializer:
         # Both the cluster_id field and 'cluster' field are generated.
 
         parkeervak_serializer = ParkeervakSerializer(parkeervak, context={"request": drf_request})
-        assert parkeervak_serializer.data == {
+        data = normalize_data(parkeervak_serializer.data)
+        assert data == {
             "_links": {
                 "self": {
                     "href": "http://testserver/v1/parkeervakken/parkeervakken/121138489047/",
@@ -423,19 +421,19 @@ class TestDynamicSerializer:
             "buurtcode": "A05d",
             "straatnaam": "Zoutkeetsgracht",
             "regimes": [
-                OrderedDict(
-                    bord="",
-                    dagen=["ma", "di", "wo", "do", "vr", "za", "zo"],
-                    soort="MULDER",
-                    aantal=None,
-                    eType="E6b",
-                    kenteken="69-SF-NT",
-                    eindTijd="23:59:00",
-                    opmerking="",
-                    beginTijd="00:00:00",
-                    eindDatum=None,
-                    beginDatum=None,
-                )
+                {
+                    "bord": "",
+                    "dagen": ["ma", "di", "wo", "do", "vr", "za", "zo"],
+                    "soort": "MULDER",
+                    "aantal": None,
+                    "eType": "E6b",
+                    "kenteken": "69-SF-NT",
+                    "eindTijd": "23:59:00",
+                    "opmerking": "",
+                    "beginTijd": "00:00:00",
+                    "eindDatum": None,
+                    "beginDatum": None,
+                }
             ],
         }
 
@@ -675,9 +673,8 @@ class TestDynamicSerializer:
             many=True,
         )
 
-        assert (
-            fietspaaltjes_serializer.data["fietspaaltjes"][0]["area"] == "A"
-        ), fietspaaltjes_serializer.data
+        fietspaaltjes = list(fietspaaltjes_serializer.data["fietspaaltjes"])  # consume generator
+        assert fietspaaltjes[0]["area"] == "A", fietspaaltjes_serializer.data
 
     @staticmethod
     def test_download_url_field(
@@ -703,12 +700,14 @@ class TestDynamicSerializer:
             many=True,
         )
 
-        assert "sig=" in dossiers_serializer.data["dossiers"][0]["url"]
-        assert "se=" in dossiers_serializer.data["dossiers"][0]["url"]
-        assert "sv=" in dossiers_serializer.data["dossiers"][0]["url"]
-        assert "sp=" in dossiers_serializer.data["dossiers"][0]["url"]
-        assert "sr=b" in dossiers_serializer.data["dossiers"][0]["url"]
-        assert "sp=r" in dossiers_serializer.data["dossiers"][0]["url"]
+        dossiers = list(dossiers_serializer.data["dossiers"])  # consume generator
+        url = dossiers[0]["url"]
+        assert "sig=" in url
+        assert "se=" in url
+        assert "sv=" in url
+        assert "sp=" in url
+        assert "sr=b" in url
+        assert "sp=r" in url
 
     @staticmethod
     def test_download_url_field_empty_field(
@@ -731,7 +730,8 @@ class TestDynamicSerializer:
             many=True,
         )
 
-        assert dossiers_serializer.data["dossiers"][0]["url"] == ""
+        dossiers = list(dossiers_serializer.data["dossiers"])  # consume generator
+        assert dossiers[0]["url"] == ""
 
     @staticmethod
     def test_loose_relation_serialization(

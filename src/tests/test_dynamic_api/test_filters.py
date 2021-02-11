@@ -4,6 +4,7 @@ from django.contrib.gis.geos import GEOSGeometry
 from rest_framework.test import APIClient
 
 from dso_api.dynamic_api.filterset import filterset_factory
+from tests.utils import read_response_json
 
 
 @pytest.mark.django_db
@@ -232,10 +233,11 @@ class TestDynamicFilterSet:
             "/v1/parkeervakken/parkeervakken/",
             data={"regimes.inWerkingOp": "08:00", "regimes.eType": "E6b"},
         )
+        data = read_response_json(response)
 
-        assert len(response.data["_embedded"]["parkeervakken"]) == 1, response.data
-        assert response.data["_embedded"]["parkeervakken"][0]["id"] == parkeervak.pk
-        assert len(response.data["_embedded"]["parkeervakken"][0]["regimes"]) == 3, response.data
+        assert len(data["_embedded"]["parkeervakken"]) == 1, data
+        assert data["_embedded"]["parkeervakken"][0]["id"] == parkeervak.pk
+        assert len(data["_embedded"]["parkeervakken"][0]["regimes"]) == 3, data
 
     @staticmethod
     def test_additional_filters_with_null_start_value(
@@ -285,10 +287,11 @@ class TestDynamicFilterSet:
             "/v1/parkeervakken/parkeervakken/",
             data={"regimes.inWerkingOp": "09:00", "regimes.eType": "E6b"},
         )
+        data = read_response_json(response)
 
-        assert len(response.data["_embedded"]["parkeervakken"]) == 1, response.data
-        assert response.data["_embedded"]["parkeervakken"][0]["id"] == parkeervak.pk
-        assert len(response.data["_embedded"]["parkeervakken"][0]["regimes"]) == 1, response.data
+        assert len(data["_embedded"]["parkeervakken"]) == 1, data
+        assert data["_embedded"]["parkeervakken"][0]["id"] == parkeervak.pk
+        assert len(data["_embedded"]["parkeervakken"][0]["regimes"]) == 1, data
 
     @staticmethod
     def test_additional_filters_with_null_end_value(
@@ -338,10 +341,11 @@ class TestDynamicFilterSet:
             "/v1/parkeervakken/parkeervakken/",
             data={"regimes.inWerkingOp": "09:00", "regimes.eType": "E6b"},
         )
+        data = read_response_json(response)
 
-        assert len(response.data["_embedded"]["parkeervakken"]) == 1, response.data
-        assert response.data["_embedded"]["parkeervakken"][0]["id"] == parkeervak.pk
-        assert len(response.data["_embedded"]["parkeervakken"][0]["regimes"]) == 1, response.data
+        assert len(data["_embedded"]["parkeervakken"]) == 1, data
+        assert data["_embedded"]["parkeervakken"][0]["id"] == parkeervak.pk
+        assert len(data["_embedded"]["parkeervakken"][0]["regimes"]) == 1, data
 
     @staticmethod
     def test_geofilter_contains(parkeervakken_parkeervak_model):
@@ -372,21 +376,24 @@ class TestDynamicFilterSet:
             data={"geometry[contains]": "52.388231,4.8897865"},
             headers={"Accept-CRS": 4326},
         )
-        assert len(response.data["_embedded"]["parkeervakken"]) == 1
+        data = read_response_json(response)
+        assert len(data["_embedded"]["parkeervakken"]) == 1
 
         response = APIClient().get(
             "/v1/parkeervakken/parkeervakken/",
             data={"geometry[contains]": "52.3883019,4.8900356"},
             headers={"Accept-CRS": 4326},
         )
-        assert len(response.data["_embedded"]["parkeervakken"]) == 0
+        data = read_response_json(response)
+        assert len(data["_embedded"]["parkeervakken"]) == 0
 
         response = APIClient().get(
             "/v1/parkeervakken/parkeervakken/",
             data={"geometry[contains]": "121137.7,489046.9"},
             headers={"Accept-CRS": 28992},
         )
-        assert len(response.data["_embedded"]["parkeervakken"]) == 1
+        data = read_response_json(response)
+        assert len(data["_embedded"]["parkeervakken"]) == 1
 
     @staticmethod
     def test_filter_isempty(parkeervakken_parkeervak_model):
@@ -424,15 +431,17 @@ class TestDynamicFilterSet:
             "/v1/parkeervakken/parkeervakken/",
             data={"soort[isempty]": "true"},
         )
-        assert len(response.data["_embedded"]["parkeervakken"]) == 2
+        data = read_response_json(response)
+        assert len(data["_embedded"]["parkeervakken"]) == 2
         assert (
-            response.data["_embedded"]["parkeervakken"][0]["id"] == "121138489007"
-            or response.data["_embedded"]["parkeervakken"][0]["id"] == "121138489008"
+            data["_embedded"]["parkeervakken"][0]["id"] == "121138489007"
+            or data["_embedded"]["parkeervakken"][0]["id"] == "121138489008"
         )
 
         response = APIClient().get(
             "/v1/parkeervakken/parkeervakken/",
             data={"soort[isempty]": "false"},
         )
-        assert len(response.data["_embedded"]["parkeervakken"]) == 1
-        assert response.data["_embedded"]["parkeervakken"][0]["id"] == "121138489006"
+        data = read_response_json(response)
+        assert len(data["_embedded"]["parkeervakken"]) == 1
+        assert data["_embedded"]["parkeervakken"][0]["id"] == "121138489006"

@@ -59,7 +59,7 @@ class AbstractEmbeddedField:
         Since this virtual-field object persists between all sessions,
         the parent/root serializer needs to be provided here.
         """
-        if not isinstance(parent, self.parent_serializer_class):
+        if not isinstance(parent, self.parent_serializer):
             raise TypeError(f"Invalid parent for {self.__class__.__name__}.get_serializer()")
 
         embedded_serializer = self.serializer_class(context=parent.context)

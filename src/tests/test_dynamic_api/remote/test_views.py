@@ -5,6 +5,8 @@ from django.urls import reverse
 from schematools.contrib.django import models
 from urllib3_mock import Responses
 
+from tests.utils import read_response_json
+
 DEFAULT_RESPONSE = {
     "naam": {
         "voornamen": "Ria",
@@ -173,10 +175,9 @@ def test_remote_detail_view(api_client, router, brp_dataset, urllib3_mocker, tes
     # Prove that URLs can now be resolved.
     url = reverse("dynamic_api:brp-ingeschrevenpersonen-detail", kwargs={"pk": "999990901"})
     response = api_client.get(url)
-
-    # To test: print(json.dumps(response.json(), indent=2))
-    assert response.status_code == 200, response.data
-    assert response.json() == local_response, response.data
+    data = read_response_json(response)
+    assert response.status_code == 200, data
+    assert data == local_response, data
 
 
 @pytest.mark.django_db
@@ -193,10 +194,12 @@ def test_remote_schema_validation(api_client, router, brp_dataset, urllib3_mocke
     # Prove that URLs can now be resolved.
     url = reverse("dynamic_api:brp-ingeschrevenpersonen-detail", kwargs={"pk": "999990901"})
     response = api_client.get(url)
+    data = read_response_json(response)
+    assert response["content-type"] == "application/problem+json"  # check before reading
 
-    assert response.status_code == 502, response.data
-    assert response["content-type"] == "application/problem+json"
-    assert response.json() == {
+    assert response.status_code == 502, data
+    assert response["content-type"] == "application/problem+json"  # and after
+    assert data == {
         "type": "urn:apiexception:validation_errors",
         "code": "validation_errors",
         "title": "Invalid remote data",
@@ -205,7 +208,7 @@ def test_remote_schema_validation(api_client, router, brp_dataset, urllib3_mocke
         "detail": "These schema fields did not validate:",
         "x-validation-errors": {"burgerservicenummer": ["This field is required."]},
         "x-raw-response": {"foo": "bar"},
-    }, response.data
+    }
 
 
 @pytest.mark.django_db
@@ -242,10 +245,11 @@ def test_remote_400_problem_json(api_client, router, brp_dataset, urllib3_mocker
     # Prove that URLs can now be resolved.
     url = reverse("dynamic_api:brp-ingeschrevenpersonen-detail", kwargs={"pk": "999990901342"})
     response = api_client.get(url)
+    data = read_response_json(response)
+    assert response["content-type"] == "application/problem+json"  # check before reading
 
-    assert response.status_code == 400, response.data
-    assert response["content-type"] == "application/problem+json"
-    assert response.json() == {
+    assert response.status_code == 400, data
+    assert data == {
         "type": "urn:apiexception:parse_error",  # changed for consistency!
         "title": "Malformed request.",
         "status": 400,
@@ -259,7 +263,7 @@ def test_remote_400_problem_json(api_client, router, brp_dataset, urllib3_mocker
                 "name": "burgerservicenummer",
             }
         ],
-    }, response.data
+    }
 
 
 @pytest.mark.django_db
@@ -289,17 +293,19 @@ def test_remote_404_problem_json(api_client, router, brp_dataset, urllib3_mocker
     # Prove that URLs can now be resolved.
     url = reverse("dynamic_api:brp-ingeschrevenpersonen-detail", kwargs={"pk": "119990901"})
     response = api_client.get(url)
+    assert response["content-type"] == "application/problem+json"  # check before reading
+    data = read_response_json(response)
 
-    assert response.status_code == 404, response.data
-    assert response["content-type"] == "application/problem+json"
-    assert response.json() == {
+    assert response.status_code == 404, data
+    assert response["content-type"] == "application/problem+json"  # and after
+    assert data == {
         "type": "urn:apiexception:not_found",  # changed for consistency!
         "title": "Not found.",
         "status": 404,
         "detail": "Ingeschreven persoon niet gevonden met burgerservicenummer 119990901.",
         "instance": "http://testserver/v1/remote/brp/ingeschrevenpersonen/119990901/",
         "code": "not_found",  # changed for consistency!
-    }, response.data
+    }
 
 
 @pytest.mark.django_db
@@ -320,11 +326,12 @@ def test_remote_timeout(api_client, router, brp_dataset, urllib3_mocker):
     # Prove that URLs can now be resolved.
     url = reverse("dynamic_api:brp-ingeschrevenpersonen-detail", kwargs={"pk": "999990901"})
     response = api_client.get(url)
+    data = read_response_json(response)
 
-    assert response.status_code == 504, response.data
-    assert response.json() == {
+    assert response.status_code == 504, data
+    assert data == {
         "type": "urn:apiexception:gateway_timeout",
         "title": "Connection failed (server timeout)",
         "detail": "Connection failed (server timeout)",
         "status": 504,
-    }, response.data
+    }

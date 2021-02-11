@@ -1,4 +1,6 @@
-from io import BytesIO
+import inspect
+import itertools
+from io import BytesIO, StringIO
 from typing import Optional
 
 import orjson
@@ -42,6 +44,13 @@ class RendererMixin:
         """Used by DelegatedPageNumberPagination"""
         self.paginator = paginator
 
+    def tune_serializer(self, serializer: Serializer):
+        """Allow to fine-tune the serializer (e.g. remove unused fields).
+        This hook is used so the 'fields' are properly set before the peek_iterable()
+        is called - as that would return the first item as original.
+        """
+        pass
+
 
 class BrowsableAPIRenderer(RendererMixin, renderers.BrowsableAPIRenderer):
     def get_context(self, data, accepted_media_type, renderer_context):
@@ -53,6 +62,17 @@ class BrowsableAPIRenderer(RendererMixin, renderers.BrowsableAPIRenderer):
             context["response_headers"]["Content-Type"] = response.content_type
 
         return context
+
+    def get_content(self, renderer, data, accepted_media_type, renderer_context):
+        """Fix showing generator content for browsable API, convert back to one string"""
+        content = super().get_content(renderer, data, accepted_media_type, renderer_context)
+        if inspect.isgenerator(content):
+            # Convert back to string. Might become a very large response!
+            sample = StringIO()
+            sample.writelines(map(bytes.decode, content))
+            content = sample.getvalue()
+
+        return content
 
     def render(self, data, accepted_media_type=None, renderer_context=None):
         # Protect the browsable API from being used as DOS (Denial of Service) attack vector.
@@ -85,6 +105,61 @@ class HALJSONRenderer(RendererMixin, renderers.JSONRenderer):
     # Define the paginator per media type.
     compatible_paginator_classes = [pagination.DSOPageNumberPagination]
 
+    def render(self, data, accepted_media_type=None, renderer_context=None):
+        """Render the data as streaming."""
+        if data is None:
+            return
+
+        indent = self.get_indent(accepted_media_type, renderer_context or {})
+        if indent:
+            yield self._render_json_indented(data)
+        else:
+            yield from _chunked_output(self._render_json(data))
+
+    def _render_json_indented(self, data):
+        """Render indented JSON for the browsable API"""
+        if isinstance(data, dict) and (embedded := data.get("_embedded")):
+            # The ReturnGenerator is rendered as empty list, so convert these values first.
+            # Using orjson.dumps(data, default) here doesn't work, as the dict ordering
+            # isn't honored by orjson.
+            for key, value in embedded.copy().items():
+                if inspect.isgenerator(value) or isinstance(value, itertools.chain):
+                    embedded[key] = list(value)
+
+        return orjson.dumps(data, option=orjson.OPT_INDENT_2)
+
+    def _render_json(self, data, level=0):
+        if not data:
+            yield orjson.dumps(data)
+            return
+        elif isinstance(data, dict):
+            # Streaming output per key, which can be a whole list in case of embedding
+            yield b"{"
+            sep = b"\n  "
+            for key, value in data.items():
+                if hasattr(data, "__iter__") and not isinstance(data, str):
+                    # Recurse streaming for actual complex values.
+                    yield b"%b%b:" % (sep, orjson.dumps(key))
+                    yield from self._render_json(value, level=level + 1)
+                else:
+                    yield b"%b%b:%b" % (sep, orjson.dumps(key), orjson.dumps(value))
+                sep = b",\n  "
+            yield b"\n}"
+        elif hasattr(data, "__iter__") and not isinstance(data, str):
+            # Streaming per item, outputs each record on a new row.
+            yield b"["
+            sep = b"\n  "
+            for item in data:
+                yield b"%b%b" % (sep, orjson.dumps(item))
+                sep = b",\n  "
+
+            yield b"\n]"
+        else:
+            yield orjson.dumps(data)
+
+        if not level:
+            yield b"\n"
+
 
 class CSVRenderer(RendererMixin, CSVStreamingRenderer):
     """Overwritten CSV renderer to provide proper headers.
@@ -97,26 +172,27 @@ class CSVRenderer(RendererMixin, CSVStreamingRenderer):
     unlimited_page_size = True
     compatible_paginator_classes = [pagination.DSOHTTPHeaderPageNumberPagination]
 
+    def tune_serializer(self, serializer: Serializer):
+        # Serializer type is known, introduce better CSV header column.
+        # Avoid M2M content, and skip HAL URL fields as this improves performance.
+        csv_fields = {
+            name: field
+            for name, field in serializer.fields.items()
+            if name != "schema"
+            and not isinstance(
+                field,
+                (HyperlinkedRelatedField, SerializerMethodField, ListSerializer),
+            )
+        }
+
+        serializer.fields = csv_fields
+
     def render(self, data, media_type=None, renderer_context=None):
         if (serializer := get_data_serializer(data)) is not None:
-            # Serializer type is known, introduce better CSV header column.
-            # Avoid M2M content, and skip HAL URL fields as this improves performance.
-            csv_fields = {
-                name: field
-                for name, field in serializer.fields.items()
-                if name != "schema"
-                and not isinstance(
-                    field,
-                    (HyperlinkedRelatedField, SerializerMethodField, ListSerializer),
-                )
-            }
-
-            serializer.fields = csv_fields
-
             renderer_context = {
                 **(renderer_context or {}),
-                "header": list(csv_fields.keys()),
-                "labels": {name: field.label for name, field in csv_fields.items()},
+                "header": list(serializer.fields.keys()),
+                "labels": {name: field.label for name, field in serializer.fields.items()},
             }
 
         output = super().render(data, media_type=media_type, renderer_context=renderer_context)
@@ -138,18 +214,18 @@ class GeoJSONRenderer(RendererMixin, renderers.JSONRenderer):
     default_crs = WGS84  # GeoJSON always defaults to WGS84 (EPSG:4326).
     compatible_paginator_classes = [pagination.DelegatedPageNumberPagination]
 
+    def tune_serializer(self, serializer: Serializer):
+        """Remove unused fields from the serializer:"""
+        serializer.fields = {
+            name: field for name, field in serializer.fields.items() if name != "_links"
+        }
+
     def render(self, data, accepted_media_type=None, renderer_context=None):
         """
         Render `data` into JSON, returning a bytestring.
         """
         if data is None:
             return b""
-
-        # Remove unused fields from the serializer:
-        if (serializer := get_data_serializer(data)) is not None:
-            serializer.fields = {
-                name: field for name, field in serializer.fields.items() if name != "_links"
-            }
 
         request = renderer_context.get("request") if renderer_context else None
         yield from _chunked_output(self._render_geojson(data, request))
@@ -158,8 +234,7 @@ class GeoJSONRenderer(RendererMixin, renderers.JSONRenderer):
         # Detect what kind of data is actually provided:
         if isinstance(data, dict):
             if len(data) > 4:
-                # Must be a detail page. Data is already read
-                data.pop("_links")
+                # Must be a detail page.
                 yield self._render_geojson_detail(data, request=request)
                 return
 

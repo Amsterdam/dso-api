@@ -13,7 +13,7 @@ from rest_framework_gis.fields import GeometryField
 
 from rest_framework_dso.crs import CRS
 from rest_framework_dso.fields import DSOGeometryField, LinksField
-from rest_framework_dso.serializer_helpers import ReturnGenerator
+from rest_framework_dso.serializer_helpers import ReturnGenerator, peek_iterable
 from rest_framework_dso.utils import EmbeddedHelper
 
 
@@ -92,7 +92,15 @@ class DSOListSerializer(_SideloadMixin, serializers.ListSerializer):
         if is_stream and self.root is self and isinstance(data, models.QuerySet):
             # Trick DRF into generating the response bit by bit, without
             # caching the whole queryset into memory.
+            iterable = data.all()  # TEMP workaround (for this commit only)
             items = (self.child.to_representation(item) for item in data.iterator())
+
+            # Make sure the first to_representation() is called early on. This makes sure
+            # DSOModelSerializer.to_representation() can inspect the CRS, and define the
+            # HTTP header for the Content-Crs setting. This will be too late when the streaming
+            # rendering started. As bonus, it's a good guard against database errors, since those
+            # exceptions might not be rendered nicely rendered either once streaming started.
+            _, items = peek_iterable(items)
         else:
             # Taken this part from ListSerializer.to_representation()
             # to avoid  accessing 'data.all()' twice, causing double evaluations.
