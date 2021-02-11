@@ -229,7 +229,7 @@ REST_FRAMEWORK = dict(
         "rest_framework_dso.renderers.HALJSONRenderer",
         "rest_framework_dso.renderers.CSVRenderer",
         "rest_framework_dso.renderers.GeoJSONRenderer",
-        "dso_api.lib.renderers.PatchedBrowsableAPIRenderer",
+        "rest_framework_dso.renderers.BrowsableAPIRenderer",
     ],
     DEFAULT_FILTER_BACKENDS=[
         "django_filters.rest_framework.backends.DjangoFilterBackend",
