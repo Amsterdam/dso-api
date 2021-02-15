@@ -53,7 +53,7 @@ class URLencodingURLfields:
         return data
 
 
-def temporal_id_based_fetcher(cls, model, is_loose=False):
+def temporal_id_based_fetcher(model, is_loose=False):
     """Helper function to return a fetcher function. This function defaults
     to Django's 'in_bulk'. However, for temporal data tables, that
     need to be accessed by identifier only, we need to get the
@@ -136,7 +136,7 @@ class DynamicSerializer(DSOModelSerializer):
 
     table_schema: DatasetTableSchema = None
 
-    id_based_fetcher = temporal_id_based_fetcher
+    id_based_fetcher = staticmethod(temporal_id_based_fetcher)
     hal_relations_serializer_class = None
 
     def get_request(self):
