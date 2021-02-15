@@ -19,10 +19,13 @@ BROWSABLE_MAX_PAGE_SIZE = 1000
 
 def get_data_serializer(data) -> Optional[Serializer]:
     """Find the serializer associated with the incoming 'data'"""
-    if isinstance(data, ReturnDict):
-        return data.serializer
-    elif isinstance(data, (ReturnList, ReturnGenerator)):
-        return data.serializer.child
+    if isinstance(data, (ReturnDict, ReturnList, ReturnGenerator)):
+        serializer = data.serializer
+        if isinstance(serializer, ListSerializer):
+            # DSOListSerializer may return a dict, so have a separate check here.
+            serializer = serializer.child
+
+        return serializer
     else:
         return None
 
