@@ -8,32 +8,18 @@ Next you would need to execute one or more DAGs, there are few available with pu
 
 - openbareverlichting
 
-## Initial setup
+## Airflow setup
 
-Let's start by describing basic directory structure, both `dso-api` and `dataservices-airflow` are expected to be cloned to into same directory for simplicity:
-
-```
-~/Projects/
- |-dso-api/
- |-dataservices-airflow/
-```
-
-### Airflow setup
-
-Airflow can be started inside docker-compose. This is two-step process:
+dataservices-airflow must be cloned somewhere. It can then be be started using docker-compose in its source directory:
 
  - `docker-compose build`
  - `SCHEMA_URL=https://schemas.data.amsterdam.nl/datasets/ docker-compose up`
  
 Setup process will require 5 to 10 minutes, depending on hardware.
 
-After few minutes console output will stop showing errors, this is a sign it is okay to create user in separate terminal window:
+After few minutes console output will stop showing errors.
 
-```
-docker-compose exec airflow airflow create_user -r Admin -u admin -e admin@example.com -f admin -l admin -p test
-```
-
-### DSO-API
+## DSO-API
 
 DSO API can be used locally, inside python virtual environment. All commands related to `dso-api` will be assumed to be executed inside virtual environment.
 
@@ -49,7 +35,8 @@ And now you're ready to migrate database and import schemas
 
 ```
 ./src/manage.py migrate
-./src/manage.py import_schemas 
+./src/manage.py import_schemas
+./src/manage.py remove_schemas hcbrk  # workaround
 ```
 
 ## Importing public data into Airflow Database
@@ -58,7 +45,9 @@ In order to import public data we will need to execute `openbareverlichting` DAG
 
 ### Triggering dags via interface
 
-Go to [http://localhost:8080](http://localhost:8080/) and login with username `admin` and password `test`, then open `bouwstroompunten` DAG and click `Trigger DAG` button.
+Go to [http://localhost:8080](http://localhost:8080/) and login with username `admin` and password `admin`
+(unless you set ``AIRFLOW_USER_ADMIN_PASSWD`` when starting Airflow),
+then open `bouwstroompunten` DAG and click `Trigger DAG` button.
 And same for `openbareverlichting` DAG.
 
 ### Command line import
@@ -67,15 +56,15 @@ Inside `dataservices-airflow` folder run:
 
 ```
 docker-compose exec airflow bash
-airflow test openbareverlichting mkdir 2020
-airflow test openbareverlichting download_objects 2020
-airflow test openbareverlichting download_objecttypes 2020
-airflow test openbareverlichting convert_to_geojson 2020
-airflow test openbareverlichting geojson_to_SQL 2020
-airflow test openbareverlichting create_table 2020
-airflow test openbareverlichting rename_columns 2020
-airflow test openbareverlichting multi_check 2020
-airflow test openbareverlichting rename_table 2020
+airflow tasks test openbareverlichting mkdir 2020
+airflow tasks test openbareverlichting download_objects 2020
+airflow tasks test openbareverlichting download_objecttypes 2020
+airflow tasks test openbareverlichting convert_to_geojson 2020
+airflow tasks test openbareverlichting geojson_to_SQL 2020
+airflow tasks test openbareverlichting create_table 2020
+airflow tasks test openbareverlichting rename_columns 2020
+airflow tasks test openbareverlichting multi_check 2020
+airflow tasks test openbareverlichting rename_table 2020
 ```
 
 
@@ -87,7 +76,7 @@ You will need to run `docker-compose up -d dso_database` in `dataservices-airflo
 export DATABASE_URL="postgresql://dataservices:insecure@localhost:5416/dataservices"
 ```
 
-After that `dso-api` can be started locally by running `./src/manage.py runserver`
+After that `dso-api` can be started locally by running `./src/manage.py runserver` in the dso-api directory.
 
 
 Happy Hacking!
