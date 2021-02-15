@@ -8,17 +8,20 @@ from rest_framework_gis.fields import GeometryField
 
 
 class AbstractEmbeddedField:
-    """A 'virtual' field that contains the configuration of an embedded field."""
+    """A 'virtual' field that contains the configuration of an embedded field.
+
+    Note this virtual field is *not* part of the serializer.fields,
+    thus it's also **not** copied per instance. It's not possible to store
+    request-state (such as the parent serializer object) in this class.
+    """
 
     def __init__(
         self,
         serializer_class: Type[serializers.Serializer],
         *,
-        to_field=None,
         source=None,
     ):
         self.serializer_class = serializer_class
-        self.to_field = to_field
         self.source = source
 
         self.field_name = None
@@ -51,7 +54,14 @@ class AbstractEmbeddedField:
         raise NotImplementedError()
 
     def get_serializer(self, parent: serializers.Serializer) -> serializers.Serializer:
-        """Build the EmbeddedFieldserializer object that can generate an embedded result."""
+        """Build the EmbeddedField serializer object that can generate an embedded result.
+
+        Since this virtual-field object persists between all sessions,
+        the parent/root serializer needs to be provided here.
+        """
+        if not isinstance(parent, self.parent_serializer_class):
+            raise TypeError(f"Invalid parent for {self.__class__.__name__}.get_serializer()")
+
         embedded_serializer = self.serializer_class(context=parent.context)
         embedded_serializer.bind(field_name=self.field_name, parent=parent)
         return embedded_serializer
@@ -67,12 +77,14 @@ class AbstractEmbeddedField:
         return self.parent_serializer.Meta.model
 
     @cached_property
+    def source_field(self):
+        field_name = self.source or self.field_name
+        return self.parent_model._meta.get_field(field_name)
+
+    @cached_property
     def is_loose(self) -> bool:
         """ Signals that the related field is not a real FK or M2M """
-        return not isinstance(
-            self.parent_model._meta.get_field(self.source or self.field_name),
-            RelatedField,
-        )
+        return not isinstance(self.source_field, RelatedField)
 
     @cached_property
     def attname(self):
