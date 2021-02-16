@@ -179,6 +179,7 @@ class DynamicSerializer(DSOModelSerializer):
             context=self.context, fields_to_expand=self.fields_to_expand
         )
 
+    @extend_schema_field(OpenApiTypes.OBJECT)
     def get__links(self, instance):
         return self.hal_relations_serializer.to_representation(instance)
 
