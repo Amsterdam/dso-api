@@ -111,9 +111,13 @@ def exception_handler(exc, context):
     # Instead of implementing output formats for all media types (e.g. CSV/GeoJSON/Shapefile),
     # all these exotic formats get the same generic error page (e.g. 404),
     # as not every format can provide a proper error page.
-    if isinstance(request, Request) and request.accepted_renderer.media_type != "text/html":
+    if isinstance(request, Request) and (
+        not hasattr(request, "accepted_renderer")
+        or request.accepted_renderer.media_type != "text/html"
+    ):
         # The accepted_renderer is assigned to the response in finalize_response()
         request.accepted_renderer = JSONRenderer()
+        request.accepted_media_type = request.accepted_renderer.media_type
 
     # For HAL-JSON responses (and browsable HTML), the content-type should be changed.
     # Instead of "application/hal+json", the content type becomes "application/problem+json".
