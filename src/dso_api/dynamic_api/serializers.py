@@ -321,6 +321,12 @@ class DynamicLinksSerializer(DynamicSerializer):
 
     serializer_related_field = HALTemporalHyperlinkedRelatedField
 
+    def _include_embedded(self):
+        """Never include embedded relations when the
+        serializer is used for generating the _links section.
+        """
+        return False
+
     def get_fields(self):
         fields = super().get_fields()
         embedded_fields = self.get_fields_to_expand()
