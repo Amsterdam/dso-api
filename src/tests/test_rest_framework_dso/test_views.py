@@ -344,6 +344,25 @@ class TestExceptionHandler:
 
     @staticmethod
     @pytest.mark.django_db
+    def test_invalid_format(api_client, api_rf):
+        """Prove that failed content negotiation still renders an error"""
+        api_client.raise_request_exception = False
+        response = api_client.get("/v1/movies", data={"_format": "jsonfdsfds"})
+        assert response.status_code == 404
+        assert response["content-type"] == "application/problem+json"  # check before reading
+        data = read_response_json(response)
+
+        # This 404 originates from DefaultContentNegotiation.filter_renderers()
+        # Raising HTTP 406 Not Acceptable would only apply to HTTP Accept headers.
+        assert data == {
+            "detail": "Not found.",
+            "status": 404,
+            "title": "",
+            "type": "urn:apiexception:not_found",
+        }
+
+    @staticmethod
+    @pytest.mark.django_db
     def test_extreme_page_size(api_client, api_rf):
         """Prove that the browser-based view protects against a DOS attack vector"""
         # First see that the API actually raises the exception
