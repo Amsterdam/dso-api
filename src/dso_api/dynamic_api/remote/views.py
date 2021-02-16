@@ -25,9 +25,7 @@ from .. import permissions
 from . import serializers
 
 logger = logging.getLogger(__name__)
-http_pool_generic = urllib3.PoolManager(
-    cert_reqs="CERT_REQUIRED", ca_certs=certifi.where()
-)
+http_pool_generic = urllib3.PoolManager(cert_reqs="CERT_REQUIRED", ca_certs=certifi.where())
 http_pool_kadaster = None
 
 
@@ -141,7 +139,7 @@ class RemoteViewSet(DSOViewMixin, ViewSet):
                 http_pool_kadaster = urllib3.PoolManager(
                     cert_file=settings.HAAL_CENTRAAL_CERTFILE,
                     cert_reqs="CERT_REQUIRED",
-                    key_file=settings.HAAL_CENTRAAL_API_KEY,
+                    key_file=settings.HAAL_CENTRAAL_KEYFILE,
                     ca_certs=certifi.where(),
                 )
             http_pool = http_pool_kadaster
