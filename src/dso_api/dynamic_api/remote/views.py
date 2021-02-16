@@ -25,7 +25,10 @@ from .. import permissions
 from . import serializers
 
 logger = logging.getLogger(__name__)
-http_pool = urllib3.PoolManager(cert_reqs="CERT_REQUIRED", ca_certs=certifi.where())
+http_pool_generic = urllib3.PoolManager(
+    cert_reqs="CERT_REQUIRED", ca_certs=certifi.where()
+)
+http_pool_kadaster = None
 
 
 def del_none(d):
@@ -131,6 +134,20 @@ class RemoteViewSet(DSOViewMixin, ViewSet):
         # Using urllib directly instead of requests for performance
         logger.debug("Forwarding call to %s", url)
         headers = self.get_headers()
+
+        if self.dataset_id == "hcbrk" and "acceptatie" not in self.endpoint_url:
+            global http_pool_kadaster
+            if http_pool_kadaster is None:
+                http_pool_kadaster = urllib3.PoolManager(
+                    cert_file=settings.HAAL_CENTRAAL_CERTFILE,
+                    cert_reqs="CERT_REQUIRED",
+                    key_file=settings.HAAL_CENTRAAL_API_KEY,
+                    ca_certs=certifi.where(),
+                )
+            http_pool = http_pool_kadaster
+        else:
+            http_pool = http_pool_generic
+
         try:
             response: HTTPResponse = http_pool.request(
                 "GET",
