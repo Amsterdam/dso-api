@@ -333,24 +333,8 @@ class DSOModelSerializer(DSOSerializer, serializers.HyperlinkedModelSerializer):
     id_based_fetcher = None
 
     def _include_embedded(self):
-        """Determines if the _embedded field must be generated.
-        - The "_links" field never contains an "_embedded", so if this function is called
-        from within a LinksSerializer instance, return False. (Because LinksSerializer is a
-        subclass and inaccessible from here, we check this instead by the presence of the
-        "self" field.)
-        - If there is a view context, do not generate the _embedded field for the objects in
-        a list view.
-        - If there is no view context, only generate the _embedded field if the object is root and
-        output is not used for CSV.
-        """
-
-        is_root = not hasattr(self, "parent") or self.root is self
-        accepted_renderer = self.context["request"].accepted_renderer
-        if "self" in self.fields:
-            return False
-        if "view" in self.context and not getattr(self.context["view"], "detail", True):
-            return False
-        return is_root and accepted_renderer.format != "csv"
+        """Determines if the _embedded field must be generated."""
+        return self.root is self
 
     def to_representation(self, instance):
         """Check whether the geofields need to be transformed."""
