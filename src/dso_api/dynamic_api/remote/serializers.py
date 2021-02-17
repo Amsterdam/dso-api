@@ -34,8 +34,7 @@ JSON_TYPE_TO_DRF = {
 class RemoteListSerializer(DSOListSerializer):
     """ListSerializer that takes remote data"""
 
-    def get_embeds(self, instances, items: List[dict]) -> dict:
-        """Generate the embed sections for this listing. To be defined"""
+    def get_expanded_fields(self):
         return {}
 
 

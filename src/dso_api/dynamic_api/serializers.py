@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 from collections import OrderedDict
-from functools import lru_cache, partial
+from functools import lru_cache
 from typing import Type
 from urllib.parse import quote, urlencode
 
@@ -54,35 +54,27 @@ class URLencodingURLfields:
 
 
 def temporal_id_based_fetcher(model, is_loose=False):
-    """Helper function to return a fetcher function. This function defaults
-    to Django's 'in_bulk'. However, for temporal data tables, that
-    need to be accessed by identifier only, we need to get the
-    objects with the highest sequence number.
+    """Helper function to return a fetcher function.
+    For temporal data tables, that need to be accessed by identifier only,
+    we need to get the objects with the highest sequence number.
     """
 
-    def _fetch_by_ids(identifier, sequence_name, table_name, ids):
-        # Use a raw query, impossible to do this with ORM
-        # Short-circuit on empty ids
-        if not ids:
-            return {}
-        slots = ", ".join([" %s "] * len(ids))
-        query = f"""
-            SELECT DISTINCT ON ({identifier}) id, {identifier}, {sequence_name}
-            FROM {table_name} WHERE identificatie IN ({slots})
-            ORDER BY {identifier}, {sequence_name} DESC;
-        """
-        return {getattr(obj, identifier): obj for obj in model.objects.raw(query, ids)}
+    def _fetcher(id_list):
+        if is_loose:
+            # We assume temporal config is available in the dataset
+            dataset = model.get_dataset()
+            identifier = dataset.identifier
+            sequence_name = dataset.temporal["identifier"]
+            return (
+                model.objects.distinct(identifier)  # does SELECT DISTINCT ON(identifier)
+                .filter(**{f"{identifier}__in": id_list})
+                .order_by(identifier, f"-{sequence_name}")
+                .iterator()
+            )
+        else:
+            return model.objects.filter(pk__in=id_list).iterator()
 
-    fetcher = model.objects.in_bulk
-    if is_loose:
-        dataset = model.get_dataset()
-        # We assume temporal config is available in the dataset
-        identifier = dataset.identifier
-        sequence_name = dataset.temporal.get("identifier")
-        table_name = model._meta.db_table
-        fetcher = partial(_fetch_by_ids, identifier, sequence_name, table_name)
-
-    return fetcher
+    return _fetcher
 
 
 class DynamicLinksField(TemporalLinksField):
@@ -329,7 +321,7 @@ class DynamicLinksSerializer(DynamicSerializer):
 
     def get_fields(self):
         fields = super().get_fields()
-        embedded_fields = self.get_fields_to_expand()
+        embedded_fields = self.fields_to_expand
         link_fields = ["self", "schema"]
         relation_fields = [
             field_name

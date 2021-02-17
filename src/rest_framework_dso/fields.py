@@ -25,7 +25,7 @@ class AbstractEmbeddedField:
         self.source = source
 
         self.field_name = None
-        self.parent_serializer = None
+        self.parent_serializer_class = None
 
     def __set_name__(self, owner, name):
         from .serializers import _SideloadMixin
@@ -33,24 +33,20 @@ class AbstractEmbeddedField:
         if not issubclass(owner, _SideloadMixin):
             raise TypeError(f"{owner} does not extend from DSO serializer classes") from None
 
-        self.parent_serializer = owner
+        self.parent_serializer_class = owner
         self.field_name = name
 
         # Also register this field in the Meta.embedded,
         # which makes it easier to collect embedded relations
-        meta = self.parent_serializer.Meta
+        meta = self.parent_serializer_class.Meta
         if not hasattr(meta, "embedded_fields"):
             meta.embedded_fields = []
         meta.embedded_fields.append(name)
 
-    def get_related_detail_ids(self, instance):
+    def get_related_ids(self, instance):
         """Return the "ID" values that are referenced from a single instance
         This can be a FK or an NM relationship.
         """
-        raise NotImplementedError()
-
-    def get_related_list_ids(self, instances) -> list:
-        """Return the "ID" values that are referenced from a list of instances."""
         raise NotImplementedError()
 
     def get_serializer(self, parent: serializers.Serializer) -> serializers.Serializer:
@@ -59,7 +55,7 @@ class AbstractEmbeddedField:
         Since this virtual-field object persists between all sessions,
         the parent/root serializer needs to be provided here.
         """
-        if not isinstance(parent, self.parent_serializer):
+        if not isinstance(parent, self.parent_serializer_class):
             raise TypeError(f"Invalid parent for {self.__class__.__name__}.get_serializer()")
 
         embedded_serializer = self.serializer_class(context=parent.context)
@@ -74,7 +70,7 @@ class AbstractEmbeddedField:
     @cached_property
     def parent_model(self) -> Type[models.Model]:
         """Return the Django model class"""
-        return self.parent_serializer.Meta.model
+        return self.parent_serializer_class.Meta.model
 
     @cached_property
     def source_field(self):
@@ -85,6 +81,12 @@ class AbstractEmbeddedField:
     def is_loose(self) -> bool:
         """ Signals that the related field is not a real FK or M2M """
         return not isinstance(self.source_field, RelatedField)
+
+    @cached_property
+    def is_array(self) -> bool:
+        """Whether the relation returns an list of items (e.g. ManyToMany)."""
+        # This includes LooseRelationManyToManyField
+        return isinstance(self.source_field, models.ManyToManyField)
 
     @cached_property
     def attname(self):
@@ -104,20 +106,16 @@ class AbstractEmbeddedField:
 class EmbeddedField(AbstractEmbeddedField):
     """An embedded field for a foreign-key relation."""
 
-    def get_related_detail_ids(self, instance):
+    def get_related_ids(self, instance):
         """Find the _id field value(s)"""
         id_value = getattr(instance, self.attname, None)
         return [] if id_value is None else [id_value]
-
-    def get_related_list_ids(self, instances) -> list:
-        """Find the object IDs of the instances."""
-        return list(filter(None, [getattr(instance, self.attname) for instance in instances]))
 
 
 class EmbeddedManyToManyField(AbstractEmbeddedField):
     """An embedded field for a n-m relation."""
 
-    def get_related_detail_ids(self, instance):
+    def get_related_ids(self, instance):
         """Find the _id field value(s)"""
         related_mgr = getattr(instance, self.attname, None)
         if related_mgr is None:
@@ -131,21 +129,6 @@ class EmbeddedManyToManyField(AbstractEmbeddedField):
         else:
             ids = [r.pk for r in related_mgr.all()]
         return ids
-
-    def get_related_list_ids(self, instances) -> list:
-        """Find the object IDs of the instances."""
-        ids = set()
-        for instance in instances:
-            related_mgr = getattr(instance, self.attname, None)
-            if related_mgr is None:
-                continue
-            source_is_temporal = self.parent_model.is_temporal()
-            target_is_temporal = related_mgr.model.is_temporal()
-            if not source_is_temporal and target_is_temporal:
-                ids |= set(self._get_temporal_ids(instance, related_mgr))
-            else:
-                ids |= set(r.pk for r in related_mgr.all())
-        return list(ids)
 
     def _get_temporal_ids(self, instance, related_mgr):
         (

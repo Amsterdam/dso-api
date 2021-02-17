@@ -811,7 +811,7 @@ class TestEmbedTemporalTables:
         response = api_client.get(url)
         data = read_response_json(response)
         assert response.status_code == 200, data
-        assert data["_embedded"]["bestaatUitBuurten"]["id"] == "03630000000078.1"
+        assert data["_embedded"]["bestaatUitBuurten"][0]["id"] == "03630000000078.1"
 
     def test_list_expand_true_for_nm_relation(
         self,
@@ -985,15 +985,14 @@ class TestEmbedTemporalTables:
         response = api_client.get(url)
         data = read_response_json(response)
         assert response.status_code == 200, data
+
         assert data["_embedded"]["buurt"][0]["id"] == "03630000000078.2"
-        assert (
-            data["_embedded"]["buurt"][0]["_links"]["self"]["href"]
-            == "http://testserver/v1/gebieden/buurten/03630000000078/?volgnummer=2"
+        assert data["_embedded"]["buurt"][0]["_links"]["self"]["href"] == (
+            "http://testserver/v1/gebieden/buurten/03630000000078/?volgnummer=2"
         )
         assert data["_embedded"]["statistieken"][0]["id"] == 1
-        assert (
-            data["_embedded"]["statistieken"][0]["_links"]["buurt"]["href"]
-            == "http://testserver/v1/gebieden/buurten/03630000000078/"
+        assert data["_embedded"]["statistieken"][0]["_links"]["buurt"]["href"] == (
+            "http://testserver/v1/gebieden/buurten/03630000000078/"
         )
         assert "_embedded" not in data["_embedded"]["statistieken"][0]
 
@@ -1043,13 +1042,10 @@ class TestEmbedTemporalTables:
         data = read_response_json(response)
         assert response.status_code == 200, data
         assert "buurten" not in data  # because it must be in  "_embedded"
-        # Note that "buurten" is a ManyToMany, but upacked here because the
-        # list contained only 1 item
-        # (previous design choice, see EmbedHelper.get_embedded in utils.py)
-        assert data["_embedded"]["buurten"]["id"] == "03630000000078.2"
-        assert (
-            data["_embedded"]["buurten"]["_links"]["self"]["href"]
-            == "http://testserver/v1/gebieden/buurten/03630000000078/?volgnummer=2"
+        buurten = data["_embedded"]["buurten"]
+        assert buurten[0]["id"] == "03630000000078.2"
+        assert buurten[0]["_links"]["self"]["href"] == (
+            "http://testserver/v1/gebieden/buurten/03630000000078/?volgnummer=2"
         )
 
     def test_independence_of_m2m_through_id_field(

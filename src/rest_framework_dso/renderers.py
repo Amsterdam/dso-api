@@ -36,6 +36,8 @@ class RendererMixin:
     """Extra attributes on renderers in this project."""
 
     unlimited_page_size = False
+    supports_list_embeds = True
+    supports_detail_embeds = True
     compatible_paginator_classes = None
     default_crs = None
     paginator = None
@@ -170,6 +172,8 @@ class CSVRenderer(RendererMixin, CSVStreamingRenderer):
     """
 
     unlimited_page_size = True
+    supports_list_embeds = False
+    supports_detail_embeds = False
     compatible_paginator_classes = [pagination.DSOHTTPHeaderPageNumberPagination]
 
     def tune_serializer(self, serializer: Serializer):
@@ -207,6 +211,7 @@ class GeoJSONRenderer(RendererMixin, renderers.JSONRenderer):
     """Convert the output into GeoJSON notation."""
 
     unlimited_page_size = True
+    supports_detail_embeds = False
     media_type = "application/geo+json"
     format = "geojson"
     charset = "utf-8"

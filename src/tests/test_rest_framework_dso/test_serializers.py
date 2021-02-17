@@ -53,8 +53,8 @@ def test_serializer_single(drf_request, movie):
 def test_serializer_many(drf_request, movie):
     """Prove that the serializer can embed data (for the detail page)"""
     serializer = MovieSerializer(
+        Movie.objects.all(),
         many=True,
-        instance=[movie],
         fields_to_expand=["category"],
         context={"request": drf_request},
     )
@@ -74,23 +74,25 @@ def test_serializer_embed_with_missing_relations(drf_request):
     cursor.execute(
         "INSERT INTO test_rest_framework_dso_movie (name, category_id) VALUES ('Test', 333);"
     )
-    movie = Movie.objects.get(name="Test")
+    try:
+        movie = Movie.objects.get(name="Test")
 
-    serializer = MovieSerializer(
-        many=True,
-        instance=[movie],
-        fields_to_expand=["category"],
-        context={"request": drf_request},
-    )
+        serializer = MovieSerializer(
+            Movie.objects.all(),
+            many=True,
+            fields_to_expand=["category"],
+            context={"request": drf_request},
+        )
 
-    data = normalize_data(serializer.data)
-    assert data == {
-        "movie": [{"name": "Test", "category_id": movie.category_id}],
-        "category": [],
-    }
-
-    # Cleanup needed to make Django happy.
-    cursor.execute("DELETE FROM test_rest_framework_dso_movie")
+        data = normalize_data(serializer.data)
+        assert data == {
+            "movie": [{"name": "Test", "category_id": movie.category_id}],
+            "category": [],
+        }
+    finally:
+        # Make sure the cleanup happens or unit tests report this error
+        # instead of the actual assertion error.
+        cursor.execute("DELETE FROM test_rest_framework_dso_movie WHERE category_id=333")
 
 
 @pytest.mark.django_db
