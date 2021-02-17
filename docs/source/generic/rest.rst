@@ -43,7 +43,7 @@ Paginering
 ----------
 
 De resultaten worden gepagineerd teruggegeven.
-De paginagrootte kan aangepast worden door een :samp:`?page_size={n}` query parameter toe te voegen aan de request URL.
+De paginagrootte kan aangepast worden door een :samp:`?pageSize={n}` query parameter toe te voegen aan de request URL.
 
 In de response zijn de volgende elementen te vinden:
 
