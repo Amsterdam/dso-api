@@ -4,7 +4,7 @@ import re
 from collections import OrderedDict
 from functools import lru_cache, partial
 from typing import Type
-from urllib import parse
+from urllib.parse import quote, urlencode
 
 from django.core.exceptions import ImproperlyConfigured
 from django.db import models
@@ -47,7 +47,7 @@ class URLencodingURLfields:
                 protocol_uri = re.search("([a-z,A-z,0-9,:/]+)(.*)", data[field_name])
                 protocol = protocol_uri.group(1)
                 uri = protocol_uri.group(2)
-                data[field_name] = protocol + parse.quote(uri)
+                data[field_name] = protocol + quote(uri)
             except (TypeError, AttributeError):
                 data = data
         return data
@@ -105,24 +105,19 @@ class DynamicLinksField(TemporalLinksField):
 
 
 class _RelatedSummaryField(Field):
-    def to_representation(self, value: DynamicModel):
-        count = value.count()
+    def to_representation(self, value: models.Manager):
         request = self.context["request"]
         url = reverse(get_view_name(value.model, "list"), request=request)
-        url_parts = parse.urlparse(url)
-        parent_pk = value.instance.pk
-        filter_name = list(value.core_filters.keys())[0] + "Id"
-        q_params = {parent_pk: filter_name}
+        filter_field = next(iter(value.core_filters.keys()))
+        q_params = {toCamelCase(filter_field + "_id"): value.instance.pk}
+
         # If this is a temporary slice, add the extra parameter to the qs.
         if request.dataset_temporal_slice is not None:
             key = request.dataset_temporal_slice["key"]
-            value = request.dataset_temporal_slice["value"]
-            q_params[key] = value
-        url_parts = url_parts._replace(query=parse.urlencode(q_params))
-        return {
-            "count": count,
-            "href": parse.urlunparse(url_parts),
-        }
+            q_params[key] = request.dataset_temporal_slice["value"]
+
+        query_string = ("&" if "?" in url else "?") + urlencode(q_params)
+        return {"count": value.count(), "href": f"{url}{query_string}"}
 
 
 class DynamicSerializer(DSOModelSerializer):

@@ -741,6 +741,10 @@ class TestEmbedTemporalTables:
         response = api_client.get(url)
         assert response.status_code == 200, response.data
         assert response.data["_embedded"]["ligtInWijk"]["id"] == "03630012052035.1"
+        assert response.data["_embedded"]["ligtInWijk"]["buurt"] == {
+            "count": 1,
+            "href": "http://testserver/v1/gebieden/buurten/?ligtInWijkId=03630012052035.1",
+        }
 
     def test_list_expand_true_for_fk_relation(
         self,
@@ -756,10 +760,17 @@ class TestEmbedTemporalTables:
         """
 
         url = reverse("dynamic_api:gebieden-buurten-list")
-        url = f"{url}?_expand=true"
+        url = f"{url}?_format=json&_expand=true"
         response = api_client.get(url)
         assert response.status_code == 200, response.data
         assert response.data["_embedded"]["ligtInWijk"][0]["id"] == "03630012052035.1"
+        assert response.data["_embedded"]["ligtInWijk"][0]["buurt"] == {
+            "count": 1,
+            "href": (
+                "http://testserver/v1/gebieden/buurten/"
+                "?_format=json&ligtInWijkId=03630012052035.1"
+            ),
+        }
 
     def test_detail_expand_true_for_nm_relation(
         self,
