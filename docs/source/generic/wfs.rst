@@ -2,25 +2,25 @@ WFS Kaartlagen uitlezen
 =======================
 
 Alle "DSO API" diensten zijn ook als WFS feature beschikbaar.
-Hiermee kunnen GIS-pakketten (zoals QGis) de ruimtelijke data direct visualiseren,
+Hiermee kunnen GIS-pakketten (zoals QGIS) de ruimtelijke data direct visualiseren,
 en queries op uitvoeren.
 
-Werken met QGis
+Werken met QGIS
 ---------------
 
 De WFS lagen zijn beschikbaar onder de volgende URL's:
 
 :samp:`https://api.data.amsterdam.nl/v1/wfs/{<dataset naam>}/`
 
-Gebruik zo'n URL in QGis:
+Gebruik zo'n URL in QGIS:
 
 .. figure:: images/qgis-add-wfs.png
    :width: 1340
    :height: 1582
    :scale: 25%
-   :alt: (voorbeeldafbeelding van QGis)
+   :alt: (voorbeeldafbeelding van QGIS)
 
-   In de bovenstaande afbeelding wordt QGis gekoppeld met de BAG dataset:
+   In de bovenstaande afbeelding wordt QGIS gekoppeld met de BAG dataset:
    https://api.data.amsterdam.nl/v1/wfs/bag/
 
 Hierna zijn de gegevens te raadplegen, te filteren en te combineren:
@@ -29,11 +29,16 @@ Hierna zijn de gegevens te raadplegen, te filteren en te combineren:
    :width: 2438
    :height: 1614
    :scale: 25%
-   :alt: (stadsdelen weergegeven in QGis)
+   :alt: (stadsdelen weergegeven in QGIS)
 
 .. tip::
-    De parameters ``?SERVICE=WFS&VERSION=2.0.0&REQUEST=..`` worden door QGis zelf achter de URL gezet.
+    De parameters ``?SERVICE=WFS&VERSION=2.0.0&REQUEST=..`` worden door QGIS zelf achter de URL gezet.
     Het is niet nodig deze zelf toe te voegen.
+
+.. tip::
+    De schuine streep aan het einde van de URL is belangrijk.
+    QGIS werkt niet als deze ontbreekt. Dit is een beperking
+    in QGIS.
 
 Queries op relaties
 ~~~~~~~~~~~~~~~~~~~
@@ -44,7 +49,7 @@ kan je de volgende optie toevoegen aan de URL:
 * :samp:`?embed={relatienaam},{...}` zal een veld platgeslagen invoegen.
 * :samp:`?expand={relatienaam},{...}` zal een veld als "complex feature" invoegen.
 
-Gebruik deze URL in QGis, of een ander GIS-pakket.
+Gebruik deze URL in QGIS, of een ander GIS-pakket.
 
 Als voorbeeld: de BAG feature type *buurt* een relatie met een *stadsdeel*.
 Deze kan op beide manieren geconfigureerd worden in een GIS-pakket:
@@ -57,8 +62,8 @@ zodat het export formaat ook geneste relaties bevat.
 
 .. admonition:: Embed of expand gebruiken?
 
-   QGis 3 heeft geen ondersteuning voor complex features, en verwerkt deze als tekst.
-   Gebruikt in QGis daarom alleen de platgeslagen versie met :samp:`?embed={...}`.
+   QGIS 3 heeft geen ondersteuning voor complex features, en verwerkt deze als tekst.
+   Gebruikt in QGIS daarom alleen de platgeslagen versie met :samp:`?embed={...}`.
    De :samp:`?expand={...}` versie is daarentegen ideaal voor GeoJSON exports,
    die wel goed kan omgaan met geneste structuren.
 
@@ -531,7 +536,7 @@ Diverse bestaande filters gebruiken nog andere WFS 1 elementen, zoals ``<Propert
 van ``<ValueReference>``. Voor compatibiliteit wordt deze tag ook ondersteund.
 
 De WFS 1 expressies ``<Add>``, ``<Sub>``, ``<Mul>`` en ``<Div>`` zijn tevens geïmplementeerd
-om rekenkundige operaties te ondersteunen vanuit QGis (optellen, aftrekken, vermenigvuldigen en delen).
+om rekenkundige operaties te ondersteunen vanuit QGIS (optellen, aftrekken, vermenigvuldigen en delen).
 
 Technische achtergrond
 ----------------------

@@ -42,9 +42,8 @@ altijd een JSON response geforceerd.
 Paginering
 ----------
 
-De resultaten hebben een standaard paginagrootte van 1000 records.
-
-De paginagrootte kan aangepast worden door een :samp:`&page_size={n}` query parameter toe te voegen aan de request URL.
+De resultaten worden gepagineerd teruggegeven.
+De paginagrootte kan aangepast worden door een :samp:`?page_size={n}` query parameter toe te voegen aan de request URL.
 
 In de response zijn de volgende elementen te vinden:
 
@@ -158,6 +157,9 @@ Tekstvelden ondersteunen wildcards. Maak daarvoor gebruik van de :samp:`?{veld}[
     curl 'https://api.data.amsterdam.nl/v1/bag/stadsdeel/?naam[like]=West*'
 
     curl 'https://api.data.amsterdam.nl/v1/bag/stadsdeel/?naam[like]=Westp??rt'
+
+``*`` staat voor nul of meer willekeurige tekens. ``?`` staat voor precies
+één willekeurig teken. Er is geen *escaping* van deze symbolen mogelijk.
 
 De namen van de velden en mogelijke operatoren zijn te vinden op
 de :doc:`datasets <../datasets/index>` pagina.
