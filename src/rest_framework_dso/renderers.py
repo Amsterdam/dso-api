@@ -164,7 +164,7 @@ class GeoJSONRenderer(RendererMixin, renderers.JSONRenderer):
                 # Must be a listing, not a detail view which may also have _embed.
                 collections = data["_embed"]
             else:
-                collections = {"list": data}
+                collections = data
         elif isinstance(data, (list, ReturnGenerator)):
             collections = {"gen": data}
         else:
