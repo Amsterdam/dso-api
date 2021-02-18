@@ -220,7 +220,11 @@ class DynamicSerializer(DSOModelSerializer):
                     to_snake_case(part) for part in field.relation.split(":")
                 ]
                 url_name = f"{app_name}:{dataset_name}-{table_name}-detail"
-                result.append((f.attname, toCamelCase(f.attname), url_name))
+                related_ds = field.related_model.get_dataset()
+                related_identifier_field = related_ds.identifier
+                result.append(
+                    (f.attname, toCamelCase(f.attname), url_name, related_identifier_field)
+                )
 
         return result
 
@@ -233,7 +237,12 @@ class DynamicSerializer(DSOModelSerializer):
         if self._url_content_fields:
             data = URLencodingURLfields().to_representation(self._url_content_fields, data)
 
-        for attname, camel_name, url_name in self._loose_relation_m2m_fields:
+        for (
+            attname,
+            camel_name,
+            url_name,
+            related_identifier_field,
+        ) in self._loose_relation_m2m_fields:
             if attname in data and not data[camel_name]:
                 # TODO: N-query issue, which needs to be addressed later.
                 related_mgr = getattr(validated_data, attname)
@@ -249,6 +258,7 @@ class DynamicSerializer(DSOModelSerializer):
                     {
                         "href": reverse(url_name, kwargs={"pk": item}, request=request),
                         "title": item,
+                        related_identifier_field: item,
                     }
                     for item in related_ids
                 ]
@@ -288,14 +298,22 @@ class DynamicBodySerializer(DynamicSerializer):
 
     def get_fields(self):
         fields = super().get_fields()
+        ds = self.Meta.model.get_dataset()
+        identifier_fields = [ds.identifier]
+        temporal = ds.temporal
+        if temporal is not None and "identifier" in temporal:
+            identifier_fields.append(temporal["identifier"])
         output_fields = OrderedDict(
             [
                 (field_name, field)
                 for field_name, field in fields.items()
                 if field_name in ["_links", "_embedded"]
-                or not isinstance(
-                    field,
-                    (HyperlinkedRelatedField, ManyRelatedField, LooseRelationUrlField),
+                or (
+                    not isinstance(
+                        field,
+                        (HyperlinkedRelatedField, ManyRelatedField, LooseRelationUrlField),
+                    )
+                    and field_name not in identifier_fields
                 )
             ]
         )
@@ -323,6 +341,7 @@ class DynamicLinksSerializer(DynamicSerializer):
         fields = super().get_fields()
         embedded_fields = self.fields_to_expand
         link_fields = ["self", "schema"]
+
         relation_fields = [
             field_name
             for field_name, field in fields.items()

@@ -837,6 +837,8 @@ class TestEmbedTemporalTables:
                     {
                         "href": "http://testserver/v1/gebieden/ggwgebieden/03630950000000/?volgnummer=1",  # noqa: E501
                         "title": "03630950000000.1",
+                        "volgnummer": 1,
+                        "identificatie": "03630950000000",
                     }
                 ],
                 "buurtenWoningbouwplan": [],
@@ -845,15 +847,15 @@ class TestEmbedTemporalTables:
                 "self": {
                     "href": "http://testserver/v1/gebieden/buurten/03630000000078/?volgnummer=1",
                     "title": "03630000000078.1",
+                    "volgnummer": 1,
+                    "identificatie": "03630000000078",
                 },
             },
             "geometrie": None,
             "ligtInWijkVolgnummer": None,
             "ligtInWijkIdentificatie": None,
-            "volgnummer": 1,
             "naam": None,
             "code": None,
-            "identificatie": "03630000000078",
             "eindGeldigheid": None,
             "beginGeldigheid": None,
             "id": "03630000000078.1",
@@ -864,17 +866,19 @@ class TestEmbedTemporalTables:
                 "self": {
                     "href": "http://testserver/v1/gebieden/ggwgebieden/03630950000000/?volgnummer=1",  # noqa: E501
                     "title": "03630950000000.1",
+                    "volgnummer": 1,
+                    "identificatie": "03630950000000",
                 },
                 "bestaatUitBuurten": [
                     {
                         "href": "http://testserver/v1/gebieden/buurten/03630000000078/?volgnummer=1",  # noqa: E501
                         "title": "03630000000078.1",
+                        "volgnummer": 1,
+                        "identificatie": "03630000000078",
                     },
                 ],
             },
             "geometrie": None,
-            "volgnummer": 1,
-            "identificatie": "03630950000000",
             "id": "03630950000000.1",
             "eindGeldigheid": None,
             "beginGeldigheid": None,
@@ -893,7 +897,10 @@ class TestEmbedTemporalTables:
     ):
         """Without _expand=true there is no _embedded field.
         The buurt link must appear in the _links field inside an HAL envelope.
-        The buurt link is not resolved to the latest volgnummer.
+        The "buurtId" field in is how the field is known in the statistieken dataset, and must
+        appear in the body of the response.
+        The buurt link is not resolved to the latest volgnummer, but "identificatie" is specified,
+        which is the identifier used by the gebieden dataset.
         """
 
         url = reverse("dynamic_api:meldingen-statistieken-detail", args=[1])
@@ -905,6 +912,7 @@ class TestEmbedTemporalTables:
                 "buurt": {
                     "href": "http://testserver/v1/gebieden/buurten/03630000000078/",
                     "title": "03630000000078",
+                    "identificatie": "03630000000078",
                 },
                 "schema": "https://schemas.data.amsterdam.nl/datasets/meldingen/meldingen#statistieken",  # noqa: E501
                 "self": {
@@ -951,6 +959,8 @@ class TestEmbedTemporalTables:
                         "self": {
                             "href": "http://testserver/v1/gebieden/buurten/03630000000078/?volgnummer=2",  # noqa: E501
                             "title": "03630000000078.2",
+                            "volgnummer": 2,
+                            "identificatie": "03630000000078",
                         },
                     },
                     "code": None,
@@ -958,8 +968,6 @@ class TestEmbedTemporalTables:
                     "geometrie": None,
                     "ligtInWijkVolgnummer": None,
                     "ligtInWijkIdentificatie": None,
-                    "volgnummer": 2,
-                    "identificatie": "03630000000078",
                     "eindGeldigheid": None,
                     "beginGeldigheid": None,
                     "id": "03630000000078.2",
@@ -984,16 +992,21 @@ class TestEmbedTemporalTables:
         url = f"{url}?_expand=true"
         response = api_client.get(url)
         data = read_response_json(response)
-        assert response.status_code == 200, data
 
+        assert response.status_code == 200, data
         assert data["_embedded"]["buurt"][0]["id"] == "03630000000078.2"
-        assert data["_embedded"]["buurt"][0]["_links"]["self"]["href"] == (
-            "http://testserver/v1/gebieden/buurten/03630000000078/?volgnummer=2"
-        )
+        assert data["_embedded"]["buurt"][0]["_links"]["self"] == {
+            "href": "http://testserver/v1/gebieden/buurten/03630000000078/?volgnummer=2",
+            "identificatie": "03630000000078",
+            "title": "03630000000078.2",
+            "volgnummer": 2,
+        }
         assert data["_embedded"]["statistieken"][0]["id"] == 1
-        assert data["_embedded"]["statistieken"][0]["_links"]["buurt"]["href"] == (
-            "http://testserver/v1/gebieden/buurten/03630000000078/"
-        )
+        assert data["_embedded"]["statistieken"][0]["_links"]["buurt"] == {
+            "href": "http://testserver/v1/gebieden/buurten/03630000000078/",
+            "title": "03630000000078",
+            "identificatie": "03630000000078",
+        }
         assert "_embedded" not in data["_embedded"]["statistieken"][0]
 
     def test_list_expand_true_non_tempooral_many_to_many_to_temporal(
@@ -1005,6 +1018,17 @@ class TestEmbedTemporalTables:
         woningbouwplan_model,
         woningbouwplannen_data,
     ):
+        """_embedded must contain for each FK or MN relation a key (with camelCased fieldname)
+        containing a list of all records that are being referred to
+        for loose relations, these must be resolved to the latest 'volgnummer'
+        _embedded must also contain a key (with table name)
+          containing a (filtered) list of items.
+        the FK or NM relation keys in those items are urls without volgnummer
+
+        Check the loose coupling of woningbouwplan with buurten
+        The "identificatie" fieldname is taken from the related buurten model.
+        Note that "volgnummer" is not specified within the woningbouwplan data (which
+        makes it "loose"), and therefore not mentioned here"""
 
         url = reverse("dynamic_api:woningbouwplannen-woningbouwplan-list")
         url = f"{url}?_expand=true"
@@ -1024,8 +1048,19 @@ class TestEmbedTemporalTables:
             {
                 "href": "http://testserver/v1/gebieden/buurten/03630000000078/",
                 "title": "03630000000078",
+                "identificatie": "03630000000078",
             }
         ]
+        #  Check that the embedded buurten contains the correct "identificatie",
+        #  and is now also resolved to the latest "volgnummer", which is specified.
+        assert data["_embedded"]["buurten"][0]["_links"]["self"] == {
+            "href": "http://testserver/v1/gebieden/buurten/03630000000078/?volgnummer=2",
+            "title": "03630000000078.2",
+            "identificatie": "03630000000078",
+            "volgnummer": 2,
+        }
+        #  Check "id" is resolved to correct identificatie.volgnummer format
+        assert data["_embedded"]["buurten"][0]["id"] == "03630000000078.2"
 
     def test_detail_expand_true_non_temporal_many_to_many_to_temporal(
         self,

@@ -4,10 +4,11 @@ import pytest
 from django.core.validators import EmailValidator, URLValidator
 from schematools.contrib.django.auth_backend import RequestProfile
 from schematools.contrib.django.models import Profile
-
 from dso_api.dynamic_api.serializers import serializer_factory
 from rest_framework_dso.fields import EmbeddedField
+from rest_framework_dso.views import DSOViewMixin
 from tests.utils import normalize_data
+
 
 
 @pytest.fixture(autouse=True)
@@ -238,20 +239,22 @@ class TestDynamicSerializer:
                 "self": {
                     "href": "http://testserver/v1/gebieden/stadsdelen/0363/?volgnummer=1",
                     "title": "0363.1",
+                    "volgnummer": 1,
+                    "identificatie": "0363",
                 },
                 "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/gebieden#stadsdelen",  # NoQA
                 "wijk": [
                     {
                         "href": "http://testserver/v1/gebieden/wijken/03630000000001/?volgnummer=1",  # NoQA
                         "title": "03630000000001.1",
+                        "volgnummer": 1,
+                        "identificatie": "03630000000001",
                     }
                 ],
             },
             "id": "0363.1",
             "naam": "Stadsdeel",
             "code": None,
-            "volgnummer": 1,
-            "identificatie": "0363",
             "eindGeldigheid": None,
             "beginGeldigheid": None,
             "registratiedatum": None,
@@ -743,7 +746,7 @@ class TestDynamicSerializer:
         for a loose relation field
         """
 
-        class DummyView:
+        class DummyView(DSOViewMixin):
             def __init__(self, model):
                 self.model = model
 
