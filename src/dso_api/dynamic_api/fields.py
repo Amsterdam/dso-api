@@ -52,7 +52,18 @@ class HALTemporalHyperlinkedRelatedField(TemporalHyperlinkedRelatedField):
 
     def to_representation(self, value):
         href = super().to_representation(value)
-        return {"href": href, "title": str(value.pk)}
+        output = {"href": href, "title": str(value.pk)}
+        if href and value.is_temporal():
+            dataset = value.get_dataset()
+            temporal_fieldname = dataset.temporal["identifier"]
+            id_fieldname = dataset["identifier"]
+            output.update(
+                {
+                    temporal_fieldname: getattr(value, temporal_fieldname),
+                    id_fieldname: getattr(value, id_fieldname),
+                }
+            )
+        return output
 
 
 class TemporalReadOnlyField(serializers.ReadOnlyField):
@@ -147,7 +158,14 @@ class HALLooseRelationUrlField(LooseRelationUrlField):
 
     def to_representation(self, value):
         href = super().to_representation(value)
-        return {"href": href, "title": str(value)}
+        view = self.context["view"]
+        relation = view.model._meta.get_field(to_snake_case(self.field_name)).relation
+        dataset_name, table_name = [to_snake_case(part) for part in relation.split(":")]
+        result = {"href": href, "title": str(value)}
+        related_ds = view.table_schema.get_dataset_schema(dataset_name)
+        related_identifier = related_ds.identifier
+        result[related_identifier] = value
+        return result
 
 
 class LooseRelationUrlListField(serializers.ListField):

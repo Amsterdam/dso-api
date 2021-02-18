@@ -101,9 +101,9 @@ class TestViews:
 
         assert response.status_code == 200, data
         assert len(data["_embedded"]["stadsdelen"]) == 1, data["_embedded"]["stadsdelen"]
-        assert data["_embedded"]["stadsdelen"][0]["volgnummer"] == 2, data["_embedded"][
-            "stadsdelen"
-        ][0]
+        assert (
+            data["_embedded"]["stadsdelen"][0]["_links"]["self"]["volgnummer"] == 2
+        ), data["_embedded"]["stadsdelen"][0]
 
     def test_additionalrelations_works_and_has_temporary_param(
         self, api_client, stadsdelen, wijk, buurt
@@ -115,10 +115,12 @@ class TestViews:
         response = api_client.get(f"{url}?geldigOp=2015-01-02")
         data = read_response_json(response)
 
+
         assert response.status_code == 200, data
         assert len(data["_embedded"]["wijken"]) == 1, data["_embedded"]["wijken"]
-        assert data["_embedded"]["wijken"][0]["volgnummer"] == 1, data["_embedded"]["wijken"][0]
-
+        assert (
+            data["_embedded"]["wijken"][0]["_links"]["self"]["volgnummer"] == 1
+        ), data["_embedded"]["wijken"][0]
         assert data["_embedded"]["wijken"][0]["buurt"]["count"] == 1
         href = data["_embedded"]["wijken"][0]["buurt"]["href"]
         query_params = parse.parse_qs(parse.urlparse(href).query)
@@ -131,7 +133,9 @@ class TestViews:
         data = read_response_json(response)
 
         assert response.status_code == 200, data
-        assert data["volgnummer"] == stadsdelen[0].volgnummer, data
+        assert (
+            data["_links"]["self"]["volgnummer"] == stadsdelen[0].volgnummer
+        ), data
 
     def test_details_default_returns_latest_record(self, api_client, stadsdelen):
         """Prove that object can be requested by identification
@@ -141,7 +145,7 @@ class TestViews:
         data = read_response_json(response)
 
         assert response.status_code == 200, data
-        assert data["volgnummer"] == 2, data
+        assert data["_links"]["self"]["volgnummer"] == 2, data
 
     def test_details_can_be_requested_with_valid_date(self, api_client, stadsdelen):
         """Prove that object can be requested by identification and date,
@@ -153,7 +157,7 @@ class TestViews:
         data = read_response_json(response)
 
         assert response.status_code == 200, data
-        assert data["volgnummer"] == 1, data
+        assert data["_links"]["self"]["volgnummer"] == 1, data
 
     def test_details_can_be_requested_with_version(self, api_client, stadsdelen):
         """Prove that object can be requested by identification and version,
@@ -163,7 +167,7 @@ class TestViews:
         data = read_response_json(response)
 
         assert response.status_code == 200, data
-        assert data["volgnummer"] == 1, data
+        assert data["_links"]["self"]["volgnummer"] == 1, response.data
 
     def test_serializer_temporal_request_corrects_link_to_temporal(
         self, api_client, reloadrouter, gebied, buurt
