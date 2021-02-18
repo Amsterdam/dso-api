@@ -33,7 +33,7 @@ class _SideloadMixin:
         self._fields_to_expand = fields_to_expand
 
     @property
-    def fields_to_expand(self) -> Union[list, bool]:
+    def fields_to_expand(self) -> Union[List[str], bool]:
         """Retrieve the requested expand, 2 possible values:
 
         * A bool (True) for "expand all"

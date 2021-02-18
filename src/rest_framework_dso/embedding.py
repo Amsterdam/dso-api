@@ -4,7 +4,9 @@ It's written in an observer/listener style, allowing the embedded data to be det
 during the rendering. Instead of having to load the main results in memory for analysis,
 the main objects are inspected while they are consumed by the output stream.
 """
-from typing import Dict, Optional, Union
+from __future__ import annotations
+
+from typing import Callable, Dict, Iterable, Iterator, List, Optional, TypeVar, Union
 
 from rest_framework import serializers
 from rest_framework.exceptions import ParseError, PermissionDenied
@@ -14,10 +16,11 @@ from rest_framework_dso.fields import AbstractEmbeddedField, EmbeddedField
 from rest_framework_dso.serializer_helpers import ReturnGenerator, peek_iterable
 
 EmbeddedFieldDict = Dict[str, AbstractEmbeddedField]
+T = TypeVar("T")
 
 
 def get_expanded_fields(  # noqa: C901
-    parent_serializer: serializers.Serializer, fields_to_expand: Union[list, bool]
+    parent_serializer: serializers.Serializer, fields_to_expand: Union[List[str], bool]
 ) -> Dict[str, EmbeddedField]:
     """Find the expanded fields in a serializer that are requested.
     This translates the ``_expand`` query into a dict of embedded fields.
@@ -74,27 +77,27 @@ def _expand_parse_error(allowed_names, field_name):
         )
 
 
-class ObservableIterator:
+class ObservableIterator(Iterator[T]):
     """Observe the objects that are being returned.
 
     Unlike itertools.tee(), retrieved objects are directly processed by other functions.
     As built-in feature, the number of returned objects is also counted.
     """
 
-    def __init__(self, iterable, observers=None):
+    def __init__(self, iterable: Iterable[T], observers=None):
         self.number_returned = 0
         self._iterable = iter(iterable)
         self._item_callbacks = list(observers) if observers else []
         self._has_items = None
 
-    def add_observer(self, callback):
+    def add_observer(self, callback: Callable[[T], None]):
         """Install an observer callback that is notified when items are iterated"""
         self._item_callbacks.append(callback)
 
-    def __iter__(self):
+    def __iter__(self) -> ObservableIterator[T]:
         return self
 
-    def __next__(self):
+    def __next__(self) -> T:
         """Keep a count of the returned items, and allow to notify other generators"""
         try:
             value = next(self._iterable)
