@@ -373,12 +373,18 @@ class GeoJSONRenderer(RendererMixin, renderers.JSONRenderer):
 
     def _item_to_feature(self, item: dict, geometry_field):
         """Reorganize the dict of a single item"""
-        return {
-            "type": "Feature",
-            # "id": item
-            "geometry": item.pop(geometry_field),
-            "properties": item,
-        }
+        if geometry_field is None:
+            return {
+                "type": "Feature",
+                "properties": item,
+            }
+        else:
+            return {
+                "type": "Feature",
+                # "id": item
+                "geometry": item.pop(geometry_field),
+                "properties": item,
+            }
 
     def _find_geometry_field(self, properties: dict):
         """Find the first field which contains the geometry of a feature."""
