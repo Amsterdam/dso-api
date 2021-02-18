@@ -254,7 +254,7 @@ class DSOSerializer(_SideloadMixin, serializers.Serializer):
         for field in self._geometry_fields:
             if isinstance(instance, dict):
                 # non-model Serializer
-                geo_value = instance[field.source]
+                geo_value = instance.get(field.source)
             else:
                 # ModelSerializer
                 geo_value = getattr(instance, field.source)
