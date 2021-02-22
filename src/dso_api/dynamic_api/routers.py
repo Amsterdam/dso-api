@@ -76,12 +76,14 @@ class DynamicRouter(routers.DefaultRouter):
         generated_models = []
         datasets = {}
 
+        db_datasets = self.filter_datasets(Dataset.objects.db_enabled())
+
         # Because dataset are related, we need to 'prewarm'
         # the datatasets cache (in schematools)
-        for dataset in Dataset.objects.db_enabled():
+        for dataset in db_datasets:
             dataset.schema
 
-        for dataset in Dataset.objects.db_enabled():  # type: Dataset
+        for dataset in db_datasets:  # type: Dataset
             dataset_id = dataset.schema.id  # not dataset.name!
             datasets[dataset_id] = dataset
             new_models = {}
@@ -128,7 +130,7 @@ class DynamicRouter(routers.DefaultRouter):
         """Initialize viewsets that are are proxies for remote URLs"""
         tmp_router = routers.SimpleRouter()
 
-        for dataset in Dataset.objects.endpoint_enabled():  # type: Dataset
+        for dataset in self.filter_datasets(Dataset.objects.endpoint_enabled()):  # type: Dataset
             schema = dataset.schema
             dataset_id = schema.id
 
@@ -227,3 +229,10 @@ class DynamicRouter(routers.DefaultRouter):
         """Clear models from the Django App registry cache if they are no longer used."""
         for removed_app in old_dynamic_apps - set(self.all_models.keys()):
             del apps.all_models[removed_app]
+
+    def filter_datasets(self, queryset):
+        if settings.DATASETS_LIST is not None:
+            queryset = queryset.filter(name__in=settings.DATASETS_LIST)
+        if settings.DATASETS_EXCLUDE is not None:
+            queryset = queryset.exclude(name__in=settings.DATASETS_EXCLUDE)
+        return queryset
