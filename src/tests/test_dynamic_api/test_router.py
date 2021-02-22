@@ -82,7 +82,7 @@ def test_router_excludes_datasets_combined_with_list(
     assert reverse("dynamic_api:gebieden-buurten-list")
     assert reverse("dynamic_api:meldingen-statistieken-list")
 
-    settings.DATASETS_LIST = ["gebieden"]
+    settings.DATASETS_LIST = ["gebieden", "bommen"]
     settings.DATASETS_EXCLUDE = ["bommen"]
 
     router.reload()
