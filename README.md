@@ -204,8 +204,8 @@ for example sensitive information should not be published via Public APIs, but p
 This can be achieved by using `DATASETS_LIST` and `DATASETS_EXCLUDE` environment variables.
 Both variables accept comma separated list of dataset ids e.g. `bommen,gebieden,meldingen` etc.
 
-In case API should expose only limited set of datasets - use `DATASETS_LIST` to load only provided datasets into memory.
-In case API should expose all datasets with exception to limited subset - use `DATASETS_EXCLUDE` to load all datasets except provided into memory.
+* To expose only a subset of the datasets, use `DATASETS_LIST`.
+* To expose all datasets with some exceptions, use `DATASETS_EXCLUDE`.
 
 Both `DATASETS_LIST` and `DATASETS_EXCLUDE` variables should be used with great care, 
 as any relation to dataset outside of those loaded into memory will break API.
