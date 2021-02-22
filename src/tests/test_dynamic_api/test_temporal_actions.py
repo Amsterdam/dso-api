@@ -180,3 +180,16 @@ class TestViews:
         assert data["_links"]["bestaatUitBuurten"][0]["href"].endswith(expected_url), data[
             "bestaatUitBuurten"
         ]
+
+    def test_correct_handling_of_extra_url_params(
+        self, api_client, reloadrouter, stadsdelen, buurt
+    ):
+        """Prove that extra url parameters do not interfere with the existing
+        url parameters for temporality."""
+        url = reverse("dynamic_api:gebieden-stadsdelen-list")
+        response = api_client.get(f"{url}?_format=json")
+        data = read_response_json(response)
+
+        # Check if there is only one '?' in the temporal urls
+        assert len(data["_embedded"]["stadsdelen"][1]["_links"]["self"]["href"].split("?")) == 2
+        assert len(data["_embedded"]["stadsdelen"][1]["_links"]["wijk"][0]["href"].split("?")) == 2
