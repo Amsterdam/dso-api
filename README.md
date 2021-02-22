@@ -202,6 +202,7 @@ In some cases it might be required to isolate datasets from others on infrastruc
 for example sensitive information should not be published via Public APIs, but public information should be available in private API.
 
 This can be achieved by using `DATASETS_LIST` and `DATASETS_EXCLUDE` environment variables.
+Both variables accept comma separated list of dataset ids e.g. `bommen,gebieden,meldingen` etc.
 
 In case API should expose only limited set of datasets - use `DATASETS_LIST` to load only provided datasets into memory.
 In case API should expose all datasets with exception to limited subset - use `DATASETS_EXCLUDE` to loxad all datasets except provided into memory.

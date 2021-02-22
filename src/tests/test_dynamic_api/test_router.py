@@ -36,9 +36,9 @@ def test_only_selected_datasets_loaded(
     settings, router, bommen_dataset, gebieden_dataset, meldingen_dataset
 ):
     router.reload()
-    assert reverse(
-        "dynamic_api:bommen-bommen-list"
-    )  # Bommen dataset reverse works, as dataset is registered
+
+    # Bommen dataset reverse works, as dataset is registered
+    assert reverse("dynamic_api:bommen-bommen-list")
     assert reverse("dynamic_api:gebieden-buurten-list")
     assert reverse("dynamic_api:meldingen-statistieken-list")
 
@@ -56,9 +56,9 @@ def test_router_excludes_datasets(
     settings, router, bommen_dataset, gebieden_dataset, meldingen_dataset
 ):
     router.reload()
-    assert reverse(
-        "dynamic_api:bommen-bommen-list"
-    )  # Bommen dataset reverse works, as dataset is registered
+
+    # Bommen dataset reverse works, as dataset is registered
+    assert reverse("dynamic_api:bommen-bommen-list")
     assert reverse("dynamic_api:gebieden-buurten-list")
     assert reverse("dynamic_api:meldingen-statistieken-list")
 
@@ -76,9 +76,9 @@ def test_router_excludes_datasets_combined_with_list(
     settings, router, bommen_dataset, gebieden_dataset, meldingen_dataset
 ):
     router.reload()
-    assert reverse(
-        "dynamic_api:bommen-bommen-list"
-    )  # Bommen dataset reverse works, as dataset is registered
+
+    # Bommen dataset reverse works, as dataset is registered
+    assert reverse("dynamic_api:bommen-bommen-list")
     assert reverse("dynamic_api:gebieden-buurten-list")
     assert reverse("dynamic_api:meldingen-statistieken-list")
 
