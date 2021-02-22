@@ -1,9 +1,11 @@
 import inspect
 import itertools
 from io import BytesIO, StringIO
+from types import GeneratorType
 from typing import Optional
 
 import orjson
+from django.conf import settings
 from gisserver.geometries import WGS84
 from rest_framework import renderers
 from rest_framework.exceptions import ValidationError
@@ -17,6 +19,7 @@ from rest_framework_dso import pagination
 from rest_framework_dso.serializer_helpers import ReturnGenerator
 
 BROWSABLE_MAX_PAGE_SIZE = 1000
+DEFAULT_CHUNK_SIZE = 4096
 
 
 def get_data_serializer(data) -> Optional[Serializer]:
@@ -42,6 +45,8 @@ class RendererMixin:
     default_crs = None
     paginator = None
 
+    chunk_size = DEFAULT_CHUNK_SIZE  # allow to overrule in unit tests
+
     def setup_pagination(self, paginator: pagination.DelegatedPageNumberPagination):
         """Used by DelegatedPageNumberPagination"""
         self.paginator = paginator
@@ -52,6 +57,18 @@ class RendererMixin:
         is called - as that would return the first item as original.
         """
         pass
+
+    def render_exception(self, exception):
+        """Inform the client that the stream processing was interrupted with an exception.
+        The exception can be rendered in the format fits with the output.
+
+        Purposefully, not much information is given, so avoid informing clients.
+        The actual exception is still raised and logged server-side.
+        """
+        if settings.DEBUG:
+            return f"/* Aborted by {exception.__class__.__name__}: {exception} */\n"
+        else:
+            return f"/* Aborted by {exception.__class__.__name__} during rendering! */\n"
 
 
 class BrowsableAPIRenderer(RendererMixin, renderers.BrowsableAPIRenderer):
@@ -103,6 +120,7 @@ class BrowsableAPIRenderer(RendererMixin, renderers.BrowsableAPIRenderer):
 
 class HALJSONRenderer(RendererMixin, renderers.JSONRenderer):
     media_type = "application/hal+json"
+    chunk_size = 4096
 
     # Define the paginator per media type.
     compatible_paginator_classes = [pagination.DSOPageNumberPagination]
@@ -116,7 +134,7 @@ class HALJSONRenderer(RendererMixin, renderers.JSONRenderer):
         if indent:
             yield self._render_json_indented(data)
         else:
-            yield from _chunked_output(self._render_json(data))
+            yield from _chunked_output(self._render_json(data), chunk_size=self.chunk_size)
 
     def _render_json_indented(self, data):
         """Render indented JSON for the browsable API"""
@@ -204,7 +222,17 @@ class CSVRenderer(RendererMixin, CSVStreamingRenderer):
         # This method must have a "yield" statement so finalize_response() can
         # recognize this renderer returns a generator/stream, and patch the
         # response.streaming attribute accordingly.
-        yield from _chunked_output(output)
+        yield from _chunked_output(output, chunk_size=self.chunk_size)
+
+    def render_exception(self, exception: Exception):
+        """Inform clients that the stream was interrupted by an exception.
+        The actual exception is still raised and logged.
+        Purposefully little information is given to the client.
+        """
+        if settings.DEBUG:
+            return f"\n\nAborted by {exception.__class__.__name__}: {exception}\n"
+        else:
+            return f"\n\nAborted by {exception.__class__.__name__} during rendering!\n"
 
 
 class GeoJSONRenderer(RendererMixin, renderers.JSONRenderer):
@@ -233,7 +261,7 @@ class GeoJSONRenderer(RendererMixin, renderers.JSONRenderer):
             return b""
 
         request = renderer_context.get("request") if renderer_context else None
-        yield from _chunked_output(self._render_geojson(data, request))
+        yield from _chunked_output(self._render_geojson(data, request), chunk_size=self.chunk_size)
 
     def _render_geojson(self, data, request=None):
         # Detect what kind of data is actually provided:
@@ -248,7 +276,7 @@ class GeoJSONRenderer(RendererMixin, renderers.JSONRenderer):
                 collections = data["_embed"]
             else:
                 collections = data
-        elif isinstance(data, (list, ReturnGenerator)):
+        elif isinstance(data, (list, ReturnGenerator, GeneratorType)):
             collections = {"gen": data}
         else:
             raise NotImplementedError(f"Unsupported GeoJSON format: {data.__class__.__name__}")
@@ -394,22 +422,28 @@ class GeoJSONRenderer(RendererMixin, renderers.JSONRenderer):
         )
 
 
-def _chunked_output(stream, chunk_size=4096):
+def _chunked_output(stream, chunk_size=DEFAULT_CHUNK_SIZE, write_exception=None):
     """Output in larger chunks to avoid many small writes or back-forth calls
     between the WSGI server write code and the original generator function.
     Inspired by django-gisserver logic which applies the same trick.
     """
     buffer = BytesIO()
     buffer_size = 0
-    for row in stream:
-        buffer.write(row)
-        buffer_size += len(row)
+    try:
+        for row in stream:
+            buffer.write(row)
+            buffer_size += len(row)
 
-        if buffer_size > chunk_size:
+            if buffer_size > chunk_size:
+                yield buffer.getvalue()
+                buffer.seek(0)
+                buffer.truncate(0)
+                buffer_size = 0
+        if buffer_size:
             yield buffer.getvalue()
-            buffer.seek(0)
-            buffer.truncate(0)
-            buffer_size = 0
-
-    if buffer_size:
-        yield buffer.getvalue()
+    except Exception as e:
+        # Make sure some indication of an exception is also written to the stream.
+        # Otherwise, the response is just cut off without any indication what happened.
+        if write_exception is not None:
+            yield write_exception(e)
+        raise
