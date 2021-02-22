@@ -191,5 +191,11 @@ class TestViews:
         data = read_response_json(response)
 
         # Check if there is only one '?' in the temporal urls
-        assert len(data["_embedded"]["stadsdelen"][1]["_links"]["self"]["href"].split("?")) == 2
-        assert len(data["_embedded"]["stadsdelen"][1]["_links"]["wijk"][0]["href"].split("?")) == 2
+        fetch_query_keys = lambda url: set(parse.parse_qs(parse.urlparse(url).query).keys())
+        assert fetch_query_keys(data["_embedded"]["stadsdelen"][1]["_links"]["self"]["href"]) == {
+            "_format",
+            "volgnummer",
+        }
+        assert fetch_query_keys(
+            data["_embedded"]["stadsdelen"][1]["_links"]["wijk"][0]["href"]
+        ) == {"_format", "volgnummer"}
