@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 
 import azure.storage.blob
 from django.conf import settings
+from more_ds.network.url import URL
 from rest_framework import serializers
 from rest_framework.reverse import reverse
 from schematools.utils import to_snake_case
@@ -38,7 +39,8 @@ class TemporalHyperlinkedRelatedField(serializers.HyperlinkedRelatedField):
             else:
                 key = request.dataset_temporal_slice["key"]
                 value = request.dataset_temporal_slice["value"]
-            base_url = "{}?{}={}".format(base_url, key, value)
+
+            base_url = URL(base_url) // {key: value}
         else:
             kwargs = {self.lookup_field: obj.pk}
             base_url = self.reverse(view_name, kwargs=kwargs, request=request, format=format)
@@ -87,7 +89,7 @@ class TemporalLinksField(LinksField):
 
         temporal_identifier = dataset.temporal["identifier"]
         version = getattr(obj, temporal_identifier)
-        return "{}?{}={}".format(base_url, temporal_identifier, version)
+        return URL(base_url) // {temporal_identifier: version}
 
 
 class AzureBlobFileField(serializers.ReadOnlyField):
