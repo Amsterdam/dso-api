@@ -29,3 +29,66 @@ def test_reload_delete(router, bommen_dataset):
 
     with pytest.raises(NoReverseMatch):
         assert reverse("dynamic_api:bommen-bommen-list")
+
+
+@pytest.mark.django_db
+def test_only_selected_datasets_loaded(
+    settings, router, bommen_dataset, gebieden_dataset, meldingen_dataset
+):
+    router.reload()
+
+    # Bommen dataset reverse works, as dataset is registered
+    assert reverse("dynamic_api:bommen-bommen-list")
+    assert reverse("dynamic_api:gebieden-buurten-list")
+    assert reverse("dynamic_api:meldingen-statistieken-list")
+
+    settings.DATASETS_LIST = ["gebieden", "meldingen"]
+
+    router.reload()
+    with pytest.raises(NoReverseMatch):
+        assert reverse("dynamic_api:bommen-bommen-list")
+    assert reverse("dynamic_api:gebieden-buurten-list")
+    assert reverse("dynamic_api:meldingen-statistieken-list")
+
+
+@pytest.mark.django_db
+def test_router_excludes_datasets(
+    settings, router, bommen_dataset, gebieden_dataset, meldingen_dataset
+):
+    router.reload()
+
+    # Bommen dataset reverse works, as dataset is registered
+    assert reverse("dynamic_api:bommen-bommen-list")
+    assert reverse("dynamic_api:gebieden-buurten-list")
+    assert reverse("dynamic_api:meldingen-statistieken-list")
+
+    settings.DATASETS_EXCLUDE = ["bommen"]
+
+    router.reload()
+    with pytest.raises(NoReverseMatch):
+        assert reverse("dynamic_api:bommen-bommen-list")
+    assert reverse("dynamic_api:gebieden-buurten-list")
+    assert reverse("dynamic_api:meldingen-statistieken-list")
+
+
+@pytest.mark.django_db
+def test_router_excludes_datasets_combined_with_list(
+    settings, router, bommen_dataset, gebieden_dataset, meldingen_dataset
+):
+    router.reload()
+
+    # Bommen dataset reverse works, as dataset is registered
+    assert reverse("dynamic_api:bommen-bommen-list")
+    assert reverse("dynamic_api:gebieden-buurten-list")
+    assert reverse("dynamic_api:meldingen-statistieken-list")
+
+    settings.DATASETS_LIST = ["gebieden", "bommen"]
+    settings.DATASETS_EXCLUDE = ["bommen"]
+
+    router.reload()
+
+    assert reverse("dynamic_api:gebieden-buurten-list")
+    with pytest.raises(NoReverseMatch):
+        assert reverse("dynamic_api:bommen-bommen-list")
+    with pytest.raises(NoReverseMatch):
+        assert reverse("dynamic_api:meldingen-statistieken-list")

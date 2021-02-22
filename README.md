@@ -118,10 +118,7 @@ To change from e.g. Django 3.0 to 3.1, update the version in `requirements.in` y
 
 # Development details
 
-Extra information on how to develop DSO-API locally can be found in [DEVELOPMENT.md](DEVELOPMENT)
-
-To import the latest database from acceptance (replace `<username>` with your
-username, assumes your public SSH key is known and you have appropriate level of access.
+Extra information on how to develop DSO-API locally can be found in [DEVELOPMENT](DEVELOPMENT.md)
 
 This command expects the private SSH key to be found in the ~/.ssh folder,
 in a file with the name datapunt.key (chmod 600):
@@ -151,7 +148,7 @@ Then it will import the schemafiles in **_schemas/data/datasets_** with :
 
     python manage.py import_schemas
     
-#FreeBSD Installation Instructions
+# FreeBSD Installation Instructions
 
 Installing the DSO API under FreeBSD should be largely similar to installing it under Linux or MacOS.
 However, some extra work will be required to build packages that rely on code written in other languages
@@ -197,3 +194,18 @@ OpenAPI schema can be verified on localhost using following command:
     OPENAPI_HOST=http://localhost:8000 ./.jenkins/openapi_validator/run_validator.sh
 
 Do not forget to replace `OPENAPI_HOST` with address of running DSO api, if it differs from `http://localhost:8000`.
+
+
+# Limiting number of Datasets available via API
+
+In some cases it might be required to isolate datasets from others on infrastructure level, 
+for example sensitive information should not be published via Public APIs, but public information should be available in private API.
+
+This can be achieved by using `DATASETS_LIST` and `DATASETS_EXCLUDE` environment variables.
+Both variables accept comma separated list of dataset ids e.g. `bommen,gebieden,meldingen` etc.
+
+* To expose only a subset of the datasets, use `DATASETS_LIST`.
+* To expose all datasets with some exceptions, use `DATASETS_EXCLUDE`.
+
+Both `DATASETS_LIST` and `DATASETS_EXCLUDE` variables should be used with great care, 
+as any relation to dataset outside of those loaded into memory will break API.
