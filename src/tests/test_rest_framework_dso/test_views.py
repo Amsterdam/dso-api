@@ -363,6 +363,45 @@ class TestExceptionHandler:
 
     @staticmethod
     @pytest.mark.django_db
+    def test_invalid_expand(api_client, api_rf):
+        """Prove that _expand=some-field is properly rendered"""
+        api_client.raise_request_exception = False
+        response = api_client.get("/v1/movies", data={"_expand": "some-field"})
+        assert response.status_code == 400
+        assert response["content-type"] == "application/problem+json"  # check before reading
+        data = read_response_json(response)
+
+        assert data == {
+            "type": "urn:apiexception:parse_error",
+            "title": "Malformed request.",
+            "detail": (
+                "Only _expand=true is allowed. Use _expandScope to expanding specific fields."
+            ),
+            "status": 400,
+        }
+
+    @staticmethod
+    @pytest.mark.django_db
+    def test_invalid_expand_scope(api_client, api_rf):
+        """Prove that _expandScope=unknownField is properly rendered"""
+        api_client.raise_request_exception = False
+        response = api_client.get("/v1/movies", data={"_expandScope": "unknownField"})
+        assert response.status_code == 400
+        assert response["content-type"] == "application/problem+json"  # check before reading
+        data = read_response_json(response)
+
+        assert data == {
+            "type": "urn:apiexception:parse_error",
+            "title": "Malformed request.",
+            "detail": (
+                "Eager loading is not supported for field 'unknownField', "
+                "available options are: category"
+            ),
+            "status": 400,
+        }
+
+    @staticmethod
+    @pytest.mark.django_db
     def test_extreme_page_size(api_client, api_rf):
         """Prove that the browser-based view protects against a DOS attack vector"""
         # First see that the API actually raises the exception
