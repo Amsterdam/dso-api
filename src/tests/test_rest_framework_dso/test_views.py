@@ -55,65 +55,65 @@ pytestmark = [pytest.mark.urls(__name__)]  # enable for all tests in this file
 
 
 @pytest.mark.django_db
-@pytest.mark.parametrize("params", [{"_expand": "true"}, {"_expandScope": "category"}])
-def test_detail_expand_true(api_client, movie, params):
-    """Prove that ?_expand=true and ?_expand=category both work for the detail view.
+class TestExpand:
+    @pytest.mark.parametrize("params", [{"_expand": "true"}, {"_expandScope": "category"}])
+    def test_detail_expand_true(self, api_client, movie, params):
+        """Prove that ?_expand=true and ?_expand=category both work for the detail view.
 
-    This also tests the parameter expansion within the view logic.
-    """
-    response = api_client.get(f"/v1/movies/{movie.pk}", data=params)
-    data = read_response_json(response)
-    assert data == {
-        "name": "foo123",
-        "category_id": movie.category_id,
-        "date_added": None,
-        "_embedded": {"category": {"name": "bar"}},
-    }
-    assert response["Content-Type"] == "application/hal+json"
+        This also tests the parameter expansion within the view logic.
+        """
+        response = api_client.get(f"/v1/movies/{movie.pk}", data=params)
+        data = read_response_json(response)
+        assert data == {
+            "name": "foo123",
+            "category_id": movie.category_id,
+            "date_added": None,
+            "_embedded": {"category": {"name": "bar"}},
+        }
+        assert response["Content-Type"] == "application/hal+json"
 
+    def test_detail_expand_unknown_field(self, api_client, movie):
+        """Prove that ?_expand=true and ?_expandScope=category both work for the detail view.
 
-@pytest.mark.django_db
-def test_detail_expand_unknown_field(api_client, movie):
-    """Prove that ?_expand=true and ?_expandScope=category both work for the detail view.
+        This also tests the parameter expansion within the view logic.
+        """
+        response = api_client.get(f"/v1/movies/{movie.pk}", data={"_expandScope": "foobar"})
+        data = read_response_json(response)
 
-    This also tests the parameter expansion within the view logic.
-    """
-    response = api_client.get(f"/v1/movies/{movie.pk}", data={"_expandScope": "foobar"})
-    data = read_response_json(response)
+        assert response.status_code == 400, data
+        assert data == {
+            "status": 400,
+            "type": "urn:apiexception:parse_error",
+            "title": "Malformed request.",
+            "detail": (
+                "Eager loading is not supported for field 'foobar', "
+                "available options are: category"
+            ),
+        }
 
-    assert response.status_code == 400, data
-    assert data == {
-        "status": 400,
-        "type": "urn:apiexception:parse_error",
-        "title": "Malformed request.",
-        "detail": (
-            "Eager loading is not supported for field 'foobar', " "available options are: category"
-        ),
-    }
+    @pytest.mark.parametrize("params", [{"_expand": "true"}, {"_expandScope": "category"}])
+    def test_list_expand_true(self, api_client, movie, params):
+        """Prove that ?_expand=true and ?_expandScope=category both work for the detail view.
 
-
-@pytest.mark.django_db
-@pytest.mark.parametrize("params", [{"_expand": "true"}, {"_expandScope": "category"}])
-def test_list_expand_true(api_client, movie, params):
-    """Prove that ?_expand=true and ?_expandScope=category both work for the detail view.
-
-    This also tests the parameter expansion within the view logic.
-    """
-    response = api_client.get("/v1/movies", data=params)
-    data = read_response_json(response)
-    assert data == {
-        "_links": {
-            "self": {"href": "http://testserver/v1/movies"},
-            "next": {"href": None},
-            "previous": {"href": None},
-        },
-        "_embedded": {
-            "movie": [{"name": "foo123", "category_id": movie.category_id, "date_added": None}],
-            "category": [{"name": "bar"}],
-        },
-        "page": {"number": 1, "size": 20, "totalElements": 1, "totalPages": 1},
-    }
-    assert response["Content-Type"] == "application/hal+json"
+        This also tests the parameter expansion within the view logic.
+        """
+        response = api_client.get("/v1/movies", data=params)
+        data = read_response_json(response)
+        assert data == {
+            "_links": {
+                "self": {"href": "http://testserver/v1/movies"},
+                "next": {"href": None},
+                "previous": {"href": None},
+            },
+            "_embedded": {
+                "movie": [
+                    {"name": "foo123", "category_id": movie.category_id, "date_added": None}
+                ],
+                "category": [{"name": "bar"}],
+            },
+            "page": {"number": 1, "size": 20, "totalElements": 1, "totalPages": 1},
+        }
+        assert response["Content-Type"] == "application/hal+json"
 
 
 @pytest.mark.django_db
