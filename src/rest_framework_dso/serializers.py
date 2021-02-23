@@ -53,7 +53,7 @@ class _SideloadMixin:
             return True
         elif expand:
             raise ParseError(
-                "Only _expand=true is allowed. Use _expandScope to expanding specific fields."
+                "Only _expand=true is allowed. Use _expandScope to expand specific fields."
             ) from None
 
         # otherwise, parse as a list of fields to expand.
