@@ -143,8 +143,8 @@ def exception_handler(exc, context):
         # our own API's would return these.
         normalized_fields = {
             "type": f"urn:apiexception:{exc.code}",
-            "code": exc.code,
-            "title": exc.default_detail,
+            "code": str(exc.code),
+            "title": str(exc.default_detail),
             "status": int(exc.status_code),
             "instance": request.build_absolute_uri() if request else None,
         }
@@ -157,7 +157,7 @@ def exception_handler(exc, context):
         detail = response.data["detail"]
         response.data = {
             "type": f"urn:apiexception:{detail.code}",
-            "title": exc.default_detail if hasattr(exc, "default_detail") else str(exc),
+            "title": str(exc.default_detail) if hasattr(exc, "default_detail") else str(exc),
             "detail": str(detail),
             "status": response.status_code,
         }
