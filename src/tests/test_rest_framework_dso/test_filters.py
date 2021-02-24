@@ -42,6 +42,7 @@ class TestDSOFilterSet:
                 "name": ["exact"],
                 "category_id": ["exact", "in", "not"],
                 "date_added": ["exact", "lt", "lte", "gt", "gte", "not"],
+                "url": ["exact", "isnull", "not", "isempty", "like"],
             }
 
     @pytest.fixture
@@ -50,29 +51,33 @@ class TestDSOFilterSet:
 
     @pytest.fixture
     def movie2(self):
-        return Movie.objects.create(name="movie2", date_added=date(2020, 3, 1))
+        return Movie.objects.create(
+            name="movie2", date_added=date(2020, 3, 1), url="http://example.com/someurl"
+        )
 
     @pytest.mark.django_db
     @pytest.mark.parametrize(
         "comparison",
         [
-            # Less then
+            # Date less than
             ({"date_added[lt]": "2020-2-10"}, {"movie1"}),
             ({"date_added[lt]": "2020-3-1"}, {"movie1"}),
             ({"date_added[lte]": "2020-3-1"}, {"movie1", "movie2"}),
-            # Less then full datetime
+            # Date less than full datetime
             ({"date_added[lt]": "2020-3-1T23:00:00"}, {"movie1", "movie2"}),
-            # Greater then
+            # Date greater than
             ({"date_added[gt]": "2020-2-10"}, {"movie2"}),
             ({"date_added[gt]": "2020-3-1"}, set()),
             ({"date_added[gte]": "2020-3-1"}, {"movie2"}),
             # Not (can be repeated for "AND NOT" testing)
             ({"date_added[not]": "2020-2-1"}, {"movie2"}),
             (QueryDict("date_added[not]=2020-2-1&date_added[not]=2020-3-1"), set()),
+            # URLs have string-like comparison operators
+            ({"url[like]": "http:*"}, {"movie2"}),
+            ({"url[isnull]": "true"}, {"movie1"}),
         ],
     )
     def test_filter_logic(self, movie1, movie2, comparison):
-        """Prove that date lookups work"""
         filter_data, expect = comparison
         filterset = self.MovieFilterSet(filter_data)
         assert filterset.is_valid(), filterset.errors

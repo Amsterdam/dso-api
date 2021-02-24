@@ -21,6 +21,7 @@ class Movie(models.Model, NonTemporalMixin):
     name = models.CharField(max_length=100)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
     date_added = models.DateTimeField(null=True)
+    url = models.URLField(null=True)
 
     class Meta:
         app_label = "test_rest_framework_dso"
