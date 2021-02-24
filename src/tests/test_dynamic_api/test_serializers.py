@@ -4,11 +4,11 @@ import pytest
 from django.core.validators import EmailValidator, URLValidator
 from schematools.contrib.django.auth_backend import RequestProfile
 from schematools.contrib.django.models import Profile
+
 from dso_api.dynamic_api.serializers import serializer_factory
 from rest_framework_dso.fields import EmbeddedField
 from rest_framework_dso.views import DSOViewMixin
 from tests.utils import normalize_data
-
 
 
 @pytest.fixture(autouse=True)
