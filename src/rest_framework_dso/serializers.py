@@ -65,7 +65,8 @@ class _SideloadMixin:
         expand = request.GET.get(self.expand_param)
         return expand.split(",") if expand else False
 
-    def get_expanded_fields(self) -> Dict[str, EmbeddedField]:
+    @property
+    def expanded_fields(self) -> Dict[str, EmbeddedField]:
         """Retrieve the embedded fields for this request."""
         raise NotImplementedError("child serializer should implement this")
 
@@ -90,7 +91,8 @@ class DSOListSerializer(_SideloadMixin, serializers.ListSerializer):
         elif not self.results_field:
             self.results_field = self.child.Meta.model._meta.model_name
 
-    def get_expanded_fields(self) -> Dict[str, EmbeddedField]:
+    @cached_property
+    def expanded_fields(self) -> Dict[str, EmbeddedField]:
         """Retrieve the embedded fields for this serializer"""
         request = self.context["request"]
         fields = self.fields_to_expand
@@ -145,12 +147,12 @@ class DSOListSerializer(_SideloadMixin, serializers.ListSerializer):
         # Add any HAL-style sideloading if these were requested
         embedded_fields = {}
 
-        if expanded_fields := self.get_expanded_fields():
+        if self.expanded_fields:
             # All embedded result sets are updated during the iteration over
             # the main data with the relevant ID's to fetch on-demand.
             embedded_fields = {
                 name: EmbeddedResultSet(field, serializer=field.get_serializer(self.child))
-                for name, field in expanded_fields.items()
+                for name, field in self.expanded_fields.items()
             }
 
             # Wrap the main object inside an observer, which notifies all
@@ -287,7 +289,8 @@ class DSOSerializer(_SideloadMixin, serializers.Serializer):
             )
         return display_fields
 
-    def get_expanded_fields(self) -> Dict[str, EmbeddedField]:
+    @cached_property
+    def expanded_fields(self) -> Dict[str, EmbeddedField]:
         """Retrieve the embedded fields for this serializer"""
         request = self.context["request"]
         fields = self.fields_to_expand
@@ -425,9 +428,8 @@ class DSOModelSerializer(DSOSerializer, serializers.HyperlinkedModelSerializer):
         ret = super().to_representation(instance)
 
         # See if any HAL-style sideloading was requested
-        if self._include_embedded():
-            if expanded_fields := self.get_expanded_fields():
-                ret[self.expand_field] = self._get_expand(instance, expanded_fields)
+        if self._include_embedded() and self.expanded_fields:
+            ret[self.expand_field] = self._get_expand(instance, self.expanded_fields)
 
         return ret
 
