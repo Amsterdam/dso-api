@@ -1,7 +1,10 @@
+import json
 from datetime import datetime
+from html import unescape
 
 import pytest
 from django.urls import path
+from django.utils.html import strip_tags
 from rest_framework import generics
 from rest_framework.exceptions import ErrorDetail, ValidationError
 
@@ -9,7 +12,7 @@ from rest_framework_dso import views
 from rest_framework_dso.fields import EmbeddedField
 from rest_framework_dso.filters import DSOFilterSet
 from rest_framework_dso.serializers import DSOModelSerializer
-from tests.utils import read_response_json
+from tests.utils import read_response, read_response_json
 
 from .models import Category, Movie
 
@@ -114,6 +117,33 @@ class TestExpand:
             "page": {"number": 1, "size": 20, "totalElements": 1, "totalPages": 1},
         }
         assert response["Content-Type"] == "application/hal+json"
+
+    def test_list_expand_api(self, api_client, movie):
+        """Prove that the browsable API also properly renders the generator content."""
+        response = api_client.get("/v1/movies", data={"_expand": "true"}, HTTP_ACCEPT="text/html")
+        assert response["content-type"] == "text/html; charset=utf-8"
+        html = read_response(response)
+        assert response["content-type"] == "text/html; charset=utf-8"
+
+        start = html.index("{", html.index("<pre"))
+        end = html.rindex("}", start, html.rindex("</pre>")) + 1
+        response_preview = unescape(strip_tags(html[start:end]))
+        data = json.loads(response_preview)
+
+        assert data == {
+            "_links": {
+                "self": {"href": "http://testserver/v1/movies"},
+                "next": {"href": None},
+                "previous": {"href": None},
+            },
+            "_embedded": {
+                "movie": [
+                    {"name": "foo123", "category_id": movie.category_id, "date_added": None}
+                ],
+                "category": [{"name": "bar"}],
+            },
+            "page": {"number": 1, "size": 20, "totalElements": 1, "totalPages": 1},
+        }
 
 
 @pytest.mark.django_db
