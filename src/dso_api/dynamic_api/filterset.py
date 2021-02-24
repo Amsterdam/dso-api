@@ -38,6 +38,7 @@ DEFAULT_LOOKUPS_BY_TYPE = {
     models.ForeignKey: _identifier_lookups,
     models.OneToOneField: _identifier_lookups,
     models.OneToOneRel: _identifier_lookups,
+    models.URLField: _string_lookups,
     ArrayField: ["contains"],
     PolygonField: _polygon_lookups,
     MultiPolygonField: _polygon_lookups,
