@@ -34,7 +34,8 @@ JSON_TYPE_TO_DRF = {
 class RemoteListSerializer(DSOListSerializer):
     """ListSerializer that takes remote data"""
 
-    def get_expanded_fields(self):
+    @property
+    def expanded_fields(self):
         return {}
 
 
