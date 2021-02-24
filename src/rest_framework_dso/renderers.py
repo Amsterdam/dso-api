@@ -143,7 +143,7 @@ class HALJSONRenderer(RendererMixin, renderers.JSONRenderer):
             # Using orjson.dumps(data, default) here doesn't work, as the dict ordering
             # isn't honored by orjson.
             for key, value in embedded.copy().items():
-                if inspect.isgenerator(value) or isinstance(value, itertools.chain):
+                if isinstance(value, (ReturnGenerator, GeneratorType, itertools.chain)):
                     embedded[key] = list(value)
 
         return orjson.dumps(data, option=orjson.OPT_INDENT_2)
