@@ -36,7 +36,7 @@ Wanneer een pagina direct met de browser opgevraagd wordt
 dan worden de resultaten als een doorklikbare HTML pagina getoond.
 Bijvoorbeeld: https://api.data.amsterdam.nl/v1/gebieden/buurten/.
 Door de ``Accept-Type: application/json`` header te sturen wordt
-altijd een JSON response geforceerd.
+altijd een JSON response geforceerd. Dit kan ook met de query parameter :samp:`_format=json`
 
 
 Paginering
@@ -183,7 +183,7 @@ De volgende aanroepen zijn identiek:
 
     curl 'https://api.data.amsterdam.nl/v1/gebieden/buurten/?_expand=true'
 
-    curl 'https://api.data.amsterdam.nl/v1/gebieden/buurten/?_expandScope=ligtinwijk'
+    curl 'https://api.data.amsterdam.nl/v1/gebieden/buurten/?_expandScope=ligtInWijk'
 
 De response bevat zowel het "buurt" object als de "wijk":
 
@@ -197,66 +197,103 @@ De response bevat zowel het "buurt" object als de "wijk":
             "buurten": [
                 {
                     "_links": {
+                        "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/gebieden#buurten",
                         "self": {
-                            "href": "https://api.data.amsterdam.nl/v1/gebieden/buurten/03630000000079/?volgnummer=1",
-                            "title": "03630000000079.1"
+                            "href": "https://api.data.amsterdam.nl/v1/gebieden/buurten/03630000000078/?volgnummer=1",
+                            "title": "03630000000078.1",
+                            "volgnummer": 1,
+                            "identificatie": "03630000000078"
+                        },
+                        "bestaatUitBuurtenGgwgebieden": [
+                            {
+                                "href": "https://api.data.amsterdam.nl/v1/gebieden/ggwgebieden/03630950000000/?volgnummer=1",
+                                "title": "03630950000000.1",
+                                "volgnummer": 1,
+                                "identificatie": "03630950000000"
+                            },
+                            {
+                                "href": "https://api.data.amsterdam.nl/v1/gebieden/ggwgebieden/03630950000000/?volgnummer=2",
+                                "title": "03630950000000.2",
+                                "volgnummer": 2,
+                                "identificatie": "03630950000000"
+                            }
+                        ],
+                        "bestaatUitBuurtenGgpgebieden": [
+                            {
+                                "href": "https://api.data.amsterdam.nl/v1/gebieden/ggpgebieden/03630940000000/?volgnummer=1",
+                                "title": "03630940000000.1",
+                                "volgnummer": 1,
+                                "identificatie": "03630940000000"
+                            }
+                        ],
+                        "buurtenWoningbouwplan": [],
+                        "buurtenStrategischeruimtes": [],
+                        "ligtInWijk": {
+                            "href": "https://api.data.amsterdam.nl/v1/gebieden/wijken/03630012052036/?volgnummer=1",
+                            "title": "03630012052036.1",
+                            "volgnummer": 1,
+                            "identificatie": "03630012052036"
                         }
                     },
-                    "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/gebieden#buurten",
-                    "id": "03630000000079.1",
-                    "code": "A00b",
-                    "naam": "Oude Kerk e.o.",
+                    "code": "A00a",
+                    "naam": "Kop Zeedijk",
+                    "cbsCode": "BU03630000",
                     "geometrie": {
                         "type": "Polygon",
                         "coordinates": [
                             // ...
                         ]
                     },
-                    "ligtinwijkId": "03630012052036",
-                    "ligtinwijk": "https://api.data.amsterdam.nl/v1/gebieden/wijken/03630012052036/?volgnummer=1",
-                    "volgnummer": 1,
-                    "identificatie": "03630000000079",
-                    "registratiedatum": "2006-06-12T12:40:21.000000"
-                    "begingeldigheid": "2006-06-12",
-                    "eindgeldigheid": "2015-01-01",
+                    "ligtInWijkVolgnummer": 1,
+                    "ligtInWijkIdentificatie": "03630012052036",
+                    "ligtInWijkId": "03630012052036",
+                    "documentdatum": null,
+                    "documentnummer": null,
+                    "eindGeldigheid": null,
+                    "beginGeldigheid": "2006-06-12",
+                    "registratiedatum": "2018-10-25T12:17:48",
+                    "id": "03630000000078.1"
                 }
             ],
-            "ligtinwijk": [
+            "ligtInWijk": [
                 {
                     "_links": {
+                        "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/gebieden#wijken",
                         "self": {
                             "href": "https://api.data.amsterdam.nl/v1/gebieden/wijken/03630012052036/?volgnummer=1",
-                            "title": "03630012052036.1"
+                            "title": "03630012052036.1",
+                            "volgnummer": 1,
+                            "identificatie": "03630012052036"
+                        },
+                        "ligtInStadsdeel": {
+                            "href": "https://api.data.amsterdam.nl/v1/gebieden/stadsdelen/03630000000018/?volgnummer=3",
+                            "title": "03630000000018.3",
+                            "volgnummer": 3,
+                            "identificatie": "03630000000018"
                         }
                     },
-                    "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/gebieden#wijken",
-                    "id": "03630012052036.1",
                     "code": "A00",
                     "naam": "Burgwallen-Oude Zijde",
-                    "cbscode": "WK036300",
+                    "cbsCode": "WK036300",
                     "geometrie": {
                         "type": "Polygon",
                         "coordinates": [
                             // ...
-                        ],
+                        ]
                     },
-                    "volgnummer": 1,
                     "documentdatum": null,
-                    "identificatie": "03630012052036",
                     "documentnummer": null,
-                    "eindgeldigheid": null,
-                    "begingeldigheid": "2006-06-12",
-                    "ligtinstadsdeelId": "03630000000018",
-                    "ligtinstadsdeel": "https://api.data.amsterdam.nl/v1/gebieden/stadsdelen/03630000000018/?volgnummer=3",
-                    "registratiedatum": "2018-10-25T12:17:33.000000"
+                    "eindGeldigheid": null,
+                    "beginGeldigheid": "2006-06-12",
+                    "ligtInStadsdeelVolgnummer": 3,
+                    "ligtInStadsdeelIdentificatie": "03630000000018",
+                    "registratiedatum": "2018-10-25T12:17:33",
+                    "id": "03630012052036.1"
                 }
             ]
         },
-        "page": {
-            // ...
-        }
+        "page": {"number": 1, "size": 1, "totalElements": 973, "totalPages": 973}
     }
-
 
 Geometrie projecties
 --------------------

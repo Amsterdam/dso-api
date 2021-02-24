@@ -13,39 +13,48 @@ Bijvoorbeeld: de buurt `Riekerpolder <https://api.data.amsterdam.nl/v1/gebieden/
 .. code-block::
 
    {
-       ...
-       "code": "F88a",
-       "naam": "Riekerpolder",
-       ...
-       "volgnummer": 2,
-       ...
-       "identificatie": "03630000000477",
-       ...
-       "eindGeldigheid": null,
-       "beginGeldigheid": "2010-05-01",
-       "registratiedatum": "2010-05-01T00:00:00",
-       "id": "03630000000477.2"
-   }
+        "_links": {
+            ...
+            "self": {
+                "href": "https://api.data.amsterdam.nl/v1/gebieden/buurten/03630000000477/?volgnummer=2",
+                "title": "03630000000477.2",
+                "volgnummer": 2,
+                "identificatie": "03630000000477"
+            },
+            ...
+        },
+        "code": "F88a",
+        "naam": "Riekerpolder",
+        ...
+        "eindGeldigheid": null,
+        "beginGeldigheid": "2010-05-01",
+        "registratiedatum": "2018-10-25T12:17:48",
+        "id": "03630000000477.2"
+    }
 
 Dezelfde link met `volgnummer=1 <https://api.data.amsterdam.nl/v1/gebieden/buurten/03630000000477/?volgnummer=1>`_ geeft de eerste versie van deze buurt:
 
 .. code-block::
 
-   {
-       ...
-       "code": "F88a",
-       "naam": "Riekerpolder",
-       ...
-       "volgnummer": 1,
-       ...
-       "identificatie": "03630000000477",
-       ...
-       "eindGeldigheid": "2010-05-01",
-       "beginGeldigheid": "2006-06-16",
-       "registratiedatum": "2010-05-01T00:00:00",
-       "id": "03630000000477.1"
-   }
-
+    {
+        "_links": {
+            ...
+            "self": {
+                "href": "https://api.data.amsterdam.nl/v1/gebieden/buurten/03630000000477/?volgnummer=1",
+                "title": "03630000000477.1",
+                "volgnummer": 1,
+                "identificatie": "03630000000477"
+            },
+            ...
+        },
+        "code": "R88a",
+        "naam": "Riekerpolder",
+        ...
+        "eindGeldigheid": "2010-05-01",
+        "beginGeldigheid": "2006-06-16",
+        "registratiedatum": "2010-05-01T00:00:00",
+        "id": "03630000000477.1"
+    }
 
 
 Filtering op basis van geldigheidsdatum
@@ -63,17 +72,22 @@ Bijvoorbeeld, opnieuw Riekerpolder, maar nu met `geldigOp=2010-04-30 <https://ap
 
 .. code-block::
 
-   {
-       ...
-       "code": "F88a",
-       "naam": "Riekerpolder",
-       ...
-       "volgnummer": 1,
-       ...
-       "identificatie": "03630000000477",
-       ...
-       "eindGeldigheid": "2010-05-01",
-       "beginGeldigheid": "2006-06-16",
-       "registratiedatum": "2010-05-01T17:00:00"
-       "id": "03630000000477.1",
-   }
+    {
+        "_links": {
+            ...
+            "self": {
+                "href": "https://api.data.amsterdam.nl/v1/gebieden/buurten/03630000000477/?volgnummer=1",
+                "title": "03630000000477.1",
+                "volgnummer": 1,
+                "identificatie": "03630000000477"
+            },
+            ...
+        },
+        "code": "R88a",
+        "naam": "Riekerpolder",
+        ...
+        "eindGeldigheid": "2010-05-01",
+        "beginGeldigheid": "2006-06-16",
+        "registratiedatum": "2010-05-01T00:00:00",
+        "id": "03630000000477.1"
+    }
