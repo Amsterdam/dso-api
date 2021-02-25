@@ -106,6 +106,8 @@ class DatasetWFSView(WFSView):
     in the URLConf. Instead, we can resolve the 'dataset' via the URL kwargs.
     """
 
+    xml_namespace = "https://api.data.amsterdam.nl/v1/wfs"
+
     index_template_name = "dso_api/dynamic_api/wfs_dataset.html"
 
     #: Custom permission that checks amsterdam schema auth settings
