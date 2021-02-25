@@ -100,6 +100,7 @@ def filled_router(
     meldingen_dataset,
     gebieden_dataset,
     woningbouwplannen_dataset,
+    bag_dataset,
 ):
     # Prove that the router URLs are extended on adding a model
     router.reload()
@@ -122,6 +123,7 @@ def filled_router(
         meldingen_dataset: "meldingen_statistieken",
         gebieden_dataset: "gebieden_buurten",
         woningbouwplannen_dataset: "woningbouwplannen_woningbouwplan",
+        bag_dataset: "bag_panden",
     }
 
     # Based on datasets, create test table if not exists
@@ -636,6 +638,23 @@ def gebieden_dataset(gebieden_schema_json) -> Dataset:
 
 
 @pytest.fixture()
+def bag_schema_json() -> dict:
+    """ Fixture to return the schema json """
+    path = HERE / "files/bag.json"
+    return json.loads(path.read_text())
+
+
+@pytest.fixture()
+def bag_schema(bag_schema_json) -> DatasetSchema:
+    return DatasetSchema.from_dict(bag_schema_json)
+
+
+@pytest.fixture()
+def bag_dataset(bag_schema_json) -> Dataset:
+    return Dataset.objects.create(name="bag", schema_data=bag_schema_json)
+
+
+@pytest.fixture()
 def woningbouwplannen_schema_json() -> dict:
     """ Fixture to return the schema json """
     path = HERE / "files/woningbouwplannen.json"
@@ -657,6 +676,16 @@ def woningbouwplannen_dataset(woningbouwplannen_schema_json) -> Dataset:
 @pytest.fixture()
 def statistieken_model(filled_router):
     return filled_router.all_models["meldingen"]["statistieken"]
+
+
+@pytest.fixture()
+def panden_model(filled_router):
+    return filled_router.all_models["bag"]["panden"]
+
+
+@pytest.fixture()
+def dossiers_model(filled_router):
+    return filled_router.all_models["bag"]["dossiers"]
 
 
 @pytest.fixture()
@@ -698,6 +727,17 @@ def buurten_data(buurten_model):
     buurten_model.objects.create(
         id="03630000000078.2", identificatie="03630000000078", volgnummer=2
     )
+
+
+@pytest.fixture()
+def panden_data(panden_model, dossiers_model):
+    panden_model.objects.create(
+        id="0363100012061164.3",
+        volgnummer=3,
+        identificatie="0363100012061164",
+        heeft_dossier_id="GV00000406",
+    )
+    dossiers_model.objects.create(dossier="GV00000406")
 
 
 @pytest.fixture()

@@ -1,0 +1,90 @@
+{
+  "type": "dataset",
+  "id": "bag",
+  "title": "bag",
+  "status": "niet_beschikbaar",
+  "version": "0.0.1",
+  "crs": "EPSG:28992",
+  "identifier": "identificatie",
+  "temporal": {
+    "identifier": "volgnummer",
+    "dimensions": {
+      "geldigOp": ["beginGeldigheid", "eindGeldigheid"]
+    }
+  },
+  "tables": [
+    {
+      "id": "panden",
+      "type": "table",
+      "schema": {
+        "$id": "https://github.com/Amsterdam/schemas/bag/panden.json",
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "additionalProperties": false,
+        "identifier": ["identificatie", "volgnummer"],
+        "required": ["schema", "id", "identificatie", "volgnummer"],
+        "display": "id",
+        "properties": {
+          "schema": {
+            "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.1#/definitions/schema"
+          },
+          "identificatie": {
+            "type": "string",
+            "description": "Landelijke identificerende sleutel."
+          },
+          "volgnummer": {
+            "type": "integer",
+            "description": "Uniek volgnummer van de toestand van het object."
+          },
+          "beginGeldigheid": {
+            "type": "string",
+            "format": "date-time",
+            "description": "De ingangsdatum van de geldigheid van een bepaalde combinatie van gegevens over een PAND."
+          },
+          "eindGeldigheid": {
+            "type": "string",
+            "format": "date-time",
+            "description": "De einddatum van de geldigheid van een bepaalde combinatie van gegevens over een PAND."
+          },
+          "naam": {
+            "type": "string",
+            "description": "Naamgeving van een pand (bv. naam van metrostation of bijzonder gebouw)."
+          },
+          "heeftDossier": {
+            "type": "object",
+            "properties": {
+              "dossier": {
+                "type": "string"
+              }
+            },
+            "relation": "bag:dossiers",
+            "description": "Het dossier op basis waarvan het object is toegevoegd aan de registratie."
+          }
+        }
+      }
+    },
+    {
+      "id": "dossiers",
+      "type": "table",
+      "schema": {
+        "$id": "https://github.com/Amsterdam/schemas/bag/dossiers.json",
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "additionalProperties": false,
+        "identifier": "dossier",
+        "required": ["schema", "dossier"],
+        "display": "dossier",
+        "isTemporal": false,
+        "properties": {
+          "schema": {
+            "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.1#/definitions/schema"
+          },
+          "dossier": {
+            "type": "string",
+            "description": "Verwijzing vanuit de overige objectklassen."
+          }
+        }
+      }
+    }
+  ]
+}

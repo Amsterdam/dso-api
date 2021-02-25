@@ -298,26 +298,44 @@ class DynamicBodySerializer(DynamicSerializer):
 
     def get_fields(self):
         fields = super().get_fields()
+        hal_fields = self._get_hal_field_names(fields)
+        for hal_field in hal_fields:
+            fields.pop(hal_field, None)
+        return fields
+
+    def _get_hal_field_names(self, fields):  # noqa: C901
+        """Get the relational and other identifier fields which should not appear in the body
+        but in the respective HAL envelopes in _links
+        """
         ds = self.Meta.model.get_dataset()
-        identifier_fields = [ds.identifier]
+        hal_fields = [ds.identifier]
         temporal = ds.temporal
         if temporal is not None and "identifier" in temporal:
-            identifier_fields.append(temporal["identifier"])
-        output_fields = OrderedDict(
-            [
-                (field_name, field)
-                for field_name, field in fields.items()
-                if field_name in ["_links", "_embedded"]
-                or (
-                    not isinstance(
-                        field,
-                        (HyperlinkedRelatedField, ManyRelatedField, LooseRelationUrlField),
-                    )
-                    and field_name not in identifier_fields
-                )
-            ]
-        )
-        return output_fields
+            hal_fields.append(temporal["identifier"])
+        capitalized_identifier_fields = [
+            identifier_field.capitalize() for identifier_field in hal_fields
+        ]
+        fk_identifier_fields = []
+        for field_name, field in fields.items():
+            if isinstance(field, TemporalHyperlinkedRelatedField):
+                hal_fields.append(field_name)
+                hal_fields += [f"{field_name}{suffix}" for suffix in capitalized_identifier_fields]
+            elif isinstance(field, TemporalReadOnlyField):
+                fk_identifier_fields.append(field_name)
+            elif isinstance(
+                field,
+                (HyperlinkedRelatedField, ManyRelatedField, LooseRelationUrlField),
+            ):
+                hal_fields.append(field_name)
+
+        for fk_identifier_field in fk_identifier_fields:
+            root_field_name = fk_identifier_field[:-2]  # without "Id"
+            for field_name, field in fields.items():
+                if field_name not in fk_identifier_fields and field_name.startswith(
+                    root_field_name
+                ):
+                    hal_fields.append(field_name)
+        return hal_fields
 
 
 class DynamicLinksSerializer(DynamicSerializer):
@@ -339,9 +357,13 @@ class DynamicLinksSerializer(DynamicSerializer):
 
     def get_fields(self):
         fields = super().get_fields()
+        link_fields = self._get_link_field_names(fields)
+        return OrderedDict([(key, value) for key, value in fields.items() if key in link_fields])
+
+    def _get_link_field_names(self, fields):
+        """Get the fields that should appear in the _links section"""
         embedded_fields = self.fields_to_expand
         link_fields = ["self", "schema"]
-
         relation_fields = [
             field_name
             for field_name, field in fields.items()
@@ -362,14 +384,7 @@ class DynamicLinksSerializer(DynamicSerializer):
             link_fields += [
                 field_name for field_name in relation_fields if field_name not in embedded_fields
             ]
-        output_fields = OrderedDict(
-            [
-                (field_name, field)
-                for field_name, field in fields.items()
-                if field_name in link_fields
-            ]
-        )
-        return output_fields
+        return link_fields
 
 
 def get_view_name(model: Type[DynamicModel], suffix: str):

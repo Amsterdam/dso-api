@@ -768,6 +768,86 @@ class TestEmbedTemporalTables:
             "href": "http://testserver/v1/gebieden/buurten/?ligtInWijkId=03630012052035.1",
         }
 
+    def test_detail_no_expand_for_temporal_fk_relation(
+        self,
+        api_client,
+        reloadrouter,
+        buurten_model,
+        buurten_data,
+        wijken_data,
+    ):
+        """Prove that temporal identifier fields have been removed from the body
+        and only appear in the respective HAL envelopes"""
+
+        url = reverse("dynamic_api:gebieden-buurten-detail", args=["03630000000078.1"])
+        response = api_client.get(url)
+        data = read_response_json(response)
+        assert response.status_code == 200, data
+        assert data == {
+            "_links": {
+                "bestaatUitBuurtenGgwgebieden": [],
+                "buurtenWoningbouwplan": [],
+                "ligtInWijk": {
+                    "href": "http://testserver/v1/gebieden/wijken/03630012052035/?volgnummer=1",
+                    "identificatie": "03630012052035",
+                    "title": "03630012052035.1",
+                    "volgnummer": 1,
+                },
+                "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/gebieden#buurten",
+                "self": {
+                    "href": "http://testserver/v1/gebieden/buurten/03630000000078/?volgnummer=1",
+                    "identificatie": "03630000000078",
+                    "title": "03630000000078.1",
+                    "volgnummer": 1,
+                },
+            },
+            "beginGeldigheid": None,
+            "code": None,
+            "eindGeldigheid": None,
+            "geometrie": None,
+            "id": "03630000000078.1",
+            "ligtInWijkId": "03630012052035",
+            "naam": None,
+        }
+
+    def test_detail_no_expand_for_fk_relation(
+        self,
+        api_client,
+        reloadrouter,
+        buurten_model,
+        buurten_data,
+        wijken_data,
+        panden_model,
+        panden_data,
+    ):
+        """Prove that the FK identifier field (heeftDossierDossier) has been removed
+        from the body"""
+
+        url = reverse("dynamic_api:bag-panden-detail", args=["0363100012061164.3"])
+        response = api_client.get(url)
+        data = read_response_json(response)
+        assert response.status_code == 200, data
+        assert data == {
+            "_links": {
+                "heeftDossier": {
+                    "href": "http://testserver/v1/bag/dossiers/GV00000406/",
+                    "title": "GV00000406",
+                },
+                "schema": "https://schemas.data.amsterdam.nl/datasets/bag/bag#panden",
+                "self": {
+                    "href": "http://testserver/v1/bag/panden/0363100012061164/?volgnummer=3",
+                    "identificatie": "0363100012061164",
+                    "title": "0363100012061164.3",
+                    "volgnummer": 3,
+                },
+            },
+            "beginGeldigheid": None,
+            "eindGeldigheid": None,
+            "heeftDossierId": "GV00000406",
+            "id": "0363100012061164.3",
+            "naam": None,
+        }
+
     def test_list_expand_true_for_fk_relation(
         self,
         api_client,
@@ -852,8 +932,6 @@ class TestEmbedTemporalTables:
                 },
             },
             "geometrie": None,
-            "ligtInWijkVolgnummer": None,
-            "ligtInWijkIdentificatie": None,
             "naam": None,
             "code": None,
             "eindGeldigheid": None,
@@ -966,8 +1044,6 @@ class TestEmbedTemporalTables:
                     "code": None,
                     "naam": None,
                     "geometrie": None,
-                    "ligtInWijkVolgnummer": None,
-                    "ligtInWijkIdentificatie": None,
                     "eindGeldigheid": None,
                     "beginGeldigheid": None,
                     "id": "03630000000078.2",
