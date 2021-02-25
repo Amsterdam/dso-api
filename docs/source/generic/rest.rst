@@ -119,7 +119,15 @@ Gebruik de :samp:`?_fields={veld1},{veld2},{...}` parameter om alleen specifieke
 
 .. code-block:: bash
 
-    curl 'https://api.data.amsterdam.nl/v1/bag/stadsdeel/?_fields=id,code,naam'
+    curl 'https://api.data.amsterdam.nl/v1/fietspaaltjes/fietspaaltjes/?fields=geometry,soortPaaltje'
+
+Als de veldnamen voorafgegaan worden door een minteken, dan worden alle velden behalve de genoemde
+opgestuurd:
+
+.. code-block:: bash
+
+    curl 'https://api.data.amsterdam.nl/v1/fietspaaltjes/fietspaaltjes/?fields=-area,-noodzaak'
+
 
 
 Filtering
