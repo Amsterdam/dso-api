@@ -50,7 +50,7 @@ class TestDatasetWFSView:
         root = ET.fromstring(response_text)
         data = {}
         for x in root[0][0]:
-            data[x.tag.replace("{http://example.org/gisserver}", "")] = x.text
+            data[x.tag.split("}")[1]] = x.text
 
         assert "e_type" in data.keys()
         assert data == {
@@ -91,7 +91,7 @@ class TestDatasetWFSView:
         root = ET.fromstring(response_text)
         data = {}
         for x in root[0][0]:
-            data[x.tag.replace("{http://example.org/gisserver}", "")] = x.text
+            data[x.tag.split("}")[1]] = x.text
 
         assert "e_type" not in data.keys()
         assert data == {

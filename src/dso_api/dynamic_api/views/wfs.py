@@ -29,6 +29,7 @@ import re
 from collections import UserList
 from typing import List, Union
 
+from django.conf import settings
 from django.contrib.gis.db.models import GeometryField
 from django.db import models
 from django.http import Http404
@@ -106,7 +107,7 @@ class DatasetWFSView(WFSView):
     in the URLConf. Instead, we can resolve the 'dataset' via the URL kwargs.
     """
 
-    xml_namespace = "https://api.data.amsterdam.nl/v1/wfs"
+    xml_namespace = f"{settings.DATAPUNT_API_URL}v1/wfs"
 
     index_template_name = "dso_api/dynamic_api/wfs_dataset.html"
 
