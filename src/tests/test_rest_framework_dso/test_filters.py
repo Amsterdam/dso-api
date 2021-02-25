@@ -114,7 +114,7 @@ class TestDSOFilterSetBackend:
     def test_is_unfiltered(self, api_rf):
         """Prove that is_unfiltered() correctly detects non-standard fields"""
         backend = DSOFilterSetBackend()
-        assert backend.is_unfiltered(api_rf.get("/", data={"_format": "csv"}))
+        assert backend.is_unfiltered(api_rf.get("/", data={"_format": "csv", "_fields": "foo"}))
         assert backend.is_unfiltered(api_rf.get("/", data={"_pageSize": "100", "_format": "csv"}))
 
         assert not backend.is_unfiltered(api_rf.get("/", data={"field[in]": "foo"}))
