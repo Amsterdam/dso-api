@@ -4,6 +4,7 @@ import pytest
 from schematools.contrib.django import models
 
 from dso_api.dynamic_api.permissions import fetch_scopes_for_dataset_table, fetch_scopes_for_model
+from tests.utils import read_response
 
 
 @pytest.fixture(autouse=True)
@@ -46,7 +47,7 @@ class TestDatasetWFSView:
 
         assert response.status_code == 200
 
-        response_text = "".join([line.decode("utf-8") for line in response.streaming_content])
+        response_text = read_response(response)
         root = ET.fromstring(response_text)
         data = {}
         for x in root[0][0]:
@@ -87,7 +88,7 @@ class TestDatasetWFSView:
 
         assert response.status_code == 200
 
-        response_text = "".join([line.decode("utf-8") for line in response.streaming_content])
+        response_text = read_response(response)
         root = ET.fromstring(response_text)
         data = {}
         for x in root[0][0]:
