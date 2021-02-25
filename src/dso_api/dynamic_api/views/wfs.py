@@ -107,7 +107,7 @@ class DatasetWFSView(WFSView):
     in the URLConf. Instead, we can resolve the 'dataset' via the URL kwargs.
     """
 
-    xml_namespace = f"{settings.DATAPUNT_API_URL}v1/wfs"
+    xml_namespace = f"{settings.DATAPUNT_API_URL}v1/wfs/"
 
     index_template_name = "dso_api/dynamic_api/wfs_dataset.html"
 
