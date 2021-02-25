@@ -49,9 +49,7 @@ class TestDatasetWFSView:
 
         response_text = read_response(response)
         root = ET.fromstring(response_text)
-        data = {}
-        for x in root[0][0]:
-            data[x.tag.split("}")[1]] = x.text
+        data = _xml_to_dict(root)
 
         assert "e_type" in data.keys()
         assert data == {
@@ -90,9 +88,7 @@ class TestDatasetWFSView:
 
         response_text = read_response(response)
         root = ET.fromstring(response_text)
-        data = {}
-        for x in root[0][0]:
-            data[x.tag.split("}")[1]] = x.text
+        data = _xml_to_dict(root)
 
         assert "e_type" not in data.keys()
         assert data == {
@@ -104,3 +100,7 @@ class TestDatasetWFSView:
             "geometry": None,
             "straatnaam": None,
         }
+
+
+def _xml_to_dict(root):
+    return {x.tag.split("}")[1]: x.text for x in root[0][0]}
