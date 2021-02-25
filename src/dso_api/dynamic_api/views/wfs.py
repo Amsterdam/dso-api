@@ -302,7 +302,7 @@ class DatasetWFSView(WFSView):
             )
             for model_field in model._meta.get_fields()  # type: models.Field
             if not model_field.is_relation
-            and model_field.name not in unauthorized_fields
+            and snake_to_camel_case(model_field.name) not in unauthorized_fields
             and not isinstance(model_field, GeometryField)
         ]
 
