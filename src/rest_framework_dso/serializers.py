@@ -237,13 +237,31 @@ class DSOSerializer(_SideloadMixin, serializers.Serializer):
 
     def get_fields_to_display(self, fields, request_fields) -> set:
         """Tell which fields should be displayed"""
-        display_fields = set(request_fields.split(","))
 
-        invalid_fields = display_fields - set(fields.keys())
+        # Split into fields to include and fields to omit (-fieldname).
+        display_fields, omit_fields = set(), set()
+        for field in request_fields.split(","):
+            if field.startswith("-"):
+                omit_fields.add(field[1:])
+            else:
+                display_fields.add(field)
+
+        if display_fields and omit_fields:
+            raise ValidationError(
+                "It's not possible to combine inclusions and exclusions in the _fields parameter"
+            )
+
+        fields = set(fields.keys())
+        if omit_fields:
+            display_fields = fields - omit_fields
+            invalid_fields = omit_fields - fields
+        else:
+            invalid_fields = display_fields - fields
+
         if invalid_fields:
             # Some of `display_fields` are not in result.
             raise ValidationError(
-                "'{}' is not one of available options".format("', '".join(sorted(invalid_fields))),
+                "'{}' not among the available options".format("', '".join(sorted(invalid_fields))),
                 code="fields",
             )
         return display_fields

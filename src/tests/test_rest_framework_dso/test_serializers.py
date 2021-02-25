@@ -135,9 +135,10 @@ def test_pagination_many(drf_request, movie):
 
 
 @pytest.mark.django_db
-def test_fields_limit_works(api_rf, movie):
+@pytest.mark.parametrize("fields", ["name", "-category_id"])  # -category_id leaves only name.
+def test_fields_limit_works(api_rf, movie, fields):
     """Prove that serializer can limit output fields."""
-    django_request = api_rf.get("/", {"fields": "name"})
+    django_request = api_rf.get("/", {"fields": fields})
     drf_request = Request(django_request)
     drf_request.accepted_renderer = HALJSONRenderer()
 
@@ -169,9 +170,10 @@ def test_fields_limit_works(api_rf, movie):
 
 
 @pytest.mark.django_db
-def test_fields_limit_by_incorrect_field_gives_error(api_rf, movie):
-    """Prove that serializer can limit output fields."""
-    django_request = api_rf.get("/", {"fields": "batman"})
+@pytest.mark.parametrize("fields", ["batman", "-batman"])
+def test_fields_limit_by_incorrect_field_gives_error(api_rf, movie, fields):
+    """Requesting non-existent fields is an error."""
+    django_request = api_rf.get("/", {"fields": fields})
     request = Request(django_request)
     queryset = Movie.objects.all()
 
@@ -181,7 +183,22 @@ def test_fields_limit_by_incorrect_field_gives_error(api_rf, movie):
         #  as fields limit is performed on Single serializer level.
         repr(serializer)
 
-    assert "'batman' is not one of available options" in str(exec_info.value)
+    assert "'batman' not among the available options" in str(exec_info.value)
+
+
+@pytest.mark.django_db
+def test_fields_limit_mixed(api_rf, movie):
+    """Positive and negative field specifiers may not be mixed."""
+    request = Request(api_rf.get("/", {"fields": "name,-category_id"}))
+    queryset = Movie.objects.all()
+
+    serializer = MovieSerializer(many=True, instance=queryset, context={"request": request})
+    with pytest.raises(ValidationError) as exec_info:
+        # Error is delayed until serialier is evaulated,
+        #  as fields limit is performed on Single serializer level.
+        repr(serializer)
+
+    assert "not possible to combine" in str(exec_info.value)
 
 
 @pytest.mark.django_db
