@@ -1,10 +1,8 @@
-import xml.etree.ElementTree as ET
-
 import pytest
 from schematools.contrib.django import models
 
 from dso_api.dynamic_api.permissions import fetch_scopes_for_dataset_table, fetch_scopes_for_model
-from tests.utils import read_response
+from tests.utils import read_response_xml, xml_element_to_dict
 
 
 @pytest.fixture(autouse=True)
@@ -44,12 +42,9 @@ class TestDatasetWFSView:
             "&OUTPUTFORMAT=application/gml+xml"
         )
         response = api_client.get(wfs_url)
-
         assert response.status_code == 200
-
-        response_text = read_response(response)
-        root = ET.fromstring(response_text)
-        data = _xml_to_dict(root)
+        xml_root = read_response_xml(response)
+        data = xml_element_to_dict(xml_root[0][0])
 
         assert "e_type" in data.keys()
         assert data == {
@@ -83,12 +78,9 @@ class TestDatasetWFSView:
             "&OUTPUTFORMAT=application/gml+xml"
         )
         response = api_client.get(wfs_url)
-
         assert response.status_code == 200
-
-        response_text = read_response(response)
-        root = ET.fromstring(response_text)
-        data = _xml_to_dict(root)
+        xml_root = read_response_xml(response)
+        data = xml_element_to_dict(xml_root[0][0])
 
         assert "e_type" not in data.keys()
         assert data == {
@@ -100,7 +92,3 @@ class TestDatasetWFSView:
             "geometry": None,
             "straatnaam": None,
         }
-
-
-def _xml_to_dict(root):
-    return {x.tag.split("}")[1]: x.text for x in root[0][0]}
