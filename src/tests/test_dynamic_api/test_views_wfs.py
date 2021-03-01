@@ -19,7 +19,7 @@ class TestDatasetWFSView:
     def test_wfs_view(self, api_client, filled_router, afval_dataset, afval_container):
         wfs_url = (
             "/v1/wfs/afvalwegingen/"
-            "?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=containers"
+            "?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=app:containers"
             "&OUTPUTFORMAT=application/gml+xml"
         )
         response = api_client.get(wfs_url)
@@ -92,3 +92,18 @@ class TestDatasetWFSView:
             "geometry": None,
             "straatnaam": None,
         }
+
+    def test_wfs_feature_name(
+        self, api_client, filled_router, afval_dataset, afval_adresloopafstand
+    ):
+        """Prove that if feature name contains non-letters like underscore,
+        it can be useds find the correct table name and data
+        """
+        print("******", afval_adresloopafstand.__dict__)
+        wfs_url = (
+            "/v1/wfs/afvalwegingen/"
+            "?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=app:adres_loopafstand"
+            "&OUTPUTFORMAT=application/gml+xml"
+        )
+        response = api_client.get(wfs_url)
+        assert response.status_code == 200
