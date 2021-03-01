@@ -316,10 +316,10 @@ class TestLimitFields:
                 {
                     "type": "urn:apiexception:invalid:fields",
                     "name": "fields",
-                    "reason": "'date' is not one of available options",
+                    "reason": "'date' not among the available options",
                 }
             ],
-            "x-validation-errors": ["'date' is not one of available options"],
+            "x-validation-errors": ["'date' not among the available options"],
         }
 
 
