@@ -110,7 +110,7 @@ def filled_router(
     table_names = connection.introspection.table_names()
 
     datasets = {
-        afval_dataset: "afval_containers",
+        afval_dataset: "afval_clusters",
         bommen_dataset: "bommen_bommen",
         parkeervakken_dataset: "parkeervakken_parkeervakken",
         vestiging_dataset: "vestiging_vestiging",
@@ -201,8 +201,28 @@ def afval_container_model(filled_router):
 
 
 @pytest.fixture()
+def afval_adresloopafstand_model(filled_router):
+    # Using filled_router so all urls can be generated too.
+    return filled_router.all_models["afvalwegingen"]["adres_loopafstand"]
+
+
+@pytest.fixture()
 def afval_container(afval_container_model, afval_cluster):
     return afval_container_model.objects.create(
+        id=1,
+        serienummer="foobar-123",
+        eigenaar_naam="Dataservices",
+        # set to fixed dates to the CSV export can also check for desired formatting
+        datum_creatie=date(2021, 1, 3),
+        datum_leegmaken=get_current_timezone().localize(datetime(2021, 1, 3, 12, 13, 14)),
+        cluster=afval_cluster,
+        geometry=Point(10, 10),  # no SRID on purpose, should use django model field.
+    )
+
+
+@pytest.fixture()
+def afval_adresloopafstand(afval_adresloopafstand_model, afval_cluster):
+    return afval_adresloopafstand_model.objects.create(
         id=1,
         serienummer="foobar-123",
         eigenaar_naam="Dataservices",

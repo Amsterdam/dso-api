@@ -46,7 +46,7 @@ from rest_framework_dso import crs
 
 FieldDef = Union[str, FeatureField]
 RE_SIMPLE_NAME = re.compile(
-    r"^(?P<ns>[a-z0-9]+:)?(?P<name>[a-z0-9]+)(?P<variant>-[a-z0-9]+)?$", re.I
+    r"^(?P<ns>[a-z0-9_]+:)?(?P<name>[a-z0-9_]+)(?P<variant>-[a-z0-9_]+)?$", re.I
 )
 
 
