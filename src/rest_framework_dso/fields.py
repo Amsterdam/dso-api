@@ -27,6 +27,9 @@ class AbstractEmbeddedField:
         self.field_name = None
         self.parent_serializer_class = None
 
+    def __repr__(self):
+        return f"<{self.__class__.__name__}: {self.field_name}>"
+
     def __set_name__(self, owner, name):
         from .serializers import _SideloadMixin
 
