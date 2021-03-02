@@ -1,4 +1,66 @@
-from rest_framework_dso.embedding import ObservableIterator
+from itertools import cycle
+
+import pytest
+
+from rest_framework_dso.embedding import ChunkedQuerySetIterator, ObservableIterator
+from tests.test_rest_framework_dso.models import Category, Movie
+
+
+@pytest.mark.django_db
+class TestChunkedQuerySetIterator:
+    """Test whether the queryset chunking works as advertised."""
+
+    @pytest.fixture()
+    def movie_data(self):
+        categories = cycle(
+            [
+                Category.objects.create(pk=1, name="category1"),
+                Category.objects.create(pk=2, name="category2"),
+            ]
+        )
+
+        for i in range(20):
+            Movie.objects.create(pk=i, name=f"Movie {i}", category=next(categories))
+
+    def test_chunked(self, movie_data, django_assert_num_queries):
+        """Test whether the queryset chunking works as expected"""
+        queryset = Movie.objects.prefetch_related("category").order_by("pk")
+        iterator = ChunkedQuerySetIterator(queryset, chunk_size=6, sql_chunk_size=6)
+
+        # Only needs 2 queries: the movies + prefetch categories
+        with django_assert_num_queries(2):
+            data = list(iterator)
+
+        # Last chunk also fetched completely:
+        assert len(data) == 20, data
+
+        # Foreign key caches are filled, so can read data without queries.
+        with django_assert_num_queries(0):
+            summary = [(movie.name, movie.category.name) for movie in data]
+
+        # See that the data is properly linked
+        assert summary == [
+            ("Movie 0", "category1"),
+            ("Movie 1", "category2"),
+            ("Movie 2", "category1"),
+            ("Movie 3", "category2"),
+            ("Movie 4", "category1"),
+            ("Movie 5", "category2"),
+            ("Movie 6", "category1"),
+            ("Movie 7", "category2"),
+            ("Movie 8", "category1"),
+            ("Movie 9", "category2"),
+            ("Movie 10", "category1"),
+            ("Movie 11", "category2"),
+            ("Movie 12", "category1"),
+            ("Movie 13", "category2"),
+            ("Movie 14", "category1"),
+            ("Movie 15", "category2"),
+            ("Movie 16", "category1"),
+            ("Movie 17", "category2"),
+            ("Movie 18", "category1"),
+            ("Movie 19", "category2"),
+        ]
 
 
 class TestObservableIterator:

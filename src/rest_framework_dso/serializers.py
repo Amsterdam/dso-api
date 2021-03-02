@@ -12,7 +12,12 @@ from rest_framework.utils.serializer_helpers import ReturnDict, ReturnList
 from rest_framework_gis.fields import GeometryField
 
 from rest_framework_dso.crs import CRS
-from rest_framework_dso.embedding import EmbeddedResultSet, ObservableIterator, get_expanded_fields
+from rest_framework_dso.embedding import (
+    ChunkedQuerySetIterator,
+    EmbeddedResultSet,
+    ObservableIterator,
+    get_expanded_fields,
+)
 from rest_framework_dso.fields import DSOGeometryField, EmbeddedField, LinksField
 from rest_framework_dso.serializer_helpers import ReturnGenerator, peek_iterable
 
@@ -109,6 +114,15 @@ class DSOListSerializer(_SideloadMixin, serializers.ListSerializer):
             # Normal behavior
             return ReturnList(ret, serializer=self)
 
+    def _get_prefetch_lookups(self) -> List[str]:
+        """Tell which fields should be included for a ``prefetch_related()``."""
+        return [
+            f.source.replace(".", "__")
+            for f in self.child.fields.values()
+            if isinstance(f, (serializers.Serializer, serializers.RelatedField))
+            and f.source != "*"
+        ]
+
     def to_representation(self, data):
         """Improved list serialization.
 
@@ -120,8 +134,15 @@ class DSOListSerializer(_SideloadMixin, serializers.ListSerializer):
             # When generating as part of an sub-object, just output the list.
             return super().to_representation(data)
 
+        # Find the the best approach to iterate over the results.
+        if prefetch_lookups := self._get_prefetch_lookups():
+            # When there are related fields, avoid an N-query issue by prefetching.
+            # ChunkedQuerySetIterator makes sure the queryset is still read in partial chunks.
+            queryset_iterator = ChunkedQuerySetIterator(data.prefetch_related(*prefetch_lookups))
+        else:
+            queryset_iterator = data.iterator()
+
         # Add any HAL-style sideloading if these were requested
-        queryset_iterator = data.iterator()
         embedded_fields = {}
 
         if expanded_fields := self.get_expanded_fields():
