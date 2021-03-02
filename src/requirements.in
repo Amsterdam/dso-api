@@ -13,6 +13,7 @@ amsterdam-schema-tools[django] == 0.17.8
 datapunt-authorization-django==1.0.0
 drf-spectacular == 0.8.5
 jsonschema == 3.2.0
+lru_dict == 1.1.7
 more-ds == 0.0.3
 psycopg2-binary == 2.8.4
 python-string-utils == 1.0.0

@@ -125,6 +125,8 @@ jwcrypto==0.7
     # via datapunt-authorization-django
 lark-parser==0.7.8
     # via mappyfile
+lru_dict==1.1.7
+    # via -r requirements.in
 mappyfile==0.8.4
     # via amsterdam-schema-tools
 markdown==3.2.1
