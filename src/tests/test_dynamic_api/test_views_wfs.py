@@ -108,7 +108,6 @@ class TestDatasetWFSView:
         assert response.status_code == 200
         xml_root = read_response_xml(response)
         data = xml_element_to_dict(xml_root[0][0])
-        print("****", data)
         assert data == {
             "name": "999",
             "id": "999",
