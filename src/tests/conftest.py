@@ -221,16 +221,10 @@ def afval_container(afval_container_model, afval_cluster):
 
 
 @pytest.fixture()
-def afval_adresloopafstand(afval_adresloopafstand_model, afval_cluster):
+def afval_adresloopafstand(afval_adresloopafstand_model):
     return afval_adresloopafstand_model.objects.create(
-        id=1,
-        serienummer="foobar-123",
-        eigenaar_naam="Dataservices",
-        # set to fixed dates to the CSV export can also check for desired formatting
-        datum_creatie=date(2021, 1, 3),
-        datum_leegmaken=get_current_timezone().localize(datetime(2021, 1, 3, 12, 13, 14)),
-        cluster=afval_cluster,
-        geometry=Point(10, 10),  # no SRID on purpose, should use django model field.
+        id=999,
+        serienummer="foobar-456",
     )
 
 
