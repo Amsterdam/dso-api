@@ -99,7 +99,6 @@ class TestDatasetWFSView:
         """Prove that if feature name contains non-letters like underscore,
         it can be useds find the correct table name and data
         """
-        print("******", afval_adresloopafstand.__dict__)
         wfs_url = (
             "/v1/wfs/afvalwegingen/"
             "?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=app:adres_loopafstand"
@@ -107,3 +106,12 @@ class TestDatasetWFSView:
         )
         response = api_client.get(wfs_url)
         assert response.status_code == 200
+        xml_root = read_response_xml(response)
+        data = xml_element_to_dict(xml_root[0][0])
+        print("****", data)
+        assert data == {
+            "name": "999",
+            "id": "999",
+            "geometry": None,
+            "serienummer": "foobar-456",
+        }
