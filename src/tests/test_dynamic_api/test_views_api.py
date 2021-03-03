@@ -1241,7 +1241,7 @@ class TestExportFormats:
     }
 
     @pytest.mark.parametrize("format", sorted(UNPAGINATED_FORMATS.keys()))
-    def test_unpaginated_list(self, format, api_client, api_rf, afval_container, filled_router):
+    def test_unpaginated_list(self, format, api_client, afval_container, filled_router):
         """Prove that the export formats generate proper data."""
         decoder, expected_type, expected_data = self.UNPAGINATED_FORMATS[format]
         url = reverse("dynamic_api:afvalwegingen-containers-list")
@@ -1325,7 +1325,7 @@ class TestExportFormats:
     }
 
     @pytest.mark.parametrize("format", sorted(PAGINATED_FORMATS.keys()))
-    def test_paginated_list(self, format, api_client, api_rf, afval_container, filled_router):
+    def test_paginated_list(self, format, api_client, afval_container, filled_router):
         """Prove that the pagination still works if explicitly requested."""
         decoder, expected_type, expected_data = self.PAGINATED_FORMATS[format]
         url = reverse("dynamic_api:afvalwegingen-containers-list")
@@ -1378,7 +1378,7 @@ class TestExportFormats:
     }
 
     @pytest.mark.parametrize("format", sorted(EMPTY_FORMATS.keys()))
-    def test_empty_list(self, format, api_client, api_rf, filled_router):
+    def test_empty_list(self, format, api_client, filled_router):
         """Prove that empty list pages are properly serialized."""
         decoder, expected_type, expected_data = self.EMPTY_FORMATS[format]
         url = reverse("dynamic_api:afvalwegingen-containers-list")
@@ -1426,7 +1426,7 @@ class TestExportFormats:
     }
 
     @pytest.mark.parametrize("format", sorted(DETAIL_FORMATS.keys()))
-    def test_detail(self, format, api_client, api_rf, afval_container, filled_router):
+    def test_detail(self, format, api_client, afval_container, filled_router):
         """Prove that the detail view also returns an export of a single feature."""
         decoder, expected_type, expected_data = self.DETAIL_FORMATS[format]
         url = reverse(
@@ -1447,7 +1447,7 @@ class TestExportFormats:
         assert "X-Pagination-Page" not in response
 
     @pytest.mark.parametrize("format", sorted(DETAIL_FORMATS.keys()))
-    def test_detail_404(self, format, api_client, api_rf, filled_router):
+    def test_detail_404(self, format, api_client, filled_router):
         """Prove that error pages are also properly rendered.
         These are not rendered in the output format, but get a generic exception.
         """
