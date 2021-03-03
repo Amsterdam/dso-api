@@ -21,6 +21,7 @@ def snake_to_camel_case(key: str) -> str:
     return re.sub(RE_CAMELIZE, _underscore_to_camel, key)
 
 
-def split_on_separator(instr):
+def split_on_separator(value):
+    """Split on the last separator, which can be a dot or underscore."""
     # reversal is king
-    return [part[::-1] for part in PK_SPLIT.split(instr[::-1], 1)][::-1]
+    return [part[::-1] for part in PK_SPLIT.split(value[::-1], 1)][::-1]
