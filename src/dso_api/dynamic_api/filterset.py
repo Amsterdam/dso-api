@@ -79,7 +79,7 @@ def filterset_factory(model: Type[DynamicModel]) -> Type[DynamicFilterSet]:
     fields = {
         f.attname: _get_field_lookups(f)
         for f in model._meta.get_fields()
-        if isinstance(f, (models.fields.Field, models.fields.related.ForeignKey))
+        if isinstance(f, (models.fields.Field, models.ForeignKey))
     }
 
     filters = generate_relation_filters(model)
