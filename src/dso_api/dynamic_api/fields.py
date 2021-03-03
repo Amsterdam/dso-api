@@ -73,6 +73,9 @@ class TemporalReadOnlyField(serializers.ReadOnlyField):
     """
 
     def to_representation(self, value):
+        """Remove the version number from the relation value,
+        typically done for RELATION_identificatie, RELATION_volgnummer fields.
+        """
         if "request" in self.parent.context and self.parent.context["request"].versioned:
             value = split_on_separator(value)[0]
         return value
