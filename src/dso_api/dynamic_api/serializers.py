@@ -315,26 +315,16 @@ class DynamicBodySerializer(DynamicSerializer):
         capitalized_identifier_fields = [
             identifier_field.capitalize() for identifier_field in hal_fields
         ]
-        fk_identifier_fields = []
         for field_name, field in fields.items():
             if isinstance(field, TemporalHyperlinkedRelatedField):
                 hal_fields.append(field_name)
                 hal_fields += [f"{field_name}{suffix}" for suffix in capitalized_identifier_fields]
-            elif isinstance(field, TemporalReadOnlyField):
-                fk_identifier_fields.append(field_name)
             elif isinstance(
                 field,
                 (HyperlinkedRelatedField, ManyRelatedField, LooseRelationUrlField),
             ):
                 hal_fields.append(field_name)
 
-        for fk_identifier_field in fk_identifier_fields:
-            root_field_name = fk_identifier_field[:-2]  # without "Id"
-            for field_name, field in fields.items():
-                if field_name not in fk_identifier_fields and field_name.startswith(
-                    root_field_name
-                ):
-                    hal_fields.append(field_name)
         return hal_fields
 
 

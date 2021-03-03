@@ -810,44 +810,6 @@ class TestEmbedTemporalTables:
             "naam": None,
         }
 
-    def test_detail_no_expand_for_fk_relation(
-        self,
-        api_client,
-        reloadrouter,
-        buurten_model,
-        buurten_data,
-        wijken_data,
-        panden_model,
-        panden_data,
-    ):
-        """Prove that the FK identifier field (heeftDossierDossier) has been removed
-        from the body"""
-
-        url = reverse("dynamic_api:bag-panden-detail", args=["0363100012061164.3"])
-        response = api_client.get(url)
-        data = read_response_json(response)
-        assert response.status_code == 200, data
-        assert data == {
-            "_links": {
-                "heeftDossier": {
-                    "href": "http://testserver/v1/bag/dossiers/GV00000406/",
-                    "title": "GV00000406",
-                },
-                "schema": "https://schemas.data.amsterdam.nl/datasets/bag/bag#panden",
-                "self": {
-                    "href": "http://testserver/v1/bag/panden/0363100012061164/?volgnummer=3",
-                    "identificatie": "0363100012061164",
-                    "title": "0363100012061164.3",
-                    "volgnummer": 3,
-                },
-            },
-            "beginGeldigheid": None,
-            "eindGeldigheid": None,
-            "heeftDossierId": "GV00000406",
-            "id": "0363100012061164.3",
-            "naam": None,
-        }
-
     def test_list_expand_true_for_fk_relation(
         self,
         api_client,
