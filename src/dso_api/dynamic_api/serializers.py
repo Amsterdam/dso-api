@@ -534,7 +534,7 @@ def _build_serializer_field(  # noqa: C901
 
 
 def generate_embedded_relations(model, fields, new_attrs):
-    schema_fields = {to_snake_case(f._name): f for f in model._table_schema.fields}
+    schema_fields = {to_snake_case(f.name): f for f in model._table_schema.fields}
     for item in model._meta.related_objects:
         # Do not create fields for django-created relations.
         if item.name in schema_fields and schema_fields[item.name].is_nested_table:
