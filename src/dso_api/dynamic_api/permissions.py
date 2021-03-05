@@ -5,6 +5,7 @@ from cachetools.func import ttl_cache
 from django.contrib.auth.models import AnonymousUser, _user_has_perm
 from rest_framework import permissions
 from schematools.contrib.django import models
+from schematools.utils import to_snake_case
 
 from dso_api.dynamic_api.utils import snake_to_camel_case
 
@@ -20,6 +21,13 @@ class TableScopes:
 @ttl_cache(ttl=60 * 60)
 def fetch_scopes_for_dataset_table(dataset_id: str, table_id: str):
     """ Get the scopes for a dataset and table, based on the Amsterdam schema information """
+
+    # Make sure that names are snake_cased
+    # if used for a lookup in models.DatasetTable.objects
+    # TODO: do snake_case transformations at one centralized place to
+    # to be used in code (as much as possible)
+    dataset_id = to_snake_case(dataset_id)
+    table_id = to_snake_case(table_id)
 
     def _fetch_scopes(obj):
         if obj.auth:

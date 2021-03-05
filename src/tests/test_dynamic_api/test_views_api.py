@@ -743,6 +743,21 @@ class TestAuth:
         assert log_data["subject"] == "test@tester.nl"
         assert "request_headers" in log_data
 
+    def test_auth_on_table_schema_protects_camel_case(
+        self, api_client, filled_router, afval_schema
+    ):
+        """Prove that auth protection at table level (adresLoopafstand)
+        leads to a 403 on the adresLoopafstand listview even if table name
+        is in camelCase."""
+        url = reverse("dynamic_api:afvalwegingen-adres_loopafstand-list")
+        models.DatasetTable.objects.filter(name="adres_loopafstand").update(auth="SOME_AUTH/SCOPE")
+        scopes_for_camelcased_table_name = fetch_scopes_for_dataset_table(
+            afval_schema["id"], "adresLoopafstand"
+        )
+        assert scopes_for_camelcased_table_name.table == {"SOME_AUTH/SCOPE"}
+        response = api_client.get(url)
+        assert response.status_code == 403, response.data
+
 
 # @pytest.mark.usefixtures("reloadrouter")
 @pytest.mark.django_db
