@@ -6,6 +6,7 @@ Combined setup would require setting up [dataservices-airflow](https://github.co
 
 Next you would need to execute one or more DAGs, there are few available with public data:
 
+- fietspaaltjes
 - openbareverlichting
 
 ## Airflow setup
