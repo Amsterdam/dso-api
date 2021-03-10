@@ -24,7 +24,7 @@ test:
 
 .PHONY: test
 retest:
-	pytest --reuse-db --nomigrations -vs --lf .
+	pytest --reuse-db --nomigrations -vvs --lf .
 
 
 .PHONY: coverage
