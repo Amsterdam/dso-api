@@ -68,7 +68,8 @@ class TestDynamicSerializer:
         container_serializer = ContainerSerializer(
             afval_container, context={"request": drf_request}
         )
-        assert container_serializer.data == {
+        data = normalize_data(container_serializer.data)
+        assert data == {
             "_links": {
                 "cluster": {
                     "href": "http://testserver/v1/afvalwegingen/clusters/123.456/",
@@ -234,7 +235,8 @@ class TestDynamicSerializer:
             stadsdeel,
             context={"request": drf_request},
         )
-        assert stadsdelen_serializer.data == {
+        data = normalize_data(stadsdelen_serializer.data)
+        assert data == {
             "_links": {
                 "self": {
                     "href": "http://testserver/v1/gebieden/stadsdelen/0363/?volgnummer=1",
@@ -282,8 +284,8 @@ class TestDynamicSerializer:
             vestiging1,
             context={"request": drf_request},
         )
-
-        assert vestiging_serializer.data == {
+        data = normalize_data(vestiging_serializer.data)
+        assert data == {
             "_links": {
                 "self": {
                     "href": "http://testserver/v1/vestiging/vestiging/1/",
@@ -309,7 +311,8 @@ class TestDynamicSerializer:
             vestiging2,
             context={"request": drf_request},
         )
-        assert vestiging_serializer.data == {
+        data = normalize_data(vestiging_serializer.data)
+        assert data == {
             "_links": {
                 "self": {
                     "href": "http://testserver/v1/vestiging/vestiging/2/",
@@ -336,7 +339,8 @@ class TestDynamicSerializer:
             post_adres1,
             context={"request": drf_request},
         )
-        assert adres_serializer.data == {
+        data = normalize_data(adres_serializer.data)
+        assert data == {
             "_links": {
                 "schema": "https://schemas.data.amsterdam.nl/datasets/vestiging/vestiging#adres",
                 "self": {
@@ -487,7 +491,8 @@ class TestDynamicSerializer:
         # Both the cluster_id field and 'cluster' field are generated.
 
         parkeervak_serializer = ParkeervakSerializer(parkeervak, context={"request": drf_request})
-        assert parkeervak_serializer.data == {
+        data = normalize_data(parkeervak_serializer.data)
+        assert data == {
             "_links": {
                 "self": {"href": "http://testserver/v1/parkeervakken/parkeervakken/121138489047/"},
                 "schema": "https://schemas.data.amsterdam.nl/datasets/parkeervakken/parkeervakken#parkeervakken",  # noqa: E501
