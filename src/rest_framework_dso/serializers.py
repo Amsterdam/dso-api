@@ -116,6 +116,16 @@ class DSOListSerializer(_SideloadMixin, serializers.ListSerializer):
             # Normal behavior
             return ReturnList(ret, serializer=self)
 
+    def _get_embedded_serializer(self, field, **kwargs):
+        serializer = field.get_serializer(self.child, **kwargs)
+
+        # Allow the output format to customize the serializer for the embedded relation.
+        renderer = self.context["request"].accepted_renderer
+        if hasattr(renderer, "tune_serializer"):
+            renderer.tune_serializer(serializer)
+
+        return serializer
+
     def _get_prefetch_lookups(self) -> List[str]:
         """Tell which fields should be included for a ``prefetch_related()``."""
         return [
@@ -151,7 +161,7 @@ class DSOListSerializer(_SideloadMixin, serializers.ListSerializer):
             # All embedded result sets are updated during the iteration over
             # the main data with the relevant ID's to fetch on-demand.
             embedded_fields = {
-                name: EmbeddedResultSet(field, serializer=field.get_serializer(self.child))
+                name: EmbeddedResultSet(field, serializer=self._get_embedded_serializer(field))
                 for name, field in self.expanded_fields.items()
             }
 
@@ -435,8 +445,15 @@ class DSOModelSerializer(DSOSerializer, serializers.HyperlinkedModelSerializer):
 
     def _get_expand(self, instance, expanded_fields):
         expanded = {}
+        renderer = self.context["request"].accepted_renderer
+
         for name, field in expanded_fields.items():
             # This just reuses the machinery for listings
+            field_serializer = field.get_serializer(self)
+            if hasattr(renderer, "tune_serializer"):
+                # Allow the output format to customize the serializer for the embedded relation.
+                renderer.tune_serializer(field_serializer)
+
             result_set = EmbeddedResultSet(
                 field, serializer=field.get_serializer(self), main_instances=[instance]
             )
