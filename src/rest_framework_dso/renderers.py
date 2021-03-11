@@ -41,6 +41,8 @@ class RendererMixin:
     unlimited_page_size = False
     supports_list_embeds = True
     supports_detail_embeds = True
+    supports_inline_embeds = False
+    supports_m2m = True
     compatible_paginator_classes = None
     default_crs = None
     paginator = None
@@ -191,31 +193,56 @@ class CSVRenderer(RendererMixin, CSVStreamingRenderer):
 
     unlimited_page_size = True
     supports_list_embeds = False
-    supports_detail_embeds = False
+    supports_detail_embeds = True
+    supports_inline_embeds = True
+    supports_m2m = False
     compatible_paginator_classes = [pagination.DSOHTTPHeaderPageNumberPagination]
 
     def tune_serializer(self, serializer: Serializer):
         # Serializer type is known, introduce better CSV header column.
         # Avoid M2M content, and skip HAL URL fields as this improves performance.
-        csv_fields = {
-            name: field
-            for name, field in serializer.fields.items()
-            if name != "schema"
-            and not isinstance(
+        csv_fields = {}
+
+        for name, field in serializer.fields.items():
+            if name not in ("schema", "_links") and not isinstance(
                 field,
                 (HyperlinkedRelatedField, SerializerMethodField, ListSerializer),
-            )
-        }
+            ):
+                csv_fields[name] = field
+
+                # Make sure sub resources are also trimmed
+                if isinstance(field, Serializer):
+                    self.tune_serializer(field)
 
         serializer.fields = csv_fields
 
+    def _get_csv_header(self, serializer: Serializer):
+        """Build the CSV header, including fields from sub-resources."""
+        header = []
+        labels = {}
+        extra_headers = []  # separate list to append at the end.
+        extra_labels = {}
+
+        for name, field in serializer.fields.items():
+            if isinstance(field, Serializer):
+                sub_header, sub_labels = self._get_csv_header(field)
+                extra_headers.extend(f"{name}.{sub_name}" for sub_name in sub_header)
+                extra_labels.update(
+                    {
+                        f"{name}.{sub_name}": f"{field.label}.{sub_label}"
+                        for sub_name, sub_label in sub_labels.items()
+                    }
+                )
+            else:
+                header.append(name)
+                labels[name] = field.label
+
+        return header + extra_headers, {**labels, **extra_labels}
+
     def render(self, data, media_type=None, renderer_context=None):
         if (serializer := get_data_serializer(data)) is not None:
-            renderer_context = {
-                **(renderer_context or {}),
-                "header": list(serializer.fields.keys()),
-                "labels": {name: field.label for name, field in serializer.fields.items()},
-            }
+            header, labels = self._get_csv_header(serializer)
+            renderer_context = {**(renderer_context or {}), "header": header, "labels": labels}
 
         output = super().render(data, media_type=media_type, renderer_context=renderer_context)
 

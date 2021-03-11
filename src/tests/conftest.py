@@ -735,6 +735,7 @@ def panden_data(panden_model, dossiers_model):
         id="0363100012061164.3",
         volgnummer=3,
         identificatie="0363100012061164",
+        naam="Voorbeeldpand",
         heeft_dossier_id="GV00000406",
     )
     dossiers_model.objects.create(dossier="GV00000406")

@@ -47,7 +47,7 @@ class _SideloadMixin:
         if self._fields_to_expand is not empty:
             # Instead of retrieving this from request,
             # the expand can be defined using the serializer __init__.
-            return cast(list, self._fields_to_expand)
+            return False if not self._fields_to_expand else cast(list, self._fields_to_expand)
 
         request = self.context["request"]
 
@@ -99,9 +99,15 @@ class DSOListSerializer(_SideloadMixin, serializers.ListSerializer):
         if not fields:
             return {}
 
-        if not request.accepted_renderer.supports_list_embeds:
+        if (
+            not request.accepted_renderer.supports_list_embeds
+            and not request.accepted_renderer.supports_inline_embeds
+        ):
             raise ParseError("Embedding objects is not supported for this output format")
-        return get_expanded_fields(self.child, fields)
+
+        return get_expanded_fields(
+            self.child, fields, allow_m2m=request.accepted_renderer.supports_m2m
+        )
 
     @property
     def data(self):
@@ -117,7 +123,7 @@ class DSOListSerializer(_SideloadMixin, serializers.ListSerializer):
             return ReturnList(ret, serializer=self)
 
     def _get_embedded_serializer(self, field, **kwargs):
-        serializer = field.get_serializer(self.child, **kwargs)
+        serializer = field.get_serializer(self.child, many=False, **kwargs)
 
         # Allow the output format to customize the serializer for the embedded relation.
         renderer = self.context["request"].accepted_renderer
@@ -146,6 +152,8 @@ class DSOListSerializer(_SideloadMixin, serializers.ListSerializer):
             # When generating as part of an sub-object, just output the list.
             return super().to_representation(data)
 
+        request = self.context["request"]
+
         # Find the the best approach to iterate over the results.
         if prefetch_lookups := self._get_prefetch_lookups():
             # When there are related fields, avoid an N-query issue by prefetching.
@@ -154,42 +162,45 @@ class DSOListSerializer(_SideloadMixin, serializers.ListSerializer):
         else:
             queryset_iterator = data.iterator()
 
-        # Add any HAL-style sideloading if these were requested
-        embedded_fields = {}
+        # Output format needs a plain list (a non-JSON format), give it just that.
+        if not request.accepted_renderer.supports_list_embeds:
+            # The generator syntax tricks DRF into reading the source bit by bit,
+            # without caching the whole queryset into memory.
+            items = (self.child.to_representation(item) for item in queryset_iterator)
 
-        if self.expanded_fields:
-            # All embedded result sets are updated during the iteration over
-            # the main data with the relevant ID's to fetch on-demand.
-            embedded_fields = {
-                name: EmbeddedResultSet(field, serializer=self._get_embedded_serializer(field))
-                for name, field in self.expanded_fields.items()
-            }
-
-            # Wrap the main object inside an observer, which notifies all
-            # embedded sets about the retrieved objects. They prepare their
-            # data retrieval accordingly.
-            queryset_iterator = ObservableIterator(
-                queryset_iterator,
-                observers=[result_set.inspect_instance for result_set in embedded_fields.values()],
-            )
-
-        # Only when we're the root structure, consider returning a dictionary.
-        # DSO always mandates a dict structure: {"objectname": [...]}
-        #
-        # The generator syntax tricks DRF into reading the source bit by bit,
-        # without caching the whole queryset into memory.
-        items = (self.child.to_representation(item) for item in queryset_iterator)
-
-        # Make sure the first to_representation() is called early on. This makes sure
-        # DSOModelSerializer.to_representation() can inspect the CRS, and define the
-        # HTTP header for the Content-Crs setting. This will be too late when the streaming
-        # rendering started. As bonus, it's a good guard against database errors, since those
-        # exceptions might not be nicely rendered either once streaming started.
-        _, items = peek_iterable(items)
-
-        if not self.context["request"].accepted_renderer.supports_list_embeds:
+            # Make sure the first to_representation() is called early on. This makes sure
+            # DSOModelSerializer.to_representation() can inspect the CRS, and define the
+            # HTTP header for the Content-Crs setting. This will be too late when the streaming
+            # rendering started. As bonus, it's a good guard against database errors, since those
+            # exceptions might not be nicely rendered either once streaming started.
+            _, items = peek_iterable(items)
             return items
         else:
+            # Add any HAL-style sideloading if these were requested
+            embedded_fields = {}
+            if self.expanded_fields:
+                # All embedded result sets are updated during the iteration over
+                # the main data with the relevant ID's to fetch on-demand.
+                embedded_fields = {
+                    name: EmbeddedResultSet(field, serializer=self._get_embedded_serializer(field))
+                    for name, field in self.expanded_fields.items()
+                }
+
+                # Wrap the main object inside an observer, which notifies all
+                # embedded sets about the retrieved objects. They prepare their
+                # data retrieval accordingly.
+                queryset_iterator = ObservableIterator(
+                    queryset_iterator,
+                    observers=[
+                        result_set.inspect_instance for result_set in embedded_fields.values()
+                    ],
+                )
+
+            # The generator/peek logic avoids unnecessary memory usage (see details above).
+            items = (self.child.to_representation(item) for item in queryset_iterator)
+            _, items = peek_iterable(items)
+
+            # DSO always mandates a dict structure for JSON responses: {"objectname": [...]}
             return {self.results_field: items, **embedded_fields}
 
 
@@ -250,15 +261,14 @@ class DSOSerializer(_SideloadMixin, serializers.Serializer):
                 "Request object should be provided to serializer to apply security-restrictions"
             )
 
-        # Adjust the serializer based on the request.
+        # Adjust the serializer based on the request,
+        # remove fields if a subset is requested.
         request_fields = request.GET.get(self.fields_param)
         if not request_fields and "fields" in request.GET:
             request_fields = request.GET["fields"]  # DSO 1.0
 
         if request_fields:
             display_fields = self.get_fields_to_display(fields, request_fields)
-
-            # Limit result to requested fields only
             fields = OrderedDict(
                 [
                     (field_name, field)
@@ -266,6 +276,17 @@ class DSOSerializer(_SideloadMixin, serializers.Serializer):
                     if field_name in display_fields
                 ]
             )
+
+        # Allow embedded objects to be included inline, if this is needed for the output renderer
+        # (e.g. CSV). To achieve this effect, the serializers are included as regular fields.
+        # The getattr() is needed for the OpenAPIRenderer which lacks the supports_* attrs.
+        if getattr(request.accepted_renderer, "supports_inline_embeds", False):
+            for name, field in self.expanded_fields.items():
+                # Not using field.get_serialize() as the .bind() will be called by DRF here.
+                fields[name] = field.serializer_class(
+                    source=(field.source if field.source != name else None), fields_to_expand=None
+                )
+
         return fields
 
     def get_fields_to_display(self, fields, request_fields) -> set:
@@ -307,9 +328,13 @@ class DSOSerializer(_SideloadMixin, serializers.Serializer):
         if not fields:
             return {}
 
-        if not request.accepted_renderer.supports_detail_embeds:
+        if (
+            not request.accepted_renderer.supports_detail_embeds
+            and not request.accepted_renderer.supports_inline_embeds
+        ):
             raise ParseError("Embedding objects is not supported for this output format")
-        return get_expanded_fields(self, fields)
+
+        return get_expanded_fields(self, fields, allow_m2m=request.accepted_renderer.supports_m2m)
 
     @cached_property
     def _geometry_fields(self) -> List[GeometryField]:

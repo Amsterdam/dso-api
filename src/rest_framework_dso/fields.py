@@ -52,7 +52,7 @@ class AbstractEmbeddedField:
         """
         raise NotImplementedError()
 
-    def get_serializer(self, parent: serializers.Serializer) -> serializers.Serializer:
+    def get_serializer(self, parent: serializers.Serializer, **kwargs) -> serializers.Serializer:
         """Build the EmbeddedField serializer object that can generate an embedded result.
 
         Since this virtual-field object persists between all sessions,
@@ -61,7 +61,7 @@ class AbstractEmbeddedField:
         if not isinstance(parent, self.parent_serializer_class):
             raise TypeError(f"Invalid parent for {self.__class__.__name__}.get_serializer()")
 
-        embedded_serializer = self.serializer_class(context=parent.context)
+        embedded_serializer = self.serializer_class(context=parent.context, **kwargs)
         embedded_serializer.bind(field_name=self.field_name, parent=parent)
         return embedded_serializer
 
@@ -117,6 +117,10 @@ class EmbeddedField(AbstractEmbeddedField):
 
 class EmbeddedManyToManyField(AbstractEmbeddedField):
     """An embedded field for a n-m relation."""
+
+    def get_serializer(self, parent: serializers.Serializer, **kwargs) -> serializers.Serializer:
+        kwargs.setdefault("many", True)
+        return super().get_serializer(parent, **kwargs)
 
     def get_related_ids(self, instance):
         """Find the _id field value(s)"""
