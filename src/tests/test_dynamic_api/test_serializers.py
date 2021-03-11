@@ -52,10 +52,10 @@ class TestDynamicSerializer:
         )
 
         # Generate serializers from models
-        ContainerSerializer = serializer_factory(afval_container_model, 0)
+        ContainerSerializer = serializer_factory(afval_container_model)
         # Important note is that ClusterSerializer is initiated as flat,
         # not allowing relations to resolve.
-        ClusterSerializer = serializer_factory(afval_cluster_model, 0, flat=True)
+        ClusterSerializer = serializer_factory(afval_cluster_model, flat=True)
 
         # Prove that EmbeddedField is created, as it should be.
         assert ContainerSerializer.Meta.embedded_fields == ["cluster"]
@@ -97,7 +97,7 @@ class TestDynamicSerializer:
         The _embedded section is generated, using the cluster serializer.
         """
         drf_request.dataset = afval_schema
-        ContainerSerializer = serializer_factory(afval_container_model, 0)
+        ContainerSerializer = serializer_factory(afval_container_model)
         afval_container = afval_container_model.objects.create(id=2, cluster=afval_cluster)
 
         # Prove that expands work on object-detail level
@@ -144,7 +144,7 @@ class TestDynamicSerializer:
         The _embedded part has a None value instead.
         """
         drf_request.dataset = afval_schema
-        ContainerSerializer = serializer_factory(afval_container_model, 0)
+        ContainerSerializer = serializer_factory(afval_container_model)
         container_without_cluster = afval_container_model.objects.create(
             id=3,
             cluster=None,
@@ -181,7 +181,7 @@ class TestDynamicSerializer:
         The _embedded part has a None value instead.
         """
         drf_request.dataset = afval_schema
-        ContainerSerializer = serializer_factory(afval_container_model, 0)
+        ContainerSerializer = serializer_factory(afval_container_model)
         container_invalid_cluster = afval_container_model.objects.create(
             id=4,
             cluster_id=99,
@@ -230,7 +230,7 @@ class TestDynamicSerializer:
             volgnummer=1,
             ligt_in_stadsdeel=stadsdeel,
         )
-        StadsdelenSerializer = serializer_factory(stadsdelen_model, 0)
+        StadsdelenSerializer = serializer_factory(stadsdelen_model)
         stadsdelen_serializer = StadsdelenSerializer(
             stadsdeel,
             context={"request": drf_request},
@@ -278,7 +278,7 @@ class TestDynamicSerializer:
         """Show backwards"""
         drf_request.dataset = vestiging_schema
 
-        VestigingSerializer = serializer_factory(vestiging_vestiging_model, 0)
+        VestigingSerializer = serializer_factory(vestiging_vestiging_model)
 
         vestiging_serializer = VestigingSerializer(
             vestiging1,
@@ -334,7 +334,7 @@ class TestDynamicSerializer:
             "bezoekAdresId": 2,
         }
 
-        AdresSerializer = serializer_factory(vestiging_adres_model, 0)
+        AdresSerializer = serializer_factory(vestiging_adres_model)
         adres_serializer = AdresSerializer(
             post_adres1,
             context={"request": drf_request},
@@ -402,7 +402,7 @@ class TestDynamicSerializer:
             begin_datum=None,
         )
 
-        ParkeervakSerializer = serializer_factory(parkeervakken_parkeervak_model, 0)
+        ParkeervakSerializer = serializer_factory(parkeervakken_parkeervak_model)
 
         # Prove that no reverse relation to containers here.
         assert "regimes" in ParkeervakSerializer._declared_fields
@@ -482,7 +482,7 @@ class TestDynamicSerializer:
             begin_datum=None,
         )
 
-        ParkeervakSerializer = serializer_factory(parkeervakken_parkeervak_model, 0, flat=True)
+        ParkeervakSerializer = serializer_factory(parkeervakken_parkeervak_model, flat=True)
 
         # Prove that no reverse relation to containers here.
         assert "regimes" not in ParkeervakSerializer._declared_fields
@@ -516,7 +516,7 @@ class TestDynamicSerializer:
     ):
         """ Prove that title element shows display value if display field is specified """
 
-        FietsplaatjesSerializer = serializer_factory(fietspaaltjes_model, 0, flat=False)
+        FietsplaatjesSerializer = serializer_factory(fietspaaltjes_model)
 
         drf_request.dataset = fietspaaltjes_schema
 
@@ -535,7 +535,7 @@ class TestDynamicSerializer:
     ):
         """ Prove that title element is omitted if display field is not specified """
 
-        FietsplaatjesSerializer = serializer_factory(fietspaaltjes_model_no_display, 0, flat=True)
+        FietsplaatjesSerializer = serializer_factory(fietspaaltjes_model_no_display, flat=True)
 
         drf_request.dataset = fietspaaltjes_schema_no_display
 
@@ -557,7 +557,7 @@ class TestDynamicSerializer:
     ):
         """ Prove that a URLfield can be validated by the URIValidator """
 
-        ExplosievenSerializer = serializer_factory(explosieven_model, 0, flat=True)
+        ExplosievenSerializer = serializer_factory(explosieven_model, flat=True)
 
         drf_request.dataset = explosieven_schema
 
@@ -576,7 +576,7 @@ class TestDynamicSerializer:
     ):
         """ Prove that a URLfield content is URL encoded i.e. space to %20 """
 
-        ExplosievenSerializer = serializer_factory(explosieven_model, 0, flat=True)
+        ExplosievenSerializer = serializer_factory(explosieven_model, flat=True)
 
         drf_request.dataset = explosieven_schema
 
@@ -595,7 +595,7 @@ class TestDynamicSerializer:
     ):
         """ Prove that a EmailField can be validated by the EmailValidator """
 
-        ExplosievenSerializer = serializer_factory(explosieven_model, 0, flat=True)
+        ExplosievenSerializer = serializer_factory(explosieven_model, flat=True)
 
         drf_request.dataset = explosieven_schema
 
@@ -616,7 +616,7 @@ class TestDynamicSerializer:
         """
         drf_request.dataset = indirect_self_ref_schema
         indirect_self_ref_model = filled_router.all_models["selfref"]["ligplaatsen"]
-        serializer_factory(indirect_self_ref_model, 0)
+        serializer_factory(indirect_self_ref_model)
 
     @staticmethod
     def test_field_permissions_display_first_letter(
@@ -640,7 +640,7 @@ class TestDynamicSerializer:
         # does not have scope for Dataset or Table
         drf_request.is_authorized_for = lambda scopes=None: False
 
-        FietspaaltjesSerializer = serializer_factory(fietspaaltjes_model, 0, flat=False)
+        FietspaaltjesSerializer = serializer_factory(fietspaaltjes_model)
 
         drf_request.dataset = fietspaaltjes_schema
 
@@ -671,7 +671,7 @@ class TestDynamicSerializer:
 
         # does not have scope for Dataset or Table
         drf_request.is_authorized_for = lambda scopes=None: False
-        FietspaaltjesSerializer = serializer_factory(fietspaaltjes_model, 0, flat=False)
+        FietspaaltjesSerializer = serializer_factory(fietspaaltjes_model)
 
         drf_request.dataset = fietspaaltjes_schema
 
@@ -698,7 +698,7 @@ class TestDynamicSerializer:
                 "quickstartb4e564a8-5071-4e41-9fc0-21a678f3815c/myblockblob"
             ),
         )
-        DossiersSerializer = serializer_factory(dossier_model, 0, flat=False)
+        DossiersSerializer = serializer_factory(dossier_model)
 
         drf_request.dataset = download_url_schema
 
@@ -728,7 +728,7 @@ class TestDynamicSerializer:
             id=1,
             url="",
         )
-        DossiersSerializer = serializer_factory(dossier_model, 0, flat=False)
+        DossiersSerializer = serializer_factory(dossier_model)
 
         drf_request.dataset = download_url_schema
 
@@ -760,7 +760,7 @@ class TestDynamicSerializer:
             id=1,
             buurt="03630000000078",
         )
-        StatistiekenSerializer = serializer_factory(statistieken_model, 0)
+        StatistiekenSerializer = serializer_factory(statistieken_model)
 
         statistieken_serializer = StatistiekenSerializer(
             statistiek,
