@@ -1221,6 +1221,7 @@ class TestExportFormats:
                 "features": [
                     {
                         "type": "Feature",
+                        "id": "containers.1",
                         "geometry": {
                             "type": "Point",
                             "coordinates": GEOJSON_POINT,
@@ -1294,6 +1295,7 @@ class TestExportFormats:
                 "features": [
                     {
                         "type": "Feature",
+                        "id": f"containers.{i}",
                         "geometry": {
                             "type": "Point",
                             "coordinates": GEOJSON_POINT,
@@ -1458,6 +1460,7 @@ class TestExportFormats:
             "application/geo+json; charset=utf-8",
             {
                 "type": "Feature",
+                "id": "containers.1",
                 "geometry": {
                     "coordinates": GEOJSON_POINT,
                     "type": "Point",
