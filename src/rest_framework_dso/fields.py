@@ -212,3 +212,21 @@ class HALHyperlinkedRelatedField(serializers.HyperlinkedRelatedField):
     def to_representation(self, value):
         href = super().to_representation(value)
         return {"href": href, "title": str(value.pk)}
+
+
+class GeoJSONIdentifierField(serializers.Field):
+    """A field that renders the "id" field for a GeoJSON feature."""
+
+    def __init__(self, model=None, **kwargs):
+        kwargs["source"] = "*"
+        kwargs["read_only"] = True
+        super().__init__(**kwargs)
+        self.model = model
+
+    def bind(self, field_name, parent):
+        super().bind(field_name, parent)
+        if self.model is None:
+            self.model = parent.Meta.model
+
+    def to_representation(self, value):
+        return f"{self.model._meta.object_name}.{value.pk}"

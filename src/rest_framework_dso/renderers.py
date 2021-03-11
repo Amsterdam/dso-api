@@ -16,6 +16,7 @@ from rest_framework_csv.renderers import CSVStreamingRenderer
 from rest_framework_gis.fields import GeoJsonDict
 
 from rest_framework_dso import pagination
+from rest_framework_dso.fields import GeoJSONIdentifierField
 from rest_framework_dso.serializer_helpers import ReturnGenerator
 
 BROWSABLE_MAX_PAGE_SIZE = 1000
@@ -280,6 +281,12 @@ class GeoJSONRenderer(RendererMixin, renderers.JSONRenderer):
             name: field for name, field in serializer.fields.items() if name != "_links"
         }
 
+        # Inject an extra field in the serializer to retrieve the object ID.
+        if serializer.Meta.model:
+            id_field = GeoJSONIdentifierField()
+            id_field.bind("__id__", serializer)
+            serializer.fields["__id__"] = id_field
+
     def render(self, data, accepted_media_type=None, renderer_context=None):
         """
         Render `data` into JSON, returning a bytestring.
@@ -427,19 +434,18 @@ class GeoJSONRenderer(RendererMixin, renderers.JSONRenderer):
         return links
 
     def _item_to_feature(self, item: dict, geometry_field):
-        """Reorganize the dict of a single item"""
-        if geometry_field is None:
-            return {
-                "type": "Feature",
-                "properties": item,
-            }
-        else:
-            return {
-                "type": "Feature",
-                # "id": item
-                "geometry": item.pop(geometry_field),
-                "properties": item,
-            }
+        """Reorganize the dict of a single item."""
+        id_value = item.pop("__id__", None)
+        feature = {"type": "Feature"}
+
+        if id_value is not None:
+            feature["id"] = id_value
+
+        if geometry_field is not None:
+            feature["geometry"] = item.pop(geometry_field)
+
+        feature["properties"] = item
+        return feature
 
     def _find_geometry_field(self, properties: dict):
         """Find the first field which contains the geometry of a feature."""
