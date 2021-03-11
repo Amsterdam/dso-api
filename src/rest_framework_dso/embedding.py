@@ -26,7 +26,9 @@ DEFAULT_SQL_CHUNK_SIZE = 2000  # allow unit tests to alter this.
 
 
 def get_expanded_fields(  # noqa: C901
-    parent_serializer: serializers.Serializer, fields_to_expand: Union[List[str], bool]
+    parent_serializer: serializers.Serializer,
+    fields_to_expand: Union[List[str], bool],
+    allow_m2m=True,
 ) -> Dict[str, EmbeddedField]:
     """Find the expanded fields in a serializer that are requested.
     This translates the ``_expand`` query into a dict of embedded fields.
@@ -49,12 +51,20 @@ def get_expanded_fields(  # noqa: C901
 
         # Get the field
         try:
-            field = getattr(parent_serializer, field_name)
+            field: AbstractEmbeddedField = getattr(parent_serializer, field_name)
         except AttributeError:
             raise RuntimeError(
                 f"{parent_serializer.__class__.__name__}.{field_name}"
                 f" does not refer to an embedded field."
             ) from None
+
+        # Some output formats don't support M2M, so avoid expanding these.
+        if field.is_array and not allow_m2m:
+            if auto_expand_all:
+                continue
+            raise ParseError(
+                f"Eager loading is not supported for field '{field_name}' in this output format"
+            )
 
         # Check access via scopes (NOTE: this is higher-level functionality)
         scopes = fetch_scopes_for_model(field.related_model)
@@ -236,6 +246,11 @@ class EmbeddedResultSet(ReturnGenerator):
         main_instances: Optional[list] = None,
         id_fetcher=None,
     ):
+        # Embedded result sets always work on child elements,
+        # as the source queryset is iterated over within this class.
+        if isinstance(serializer, serializers.ListSerializer):
+            serializer = serializer.child
+
         super().__init__(generator=None, serializer=serializer)
         self.embedded_field = embedded_field
         self.id_list = []

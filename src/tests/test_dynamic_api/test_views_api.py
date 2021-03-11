@@ -15,7 +15,7 @@ from schematools.contrib.django.db import create_tables
 from dso_api.dynamic_api.permissions import fetch_scopes_for_dataset_table, fetch_scopes_for_model
 from rest_framework_dso.crs import CRS, RD_NEW
 from rest_framework_dso.response import StreamingResponse
-from tests.utils import read_response_json
+from tests.utils import read_response, read_response_json
 
 
 class AproxFloat(float):
@@ -1248,9 +1248,9 @@ class TestExportFormats:
 
         # Prove that the view is available and works
         response = api_client.get(url, {"_format": format})
-        assert isinstance(response, StreamingResponse)  # still wrapped in DRF response!
         assert response["Content-Type"] == expected_type  # Test before reading stream
         assert response.status_code == 200, response.getvalue()
+        assert isinstance(response, StreamingResponse)
         data = decoder(response.getvalue())
         assert data == expected_data
         assert response["Content-Type"] == expected_type  # And test after reading
@@ -1336,9 +1336,9 @@ class TestExportFormats:
 
         # Prove that the view is available and works
         response = api_client.get(url, {"_format": format, "_pageSize": "4"})
-        assert isinstance(response, StreamingResponse)
         assert response["Content-Type"] == expected_type  # Test before reading stream
         assert response.status_code == 200, response.getvalue()
+        assert isinstance(response, StreamingResponse)
         data = decoder(response.getvalue())
         assert data == expected_data
         assert response["Content-Type"] == expected_type  # And test after reading
@@ -1385,12 +1385,65 @@ class TestExportFormats:
 
         # Prove that the view is available and works
         response = api_client.get(url, {"_format": format})
-        assert isinstance(response, StreamingResponse)
         assert response["Content-Type"] == expected_type  # Test before reading stream
         assert response.status_code == 200, response.getvalue()
+        assert isinstance(response, StreamingResponse)
         data = decoder(response.getvalue())
         assert data == expected_data
         assert response["Content-Type"] == expected_type  # And test after reading
+
+    def test_csv_expand_inline(
+        self, api_client, api_rf, afval_container, filled_router, fetch_auth_token
+    ):
+        """Prove that the expand logic works, which is implemented inline for CSV"""
+        url = reverse("dynamic_api:afvalwegingen-containers-list")
+        token = fetch_auth_token(["BAG/R"])  # needed in afval.json to fetch cluster
+        response = api_client.get(
+            url,
+            {"_format": "csv", "_expandScope": "cluster"},
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+        assert response["Content-Type"] == "text/csv; charset=utf-8"  # Test before reading stream
+        assert response.status_code == 200, response.getvalue()
+        assert isinstance(response, StreamingResponse)
+        data = read_response(response)
+        assert data == (
+            "Id,Clusterid,Geometry,Serienummer,Datumcreatie,Eigenaarnaam,Datumleegmaken"
+            ",Cluster.Id,Cluster.Status\r\n"
+            "1,c1,SRID=28992;POINT (10 10),foobar-123,2021-01-03,Dataservices,2021-01-03T12:13:14"
+            ",c1,valid\r\n"
+        )
+
+    def test_csv_expand_m2m_invalid(self, api_client, api_rf, ggwgebieden_data, filled_router):
+        """Prove that the expand logic works, which is implemented inline for CSV"""
+        url = reverse("dynamic_api:gebieden-ggwgebieden-list")
+        api_client.raise_request_exception = False
+        response = api_client.get(url, {"_format": "csv", "_expandScope": "bestaatUitBuurten"})
+        assert response.status_code == 400, response.getvalue()
+        data = read_response_json(response)
+        assert data == {
+            "detail": (
+                "Eager loading is not supported for field 'bestaatUitBuurten' "
+                "in this output format"
+            ),
+            "status": 400,
+            "title": "Malformed request.",
+            "type": "urn:apiexception:parse_error",
+        }
+
+    def test_csv_expand_skip_m2m(self, api_client, api_rf, ggwgebieden_data, filled_router):
+        """Prove that the expand logic works, but skips M2M relations for auto-expand-all"""
+        url = reverse("dynamic_api:gebieden-ggwgebieden-list")
+        api_client.raise_request_exception = False
+        response = api_client.get(url, {"_format": "csv", "_expand": "true"})
+        assert response.status_code == 200, response.getvalue()
+        data = read_response(response)
+
+        # fields don't include bestaatUitBuurten
+        assert data == (
+            "Naam,Geometrie,Eindgeldigheid,Begingeldigheid,Registratiedatum,Id\r\n"
+            ",,,,,03630950000000.1\r\n"
+        )
 
     DETAIL_FORMATS = {
         "csv": (
@@ -1436,9 +1489,9 @@ class TestExportFormats:
 
         # Prove that the view is available and works
         response = api_client.get(url, {"_format": format})
-        assert isinstance(response, StreamingResponse)
         assert response["Content-Type"] == expected_type  # Test before reading stream
         assert response.status_code == 200, response.getvalue()
+        assert isinstance(response, StreamingResponse)
         data = decoder(response.getvalue())
         assert data == expected_data
         assert response["Content-Type"] == expected_type  # And test after reading
