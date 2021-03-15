@@ -177,7 +177,15 @@ class DynamicSerializer(DSOModelSerializer):
         """The schema field is exposed with every record"""
         name = instance.get_dataset_id()
         table = instance.get_table_id()
-        return f"https://schemas.data.amsterdam.nl/datasets/{name}/{name}#{table}"
+        url_parts = [name, name]
+        url_prefix = instance._dataset_schema.url_prefix
+        print("-" * 80)
+        print(repr(instance.__dict__))
+        print("-" * 80)
+        if url_prefix:
+            url_parts.insert(0, url_prefix.strip("/"))
+
+        return f"https://schemas.data.amsterdam.nl/datasets/{'/'.join(url_parts)}#{table}"
 
     def build_url_field(self, field_name, model_class):
         """Make sure the generated URLs point to our dynamic models"""

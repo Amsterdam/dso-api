@@ -211,6 +211,56 @@ class TestDynamicSerializer:
         }
 
     @staticmethod
+    def test_dataset_url_prefix(
+        drf_request, afval_schema, afval_dataset, afval_container_model, afval_cluster
+    ):
+        """Prove dataset url_prefix works.
+
+        The schema in _links contains correct URLs.
+        """
+        afval_dataset.url_prefix = "test"
+        afval_dataset.save()
+        drf_request.dataset = afval_schema
+        ContainerSerializer = serializer_factory(afval_container_model, 0)
+        afval_container = afval_container_model.objects.create(id=2, cluster=afval_cluster)
+        # Prove that expands work on object-detail level
+        container_serializer = ContainerSerializer(
+            afval_container,
+            context={"request": drf_request},
+            fields_to_expand=["cluster"],
+        )
+        data = normalize_data(container_serializer.data)
+        assert data == {
+            "_links": {
+                "schema": "https://schemas.data.amsterdam.nl/datasets/test/afvalwegingen/afvalwegingen#containers",  # noqa: E501
+                "self": {
+                    "href": "http://testserver/v1/test/afvalwegingen/containers/2/",
+                    "title": "2",
+                },
+            },
+            "id": 2,
+            "clusterId": "123.456",
+            "serienummer": None,
+            "datumCreatie": None,
+            "datumLeegmaken": None,
+            "geometry": None,
+            "eigenaarNaam": None,
+            "_embedded": {
+                "cluster": {
+                    "_links": {
+                        "self": {
+                            "href": "http://testserver/v1/test/afvalwegingen/clusters/123.456/",
+                            "title": "123.456",
+                        },
+                        "schema": "https://schemas.data.amsterdam.nl/datasets/test/afvalwegingen/afvalwegingen#clusters",  # noqa: E501
+                    },
+                    "id": "123.456",
+                    "status": "open",
+                }
+            },
+        }
+
+    @staticmethod
     def test_backwards_relation(
         drf_request,
         gebieden_schema,
