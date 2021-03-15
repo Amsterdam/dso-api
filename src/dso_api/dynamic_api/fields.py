@@ -34,7 +34,7 @@ class TemporalHyperlinkedRelatedField(serializers.HyperlinkedRelatedField):
             base_url = self.reverse(view_name, kwargs=kwargs, request=request, format=format)
 
             if request.dataset_temporal_slice is None:
-                key = obj.get_dataset().temporal.get("identifier")
+                key = obj.get_dataset_schema().temporal.get("identifier")
                 value = version
             else:
                 key = request.dataset_temporal_slice["key"]
@@ -54,9 +54,9 @@ class HALTemporalHyperlinkedRelatedField(TemporalHyperlinkedRelatedField):
         href = super().to_representation(value)
         output = {"href": href, "title": str(value.pk)}
         if href and value.is_temporal():
-            dataset = value.get_dataset()
-            temporal_fieldname = dataset.temporal["identifier"]
-            id_fieldname = dataset["identifier"]
+            dataset_schema = value.get_dataset_schema()
+            temporal_fieldname = dataset_schema.temporal["identifier"]
+            id_fieldname = dataset_schema["identifier"]
             output.update(
                 {
                     temporal_fieldname: getattr(value, temporal_fieldname),
@@ -96,12 +96,12 @@ class TemporalLinksField(LinksField):
         if not obj.is_temporal():
             return super().get_url(obj, view_name, request, format)
 
-        dataset = obj.get_dataset()
-        lookup_value = getattr(obj, dataset.identifier)
+        dataset_schema = obj.get_dataset_schema()
+        lookup_value = getattr(obj, dataset_schema.identifier)
         kwargs = {self.lookup_field: lookup_value}
         base_url = self.reverse(view_name, kwargs=kwargs, request=request, format=format)
 
-        temporal_identifier = dataset.temporal["identifier"]
+        temporal_identifier = dataset_schema.temporal["identifier"]
         version = getattr(obj, temporal_identifier)
         return URL(base_url) // {temporal_identifier: version}
 

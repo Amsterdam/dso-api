@@ -64,9 +64,9 @@ def temporal_id_based_fetcher(model, is_loose=False):
     def _fetcher(id_list):
         if is_loose:
             # We assume temporal config is available in the dataset
-            dataset = model.get_dataset()
-            identifier = dataset.identifier
-            sequence_name = dataset.temporal["identifier"]
+            dataset_schema = model.get_dataset_schema()
+            identifier = dataset_schema.identifier
+            sequence_name = dataset_schema.temporal["identifier"]
             return (
                 model.objects.distinct(identifier)  # does SELECT DISTINCT ON(identifier)
                 .filter(**{f"{identifier}__in": id_list})
@@ -222,7 +222,7 @@ class DynamicSerializer(DSOModelSerializer):
                     to_snake_case(part) for part in field.relation.split(":")
                 ]
                 url_name = f"{app_name}:{dataset_name}-{table_name}-detail"
-                related_ds = field.related_model.get_dataset()
+                related_ds = field.related_model.get_dataset_schema()
                 related_identifier_field = related_ds.identifier
                 result.append(
                     (f.attname, toCamelCase(f.attname), url_name, related_identifier_field)
@@ -309,7 +309,7 @@ class DynamicBodySerializer(DynamicSerializer):
         """Get the relational and other identifier fields which should not appear in the body
         but in the respective HAL envelopes in _links
         """
-        ds = self.Meta.model.get_dataset()
+        ds = self.Meta.model.get_dataset_schema()
         hal_fields = [ds.identifier]
         temporal = ds.temporal
         if temporal is not None and "identifier" in temporal:
