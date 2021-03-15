@@ -642,9 +642,11 @@ class DSOOrderingFilter(OrderingFilter):
         if ordering is None:
             return ordering
 
-        # convert to snake_case, preserving `-` if needed
-        correct_ordering = ["-".join([to_snake_case(y) for y in x.split("-")]) for x in ordering]
-        return correct_ordering
+        # Convert identifiers to snake_case, preserving `-` (descending sort).
+        return [
+            "-" + to_snake_case(part[1:]) if part.startswith("-") else to_snake_case(part)
+            for part in ordering
+        ]
 
     def remove_invalid_fields(self, queryset, fields, view, request):
         """Raise errors for invalid parameters instead of silently dropping them."""
