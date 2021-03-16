@@ -225,12 +225,12 @@ class DSOViewMixin:
 
     This adds:
     * HTTP Accept-Crs and HTTP POST Content-Crs support.
-    * Default filter backends in the view for sorting and filtering.
+    * Default filter backends in the view for sorting and filtering.\
       The filtering logic is delegated to a ``filterset_class`` by django-filter.
 
     Usage:
     * Set ``filterset_class`` to enable filtering on fields.
-    * The ``ordering_fields`` can be set on the view as well.
+    * The ``ordering_fields`` can be set on the view as well.\
       By default, it accepts all serializer field names as input.
     """
 
