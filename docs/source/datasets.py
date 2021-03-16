@@ -107,6 +107,7 @@ def _get_table_context(table: DatasetTableSchema):
     return {
         "title": snake_id.replace("_", " ").capitalize(),
         "uri": uri,
+        "description": table.get("description"),
         "fields": [_get_field_context(field) for field in fields],
         "relations": [
             {
@@ -145,6 +146,7 @@ def _get_feature_type_context(table: DatasetTableSchema):
         "title": snake_id.replace("_", " ").capitalize(),
         "typenames": [f"app:{snake_id}", snake_id],
         "uri": uri,
+        "description": table.get("description"),
         "fields": [_get_field_context(field) for field in fields],
         "embeds": [
             {
