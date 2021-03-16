@@ -6,7 +6,6 @@ from typing import Optional
 
 import orjson
 from django.conf import settings
-from gisserver.geometries import WGS84
 from rest_framework import renderers
 from rest_framework.exceptions import ValidationError
 from rest_framework.relations import HyperlinkedRelatedField
@@ -16,6 +15,7 @@ from rest_framework_csv.renderers import CSVStreamingRenderer
 from rest_framework_gis.fields import GeoJsonDict
 
 from rest_framework_dso import pagination
+from rest_framework_dso.crs import WGS84
 from rest_framework_dso.fields import GeoJSONIdentifierField
 from rest_framework_dso.serializer_helpers import ReturnGenerator
 
