@@ -178,10 +178,7 @@ class DynamicSerializer(DSOModelSerializer):
         name = instance.get_dataset_id()
         table = instance.get_table_id()
         url_parts = [name, name]
-        url_prefix = instance._dataset_schema.url_prefix
-        print("-" * 80)
-        print(repr(instance.__dict__))
-        print("-" * 80)
+        url_prefix = instance.get_dataset().url_prefix
         if url_prefix:
             url_parts.insert(0, url_prefix.strip("/"))
 
