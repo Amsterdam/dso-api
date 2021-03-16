@@ -13,7 +13,8 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 from urllib3 import HTTPResponse
 
-from dso_api.lib.exceptions import (
+from dso_api.dynamic_api import permissions
+from rest_framework_dso.exceptions import (
     BadGateway,
     GatewayTimeout,
     RemoteAPIException,
@@ -21,7 +22,6 @@ from dso_api.lib.exceptions import (
 )
 from rest_framework_dso.views import DSOViewMixin
 
-from .. import permissions
 from . import serializers
 
 logger = logging.getLogger(__name__)
