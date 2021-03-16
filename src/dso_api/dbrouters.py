@@ -2,7 +2,11 @@ from django.conf import settings
 from django.db import connections
 
 
-class DisableMigrationsRouter:
+class DatabaseSchemasRouter:
+    """
+    Database Router to allow use of PostgreSQL schemas.
+    """
+
     def allow_migrate(self, db, app_label, model_name=None, **hints):
         """
         Do not allow migration for 'bag'
@@ -10,12 +14,6 @@ class DisableMigrationsRouter:
         if app_label in settings.DATABASE_DISABLE_MIGRATIONS:
             return False
         return None
-
-
-class DatabaseSchemasRouter(DisableMigrationsRouter):
-    """
-    Database Router to allow use of PostgreSQL schemas.
-    """
 
     def db_for_read(self, model, **hints):
         """
