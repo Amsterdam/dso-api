@@ -3,7 +3,15 @@
 {{ schema.description or '' }}
 
 * **ID:** {{ schema_name }}
-* **WFS:** {% if wfs_url %}{{ wfs_url }} (:doc:`documentatie <../wfs-datasets/{{ schema_name }}>`){% else %}N.B.{% endif %}
+* **VERSIE:** {{ schema.version }}
+* **ENDPOINTS:**
+
+      .. raw:: html
+         <ul>
+            {% for table in tables %}
+            <li><b>REST URI:</b> <a href="{{ table.uri }}">{{ table.uri|strip_base_url }}</a></li>
+            {% endfor %}
+         </ul>
 
 .. contents:: Tabellen
    :local:
