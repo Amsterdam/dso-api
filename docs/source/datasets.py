@@ -183,7 +183,7 @@ def _get_fields(table_fields, parent_field=None) -> List[DatasetFieldSchema]:
 
         result_fields.append(field)
 
-        if field.is_array or field.is_object:
+        if field.is_array_of_objects or field.is_object:
             result_fields.extend(_get_fields(field.sub_fields, parent_field=field))
 
     return result_fields
