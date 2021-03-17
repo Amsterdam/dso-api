@@ -32,6 +32,7 @@ class TestDynamicSerializer:
 
     @staticmethod
     def test_basic_factory_logic(
+        reloadrouter,
         drf_request,
         afval_schema,
         afval_cluster_model,
@@ -45,7 +46,7 @@ class TestDynamicSerializer:
         drf_request.dataset = afval_schema
         afval_container = afval_container_model.objects.create(
             id=2,
-            cluster=afval_cluster,
+            cluster_id=afval_cluster.pk,
             serienummer="serie123",
             eigenaar_naam="datapunt",
             datum_creatie=date(2020, 2, 3),
@@ -212,7 +213,7 @@ class TestDynamicSerializer:
 
     @staticmethod
     def test_dataset_url_prefix(
-        drf_request, afval_schema, afval_dataset, afval_container_model, afval_cluster, router
+        drf_request, filled_router, afval_dataset, afval_container_model, afval_cluster
     ):
         """Prove dataset url_prefix works.
 
@@ -222,7 +223,7 @@ class TestDynamicSerializer:
         afval_dataset.save()
         # Update dataset in instance cache
         afval_container_model._dataset = afval_dataset
-        drf_request.dataset = afval_schema
+        drf_request.dataset = afval_dataset.schema
         ContainerSerializer = serializer_factory(afval_container_model, 0)
         afval_container = afval_container_model.objects.create(id=2, cluster=afval_cluster)
         # Prove that expands work on object-detail level

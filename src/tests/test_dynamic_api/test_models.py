@@ -1,8 +1,10 @@
+import pytest
 from django.contrib.gis.db import models
 from django_postgres_unlimited_varchar import UnlimitedCharField
 from schematools.contrib.django.factories import model_factory, schema_models_factory
 
 
+@pytest.mark.django_db
 def test_model_factory_fields(afval_dataset):
     """Prove that the fields from the schema will be generated"""
     table = afval_dataset.schema.tables[0]
@@ -28,12 +30,15 @@ def test_model_factory_fields(afval_dataset):
     assert meta.app_label == afval_dataset.schema.id
 
     table_with_id_as_string = afval_dataset.schema.tables[1]
-    model_cls = model_factory(table_with_id_as_string, base_app_name="dso_api.dynamic_api")
+    model_cls = model_factory(
+        afval_dataset, table_with_id_as_string, base_app_name="dso_api.dynamic_api"
+    )
     meta = model_cls._meta
     assert meta.get_field("id").primary_key
     assert isinstance(meta.get_field("id"), UnlimitedCharField)
 
 
+@pytest.mark.django_db
 def test_model_factory_relations(afval_dataset):
     """Prove that relations between models can be resolved"""
     models = {
