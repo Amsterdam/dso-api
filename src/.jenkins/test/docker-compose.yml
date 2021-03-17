@@ -19,5 +19,6 @@ services:
       UWSGI_STATIC_MAP: "/dso_api/static=/static"
       SECRET_KEY: insecure
       DATABASE_URL: "postgres://dataservices:insecure@database/dataservices"
+      DATABASE_URL_WRITE: "postgres://dataservices:insecure@database/dataservices"
     command: >
       bash -c ".jenkins/test/test.sh"
