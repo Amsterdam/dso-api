@@ -6,16 +6,17 @@
 * **Versie:** {{ schema.version }}
 * **Endpoints:**
 
-      .. raw:: html
+   .. raw:: html
+      {% for table in tables %}
          <ul>
-            {% for table in tables %}
-            <li><b>REST URI:</b> <a href="{{ table.uri }}">{{ table.uri|strip_base_url }}</a></li>
-            {% endfor %}
+            <li>REST URI:<a href="{{ table.uri }}">{{ table.uri|strip_base_url }}</a></li>
          </ul>
+      {% endfor %}
+
 
 .. contents:: Tabellen
-   :local:
-   :depth: 1
+      :local:
+      :depth: 2
 
 {% for table in tables %}
 ----
