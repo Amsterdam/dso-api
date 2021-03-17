@@ -21,6 +21,7 @@ cachetools==4.2.1
     # via
     #   -r requirements.in
     #   amsterdam-schema-tools
+    #   google-auth
 certifi==2020.12.5
     # via
     #   msrest
@@ -82,6 +83,7 @@ django==3.1.8
     #   django-vectortiles
     #   djangorestframework
     #   drf-spectacular
+    #   opencensus-ext-django
 djangorestframework-csv==2.1.0
     # via -r requirements.in
 djangorestframework-gis==0.17
@@ -112,6 +114,12 @@ future==0.18.2
     # via mapbox-vector-tile
 geoalchemy2==0.8.5
     # via amsterdam-schema-tools
+google-api-core==1.26.3
+    # via opencensus
+google-auth==1.28.1
+    # via google-api-core
+googleapis-common-protos==1.53.0
+    # via google-api-core
 idna==2.10
     # via requests
 inflection==0.5.1
@@ -158,6 +166,16 @@ ndjson==0.3.1
     # via amsterdam-schema-tools
 oauthlib==3.1.0
     # via requests-oauthlib
+opencensus-context==0.1.2
+    # via opencensus
+opencensus-ext-azure==1.0.7
+    # via -r requirements.in
+opencensus-ext-django==0.7.4
+    # via -r requirements.in
+opencensus==0.7.12
+    # via
+    #   opencensus-ext-azure
+    #   opencensus-ext-django
 ordered-set==4.0.2
     # via deepdiff
 orjson==3.5.1
@@ -165,7 +183,9 @@ orjson==3.5.1
     #   -r requirements.in
     #   django-gisserver
 packaging==20.9
-    # via pytest
+    # via
+    #   google-api-core
+    #   pytest
 pg-grant==0.3.2
     # via amsterdam-schema-tools
 pluggy==0.13.1
@@ -173,13 +193,24 @@ pluggy==0.13.1
 ply==3.11
     # via jsonpath-rw
 protobuf==3.15.7
-    # via mapbox-vector-tile
+    # via
+    #   google-api-core
+    #   googleapis-common-protos
+    #   mapbox-vector-tile
+psutil==5.8.0
+    # via opencensus-ext-azure
 psycopg2-binary==2.8.6
     # via -r requirements.in
 psycopg2==2.8.6
     # via amsterdam-schema-tools
 py==1.10.0
     # via pytest
+pyasn1-modules==0.2.8
+    # via google-auth
+pyasn1==0.4.8
+    # via
+    #   pyasn1-modules
+    #   rsa
 pyclipper==1.2.1
     # via mapbox-vector-tile
 pycodestyle==2.7.0
@@ -212,7 +243,9 @@ python-string-utils==1.0.0
     #   -r requirements.in
     #   amsterdam-schema-tools
 pytz==2021.1
-    # via django
+    # via
+    #   django
+    #   google-api-core
 pyyaml==5.4.1
     # via drf-spectacular
 readerwriterlock==1.0.8
@@ -226,9 +259,13 @@ requests==2.25.1
     #   azure-core
     #   datapunt-authorization-django
     #   django-healthchecks
+    #   google-api-core
     #   msrest
+    #   opencensus-ext-azure
     #   python-owasp-zap-v2.4
     #   requests-oauthlib
+rsa==4.7.2
+    # via google-auth
 sentry-sdk==1.0.0
     # via -r requirements.in
 shapely==1.7.1
@@ -243,6 +280,8 @@ six==1.15.0
     #   django-healthchecks
     #   djangorestframework-csv
     #   flake8-debugger
+    #   google-api-core
+    #   google-auth
     #   isodate
     #   jsonpath-rw
     #   jsonschema
