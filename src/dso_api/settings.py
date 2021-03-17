@@ -1,6 +1,8 @@
 import logging
 import os
 import sys
+from pathlib import Path
+from typing import Optional
 
 import environ
 import sentry_sdk
@@ -25,6 +27,9 @@ SCHEMA_URL = env.str("SCHEMA_URL", "https://schemas.data.amsterdam.nl/datasets/"
 PROFILES_URL = env.str("PROFILES_URL", "https://schemas.data.amsterdam.nl/profiles/")
 SCHEMA_DEFS_URL = env.str("SCHEMA_DEFS_URL", "https://schemas.data.amsterdam.nl/schema")
 
+# -- Azure specific settings
+
+AZURE_INSTRUMENTATION_KEY: Optional[str] = env.str("AZURE_INSTRUMENTATION_KEY", None)
 
 # -- Security
 
@@ -67,12 +72,24 @@ MIDDLEWARE = [
     "dso_api.dynamic_api.middleware.DatasetMiddleware",
     "dso_api.dynamic_api.middleware.TemporalDatasetMiddleware",
     "dso_api.dynamic_api.middleware.RequestAuditLoggingMiddleware",
+    "opencensus.ext.django.middleware.OpencensusMiddleware",
 ]
 
 AUTHENTICATION_BACKENDS = [
     "schematools.contrib.django.auth_backend.ProfileAuthorizationBackend",
     "django.contrib.auth.backends.ModelBackend",
 ]
+
+OPENCENSUS = {
+    "TRACE": {
+        "SAMPLER": "opencensus.trace.samplers.ProbabilitySampler(rate=1)",
+        "EXPORTER": f"""opencensus.ext.azure.trace_exporter.AzureExporter(
+            connection_string="InstrumentationKey={AZURE_INSTRUMENTATION_KEY}"
+        )""",
+        "EXCLUDELIST_PATHS": [],
+    }
+}
+
 
 if DEBUG:
     INSTALLED_APPS += [
@@ -173,13 +190,18 @@ LOGGING = {
             "class": "logging.StreamHandler",
             "formatter": "structured_console",
         },
+        "azure": {
+            "level": "DEBUG",
+            "class": "opencensus.ext.azure.log_exporter.AzureLogHandler",
+            "instrumentation_key": AZURE_INSTRUMENTATION_KEY,
+        },
     },
-    "root": {"level": "INFO", "handlers": ["console"]},
+    "root": {"level": "INFO", "handlers": ["console", "azure"]},
     "loggers": {
         # "django.db.backends": {"level": "DEBUG", "handlers": ["console"]},
-        "dso_api": {"handlers": ["console"], "level": "DEBUG", "propagate": False},
+        "dso_api": {"handlers": ["console", "azure"], "level": "DEBUG", "propagate": False},
         "dso_api.audit": {
-            "handlers": ["structured_console"],
+            "handlers": ["structured_console", "azure"],
             "level": "DEBUG",
             "propagate": False,
         },
