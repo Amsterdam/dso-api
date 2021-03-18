@@ -34,24 +34,6 @@ SECRET_KEY = env.str("SECRET_KEY", "insecure")
 SESSION_COOKIE_SECURE = env.bool("SESSION_COOKIE_SECURE", not DEBUG)
 CSRF_COOKIE_SECURE = env.bool("CSRF_COOKIE_SECURE", not DEBUG)
 
-# On unapplied migrations, the Django 'check' fails when trying to
-# Fetch datasets from the database. Viewsets are not needed when migrating.
-INITIALIZE_DYNAMIC_VIEWSETS = env.bool(
-    "INITIALIZE_DYNAMIC_VIEWSETS",
-    default={"migrate", "makemigrations", "showmigrations"}.isdisjoint(sys.argv[1:]),
-)
-
-# -- Datasets
-
-# WARNING: use with care, dangerous settings.
-# Both DATASETS_LIST and DATASETS_EXCLUDE will limit list of datasets loaded into memory.
-#  Relations to datasets outside list are not loaded automatically,
-#  this means dso-api will break on pages where related datasets are missing.
-# DATASETS_LIST: will load only provided datasets into memory.
-# DATASETS_EXCLUDE: will load all datasets except provided in list.
-DATASETS_LIST = env.list("DATASETS_LIST", default=None)
-DATASETS_EXCLUDE = env.list("DATASETS_EXCLUDE", default=None)
-
 INTERNAL_IPS = ("127.0.0.1", "0.0.0.0")
 
 TIME_ZONE = "Europe/Amsterdam"
@@ -285,6 +267,21 @@ DATAPUNT_AUTHZ = {
 
 AMSTERDAM_SCHEMA = {"geosearch_disabled_datasets": ["bag", "meetbouten"]}
 
+# On unapplied migrations, the Django 'check' fails when trying to
+# Fetch datasets from the database. Viewsets are not needed when migrating.
+INITIALIZE_DYNAMIC_VIEWSETS = env.bool(
+    "INITIALIZE_DYNAMIC_VIEWSETS",
+    default={"migrate", "makemigrations", "showmigrations"}.isdisjoint(sys.argv[1:]),
+)
+
+# WARNING: use with care, dangerous settings.
+# Both DATASETS_LIST and DATASETS_EXCLUDE will limit list of datasets loaded into memory.
+#  Relations to datasets outside list are not loaded automatically,
+#  this means dso-api will break on pages where related datasets are missing.
+# DATASETS_LIST: will load only provided datasets into memory.
+# DATASETS_EXCLUDE: will load all datasets except provided in list.
+DATASETS_LIST = env.list("DATASETS_LIST", default=None)
+DATASETS_EXCLUDE = env.list("DATASETS_EXCLUDE", default=None)
 
 # Dynamicaly import Azure Blob connections from environment
 for key, value in env.ENVIRON.items():
