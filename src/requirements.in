@@ -26,6 +26,7 @@ urllib3 == 1.26.4
 urllib3-mock == 0.3.3
 opencensus-ext-azure == 1.0.7
 opencensus-ext-django == 0.7.4
+opencensus-ext-logging == 0.1.0
 
 # When installed, it's used for API doc markup:
 markdown == 3.3.4
