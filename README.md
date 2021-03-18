@@ -89,6 +89,31 @@ To address the error we need to point requests for that dataset to another valid
 
     ./manage.py change_dataset hcbrk --endpoint-url='http://example.com/{table_id}/'
 
+# Cloud environment
+
+Depending on where the DSO API is being run, 
+it might need to perform additional configuration.
+An environment for which this is currently the case is Azure.
+When run in an Azure environment 
+logging and tracing information utilizes the OpenCensus standard.
+To ensure this facility is used 
+be sure to set the environment variable `CLOUD_ENV` to either:
+
+- `azure_aks`
+- `azure_aci`
+
+When running in Azure 
+two additional environment variables need to be specified:
+
+- `AZURE_INSTRUMENTATION_KEY`
+- `AZURE_INGESTION_ENDPOINT`
+
+These are used to determine where 
+Azure specific
+logging and tracing information should be sent to.
+
+If `CLOUD_ENV` is not set is assumes its value to be`cloudvps_docker`.
+
 # Run the server
 
     ./manage.py runserver localhost:8000

@@ -1,6 +1,7 @@
 import logging
 import os
 import sys
+from enum import Enum
 from pathlib import Path
 from typing import Optional
 
@@ -8,8 +9,20 @@ import environ
 import sentry_sdk
 import sentry_sdk.utils
 from corsheaders.defaults import default_headers
+from django.core.exceptions import ImproperlyConfigured
+from opencensus.trace import config_integration
 from sentry_sdk.integrations.django import DjangoIntegration
 from sentry_sdk.integrations.logging import LoggingIntegration
+
+
+class CloudEnv(Enum):
+    CLOUDVPS_DOCKER = "cloudvps_docker"
+    AZURE_ACI = "azure_aci"
+    AZURE_AKS = "azure_aks"
+
+    def is_azure(self):
+        return self in (CloudEnv.AZURE_ACI, CloudEnv.AZURE_AKS)
+
 
 env = environ.Env()
 
@@ -17,6 +30,9 @@ env = environ.Env()
 
 BASE_DIR = Path(__file__).parents[1]
 DEBUG = env.bool("DJANGO_DEBUG", True)
+
+CLOUD_ENV = CloudEnv(env.str("CLOUD_ENV", "cloudvps_docker"))
+DJANGO_LOG_LEVEL = env.str("DJANGO_LOG_LEVEL", "INFO")
 
 # Paths
 STATIC_URL = "/v1/static/"
@@ -30,7 +46,7 @@ SCHEMA_DEFS_URL = env.str("SCHEMA_DEFS_URL", "https://schemas.data.amsterdam.nl/
 # -- Azure specific settings
 
 AZURE_INSTRUMENTATION_KEY: Optional[str] = env.str("AZURE_INSTRUMENTATION_KEY", None)
-
+AZURE_INGESTION_ENDPOINT: Optional[str] = env.str("AZURE_INGESTION_ENDPOINT", None)
 # -- Security
 
 # SECURITY WARNING: keep the secret key used in production secret!
@@ -72,24 +88,37 @@ MIDDLEWARE = [
     "dso_api.dynamic_api.middleware.DatasetMiddleware",
     "dso_api.dynamic_api.middleware.TemporalDatasetMiddleware",
     "dso_api.dynamic_api.middleware.RequestAuditLoggingMiddleware",
-    "opencensus.ext.django.middleware.OpencensusMiddleware",
 ]
+connection_string: Optional[str] = None
+if CLOUD_ENV.is_azure():
+    if AZURE_INSTRUMENTATION_KEY is None:
+        raise ImproperlyConfigured(
+            "Please specify the 'AZURE_INSTRUMENTATION_KEY' environment variable."
+        )
+    if AZURE_INGESTION_ENDPOINT is None:
+        raise ImproperlyConfigured(
+            "Please specify the 'AZURE_INGESTION_ENDPOINT' environment variable."
+        )
+    MIDDLEWARE.append("opencensus.ext.django.middleware.OpencensusMiddleware")
+    connection_string = (
+        f"InstrumentationKey={AZURE_INSTRUMENTATION_KEY}"
+        f";IngestionEndpoint={AZURE_INGESTION_ENDPOINT}"
+    )
+    OPENCENSUS = {
+        "TRACE": {
+            "SAMPLER": "opencensus.trace.samplers.ProbabilitySampler(rate=1)",
+            "EXPORTER": f"""opencensus.ext.azure.trace_exporter.AzureExporter(
+                connection_string='{connection_string}',
+                service_name='dso-api'
+            )""",
+            "EXCLUDELIST_PATHS": [],
+        }
+    }
 
 AUTHENTICATION_BACKENDS = [
     "schematools.contrib.django.auth_backend.ProfileAuthorizationBackend",
     "django.contrib.auth.backends.ModelBackend",
 ]
-
-OPENCENSUS = {
-    "TRACE": {
-        "SAMPLER": "opencensus.trace.samplers.ProbabilitySampler(rate=1)",
-        "EXPORTER": f"""opencensus.ext.azure.trace_exporter.AzureExporter(
-            connection_string="InstrumentationKey={AZURE_INSTRUMENTATION_KEY}"
-        )""",
-        "EXCLUDELIST_PATHS": [],
-    }
-}
-
 
 if DEBUG:
     INSTALLED_APPS += [
@@ -164,10 +193,9 @@ if SENTRY_DSN:
     )
     sentry_sdk.utils.MAX_STRING_LENGTH = 2048  # for WFS FILTER exceptions
 
-
 LOGGING = {
     "version": 1,
-    "disable_existing_loggers": False,
+    "disable_existing_loggers": True,
     "formatters": {
         "console": {"format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"},
         "structured_console": {
@@ -190,23 +218,40 @@ LOGGING = {
             "class": "logging.StreamHandler",
             "formatter": "structured_console",
         },
-        "azure": {
-            "level": "DEBUG",
-            "class": "opencensus.ext.azure.log_exporter.AzureLogHandler",
-            "instrumentation_key": AZURE_INSTRUMENTATION_KEY,
-        },
     },
-    "root": {"level": "INFO", "handlers": ["console", "azure"]},
+    "root": {"level": "INFO", "handlers": ["console"]},
     "loggers": {
-        # "django.db.backends": {"level": "DEBUG", "handlers": ["console"]},
-        "dso_api": {"handlers": ["console", "azure"], "level": "DEBUG", "propagate": False},
+        "django": {"handlers": ["console"], "level": DJANGO_LOG_LEVEL, "propagate": False},
+        "dso_api": {"handlers": ["console"], "level": "DEBUG", "propagate": False},
         "dso_api.audit": {
-            "handlers": ["structured_console", "azure"],
+            "handlers": ["structured_console"],
             "level": "DEBUG",
             "propagate": False,
         },
     },
 }
+if CLOUD_ENV.is_azure():
+    assert connection_string is not None, "`connection_string` should have been configured by now."
+    config_integration.trace_integrations(["logging"])
+    LOGGING["formatters"]["azure"] = {
+        "format": (
+            '{"time": "%(asctime)s", '
+            '"name": "%(name)s", '
+            '"level": "%(levelname)s", '
+            '"trace_id": "%(traceId)s", '
+            '"span_id": "%(spanId)s" '
+            '"message": %(message)s}'
+        )
+    }
+    LOGGING["handlers"]["azure"] = {
+        "level": "DEBUG",
+        "class": "opencensus.ext.azure.log_exporter.AzureLogHandler",
+        "connection_string": connection_string,
+        "formatter": "azure",
+    }
+    LOGGING["root"]["handlers"] = ["azure"]
+    for logger in LOGGING["loggers"]:
+        LOGGING["loggers"][logger]["handlers"] = ["azure"]
 
 # -- Third party app settings
 
