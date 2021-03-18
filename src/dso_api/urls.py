@@ -4,7 +4,7 @@ from django.urls import include, path, re_path
 from django.views.generic import RedirectView
 
 import dso_api.dynamic_api.urls
-from dso_api.dynamic_api.oas3 import get_openapi_yaml_view
+from dso_api.dynamic_api.openapi import get_openapi_yaml_view
 from rest_framework_dso import views
 
 urlpatterns = [
