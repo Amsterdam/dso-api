@@ -294,7 +294,7 @@ class DynamicSerializer(DSOModelSerializer):
             if permission is not None:
                 key = toCamelCase(model_field.name)
                 if key in data:
-                    authorized_data[key] = mutate_value(permission, data[key])
+                    authorized_data[key] = _mutate_value(permission, data[key])
         return authorized_data
 
 
@@ -452,12 +452,12 @@ def serializer_factory(
             _build_serializer_field(model, model_field, flat, new_attrs, fields, extra_kwargs)
 
     if not flat:
-        generate_embedded_relations(model, fields, new_attrs)
+        _generate_embedded_relations(model, fields, new_attrs)
 
     if "_links" in fields:
         # Generate the serializer for the _links field
         # containing the relations according to HAL
-        new_attrs["hal_relations_serializer_class"] = links_serializer_factory(model, depth)
+        new_attrs["hal_relations_serializer_class"] = _links_serializer_factory(model, depth)
 
     # Generate Meta section and serializer class
     new_attrs["Meta"] = type(
@@ -467,7 +467,7 @@ def serializer_factory(
     return type(serializer_name, (DynamicBodySerializer,), new_attrs)
 
 
-def links_serializer_factory(model: Type[DynamicModel], depth: int) -> Type[DynamicSerializer]:
+def _links_serializer_factory(model: Type[DynamicModel], depth: int) -> Type[DynamicSerializer]:
     """Generate the DRF serializer class for the ``_links`` section."""
     fields = [
         "schema",
@@ -629,7 +629,7 @@ def _find_reverse_fk_relation(
     )
 
 
-def generate_embedded_relations(model, fields, new_attrs):
+def _generate_embedded_relations(model, fields, new_attrs):
     schema_fields = {to_snake_case(f.name): f for f in model.table_schema().fields}
     for item in model._meta.related_objects:
         # Do not create fields for django-created relations.
@@ -639,7 +639,7 @@ def generate_embedded_relations(model, fields, new_attrs):
             new_attrs[item.name] = related_serializer(many=True)
 
 
-def mutate_value(permission, value):
+def _mutate_value(permission, value):
     params = None
     if ":" in permission:
         permission, params = permission.split(":")

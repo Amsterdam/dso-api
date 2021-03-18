@@ -29,7 +29,7 @@ http_pool_generic = urllib3.PoolManager(cert_reqs="CERT_REQUIRED", ca_certs=cert
 http_pool_kadaster = None
 
 
-def del_none(d):
+def _del_none(d):
     """
     Delete keys with the value ``None`` in a dictionary, recursively.
 
@@ -39,7 +39,7 @@ def del_none(d):
         if value is None:
             del d[key]
         elif isinstance(value, dict):
-            del_none(value)
+            _del_none(value)
 
 
 class RemoteViewSet(DSOViewMixin, ViewSet):
@@ -94,7 +94,7 @@ class RemoteViewSet(DSOViewMixin, ViewSet):
         # Validate data. Throw exception if not valid
         self.validate(serializer, data)
         serialized_data = serializer.data
-        del_none(serialized_data)
+        _del_none(serialized_data)
         # Add self url.
         self_link = self.request.build_absolute_uri(self.request.path)
         if "_links" not in serialized_data:
