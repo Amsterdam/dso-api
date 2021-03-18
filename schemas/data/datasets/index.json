@@ -1,0 +1,8 @@
+{
+  "bag": "bag/bag.json",
+  "bommen": "bommen/bommen",
+  "sportparken": "sportparken/sportparken",
+  "reclame": "belastingen/reclame",
+  "terrassen": "belastingen/precario/terrassen",
+  "woonschepen": "belastingen/precario/woonschepen"
+}

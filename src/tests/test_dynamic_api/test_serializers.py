@@ -32,6 +32,7 @@ class TestDynamicSerializer:
 
     @staticmethod
     def test_basic_factory_logic(
+        reloadrouter,
         drf_request,
         afval_schema,
         afval_cluster_model,
@@ -45,7 +46,7 @@ class TestDynamicSerializer:
         drf_request.dataset = afval_schema
         afval_container = afval_container_model.objects.create(
             id=2,
-            cluster=afval_cluster,
+            cluster_id=afval_cluster.pk,
             serienummer="serie123",
             eigenaar_naam="datapunt",
             datum_creatie=date(2020, 2, 3),
@@ -208,6 +209,64 @@ class TestDynamicSerializer:
             "geometry": None,
             "eigenaarNaam": None,
             "_embedded": {"cluster": None},
+        }
+
+    @staticmethod
+    def test_dataset_url_prefix(
+        drf_request,
+        filled_router,
+        afval_dataset,
+        afval_container_model,
+        afval_cluster,
+        afval_cluster_model,
+    ):
+        """Prove dataset url_prefix works.
+
+        The schema in _links contains correct URLs.
+        """
+        afval_dataset.url_prefix = "test"
+        afval_dataset.save()
+        # Update dataset in instance cache
+        afval_container_model._dataset = afval_dataset
+        afval_cluster_model._dataset = afval_dataset
+        drf_request.dataset = afval_dataset.schema
+        ContainerSerializer = serializer_factory(afval_container_model, 0)
+        afval_container = afval_container_model.objects.create(id=2, cluster=afval_cluster)
+        # Prove that expands work on object-detail level
+        container_serializer = ContainerSerializer(
+            afval_container,
+            context={"request": drf_request},
+            fields_to_expand=["cluster"],
+        )
+        data = normalize_data(container_serializer.data)
+        assert data == {
+            "_links": {
+                "schema": "https://schemas.data.amsterdam.nl/datasets/test/afvalwegingen#containers",  # noqa: E501
+                "self": {
+                    "href": "http://testserver/v1/afvalwegingen/containers/2/",
+                    "title": "2",
+                },
+            },
+            "id": 2,
+            "clusterId": "123.456",
+            "serienummer": None,
+            "datumCreatie": None,
+            "datumLeegmaken": None,
+            "geometry": None,
+            "eigenaarNaam": None,
+            "_embedded": {
+                "cluster": {
+                    "_links": {
+                        "self": {
+                            "href": "http://testserver/v1/afvalwegingen/clusters/123.456/",
+                            "title": "123.456",
+                        },
+                        "schema": "https://schemas.data.amsterdam.nl/datasets/test/afvalwegingen#clusters",  # noqa: E501
+                    },
+                    "id": "123.456",
+                    "status": "open",
+                }
+            },
         }
 
     @staticmethod

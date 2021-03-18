@@ -1,12 +1,14 @@
+import pytest
 from django.contrib.gis.db import models
 from django_postgres_unlimited_varchar import UnlimitedCharField
 from schematools.contrib.django.factories import model_factory, schema_models_factory
 
 
-def test_model_factory_fields(afval_schema):
+@pytest.mark.django_db
+def test_model_factory_fields(afval_dataset):
     """Prove that the fields from the schema will be generated"""
-    table = afval_schema.tables[0]
-    model_cls = model_factory(table, base_app_name="dso_api.dynamic_api")
+    table = afval_dataset.schema.tables[0]
+    model_cls = model_factory(afval_dataset, table, base_app_name="dso_api.dynamic_api")
     meta = model_cls._meta
     assert set(f.name for f in meta.get_fields()) == {
         "id",
@@ -25,20 +27,23 @@ def test_model_factory_fields(afval_schema):
     geo_field = meta.get_field("geometry")
     assert geo_field.srid == 28992
     assert geo_field.db_index
-    assert meta.app_label == afval_schema.id
+    assert meta.app_label == afval_dataset.schema.id
 
-    table_with_id_as_string = afval_schema.tables[1]
-    model_cls = model_factory(table_with_id_as_string, base_app_name="dso_api.dynamic_api")
+    table_with_id_as_string = afval_dataset.schema.tables[1]
+    model_cls = model_factory(
+        afval_dataset, table_with_id_as_string, base_app_name="dso_api.dynamic_api"
+    )
     meta = model_cls._meta
     assert meta.get_field("id").primary_key
     assert isinstance(meta.get_field("id"), UnlimitedCharField)
 
 
-def test_model_factory_relations(afval_schema):
+@pytest.mark.django_db
+def test_model_factory_relations(afval_dataset):
     """Prove that relations between models can be resolved"""
     models = {
         cls._meta.model_name: cls
-        for cls in schema_models_factory(afval_schema, base_app_name="dso_api.dynamic_api")
+        for cls in schema_models_factory(afval_dataset, base_app_name="dso_api.dynamic_api")
     }
     cluster_fk = models["containers"]._meta.get_field("cluster")
     # Cannot compare using identity for dynamically generated classes
