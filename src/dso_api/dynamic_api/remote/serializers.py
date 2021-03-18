@@ -108,12 +108,12 @@ def _build_declared_fields(
             kwargs["allow_blank"] = True
         if camel_name != field.name:
             kwargs["source"] = field.name
-        declared_fields[camel_name] = remote_field_factory(field, **kwargs)
+        declared_fields[camel_name] = _remote_field_factory(field, **kwargs)
 
     return declared_fields
 
 
-def remote_field_factory(field: DatasetFieldSchema, **kwargs) -> serializers.Field:
+def _remote_field_factory(field: DatasetFieldSchema, **kwargs) -> serializers.Field:
     """Generate the serializer field for a single schema field."""
     type_ = field.type
     # reduce amsterdam schema refs to their fragment
