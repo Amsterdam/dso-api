@@ -418,7 +418,7 @@ class DSOModelSerializer(DSOSerializer, serializers.HyperlinkedModelSerializer):
     This supports the following extra's:
     - self-url is generated in a ``_links`` section.
     - Embedded relations are returned in an ``_embedded`` section.
-    - Geometry values are converted into a single coordinate reference system
+    - Geometry values are converted into a single coordinate reference system\
       (using ``request.accept_crs``)
     - ``request.response_content_crs`` is filled with the used CRS value.
 

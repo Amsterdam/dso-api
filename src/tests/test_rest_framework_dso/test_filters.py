@@ -4,7 +4,8 @@ import pytest
 from django.db.models import Value
 from django.http import QueryDict
 
-from rest_framework_dso.filters import DSOFilterSet, DSOFilterSetBackend, Wildcard
+from rest_framework_dso.filters import DSOFilterSet, DSOFilterSetBackend
+from rest_framework_dso.filters.lookups import Wildcard
 
 from .models import Category, Movie
 

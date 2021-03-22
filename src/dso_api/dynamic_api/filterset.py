@@ -82,8 +82,8 @@ def filterset_factory(model: Type[DynamicModel]) -> Type[DynamicFilterSet]:
         if isinstance(f, (models.fields.Field, models.ForeignKey))
     }
 
-    filters = generate_relation_filters(model)
-    filters.update(generate_additional_filters(model))
+    filters = _generate_relation_filters(model)
+    filters.update(_generate_additional_filters(model))
 
     # Generate the class
     meta_attrs = {
@@ -94,7 +94,7 @@ def filterset_factory(model: Type[DynamicModel]) -> Type[DynamicFilterSet]:
     return type(f"{model.__name__}FilterSet", (DynamicFilterSet,), {"Meta": meta, **filters})
 
 
-def generate_relation_filters(model: Type[DynamicModel]):  # NoQA
+def _generate_relation_filters(model: Type[DynamicModel]):  # noqa: C901
     """
     Generates additional filters for relations, including sub items.
     """
@@ -154,7 +154,7 @@ def generate_relation_filters(model: Type[DynamicModel]):  # NoQA
     return filters
 
 
-def generate_additional_filters(model: Type[DynamicModel]):
+def _generate_additional_filters(model: Type[DynamicModel]):
     filters = {}
     for filter_name, options in model._table_schema.filters.items():
         try:

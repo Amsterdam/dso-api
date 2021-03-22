@@ -5,9 +5,7 @@ from cachetools.func import ttl_cache
 from django.contrib.auth.models import AnonymousUser, _user_has_perm
 from rest_framework import permissions
 from schematools.contrib.django import models
-from schematools.utils import to_snake_case
-
-from dso_api.dynamic_api.utils import snake_to_camel_case
+from schematools.utils import to_snake_case, toCamelCase
 
 
 @dataclass
@@ -70,7 +68,7 @@ def get_unauthorized_fields(request, model) -> set:
             permission_key = get_permission_key_for_field(model_field)
             if not request.is_authorized_for(*scopes):
                 if not request_has_permission(request=request, perm=permission_key):
-                    unauthorized_fields.add(snake_to_camel_case(model_field.name))
+                    unauthorized_fields.add(toCamelCase(model_field.name))
 
     return unauthorized_fields
 

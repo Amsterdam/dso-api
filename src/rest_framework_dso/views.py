@@ -12,9 +12,8 @@ from rest_framework.serializers import ListSerializer
 from rest_framework.views import exception_handler as drf_exception_handler
 from schematools.types import DatasetTableSchema
 
-from dso_api.lib.exceptions import RemoteAPIException
 from rest_framework_dso import crs, filters, parsers
-from rest_framework_dso.exceptions import PreconditionFailed
+from rest_framework_dso.exceptions import PreconditionFailed, RemoteAPIException
 from rest_framework_dso.pagination import DSOPageNumberPagination
 from rest_framework_dso.response import StreamingResponse
 
@@ -148,7 +147,7 @@ def exception_handler(exc, context):
             "status": int(exc.status_code),
             "instance": request.build_absolute_uri() if request else None,
         }
-        # This merge stategy puts the normal fields first:
+        # This merge strategy puts the normal fields first:
         response.data = {**normalized_fields, **response.data}
         response.data.update(normalized_fields)
         response.status_code = int(exc.status_code)
@@ -226,12 +225,12 @@ class DSOViewMixin:
 
     This adds:
     * HTTP Accept-Crs and HTTP POST Content-Crs support.
-    * Default filter backends in the view for sorting and filtering.
+    * Default filter backends in the view for sorting and filtering.\
       The filtering logic is delegated to a ``filterset_class`` by django-filter.
 
     Usage:
     * Set ``filterset_class`` to enable filtering on fields.
-    * The ``ordering_fields`` can be set on the view as well.
+    * The ``ordering_fields`` can be set on the view as well.\
       By default, it accepts all serializer field names as input.
     """
 

@@ -18,14 +18,8 @@
 # -- Project information -----------------------------------------------------
 
 project = "Amsterdam DSO API"
-copyright = (
-    "2020, Team Dataservices. "
-    "DataPunt, afdeling Onderzoek, Informatie en Statistiek Gemeente Amsterdam."
-)
-author = (
-    "Team Dataservices. "
-    "DataPunt, afdeling Onderzoek, Informatie en Statistiek Gemeente Amsterdam."
-)
+copyright = "2021, Team Data Diensten, Gemeente Amsterdam."
+author = "Team Data Diensten, Gemeente Amsterdam."
 
 # The full version, including alpha/beta/rc tags
 release = "v1"

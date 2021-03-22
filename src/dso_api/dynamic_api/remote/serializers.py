@@ -7,9 +7,8 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 from schematools.types import DatasetFieldSchema, DatasetTableSchema
-from schematools.utils import to_snake_case
+from schematools.utils import to_snake_case, toCamelCase
 
-from dso_api.dynamic_api.utils import snake_to_camel_case
 from rest_framework_dso.fields import DSOGeometryField
 from rest_framework_dso.serializers import DSOListSerializer, DSOSerializer
 
@@ -102,19 +101,19 @@ def _build_declared_fields(
         # create converted field names on the serializer construction.
         # The space replacement is unlikely for a remote field, but kept for consistency.
         safe_field_name = field.name.replace(" ", "_")
-        camel_name = snake_to_camel_case(safe_field_name)
+        camel_name = toCamelCase(safe_field_name)
 
         kwargs = {"required": field.required, "allow_null": not field.required}
         if field.type == "string" and not field.required:
             kwargs["allow_blank"] = True
         if camel_name != field.name:
             kwargs["source"] = field.name
-        declared_fields[camel_name] = remote_field_factory(field, **kwargs)
+        declared_fields[camel_name] = _remote_field_factory(field, **kwargs)
 
     return declared_fields
 
 
-def remote_field_factory(field: DatasetFieldSchema, **kwargs) -> serializers.Field:
+def _remote_field_factory(field: DatasetFieldSchema, **kwargs) -> serializers.Field:
     """Generate the serializer field for a single schema field."""
     type_ = field.type
     # reduce amsterdam schema refs to their fragment

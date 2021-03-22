@@ -39,9 +39,9 @@ from gisserver.exceptions import InvalidParameterValue, PermissionDenied
 from gisserver.features import ComplexFeatureField, FeatureField, FeatureType, ServiceDescription
 from gisserver.views import WFSView
 from schematools.contrib.django.models import Dataset
+from schematools.utils import toCamelCase
 
 from dso_api.dynamic_api import permissions
-from dso_api.dynamic_api.utils import snake_to_camel_case
 from rest_framework_dso import crs
 
 FieldDef = Union[str, FeatureField]
@@ -233,7 +233,7 @@ class DatasetWFSView(WFSView):
         fields = []
         other_geo_fields = []
         for model_field in model._meta.get_fields():
-            if snake_to_camel_case(model_field.name) in unauthorized_fields:
+            if toCamelCase(model_field.name) in unauthorized_fields:
                 continue
 
             if isinstance(model_field, models.ForeignKey):
@@ -284,7 +284,7 @@ class DatasetWFSView(WFSView):
             model_field.name
             for model_field in model._meta.get_fields()  # type: models.Field
             if not model_field.is_relation
-            and snake_to_camel_case(model_field.name) not in unauthorized_fields
+            and toCamelCase(model_field.name) not in unauthorized_fields
             and not isinstance(model_field, GeometryField)
         ]
 
@@ -302,7 +302,7 @@ class DatasetWFSView(WFSView):
             )
             for model_field in model._meta.get_fields()  # type: models.Field
             if not model_field.is_relation
-            and snake_to_camel_case(model_field.name) not in unauthorized_fields
+            and toCamelCase(model_field.name) not in unauthorized_fields
             and not isinstance(model_field, GeometryField)
         ]
 
