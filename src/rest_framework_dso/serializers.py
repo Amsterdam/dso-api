@@ -143,6 +143,21 @@ class DSOListSerializer(_SideloadMixin, serializers.ListSerializer):
             # Normal behavior
             return ReturnList(ret, serializer=self)
 
+
+class DSOModelListSerializer(DSOListSerializer):
+    """Perform object embedding for lists.
+
+    This subclass implements the ORM-specific bits that the :class:`DSOListSerializer`
+    can't provide.
+
+    This should be used together with the DSO...Pagination class when results are paginated.
+    It outputs the ``_embedded`` section for the HAL-JSON spec:
+    https://tools.ietf.org/html/draft-kelly-json-hal-08
+    """
+
+    # Fetcher function to be overridden by subclasses if needed
+    id_based_fetcher = None
+
     def _get_embedded_serializer(self, field, **kwargs):
         serializer = field.get_serializer(self.child, many=False, **kwargs)
 
@@ -430,21 +445,6 @@ class DSOSerializer(_SideloadMixin, serializers.Serializer):
                 return CRS.from_srid(geo_value.srid)
 
         return None
-
-
-class DSOModelListSerializer(DSOListSerializer):
-    """Perform object embedding for lists.
-
-    This subclass implements the ORM-specific bits that the :class:`DSOListSerializer`
-    can't provide.
-
-    This should be used together with the DSO...Pagination class when results are paginated.
-    It outputs the ``_embedded`` section for the HAL-JSON spec:
-    https://tools.ietf.org/html/draft-kelly-json-hal-08
-    """
-
-    # Fetcher function to be overridden by subclasses if needed
-    id_based_fetcher = None
 
 
 class DSOModelSerializer(DSOSerializer, serializers.HyperlinkedModelSerializer):
