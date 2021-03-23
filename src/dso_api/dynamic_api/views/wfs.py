@@ -1,11 +1,9 @@
-"""WFS server layer for dynamic models.
+"""The WFS views expose all geographic datasets as WFS endpoints and feature types.
 
-This file exposes all geographic datasets as WFS endpoints and feature types.
-
-The main logic of the WFS server can be found in the
-`django-gisserver <https://github.com/Amsterdam/django-gisserver>`_
-package. By overriding it's WFSView class, our dynamic models can be introduced
-into the django-gisserver logic. Specifically, the following happens:
+The main logic of the WFS server can be found in the `django-gisserver`_
+package. By overriding it's :class:`~gisserver.views.WFSView` class,
+our dynamic models can be introduced into the `django-gisserver`_ logic.
+Specifically, the following happens:
 
 * The ``FeatureType`` class is overwritten to implement permission checks.
 * The ``WFSView.get_feature_types()`` dynamically returns the feature types
@@ -22,6 +20,8 @@ different ``FeatureType`` definition in such case.
 By making the dataset name part of the view ``kwargs``,
 each individual dataset becomes a separate WFS server endpoint.
 The models of that dataset become WFS feature types.
+
+.. _django-gisserver: https://github.com/Amsterdam/django-gisserver
 """
 from __future__ import annotations
 
@@ -58,7 +58,9 @@ class AuthenticatedFeatureType(FeatureType):
         self.wfs_view = wfs_view
 
     def check_permissions(self, request):
-        """Relay permission check to the view"""
+        """Perform the access check for a particular request.
+        This retrieves the accessed models, and relays further processing in the view.
+        """
         models = [self.model]
 
         # If the ?expand=.. parameter is used, check the type definition for
@@ -72,7 +74,9 @@ class AuthenticatedFeatureType(FeatureType):
 
 
 class DatasetWFSIndexView(TemplateView):
-    """An overview of the WFS services."""
+    """An overview of the available WFS endpoints.
+    This makes sure a request to ``/wfs/`` renders a reasonable index page.
+    """
 
     template_name = "dso_api/dynamic_api/wfs_index.html"
 
@@ -103,7 +107,16 @@ class DatasetWFSIndexView(TemplateView):
 class DatasetWFSView(WFSView):
     """A WFS view for a single dataset.
 
-    This view does not need a factory-logic as we don't need named-integration
+    This extends the logic of django-gisserver to expose the dynamically generated
+    as WFS :class:`~gisserver.features.FeatureType` objects. When the
+    ``?extend=..``/``?expand=..`` parameters are given, a different set of feature types
+    is generated so the WFS response contains complex nested objects.
+
+    Permission checks happen in 2 levels. First, only the accessible fields are exposed
+    in the feature types. Second, the :class:`AuthenticatedFeatureType` class extends
+    the feature type logic to add permission-checking for table-level access.
+
+    This view is not constructed with factory-logic as we don't need named-integration
     in the URLConf. Instead, we can resolve the 'dataset' via the URL kwargs.
     """
 

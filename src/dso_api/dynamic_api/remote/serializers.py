@@ -1,4 +1,8 @@
-"""Generate a serializer from a (remote) source"""
+"""The serializer logic extends from the
+:class:`~rest_framework_dso.serializer.DSOSerializer`
+and not :class:`~rest_framework_dso.serializer.DSOModelSerializer`.
+The serializers mainly make sure the response is outputted in a DSO-compatible format.
+"""
 from typing import Dict, List
 from urllib.parse import urlparse
 
@@ -31,7 +35,11 @@ JSON_TYPE_TO_DRF = {
 
 
 class RemoteListSerializer(DSOListSerializer):
-    """ListSerializer that takes remote data"""
+    """ListSerializer that takes remote data.
+
+    This is automatically used when ``many=True``
+    is used on :class:`RemoteSerializer` construction.
+    """
 
     @property
     def expanded_fields(self):

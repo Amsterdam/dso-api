@@ -1,3 +1,7 @@
+"""The remote views retrieve data from other REST API endpoints.
+Currently it mainly performs authorization, data retrieval, and schema validation.
+The endpoint is queried with raw urllib3 logic, to avoid the overhead of the requests library.
+"""
 import logging
 from typing import Type, Union
 from urllib.parse import urlencode, urljoin
@@ -43,7 +47,10 @@ def _del_none(d):
 
 
 class RemoteViewSet(DSOViewMixin, ViewSet):
-    """Views for a remote serializer."""
+    """Views for a remote serializer.
+
+    This viewset retrieves the data from a remote endpoint.
+    """
 
     serializer_class = None
     pagination_class = None

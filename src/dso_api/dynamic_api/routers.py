@@ -1,3 +1,25 @@
+"""The router logic is the core of the dynamic API creation.
+
+When the call to :func:`~DynamicRouter.initialize` is made,
+all viewsets, models, serializers, filtersets and so on are created.
+This fills the complete router so calling :attr:`router.urls <DynamicRouter.urls>`
+returns all endpoints as if they were hard-coded. The router can be used in the ``urls.py`` file
+like:
+
+.. code-block:: python
+
+    router = DynamicRouter()
+    router.initialize()
+
+    urlpatterns = [
+        path("/some/path/", include(router.urls)),
+    ]
+
+The :func:`~DynamicRouter.initialize` function is also responsible for calling
+the :func:`~schematools.contrib.django.factories.model_factory`,
+:func:`~dso_api.dynamic_api.views.viewset_factory` and
+:func:`~dso_api.dynamic_api.remote.remote_viewset_factory` functions.
+"""
 from __future__ import annotations
 
 import logging
@@ -36,10 +58,21 @@ class DynamicRouter(routers.DefaultRouter):
         self.static_routes = []
 
     def get_api_root_view(self, api_urls=None):
+        """Show the OpenAPI specification as root view."""
         return get_openapi_json_view()
 
     def initialize(self):
-        """Initialize all dynamic routes on startup."""
+        """Initialize all dynamic routes on startup.
+
+        The initialization is skipped when
+        :ref:`INITIALIZE_DYNAMIC_VIEWSETS <INITIALIZE_DYNAMIC_VIEWSETS>` is set,
+        or when the meta tables are not found in the database (e.g. using a first migrate).
+
+        The initialization calls
+        the :func:`~schematools.contrib.django.factories.model_factory`,
+        :func:`~dso_api.dynamic_api.views.viewset_factory` and
+        :func:`~dso_api.dynamic_api.remote.remote_viewset_factory` functions.
+        """
         if not settings.INITIALIZE_DYNAMIC_VIEWSETS:
             return []
 
@@ -51,7 +84,7 @@ class DynamicRouter(routers.DefaultRouter):
         self._initialize_viewsets()
 
     def register(self, prefix, viewset, basename=None):
-        """Preserve any manually added routes on reloading"""
+        """Overwritten function to preserve any manually added routes on reloading."""
         super().register(prefix, viewset, basename=basename)
         self.static_routes.append(self.registry[-1])
 

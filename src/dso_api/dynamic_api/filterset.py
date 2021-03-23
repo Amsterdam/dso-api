@@ -1,6 +1,9 @@
 """
-Creating filters for the dynamic model fields.
-This uses the django-filter logic to process the GET parameters.
+Dynamically generated filters for dynamic model fields.
+
+The generic DSO logic is provided by :mod:`rest_framework_dso.filters`.
+Both files build on top of the core logic from *django-filter*.
+This file provides the translation and required bits for dynamic models.
 """
 import logging
 import re

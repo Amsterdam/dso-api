@@ -1,3 +1,8 @@
+"""Improved input parsing.
+
+This supports the DSO ``Content-Crs`` HTTP header, so HTTP POST requests
+can be parsed with the desired coordinate projection.
+"""
 from rest_framework.exceptions import NotAcceptable
 from rest_framework.parsers import JSONParser
 
@@ -7,12 +12,16 @@ from .renderers import HALJSONRenderer
 
 
 class GeoDict(dict):
+    """A wrapper to provide the CRS data to the ``request.data``."""
+
     def __init__(self, data: dict, crs: CRS):
         super().__init__(data)
         self.crs = crs
 
 
 class GeoList(list):
+    """A wrapper to provide the CRS data to the ``request.data``."""
+
     def __init__(self, data: list, crs: CRS):
         super().__init__(data)
         self.crs = crs

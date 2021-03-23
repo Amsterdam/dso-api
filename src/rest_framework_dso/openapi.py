@@ -1,4 +1,10 @@
-"""Improve the OpenAPI schema output """
+"""Improvements for the OpenAPI schema output.
+
+While `django-rest-framework <https://www.django-rest-framework.org/>`_ provides OpenAPI support,
+it's very limited. That functionality is greatly extended by the use
+of `drf-spectacular <https://drf-spectacular.readthedocs.io/>`_ and the classes in this module.
+This also inludes exposing geometery type classes in the OpenAPI schema.
+"""
 import logging
 import re
 from typing import List
@@ -33,10 +39,10 @@ GEOM_TYPES_TO_GEOJSON = {x.upper(): x for x in GEOJSON_TYPES}
 
 
 class DSOSchemaGenerator(openapi.SchemaGenerator):
-    """Extended OpenAPI schema generator, that includes:
+    """Extended OpenAPI schema generator, that provides:
 
-    - GeoJSON components
-    - Override OpenAPI parts
+    * Override OpenAPI parts (via: :attr:`schema_overrides`)
+    * GeoJSON components (added to ``components.schemas``).
     """
 
     #: Allow to override the schema
@@ -215,7 +221,9 @@ class DSOAutoSchema(openapi.AutoSchema):
     """Default schema for API views that don't define a ``schema`` attribute."""
 
     def get_tags(self, path, method) -> List[str]:
-        """Auto-generate tags based on the path"""
+        """Auto-generate tags based on the path.
+        This also skips a version number endpoint prefix.
+        """
         tokenized_path = self._tokenize_path(path)
 
         if RE_VERSION.match(tokenized_path[0]):

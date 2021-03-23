@@ -1,13 +1,14 @@
-"""Reference implementation for DSO-compliant API's in Python with Django-Rest-Framework.
+"""This package holds a reference implementation for DSO-compliant API's in Python
+using Django-Rest-Framework.
 
-DSO = Digitaal Stelsel Omgevingswet.
-This is a Dutch standard for API's for the government in The Netherlands:
-https://aandeslagmetdeomgevingswet.nl/digitaal-stelsel/aansluiten/standaarden/api-en-uri-strategie/
+.. note::
+    DSO = Digitaal Stelsel Omgevingswet.
+    This is a Dutch standard for API's for the government in The Netherlands:
+    https://aandeslagmetdeomgevingswet.nl/digitaal-stelsel/aansluiten/standaarden/api-en-uri-strategie/
+    This is also updated using the "NL Designrules":
+    https://docs.geostandaarden.nl/api/API-Strategie-ext/
 
-Which is updated as "NL Designrules":
-https://docs.geostandaarden.nl/api/API-Strategie-ext/
-
-Implemented:
+Implemented bits:
 
 * HAL links ``{"_links": {"self": {"href": ..., "title": ...}}}``
 * The ``?_expand=true`` option to sideload all related objects.
@@ -22,20 +23,8 @@ Additionally:
 * We support ``?_pageSize=...`` to change the REST page size, with ``?page_size=..`` as fallback.
 * We support ``?_format=..`` to request other output formats\
   (e.g. ``json``, ``geojson`` or ``csv``).
-* To write fields as "camelCase" either define the serializer as such,
-  or use djangorestframework-camel-case which rewrites the output.
 
-Not implemented (yet):
-
-* Subfields: ``?_fields=field1.subfield``
-* Wildcard search with ``?_find=...``
-* Queries with GeoJSON POST requests.
-
-Extra recommendations:
-
-* Use base64-encoded UUID's (=22 characters).
-
-Mandatory settings:
+Mandatory settings to activate these classes by default:
 
 .. code-block:: python
 
@@ -57,4 +46,7 @@ Mandatory settings:
         COERCE_DECIMAL_TO_STRING=True,
         URL_FORMAT_OVERRIDE="_format",  # use ?_format=.. instead of ?format=..
     )
+
+To write fields as "camelCase" either define the serializer as such,
+or use *djangorestframework-camel-case* which rewrites the output.
 """

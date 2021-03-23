@@ -1,3 +1,7 @@
+"""The output rendering for the DSO library.
+
+This makes sure the response gets the desired ``application/hal+json``
+"""
 import inspect
 import itertools
 from io import BytesIO, StringIO

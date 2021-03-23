@@ -1,13 +1,14 @@
-"""Rest API views, based on Django-Rest-Framework.
+"""The REST API views are based on Django-Rest-Framework.
 
-These viewsets handle the main API logic of the server.
-The views are dynamically generated from Amsterdam Schema files,
+The viewsets handle the main API logic of the server.
+The relevant subclasses are dynamically generated from Amsterdam Schema files,
 just like the rest of the objects (such as serializers, filtersets and models).
 
-To keep the code readable, all logic is placed in a regular DRF-style viewset
-(namely :class:`DynamicApiViewSet`). The :func:`viewset_factory` function then
-dynamically generates a subclass for the specific model/endpoint. The same
-two-step logic can be found in the serializer and model layer of this application.
+To maintain readable code for the dynamic viewsets, all logic can be found in a normal Python
+class (namely the :class:`~dso_api.dynamic_api.views.DynamicApiViewSet` base class).
+The :func:`~dso_api.dynamic_api.views.viewset_factory` function then generates a subclass
+for the specific model/endpoint. The same two-step logic can be found in the serializer
+and model layer of this application.
 """
 from __future__ import annotations
 
@@ -106,23 +107,28 @@ class DynamicApiViewSet(
 ):
     """Viewset for an API, that is DSO-compatible and dynamically generated.
     Each dynamically generated model in this server will receive a viewset.
+
+    Most of the DSO logic is implemented in the base class;
+    :class:`~rest_framework_dso.views.DSOViewMixin`.
     """
 
+    #: The dataset ID is filled in by the factory
     dataset_id = None
+    #: The table ID is filled in by the factory
     table_id = None
-
-    #: Make sure composed keys like (112740.024|487843.078) are allowed.
-    #: The DefaultRouter won't allow '.' in URLs because it's used as format-type.
-    lookup_value_regex = r"[^/]+"
-
-    #: Define the model class to use (e.g. in .as_view() call / subclass)
+    #: The model is filled in by the factory
     model: Type[DynamicModel] = None
 
-    #: Custom permission that checks amsterdam schema auth settings
+    # Make sure composed keys like (112740.024|487843.078) are allowed.
+    # The DefaultRouter won't allow '.' in URLs because it's used as format-type.
+    lookup_value_regex = r"[^/]+"
+
+    # Custom permission that checks amsterdam schema auth settings
     permission_classes = [permissions.HasOAuth2Scopes]
 
     @property
     def paginator(self):
+        """The paginator is disabled when a output format supports unlimited sizes."""
         if (
             self.request.accepted_renderer.unlimited_page_size
             and self.pagination_class.page_size_query_param not in self.request.GET
@@ -183,7 +189,26 @@ def _get_ordering_fields(
 
 
 def viewset_factory(model: Type[DynamicModel]) -> Type[DynamicApiViewSet]:
-    """Generate the viewset for a schema."""
+    """Generate the viewset for a dynamic model.
+
+    This generates a class in-memory, as if the following code was written:
+
+    .. code-block:: python
+
+        class CustomViewSet(DynamicApiViewSet):
+            dataset_id = ...
+            table_id = ...
+            model = ...
+
+            queryset = model.objects.all()
+            serializer_class = serializer_factory(model)
+            filterset_class = filterset_factory(model)
+            ordering_fields = ...
+
+    Internally, the :func:`~dso_api.dynamic_api.serializers.serializer_factory`,
+    and :func:`~dso_api.dynamic_api.filterset.filterset_factory` functions are called
+    to generate those classes.
+    """
     serializer_class = serializers.serializer_factory(model)
     filterset_class = filterset.filterset_factory(model)
     ordering_fields = _get_ordering_fields(serializer_class)

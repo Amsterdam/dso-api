@@ -1,3 +1,11 @@
+"""The data serialization for dynamic models.
+
+The serializers in this package build on top of the :mod:`rest_framework_dso.serializers`,
+to integrate the dynamic construction on top of the DSO serializer format.
+Other application-specifice logic is also introduced here as well,
+e.g. logic that depends on Amsterdam Schema policies. Such logic is *not* implemented
+in the DSO base classes as those classes are completely generic.
+"""
 from __future__ import annotations
 
 import re
@@ -115,7 +123,21 @@ class _RelatedSummaryField(Field):
 
 
 class DynamicSerializer(DSOModelSerializer):
-    """Base class for all generic serializers of this package."""
+    """The logic for dynamically generated serializers.
+
+    Most DSO-related logic is found in the base class
+    :class:`~rest_framework_dso.serializers.DSOModelSerializer`.
+    This class adds more application-specific logic to the serializer such as:
+
+    * Logic that depends on Amsterdam Schema data.
+    * Permissions based on the schema.
+    * Temporal relations (ideally in DSO, but highly dependent on schema data).
+    * The ``_links`` section logic (depends on knowledge of temporal relations).
+
+    A part of the serializer construction happens here
+    (the Django model field -> serializer field translation).
+    The remaining part happens in :func:`serializer_factory`.
+    """
 
     serializer_url_field = DynamicLinksField
     serializer_field_mapping = {
@@ -140,6 +162,7 @@ class DynamicSerializer(DSOModelSerializer):
         return self.context["request"]
 
     def get_fields(self):
+        """Remove fields that shouldn't be part of the response."""
         fields = super().get_fields()
         request = self.get_request()
 
@@ -299,13 +322,14 @@ class DynamicSerializer(DSOModelSerializer):
 
 
 class DynamicBodySerializer(DynamicSerializer):
-    """Following DSO/HAL guidelines, objects are serialized with _links and _embedded fields,
-    but without relational fields at the top level. The relational fields appear either in
-    _links or in expanded form in _embedded; depending on the _expand and _expandScope URL
-    parameters
+    """This subclass of the dynamic serializer only exposes the non-relational fields.
+
+    Ideally, this should be obsolete as the serializer_factory() can avoid
+    generating those fields in the first place.
     """
 
     def get_fields(self):
+        """Remove fields that shouldn't be in the body."""
         fields = super().get_fields()
         hal_fields = self._get_hal_field_names(fields)
         for hal_field in hal_fields:
@@ -338,11 +362,13 @@ class DynamicBodySerializer(DynamicSerializer):
 
 
 class DynamicLinksSerializer(DynamicSerializer):
-    """The serializer for the _links field. Following DSO/HAL guidelines, it contains "self",
-    "schema", and all relational fields that have not been expanded. This depends on the
-    _expand and _expandScope URL parameters. When expanded, they move to "_embedded".
-    In case of a list-view, keep the relational fields. The resources in "_embedded" are
-    grouped together for deduplication purposes and this will allow the user to know which
+    """The serializer for the ``_links`` field.
+
+    Following DSO/HAL guidelines, it contains "self", "schema", and all relational fields
+    that have not been expanded. This depends on the ``_expand`` and ``_expandScope`` URL
+    parameters. When expanded, they move to ``_embedded``. In case of a list-view,
+    keep the relational fields. The resources in ``_embedded`` are grouped together
+    for deduplication purposes and this will allow the user to know which
     embed belongs to which object.
     """
 
@@ -397,6 +423,7 @@ class DynamicLinksSerializer(DynamicSerializer):
 def get_view_name(model: Type[DynamicModel], suffix: str):
     """Return the URL pattern for a dynamically generated model.
 
+    :param model: The dynamic model.
     :param suffix: This can be "detail" or "list".
     """
     dataset_id = to_snake_case(model.get_dataset_id())
@@ -409,8 +436,21 @@ def serializer_factory(
     model: Type[DynamicModel], depth: int = 0, flat: bool = False
 ) -> Type[DynamicSerializer]:
     """Generate the DRF serializer class for a specific dataset model.
-    It can generate the serializer for both the body as well as for the _links field,
-    depending on links_serializer being False or True."""
+
+    Internally, this creates all serializer fields based on the metadata
+    from the model, and underlying schema definition. It also generates
+    a secondary serializer for the ``_links`` field where all relations are exposed.
+
+    Following DSO/HAL guidelines, objects are serialized with ``_links`` and ``_embedded``
+    fields, but without relational fields at the top level. The relational fields appear
+    either in ``_links`` or in expanded form in ``_embedded``;
+    depending on the ``_expand`` and ``_expandScope`` URL parameters.
+
+    :param model: The dynamic model.
+    :param depth: Matches the depth parameter for the serializer ``Meta`` field.
+      This allows Django Rest Framework to auto-expand relations or omit them.
+    :param flat: When true, embedded relations will not be generated.
+    """
     if isinstance(model, str):
         raise ImproperlyConfigured(f"Model {model} could not be resolved.")
 

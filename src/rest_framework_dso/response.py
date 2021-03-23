@@ -1,3 +1,17 @@
+"""Streaming rendering support on top of Django-Rest-Framework.
+
+Django has the internal support for streaming responses, but REST Framework does not.
+This module bridges that feature into the response format that Django-Rest-Framework's
+rendering classes need.
+
+This generic :class:`StreamingResponse` class allows responses to be submitted as streaming.
+A streaming response can submit large amounts of data without consuming too much memory.
+Each time a bit of the response is generated, it's immediately written to the client.
+
+The rendered data also needs to be generated on consumption to have the full benefits of
+streaming. The :class:`~rest_framework_dso.serializers.DSOListSerializer` achieves this
+by returning the results as a Python generator instead of a pre-rendered list.
+"""
 from http.client import responses
 from inspect import isgenerator
 
@@ -23,6 +37,7 @@ class StreamingResponse(StreamingHttpResponse):
         exception=False,
         content_type=None,
     ):
+        """Init parameters are similar to the DRF Response class."""
         # Note that StreamingHttpResponse.__init__() sets .streaming_content
         super().__init__(self._read_rendered_content(), status=status)
 
@@ -38,7 +53,9 @@ class StreamingResponse(StreamingHttpResponse):
 
     @classmethod
     def from_response(cls, response: Response):
-        """Convert a regular DRF Response into this streaming response."""
+        """Convert a regular DRF Response into this streaming response.
+        This is to be called from the ``APIView.finalize_response()`` function.
+        """
         content_type = response.content_type
 
         # Make sure the content-type is properly set. Normally this happens inside

@@ -12,15 +12,18 @@ from .filtersets import DSOFilterSet
 class DSOFilterSetBackend(DjangoFilterBackend):
     """DSF fields filter.
 
-    This loads the filterset logic of django-filter.
+    This loads the filterset logic of django-filter into the
+    REST Framework :class:`~rest_framework.generics.GenericAPIView`.
+    The real work is performed in the custom :class:`~rest_framework_dso.filters.DSOFilterSet`
+    subclass that is configured for that particular view.
+
     Usage in views::
 
         class View(GenericAPIView):
             filter_backends = [filters.DSOFilterSetBackend]
             filterset_class = ... # subclass of DSOFilterSet
 
-    The ``filterset_class`` defines how each querystring field is parsed
-    and processed.
+    The ``filterset_class`` defines how each querystring field is parsed and processed.
     """
 
     filterset_base = DSOFilterSet
@@ -81,14 +84,15 @@ class DSOFilterSetBackend(DjangoFilterBackend):
 
 class DSOOrderingFilter(OrderingFilter):
     """DRF Ordering filter, following the DSO spec.
-    Usage in views::
-
-        class View(GenericAPIView):
-            filter_backends = [filters.DSOOrderingFilter]
 
     This adds an ``?_sort=<fieldname>,-<desc-fieldname>`` option to the view.
     On the view, an ``view.ordering_fields`` attribute may limit which fields
     can be used in the sorting. By default, it's all serializer fields.
+
+    Usage in views::
+
+        class View(GenericAPIView):
+            filter_backends = [filters.DSOOrderingFilter]
     """
 
     ordering_param = "_sort"

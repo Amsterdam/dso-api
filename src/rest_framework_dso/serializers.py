@@ -1,3 +1,23 @@
+"""The serializers implement additional DSO responses features.
+
+Most features can be implemented by the following means:
+
+1. Having the proper set of "fields" loaded in the serializer.
+   These field classes determine the format of individual data types.
+2. Overriding ``to_representation()`` where needed.
+
+There are 2 layers of serializers, just like standard DRF:
+
+* :class:`DSOSerializer` and it's cousin :class:`DSOListSerializer` that's used for ``many=True``.
+* :class:`DSOModelSerializer` and :class:`DSOModelListSerializer`.
+
+The non-model serializers implement the bits that are not dependant on database ORM logic
+like models or querysets. These serializers are therefore more limited in functionality,
+but useful to implement DSO-style responses for other data sources (e.g. remote API responses).
+
+The model-serializers depend on the ORM logic, and support features like object embedding
+and constructing serializer fields based on the model field metadata.
+"""
 import inspect
 from collections import OrderedDict
 from typing import Dict, List, Optional, Union, cast
@@ -26,7 +46,7 @@ class _SideloadMixin:
     """Handling ?_expand / ?_expandScope parameter.
 
     This is only a separate mixin because the parameter needs to be handled
-    in 2 separate classes: `DSOListSerializer` and the regular `DSOSerializer`.
+    in 2 separate classes: :class:`DSOListSerializer` and the regular :class:`DSOSerializer`.
     """
 
     expand_all_param = "_expand"
@@ -85,6 +105,7 @@ class DSOListSerializer(_SideloadMixin, serializers.ListSerializer):
     requires_context = True
 
     def __init__(self, *args, results_field=None, **kwargs):
+        """Allow to override the ``results_field`` on construction"""
         super().__init__(*args, **kwargs)
         if results_field:
             self.results_field = results_field
@@ -208,7 +229,14 @@ class DSOSerializer(_SideloadMixin, serializers.Serializer):
     """Basic non-model serializer logic.
 
     This class implements all logic that can be used by all serializers,
-    including those which are not based on database models.
+    including those which are not based on database models:
+
+    * Geometry values are converted into a single coordinate reference system.
+    * The ``?_fields`` parameter can limit the returned fields.
+    * ``request.response_content_crs`` is filled with the used CRS value.
+
+    The geometry values are transformed using the :class:`~rest_framework_dso.crs.CRS`
+    object found in ``request.accept_crs``.
     """
 
     # Requires context in order to limit fields in representation.
@@ -361,7 +389,11 @@ class DSOSerializer(_SideloadMixin, serializers.Serializer):
         ]
 
     def to_representation(self, instance):
-        """Check whether the geofields need to be transformed."""
+        """Check whether the geofields need to be transformed.
+
+        This method also sets ``request.response_content_crs`` so the response rendering
+        can tell which Coordinate Reference System is used by all geometry fields.
+        """
         if self._geometry_fields:
             request = self.context["request"]
             accept_crs: CRS = request.accept_crs  # Mandatory for DSO!
@@ -403,6 +435,9 @@ class DSOSerializer(_SideloadMixin, serializers.Serializer):
 class DSOModelListSerializer(DSOListSerializer):
     """Perform object embedding for lists.
 
+    This subclass implements the ORM-specific bits that the :class:`DSOListSerializer`
+    can't provide.
+
     This should be used together with the DSO...Pagination class when results are paginated.
     It outputs the ``_embedded`` section for the HAL-JSON spec:
     https://tools.ietf.org/html/draft-kelly-json-hal-08
@@ -413,14 +448,15 @@ class DSOModelListSerializer(DSOListSerializer):
 
 
 class DSOModelSerializer(DSOSerializer, serializers.HyperlinkedModelSerializer):
-    """DSO-compliant serializer.
+    """DSO-compliant serializer for Django models.
+
+    This serializer can be used inside a list (by :class:`DSOModelListSerializer`
+    when ``many=True`` is given), or standalone for a detail page.
 
     This supports the following extra's:
-    - self-url is generated in a ``_links`` section.
-    - Embedded relations are returned in an ``_embedded`` section.
-    - Geometry values are converted into a single coordinate reference system\
-      (using ``request.accept_crs``)
-    - ``request.response_content_crs`` is filled with the used CRS value.
+
+    * The self-URL is generated in a ``_links`` section.
+    * Embedded relations are returned in an ``_embedded`` section.
 
     To use the embedding feature, include an ``EmbeddedField`` field in the class::
 
@@ -431,7 +467,7 @@ class DSOModelSerializer(DSOSerializer, serializers.HyperlinkedModelSerializer):
                 model = ...
                 fields = [...]
 
-    The embedded support works on the ``ForeignKey`` field so far.
+    The embedded support works on ``ForeignKey`` fields.
     """
 
     _default_list_serializer_class = DSOModelListSerializer
@@ -448,10 +484,13 @@ class DSOModelSerializer(DSOSerializer, serializers.HyperlinkedModelSerializer):
         gis_models.GeometryCollectionField: DSOGeometryField,
     }
 
+    #: Define the field name inside the URL object.
     url_field_name = "self"
+
+    #: Define the object that renders the object URL (e.g. ``_links``).
     serializer_url_field = LinksField
 
-    # Fetcher function to be overridden by subclasses if needed
+    #: Fetcher function for embedded objects, can be redefined by subclasses.
     id_based_fetcher = None
 
     def _include_embedded(self):
@@ -469,6 +508,11 @@ class DSOModelSerializer(DSOSerializer, serializers.HyperlinkedModelSerializer):
         return ret
 
     def _get_expand(self, instance, expanded_fields):
+        """Generate the expand section for a detail page.
+
+        This reuses the machinery for a list processing,
+        but immediately fetches the results as these are inlined in the detail object.
+        """
         expanded = {}
         renderer = self.context["request"].accepted_renderer
 

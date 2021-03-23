@@ -1,3 +1,7 @@
+"""Extensions for the OpenAPI schema generator, that provides application-specific descriptions.
+
+The main logic can be found in :mod:`rest_framework_dso.openapi`.
+"""
 from django.conf import settings
 from rest_framework import permissions, renderers
 from rest_framework.schemas import get_schema_view
@@ -75,8 +79,10 @@ def _get_openapi_view(renderer_classes=None):
 
 
 def get_openapi_json_view():
+    """Provide the OpenAPI view, which renders as JSON."""
     return _get_openapi_view(renderer_classes=[renderers.JSONOpenAPIRenderer])
 
 
 def get_openapi_yaml_view():
+    """Provide the OpenAPI view, which renders as YAML."""
     return _get_openapi_view(renderer_classes=[renderers.OpenAPIRenderer])

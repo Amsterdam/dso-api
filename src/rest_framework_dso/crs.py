@@ -1,6 +1,9 @@
-"""Expose common projections for Dutch GIS systems
+"""This expose common projections for Dutch GIS systems.
 
-NOTE: the CRS class should be imported when publishing this as a separate library.
+.. note:
+   Currently this package just imports the :class:`CRS` and :attr:`WGS84` objects
+   from *django-gisserver* pretending that they exist here.
+   This needs to be copied when publishing :mod:`rest_framework_dso` as a separate library.
 """
 from gisserver.geometries import CRS, WGS84
 
@@ -16,10 +19,21 @@ __all__ = [
 ]
 
 # Common projections for Dutch GIS systems:
-RD_NEW = CRS.from_string("EPSG:28992")  # Amersfoort / RD New
-WEB_MERCATOR = CRS.from_string("EPSG:3857")  # Spherical Mercator (Google Maps, ...)
-ETRS89 = CRS.from_string("EPSG:4258")  # European Terrestrial Reference System 1989
 
+#: Amersfoort / RD New
+RD_NEW = CRS.from_string("EPSG:28992")
+
+#: Spherical Mercator (Google Maps, ...)
+WEB_MERCATOR = CRS.from_string("EPSG:3857")
+
+#: European Terrestrial Reference System 1989
+ETRS89 = CRS.from_string("EPSG:4258")
+
+#: The default suggested CRS (e.g for use in WFS)
 DEFAULT_CRS = RD_NEW
+
+#: Other suggested CRS's (e.g for use in WFS)
 OTHER_CRS = [WGS84, WEB_MERCATOR, ETRS89]
+
+#: All coordinate reference systems exposed by this file.
 ALL_CRS = set([DEFAULT_CRS] + OTHER_CRS)

@@ -20,7 +20,8 @@ from .filters import (
 class DSOFilterSet(FilterSet):
     """Base class to create filter sets.
 
-    The 'FILTER_DEFAULTS' field defines how fields are constructed.
+    The ``FILTER_DEFAULTS`` attribute defines how fields are constructed;
+    it translates the Django model fields to proper filter class.
     Usage in views::
 
         class MyFilterSet(DSOFilterSetBackend):
