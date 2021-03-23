@@ -1,5 +1,6 @@
 """Improve the OpenAPI schema output """
 import logging
+import re
 from typing import List
 
 from django.core.exceptions import FieldDoesNotExist
@@ -18,6 +19,7 @@ logger = logging.getLogger(__name__)
 
 __all__ = ["DSOSchemaGenerator", "DSOAutoSchema"]
 
+RE_VERSION = re.compile(r"^v?\d+(\.\d+)?$")
 GEOS_TO_GEOJSON = {}
 GEOJSON_TYPES = [
     "Point",
@@ -216,7 +218,7 @@ class DSOAutoSchema(openapi.AutoSchema):
         """Auto-generate tags based on the path"""
         tokenized_path = self._tokenize_path(path)
 
-        if tokenized_path[0] in {"v1", "1.0"}:
+        if RE_VERSION.match(tokenized_path[0]):
             # Skip a version number in the path
             return tokenized_path[1:2]
         else:
