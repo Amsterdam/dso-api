@@ -23,7 +23,7 @@ the :func:`~schematools.contrib.django.factories.model_factory`,
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Dict, List, Type
+from typing import TYPE_CHECKING, Dict, Iterable, List, Type
 
 from django.apps import apps
 from django.conf import settings
@@ -90,9 +90,14 @@ class DynamicRouter(routers.DefaultRouter):
 
     def _initialize_viewsets(self) -> List[Type[DynamicModel]]:
         """Build all viewsets, serializers, models and URL routes."""
-        # Generate new viewsets for everything
-        dataset_routes, generated_models = self._build_db_viewsets()
-        remote_routes = self._build_remote_viewsets()
+        # Generate new viewsets for dynamic models
+        db_datasets = self.filter_datasets(Dataset.objects.db_enabled())
+        generated_models = self._build_db_models(db_datasets)
+        dataset_routes = self._build_db_viewsets(db_datasets)
+
+        # Same for remote API's
+        api_datasets = self.filter_datasets(Dataset.objects.endpoint_enabled())
+        remote_routes = self._build_remote_viewsets(api_datasets)
 
         # Atomically copy the new viewset registrations
         self.registry = self.static_routes + dataset_routes + remote_routes
@@ -103,13 +108,9 @@ class DynamicRouter(routers.DefaultRouter):
 
         return generated_models
 
-    def _build_db_viewsets(self):
-        """Initialize viewsets that are linked to Django database models."""
-        tmp_router = routers.SimpleRouter()
+    def _build_db_models(self, db_datasets: Iterable[Dataset]) -> List[Type[DynamicModel]]:
+        """Generate the Django models based on the dataset definitions."""
         generated_models = []
-        datasets = {}
-
-        db_datasets = self.filter_datasets(Dataset.objects.db_enabled())
 
         # Because dataset are related, we need to 'prewarm'
         # the datatasets cache (in schematools)
@@ -118,7 +119,6 @@ class DynamicRouter(routers.DefaultRouter):
 
         for dataset in db_datasets:  # type: Dataset
             dataset_id = dataset.schema.id  # not dataset.name!
-            datasets[dataset_id] = dataset
             new_models = {}
 
             for model in dataset.create_models():
@@ -132,7 +132,15 @@ class DynamicRouter(routers.DefaultRouter):
                     new_models[model._meta.model_name] = model
 
             self.all_models[dataset_id] = new_models
+
             generated_models.extend(new_models.values())
+
+        return generated_models
+
+    def _build_db_viewsets(self, db_datasets: Iterable[Dataset]):
+        """Initialize viewsets that are linked to Django database models."""
+        tmp_router = routers.SimpleRouter()
+        db_datasets = {dataset.schema.id: dataset for dataset in db_datasets}
 
         # Generate views now that all models have been created.
         # This makes sure the 'to' field is resolved to an actual model class.
@@ -143,7 +151,7 @@ class DynamicRouter(routers.DefaultRouter):
                     continue
 
                 dataset_id = model.get_dataset_id()
-                dataset = datasets[dataset_id]
+                dataset = db_datasets[dataset_id]
 
                 # Determine the URL prefix for the model
                 url_prefix = self.make_url(dataset.url_prefix, dataset_id, model.get_table_id())
@@ -157,13 +165,13 @@ class DynamicRouter(routers.DefaultRouter):
                     basename=f"{dataset_id}-{table_id}",
                 )
 
-        return tmp_router.registry, generated_models
+        return tmp_router.registry
 
-    def _build_remote_viewsets(self):
+    def _build_remote_viewsets(self, api_datasets: Iterable[Dataset]):
         """Initialize viewsets that are are proxies for remote URLs"""
         tmp_router = routers.SimpleRouter()
 
-        for dataset in self.filter_datasets(Dataset.objects.endpoint_enabled()):  # type: Dataset
+        for dataset in api_datasets:
             schema = dataset.schema
             dataset_id = schema.id
 
