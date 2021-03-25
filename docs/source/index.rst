@@ -19,6 +19,7 @@ Tot slot worden er ook volledige CSV en GeoJSON exports ondersteund.
    :maxdepth: 2
 
    generic/rest.rst
+   generic/mvt.rst
    generic/wfs.rst
    generic/temporele_datasets.rst
 

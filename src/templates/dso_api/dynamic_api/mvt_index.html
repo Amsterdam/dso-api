@@ -1,0 +1,27 @@
+<!doctype html>{% load i18n %}
+<html>
+<head>
+  <title>MVT datasets</title>
+  {% block extrahead %}{% endblock %}
+</head>
+<body>
+  <main>
+    <h1>Index of datasets supporting Mapbox Vector Tiles (MVT)</h1>
+
+    <ul>
+    {% for name, fields, schema in datasets %}
+      <li>
+        <span>{% if schema.title %}{{ schema.title }}{% else %}{{ name|title }}{% endif %}:</span>
+        <ul>
+        {% for field in fields %}
+          <li>
+            <tt>{{ request.scheme }}://{{ request.get_host }}/v1/mvt/{{ name }}/{{ field }}/{z}/{x}/{y}.pbf</tt>
+          </li>
+        {% endfor %}
+        </ul>
+      </li>
+    {% endfor %}
+    </ul>
+  </main>
+</body>
+</html>
