@@ -33,6 +33,8 @@ release = "v1"
 
 # -- General configuration ---------------------------------------------------
 
+nitpicky = True
+
 master_doc = "index"
 
 # Add any Sphinx extension module names here, as strings. They can be
@@ -40,6 +42,7 @@ master_doc = "index"
 # ones.
 extensions = [
     "sphinx.ext.autodoc",
+    "sphinx.ext.napoleon",
     "sphinx.ext.intersphinx",
     "sphinx.ext.graphviz",
     "sphinx_rtd_theme",
@@ -54,7 +57,6 @@ templates_path = ["_templates"]
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = []
-
 
 # -- Options for HTML output -------------------------------------------------
 
