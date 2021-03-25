@@ -22,4 +22,4 @@ Metadata Tables
 .. autoclass:: schematools.contrib.django.models.DatasetField
 
 .. autoclass:: schematools.contrib.django.models.Profile
-   :members: get_permissions, schema, get_permissions, get_scopes
+   :members: schema, get_permissions, get_scopes
