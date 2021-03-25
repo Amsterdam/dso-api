@@ -13,6 +13,11 @@ def get_patterns(router_urls):
     """Generate the actual URL patterns for this file."""
     return [
         path("reload/", views.reload_patterns),
+        path("mvt/", views.DatasetMVTIndexView.as_view()),
+        path(
+            "mvt/<dataset_name>/<table_name>/<int:z>/<int:x>/<int:y>.pbf",
+            views.DatasetMVTView.as_view(),
+        ),
         path("wfs/", views.DatasetWFSIndexView.as_view()),
         path("wfs/<dataset_name>/", views.DatasetWFSView.as_view()),
         path("", include(router_urls)),

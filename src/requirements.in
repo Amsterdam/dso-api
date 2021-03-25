@@ -6,6 +6,7 @@ django-filter == 2.2.0
 django-healthchecks == 1.4.2
 django-postgres-unlimited-varchar == 1.1.0
 django-gisserver == 1.1.1
+django-vectortiles == 0.1.0
 djangorestframework == 3.12.0
 djangorestframework-csv == 2.1.0
 djangorestframework-gis == 0.16
@@ -33,6 +34,7 @@ flake8-blind-except == 0.1.1
 flake8-colors == 0.1.6
 flake8-debugger == 3.2.1
 flake8-raise == 0.0.5
+mapbox-vector-tile == 1.2.0
 pytest == 5.3.5
 pytest-django == 3.8.0
 pytest-cov == 2.8.1

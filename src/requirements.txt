@@ -34,6 +34,7 @@ click==7.1.2
     # via
     #   amsterdam-schema-tools
     #   mappyfile
+    #   mercantile
 coverage==5.0.3
     # via pytest-cov
 cryptography==3.3.2
@@ -66,6 +67,8 @@ django-postgres-unlimited-varchar==1.1.0
     # via
     #   -r requirements.in
     #   amsterdam-schema-tools
+django-vectortiles==0.1.0
+    # via -r requirements.in
 django==3.0.13
     # via
     #   -r requirements.in
@@ -76,6 +79,7 @@ django==3.0.13
     #   django-gisserver
     #   django-healthchecks
     #   django-postgres-unlimited-varchar
+    #   django-vectortiles
     #   djangorestframework
 djangorestframework-csv==2.1.0
     # via -r requirements.in
@@ -104,6 +108,8 @@ flake8==3.7.9
     #   flake8-colors
     #   flake8-debugger
     #   flake8-raise
+future==0.18.2
+    # via mapbox-vector-tile
 geoalchemy2==0.7.0
     # via amsterdam-schema-tools
 idna==2.9
@@ -127,6 +133,8 @@ lark-parser==0.7.8
     # via mappyfile
 lru_dict==1.1.7
     # via -r requirements.in
+mapbox-vector-tile==1.2.0
+    # via -r requirements.in
 mappyfile==0.8.4
     # via amsterdam-schema-tools
 markdown==3.2.1
@@ -135,6 +143,8 @@ markupsafe==1.1.1
     # via jinja2
 mccabe==0.6.1
     # via flake8
+mercantile==1.1.6
+    # via django-vectortiles
 more-ds==0.0.3
     # via -r requirements.in
 more-itertools==8.2.0
@@ -159,12 +169,16 @@ pluggy==0.13.1
     # via pytest
 ply==3.11
     # via jsonpath-rw
+protobuf==3.15.6
+    # via mapbox-vector-tile
 psycopg2-binary==2.8.4
     # via -r requirements.in
 psycopg2==2.8.5
     # via amsterdam-schema-tools
 py==1.8.1
     # via pytest
+pyclipper==1.2.1
+    # via mapbox-vector-tile
 pycodestyle==2.5.0
     # via
     #   flake8
@@ -215,7 +229,9 @@ requests==2.23.0
 sentry-sdk==0.14.2
     # via -r requirements.in
 shapely==1.7.0
-    # via amsterdam-schema-tools
+    # via
+    #   amsterdam-schema-tools
+    #   mapbox-vector-tile
 simple-singleton==1.1
     # via amsterdam-schema-tools
 six==1.14.0
@@ -228,6 +244,7 @@ six==1.14.0
     #   jsonpath-rw
     #   jsonschema
     #   packaging
+    #   protobuf
     #   pyrsistent
     #   python-dateutil
     #   python-owasp-zap-v2.4
