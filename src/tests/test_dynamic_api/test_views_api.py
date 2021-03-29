@@ -1190,6 +1190,7 @@ class TestExportFormats:
 
     as_is = lambda data: data
 
+    @pytest.mark.gdal_canary
     def test_point_wgs84(self):
         """See that our WGS84_POINT is indeed a lon/lat coordinate.
         This only compares a rounded version, as there can be subtle differences
