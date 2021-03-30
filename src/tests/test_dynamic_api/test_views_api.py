@@ -7,7 +7,7 @@ import orjson
 import pytest
 from django.contrib.gis.geos import Point
 from django.db import connection
-from django.urls import reverse
+from django.urls import NoReverseMatch, reverse
 from rest_framework.response import Response
 from schematools.contrib.django import models
 from schematools.contrib.django.db import create_tables
@@ -39,8 +39,11 @@ def clear_caches():
 
 
 @pytest.mark.django_db
-def test_list_dynamic_view(api_client, api_rf, router, bommen_dataset):
+def test_list_dynamic_view_reload(api_client, api_rf, router, bommen_dataset):
     """Prove that building the router also creates the available viewsets."""
+    with pytest.raises(NoReverseMatch):
+        reverse("dynamic_api:bommen-bommen-list")
+
     router_urls = [p.name for p in router.urls]
     assert router_urls == ["api-root"]
 
