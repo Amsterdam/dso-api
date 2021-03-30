@@ -129,7 +129,7 @@ def filled_router(
     # Based on datasets, create test table if not exists
     for dataset, table in datasets.items():
         if table not in table_names:
-            create_tables(dataset)
+            create_tables(dataset, base_app_name="dso_api.dynamic_api")
     return router
 
 
