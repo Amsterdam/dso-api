@@ -453,6 +453,7 @@ def serializer_factory(
     :param flat: When true, embedded relations will not be generated.
     """
     _validate_model(model)
+    prefix = "Flat" if flat else ""
 
     if model.has_parent_table():
         # Inner tables have no schema or links defined
@@ -463,7 +464,7 @@ def serializer_factory(
         ]
 
     safe_dataset_id = to_snake_case(model.get_dataset_id())
-    serializer_name = f"{safe_dataset_id.title()}{model.__name__}Serializer"
+    serializer_name = f"{prefix}{safe_dataset_id.title()}{model.__name__}Serializer"
     table_schema = model.table_schema()
     new_attrs = {
         "table_schema": table_schema,
