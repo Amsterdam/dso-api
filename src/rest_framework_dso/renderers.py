@@ -77,6 +77,9 @@ class RendererMixin:
         else:
             return f"/* Aborted by {exception.__class__.__name__} during rendering! */\n"
 
+    def get_content_disposition(self, filename):
+        return None
+
 
 class BrowsableAPIRenderer(RendererMixin, renderers.BrowsableAPIRenderer):
     def get_context(self, data, accepted_media_type, renderer_context):
@@ -265,6 +268,9 @@ class CSVRenderer(RendererMixin, CSVStreamingRenderer):
             return f"\n\nAborted by {exception.__class__.__name__}: {exception}\n"
         else:
             return f"\n\nAborted by {exception.__class__.__name__} during rendering!\n"
+
+    def get_content_disposition(self, filename):
+        return f'attachment; filename="{filename}.csv"'
 
 
 class GeoJSONRenderer(RendererMixin, renderers.JSONRenderer):
@@ -457,6 +463,9 @@ class GeoJSONRenderer(RendererMixin, renderers.JSONRenderer):
             (key for key, value in properties.items() if isinstance(value, GeoJsonDict)),
             None,
         )
+
+    def get_content_disposition(self, filename):
+        return f'attachment; filename="{filename}.json"'
 
 
 def _chunked_output(stream, chunk_size=DEFAULT_CHUNK_SIZE, write_exception=None):
