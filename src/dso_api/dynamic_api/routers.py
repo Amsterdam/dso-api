@@ -27,6 +27,7 @@ from typing import TYPE_CHECKING, Dict, Iterable, List, Type
 
 from django.conf import settings
 from django.db import connection
+from django.db.models import Q
 from django.urls import NoReverseMatch, reverse
 from rest_framework import routers
 from schematools.contrib.django.factories import remove_dynamic_models
@@ -262,6 +263,13 @@ class DynamicRouter(routers.DefaultRouter):
         remove_dynamic_models()
 
     def filter_datasets(self, queryset):
+        """Filter datasets:
+        - remove Non-default datasets
+        - include only datasets defined in DATASETS_LIST (if settings.DATASETS_LIST is defined)
+        - exclude any datasets in DATASETS_EXCLUDE list (if settings.DATASETS_EXCLUDE is defined)
+        """
+        queryset = queryset.filter(Q(version=None) | Q(is_default_version=True))
+
         if settings.DATASETS_LIST is not None:
             queryset = queryset.filter(name__in=settings.DATASETS_LIST)
         if settings.DATASETS_EXCLUDE is not None:

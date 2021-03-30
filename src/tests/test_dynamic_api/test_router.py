@@ -92,3 +92,14 @@ def test_router_excludes_datasets_combined_with_list(
         assert reverse("dynamic_api:bommen-bommen-list")
     with pytest.raises(NoReverseMatch):
         assert reverse("dynamic_api:meldingen-statistieken-list")
+
+
+@pytest.mark.django_db
+def test_router_excludes_non_default_dataset_versions(settings, router, bommen_v2_dataset):
+    router.reload()
+
+    assert len(router.urls) == 1
+    assert router.all_models == {}
+
+    with pytest.raises(NoReverseMatch):
+        assert reverse("dynamic_api:bommen-bommen-list")

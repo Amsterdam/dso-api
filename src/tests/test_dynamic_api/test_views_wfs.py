@@ -1,5 +1,6 @@
 import pytest
 from schematools.contrib.django import models
+from schematools.contrib.django.db import create_tables
 
 from dso_api.dynamic_api.permissions import fetch_scopes_for_dataset_table, fetch_scopes_for_model
 from tests.utils import read_response_xml, xml_element_to_dict
@@ -112,3 +113,47 @@ class TestDatasetWFSView:
             "geometry": None,
             "serienummer": "foobar-456",
         }
+
+    def test_wfs_default_dataset_exposed(
+        self,
+        api_client,
+        router,
+        bommen_dataset,
+    ):
+        """Prove that if feature name contains non-letters like underscore,
+        it can be useds find the correct table name and data
+        """
+        router.reload()
+        # manually creating tables, as we do not want to use `filled_router` here.
+        create_tables(bommen_dataset)
+        wfs_url = (
+            f"/v1/wfs/{bommen_dataset.name}/"
+            "?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=app:bommen"
+            "&OUTPUTFORMAT=application/gml+xml"
+        )
+        response = api_client.get(wfs_url)
+        assert response.status_code == 200
+        xml_root = read_response_xml(response)
+
+        assert len(xml_root) == 0
+
+    def test_wfs_non_default_dataset_not_exposed(
+        self,
+        api_client,
+        router,
+        bommen_v2_dataset,
+    ):
+        """Prove that if feature name contains non-letters like underscore,
+        it can be useds find the correct table name and data
+        """
+        router.reload()
+        # manually creating tables, as we do not want to use `filled_router` here.
+        create_tables(bommen_v2_dataset)
+
+        wfs_url = (
+            f"/v1/wfs/{bommen_v2_dataset.name}/"
+            "?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=app:bommen"
+            "&OUTPUTFORMAT=application/gml+xml"
+        )
+        response = api_client.get(wfs_url)
+        assert response.status_code == 404
