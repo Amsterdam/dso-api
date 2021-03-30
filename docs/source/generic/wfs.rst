@@ -71,15 +71,15 @@ Datasets met meerdere geometrieën
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Indien een tabel meerdere geometriëen bevat, zal deze voor ieder geometrie veld los opgenomen worden in de WFS.
-Zodoende kunnen GIS-pakketten op beide geometriën weergeven op de kaart.
+Zodoende kunnen GIS-pakketten op beide geometrieën weergeven op de kaart.
 
 Dit is bijvoorbeeld te zien bij Horeca-exploitatievergunningen: er wordt een aparte laag voor het pand,
-en de bijbehorende terassen beschikbaar gesteld. Zodoende kunnen beide geometriën uitgelezen worden.
+en de bijbehorende terrassen beschikbaar gesteld. Zodoende kunnen beide geometriën uitgelezen worden.
 De data van beide lagen is identiek; alleen de volgorde van geometrie-velden is aangepast.
 
 
-Handmatig koppellen
--------------------
+Handmatig koppelen
+------------------
 
 De WFS server kan rechtstreeks vanuit de browser of HTTP client (curl e.d.) uitgelezen worden.
 Gebruik de basis URL :samp:`https://api.data.amsterdam.nl/v1/wfs/{<dataset naam>}/` in een WFS-client.
