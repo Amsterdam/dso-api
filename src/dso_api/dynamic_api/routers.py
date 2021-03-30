@@ -121,7 +121,7 @@ class DynamicRouter(routers.DefaultRouter):
             dataset_id = dataset.schema.id  # not dataset.name!
             new_models = {}
 
-            for model in dataset.create_models():
+            for model in dataset.create_models(base_app_name="dso_api.dynamic_api"):
                 logger.debug("Created model %s.%s", dataset_id, model.__name__)
 
                 # Register model in Django apps under Datasets application name,

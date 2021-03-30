@@ -50,7 +50,7 @@ def test_list_dynamic_view(api_client, api_rf, router, bommen_dataset):
 
     # Make sure the tables are created too
     if "bommen_bommen" not in connection.introspection.table_names():
-        create_tables(bommen_dataset)
+        create_tables(bommen_dataset, base_app_name="dso_api.dynamic_api")
 
     # Prove that URLs can now be resolved.
     url = reverse("dynamic_api:bommen-bommen-list")
