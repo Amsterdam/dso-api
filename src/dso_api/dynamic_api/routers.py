@@ -25,15 +25,14 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Dict, Iterable, List, Type
 
-from django.apps import apps
 from django.conf import settings
 from django.db import connection
 from django.urls import NoReverseMatch, reverse
 from rest_framework import routers
+from schematools.contrib.django.factories import remove_dynamic_models
 from schematools.contrib.django.models import Dataset
 from schematools.utils import to_snake_case
 
-from dso_api.dynamic_api.app_config import register_model
 from dso_api.dynamic_api.locking import lock_for_writing
 from dso_api.dynamic_api.openapi import get_openapi_json_view
 from dso_api.dynamic_api.remote import remote_serializer_factory, remote_viewset_factory
@@ -91,6 +90,7 @@ class DynamicRouter(routers.DefaultRouter):
     def _initialize_viewsets(self) -> List[Type[DynamicModel]]:
         """Build all viewsets, serializers, models and URL routes."""
         # Generate new viewsets for dynamic models
+        serializer_factory.cache_clear()  # Avoid old cached data
         db_datasets = self.filter_datasets(Dataset.objects.db_enabled())
         generated_models = self._build_db_models(db_datasets)
         dataset_routes = self._build_db_viewsets(db_datasets)
@@ -123,11 +123,6 @@ class DynamicRouter(routers.DefaultRouter):
 
             for model in dataset.create_models(base_app_name="dso_api.dynamic_api"):
                 logger.debug("Created model %s.%s", dataset_id, model.__name__)
-
-                # Register model in Django apps under Datasets application name,
-                #  because django requires fully set up app for model discovery to work.
-                register_model(dataset, model)
-
                 if dataset.enable_api:
                     new_models[model._meta.model_name] = model
 
@@ -212,17 +207,10 @@ class DynamicRouter(routers.DefaultRouter):
         """Regenerate all viewsets for this router."""
         from . import urls  # avoid cyclic imports
 
-        old_dynamic_apps = set(self.all_models.keys())
-
-        # Clear caches
-        serializer_factory.cache_clear()
-        self.all_models.clear()
-
-        # Clear models from the Django App registry cache for removed apps
-        self._prune_app_registry(old_dynamic_apps)
-
+        # Remove all created objects, and recreate them
         # Note that the models get recreated too. This works as expected,
         # since each model creation flushes the App registry caches.
+        self._delete_created_objects()
         models = self._initialize_viewsets()
 
         # Refresh URLConf in urls.py
@@ -251,25 +239,23 @@ class DynamicRouter(routers.DefaultRouter):
         """Internal function for tests, restore the internal registry."""
         from . import urls  # avoid cyclic imports
 
-        old_dynamic_apps = set(self.all_models.keys())
-        self.registry = []
-        self.all_models = {}
-        self._prune_app_registry(old_dynamic_apps)
-
-        # invalidate the urls cache
-        if hasattr(self, "_urls"):
-            del self._urls
-
-        # Clear the LRU-cache
-        serializer_factory.cache_clear()
+        # Clear all caches
+        self._delete_created_objects()
 
         # Refresh URLConf in urls.py
         urls.refresh_urls(self)
 
-    def _prune_app_registry(self, old_dynamic_apps: set):
-        """Clear models from the Django App registry cache if they are no longer used."""
-        for removed_app in old_dynamic_apps - set(self.all_models.keys()):
-            del apps.all_models[removed_app]
+    def _delete_created_objects(self):
+        """Remove all created objects from the application memory."""
+        # Clear URLs and routes
+        self.registry = self.static_routes.copy()
+        if hasattr(self, "_urls"):
+            del self._urls
+
+        # Clear models, serializers and app registries
+        self.all_models.clear()
+        serializer_factory.cache_clear()
+        remove_dynamic_models()
 
     def filter_datasets(self, queryset):
         if settings.DATASETS_LIST is not None:

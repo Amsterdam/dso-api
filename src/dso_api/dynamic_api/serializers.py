@@ -25,6 +25,7 @@ from rest_framework import serializers
 from rest_framework.relations import HyperlinkedRelatedField
 from rest_framework.reverse import reverse
 from rest_framework.serializers import Field, ManyRelatedField
+from schematools.contrib.django.factories import is_dangling_model
 from schematools.contrib.django.models import (
     DynamicModel,
     LooseRelationField,
@@ -451,8 +452,7 @@ def serializer_factory(
       This allows Django Rest Framework to auto-expand relations or omit them.
     :param flat: When true, embedded relations will not be generated.
     """
-    if isinstance(model, str):
-        raise ImproperlyConfigured(f"Model {model} could not be resolved.")
+    _validate_model(model)
 
     if model.has_parent_table():
         # Inner tables have no schema or links defined
@@ -505,6 +505,16 @@ def serializer_factory(
     )
 
     return type(serializer_name, (DynamicBodySerializer,), new_attrs)
+
+
+def _validate_model(model: Type[DynamicModel]):
+    if isinstance(model, str):
+        raise ImproperlyConfigured(f"Model {model} could not be resolved.")
+    elif not issubclass(model, DynamicModel):
+        # Also protects against tests that use a SimpleLazyObject, to avoid bypassing lru_cache()
+        raise TypeError(f"serializer_factory() didn't receive a model: {model!r}")
+    elif is_dangling_model(model):
+        raise RuntimeError("serializer_factory() received an older model reference")
 
 
 def _links_serializer_factory(model: Type[DynamicModel], depth: int) -> Type[DynamicSerializer]:

@@ -51,7 +51,8 @@ def test_openapi_json(api_client, filled_router, caplog):
     assert "Accept-Crs" in afval_parameters, ", ".join(afval_parameters.keys())
     assert afval_parameters["Accept-Crs"]["in"] == "header"
 
-    assert not caplog.messages
+    log_messages = [m for m in caplog.messages if "DisableMigrations" not in m]
+    assert not log_messages, caplog.messages
 
 
 @pytest.mark.django_db
