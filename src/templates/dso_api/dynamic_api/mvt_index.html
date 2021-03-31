@@ -8,20 +8,14 @@
   <main>
     <h1>Index of datasets supporting Mapbox Vector Tiles (MVT)</h1>
 
-    <ul>
     {% for name, fields, schema in datasets %}
-      <li>
-        <span>{% if schema.title %}{{ schema.title }}{% else %}{{ name|title }}{% endif %}:</span>
-        <ul>
-        {% for field in fields %}
-          <li>
-            <tt>{{ request.scheme }}://{{ request.get_host }}/v1/mvt/{{ name }}/{{ field }}/{z}/{x}/{y}.pbf</tt>
-          </li>
-        {% endfor %}
-        </ul>
-      </li>
+      <h2>{% if schema.title %}{{ schema.title }}{% else %}{{ name|title }}{% endif %}</h2>
+      <ul>
+      {% for field in fields %}
+        <li><kbd>{{ request.scheme }}://{{ request.get_host }}/v1/mvt/{{ name }}/{{ field }}/{z}/{x}/{y}.pbf</kbd></li>
+      {% endfor %}
+      </ul>
     {% endfor %}
-    </ul>
   </main>
 </body>
 </html>
