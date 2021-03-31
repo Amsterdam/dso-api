@@ -147,7 +147,10 @@ class TestDatasetWFSView:
         it can be useds find the correct table name and data
         """
         router.reload()
-        # manually creating tables, as we do not want to use `filled_router` here.
+        # manually creating tables.
+        # Not using filled_router here, as it will throw RuntimeError,
+        #  due to missing model, which is expected,
+        #  because non-default dataset is not expected to be registered in router.
         create_tables(bommen_v2_dataset)
 
         wfs_url = (

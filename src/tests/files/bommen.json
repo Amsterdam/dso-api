@@ -3,7 +3,7 @@
   "type": "dataset",
   "title": "",
   "version": "0.0.1",
-  "version": "0.0.1",
+  "default_version": "0.0.1",
   "crs": "EPSG:28992",
   "tables": [
     {
