@@ -24,7 +24,7 @@ class DatasetMVTIndexView(TemplateView):
 
         dataset_names = set(router.all_models.keys())
         datasets = (
-            (ds.name, list(self._have_geometry_fields(ds.schema)), ds.schema)
+            (ds.name, sorted(self._get_geo_tables(ds.schema)), ds.schema)
             for ds in Dataset.objects.db_enabled().order_by("name")
             if ds.name in dataset_names
         )
@@ -34,7 +34,7 @@ class DatasetMVTIndexView(TemplateView):
 
         return context
 
-    def _have_geometry_fields(self, schema):
+    def _get_geo_tables(self, schema):
         """Yields names of tables that have a geometry field."""
         for table in schema.tables:
             for field in table.fields:
