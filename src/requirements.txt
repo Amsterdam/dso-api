@@ -4,7 +4,7 @@
 #
 #    pip-compile --output-file=requirements.txt requirements.in
 #
-amsterdam-schema-tools[django]==0.18.1
+amsterdam-schema-tools[django]==0.19.0
     # via -r requirements.in
 asgiref==3.2.3
     # via django
@@ -231,8 +231,10 @@ six==1.14.0
     #   pyrsistent
     #   python-dateutil
     #   python-owasp-zap-v2.4
-sqlalchemy==1.3.16
-    # via geoalchemy2
+sqlalchemy==1.3.24
+    # via
+    #   amsterdam-schema-tools
+    #   geoalchemy2
 sqlparse==0.3.1
     # via django
 typing-extensions==3.7.4.1
