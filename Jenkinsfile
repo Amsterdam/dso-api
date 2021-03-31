@@ -54,7 +54,7 @@ node {
         tryStep "build dev docs", {
             catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
                 docker.withRegistry("${DOCKER_REGISTRY_HOST}",'docker_registry_auth') {
-                    def image = docker.build("datapunt/dataservices/dso-api-dev-docs:${env.BUILD_NUMBER}", "--build-arg BUILD_NUMBER=${env.BUILD_NUMBER} -f DockerfileDevDocs")
+                    def image = docker.build("datapunt/dataservices/dso-api-dev-docs:${env.BUILD_NUMBER}", "--build-arg BUILD_NUMBER=${env.BUILD_NUMBER} -f Dockerfile-dev-docs")
                     image.push()
                 }
             }

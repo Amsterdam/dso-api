@@ -68,7 +68,7 @@ services:
   dev-docs:
     build:
       context:  .
-      dockerfile: DockerfileDevDocs
+      dockerfile: Dockerfile-dev-docs
     environment:
       PYTHONPATH: "/dev-docs/"
       DATABASE_URL: "postgres://dataservices:insecure@database/dataservices"
