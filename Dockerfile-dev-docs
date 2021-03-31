@@ -25,4 +25,4 @@ RUN mkdir -p /docs/_static \
 # Static serving runtime
 FROM nginx
 RUN mkdir -p /usr/share/nginx/html/v1/docs/
-COPY --from=builder /docs/build/html/ /usr/share/nginx/html/v1/docs/
+COPY --from=builder /docs/build/html/ /usr/share/nginx/html/
