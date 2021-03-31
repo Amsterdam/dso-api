@@ -1,6 +1,5 @@
 import json
 import sys
-from datetime import datetime
 from inspect import isgeneratorfunction
 from typing import Optional, Type, Union
 
@@ -328,16 +327,13 @@ class DSOViewMixin:
         if isgeneratorfunction(response.accepted_renderer.render):
             response = StreamingResponse.from_response(response)
 
-        if hasattr(response.accepted_renderer, "get_content_disposition"):
+        if hasattr(response.accepted_renderer, "finalize_response"):
+            renderer_context = {}
             try:
-                now = datetime.now().isoformat()
-                filename = f"{self.dataset_id}-{self.table_id}-{now}"
+                renderer_context = {"dataset_id": self.dataset_id, "table_id": self.table_id}
             except AttributeError:
-                filename = "file"
-            content_disposition = response.accepted_renderer.get_content_disposition(filename)
-
-            if content_disposition is not None:
-                response["Content-Disposition"] = content_disposition
+                pass
+            response = response.accepted_renderer.finalize_response(response, renderer_context)
 
         return response
 

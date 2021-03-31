@@ -1184,8 +1184,9 @@ class TestExportFormats:
         data = decoder(response.getvalue())
         assert data == expected_data
         assert response["Content-Type"] == expected_type  # And test after reading
-        assert "attachment" in response.get("Content-Disposition")
-        assert "afvalwegingen-containers" in response.get("Content-Disposition")
+        assert response["Content-Disposition"].startswith(
+            'attachment; filename="afvalwegingen-containers'
+        )
 
         # Paginator was not triggered
         assert "X-Pagination-Page" not in response
@@ -1337,8 +1338,9 @@ class TestExportFormats:
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         assert response["Content-Type"] == "text/csv; charset=utf-8"  # Test before reading stream
-        assert "attachment" in response.get("Content-Disposition")
-        assert "afvalwegingen-containers" in response.get("Content-Disposition")
+        assert response["Content-Disposition"].startswith(
+            'attachment; filename="afvalwegingen-containers'
+        )
 
         assert response.status_code == 200, response.getvalue()
         assert isinstance(response, StreamingResponse)

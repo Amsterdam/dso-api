@@ -4,6 +4,7 @@ This makes sure the response gets the desired ``application/hal+json``
 """
 import inspect
 import itertools
+from datetime import datetime
 from io import BytesIO, StringIO
 from types import GeneratorType
 from typing import Optional
@@ -49,6 +50,7 @@ class RendererMixin:
     supports_inline_embeds = False
     supports_m2m = True
     compatible_paginator_classes = None
+    content_disposition: Optional[str] = None
     default_crs = None
     paginator = None
 
@@ -77,8 +79,24 @@ class RendererMixin:
         else:
             return f"/* Aborted by {exception.__class__.__name__} during rendering! */\n"
 
-    def get_content_disposition(self, filename):
-        return None
+    def finalize_response(self, response, renderer_context: dict):
+        """Make final adjustments to the response."""
+        for name, value in self.get_http_headers(renderer_context).items():
+            response[name] = value
+        return response
+
+    def get_http_headers(self, renderer_context: dict):
+        """Return the http headers for the response."""
+        if self.content_disposition:
+            now = datetime.now().isoformat()
+            dataset_id = renderer_context.get("dataset_id", "dataset")
+            table_id = renderer_context.get("table_id", "table")
+            return {
+                "Content-Disposition": self.content_disposition.format(
+                    filename=f"{dataset_id}-{table_id}-{now}"
+                )
+            }
+        return {}
 
 
 class BrowsableAPIRenderer(RendererMixin, renderers.BrowsableAPIRenderer):
@@ -205,6 +223,7 @@ class CSVRenderer(RendererMixin, CSVStreamingRenderer):
     supports_inline_embeds = True
     supports_m2m = False
     compatible_paginator_classes = [pagination.DSOHTTPHeaderPageNumberPagination]
+    content_disposition = 'attachment; filename="{filename}.csv"'
 
     def tune_serializer(self, serializer: Serializer):
         # Serializer type is known, introduce better CSV header column.
@@ -269,9 +288,6 @@ class CSVRenderer(RendererMixin, CSVStreamingRenderer):
         else:
             return f"\n\nAborted by {exception.__class__.__name__} during rendering!\n"
 
-    def get_content_disposition(self, filename):
-        return f'attachment; filename="{filename}.csv"'
-
 
 class GeoJSONRenderer(RendererMixin, renderers.JSONRenderer):
     """Convert the output into GeoJSON notation."""
@@ -284,6 +300,7 @@ class GeoJSONRenderer(RendererMixin, renderers.JSONRenderer):
 
     default_crs = WGS84  # GeoJSON always defaults to WGS84 (EPSG:4326).
     compatible_paginator_classes = [pagination.DelegatedPageNumberPagination]
+    content_disposition = 'attachment; filename="{filename}.json"'
 
     def tune_serializer(self, serializer: Serializer):
         """Remove unused fields from the serializer:"""
