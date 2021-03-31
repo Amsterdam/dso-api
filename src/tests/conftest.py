@@ -89,23 +89,7 @@ def router():
 
 
 @pytest.fixture()
-def filled_router(
-    router,
-    dynamic_models,
-    # afval_dataset,
-    # bommen_dataset,
-    # parkeervakken_dataset,
-    # vestiging_dataset,
-    # fietspaaltjes_dataset,
-    # fietspaaltjes_dataset_no_display,
-    # explosieven_dataset,
-    # indirect_self_ref_dataset,
-    # download_url_dataset,
-    # meldingen_dataset,
-    # gebieden_dataset,
-    # woningbouwplannen_dataset,
-    # bag_dataset,
-):
+def filled_router(router, dynamic_models):
     """The fixture to add when dynamic viewsets are needed in the test.
     Without this fixture, the viewsets are not generated, and hence ``reverse()`` won't work.
 
@@ -143,17 +127,9 @@ class _LazyDynamicModels:
         try:
             return app[model_name]
         except KeyError:
-            if Dataset.objects.filter(name=dataset_name).exists():
-                # Check if was created later.
-                raise KeyError(
-                    f"The dataset tables were already created before "
-                    f"model '{model_name}' was requested. Please update "
-                    f"the fixture order (e.g. place 'data' fixtures at the end)."
-                ) from None
-            else:
-                raise KeyError(
-                    f"Model {model_name} does not exist in dataset '{dataset_name}'"
-                ) from None
+            raise KeyError(
+                f"Model {model_name} does not exist in dataset '{dataset_name}'"
+            ) from None
 
     def __getitem__(self, dataset_name) -> _LazyDynamicModels._LazyApp:
         return self._LazyApp(self, dataset_name)
@@ -186,22 +162,19 @@ def pytest_runtest_call(item):
     if "dynamic_models" in item.fixturenames or "filled_router" in item.fixturenames:
         from dso_api.dynamic_api.urls import router
 
-        # Perform late initialization if this didn't happen yet on demand.
         if not router.is_initialized():
+            # Perform late initialization if this didn't happen yet on demand.
             _initialize_router(router)
-            if not router.is_initialized():
+        else:
+            # If router already initialized (e.g. via _LazyDynamicModels), test whether no
+            # datasets were created afterwards. That likely means the fixture order isn't correct.
+            datasets = {ds.schema.id for ds in Dataset.objects.db_enabled()}
+            if len(datasets) > len(router.all_models):
+                added = datasets - set(router.all_models.keys())
                 raise RuntimeError(
-                    "The 'filled_router' or 'dynamic_models' fixture was requested, "
-                    "but no dataset fixtures were defined for this test."
+                    f"More dataset fixtures were defined after 'filled_router':"
+                    f" {','.join(sorted(added))}"
                 )
-
-        datasets = {ds.schema.id for ds in Dataset.objects.db_enabled()}
-        if len(datasets) > len(router.all_models):
-            added = datasets - set(router.all_models.keys())
-            raise RuntimeError(
-                f"More dataset fixtures were defined after 'filled_router':"
-                f" {','.join(sorted(added))}"
-            )
 
 
 def _initialize_router(router):
@@ -209,6 +182,12 @@ def _initialize_router(router):
     # It's very hard to reliably determine whether these are needed or not.
     # Optimizing this would risk breaking various reverse() calls in tests.
     router.reload()
+    if not router.is_initialized():
+        raise RuntimeError(
+            "The 'filled_router' or 'dynamic_models' fixture was requested, "
+            "but no dataset fixtures were defined for this test."
+        )
+
     _create_tables_if_missing(router.all_models)
 
 
@@ -220,10 +199,7 @@ def _create_tables_if_missing(dynamic_models):
         for dataset_id, models in dynamic_models.items():
             for model in models.values():
                 if model._meta.db_table not in table_names:
-                    print("CREATING ", model._meta.db_table)
                     schema_editor.create_model(model)
-                else:
-                    print("SKIP     ", model._meta.db_table)
 
 
 @pytest.fixture()
