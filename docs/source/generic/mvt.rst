@@ -1,7 +1,7 @@
 Vector tiles uitlezen (MVT)
 ===========================
 
-Datasets met een geometrisch component kunnen uitgelezen worden
+Datasets met een geometrisch veld kunnen uitgelezen worden
 in een bestandsindeling die Mapbox Vector Tiles (MVT) heet.
 Vergeleken bij WFS laden vector tiles snel en staan ze snel in- en uitzoomen toe.
 
