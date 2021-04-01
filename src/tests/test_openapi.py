@@ -5,6 +5,23 @@ from django.urls import reverse
 
 
 @pytest.mark.django_db
+def test_root_view(api_client, afval_dataset, fietspaaltjes_dataset, filled_router):
+    """Prove that the OpenAPI page can be rendered."""
+    url = reverse("dynamic_api:api-root")
+    assert url == "/v1/"
+
+    response = api_client.get(url)
+    assert response.status_code == 200, response.data
+
+    assert response.data == {
+        "datasets": {
+            "afvalwegingen": "http://testserver/v1/afvalwegingen/",
+            "fietspaaltjes": "http://testserver/v1/fietspaaltjes/",
+        }
+    }
+
+
+@pytest.mark.django_db
 def test_openapi_json(api_client, afval_dataset, fietspaaltjes_dataset, filled_router, caplog):
     """Prove that the OpenAPI page can be rendered."""
     caplog.set_level(logging.WARNING)

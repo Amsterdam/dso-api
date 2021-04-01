@@ -30,6 +30,8 @@ from django.db import connection
 from django.db.models import Q
 from django.urls import NoReverseMatch, URLPattern, path, reverse
 from rest_framework import routers
+from rest_framework.response import Response
+from rest_framework.views import APIView
 from schematools.contrib.django.factories import remove_dynamic_models
 from schematools.contrib.django.models import Dataset
 from schematools.utils import to_snake_case
@@ -47,6 +49,27 @@ if TYPE_CHECKING:
     from schematools.contrib.django.models import DynamicModel
 
 
+class DynamicAPIRootView(APIView):
+    """An overview of API endpoints."""
+
+    name = "DSO-API"  # for browsable API.
+    description = (
+        "To use the DSO-API, see the documentation at <https://api.data.amsterdam.nl/v1/docs/>. "
+    )
+    schema = None  # exclude from schema
+    dataset_ids: List[str] = []  # set by as_view()
+
+    def get(self, request, *args, **kwargs):
+        base = request.build_absolute_uri("/").rstrip("/")
+        return Response(
+            {
+                "datasets": {
+                    id: base + reverse(f"dynamic_api:openapi-{id}") for id in self.dataset_ids
+                }
+            }
+        )
+
+
 class DynamicRouter(routers.DefaultRouter):
     """Router that dynamically creates all viewsets based on the Dataset models."""
 
@@ -57,10 +80,11 @@ class DynamicRouter(routers.DefaultRouter):
         self.all_models = {}
         self.static_routes = []
         self._openapi_urls = []
+        self._dataset_ids = []
 
     def get_api_root_view(self, api_urls=None):
         """Show the OpenAPI specification as root view."""
-        return get_openapi_json_view()
+        return DynamicAPIRootView.as_view(dataset_ids=sorted(self._dataset_ids))
 
     def is_initialized(self) -> bool:
         """Tell whether the router initialization was used to create viewsets."""
@@ -115,6 +139,7 @@ class DynamicRouter(routers.DefaultRouter):
         # Atomically copy the new viewset registrations
         self.registry = self.static_routes + dataset_routes + remote_routes
         self._openapi_urls = openapi_urls
+        self._dataset_ids = [ds.schema.id for ds in db_datasets + api_datasets]
 
         # invalidate the urls cache
         if hasattr(self, "_urls"):
@@ -278,6 +303,7 @@ class DynamicRouter(routers.DefaultRouter):
         # Clear URLs and routes
         self.registry = self.static_routes.copy()
         self._openapi_urls.clear()
+        self._dataset_ids.clear()
         if hasattr(self, "_urls"):
             del self._urls
 
