@@ -299,8 +299,25 @@ def bommen_schema(bommen_schema_json) -> DatasetSchema:
 
 
 @pytest.fixture()
-def bommen_dataset(bommen_schema_json) -> Dataset:
-    return Dataset.objects.create(name="bommen", schema_data=bommen_schema_json)
+def bommen_dataset(bommen_schema) -> Dataset:
+    return Dataset.create_for_schema(schema=bommen_schema)
+
+
+@pytest.fixture()
+def bommen_v2_schema_json() -> dict:
+    """Fixture to return the schema json for """
+    path = HERE / "files/bommen@2.0.0.json"
+    return json.loads(path.read_text())
+
+
+@pytest.fixture()
+def bommen_v2_schema(bommen_v2_schema_json) -> DatasetSchema:
+    return DatasetSchema.from_dict(bommen_v2_schema_json)
+
+
+@pytest.fixture()
+def bommen_v2_dataset(bommen_v2_schema) -> Dataset:
+    return Dataset.create_for_schema(schema=bommen_v2_schema)
 
 
 @pytest.fixture()

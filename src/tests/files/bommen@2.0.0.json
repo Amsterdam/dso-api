@@ -2,7 +2,7 @@
   "id": "bommen",
   "type": "dataset",
   "title": "",
-  "version": "0.0.1",
+  "version": "2.0.0",
   "default_version": "0.0.1",
   "crs": "EPSG:28992",
   "tables": [

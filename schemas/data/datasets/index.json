@@ -4,5 +4,8 @@
   "sportparken": "sportparken/sportparken",
   "reclame": "belastingen/reclame",
   "terrassen": "belastingen/precario/terrassen",
-  "woonschepen": "belastingen/precario/woonschepen"
+  "woonschepen": "belastingen/precario/woonschepen",
+  "versioned": "versioned/1.0.1/versioned",
+  "versioned_1_1_1": "versioned/1.1.1/versioned",
+  "versioned_0_0_1": "versioned/0.0.1/versioned"
 }

@@ -92,3 +92,16 @@ def test_router_excludes_datasets_combined_with_list(
         assert reverse("dynamic_api:bommen-bommen-list")
     with pytest.raises(NoReverseMatch):
         assert reverse("dynamic_api:meldingen-statistieken-list")
+
+
+@pytest.mark.django_db
+def test_router_excludes_non_default_dataset_versions(settings, bommen_v2_dataset, router):
+    # Not using filled_router here, as it will throw RuntimeError,
+    #  due to missing model, which is expected,
+    #  because non-default dataset is not expected to be registered in router.
+    router.reload()
+    assert len(router.urls) == 1
+    assert router.all_models == {}
+
+    with pytest.raises(NoReverseMatch):
+        assert reverse("dynamic_api:bommen-bommen-list")

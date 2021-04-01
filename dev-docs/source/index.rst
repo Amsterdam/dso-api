@@ -22,6 +22,7 @@ for government API's. Most logic of DSO is based on the HAL-JSON API style.
    remote
    auth
    environment
+   dataset_versioning
    compliance
 
 .. toctree::
