@@ -481,9 +481,6 @@ class GeoJSONRenderer(RendererMixin, renderers.JSONRenderer):
             None,
         )
 
-    def get_content_disposition(self, filename):
-        return f'attachment; filename="{filename}.json"'
-
 
 def _chunked_output(stream, chunk_size=DEFAULT_CHUNK_SIZE, write_exception=None):
     """Output in larger chunks to avoid many small writes or back-forth calls
