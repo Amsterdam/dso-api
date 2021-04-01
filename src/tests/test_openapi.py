@@ -5,17 +5,27 @@ from django.urls import reverse
 
 
 @pytest.mark.django_db
-def test_openapi_json(api_client, afval_dataset, filled_router, caplog):
+def test_openapi_json(api_client, afval_dataset, fietspaaltjes_dataset, filled_router, caplog):
     """Prove that the OpenAPI page can be rendered."""
     caplog.set_level(logging.WARNING)
 
-    url = reverse("dynamic_api:api-root")
-    assert url == "/v1/"
+    # Prove the that OpenAPI view can be found at the endpoint
+    url = reverse("dynamic_api:openapi-afvalwegingen")
+    assert url == "/v1/afvalwegingen/"
 
     response = api_client.get(url)
     assert response.status_code == 200, response.data
     assert response["content-type"] == "application/vnd.oai.openapi+json"
     schema = response.data
+
+    # Prove that only afvalwegingen are part of this OpenAPI page:
+    paths = sorted(schema["paths"].keys())
+    assert paths == [
+        "/v1/afvalwegingen/adres_loopafstand/",
+        "/v1/afvalwegingen/adres_loopafstand/{id}/",
+        "/v1/afvalwegingen/containers/",
+        "/v1/afvalwegingen/containers/{id}/",
+    ]
 
     # Prove that the oauth model is exposed
     assert schema["components"]["securitySchemes"]["oauth2"]["type"] == "oauth2"
@@ -53,11 +63,3 @@ def test_openapi_json(api_client, afval_dataset, filled_router, caplog):
 
     log_messages = [m for m in caplog.messages if "DisableMigrations" not in m]
     assert not log_messages, caplog.messages
-
-
-@pytest.mark.django_db
-def test_openapi_yaml(api_client, afval_dataset, filled_router):
-    """Prove that the OpenAPI page can be rendered."""
-    url = reverse("openapi.yaml")
-    response = api_client.get(url)
-    assert response.status_code == 200, response.data

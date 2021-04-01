@@ -28,7 +28,7 @@ from typing import TYPE_CHECKING, Dict, Iterable, List, Type
 from django.conf import settings
 from django.db import connection
 from django.db.models import Q
-from django.urls import NoReverseMatch, reverse
+from django.urls import NoReverseMatch, URLPattern, path, reverse
 from rest_framework import routers
 from schematools.contrib.django.factories import remove_dynamic_models
 from schematools.contrib.django.models import Dataset
@@ -56,6 +56,7 @@ class DynamicRouter(routers.DefaultRouter):
         super().__init__(trailing_slash=True)
         self.all_models = {}
         self.static_routes = []
+        self._openapi_urls = []
 
     def get_api_root_view(self, api_urls=None):
         """Show the OpenAPI specification as root view."""
@@ -87,6 +88,10 @@ class DynamicRouter(routers.DefaultRouter):
 
         self._initialize_viewsets()
 
+    def get_urls(self):
+        """Add extra URLs beside the registered viewsets."""
+        return super().get_urls() + self._openapi_urls
+
     def register(self, prefix, viewset, basename=None):
         """Overwritten function to preserve any manually added routes on reloading."""
         super().register(prefix, viewset, basename=basename)
@@ -96,16 +101,20 @@ class DynamicRouter(routers.DefaultRouter):
         """Build all viewsets, serializers, models and URL routes."""
         # Generate new viewsets for dynamic models
         serializer_factory.cache_clear()  # Avoid old cached data
-        db_datasets = self.filter_datasets(Dataset.objects.db_enabled())
+        db_datasets = list(self.filter_datasets(Dataset.objects.db_enabled()))
         generated_models = self._build_db_models(db_datasets)
         dataset_routes = self._build_db_viewsets(db_datasets)
 
         # Same for remote API's
-        api_datasets = self.filter_datasets(Dataset.objects.endpoint_enabled())
+        api_datasets = list(self.filter_datasets(Dataset.objects.endpoint_enabled()))
         remote_routes = self._build_remote_viewsets(api_datasets)
+
+        # OpenAPI views
+        openapi_urls = self._build_openapi_views(db_datasets + api_datasets)
 
         # Atomically copy the new viewset registrations
         self.registry = self.static_routes + dataset_routes + remote_routes
+        self._openapi_urls = openapi_urls
 
         # invalidate the urls cache
         if hasattr(self, "_urls"):
@@ -194,6 +203,20 @@ class DynamicRouter(routers.DefaultRouter):
 
         return tmp_router.registry
 
+    def _build_openapi_views(self, datasets: Iterable[Dataset]) -> List[URLPattern]:
+        """Build the OpenAPI viewsets per dataset"""
+        results = []
+        for dataset in datasets:
+            dataset_id = dataset.schema.id
+            results.append(
+                path(
+                    self.make_url(dataset.url_prefix, dataset_id) + "/",
+                    get_openapi_json_view(dataset_id),
+                    name=f"openapi-{dataset_id}",
+                )
+            )
+        return results
+
     def make_url(self, prefix, *parts):
         """Generate the URL for the viewset"""
         parts = [to_snake_case(part) for part in parts]
@@ -254,6 +277,7 @@ class DynamicRouter(routers.DefaultRouter):
         """Remove all created objects from the application memory."""
         # Clear URLs and routes
         self.registry = self.static_routes.copy()
+        self._openapi_urls.clear()
         if hasattr(self, "_urls"):
             del self._urls
 
