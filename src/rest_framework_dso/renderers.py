@@ -125,9 +125,14 @@ class BrowsableAPIRenderer(RendererMixin, renderers.BrowsableAPIRenderer):
         # Protect the browsable API from being used as DOS (Denial of Service) attack vector.
         # While we allow infinitely large pages in our streaming responses, the browsable API
         # still has to render that in-memory as part of the HTML template response.
+        from rest_framework.generics import GenericAPIView  # circular import via DRF settings
+
         request = renderer_context["request"]
         view = renderer_context["view"]
-        if view.paginator.get_page_size(request) > BROWSABLE_MAX_PAGE_SIZE:
+        if (
+            isinstance(view, GenericAPIView)
+            and view.paginator.get_page_size(request) > BROWSABLE_MAX_PAGE_SIZE
+        ):
             raise ValidationError(
                 "Browsable HTML API does not support this page size.", code="_pageSize"
             )
