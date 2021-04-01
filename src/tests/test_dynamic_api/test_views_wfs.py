@@ -58,6 +58,26 @@ class TestDatasetWFSView:
             "straatnaam": None,
         }
 
+    def test_wfs_model_auth(
+        self, api_client, parkeervakken_schema, parkeervakken_parkeervak_model
+    ):
+        models.DatasetTable.objects.filter(name="parkeervakken").update(auth="TEST/SCOPE")
+        parkeervakken_parkeervak_model.objects.create(
+            id=1,
+            type="Langs",
+            soort="NIET FISCA",
+            aantal="1.0",
+            e_type="E666",
+        )
+
+        wfs_url = (
+            "/v1/wfs/parkeervakken/"
+            "?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=parkeervakken"
+            "&OUTPUTFORMAT=application/gml+xml"
+        )
+        response = api_client.get(wfs_url)
+        assert response.status_code == 403
+
     def test_wfs_field_auth(
         self, api_client, parkeervakken_schema, parkeervakken_parkeervak_model
     ):
