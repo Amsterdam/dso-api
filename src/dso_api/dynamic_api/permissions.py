@@ -17,7 +17,7 @@ class TableScopes:
     fields: Dict[str, Set[str]] = field(default_factory=dict)
 
 
-@ttl_cache(ttl=60 * 60)
+@ttl_cache(maxsize=None, ttl=60 * 60)
 def fetch_scopes_for_dataset_table(dataset_id: str, table_id: str):
     """ Get the scopes for a dataset and table, based on the Amsterdam schema information """
 
