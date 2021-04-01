@@ -4,6 +4,7 @@ from typing import Dict, Set
 from cachetools.func import ttl_cache
 from django.contrib.auth.models import AnonymousUser, _user_has_perm
 from rest_framework import permissions
+from rest_framework.viewsets import ViewSetMixin
 from schematools.contrib.django import models
 from schematools.utils import to_snake_case, toCamelCase
 
@@ -84,7 +85,8 @@ class HasOAuth2Scopes(permissions.BasePermission):
         scopes = fetch_scopes_for_dataset_table(dataset_id, table_id)
         if request.is_authorized_for(*scopes.table):
             return True  # authorized by scope
-        else:
+        # Check for DRF classes (not WFS, MVT).
+        elif isinstance(view, ViewSetMixin):
             if view.action_map["get"] == "retrieve":  # is a detailview
                 request.auth_profile.valid_query_params = (
                     request.auth_profile.get_valid_query_params() + view.table_schema.identifier
