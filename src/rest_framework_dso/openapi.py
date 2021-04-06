@@ -9,13 +9,9 @@ import logging
 import re
 from typing import List
 
-from django.core.exceptions import FieldDoesNotExist
-from django.db import models
-from drf_spectacular import openapi
-from drf_spectacular.types import OpenApiTypes, resolve_basic_type
-from drf_spectacular.utils import ExtraParameter
-from rest_framework import serializers
-from rest_framework.fields import ReadOnlyField
+from drf_spectacular import generators, openapi
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import OpenApiParameter
 from rest_framework.settings import api_settings
 from rest_framework_gis.fields import GeometryField
 
@@ -38,7 +34,7 @@ GEOJSON_TYPES = [
 GEOM_TYPES_TO_GEOJSON = {x.upper(): x for x in GEOJSON_TYPES}
 
 
-class DSOSchemaGenerator(openapi.SchemaGenerator):
+class DSOSchemaGenerator(generators.SchemaGenerator):
     """Extended OpenAPI schema generator, that provides:
 
     * Override OpenAPI parts (via: :attr:`schema_overrides`)
@@ -220,11 +216,11 @@ class DSOSchemaGenerator(openapi.SchemaGenerator):
 class DSOAutoSchema(openapi.AutoSchema):
     """Default schema for API views that don't define a ``schema`` attribute."""
 
-    def get_tags(self, path, method) -> List[str]:
+    def get_tags(self) -> List[str]:
         """Auto-generate tags based on the path.
         This also skips a version number endpoint prefix.
         """
-        tokenized_path = self._tokenize_path(path)
+        tokenized_path = self._tokenize_path()
 
         if RE_VERSION.match(tokenized_path[0]):
             # Skip a version number in the path
@@ -232,7 +228,7 @@ class DSOAutoSchema(openapi.AutoSchema):
         else:
             return tokenized_path[:1]
 
-    def _map_serializer_field(self, method, field) -> dict:  # noqa: C901
+    def _map_serializer_field(self, field, direction) -> dict:  # noqa: C901
         """Transform the serializer field into a OpenAPI definition.
         This method is overwritten to fix some missing field types.
         """
@@ -241,9 +237,6 @@ class DSOAutoSchema(openapi.AutoSchema):
                 return {"$ref": "#/components/schemas/_SelfLink"}
 
             # Fix support for missing field types:
-            if isinstance(field, serializers.HyperlinkedRelatedField):
-                return resolve_basic_type(OpenApiTypes.URI)
-
             if isinstance(field, GeometryField):
                 # or use $ref when examples are included.
                 # model_field.geom_type is uppercase
@@ -254,46 +247,35 @@ class DSOAutoSchema(openapi.AutoSchema):
                     geojson_type = "Geometry"
                 return {"$ref": f"#/components/schemas/{geojson_type}"}
 
-            if isinstance(field, ReadOnlyField):
-                try:
-                    model_field = field.parent.Meta.model._meta.get_field(field.source)
-                except FieldDoesNotExist:
-                    pass
-                else:
-                    return self._map_model_field(model_field)
+            # if isinstance(field, ReadOnlyField):
+            #     try:
+            #         model_field = field.parent.Meta.model._meta.get_field(field.source)
+            #     except FieldDoesNotExist:
+            #         pass
+            #     else:
+            #         return self._map_model_field(model_field, direction)
 
-        return super()._map_serializer_field(method, field)
+        return super()._map_serializer_field(field, direction)
 
-    def _map_model_field(self, field) -> dict:
-        """Transform model fields into an OpenAPI definition.
-        This method is overwritten to fix some missing field types.
-        """
-        if isinstance(field, models.CharField):
-            return resolve_basic_type(OpenApiTypes.STR)
-        elif isinstance(field, models.ForeignKey):
-            return self._map_model_field(field.target_field)
-
-        return super()._map_model_field(field)
-
-    def get_extra_parameters(self, path, method):
+    def get_override_parameters(self):
         """Expose the DSO-specific HTTP headers in all API methods."""
         extra = [
-            ExtraParameter(
+            OpenApiParameter(
                 "Accept-Crs",
                 type=OpenApiTypes.STR,
-                location=ExtraParameter.HEADER,
+                location=OpenApiParameter.HEADER,
                 description="Accept-Crs header for Geo queries",
                 required=False,
-            ).to_schema(),
-            ExtraParameter(
+            ),
+            OpenApiParameter(
                 "Content-Crs",
                 type=OpenApiTypes.STR,
-                location=ExtraParameter.HEADER,
+                location=OpenApiParameter.HEADER,
                 description="Content-Crs header for Geo queries",
                 required=False,
-            ).to_schema(),
+            ),
             {
-                "in": ExtraParameter.QUERY,
+                "in": OpenApiParameter.QUERY,
                 "name": api_settings.URL_FORMAT_OVERRIDE,
                 "schema": {
                     "type": "string",
