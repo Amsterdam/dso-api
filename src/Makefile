@@ -20,16 +20,16 @@ upgrade:
 
 .PHONY: test
 test:
-	pytest -m 'not gdal_canary' --reuse-db --nomigrations -vs .
+	pytest --reuse-db --nomigrations -vs .
 
 .PHONY: test
 retest:
-	pytest -m 'not gdal_canary' --reuse-db --nomigrations -vvs --lf .
+	pytest --reuse-db --nomigrations -vvs --lf .
 
 
 .PHONY: coverage
 coverage:
-	py.test -m 'not gdal_canary' --reuse-db --nomigrations --cov --cov-report=term-missing
+	py.test --reuse-db --nomigrations --cov --cov-report=term-missing
 
 .PHONY: flake8
 flake8:
