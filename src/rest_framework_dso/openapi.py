@@ -209,7 +209,8 @@ class DSOSchemaGenerator(generators.SchemaGenerator):
             else:
                 schema[key] = value
 
-        schema["components"]["schemas"].update(self.schema_override_components)
+        if components_schemas := schema["components"].get("schemas"):
+            components_schemas.update(self.schema_override_components)
         return schema
 
 
