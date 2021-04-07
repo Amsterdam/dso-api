@@ -469,6 +469,9 @@ def serializer_factory(
     new_attrs = {
         "table_schema": table_schema,
         "__module__": f"dso_api.dynamic_api.serializers.{safe_dataset_id}",
+        "__doc__": table_schema.get(
+            "description", table_schema.name
+        ),  # avoid exposing our docstrings.
     }
 
     # Parse fields for serializer
