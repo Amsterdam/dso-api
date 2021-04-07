@@ -24,29 +24,9 @@ __all__ = (
 class ExtendedSchemaGenerator(DSOSchemaGenerator):
     """drf_spectacular also provides 'components' which DRF doesn't do."""
 
-    # Provide the missing data that DRF get_schema_view() doesn't yet offer.:
+    # Provide the missing data that DRF get_schema_view() doesn't yet offer,
+    # nor
     schema_overrides = {
-        "info": {
-            "title": "DSO-API",
-            "version": "v1",
-            "description": """
-This is the generic [DSO-compatible](https://aandeslagmetdeomgevingswet.nl/digitaal-stelsel/aansluiten/standaarden/api-en-uri-strategie/) API server.
-
-The following features are supported:
-
-* HAL-JSON based links, pagination and response structure.
-* Use `?_expandScope=name1,name2` to sideload specific relations.
-* Use `?_expand=true` to sideload all relations.
-
-The models in this server are generated from the Amsterdam Schema files.
-These are located at:
-[https://schemas.data.amsterdam.nl/datasets](https://schemas.data.amsterdam.nl/datasets)
-""",  # noqa: E501
-            # These fields can't be specified in get_schema_view():
-            "termsOfService": "https://data.amsterdam.nl/",
-            "contact": {"email": "datapunt@amsterdam.nl"},
-            "license": {"name": "CC0 1.0 Universal"},
-        },
         # While drf_spectacular parses authentication_classes, it won't
         # recognize oauth2 nor detect a remote authenticator. Adding manually:
         "security": [{"oauth2": []}],
