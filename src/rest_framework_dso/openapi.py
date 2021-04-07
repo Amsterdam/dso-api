@@ -228,7 +228,7 @@ class DSOAutoSchema(openapi.AutoSchema):
         else:
             return tokenized_path[:1]
 
-    def _map_serializer_field(self, field, direction) -> dict:  # noqa: C901
+    def _map_serializer_field(self, field, direction, collect_meta=True):
         """Transform the serializer field into a OpenAPI definition.
         This method is overwritten to fix some missing field types.
         """
@@ -247,15 +247,7 @@ class DSOAutoSchema(openapi.AutoSchema):
                     geojson_type = "Geometry"
                 return {"$ref": f"#/components/schemas/{geojson_type}"}
 
-            # if isinstance(field, ReadOnlyField):
-            #     try:
-            #         model_field = field.parent.Meta.model._meta.get_field(field.source)
-            #     except FieldDoesNotExist:
-            #         pass
-            #     else:
-            #         return self._map_model_field(model_field, direction)
-
-        return super()._map_serializer_field(field, direction)
+        return super()._map_serializer_field(field, direction, collect_meta=collect_meta)
 
     def get_override_parameters(self):
         """Expose the DSO-specific HTTP headers in all API methods."""
