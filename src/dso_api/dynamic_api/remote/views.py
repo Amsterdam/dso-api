@@ -4,7 +4,7 @@ The endpoint is queried with raw urllib3 logic, to avoid the overhead of the req
 """
 import logging
 from typing import Type, Union
-from urllib.parse import urlencode, urljoin
+from urllib.parse import urlencode, urljoin, urlparse
 
 import certifi
 import orjson
@@ -29,8 +29,27 @@ from rest_framework_dso.views import DSOViewMixin
 from . import serializers
 
 logger = logging.getLogger(__name__)
-http_pool_generic = urllib3.PoolManager(cert_reqs="CERT_REQUIRED", ca_certs=certifi.where())
-http_pool_kadaster = None
+
+
+_http_pool_generic = urllib3.PoolManager(cert_reqs="CERT_REQUIRED", ca_certs=certifi.where())
+
+_http_pool_kadaster = None
+
+
+def _get_http_pool(dataset_id, endpoint_url):
+    if dataset_id == "hcbrk" and ".acceptatie." not in urlparse(endpoint_url).netloc:
+        global _http_pool_kadaster
+        if _http_pool_kadaster is None:
+            _http_pool_kadaster = urllib3.PoolManager(
+                cert_file=settings.HAAL_CENTRAAL_CERTFILE,
+                cert_reqs="CERT_REQUIRED",
+                key_file=settings.HAAL_CENTRAAL_KEYFILE,
+                ca_certs=certifi.where(),
+            )
+        return _http_pool_kadaster
+
+    else:
+        return _http_pool_generic
 
 
 def _del_none(d):
@@ -140,18 +159,7 @@ class RemoteViewSet(DSOViewMixin, ViewSet):
         logger.debug("Forwarding call to %s", url)
         headers = self.get_headers()
 
-        if self.dataset_id == "hcbrk" and "acceptatie" not in self.endpoint_url:
-            global http_pool_kadaster
-            if http_pool_kadaster is None:
-                http_pool_kadaster = urllib3.PoolManager(
-                    cert_file=settings.HAAL_CENTRAAL_CERTFILE,
-                    cert_reqs="CERT_REQUIRED",
-                    key_file=settings.HAAL_CENTRAAL_KEYFILE,
-                    ca_certs=certifi.where(),
-                )
-            http_pool = http_pool_kadaster
-        else:
-            http_pool = http_pool_generic
+        http_pool = _get_http_pool(self.dataset_id, self.endpoint_url)
 
         try:
             response: HTTPResponse = http_pool.request(
