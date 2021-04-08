@@ -232,6 +232,34 @@ REST_FRAMEWORK = dict(
     URL_FORMAT_OVERRIDE="_format",  # use ?_format=.. instead of ?format=..
 )
 
+SPECTACULAR_SETTINGS = {
+    "TITLE": "DSO-API",
+    "VERSION": "v1",
+    "DESCRIPTION": (
+        """
+This is the generic [DSO-compatible](https://aandeslagmetdeomgevingswet.nl/digitaal-stelsel/aansluiten/standaarden/api-en-uri-strategie/) API server.
+
+The following features are supported:
+
+* HAL-JSON based links, pagination and response structure.
+* Use `?_expandScope=name1,name2` to sideload specific relations.
+* Use `?_expand=true` to sideload all relations.
+
+The models in this server are generated from the Amsterdam Schema files.
+These are located at:
+[https://schemas.data.amsterdam.nl/datasets/](https://schemas.data.amsterdam.nl/datasets/)
+"""  # noqa: E501
+    ),
+    "TOS": "https://data.amsterdam.nl/",
+    "CONTACT": {"email": "datapunt@amsterdam.nl"},
+    "LICENSE": {"name": "CC0 1.0 Universal"},
+    "EXTERNAL_DOCS": {
+        "description": "API usage Documentation",
+        "url": "https://api.data.amsterdam.nl/v1/docs/",
+    },
+    "SCHEMA_PATH_PREFIX": r"^/v?\d+(\.\d+)?/",  # strip /v1/ from tags.
+}
+
 # -- Amsterdam oauth settings
 
 # The following JWKS data was obtained in the authz project :  jwkgen -create -alg ES256

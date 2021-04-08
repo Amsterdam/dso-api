@@ -6,7 +6,6 @@ of `drf-spectacular <https://drf-spectacular.readthedocs.io/>`_ and the classes 
 This also inludes exposing geometery type classes in the OpenAPI schema.
 """
 import logging
-import re
 from typing import List
 
 from drf_spectacular import generators, openapi
@@ -21,7 +20,6 @@ logger = logging.getLogger(__name__)
 
 __all__ = ["DSOSchemaGenerator", "DSOAutoSchema"]
 
-RE_VERSION = re.compile(r"^v?\d+(\.\d+)?$")
 GEOS_TO_GEOJSON = {}
 GEOJSON_TYPES = [
     "Point",
@@ -209,7 +207,8 @@ class DSOSchemaGenerator(generators.SchemaGenerator):
             else:
                 schema[key] = value
 
-        schema["components"]["schemas"].update(self.schema_override_components)
+        if components_schemas := schema["components"].get("schemas"):
+            components_schemas.update(self.schema_override_components)
         return schema
 
 
@@ -217,16 +216,9 @@ class DSOAutoSchema(openapi.AutoSchema):
     """Default schema for API views that don't define a ``schema`` attribute."""
 
     def get_tags(self) -> List[str]:
-        """Auto-generate tags based on the path.
-        This also skips a version number endpoint prefix.
-        """
+        """Auto-generate tags based on the path, take last bit of path."""
         tokenized_path = self._tokenize_path()
-
-        if RE_VERSION.match(tokenized_path[0]):
-            # Skip a version number in the path
-            return tokenized_path[1:2]
-        else:
-            return tokenized_path[:1]
+        return tokenized_path[-1:]
 
     def _map_serializer_field(self, field, direction, collect_meta=True):
         """Transform the serializer field into a OpenAPI definition.
