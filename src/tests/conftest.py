@@ -23,7 +23,7 @@ from schematools.types import DatasetSchema, ProfileSchema
 
 from rest_framework_dso.crs import RD_NEW
 from rest_framework_dso.renderers import HALJSONRenderer
-from tests.test_rest_framework_dso.models import Category, Location, Movie
+from tests.test_rest_framework_dso.models import Actor, Category, Location, Movie
 
 HERE = Path(__file__).parent
 
@@ -358,7 +358,14 @@ def category() -> Category:
 @pytest.fixture
 def movie(category) -> Movie:
     """A dummy model to test our API with"""
-    return Movie.objects.create(name="foo123", category=category)
+    result = Movie.objects.create(name="foo123", category=category)
+    result.actors.set(
+        [
+            Actor.objects.create(name="John Doe"),
+            Actor.objects.create(name="Jane Doe"),
+        ]
+    )
+    return result
 
 
 @pytest.fixture

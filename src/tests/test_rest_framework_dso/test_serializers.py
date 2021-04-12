@@ -4,13 +4,19 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.request import Request
 
 from rest_framework_dso.crs import RD_NEW, WGS84
-from rest_framework_dso.fields import EmbeddedField
+from rest_framework_dso.fields import EmbeddedField, EmbeddedManyToManyField
 from rest_framework_dso.pagination import DSOPageNumberPagination
 from rest_framework_dso.renderers import HALJSONRenderer
 from rest_framework_dso.serializers import DSOModelSerializer
 from tests.utils import normalize_data, read_response_json
 
-from .models import Category, Location, Movie
+from .models import Actor, Category, Location, Movie
+
+
+class ActorSerializer(DSOModelSerializer):
+    class Meta:
+        model = Actor
+        fields = ["name"]
 
 
 class CategorySerializer(DSOModelSerializer):
@@ -21,6 +27,7 @@ class CategorySerializer(DSOModelSerializer):
 
 class MovieSerializer(DSOModelSerializer):
     category = EmbeddedField(CategorySerializer)
+    actors = EmbeddedManyToManyField(ActorSerializer)
 
     class Meta:
         model = Movie
@@ -37,14 +44,20 @@ class LocationSerializer(DSOModelSerializer):
 def test_serializer_single(drf_request, movie):
     """Prove that the serializer can embed data (for the detail page)"""
     serializer = MovieSerializer(
-        instance=movie, fields_to_expand=["category"], context={"request": drf_request}
+        instance=movie, fields_to_expand=["actors", "category"], context={"request": drf_request}
     )
 
     data = normalize_data(serializer.data)
     assert data == {
         "name": "foo123",
         "category_id": movie.category_id,
-        "_embedded": {"category": {"name": "bar"}},
+        "_embedded": {
+            "actors": [
+                {"name": "John Doe"},
+                {"name": "Jane Doe"},
+            ],
+            "category": {"name": "bar"},
+        },
     }
 
 
@@ -54,13 +67,17 @@ def test_serializer_many(drf_request, movie):
     serializer = MovieSerializer(
         Movie.objects.all(),
         many=True,
-        fields_to_expand=["category"],
+        fields_to_expand=["actors", "category"],
         context={"request": drf_request},
     )
 
     data = normalize_data(serializer.data)
     assert data == {
         "movie": [{"name": "foo123", "category_id": movie.category_id}],
+        "actors": [
+            {"name": "John Doe"},
+            {"name": "Jane Doe"},
+        ],
         "category": [{"name": "bar"}],
     }
 
@@ -102,7 +119,7 @@ def test_pagination_many(drf_request, movie):
     serializer = MovieSerializer(
         many=True,
         instance=queryset,
-        fields_to_expand=["category"],
+        fields_to_expand=["actors", "category"],
         context={"request": drf_request},
     )
     paginator = DSOPageNumberPagination()
@@ -123,6 +140,10 @@ def test_pagination_many(drf_request, movie):
         },
         "_embedded": {
             "movie": [{"name": "foo123", "category_id": movie.category_id}],
+            "actors": [
+                {"name": "John Doe"},
+                {"name": "Jane Doe"},
+            ],
             "category": [{"name": "bar"}],
         },
         "page": {"number": 1, "size": 20, "totalElements": 1, "totalPages": 1},

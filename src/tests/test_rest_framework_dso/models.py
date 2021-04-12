@@ -17,9 +17,17 @@ class Category(models.Model, NonTemporalMixin):
         app_label = "test_rest_framework_dso"
 
 
+class Actor(models.Model, NonTemporalMixin):
+    name = models.CharField(max_length=100)
+
+    class Meta:
+        app_label = "test_rest_framework_dso"
+
+
 class Movie(models.Model, NonTemporalMixin):
     name = models.CharField(max_length=100)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
+    actors = models.ManyToManyField(Actor, blank=True)
     date_added = models.DateTimeField(null=True)
     url = models.URLField(null=True)
 
