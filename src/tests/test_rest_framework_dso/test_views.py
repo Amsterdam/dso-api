@@ -9,12 +9,18 @@ from rest_framework import generics
 from rest_framework.exceptions import ErrorDetail, ValidationError
 
 from rest_framework_dso import views
-from rest_framework_dso.fields import EmbeddedField
+from rest_framework_dso.fields import EmbeddedField, EmbeddedManyToManyField
 from rest_framework_dso.filters import DSOFilterSet
 from rest_framework_dso.serializers import DSOModelSerializer
 from tests.utils import read_response, read_response_json
 
-from .models import Category, Movie
+from .models import Actor, Category, Movie
+
+
+class ActorSerializer(DSOModelSerializer):
+    class Meta:
+        model = Actor
+        fields = ["name"]
 
 
 class CategorySerializer(DSOModelSerializer):
@@ -25,6 +31,7 @@ class CategorySerializer(DSOModelSerializer):
 
 class MovieSerializer(DSOModelSerializer):
     category = EmbeddedField(CategorySerializer)
+    actors = EmbeddedManyToManyField(ActorSerializer)
 
     class Meta:
         model = Movie
@@ -59,7 +66,7 @@ pytestmark = [pytest.mark.urls(__name__)]  # enable for all tests in this file
 
 @pytest.mark.django_db
 class TestExpand:
-    @pytest.mark.parametrize("params", [{"_expand": "true"}, {"_expandScope": "category"}])
+    @pytest.mark.parametrize("params", [{"_expand": "true"}, {"_expandScope": "actors,category"}])
     def test_detail_expand_true(self, api_client, movie, params):
         """Prove that ?_expand=true and ?_expand=category both work for the detail view.
 
@@ -71,7 +78,13 @@ class TestExpand:
             "name": "foo123",
             "category_id": movie.category_id,
             "date_added": None,
-            "_embedded": {"category": {"name": "bar"}},
+            "_embedded": {
+                "actors": [
+                    {"name": "John Doe"},
+                    {"name": "Jane Doe"},
+                ],
+                "category": {"name": "bar"},
+            },
         }
         assert response["Content-Type"] == "application/hal+json"
 
@@ -90,11 +103,11 @@ class TestExpand:
             "title": "Malformed request.",
             "detail": (
                 "Eager loading is not supported for field 'foobar', "
-                "available options are: category"
+                "available options are: actors, category"
             ),
         }
 
-    @pytest.mark.parametrize("params", [{"_expand": "true"}, {"_expandScope": "category"}])
+    @pytest.mark.parametrize("params", [{"_expand": "true"}, {"_expandScope": "actors,category"}])
     def test_list_expand_true(self, api_client, movie, params):
         """Prove that ?_expand=true and ?_expandScope=category both work for the detail view.
 
@@ -111,6 +124,10 @@ class TestExpand:
             "_embedded": {
                 "movie": [
                     {"name": "foo123", "category_id": movie.category_id, "date_added": None}
+                ],
+                "actors": [
+                    {"name": "John Doe"},
+                    {"name": "Jane Doe"},
                 ],
                 "category": [{"name": "bar"}],
             },
@@ -139,6 +156,10 @@ class TestExpand:
             "_embedded": {
                 "movie": [
                     {"name": "foo123", "category_id": movie.category_id, "date_added": None}
+                ],
+                "actors": [
+                    {"name": "John Doe"},
+                    {"name": "Jane Doe"},
                 ],
                 "category": [{"name": "bar"}],
             },
@@ -425,7 +446,7 @@ class TestExceptionHandler:
             "title": "Malformed request.",
             "detail": (
                 "Eager loading is not supported for field 'unknownField', "
-                "available options are: category"
+                "available options are: actors, category"
             ),
             "status": 400,
         }
