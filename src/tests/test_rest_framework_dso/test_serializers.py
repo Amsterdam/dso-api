@@ -4,40 +4,12 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.request import Request
 
 from rest_framework_dso.crs import RD_NEW, WGS84
-from rest_framework_dso.fields import EmbeddedField, EmbeddedManyToManyField
 from rest_framework_dso.pagination import DSOPageNumberPagination
 from rest_framework_dso.renderers import HALJSONRenderer
-from rest_framework_dso.serializers import DSOModelSerializer
 from tests.utils import normalize_data, read_response_json
 
-from .models import Actor, Category, Location, Movie
-
-
-class ActorSerializer(DSOModelSerializer):
-    class Meta:
-        model = Actor
-        fields = ["name"]
-
-
-class CategorySerializer(DSOModelSerializer):
-    class Meta:
-        model = Category
-        fields = ["name"]
-
-
-class MovieSerializer(DSOModelSerializer):
-    category = EmbeddedField(CategorySerializer)
-    actors = EmbeddedManyToManyField(ActorSerializer)
-
-    class Meta:
-        model = Movie
-        fields = ["name", "category_id"]
-
-
-class LocationSerializer(DSOModelSerializer):
-    class Meta:
-        model = Location
-        fields = ["geometry"]
+from .models import Movie
+from .serializers import LocationSerializer, MovieSerializer
 
 
 @pytest.mark.django_db
@@ -51,6 +23,7 @@ def test_serializer_single(drf_request, movie):
     assert data == {
         "name": "foo123",
         "category_id": movie.category_id,
+        "date_added": None,
         "_embedded": {
             "actors": [
                 {"name": "John Doe"},
@@ -73,7 +46,7 @@ def test_serializer_many(drf_request, movie):
 
     data = normalize_data(serializer.data)
     assert data == {
-        "movie": [{"name": "foo123", "category_id": movie.category_id}],
+        "movie": [{"name": "foo123", "category_id": movie.category_id, "date_added": None}],
         "actors": [
             {"name": "John Doe"},
             {"name": "Jane Doe"},
@@ -102,7 +75,7 @@ def test_serializer_embed_with_missing_relations(drf_request):
 
         data = normalize_data(serializer.data)
         assert data == {
-            "movie": [{"name": "Test", "category_id": movie.category_id}],
+            "movie": [{"name": "Test", "category_id": movie.category_id, "date_added": None}],
             "category": [],
         }
     finally:
@@ -139,7 +112,7 @@ def test_pagination_many(drf_request, movie):
             "previous": {"href": None},
         },
         "_embedded": {
-            "movie": [{"name": "foo123", "category_id": movie.category_id}],
+            "movie": [{"name": "foo123", "category_id": movie.category_id, "date_added": None}],
             "actors": [
                 {"name": "John Doe"},
                 {"name": "Jane Doe"},
@@ -155,7 +128,9 @@ def test_pagination_many(drf_request, movie):
 
 
 @pytest.mark.django_db
-@pytest.mark.parametrize("fields", ["name", "-category_id"])  # -category_id leaves only name.
+@pytest.mark.parametrize(
+    "fields", ["name", "-category_id,-date_added"]  # both options give the same output
+)
 def test_fields_limit_works(api_rf, movie, fields):
     """Prove that serializer can limit output fields."""
     django_request = api_rf.get("/", {"fields": fields})
