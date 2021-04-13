@@ -44,7 +44,14 @@ pytestmark = [pytest.mark.urls(__name__)]  # enable for all tests in this file
 
 @pytest.mark.django_db
 class TestExpand:
-    @pytest.mark.parametrize("params", [{"_expand": "true"}, {"_expandScope": "actors,category"}])
+    @pytest.mark.parametrize(
+        "params",
+        [
+            {"_expand": "true"},
+            {"_expand": "true", "_expandScope": "actors,category"},
+            {"_expandScope": "actors,category"},  # backwards compatibility
+        ],
+    )
     def test_detail_expand_true(self, api_client, movie, params):
         """Prove that ?_expand=true and ?_expand=category both work for the detail view.
 
@@ -63,6 +70,24 @@ class TestExpand:
                 ],
                 "category": {"name": "bar"},
             },
+        }
+        assert response["Content-Type"] == "application/hal+json"
+
+    @pytest.mark.parametrize(
+        "params",
+        [
+            {"_expand": "false"},
+            {"_expand": "false", "_expandScope": "actors,category"},
+        ],
+    )
+    def test_detail_expand_false(self, api_client, movie, params):
+        """Prove that ?_expand=false doesn't trigger expansion."""
+        response = api_client.get(f"/v1/movies/{movie.pk}", data=params)
+        data = read_response_json(response)
+        assert data == {
+            "name": "foo123",
+            "category_id": movie.category_id,
+            "date_added": None,
         }
         assert response["Content-Type"] == "application/hal+json"
 
@@ -85,7 +110,14 @@ class TestExpand:
             ),
         }
 
-    @pytest.mark.parametrize("params", [{"_expand": "true"}, {"_expandScope": "actors,category"}])
+    @pytest.mark.parametrize(
+        "params",
+        [
+            {"_expand": "true"},
+            {"_expand": "true", "_expandScope": "actors,category"},
+            {"_expandScope": "actors,category"},  # backwards compatibility
+        ],
+    )
     def test_list_expand_true(self, api_client, movie, params):
         """Prove that ?_expand=true and ?_expandScope=category both work for the detail view.
 
@@ -108,6 +140,32 @@ class TestExpand:
                     {"name": "Jane Doe"},
                 ],
                 "category": [{"name": "bar"}],
+            },
+            "page": {"number": 1, "size": 20, "totalElements": 1, "totalPages": 1},
+        }
+        assert response["Content-Type"] == "application/hal+json"
+
+    @pytest.mark.parametrize(
+        "params",
+        [
+            {"_expand": "false"},
+            {"_expand": "false", "_expandScope": "actors,category"},
+        ],
+    )
+    def test_list_expand_false(self, api_client, movie, params):
+        """Prove that ?_expand=false won't trigger expansion."""
+        response = api_client.get("/v1/movies", data=params)
+        data = read_response_json(response)
+        assert data == {
+            "_links": {
+                "self": {"href": "http://testserver/v1/movies"},
+                "next": {"href": None},
+                "previous": {"href": None},
+            },
+            "_embedded": {
+                "movie": [
+                    {"name": "foo123", "category_id": movie.category_id, "date_added": None}
+                ],
             },
             "page": {"number": 1, "size": 20, "totalElements": 1, "totalPages": 1},
         }
@@ -404,7 +462,7 @@ class TestExceptionHandler:
             "type": "urn:apiexception:parse_error",
             "title": "Malformed request.",
             "detail": (
-                "Only _expand=true is allowed. Use _expandScope to expand specific fields."
+                "Only _expand=true|false is allowed. Use _expandScope to expand specific fields."
             ),
             "status": 400,
         }
