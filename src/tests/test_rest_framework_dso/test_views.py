@@ -9,33 +9,11 @@ from rest_framework import generics
 from rest_framework.exceptions import ErrorDetail, ValidationError
 
 from rest_framework_dso import views
-from rest_framework_dso.fields import EmbeddedField, EmbeddedManyToManyField
 from rest_framework_dso.filters import DSOFilterSet
-from rest_framework_dso.serializers import DSOModelSerializer
 from tests.utils import read_response, read_response_json
 
-from .models import Actor, Category, Movie
-
-
-class ActorSerializer(DSOModelSerializer):
-    class Meta:
-        model = Actor
-        fields = ["name"]
-
-
-class CategorySerializer(DSOModelSerializer):
-    class Meta:
-        model = Category
-        fields = ["name"]
-
-
-class MovieSerializer(DSOModelSerializer):
-    category = EmbeddedField(CategorySerializer)
-    actors = EmbeddedManyToManyField(ActorSerializer)
-
-    class Meta:
-        model = Movie
-        fields = ["name", "category_id", "date_added"]
+from .models import Movie
+from .serializers import MovieSerializer
 
 
 class MovieFilterSet(DSOFilterSet):
