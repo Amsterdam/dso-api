@@ -87,7 +87,7 @@ Meaning, that requests for it are proxied to another API;
 an API that we apparently cannot access at this moment.
 To address the error we need to point requests for that dataset to another valid URL:
 
-    ./manage.py change_dataset hcbrk --endpoint-url=http://google.com
+    ./manage.py change_dataset hcbrk --endpoint-url='http://example.com/{table_id}/'
 
 # Run the server
 
