@@ -74,13 +74,17 @@ class _SideloadMixin:
         # Initialize from request
         expand = request.GET.get(self.expand_all_param)
         if expand == "true":
-            # ?_expand=true should export all fields
-            return True
+            # ?_expand=true should export all fields, unless `&_expandScope=..` is also given.
+            expand = request.GET.get(self.expand_param)
+            return expand.split(",") if expand else True
+        elif expand == "false":
+            return False
         elif expand:
             raise ParseError(
-                "Only _expand=true is allowed. Use _expandScope to expand specific fields."
+                "Only _expand=true|false is allowed. Use _expandScope to expand specific fields."
             ) from None
 
+        # Backwards compatibility, also allow `?_expandScope` without stating `?_expand=true`
         # otherwise, parse as a list of fields to expand.
         expand = request.GET.get(self.expand_param)
         return expand.split(",") if expand else False
