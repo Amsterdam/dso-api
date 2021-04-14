@@ -110,6 +110,30 @@ class TestExpand:
             ),
         }
 
+    @staticmethod
+    @pytest.mark.parametrize("category_id", [None, 9999999])
+    def test_detail_expand_nulls(api_client, category_id):
+        """Prove that expanding NULL values or invalid FK values won't crash.
+        The _embedded part has a None value instead.
+        """
+        movie = Movie.objects.create(name="foo123", category_id=category_id)
+        try:
+            response = api_client.get(f"/v1/movies/{movie.pk}", data={"_expand": "true"})
+            data = read_response_json(response)
+            assert data == {
+                "name": "foo123",
+                "category_id": category_id,
+                "date_added": None,
+                "_embedded": {
+                    "actors": [],
+                    "category": None,
+                },
+            }
+            assert response["Content-Type"] == "application/hal+json"
+        finally:
+            # avoid Fk constraint errors when constraints are checked before rollback
+            movie.delete()
+
     @pytest.mark.parametrize(
         "params",
         [
