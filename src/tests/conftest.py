@@ -334,7 +334,7 @@ def brp_schema(brp_schema_json) -> DatasetSchema:
 
 @pytest.fixture()
 def brp_endpoint_url() -> str:
-    return "http://remote-server/unittest/brp/ingeschrevenpersonen/"
+    return "http://remote-server/unittest/brp/{table_id}"
 
 
 @pytest.fixture()

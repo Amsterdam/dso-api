@@ -5,6 +5,7 @@ from django.urls import reverse
 from schematools.contrib.django import models
 from urllib3_mock import Responses
 
+from dso_api.dynamic_api.remote import remote_viewset_factory
 from tests.utils import read_response_json
 
 DEFAULT_RESPONSE = {
@@ -333,3 +334,18 @@ def test_remote_timeout(api_client, router, brp_dataset, urllib3_mocker):
         "detail": "Connection failed (server timeout)",
         "status": 504,
     }
+
+
+@pytest.mark.parametrize(
+    "case",
+    [
+        ("http://remote", "http://remote/foo?bar=baz"),
+        ("http://remote/", "http://remote/foo?bar=baz"),
+        ("http://remote/quux/{table_id}", "http://remote/quux/mytable/foo?bar=baz"),
+        ("http://remote/quux/{table_id}/", "http://remote/quux/mytable/foo?bar=baz"),
+    ],
+)
+def test_make_url(case):
+    base, expect = case
+    viewset = remote_viewset_factory(base, type(None), None, "mytable", None)()
+    assert viewset._make_url("foo", {"bar": "baz"}) == expect
