@@ -4,13 +4,14 @@ The endpoint is queried with raw urllib3 logic, to avoid the overhead of the req
 """
 import logging
 from typing import Type, Union
-from urllib.parse import urlencode, urljoin, urlparse
+from urllib.parse import urlparse
 
 import certifi
 import orjson
 import urllib3
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
+from more_ds.network.url import URL
 from rest_framework import status
 from rest_framework.exceptions import NotAuthenticated, NotFound, ParseError
 from rest_framework.response import Response
@@ -115,7 +116,7 @@ class RemoteViewSet(DSOViewMixin, ViewSet):
 
     def retrieve(self, request, *args, **kwargs):
         """The GET request for detail"""
-        data = self._call_remote(url=self.kwargs["pk"])
+        data = self._call_remote(path=self.kwargs["pk"])
         serializer = self.get_serializer(data=data)
         # Validate data. Throw exception if not valid
         self.validate(serializer, data)
@@ -140,20 +141,12 @@ class RemoteViewSet(DSOViewMixin, ViewSet):
                 status_code=status.HTTP_502_BAD_GATEWAY,
             )
 
-    def _call_remote(self, url="", query_params={}) -> Union[dict, list]:  # noqa: C901
+    def _call_remote(self, path="", query_params={}) -> Union[dict, list]:  # noqa: C901
         """Make a request to the remote server"""
         if not self.endpoint_url:
             raise ImproperlyConfigured(f"{self.__class__.__name__}.endpoint_url is not set")
 
-        if not url:
-            url = self.endpoint_url
-        else:
-            url = urljoin(self.endpoint_url, url)
-
-        if query_params:
-            url = urljoin(self.endpoint_url, "?" + urlencode(query_params))
-
-        url = url.replace("{table_id}", self.table_id)
+        url = self._make_url(path, query_params)
 
         # Using urllib directly instead of requests for performance
         logger.debug("Forwarding call to %s", url)
@@ -182,6 +175,18 @@ class RemoteViewSet(DSOViewMixin, ViewSet):
             return orjson.loads(response.data)
 
         return self._raise_http_error(response)
+
+    def _make_url(self, path: str, query_params: dict) -> str:
+        if not self.endpoint_url:
+            raise ImproperlyConfigured(f"{self.__class__.__name__}.endpoint_url is not set")
+
+        if not path:
+            url = self.endpoint_url
+        else:
+            url = URL(self.endpoint_url) / path
+
+        url = URL(url.replace("{table_id}", self.table_id))
+        return url // query_params
 
     def _raise_http_error(self, response: HTTPResponse):  # noqa: C901
         """Translate the remote HTTP error to the proper response.
