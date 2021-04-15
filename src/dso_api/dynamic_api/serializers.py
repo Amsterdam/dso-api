@@ -64,6 +64,20 @@ class URLencodingURLfields:
         return data
 
 
+def filter_latest_temporal(queryset: models.QuerySet) -> models.QuerySet:
+    """Make sure a queryset will only return the latest temporal models"""
+    dataset_schema = queryset.model.get_dataset_schema()
+    temporal_config = dataset_schema.temporal
+    if not temporal_config:
+        return queryset
+
+    identifier = dataset_schema.identifier
+    sequence_name = dataset_schema.temporal["identifier"]
+
+    # does SELECT DISTINCT ON(identifier) ... ORDER BY identifier, sequence DESC
+    return queryset.distinct(identifier).order_by(identifier, f"-{sequence_name}")
+
+
 def temporal_id_based_fetcher(model, is_loose=False):
     """Helper function to return a fetcher function.
     For temporal data tables, that need to be accessed by identifier only,
@@ -72,14 +86,10 @@ def temporal_id_based_fetcher(model, is_loose=False):
 
     def _fetcher(id_list):
         if is_loose:
-            # We assume temporal config is available in the dataset
-            dataset_schema = model.get_dataset_schema()
-            identifier = dataset_schema.identifier
-            sequence_name = dataset_schema.temporal["identifier"]
+            identifier = model.get_dataset_schema().identifier
             return (
-                model.objects.distinct(identifier)  # does SELECT DISTINCT ON(identifier)
+                filter_latest_temporal(model.objects)
                 .filter(**{f"{identifier}__in": id_list})
-                .order_by(identifier, f"-{sequence_name}")
                 .iterator()
             )
         else:
