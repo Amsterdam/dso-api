@@ -20,7 +20,7 @@ and constructing serializer fields based on the model field metadata.
 """
 import inspect
 from collections import OrderedDict
-from typing import Dict, List, Optional, Union, cast
+from typing import List, Optional, Union, cast
 
 from django.contrib.gis.db import models as gis_models
 from django.db import models
@@ -34,11 +34,13 @@ from rest_framework_gis.fields import GeometryField
 from rest_framework_dso.crs import CRS
 from rest_framework_dso.embedding import (
     ChunkedQuerySetIterator,
+    EmbeddedFieldMatch,
     EmbeddedResultSet,
     ObservableIterator,
-    get_expanded_fields,
+    get_expanded_fields_by_scope,
+    parse_expand_scope,
 )
-from rest_framework_dso.fields import DSOGeometryField, EmbeddedField, LinksField
+from rest_framework_dso.fields import DSOGeometryField, LinksField
 from rest_framework_dso.serializer_helpers import ReturnGenerator, peek_iterable
 
 
@@ -67,30 +69,17 @@ class _SideloadMixin:
         if self._fields_to_expand is not empty:
             # Instead of retrieving this from request,
             # the expand can be defined using the serializer __init__.
-            return False if not self._fields_to_expand else cast(list, self._fields_to_expand)
-
-        request = self.context["request"]
-
-        # Initialize from request
-        expand = request.GET.get(self.expand_all_param)
-        if expand == "true":
-            # ?_expand=true should export all fields, unless `&_expandScope=..` is also given.
-            expand = request.GET.get(self.expand_param)
-            return expand.split(",") if expand else True
-        elif expand == "false":
-            return False
-        elif expand:
-            raise ParseError(
-                "Only _expand=true|false is allowed. Use _expandScope to expand specific fields."
-            ) from None
-
-        # Backwards compatibility, also allow `?_expandScope` without stating `?_expand=true`
-        # otherwise, parse as a list of fields to expand.
-        expand = request.GET.get(self.expand_param)
-        return expand.split(",") if expand else False
+            return False if self._fields_to_expand is False else cast(list, self._fields_to_expand)
+        else:
+            # Parse from request
+            request = self.context["request"]
+            return parse_expand_scope(
+                expand=request.GET.get(self.expand_all_param),
+                expand_scope=request.GET.get(self.expand_param),
+            )
 
     @property
-    def expanded_fields(self) -> Dict[str, EmbeddedField]:
+    def expanded_fields(self) -> List[EmbeddedFieldMatch]:
         """Retrieve the embedded fields for this request."""
         raise NotImplementedError("child serializer should implement this")
 
@@ -117,12 +106,12 @@ class DSOListSerializer(_SideloadMixin, serializers.ListSerializer):
             self.results_field = self.child.Meta.model._meta.model_name
 
     @cached_property
-    def expanded_fields(self) -> Dict[str, EmbeddedField]:
+    def expanded_fields(self) -> List[EmbeddedFieldMatch]:
         """Retrieve the embedded fields for this serializer"""
         request = self.context["request"]
-        fields = self.fields_to_expand
-        if not fields:
-            return {}
+        expand_scope = self.fields_to_expand
+        if not expand_scope:
+            return []
 
         if (
             not request.accepted_renderer.supports_list_embeds
@@ -130,8 +119,10 @@ class DSOListSerializer(_SideloadMixin, serializers.ListSerializer):
         ):
             raise ParseError("Embedding objects is not supported for this output format")
 
-        return get_expanded_fields(
-            self.child, fields, allow_m2m=request.accepted_renderer.supports_m2m
+        return get_expanded_fields_by_scope(
+            self.child,
+            expand_scope,
+            allow_m2m=request.accepted_renderer.supports_m2m,
         )
 
     @property
@@ -162,24 +153,24 @@ class DSOModelListSerializer(DSOListSerializer):
     # Fetcher function to be overridden by subclasses if needed
     id_based_fetcher = None
 
-    def _get_embedded_serializer(self, field, **kwargs):
-        serializer = field.get_serializer(self.child, many=False, **kwargs)
-
-        # Allow the output format to customize the serializer for the embedded relation.
-        renderer = self.context["request"].accepted_renderer
-        if hasattr(renderer, "tune_serializer"):
-            renderer.tune_serializer(serializer)
-
-        return serializer
-
-    def _get_prefetch_lookups(self) -> List[str]:
+    def get_prefetch_lookups(self) -> List[Union[models.Prefetch, str]]:
         """Tell which fields should be included for a ``prefetch_related()``."""
-        return [
-            f.source.replace(".", "__")
-            for f in self.child.fields.values()
-            if isinstance(f, (serializers.Serializer, serializers.RelatedField))
-            and f.source != "*"
-        ]
+        lookups = []
+
+        def _walk_serializer_lookups(serializer, prefix=""):
+            # Recursively find all lookups that need to be added.
+            for f in serializer.fields.values():
+                if f.source != "*" and isinstance(
+                    f, (serializers.Serializer, serializers.RelatedField)
+                ):
+                    lookup = f"{prefix}{f.source.replace('.', '__')}"
+                    lookups.append(lookup)
+
+                    if isinstance(f, serializers.Serializer):
+                        _walk_serializer_lookups(f, prefix=f"{f.source}__")
+
+        _walk_serializer_lookups(self.child)
+        return lookups
 
     def to_representation(self, data):
         """Improved list serialization.
@@ -195,16 +186,17 @@ class DSOModelListSerializer(DSOListSerializer):
         request = self.context["request"]
 
         # Find the the best approach to iterate over the results.
-        if prefetch_lookups := self._get_prefetch_lookups():
+        if prefetch_lookups := self.get_prefetch_lookups():
             # When there are related fields, avoid an N-query issue by prefetching.
             # ChunkedQuerySetIterator makes sure the queryset is still read in partial chunks.
             queryset_iterator = ChunkedQuerySetIterator(data.prefetch_related(*prefetch_lookups))
         else:
             queryset_iterator = data.iterator()
 
-        # Output format needs a plain list (a non-JSON format), give it just that.
+        # Find the desired output format
         if not request.accepted_renderer.supports_list_embeds:
-            # The generator syntax tricks DRF into reading the source bit by bit,
+            # When the output format needs a plain list (a non-JSON format), give it just that.
+            # The generator syntax still tricks DRF into reading the source bit by bit,
             # without caching the whole queryset into memory.
             items = (self.child.to_representation(item) for item in queryset_iterator)
 
@@ -216,14 +208,17 @@ class DSOModelListSerializer(DSOListSerializer):
             _, items = peek_iterable(items)
             return items
         else:
+            # Output renderer supports embedding.
             # Add any HAL-style sideloading if these were requested
             embedded_fields = {}
             if self.expanded_fields:
                 # All embedded result sets are updated during the iteration over
                 # the main data with the relevant ID's to fetch on-demand.
                 embedded_fields = {
-                    name: EmbeddedResultSet(field, serializer=self._get_embedded_serializer(field))
-                    for name, field in self.expanded_fields.items()
+                    expand_match.name: EmbeddedResultSet(
+                        expand_match.field, serializer=expand_match.embedded_serializer
+                    )
+                    for expand_match in self.expanded_fields
                 }
 
                 # Wrap the main object inside an observer, which notifies all
@@ -328,10 +323,12 @@ class DSOSerializer(_SideloadMixin, serializers.Serializer):
         # (e.g. CSV). To achieve this effect, the serializers are included as regular fields.
         # The getattr() is needed for the OpenAPIRenderer which lacks the supports_* attrs.
         if getattr(request.accepted_renderer, "supports_inline_embeds", False):
-            for name, field in self.expanded_fields.items():
+            for embed_match in self.expanded_fields:
                 # Not using field.get_serialize() as the .bind() will be called by DRF here.
-                fields[name] = field.serializer_class(
-                    source=(field.source if field.source != name else None), fields_to_expand=None
+                name = embed_match.name
+                source = embed_match.field.source if embed_match.field.source != name else None
+                fields[name] = embed_match.field.serializer_class(
+                    source=source, fields_to_expand=None
                 )
 
         return fields
@@ -368,12 +365,12 @@ class DSOSerializer(_SideloadMixin, serializers.Serializer):
         return display_fields
 
     @cached_property
-    def expanded_fields(self) -> Dict[str, EmbeddedField]:
+    def expanded_fields(self) -> List[EmbeddedFieldMatch]:
         """Retrieve the embedded fields for this serializer"""
         request = self.context["request"]
-        fields = self.fields_to_expand
-        if not fields:
-            return {}
+        expand_scope = self.fields_to_expand
+        if not expand_scope:
+            return []
 
         if (
             not request.accepted_renderer.supports_detail_embeds
@@ -381,7 +378,9 @@ class DSOSerializer(_SideloadMixin, serializers.Serializer):
         ):
             raise ParseError("Embedding objects is not supported for this output format")
 
-        return get_expanded_fields(self, fields, allow_m2m=request.accepted_renderer.supports_m2m)
+        return get_expanded_fields_by_scope(
+            self, expand_scope, allow_m2m=request.accepted_renderer.supports_m2m
+        )
 
     @cached_property
     def _geometry_fields(self) -> List[GeometryField]:
@@ -511,31 +510,26 @@ class DSOModelSerializer(DSOSerializer, serializers.HyperlinkedModelSerializer):
 
         return ret
 
-    def _get_expand(self, instance, expanded_fields):
+    def _get_expand(self, instance, expanded_fields: List[EmbeddedFieldMatch]):
         """Generate the expand section for a detail page.
 
         This reuses the machinery for a list processing,
         but immediately fetches the results as these are inlined in the detail object.
         """
         expanded = {}
-        renderer = self.context["request"].accepted_renderer
-
-        for name, field in expanded_fields.items():
+        for embed_match in expanded_fields:
             # This just reuses the machinery for listings
-            field_serializer = field.get_serializer(self)
-            if hasattr(renderer, "tune_serializer"):
-                # Allow the output format to customize the serializer for the embedded relation.
-                renderer.tune_serializer(field_serializer)
-
             result_set = EmbeddedResultSet(
-                field, serializer=field.get_serializer(self), main_instances=[instance]
+                embed_match.field,
+                serializer=embed_match.embedded_serializer,
+                main_instances=[instance],
             )
 
-            if not field.is_array:
+            if not embed_match.field.is_array:
                 # Single object, embed as dict directly
-                expanded[name] = next(iter(result_set), None)
+                expanded[embed_match.name] = next(iter(result_set), None)
             else:
                 # M2M relation, include as list (no need to delay this).
-                expanded[name] = list(result_set)
+                expanded[embed_match.name] = list(result_set)
 
         return expanded

@@ -43,7 +43,7 @@ class RemoteListSerializer(DSOListSerializer):
 
     @property
     def expanded_fields(self):
-        return {}
+        return []
 
 
 class RemoteSerializer(DSOSerializer):

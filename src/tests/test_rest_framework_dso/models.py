@@ -1,3 +1,4 @@
+"""Models for testing"""
 from django.contrib.gis.db import models as gis_models
 from django.db import models
 
@@ -10,15 +11,32 @@ class NonTemporalMixin:
         return False
 
 
-class Category(models.Model, NonTemporalMixin):
+class MovieUser(models.Model, NonTemporalMixin):
+    """Used to test double-nested relations (both FK and M2M)"""
+
     name = models.CharField(max_length=100)
 
     class Meta:
         app_label = "test_rest_framework_dso"
 
 
-class Actor(models.Model, NonTemporalMixin):
+class Category(models.Model, NonTemporalMixin):
+    """Used to test FK relations."""
+
     name = models.CharField(max_length=100)
+    last_updated_by = models.ForeignKey(
+        MovieUser, related_name="categories_updated", null=True, on_delete=models.SET_NULL
+    )
+
+    class Meta:
+        app_label = "test_rest_framework_dso"
+
+
+class Actor(models.Model, NonTemporalMixin):
+    """Used to test M2M relations"""
+
+    name = models.CharField(max_length=100)
+    last_updated_by = models.ForeignKey(MovieUser, null=True, on_delete=models.SET_NULL)
 
     class Meta:
         app_label = "test_rest_framework_dso"
@@ -26,7 +44,9 @@ class Actor(models.Model, NonTemporalMixin):
 
 class Movie(models.Model, NonTemporalMixin):
     name = models.CharField(max_length=100)
-    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
+    category = models.ForeignKey(
+        Category, related_name="movies", on_delete=models.SET_NULL, null=True
+    )
     actors = models.ManyToManyField(Actor, blank=True)
     date_added = models.DateTimeField(null=True)
     url = models.URLField(null=True)

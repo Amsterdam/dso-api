@@ -309,7 +309,6 @@ class DynamicRouter(routers.DefaultRouter):
 
         # Clear models, serializers and app registries
         self.all_models.clear()
-        serializer_factory.cache_clear()
         remove_dynamic_models()
 
     def filter_datasets(self, queryset):

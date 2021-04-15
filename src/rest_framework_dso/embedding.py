@@ -7,89 +7,212 @@ the main objects are inspected while they are consumed by the output stream.
 from __future__ import annotations
 
 from collections import defaultdict
+from dataclasses import dataclass
+from functools import cached_property
 from itertools import islice
-from typing import Callable, Dict, Iterable, Iterator, List, Optional, TypeVar, Union
+from typing import Callable, Dict, Iterable, Iterator, List, Optional, Type, TypeVar, Union
 
 from django.db import models
 from lru import LRU
 from rest_framework import serializers
-from rest_framework.exceptions import ParseError, PermissionDenied
+from rest_framework.exceptions import ParseError
 
-from dso_api.dynamic_api.permissions import fetch_scopes_for_model
-from rest_framework_dso.fields import AbstractEmbeddedField, EmbeddedField
+from rest_framework_dso.fields import AbstractEmbeddedField
 from rest_framework_dso.serializer_helpers import ReturnGenerator, peek_iterable
 
-EmbeddedFieldDict = Dict[str, AbstractEmbeddedField]
+DictOfDicts = Dict[str, Dict[str, dict]]
 T = TypeVar("T")
 M = TypeVar("M", bound=models.Model)
 DEFAULT_SQL_CHUNK_SIZE = 2000  # allow unit tests to alter this.
 
 
-def get_expanded_fields(  # noqa: C901
-    parent_serializer: serializers.Serializer,
-    fields_to_expand: Union[List[str], bool],
+def parse_expand_scope(
+    expand: Optional[str], expand_scope: Optional[str]
+) -> Union[bool, List[str]]:
+    """Parse the raw request parameters"""
+
+    # Initialize from request
+    if expand == "true":
+        # ?_expand=true should export all fields, unless `&_expandScope=..` is also given.
+        return expand_scope.split(",") if expand_scope else True
+    elif expand == "false":
+        return False
+    elif expand:
+        raise ParseError(
+            "Only _expand=true|false is allowed. Use _expandScope to expand specific fields."
+        ) from None
+
+    # Backwards compatibility, also allow `?_expandScope` without stating `?_expand=true`
+    # otherwise, parse as a list of fields to expand.
+    return expand_scope.split(",") if expand_scope else False
+
+
+def get_nested_fields_to_expand(
+    serializer_class: Type[serializers.Serializer],
+    expand_scope: Union[bool, List[str]],
     allow_m2m=True,
-) -> Dict[str, EmbeddedField]:
+) -> DictOfDicts:
+    """Convert the string value of ?_expand/_expandScope to a browsable tree."""
+    if not expand_scope:
+        return {}
+    elif expand_scope is True:
+        return get_all_embedded_field_names(serializer_class, allow_m2m=allow_m2m)
+    else:
+        return group_dotted_names(expand_scope)
+
+
+@dataclass
+class EmbeddedFieldMatch:
+    """Details of an embedded field,
+    with the associated metadata to resolve additional nested embeds too.
+    """
+
+    #: The parent serializer where the expanded field exists
+    serializer: serializers.Serializer
+
+    #: Name of the expanded field
+    name: str
+
+    #: Expanded field definition (shared object between all serializer instances!)
+    field: AbstractEmbeddedField
+
+    #: Prefix when this is a nested field
+    prefix: str
+
+    #: Additional nested expands that were requested for this field.
+    nested_fields_to_expand: DictOfDicts
+
+    def __repr__(self):
+        # Avoid long serializer repr which makes output unreadable.
+        return (
+            f"<{self.__class__.__name__}:"
+            f" {self.field!r}"
+            f" nested={self.nested_fields_to_expand!r}>"
+        )
+
+    @property
+    def full_name(self) -> str:
+        """Return the full dotted name of the field."""
+        return f"{self.prefix}{self.name}"
+
+    @cached_property
+    def embedded_serializer(self):
+        """Provide the serializer for the embedded relation."""
+        serializer = self.field.get_serializer(parent=self.serializer)
+
+        # Allow the output format to customize the serializer for the embedded relation.
+        renderer = self.serializer.context["request"].accepted_renderer
+        if hasattr(renderer, "tune_serializer"):
+            renderer.tune_serializer(serializer)
+
+        return serializer
+
+
+def get_expanded_fields_by_scope(
+    parent_serializer: serializers.Serializer,
+    expand_scope: Union[bool, List[str]],
+    allow_m2m=True,
+) -> List[EmbeddedFieldMatch]:
     """Find the expanded fields in a serializer that are requested.
     This translates the ``_expand`` query into a dict of embedded fields.
     """
+    if not expand_scope:
+        return []
+
+    fields_to_expand = get_nested_fields_to_expand(
+        parent_serializer.__class__, expand_scope, allow_m2m=allow_m2m
+    )
+
+    return get_expanded_fields(
+        parent_serializer, fields_to_expand=fields_to_expand, allow_m2m=allow_m2m
+    )
+
+
+def get_expanded_fields(
+    serializer: serializers.Serializer,
+    fields_to_expand: DictOfDicts,
+    allow_m2m=True,
+    prefix="",
+) -> List[EmbeddedFieldMatch]:
+    """Find the expanded fields for a serializer object."""
     if not fields_to_expand:
-        return {}
+        return []
 
-    allowed_names = getattr(parent_serializer.Meta, "embedded_fields", [])
-    auth_checker = getattr(parent_serializer, "get_auth_checker", lambda: None)()
-    embedded_fields = {}
+    allowed_names = getattr(serializer.Meta, "embedded_fields", [])
+    embedded_fields = []
 
-    # ?_expand=true should expand all names
-    auto_expand_all = fields_to_expand is True
-    if auto_expand_all:
-        fields_to_expand = allowed_names
-
-    for field_name in fields_to_expand:
+    for field_name, nested_fields_to_expand in fields_to_expand.items():
         if field_name not in allowed_names:
-            raise _expand_parse_error(allowed_names, field_name) from None
+            raise _expand_parse_error(allowed_names, field_name, prefix) from None
 
-        # Get the field
-        try:
-            field: AbstractEmbeddedField = getattr(parent_serializer, field_name)
-        except AttributeError:
-            raise RuntimeError(
-                f"{parent_serializer.__class__.__name__}.{field_name}"
-                f" does not refer to an embedded field."
-            ) from None
+        field = _get_embedded_field(serializer.__class__, field_name)
 
         # Some output formats don't support M2M, so avoid expanding these.
         if field.is_array and not allow_m2m:
-            if auto_expand_all:
-                continue
             raise ParseError(
-                f"Eager loading is not supported for field '{field_name}' in this output format"
+                f"Eager loading is not supported for"
+                f" field '{prefix}{field_name}' in this output format"
             )
 
-        # Check access via scopes (NOTE: this is higher-level functionality)
-        scopes = fetch_scopes_for_model(field.related_model)
-        if auth_checker and not auth_checker(*scopes.table):
-            # Not allowed, silently drop for _expand=true request.
-            if auto_expand_all:
-                continue
-
-            # Explicitly mentioned, raise error.
-            raise PermissionDenied(f"Eager loading not allowed for field '{field_name}'")
-
-        embedded_fields[field_name] = field
+        embedded_fields.append(
+            EmbeddedFieldMatch(serializer, field_name, field, prefix, nested_fields_to_expand)
+        )
 
     return embedded_fields
 
 
-def _expand_parse_error(allowed_names, field_name):
+def get_all_embedded_field_names(
+    serializer_class: Type[serializers.Serializer], allow_m2m=True
+) -> DictOfDicts:
+    """Find all possible expands, including nested fields.
+    The output format is identical to group_dotted_names().
+    """
+    result = {}
+
+    for field_name in getattr(serializer_class.Meta, "embedded_fields", ()):
+        field: AbstractEmbeddedField = _get_embedded_field(serializer_class, field_name)
+        if field.is_array and not allow_m2m:
+            continue
+
+        # If there are nested relations, these are found too.
+        # otherwise the value becomes an empty dict.
+        result[field_name] = get_all_embedded_field_names(
+            field.serializer_class, allow_m2m=allow_m2m
+        )
+
+    return result
+
+
+def group_dotted_names(fields_to_expand: List[str]) -> DictOfDicts:
+    """Convert a list of dotted names to tree."""
+    result = {}
+    for dotted_name in fields_to_expand:
+        tree_level = result
+        for path_item in dotted_name.split("."):
+            tree_level = tree_level.setdefault(path_item, {})
+    return result
+
+
+def _get_embedded_field(
+    serializer_class: Type[serializers.Serializer], field_name
+) -> AbstractEmbeddedField:
+    try:
+        return getattr(serializer_class, field_name)
+    except AttributeError:
+        raise RuntimeError(
+            f"{serializer_class.__name__}.{field_name}" f" does not refer to an embedded field."
+        ) from None
+
+
+def _expand_parse_error(allowed_names, field_name, prefix=""):
     """Generate the proper exception for the invalid expand name"""
-    available = ", ".join(sorted(allowed_names))
+    available = ", {prefix}".format(prefix=prefix).join(sorted(allowed_names))
     if not available:
         return ParseError("Eager loading is not supported for this endpoint")
     else:
         return ParseError(
-            f"Eager loading is not supported for field '{field_name}', "
-            f"available options are: {available}"
+            f"Eager loading is not supported for field '{prefix}{field_name}', "
+            f"available options are: {prefix}{available}"
         )
 
 
@@ -241,7 +364,7 @@ class EmbeddedResultSet(ReturnGenerator):
 
     def __init__(
         self,
-        embedded_field: EmbeddedField,
+        embedded_field: AbstractEmbeddedField,
         serializer: serializers.Serializer,
         main_instances: Optional[list] = None,
         id_fetcher=None,
@@ -258,9 +381,7 @@ class EmbeddedResultSet(ReturnGenerator):
 
         if id_fetcher is None and serializer.parent.id_based_fetcher:
             # Fallback to serializer based ID-fetcher if needed.
-            self.id_fetcher = serializer.parent.id_based_fetcher(
-                model=embedded_field.related_model, is_loose=embedded_field.is_loose
-            )
+            self.id_fetcher = serializer.parent.id_based_fetcher(embedded_field)
 
         # Allow to pre-feed with instances (e.g for detail view)
         if main_instances is not None:

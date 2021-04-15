@@ -1,9 +1,39 @@
+"""Tests for the ``rest_framework_dso.embedding`` module.
+
+The other embedding tests can be found under "test_serializers" and "test_views".
+"""
 from itertools import cycle
 
 import pytest
 
-from rest_framework_dso.embedding import ChunkedQuerySetIterator, ObservableIterator
+from rest_framework_dso.embedding import (
+    ChunkedQuerySetIterator,
+    ObservableIterator,
+    group_dotted_names,
+)
 from tests.test_rest_framework_dso.models import Category, Movie
+
+
+def test_group_dotted_names():
+    """Test whether the nested ?_expandScope can be parsed to a tree."""
+    result = group_dotted_names(
+        [
+            "user",
+            "user.group",
+            "user.permissions",
+            "group",
+            "group.permissions",
+        ]
+    )
+    assert result == {
+        "user": {
+            "group": {},
+            "permissions": {},
+        },
+        "group": {
+            "permissions": {},
+        },
+    }
 
 
 @pytest.mark.django_db

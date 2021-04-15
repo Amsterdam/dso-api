@@ -1,13 +1,16 @@
 from dataclasses import dataclass, field
-from typing import Dict, Set, Type
+from typing import Dict, List, Set, Type
 
 from cachetools.func import ttl_cache
 from django.contrib.auth.models import AnonymousUser, _user_has_perm
 from django.db.models import Model
 from rest_framework import permissions
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.viewsets import ViewSetMixin
 from schematools.contrib.django import models
 from schematools.utils import to_snake_case, toCamelCase
+
+from rest_framework_dso.embedding import EmbeddedFieldMatch
 
 
 @dataclass
@@ -77,6 +80,30 @@ def get_unauthorized_fields(request, model) -> Set[str]:
                 unauthorized_fields.add(toCamelCase(model_field.name))
 
     return unauthorized_fields
+
+
+def filter_unauthorized_expands(
+    request, expanded_fields: List[EmbeddedFieldMatch], skip_unauth=False
+) -> List[EmbeddedFieldMatch]:
+    """Remove expanded fields if these are not accessible"""
+    if not hasattr(request, "is_authorized_for"):
+        # Not using 'authorization_django' middleware.
+        return expanded_fields
+
+    result = []
+    for match in expanded_fields:
+        scopes = fetch_scopes_for_model(match.field.related_model)
+        if not request.is_authorized_for(*scopes.table):
+            if skip_unauth:
+                # Not allowed, but can silently drop for "auto expand all"
+                continue
+
+            # Explicitly mentioned, raise error.
+            raise PermissionDenied(f"Eager loading not allowed for field '{match.full_name}'")
+
+        result.append(match)
+
+    return result
 
 
 class HasOAuth2Scopes(permissions.BasePermission):

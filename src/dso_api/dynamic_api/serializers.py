@@ -11,7 +11,7 @@ from __future__ import annotations
 import re
 from collections import OrderedDict
 from functools import lru_cache
-from typing import Optional, Tuple, Type, Union
+from typing import List, Optional, Tuple, Type, Union
 from urllib.parse import quote, urlencode
 
 from django.core.exceptions import ImproperlyConfigured
@@ -31,6 +31,7 @@ from schematools.contrib.django.models import (
     LooseRelationField,
     LooseRelationManyToManyField,
 )
+from schematools.contrib.django.signals import dynamic_models_removed
 from schematools.types import DatasetTableSchema
 from schematools.utils import to_snake_case, toCamelCase
 
@@ -44,9 +45,14 @@ from dso_api.dynamic_api.fields import (
     TemporalLinksField,
     TemporalReadOnlyField,
 )
-from dso_api.dynamic_api.permissions import get_permission_key_for_field, get_unauthorized_fields
-from rest_framework_dso.fields import EmbeddedField, EmbeddedManyToManyField
-from rest_framework_dso.serializers import DSOModelSerializer
+from dso_api.dynamic_api.permissions import (
+    filter_unauthorized_expands,
+    get_permission_key_for_field,
+    get_unauthorized_fields,
+)
+from rest_framework_dso.embedding import EmbeddedFieldMatch
+from rest_framework_dso.fields import AbstractEmbeddedField, EmbeddedField, EmbeddedManyToManyField
+from rest_framework_dso.serializers import DSOModelListSerializer, DSOModelSerializer
 
 
 class URLencodingURLfields:
@@ -78,11 +84,13 @@ def filter_latest_temporal(queryset: models.QuerySet) -> models.QuerySet:
     return queryset.distinct(identifier).order_by(identifier, f"-{sequence_name}")
 
 
-def temporal_id_based_fetcher(model, is_loose=False):
+def temporal_id_based_fetcher(embedded_field: AbstractEmbeddedField):
     """Helper function to return a fetcher function.
     For temporal data tables, that need to be accessed by identifier only,
     we need to get the objects with the highest sequence number.
     """
+    model = embedded_field.related_model
+    is_loose = embedded_field.is_loose
 
     def _fetcher(id_list):
         if is_loose:
@@ -133,6 +141,22 @@ class _RelatedSummaryField(Field):
         return {"count": value.count(), "href": f"{url}{query_string}"}
 
 
+class DynamicListSerializer(DSOModelListSerializer):
+    """This serializer class is used internally when :class:`DynamicSerializer`
+    is initialized with the ``many=True`` init kwarg to process a list of objects.
+    """
+
+    @cached_property
+    def expanded_fields(self) -> List[EmbeddedFieldMatch]:
+        """Filter unauthorized fields from the matched expands."""
+        auto_expand_all = self.fields_to_expand is True
+        return filter_unauthorized_expands(
+            self.context["request"],
+            expanded_fields=super().expanded_fields,
+            skip_unauth=auto_expand_all,
+        )
+
+
 class DynamicSerializer(DSOModelSerializer):
     """The logic for dynamically generated serializers.
 
@@ -149,6 +173,8 @@ class DynamicSerializer(DSOModelSerializer):
     (the Django model field -> serializer field translation).
     The remaining part happens in :func:`serializer_factory`.
     """
+
+    _default_list_serializer_class = DynamicListSerializer
 
     serializer_url_field = DynamicLinksField
     serializer_field_mapping = {
@@ -190,9 +216,15 @@ class DynamicSerializer(DSOModelSerializer):
             )
         return fields
 
-    def get_auth_checker(self):
-        request = self.get_request()
-        return getattr(request, "is_authorized_for", None) if request else None
+    @cached_property
+    def expanded_fields(self) -> List[EmbeddedFieldMatch]:
+        """Filter unauthorized fields from the matched expands."""
+        auto_expand_all = self.fields_to_expand is True
+        return filter_unauthorized_expands(
+            self.get_request(),
+            expanded_fields=super().expanded_fields,
+            skip_unauth=auto_expand_all,
+        )
 
     @cached_property
     def hal_relations_serializer(self):
@@ -395,6 +427,10 @@ def get_view_name(model: Type[DynamicModel], suffix: str):
     dataset_id = to_snake_case(model.get_dataset_id())
     table_id = to_snake_case(model.get_table_id())
     return f"dynamic_api:{dataset_id}-{table_id}-{suffix}"
+
+
+# When models are removed, clear the cache.
+dynamic_models_removed.connect(lambda **kwargs: serializer_factory.cache_clear())
 
 
 @lru_cache()
