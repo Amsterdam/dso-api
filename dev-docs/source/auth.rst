@@ -80,3 +80,47 @@ See the :doc:`wfs` documentation for more details.
 
     When changing the authorization logic, make sure to test the WFS server endpoint too.
     While most logic is shared, it's important to double-check no additional data is exposed.
+
+
+Testing
+-------
+
+When testing datasets with authorization from the command line,
+you can generate a JWT with the following script:
+::
+
+    import json
+    import sys
+    import time
+    
+    from dso_api.settings import JWKS_TEST_KEY
+    
+    from jwcrypto.jwk import JWK
+    from jwcrypto.jwt import JWT
+    
+    key = JWK(**json.loads(JWKS_TEST_KEY)["keys"][0])
+    
+    # Validity period, in seconds.
+    valid = 1800
+    
+    scopes = sys.argv[1:]
+    now = int(time.time())
+    claims = {
+        "iat": now,
+        "exp": now + valid,
+        "scopes": scopes,
+        "sub": "test@tester.nl",
+    }
+    token = JWT(header={"alg": "ES256", "kid": key.key_id}, claims=claims)
+    
+    token.make_signed_token(key)
+    print(token.serialize())
+
+This requires dso-api to be installed in the current virtualenv
+(``cd src && pip install -e .``).
+If the script called is ``maketoken.py``,
+you can now issue a curl command such as
+::
+
+    curl http://localhost:8000/v1/hcbrk/kadastraalonroerendezaken/${id}/ \
+        --header "Authorization: Bearer $(python maketoken.py BRK/RSN)"
