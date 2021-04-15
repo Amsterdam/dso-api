@@ -1,8 +1,9 @@
 from dataclasses import dataclass, field
-from typing import Dict, Set
+from typing import Dict, Set, Type
 
 from cachetools.func import ttl_cache
 from django.contrib.auth.models import AnonymousUser, _user_has_perm
+from django.db.models import Model
 from rest_framework import permissions
 from rest_framework.viewsets import ViewSetMixin
 from schematools.contrib.django import models
@@ -45,7 +46,7 @@ def fetch_scopes_for_dataset_table(dataset_id: str, table_id: str):
 
 
 @ttl_cache(ttl=60 * 60)
-def fetch_scopes_for_model(model) -> TableScopes:
+def fetch_scopes_for_model(model: Type[Model]) -> TableScopes:
     """ Get the scopes for a Django model, based on the Amsterdam schema information """
 
     # If it is not a DSO-based model, we leave it alone
