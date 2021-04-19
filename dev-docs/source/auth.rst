@@ -87,18 +87,19 @@ Testing
 
 When testing datasets with authorization from the command line,
 you can generate a JWT with the following script:
-::
+
+.. code-block:: python
 
     import json
     import sys
     import time
     
-    from dso_api.settings import JWKS_TEST_KEY
-    
+    from django.conf import settings
     from jwcrypto.jwk import JWK
     from jwcrypto.jwt import JWT
     
-    key = JWK(**json.loads(JWKS_TEST_KEY)["keys"][0])
+    
+    key = JWK(**json.loads(settings.JWKS_TEST_KEY)["keys"][0])
     
     # Validity period, in seconds.
     valid = 1800
@@ -116,7 +117,7 @@ you can generate a JWT with the following script:
     token.make_signed_token(key)
     print(token.serialize())
 
-This requires dso-api to be installed in the current virtualenv
+This requires DSO-API to be installed in the current virtualenv
 (``cd src && pip install -e .``).
 If the script called is ``maketoken.py``,
 you can now issue a curl command such as
