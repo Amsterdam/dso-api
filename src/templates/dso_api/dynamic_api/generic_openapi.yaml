@@ -1,0 +1,365 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "DSO-API",
+    "version": "v1",
+    "description": "\nThis is the generic [DSO-compatible](https://aandeslagmetdeomgevingswet.nl/digitaal-stelsel/aansluiten/standaarden/api-en-uri-strategie/) API server.\n\nThe following features are supported:\n\n* HAL-JSON based links, pagination and response structure.\n* Use `?_expandScope=name1,name2` to sideload specific relations.\n* Use `?_expand=true` to sideload all relations.\n\nThe models in this server are generated from the Amsterdam Schema files.\nThese are located at:\n[https://schemas.data.amsterdam.nl/datasets/](https://schemas.data.amsterdam.nl/datasets/)\n",
+    "termsOfService": "https://data.amsterdam.nl/",
+    "contact": {
+      "email": "datapunt@amsterdam.nl"
+    },
+    "license": {
+      "name": "CC0 1.0 Universal"
+    },
+    "servers": [
+      {
+        "url": "http://localhost:8000/v1"
+      }
+    ]
+  },
+  "paths": {
+    "/v1/meldingen/": {
+      "$ref": "./meldingen-paths.json"
+    }
+  },
+  "components": {
+    "schemas": {
+      "Meldingenstatistieken": {
+        "type": "object",
+        "description": "statistieken",
+        "properties": {
+          "_links": {
+            "type": "object",
+            "additionalProperties": {},
+            "readOnly": true,
+            "title": " links"
+          },
+          "id": {
+            "type": "integer",
+            "maximum": 9223372036854776000,
+            "minimum": -9223372036854776000,
+            "format": "int64"
+          },
+          "wijkId": {
+            "type": "string"
+          },
+          "buurtId": {
+            "type": "string"
+          },
+          "aantal": {
+            "type": "integer",
+            "maximum": 9223372036854776000,
+            "minimum": -9223372036854776000,
+            "format": "int64",
+            "nullable": true
+          },
+          "wijkcode": {
+            "type": "string",
+            "nullable": true
+          },
+          "wijknaam": {
+            "type": "string",
+            "nullable": true
+          },
+          "buurtcode": {
+            "type": "string",
+            "nullable": true
+          },
+          "buurtnaam": {
+            "type": "string",
+            "nullable": true
+          },
+          "categorie": {
+            "type": "string",
+            "nullable": true
+          },
+          "stadsdeelId": {
+            "type": "string"
+          },
+          "subrubriek": {
+            "type": "string",
+            "nullable": true
+          },
+          "gebiedstype": {
+            "type": "string",
+            "nullable": true
+          },
+          "datumMelding": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "gemeentecode": {
+            "type": "string",
+            "nullable": true
+          },
+          "gemeentenaam": {
+            "type": "string",
+            "nullable": true
+          },
+          "stadsdeelcode": {
+            "type": "string",
+            "nullable": true
+          },
+          "stadsdeelnaam": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "_links",
+          "buurtId",
+          "id",
+          "stadsdeelId",
+          "wijkId"
+        ]
+      },
+      "PaginatedMeldingenstatistiekenList": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "integer",
+            "example": 123
+          },
+          "next": {
+            "type": "string",
+            "nullable": true,
+            "format": "uri",
+            "example": "http://api.example.org/accounts/?page=4"
+          },
+          "previous": {
+            "type": "string",
+            "nullable": true,
+            "format": "uri",
+            "example": "http://api.example.org/accounts/?page=2"
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Meldingenstatistieken"
+            }
+          }
+        }
+      },
+      "_SelfLink": {
+        "type": "object",
+        "properties": {
+          "self": {
+            "type": "object",
+            "properties": {
+              "href": {
+                "type": "string",
+                "readOnly": true
+              },
+              "title": {
+                "type": "string",
+                "format": "uri",
+                "readOnly": true
+              }
+            }
+          }
+        }
+      },
+      "Geometry": {
+        "type": "object",
+        "description": "GeoJSON geometry",
+        "discriminator": {
+          "propertyName": "type"
+        },
+        "required": [
+          "type"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "Point",
+              "LineString",
+              "Polygon",
+              "MultiPoint",
+              "MultiLineString",
+              "MultiPolygon"
+            ],
+            "description": "the geometry type"
+          }
+        }
+      },
+      "Point3D": {
+        "type": "array",
+        "description": "Point in 3D space",
+        "minItems": 2,
+        "maxItems": 3,
+        "items": {
+          "type": "number"
+        }
+      },
+      "Point": {
+        "type": "object",
+        "description": "GeoJSON geometry",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Geometry"
+          },
+          {
+            "properties": {
+              "coordinates": {
+                "$ref": "#/components/schemas/Point3D"
+              }
+            }
+          }
+        ]
+      },
+      "LineString": {
+        "type": "object",
+        "description": "GeoJSON geometry",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Geometry"
+          },
+          {
+            "properties": {
+              "coordinates": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Point3D"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "Polygon": {
+        "type": "object",
+        "description": "GeoJSON geometry",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Geometry"
+          },
+          {
+            "properties": {
+              "coordinates": {
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Point3D"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "MultiPoint": {
+        "type": "object",
+        "description": "GeoJSON geometry",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Geometry"
+          },
+          {
+            "properties": {
+              "coordinates": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Point3D"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "MultiLineString": {
+        "type": "object",
+        "description": "GeoJSON geometry",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Geometry"
+          },
+          {
+            "properties": {
+              "coordinates": {
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Point3D"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "MultiPolygon": {
+        "type": "object",
+        "description": "GeoJSON geometry",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Geometry"
+          },
+          {
+            "properties": {
+              "coordinates": {
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/Point3D"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "GeometryCollection": {
+        "type": "object",
+        "description": "GeoJSON geometry collection",
+        "required": [
+          "type",
+          "geometries"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "GeometryCollection"
+            ]
+          },
+          "geometries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Geometry"
+            }
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "oauth2": {
+        "type": "oauth2",
+        "flows": {
+          "implicit": {
+            "authorizationUrl": "https://login.microsoftonline.com/72fca1b1-2c2e-4376-a445-294d80196804/oauth2/v2.0/authorize",
+            "scopes": {
+              "5f929a7e-9905-4026-b0a9-d7902dfb79b6/.default": "Toegang applicatie"
+            }
+          }
+        }
+      }
+    }
+  },
+  "externalDocs": {
+    "description": "API usage Documentation",
+    "url": "https://api.data.amsterdam.nl/v1/docs/"
+  },
+  "security": [
+    {
+      "oauth2": []
+    }
+  ]
+}

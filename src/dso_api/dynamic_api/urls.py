@@ -3,7 +3,7 @@ from importlib import import_module, reload
 
 from django.conf import settings
 from django.urls import clear_url_caches, get_urlconf, include, path
-
+from drf_spectacular.views import SpectacularSwaggerView
 from dso_api.dynamic_api.routers import DynamicRouter
 
 from . import views
@@ -21,6 +21,11 @@ def get_patterns(router_urls):
         path("wfs/", views.DatasetWFSIndexView.as_view()),
         path("wfs/<dataset_name>/", views.DatasetWFSView.as_view()),
         path("", include(router_urls)),
+
+        # Swagger, OpenAPI and OAuth2 login logic.
+        path('swagger-ui/', SpectacularSwaggerView.as_view(url='/v1/openapi.json'), name='swagger-ui'),
+        path("oauth2-redirect.html", views.oauth2_redirect, name='oauth2-redirect'),
+        path("openapi.json", views.generic_openapi, name="openapi")
     ]
 
 

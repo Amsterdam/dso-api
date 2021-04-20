@@ -25,35 +25,63 @@ class ExtendedSchemaGenerator(DSOSchemaGenerator):
     """drf_spectacular also provides 'components' which DRF doesn't do."""
 
     # Provide the missing data that DRF get_schema_view() doesn't yet offer,
-    # nor
-    schema_overrides = {
-        # While drf_spectacular parses authentication_classes, it won't
-        # recognize oauth2 nor detect a remote authenticator. Adding manually:
-        "security": [{"oauth2": []}],
-        "components": {
-            "securitySchemes": {
-                "oauth2": {
-                    "type": "oauth2",
-                    "flows": {
-                        "implicit": {
-                            "authorizationUrl": f"{settings.DATAPUNT_API_URL}oauth2/authorize",
-                            "scopes": {
-                                "HR/R": "Toegang HR",
-                                "BRK/RSN": "Bevragen Natuurlijke Kadastrale Subjecten.",
-                                "BRK/RS": "Bevragen Kadastrale Subjecten.",
-                                "BRK/RO": "Read kadastraal object",
-                                "BRP/R": "Basisregister personen",
-                                "FP/MDW": "Functieprofiel medewerker",
-                            },
-                        }
-                    },
+    # nor https://login.microsoftonline.com/72fca1b1-2c2e-4376-a445-294d80196804/oauth2/v2.0/authorize?response_type=token&client_id=5f929a7e-9905-4026-b0a9-d7902dfb79b6&
+    # redirect_uri=http%3A%2F%2Flocalhost%3A8000%2Foauth2-redirect.html&
+    # scope=5f929a7e-9905-4026-b0a9-d7902dfb79b6%2F.default&state=TW9uIEFwciAxOSAyMDIxIDEyOjA2OjI2IEdNVCswMjAwIChDZW50cmFsIEV1cm9wZWFuIFN1bW1lciBUaW1lKQ%3D%3D
+    if settings.AZURE_AD_CLIENT_ID:
+        schema_overrides = {
+            "security": [{"oauth2": []}],
+            "components": {
+                "securitySchemes": {
+                    "oauth2": {
+                        "type": "oauth2",
+                        "flows": {
+                            "implicit": {
+                                "authorizationUrl": f"https://login.microsoftonline.com/{settings.AZURE_AD_TENANT_ID}/oauth2/v2.0/authorize",
+                                "scopes": {
+                                    f"{settings.AZURE_AD_CLIENT_ID}/.default": "Toegang applicatie"
+                                }
+                            }
+                        },
+                    }
                 }
-            }
-        },
-    }
+            },
+        }
+    else:
+        schema_overrides = {
+            # While drf_spectacular parses authentication_classes, it won't
+            # recognize oauth2 nor detect a remote authenticator. Adding manually:
+            "security": [{"oauth2": []}],
+            "components": {
+                "securitySchemes": {
+                    "oauth2": {
+                        "type": "oauth2",
+                        "flows": {
+                            "implicit": {
+                                "authorizationUrl": f"{settings.DATAPUNT_API_URL}oauth2/authorize",
+                                "scopes": {
+                                    "HR/R": "Toegang HR",
+                                    "BRK/RSN": "Bevragen Natuurlijke Kadastrale Subjecten.",
+                                    "BRK/RS": "Bevragen Kadastrale Subjecten.",
+                                    "BRK/RO": "Read kadastraal object",
+                                    "BRP/R": "Basisregister personen",
+                                    "FP/MDW": "Functieprofiel medewerker",
+                                },
+                            }
+                        },
+                    }
+                }
+            },
+        }
 
     if not settings.DEBUG:
         schema_overrides["servers"] = [{"url": settings.DATAPUNT_API_URL}]
+
+
+class PathsOnlyOpenAPIRenderer(renderers.JSONOpenAPIRenderer):
+    media_type = 'application/json'
+    def render(self, data, media_type=None, renderer_context=None):
+        return super().render(data['paths']['/v1/meldingen/statistieken/'], media_type=media_type, renderer_context=renderer_context)
 
 
 def get_openapi_json_view(*dataset_ids):
@@ -64,6 +92,11 @@ def get_openapi_json_view(*dataset_ids):
 def get_openapi_yaml_view(*dataset_ids):
     """Provide the OpenAPI view, which renders as YAML."""
     return _get_openapi_view(*dataset_ids, renderer_classes=[renderers.OpenAPIRenderer])
+
+
+def get_openapi_yaml_paths_view(*dataset_ids):
+    """Provide the OpenAPI view, which renders PATHS only as YAML."""
+    return _get_openapi_view(*dataset_ids, renderer_classes=[PathsOnlyOpenAPIRenderer])
 
 
 def _get_openapi_view(*dataset_ids, renderer_classes=None):

@@ -37,7 +37,7 @@ from schematools.contrib.django.models import Dataset
 from schematools.utils import to_snake_case
 
 from dso_api.dynamic_api.locking import lock_for_writing
-from dso_api.dynamic_api.openapi import get_openapi_json_view
+from dso_api.dynamic_api.openapi import get_openapi_json_view, get_openapi_yaml_paths_view
 from dso_api.dynamic_api.remote import remote_serializer_factory, remote_viewset_factory
 from dso_api.dynamic_api.serializers import get_view_name, serializer_factory
 from dso_api.dynamic_api.views import viewset_factory
@@ -235,7 +235,7 @@ class DynamicRouter(routers.DefaultRouter):
             dataset_id = dataset.schema.id
             results.append(
                 path(
-                    self.make_url(dataset.url_prefix, dataset_id) + "/",
+                    self.make_url(dataset.url_prefix, dataset_id) + ".json",
                     get_openapi_json_view(dataset_id),
                     name=f"openapi-{dataset_id}",
                 )
