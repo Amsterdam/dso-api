@@ -23,8 +23,8 @@ def get_patterns(router_urls):
         path("", include(router_urls)),
         # Swagger, OpenAPI and OAuth2 login logic.
         path(
-            "swagger-ui/",
-            views.DSOSwaggerView.as_view(url="/v1/aardgasvrijezones/"),
+            "swagger/<dataset_name>/",
+            views.DSOSwaggerView.as_view(),
             name="swagger-ui",
         ),
         path("oauth2-redirect.html", views.oauth2_redirect, name="oauth2-redirect"),
