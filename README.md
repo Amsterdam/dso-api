@@ -95,6 +95,17 @@ To address the error we need to point requests for that dataset to another valid
 
 The API can now be accessed at: http://localhost:8000
 
+# Testing
+
+Run unit tests:
+
+    (cd src && make test)
+
+The integration tests require the `HAAL_CENTRAAL_API_KEY` environment variable
+to be set to an actual key.
+
+    DSO_API=http://localhost:8000 pytest integration_test
+
 # Managing requirements.txt
 
 This project uses [pip-tools](https://pypi.org/project/pip-tools/)
