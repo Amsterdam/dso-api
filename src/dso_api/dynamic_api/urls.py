@@ -21,6 +21,13 @@ def get_patterns(router_urls):
         path("wfs/", views.DatasetWFSIndexView.as_view()),
         path("wfs/<dataset_name>/", views.DatasetWFSView.as_view()),
         path("", include(router_urls)),
+        # Swagger, OpenAPI and OAuth2 login logic.
+        path(
+            "swagger-ui/",
+            views.DSOSwaggerView.as_view(url="/v1/aardgasvrijezones/"),
+            name="swagger-ui",
+        ),
+        path("oauth2-redirect.html", views.oauth2_redirect, name="oauth2-redirect"),
     ]
 
 

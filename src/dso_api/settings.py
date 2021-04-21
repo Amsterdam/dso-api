@@ -246,6 +246,15 @@ if CLOUD_ENV.lower().startswith("azure"):
 
 # -- Third party app settings
 
+# Azure settings
+AZURE_AD_TENANT_ID = os.getenv("AZURE_AD_TENANT_ID", None)
+AZURE_AD_CLIENT_ID = os.getenv("AZURE_AD_CLIENT_ID", None)
+
+# Dynamicaly import Azure Blob connections from environment
+for key, value in env.ENVIRON.items():
+    if key.startswith("AZURE_BLOB_"):
+        locals()[key] = value
+
 # Do not set CORS_ALLOW_ALL_ORIGINS to True
 # The Access-Control-Allow-Origin should  ot de set to *
 # That will conflict with the  Access-Control-Allow-Credentials: true
@@ -316,6 +325,10 @@ These are located at:
         "url": "https://api.data.amsterdam.nl/v1/docs/",
     },
     "SCHEMA_PATH_PREFIX": r"^/v?\d+(\.\d+)?/",  # strip /v1/ from tags.
+    "SWAGGER_UI_SETTINGS": {
+        "oauth2RedirectUrl": f"{DATAPUNT_API_URL}v1/oauth2-redirect.html",
+        "clientId": AZURE_AD_CLIENT_ID,
+    },
 }
 
 # -- Amsterdam oauth settings
@@ -368,11 +381,6 @@ INITIALIZE_DYNAMIC_VIEWSETS = env.bool(
 # DATASETS_EXCLUDE: will load all datasets except provided in list.
 DATASETS_LIST = env.list("DATASETS_LIST", default=None)
 DATASETS_EXCLUDE = env.list("DATASETS_EXCLUDE", default=None)
-
-# Dynamicaly import Azure Blob connections from environment
-for key, value in env.ENVIRON.items():
-    if key.startswith("AZURE_BLOB_"):
-        locals()[key] = value
 
 HAAL_CENTRAAL_API_KEY = os.getenv("HAAL_CENTRAAL_API_KEY", "UNKNOWN")
 HAAL_CENTRAAL_KEYFILE = os.getenv("HC_KEYFILE")
