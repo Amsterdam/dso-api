@@ -7,11 +7,13 @@
 * **Endpoints:**
 
    .. raw:: html
-      {% for table in tables %}
-         <ul>
-            <li>REST URI:<a href="{{ table.uri }}">{{ table.uri|strip_base_url }}</a></li>
-         </ul>
-      {% endfor %}
+
+      <ul>
+          <li>Swagger UI:<a href="{{ swagger_url }}">{{ swagger_url|strip_base_url }}</a></li>
+        {% for table in tables %}
+          <li>REST URI:<a href="{{ table.uri }}">{{ table.uri|strip_base_url }}</a></li>
+        {% endfor %}
+      </ul>
 
 
 .. contents:: Tabellen

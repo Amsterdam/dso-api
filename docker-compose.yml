@@ -61,6 +61,6 @@ services:
       DATABASE_URL: "postgres://dataservices:insecure@database/dataservices"
     volumes:
       - "./docs:/docs"
-      - "./docs/build/html:/usr/share/nginx/html"
+      - "./docs/build/html:/usr/share/nginx/html/v1/docs"
     ports:
       - "8081:80"
