@@ -364,13 +364,7 @@ class DynamicBodySerializer(DynamicSerializer):
 
 class DynamicLinksSerializer(DynamicSerializer):
     """The serializer for the ``_links`` field.
-
-    Following DSO/HAL guidelines, it contains "self", "schema", and all relational fields
-    that have not been expanded. This depends on the ``_expand`` and ``_expandScope`` URL
-    parameters. When expanded, they move to ``_embedded``. In case of a list-view,
-    keep the relational fields. The resources in ``_embedded`` are grouped together
-    for deduplication purposes and this will allow the user to know which
-    embed belongs to which object.
+    Following DSO/HAL guidelines, it contains "self", "schema", and all relational fields.
     """
 
     serializer_related_field = HALTemporalHyperlinkedRelatedField
@@ -380,45 +374,6 @@ class DynamicLinksSerializer(DynamicSerializer):
         serializer is used for generating the _links section.
         """
         return False
-
-    def get_fields(self):
-        """Remove fields that shouldn't be part of _links right now.
-        This varies depending on the _expand=true/_expandScope parameter
-        and whether this is a detail view or regular view.
-        """
-        fields = super().get_fields()
-        link_fields = self._get_link_field_names(fields)
-        invalid = set(fields.keys()).difference(link_fields)
-        for name in invalid:
-            fields.pop(name)
-
-        return fields
-
-    def _get_link_field_names(self, fields):
-        """Get the fields that should appear in the _links section"""
-        embedded_fields = self.fields_to_expand
-        link_fields = ["self", "schema"]
-        relation_fields = [
-            field_name
-            for field_name, field in fields.items()
-            if isinstance(
-                field,
-                (HyperlinkedRelatedField, ManyRelatedField, LooseRelationUrlField),
-            )
-        ]
-        # add the relation_fields to _links if there is not going to be an _embedded
-        # or if we are part of a list-view
-        if not embedded_fields or (
-            "view" in self.context
-            and hasattr(self.context["view"], "detail")
-            and not self.context["view"].detail
-        ):
-            link_fields += relation_fields
-        elif isinstance(embedded_fields, list):
-            link_fields += [
-                field_name for field_name in relation_fields if field_name not in embedded_fields
-            ]
-        return link_fields
 
 
 def get_view_name(model: Type[DynamicModel], suffix: str):

@@ -134,6 +134,10 @@ class TestDynamicSerializer:
                     "href": "http://testserver/v1/afvalwegingen/containers/2/",
                     "title": "2",
                 },
+                "cluster": {
+                    "href": "http://testserver/v1/afvalwegingen/clusters/123.456/",
+                    "title": "123.456",
+                },
             },
             "id": 2,
             "clusterId": "123.456",
@@ -182,6 +186,7 @@ class TestDynamicSerializer:
                     "href": "http://testserver/v1/afvalwegingen/containers/3/",
                     "title": "3",
                 },
+                "cluster": None,
             },
             "id": 3,
             "clusterId": None,
@@ -219,6 +224,7 @@ class TestDynamicSerializer:
                     "title": "4",
                 },
                 "schema": "https://schemas.data.amsterdam.nl/datasets/afvalwegingen/afvalwegingen#containers",  # noqa: E501
+                "cluster": None,
             },
             "id": 4,
             "clusterId": 99,
@@ -264,6 +270,10 @@ class TestDynamicSerializer:
                 "self": {
                     "href": "http://testserver/v1/afvalwegingen/containers/2/",
                     "title": "2",
+                },
+                "cluster": {
+                    "href": "http://testserver/v1/afvalwegingen/clusters/123.456/",
+                    "title": "123.456",
                 },
             },
             "id": 2,
