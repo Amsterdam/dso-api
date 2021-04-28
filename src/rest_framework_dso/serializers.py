@@ -59,6 +59,10 @@ class _SideloadMixin:
         super().__init__(*args, **kwargs)
         self._fields_to_expand = fields_to_expand
 
+    def has_fields_to_expand_override(self) -> bool:
+        """Tell whether the 'fields_to_expand' is set by the code instead of request."""
+        return self._fields_to_expand is not empty
+
     @property
     def fields_to_expand(self) -> Union[List[str], bool]:
         """Retrieve the requested expand, 2 possible values:
@@ -66,7 +70,7 @@ class _SideloadMixin:
         * A bool (True) for "expand all"
         * A explicit list of field names to expand.
         """
-        if self._fields_to_expand is not empty:
+        if self.has_fields_to_expand_override():
             # Instead of retrieving this from request,
             # the expand can be defined using the serializer __init__.
             return False if self._fields_to_expand is False else cast(list, self._fields_to_expand)
@@ -77,6 +81,11 @@ class _SideloadMixin:
                 expand=request.GET.get(self.expand_all_param),
                 expand_scope=request.GET.get(self.expand_param),
             )
+
+    @fields_to_expand.setter
+    def fields_to_expand(self, fields: List[str]):
+        """Allow serializers to assign 'fields_to_expand' later (e.g. in bind())."""
+        self._fields_to_expand = fields
 
     @property
     def expanded_fields(self) -> List[EmbeddedFieldMatch]:
@@ -104,6 +113,16 @@ class DSOListSerializer(_SideloadMixin, serializers.ListSerializer):
             self.results_field = results_field
         elif not self.results_field:
             self.results_field = self.child.Meta.model._meta.model_name
+
+    def bind(self, field_name, parent):
+        super().bind(field_name, parent)
+
+        # Correct what many_init() did earlier. When the list is not the top-level,
+        # but a deeper object (e.g. M2M relation), the fields_to_expand should be
+        # known to the child subclass so it can perform expands itself.
+        # This list wrapper will not perform the expands in such case.
+        if self.root is not self and self.fields_to_expand is not empty:
+            self.child.fields_to_expand = self.fields_to_expand
 
     @cached_property
     def expanded_fields(self) -> List[EmbeddedFieldMatch]:
@@ -266,11 +285,15 @@ class DSOSerializer(_SideloadMixin, serializers.Serializer):
         This overrides the default ``list_serializer_class`` so it
         also returns HAL-style pagination and possibly embedding.
         """
+        # Not passing explicit 'fields_to_expand' to the child,
+        # only the list needs to handle this information.
+        fields_to_expand = kwargs.pop("fields_to_expand", empty)
+
         # Taken from base method
         child_serializer = cls(*args, **kwargs)
         list_kwargs = {
             "child": child_serializer,
-            "fields_to_expand": kwargs.pop("fields_to_expand", empty),
+            "fields_to_expand": fields_to_expand,
         }
         list_kwargs.update(
             {
@@ -498,7 +521,7 @@ class DSOModelSerializer(DSOSerializer, serializers.HyperlinkedModelSerializer):
 
     def _include_embedded(self):
         """Determines if the _embedded field must be generated."""
-        return self.root is self
+        return self.root is self or self.has_fields_to_expand_override()
 
     def to_representation(self, instance):
         """Check whether the geofields need to be transformed."""

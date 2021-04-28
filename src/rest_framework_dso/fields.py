@@ -58,6 +58,7 @@ class AbstractEmbeddedField:
 
         Since this virtual-field object persists between all sessions,
         the parent/root serializer needs to be provided here.
+        Settings like ``fields_to_extend`` are provided via the **kwargs.
         """
         if not isinstance(parent, self.parent_serializer_class):
             raise TypeError(f"Invalid parent for {self.__class__.__name__}.get_serializer()")

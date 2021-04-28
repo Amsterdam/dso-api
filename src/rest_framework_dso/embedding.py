@@ -98,7 +98,14 @@ class EmbeddedFieldMatch:
     @cached_property
     def embedded_serializer(self):
         """Provide the serializer for the embedded relation."""
-        serializer = self.field.get_serializer(parent=self.serializer)
+        # The nested 'fields_to_expand' data is provided to the child serializer,
+        # so it can expand the next nesting if needed.
+        kwargs = {}
+        if hasattr(self.field.serializer_class, "fields_to_expand"):
+            # _SideLoadMixin subclass.
+            kwargs["fields_to_expand"] = list(self.nested_fields_to_expand.keys())
+
+        serializer = self.field.get_serializer(parent=self.serializer, **kwargs)
 
         # Allow the output format to customize the serializer for the embedded relation.
         renderer = self.serializer.context["request"].accepted_renderer

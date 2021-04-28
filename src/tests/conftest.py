@@ -23,7 +23,7 @@ from schematools.types import DatasetSchema, ProfileSchema
 
 from rest_framework_dso.crs import RD_NEW
 from rest_framework_dso.renderers import HALJSONRenderer
-from tests.test_rest_framework_dso.models import Actor, Category, Location, Movie
+from tests.test_rest_framework_dso.models import Actor, Category, Location, Movie, MovieUser
 
 HERE = Path(__file__).parent
 
@@ -416,7 +416,9 @@ def geometry_authdataset_thing(geometry_authdataset_model):
 @pytest.fixture
 def category() -> Category:
     """A dummy model to test our API with"""
-    return Category.objects.create(pk=1, name="bar")
+    return Category.objects.create(
+        pk=1, name="bar", last_updated_by=MovieUser.objects.create(name="bar_man")
+    )
 
 
 @pytest.fixture
@@ -426,7 +428,9 @@ def movie(category) -> Movie:
     result.actors.set(
         [
             Actor.objects.create(name="John Doe"),
-            Actor.objects.create(name="Jane Doe"),
+            Actor.objects.create(
+                name="Jane Doe", last_updated_by=MovieUser.objects.create(name="jane_updater")
+            ),
         ]
     )
     return result

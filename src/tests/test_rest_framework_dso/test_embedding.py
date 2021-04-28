@@ -9,9 +9,12 @@ import pytest
 from rest_framework_dso.embedding import (
     ChunkedQuerySetIterator,
     ObservableIterator,
+    get_all_embedded_field_names,
     group_dotted_names,
 )
-from tests.test_rest_framework_dso.models import Category, Movie
+
+from .models import Category, Movie
+from .serializers import MovieSerializer
 
 
 def test_group_dotted_names():
@@ -32,6 +35,19 @@ def test_group_dotted_names():
         },
         "group": {
             "permissions": {},
+        },
+    }
+
+
+def test_get_all_embedded_field_names():
+    """Prove that all embedded fields are found. This is the basis for ?_expand=true."""
+    result = get_all_embedded_field_names(MovieSerializer)
+    assert result == {
+        "actors": {
+            "last_updated_by": {},
+        },
+        "category": {
+            "last_updated_by": {},
         },
     }
 
@@ -94,8 +110,10 @@ class TestChunkedQuerySetIterator:
 
 
 class TestObservableIterator:
+    """Test whether the iterator observing works as advertised."""
+
     def test_final_outcome(self):
-        """Prove that the final outcome is as desired"""
+        """Prove that the final result is as desired"""
         seen1 = []
         seen2 = []
 

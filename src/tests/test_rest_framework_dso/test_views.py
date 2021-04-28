@@ -48,14 +48,56 @@ class TestExpand:
         "params",
         [
             {"_expand": "true"},
+            # Variations that should give the same effect:
+            {
+                "_expand": "true",
+                "_expandScope": "actors.last_updated_by,category.last_updated_by",
+            },
+            {
+                "_expand": "true",
+                "_expandScope": "actors,actors.last_updated_by,category,category.last_updated_by",
+            },
+        ],
+    )
+    def test_detail_expand_nested(self, api_client, movie, params):
+        """Prove that ?_expand=true expands everything recursively.
+        The second time, params defines all expanded objects which should give the same response.
+        """
+        response = api_client.get(f"/v1/movies/{movie.pk}", data=params)
+        data = read_response_json(response)
+        assert data == {
+            "name": "foo123",
+            "category_id": movie.category_id,
+            "date_added": None,
+            "_embedded": {
+                "actors": [
+                    {
+                        "name": "John Doe",
+                        "_embedded": {"last_updated_by": None},
+                    },
+                    {
+                        "name": "Jane Doe",
+                        "_embedded": {"last_updated_by": {"name": "jane_updater"}},
+                    },
+                ],
+                "category": {
+                    "name": "bar",
+                    "_embedded": {"last_updated_by": {"name": "bar_man"}},
+                },
+            },
+        }
+        assert response["Content-Type"] == "application/hal+json"
+
+    @pytest.mark.parametrize(
+        "params",
+        [
             {"_expand": "true", "_expandScope": "actors,category"},
             {"_expandScope": "actors,category"},  # backwards compatibility
         ],
     )
-    def test_detail_expand_true(self, api_client, movie, params):
-        """Prove that ?_expand=true and ?_expand=category both work for the detail view.
-
-        This also tests the parameter expansion within the view logic.
+    def test_detail_expand_scope(self, api_client, movie, params):
+        """Prove that ?_expandScope works fine for a single level.
+        Nesting also doesn't go deeper here.
         """
         response = api_client.get(f"/v1/movies/{movie.pk}", data=params)
         data = read_response_json(response)
@@ -118,7 +160,9 @@ class TestExpand:
         """
         movie = Movie.objects.create(name="foo123", category_id=category_id)
         try:
-            response = api_client.get(f"/v1/movies/{movie.pk}", data={"_expand": "true"})
+            response = api_client.get(
+                f"/v1/movies/{movie.pk}", data={"_expandScope": "actors,category"}
+            )
             data = read_response_json(response)
             assert data == {
                 "name": "foo123",
@@ -134,17 +178,50 @@ class TestExpand:
             # avoid Fk constraint errors when constraints are checked before rollback
             movie.delete()
 
+    def test_list_expand_true(self, api_client, movie):
+        """Prove that ?_expand both work for the list view."""
+        response = api_client.get("/v1/movies", data={"_expand": "true"})
+        data = read_response_json(response)
+        assert data == {
+            "_links": {
+                "self": {"href": "http://testserver/v1/movies"},
+                "next": {"href": None},
+                "previous": {"href": None},
+            },
+            "_embedded": {
+                "movie": [
+                    {"name": "foo123", "category_id": movie.category_id, "date_added": None}
+                ],
+                "actors": [
+                    {
+                        "name": "John Doe",
+                        "_embedded": {"last_updated_by": None},
+                    },
+                    {
+                        "name": "Jane Doe",
+                        "_embedded": {"last_updated_by": {"name": "jane_updater"}},
+                    },
+                ],
+                "category": [
+                    {
+                        "name": "bar",
+                        "_embedded": {"last_updated_by": {"name": "bar_man"}},
+                    }
+                ],
+            },
+            "page": {"number": 1, "size": 20, "totalElements": 1, "totalPages": 1},
+        }
+        assert response["Content-Type"] == "application/hal+json"
+
     @pytest.mark.parametrize(
         "params",
         [
-            {"_expand": "true"},
             {"_expand": "true", "_expandScope": "actors,category"},
             {"_expandScope": "actors,category"},  # backwards compatibility
         ],
     )
-    def test_list_expand_true(self, api_client, movie, params):
+    def test_list_expand_scope(self, api_client, movie, params):
         """Prove that ?_expand=true and ?_expandScope=category both work for the detail view.
-
         This also tests the parameter expansion within the view logic.
         """
         response = api_client.get("/v1/movies", data=params)
@@ -218,10 +295,21 @@ class TestExpand:
                     {"name": "foo123", "category_id": movie.category_id, "date_added": None}
                 ],
                 "actors": [
-                    {"name": "John Doe"},
-                    {"name": "Jane Doe"},
+                    {
+                        "_embedded": {"last_updated_by": None},
+                        "name": "John Doe",
+                    },
+                    {
+                        "_embedded": {"last_updated_by": {"name": "jane_updater"}},
+                        "name": "Jane Doe",
+                    },
                 ],
-                "category": [{"name": "bar"}],
+                "category": [
+                    {
+                        "name": "bar",
+                        "_embedded": {"last_updated_by": {"name": "bar_man"}},
+                    }
+                ],
             },
             "page": {"number": 1, "size": 20, "totalElements": 1, "totalPages": 1},
         }
