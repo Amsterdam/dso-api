@@ -416,10 +416,11 @@ class TestAuth:
         """Prove that expanded fields are shown when a reference field is protected
         with an auth scope and there is a valid token"""
         url = reverse("dynamic_api:afvalwegingen-containers-list")
-        url = f"{url}?_expand=true"
         models.DatasetTable.objects.filter(name="clusters").update(auth="BAG/R")
         token = fetch_auth_token(["BAG/R"])
-        response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
+        response = api_client.get(
+            url, data={"_expand": "true"}, HTTP_AUTHORIZATION=f"Bearer {token}"
+        )
         data = read_response_json(response)
         assert response.status_code == 200, data
         assert "cluster" in data["_embedded"], data
@@ -431,9 +432,8 @@ class TestAuth:
         with an auth scope. For expand=true, we return a result,
         without the fields that are protected"""
         url = reverse("dynamic_api:afvalwegingen-containers-list")
-        url = f"{url}?_expand=true"
         models.DatasetTable.objects.filter(name="clusters").update(auth="BAG/R")
-        response = api_client.get(url)
+        response = api_client.get(url, data={"_expand": "true"})
         data = read_response_json(response)
         assert response.status_code == 200, data
         assert "cluster" not in data["_embedded"], data
@@ -445,9 +445,8 @@ class TestAuth:
         and there is no authorization in the token for that field.
         """
         url = reverse("dynamic_api:afvalwegingen-containers-list")
-        url = f"{url}?_expandScope=cluster"
         models.DatasetTable.objects.filter(name="clusters").update(auth="BAG/R")
-        response = api_client.get(url)
+        response = api_client.get(url, data={"_expandScope": "cluster"})
         assert response.status_code == 403, response.data
 
     def test_auth_on_individual_fields_with_token_for_valid_scope(
@@ -752,8 +751,7 @@ class TestEmbedTemporalTables:
         """Prove that ligtInWijk shows up when expanded"""
 
         url = reverse("dynamic_api:gebieden-buurten-detail", args=["03630000000078.1"])
-        url = f"{url}?_expand=true"
-        response = api_client.get(url)
+        response = api_client.get(url, data={"_expand": "true"})
         data = read_response_json(response)
         assert response.status_code == 200, data
         assert data["_embedded"]["ligtInWijk"]["id"] == "03630012052035.1"
@@ -826,8 +824,7 @@ class TestEmbedTemporalTables:
         """Prove that bestaatUitBuurten shows up when expanded"""
 
         url = reverse("dynamic_api:gebieden-ggwgebieden-detail", args=["03630950000000.1"])
-        url = f"{url}?_expand=true"
-        response = api_client.get(url)
+        response = api_client.get(url, data={"_expand": "true"})
         data = read_response_json(response)
         assert response.status_code == 200, data
         assert data["_embedded"]["bestaatUitBuurten"][0]["id"] == "03630000000078.1"
@@ -840,8 +837,7 @@ class TestEmbedTemporalTables:
         """
 
         url = reverse("dynamic_api:gebieden-ggwgebieden-list")
-        url = f"{url}?_expand=true"
-        response = api_client.get(url)
+        response = api_client.get(url, data={"_expand": "true"})
         data = read_response_json(response)
         assert response.status_code == 200, data
         assert dict(data["_embedded"]["bestaatUitBuurten"][0]) == {
@@ -937,8 +933,7 @@ class TestEmbedTemporalTables:
         """
 
         url = reverse("dynamic_api:meldingen-statistieken-detail", args=[1])
-        url = f"{url}?_expand=true"
-        response = api_client.get(url)
+        response = api_client.get(url, data={"_expand": "true"})
         data = read_response_json(response)
         assert response.status_code == 200, data
         assert data == {
@@ -980,8 +975,7 @@ class TestEmbedTemporalTables:
         """
 
         url = reverse("dynamic_api:meldingen-statistieken-list")
-        url = f"{url}?_expand=true"
-        response = api_client.get(url)
+        response = api_client.get(url, data={"_expand": "true"})
         data = read_response_json(response)
 
         assert response.status_code == 200, data
@@ -1016,8 +1010,7 @@ class TestEmbedTemporalTables:
         makes it "loose"), and therefore not mentioned here"""
 
         url = reverse("dynamic_api:woningbouwplannen-woningbouwplan-list")
-        url = f"{url}?_expand=true"
-        response = api_client.get(url)
+        response = api_client.get(url, data={"_expand": "true"})
         data = read_response_json(response)
         assert response.status_code == 200, data
 
@@ -1055,8 +1048,7 @@ class TestEmbedTemporalTables:
         filled_router,
     ):
         url = reverse("dynamic_api:woningbouwplannen-woningbouwplan-detail", args=[1])
-        url = f"{url}?_expand=true"
-        response = api_client.get(url)
+        response = api_client.get(url, data={"_expand": "true"})
         data = read_response_json(response)
         assert response.status_code == 200, data
         assert "buurten" not in data  # because it must be in  "_embedded"
