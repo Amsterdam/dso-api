@@ -548,6 +548,21 @@ class DSOModelSerializer(DSOSerializer, serializers.HyperlinkedModelSerializer):
         """
         expanded = {}
         for embed_match in expanded_fields:
+            # As optimization, try resolving the object via prefetches.
+            # This is needed when the serializer data is fetched for a listing.
+            prefetched_value = self._get_prefetched_expand(
+                instance,
+                lookup=embed_match.field.source,
+                is_m2m_field=embed_match.field.is_array,
+            )
+            if prefetched_value is not empty:
+                expanded[embed_match.name] = (
+                    embed_match.embedded_serializer.to_representation(prefetched_value)
+                    if prefetched_value is not None
+                    else None
+                )
+                continue
+
             # This just reuses the machinery for listings
             result_set = EmbeddedResultSet(
                 embed_match.field,
@@ -563,3 +578,14 @@ class DSOModelSerializer(DSOSerializer, serializers.HyperlinkedModelSerializer):
                 expanded[embed_match.name] = list(result_set)
 
         return expanded
+
+    def _get_prefetched_expand(self, instance, lookup, is_m2m_field):
+        # First try resolving the object via prefetches.
+        if not is_m2m_field:
+            # Prefetched foreign keys are stored in model._state.fields_cache.
+            return instance._state.fields_cache.get(lookup, empty)
+        elif prefetched_m2m := getattr(instance, "_prefetched_objects_cache", None):
+            # Prefetched M2M are stored in a ._prefetched_objects_cache
+            return prefetched_m2m.get(lookup, empty)
+        else:
+            return empty
