@@ -2,6 +2,7 @@ from typing import Type
 
 from django.db import models
 from django.db.models.fields.related import RelatedField
+from django.db.models.fields.reverse_related import ForeignObjectRel
 from django.utils.functional import cached_property
 from rest_framework import serializers
 from rest_framework_gis.fields import GeometryField
@@ -76,14 +77,14 @@ class AbstractEmbeddedField:
         return self.parent_serializer_class.Meta.model
 
     @cached_property
-    def source_field(self):
+    def source_field(self) -> models.Field:
         field_name = self.source or self.field_name
         return self.parent_model._meta.get_field(field_name)
 
     @cached_property
     def is_loose(self) -> bool:
         """ Signals that the related field is not a real FK or M2M """
-        return not isinstance(self.source_field, RelatedField)
+        return not isinstance(self.source_field, (RelatedField, ForeignObjectRel))
 
     @cached_property
     def is_array(self) -> bool:
