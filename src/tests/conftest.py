@@ -349,6 +349,35 @@ def brp_dataset(brp_schema_json, brp_endpoint_url) -> Dataset:
     )
 
 
+@pytest.fixture()
+def geometry_auth_schema_json() -> dict:
+    return json.loads((HERE / "files" / "geometry_auth.json").read_text())
+
+
+@pytest.fixture()
+def geometry_auth_schema(geometry_auth_schema_json) -> DatasetSchema:
+    return DatasetSchema.from_dict(geometry_auth_schema_json)
+
+
+@pytest.fixture()
+def geometry_auth_dataset(geometry_auth_schema):
+    return Dataset.create_for_schema(schema=geometry_auth_schema)
+
+
+@pytest.fixture()
+def geometry_auth_model(geometry_auth_dataset, dynamic_models):
+    return dynamic_models["geometry_auth"]["things"]
+
+
+@pytest.fixture()
+def geometry_auth_thing(geometry_auth_model):
+    return geometry_auth_model.objects.create(
+        id=1,
+        metadata="secret",
+        geometry=Point(10, 10),
+    )
+
+
 @pytest.fixture
 def category() -> Category:
     """A dummy model to test our API with"""
