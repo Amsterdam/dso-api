@@ -72,15 +72,8 @@ def test_mvt_forbidden(api_client, geometry_auth_thing, fetch_auth_token, filled
 def test_mvt_model_auth(api_client, geometry_auth_thing, fetch_auth_token, filled_router):
     """Prove that unauthorized fields are excluded from vector tiles"""
 
-    # Get authorization for the geometry field, but not the meta field.
-    token = fetch_auth_token(["TEST/GEO"])
-
     url = "/v1/mvt/geometry_auth/things/1/0/0.pbf"
-    response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
-    assert response.status_code == 200
-    assert response["Content-Type"] == CONTENT_TYPE
-
-    assert mapbox_vector_tile.decode(response.content) == {
+    content = {
         "default": {
             "extent": 4096,
             "version": 2,
@@ -88,9 +81,29 @@ def test_mvt_model_auth(api_client, geometry_auth_thing, fetch_auth_token, fille
                 {
                     "geometry": {"type": "Point", "coordinates": [4171, 1247]},
                     "id": 0,
-                    "properties": {"id": 1},
+                    "properties": {"id": 1, "metadata": "secret"},
                     "type": 1,
                 }
             ],
         }
     }
+
+    # With all required scopes, we get a full response.
+    token = fetch_auth_token(["TEST/GEO1", "TEST/GEO2", "TEST/META"])
+    response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
+    assert response.status_code == 200
+    assert mapbox_vector_tile.decode(response.content) == content
+
+    # With only the GEO[12] scopes, we still get a 200 response
+    # but we lose access to the metadata field.
+    token = fetch_auth_token(["TEST/GEO1", "TEST/GEO2"])
+    response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
+    assert response.status_code == 200
+
+    del content["default"]["features"][0]["properties"]["metadata"]
+    assert mapbox_vector_tile.decode(response.content) == content
+
+    # The geometry field requires two scopes. Giving it only one should give 403.
+    token = fetch_auth_token(["TEST/GEO1"])
+    response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
+    assert response.status_code == 403
