@@ -1,0 +1,36 @@
+{
+  "id": "geometry_authdataset",
+  "type": "dataset",
+  "title": "Geometry authorization test with dataset scopes",
+  "version": "0.0.1",
+  "auth": "TEST/TOP1,TEST/TOP2",
+  "crs": "EPSG:28992",
+  "tables": [
+    {
+      "id": "things",
+      "type": "table",
+      "schema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "required": ["id", "schema"],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Identifier"
+          },
+          "schema": {
+            "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.0#/definitions/schema"
+          },
+          "metadata": {
+            "type": "string",
+            "description": ""
+          },
+          "geometry": {
+            "$ref": "https://geojson.org/schema/Point.json",
+            "description": "Geometrie"
+          }
+        }
+      }
+    }
+  ]
+}

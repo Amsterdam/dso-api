@@ -349,6 +349,9 @@ def brp_dataset(brp_schema_json, brp_endpoint_url) -> Dataset:
     )
 
 
+# Dataset with auth scopes on fields.
+
+
 @pytest.fixture()
 def geometry_auth_schema_json() -> dict:
     return json.loads((HERE / "files" / "geometry_auth.json").read_text())
@@ -372,6 +375,38 @@ def geometry_auth_model(geometry_auth_dataset, dynamic_models):
 @pytest.fixture()
 def geometry_auth_thing(geometry_auth_model):
     return geometry_auth_model.objects.create(
+        id=1,
+        metadata="secret",
+        geometry=Point(10, 10),
+    )
+
+
+# Dataset with auth scopes on the entire dataset.
+
+
+@pytest.fixture()
+def geometry_authdataset_schema_json() -> dict:
+    return json.loads((HERE / "files" / "geometry_authdataset.json").read_text())
+
+
+@pytest.fixture()
+def geometry_authdataset_schema(geometry_authdataset_schema_json) -> DatasetSchema:
+    return DatasetSchema.from_dict(geometry_authdataset_schema_json)
+
+
+@pytest.fixture()
+def geometry_authdataset_dataset(geometry_authdataset_schema):
+    return Dataset.create_for_schema(schema=geometry_authdataset_schema)
+
+
+@pytest.fixture()
+def geometry_authdataset_model(geometry_authdataset_dataset, dynamic_models):
+    return dynamic_models["geometry_authdataset"]["things"]
+
+
+@pytest.fixture()
+def geometry_authdataset_thing(geometry_authdataset_model):
+    return geometry_authdataset_model.objects.create(
         id=1,
         metadata="secret",
         geometry=Point(10, 10),
