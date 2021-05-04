@@ -4,7 +4,8 @@ Authentication & Authorization
 Authentication
 --------------
 
-The authentication happens by receiving a JSON Web Token (JWT) with the proper scopes.
+Authentication happens by checking a JSON Web Token (JWT)
+against the public key of a trusted authentication service.
 These scopes are tested by the
 `datapunt-authorization-django <https://github.com/Amsterdam/authorization_django>`_
 package.
@@ -18,11 +19,26 @@ The schema definitions can add an ``auth`` field on various levels:
 * A single table
 * A single field
 
-This defines which fields, tables or datasets are not accessible
-unless a particular authorization scope is provided.
-If the required scope is missing, the fields are omitted from the response.
+At every level, the ``auth`` field contains a string that is called a *scope*.
+A request's JWT must contain this scope in its ``scopes`` claim
+(see the ``authorization_django`` source code for details)
+to meet an ``auth`` field's requirements.
+The absence of an ``auth`` field marks a publicly available resource.
 
-By default, the REST serializers only return the public fields.
+The presence of ``auth`` fields on multiple levels
+means that all listed scopes must be carried in the JWT.
+So, if the dataset has ``"auth": "FOO/BAR"`` and a field has ``"auth": "FOO/BAZ``,
+then access to the field is only available
+with a token that carries the ``FOO/BAR`` and ``FOO/BAZ`` scopes.
+
+The effect of an ``auth`` on a dataset or table is that attempts to access it
+result in an HTTP 403 Forbidden error.
+The effect on a field is that the field is omitted when from the response
+when the table is queried.
+The Mapbox Vector Tiles (MVT) endpoint is an exception to this rule:
+since the MVT format requires a geometry field,
+the endpoint cannot produce valid MVT when access to the geometry field is prohibited
+and gives 403 in this case.
 
 Profiles
 --------
@@ -41,7 +57,7 @@ The file format provides various options, such as:
             "brp": {
                 "tables": {
                     "ingeschrevenpersonen": {
-                        "permisssions": "read",
+                        "permissions": "read",
                         "fields": {
                             "bsn": "encoded"
                         },
