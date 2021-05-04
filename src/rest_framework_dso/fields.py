@@ -39,6 +39,8 @@ class AbstractEmbeddedField:
 
         self.parent_serializer_class = owner
         self.field_name = name
+        if self.source is None:
+            self.source = self.field_name
 
         # Also register this field in the Meta.embedded,
         # which makes it easier to collect embedded relations
@@ -79,8 +81,7 @@ class AbstractEmbeddedField:
 
     @cached_property
     def source_field(self) -> models.Field:
-        field_name = self.source or self.field_name
-        return self.parent_model._meta.get_field(field_name)
+        return self.parent_model._meta.get_field(self.source)
 
     @cached_property
     def is_loose(self) -> bool:
@@ -95,17 +96,16 @@ class AbstractEmbeddedField:
 
     @cached_property
     def attname(self):
-        field_name = self.source or self.field_name
         try:
             # For ForeignKey/OneToOneField this resolves to "{field_name}_id"
             # For ManyToManyField this resolves to a manager object
-            return self.parent_model._meta.get_field(field_name).attname
+            return self.parent_model._meta.get_field(self.source).attname
         except models.FieldDoesNotExist:
             # Allow non-FK relations, e.g. a "bag_id" to a completely different database
-            if not field_name.endswith("_id"):
-                return f"{field_name}_id"
+            if not self.source.endswith("_id"):
+                return f"{self.source}_id"
             else:
-                return field_name
+                return self.source
 
 
 class EmbeddedField(AbstractEmbeddedField):
