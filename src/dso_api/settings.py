@@ -45,8 +45,10 @@ SCHEMA_DEFS_URL = env.str("SCHEMA_DEFS_URL", "https://schemas.data.amsterdam.nl/
 
 # -- Azure specific settings
 
-AZURE_INSTRUMENTATION_KEY: Optional[str] = env.str("AZURE_INSTRUMENTATION_KEY", None)
-AZURE_INGESTION_ENDPOINT: Optional[str] = env.str("AZURE_INGESTION_ENDPOINT", None)
+# Microsoft recommended abbreviation for Application Insights is `APPI`
+AZURE_APPI_INSTRUMENTATION_KEY: Optional[str] = env.str("AZURE_APPI_INSTRUMENTATION_KEY", None)
+AZURE_APPI_INGESTION_ENDPOINT: Optional[str] = env.str("AZURE_APPI_INGESTION_ENDPOINT", None)
+
 # -- Security
 
 # SECURITY WARNING: keep the secret key used in production secret!
@@ -91,18 +93,18 @@ MIDDLEWARE = [
 ]
 connection_string: Optional[str] = None
 if CLOUD_ENV.is_azure():
-    if AZURE_INSTRUMENTATION_KEY is None:
+    if AZURE_APPI_INSTRUMENTATION_KEY is None:
         raise ImproperlyConfigured(
-            "Please specify the 'AZURE_INSTRUMENTATION_KEY' environment variable."
+            "Please specify the 'AZURE_APPI_INSTRUMENTATION_KEY' environment variable."
         )
-    if AZURE_INGESTION_ENDPOINT is None:
+    if AZURE_APPI_INGESTION_ENDPOINT is None:
         raise ImproperlyConfigured(
-            "Please specify the 'AZURE_INGESTION_ENDPOINT' environment variable."
+            "Please specify the 'AZURE_APPI_INGESTION_ENDPOINT' environment variable."
         )
     MIDDLEWARE.append("opencensus.ext.django.middleware.OpencensusMiddleware")
     connection_string = (
-        f"InstrumentationKey={AZURE_INSTRUMENTATION_KEY}"
-        f";IngestionEndpoint={AZURE_INGESTION_ENDPOINT}"
+        f"InstrumentationKey={AZURE_APPI_INSTRUMENTATION_KEY}"
+        f";IngestionEndpoint={AZURE_APPI_INGESTION_ENDPOINT}"
     )
     OPENCENSUS = {
         "TRACE": {
