@@ -1,7 +1,6 @@
 import logging
 import os
 import sys
-from enum import Enum
 from pathlib import Path
 from typing import Optional
 
@@ -14,16 +13,6 @@ from opencensus.trace import config_integration
 from sentry_sdk.integrations.django import DjangoIntegration
 from sentry_sdk.integrations.logging import LoggingIntegration
 
-
-class CloudEnv(Enum):
-    CLOUDVPS_DOCKER = "cloudvps_docker"
-    AZURE_ACI = "azure_aci"
-    AZURE_AKS = "azure_aks"
-
-    def is_azure(self):
-        return self in (CloudEnv.AZURE_ACI, CloudEnv.AZURE_AKS)
-
-
 env = environ.Env()
 
 # -- Environment
@@ -31,7 +20,7 @@ env = environ.Env()
 BASE_DIR = Path(__file__).parents[1]
 DEBUG = env.bool("DJANGO_DEBUG", True)
 
-CLOUD_ENV = CloudEnv(env.str("CLOUD_ENV", "cloudvps_docker"))
+CLOUD_ENV = env.str("CLOUD_ENV", "unspecified")
 DJANGO_LOG_LEVEL = env.str("DJANGO_LOG_LEVEL", "INFO")
 DSO_API_LOG_LEVEL = env.str("DSO_API_LOG_LEVEL", "INFO")
 DSO_API_AUDIT_LOG_LEVEL = env.str("DSO_API_AUDIT_LOG_LEVEL", "INFO")
@@ -210,7 +199,7 @@ LOGGING = {
     },
 }
 
-if CLOUD_ENV.is_azure():
+if CLOUD_ENV.lower().startswith("azure"):
     if AZURE_APPI_INSTRUMENTATION_KEY is None:
         raise ImproperlyConfigured(
             "Please specify the 'AZURE_APPI_INSTRUMENTATION_KEY' environment variable."

@@ -110,8 +110,10 @@ logging and tracing information utilizes the OpenCensus standard.
 To ensure this facility is used 
 be sure to set the environment variable `CLOUD_ENV` to either:
 
-- `azure_aks`
-- `azure_aci`
+- `azure`
+- `AZURE`
+
+whatever is your cup of tea regarding case.
 
 When running in Azure 
 two additional environment variables need to be specified:
