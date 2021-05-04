@@ -145,14 +145,10 @@ def get_expanded_fields(
     if not fields_to_expand:
         return []
 
-    allowed_names = getattr(serializer.Meta, "embedded_fields", [])
     embedded_fields = []
 
     for field_name, nested_fields_to_expand in fields_to_expand.items():
-        if field_name not in allowed_names:
-            raise _expand_parse_error(allowed_names, field_name, prefix) from None
-
-        field = _get_embedded_field(serializer.__class__, field_name)
+        field = get_embedded_field(serializer.__class__, field_name, prefix)
 
         # Some output formats don't support M2M, so avoid expanding these.
         if field.is_array and not allow_m2m:
@@ -177,7 +173,7 @@ def get_all_embedded_field_names(
     result = {}
 
     for field_name in getattr(serializer_class.Meta, "embedded_fields", ()):
-        field: AbstractEmbeddedField = _get_embedded_field(serializer_class, field_name)
+        field: AbstractEmbeddedField = get_embedded_field(serializer_class, field_name)
         if field.is_array and not allow_m2m:
             continue
 
@@ -200,9 +196,14 @@ def group_dotted_names(fields_to_expand: List[str]) -> DictOfDicts:
     return result
 
 
-def _get_embedded_field(
-    serializer_class: Type[serializers.Serializer], field_name
+def get_embedded_field(
+    serializer_class: Type[serializers.Serializer], field_name, prefix=""
 ) -> AbstractEmbeddedField:
+    """Retrieve an embedded field from the serializer class."""
+    allowed_names = getattr(serializer_class.Meta, "embedded_fields", [])
+    if field_name not in allowed_names:
+        raise _expand_parse_error(allowed_names, field_name, prefix) from None
+
     try:
         return getattr(serializer_class, field_name)
     except AttributeError:

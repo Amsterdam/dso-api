@@ -54,6 +54,8 @@ from rest_framework_dso.embedding import EmbeddedFieldMatch
 from rest_framework_dso.fields import AbstractEmbeddedField, EmbeddedField, EmbeddedManyToManyField
 from rest_framework_dso.serializers import DSOModelListSerializer, DSOModelSerializer
 
+MAX_EMBED_NESTING_LEVEL = 1
+
 
 class URLencodingURLfields:
     """ URL encoding mechanism for URL content """
@@ -435,7 +437,7 @@ dynamic_models_removed.connect(lambda **kwargs: serializer_factory.cache_clear()
 
 @lru_cache()
 def serializer_factory(
-    model: Type[DynamicModel], depth: int = 0, flat: bool = False
+    model: Type[DynamicModel], depth: int = 0, flat: bool = False, nesting_level=0
 ) -> Type[DynamicSerializer]:
     """Generate the DRF serializer class for a specific dataset model.
 
@@ -453,6 +455,10 @@ def serializer_factory(
       This allows Django Rest Framework to auto-expand relations or omit them.
     :param flat: When true, embedded relations will not be generated.
     """
+    if not flat and nesting_level >= MAX_EMBED_NESTING_LEVEL:
+        # Won't auto-correct this, as it would open up cache bypassing for lru_cache()
+        raise ValueError("flat should be False when nesting exceeds max nesting level")
+
     _validate_model(model)
     prefix = "Flat" if flat else ""
 
@@ -494,10 +500,12 @@ def serializer_factory(
             # Reverse relations are still part of the main body
             _build_serializer_reverse_fk_field(model, model_field, new_attrs, fields)
         else:
-            _build_serializer_field(model, model_field, flat, new_attrs, fields, extra_kwargs)
+            _build_serializer_field(
+                model, model_field, flat, nesting_level, new_attrs, fields, extra_kwargs
+            )
 
     if not flat:
-        _generate_embedded_relations(model, fields, new_attrs)
+        _generate_embedded_relations(model, fields, new_attrs, nesting_level)
 
     if "_links" in fields:
         # Generate the serializer for the _links field
@@ -553,7 +561,15 @@ def _links_serializer_factory(model: Type[DynamicModel], depth: int) -> Type[Dyn
     return type(serializer_name, (DynamicLinksSerializer,), new_attrs)
 
 
-def _build_serializer_field(model, model_field, flat, new_attrs, fields, extra_kwargs):
+def _build_serializer_field(
+    model: Type[DynamicModel],
+    model_field: models.Field,
+    flat: bool,
+    nesting_level: int,
+    new_attrs,
+    fields,
+    extra_kwargs,
+):
     """Build a serializer field, results are written in 'output' parameters"""
     # Add extra embedded part for related fields
     # For NM relations, we need another type of EmbeddedField
@@ -567,7 +583,7 @@ def _build_serializer_field(model, model_field, flat, new_attrs, fields, extra_k
         ),
     ):
         # Embedded relations are only added to the main serializer.
-        _build_serializer_embeddded_field(model_field, new_attrs)
+        _build_serializer_embeddded_field(model_field, nesting_level, new_attrs)
 
         if isinstance(model_field, LooseRelationField):
             # For loose relations, add an id char field.
@@ -590,7 +606,7 @@ def _build_serializer_field(model, model_field, flat, new_attrs, fields, extra_k
 
 
 def _build_serializer_embeddded_field(
-    model_field: Union[RelatedField, LooseRelationField], new_attrs
+    model_field: Union[RelatedField, LooseRelationField], nesting_level, new_attrs
 ):
     """Build a embedded field for the serializer"""
     camel_name = toCamelCase(model_field.name)
@@ -601,7 +617,12 @@ def _build_serializer_embeddded_field(
     )
 
     new_attrs[camel_name] = EmbeddedFieldClass(
-        serializer_class=serializer_factory(model_field.related_model, depth=1, flat=True),
+        serializer_class=serializer_factory(
+            model_field.related_model,
+            depth=1,
+            flat=(nesting_level + 1) >= MAX_EMBED_NESTING_LEVEL,
+            nesting_level=nesting_level + 1,
+        ),
         source=model_field.name,
     )
 
@@ -684,12 +705,16 @@ def _find_reverse_fk_relation(
     )
 
 
-def _generate_embedded_relations(model, fields, new_attrs):
+def _generate_embedded_relations(model, fields, new_attrs, nesting_level):
     schema_fields = {to_snake_case(f.name): f for f in model.table_schema().fields}
     for item in model._meta.related_objects:
         # Do not create fields for django-created relations.
         if item.name in schema_fields and schema_fields[item.name].is_nested_table:
-            related_serializer = serializer_factory(item.related_model, flat=True)
+            related_serializer = serializer_factory(
+                item.related_model,
+                flat=(nesting_level + 1) >= MAX_EMBED_NESTING_LEVEL,
+                nesting_level=nesting_level + 1,
+            )
             fields.append(item.name)
             new_attrs[item.name] = related_serializer(many=True)
 
