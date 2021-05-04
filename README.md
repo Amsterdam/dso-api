@@ -71,6 +71,17 @@ when you cd into your project directory.
 
 See: https://github.com/direnv/direnv
 
+# Logging
+
+DSO API can log at various log levels. 
+By default everything is logged at level `INFO`.
+To log at different levels
+set one or more of the following environment variables:
+
+- DJANGO_LOG_LEVEL
+- DSO_API_LOG_LEVEL 
+- DSO_API_AUDIT_LOG_LEVEL 
+
 # Migrate Django catalog model
 
     cd src

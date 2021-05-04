@@ -33,6 +33,8 @@ DEBUG = env.bool("DJANGO_DEBUG", True)
 
 CLOUD_ENV = CloudEnv(env.str("CLOUD_ENV", "cloudvps_docker"))
 DJANGO_LOG_LEVEL = env.str("DJANGO_LOG_LEVEL", "INFO")
+DSO_API_LOG_LEVEL = env.str("DSO_API_LOG_LEVEL", "INFO")
+DSO_API_AUDIT_LOG_LEVEL = env.str("DSO_API_AUDIT_LOG_LEVEL", "INFO")
 
 # Paths
 STATIC_URL = "/v1/static/"
@@ -199,10 +201,10 @@ LOGGING = {
     "root": {"level": "INFO", "handlers": ["console"]},
     "loggers": {
         "django": {"handlers": ["console"], "level": DJANGO_LOG_LEVEL, "propagate": False},
-        "dso_api": {"handlers": ["console"], "level": "DEBUG", "propagate": False},
+        "dso_api": {"handlers": ["console"], "level": DSO_API_LOG_LEVEL, "propagate": False},
         "dso_api.audit": {
             "handlers": ["structured_console"],
-            "level": "DEBUG",
+            "level": DSO_API_AUDIT_LOG_LEVEL,
             "propagate": False,
         },
     },
