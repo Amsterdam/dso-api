@@ -148,18 +148,14 @@ class TestDatasetWFSViewAuth:
     def test_wfs_model_unauthorized(
         self, api_client, geometry_authdataset_thing, fetch_auth_token, filled_router
     ):
-        # We need both scopes TEST/TOP[12].
-        response = self.request(
-            api_client, fetch_auth_token, "geometry_authdataset", ["TEST/TOP1"]
-        )
+        # We need TEST/TOP.
+        response = self.request(api_client, fetch_auth_token, "geometry_authdataset", [])
         assert response.status_code == 403
 
     def test_wfs_model_authorized(
         self, api_client, geometry_authdataset_thing, fetch_auth_token, filled_router
     ):
-        response = self.request(
-            api_client, fetch_auth_token, "geometry_authdataset", ["TEST/TOP1", "TEST/TOP2"]
-        )
+        response = self.request(api_client, fetch_auth_token, "geometry_authdataset", ["TEST/TOP"])
         assert response.status_code == 200
 
         # We should get a full result, regardless of "auth" on properties,
@@ -175,19 +171,9 @@ class TestDatasetWFSViewAuth:
     @pytest.mark.parametrize(
         "scopes,expect",
         [
-            # With no scopes, we should not get the "metadata" or "geometry" fields.
             ([], {"boundedBy": None, "id": "1"}),
-            # Geometry field, but no metadata.
-            (["TEST/GEO1", "TEST/GEO2"], {"boundedBy": None, "id": "1", "geometry": None}),
-            # Metadata, but not all scopes for the geometry field present.
-            (
-                ["TEST/GEO1", "TEST/META"],
-                {
-                    "boundedBy": None,
-                    "id": "1",
-                    "metadata": "secret",
-                },
-            ),
+            (["TEST/GEO"], {"boundedBy": None, "id": "1", "geometry": None}),
+            (["TEST/META"], {"boundedBy": None, "id": "1", "metadata": "secret"}),
         ],
     )
     def test_wfs_field_auth(

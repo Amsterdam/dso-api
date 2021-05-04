@@ -27,7 +27,7 @@
           },
           "geometry": {
             "$ref": "https://geojson.org/schema/Point.json",
-            "auth": "TEST/GEO1,TEST/GEO2",
+            "auth": "TEST/GEO",
             "description": "Geometrie"
           }
         }

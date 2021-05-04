@@ -14,8 +14,10 @@ from schematools.utils import to_snake_case, toCamelCase
 class TableScopes:
     """OAuth scopes for tables and fields."""
 
-    table: Set[str] = field(default_factory=set)
-    fields: Dict[str, Set[str]] = field(default_factory=dict)
+    # Table and dataset scopes.
+    table: Set[str] = field(default=None)
+    # Scope per field.
+    fields: Dict[str, str] = field(default_factory=dict)
 
 
 @ttl_cache(maxsize=None, ttl=60 * 60)
@@ -29,19 +31,14 @@ def fetch_scopes_for_dataset_table(dataset_id: str, table_id: str):
     dataset_id = to_snake_case(dataset_id)
     table_id = to_snake_case(table_id)
 
-    def _fetch_scopes(obj):
-        if obj.auth:
-            return set(obj.auth.split(","))
-        return set()
-
     try:
         table = models.DatasetTable.objects.get(name=table_id, dataset__name=dataset_id)
     except models.DatasetTable.DoesNotExist:
         return TableScopes()
 
     return TableScopes(
-        table=_fetch_scopes(table) | _fetch_scopes(table.dataset),
-        fields={field.name: _fetch_scopes(field) for field in table.fields.all()},
+        table=frozenset(level.auth for level in [table, table.dataset] if level.auth is not None),
+        fields={field.name: field.auth for field in table.fields.all() if field.auth is not None},
     )
 
 
@@ -58,19 +55,26 @@ def fetch_scopes_for_model(model: Type[Model]) -> TableScopes:
     return fetch_scopes_for_dataset_table(dataset, table)
 
 
-def get_unauthorized_fields(request, model) -> set:
-    """Check which field names should be excluded"""
+def get_unauthorized_fields(request, model) -> Set[str]:
+    """Returns a list of field names to be excluded from a response."""
+    # is_authorized_for is added by authorization_django middleware
+    # only if an authorization check is necessary.
+    if not hasattr(request, "is_authorized_for"):
+        return set()
+
     model_scopes = fetch_scopes_for_model(model)
     unauthorized_fields = set()
-    # is_authorized_for is added by authorization_django middleware
-    if hasattr(request, "is_authorized_for"):
-        for model_field in model._meta.get_fields():
-            scopes = model_scopes.fields.get(model_field.name)
-            scopes = scopes.union(model_scopes.table) if scopes else model_scopes.table
+
+    for model_field in model._meta.get_fields():
+        required = model_scopes.table
+        field_scope = model_scopes.fields.get(model_field.name)
+        if field_scope is not None:
+            required = required | set([field_scope])
+
+        if not request.is_authorized_for(*required):
             permission_key = get_permission_key_for_field(model_field)
-            if not request.is_authorized_for(*scopes):
-                if not request_has_permission(request=request, perm=permission_key):
-                    unauthorized_fields.add(toCamelCase(model_field.name))
+            if not request_has_permission(request=request, perm=permission_key):
+                unauthorized_fields.add(toCamelCase(model_field.name))
 
     return unauthorized_fields
 
@@ -100,9 +104,7 @@ class HasOAuth2Scopes(permissions.BasePermission):
     def has_permission(self, request, view, models=None):
         """Based on the model that is associated with the view
         the Dataset and DatasetTable (if available)
-        are check for their 'auth' field.
-        These auth fields could contain a komma-separated list
-        of claims."""
+        are checked for their 'auth' field."""
         if models:
             for model in models:
                 if not self._has_permission(
