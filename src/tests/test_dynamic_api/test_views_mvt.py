@@ -88,22 +88,17 @@ def test_mvt_model_auth(api_client, geometry_auth_thing, fetch_auth_token, fille
         }
     }
 
-    # With all required scopes, we get a full response.
-    token = fetch_auth_token(["TEST/GEO1", "TEST/GEO2", "TEST/META"])
+    # With both required scopes, we get a full response.
+    token = fetch_auth_token(["TEST/GEO", "TEST/META"])
     response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
     assert response.status_code == 200
     assert mapbox_vector_tile.decode(response.content) == content
 
-    # With only the GEO[12] scopes, we still get a 200 response
+    # With only the GEO scope, we still get a 200 response
     # but we lose access to the metadata field.
-    token = fetch_auth_token(["TEST/GEO1", "TEST/GEO2"])
+    token = fetch_auth_token(["TEST/GEO"])
     response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
     assert response.status_code == 200
 
     del content["default"]["features"][0]["properties"]["metadata"]
     assert mapbox_vector_tile.decode(response.content) == content
-
-    # The geometry field requires two scopes. Giving it only one should give 403.
-    token = fetch_auth_token(["TEST/GEO1"])
-    response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
-    assert response.status_code == 403
