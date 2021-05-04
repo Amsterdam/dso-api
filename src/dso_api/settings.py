@@ -91,31 +91,6 @@ MIDDLEWARE = [
     "dso_api.dynamic_api.middleware.TemporalDatasetMiddleware",
     "dso_api.dynamic_api.middleware.RequestAuditLoggingMiddleware",
 ]
-connection_string: Optional[str] = None
-if CLOUD_ENV.is_azure():
-    if AZURE_APPI_INSTRUMENTATION_KEY is None:
-        raise ImproperlyConfigured(
-            "Please specify the 'AZURE_APPI_INSTRUMENTATION_KEY' environment variable."
-        )
-    if AZURE_APPI_INGESTION_ENDPOINT is None:
-        raise ImproperlyConfigured(
-            "Please specify the 'AZURE_APPI_INGESTION_ENDPOINT' environment variable."
-        )
-    MIDDLEWARE.append("opencensus.ext.django.middleware.OpencensusMiddleware")
-    connection_string = (
-        f"InstrumentationKey={AZURE_APPI_INSTRUMENTATION_KEY}"
-        f";IngestionEndpoint={AZURE_APPI_INGESTION_ENDPOINT}"
-    )
-    OPENCENSUS = {
-        "TRACE": {
-            "SAMPLER": "opencensus.trace.samplers.ProbabilitySampler(rate=1)",
-            "EXPORTER": f"""opencensus.ext.azure.trace_exporter.AzureExporter(
-                connection_string='{connection_string}',
-                service_name='dso-api'
-            )""",
-            "EXCLUDELIST_PATHS": [],
-        }
-    }
 
 AUTHENTICATION_BACKENDS = [
     "schematools.contrib.django.auth_backend.ProfileAuthorizationBackend",
@@ -232,8 +207,31 @@ LOGGING = {
         },
     },
 }
+
 if CLOUD_ENV.is_azure():
-    assert connection_string is not None, "`connection_string` should have been configured by now."
+    if AZURE_APPI_INSTRUMENTATION_KEY is None:
+        raise ImproperlyConfigured(
+            "Please specify the 'AZURE_APPI_INSTRUMENTATION_KEY' environment variable."
+        )
+    if AZURE_APPI_INGESTION_ENDPOINT is None:
+        raise ImproperlyConfigured(
+            "Please specify the 'AZURE_APPI_INGESTION_ENDPOINT' environment variable."
+        )
+    MIDDLEWARE.append("opencensus.ext.django.middleware.OpencensusMiddleware")
+    connection_string = (
+        f"InstrumentationKey={AZURE_APPI_INSTRUMENTATION_KEY}"
+        f";IngestionEndpoint={AZURE_APPI_INGESTION_ENDPOINT}"
+    )
+    OPENCENSUS = {
+        "TRACE": {
+            "SAMPLER": "opencensus.trace.samplers.ProbabilitySampler(rate=1)",
+            "EXPORTER": f"""opencensus.ext.azure.trace_exporter.AzureExporter(
+                connection_string='{connection_string}',
+                service_name='dso-api'
+            )""",
+            "EXCLUDELIST_PATHS": [],
+        }
+    }
     config_integration.trace_integrations(["logging"])
     LOGGING["formatters"]["azure"] = {
         "format": (
