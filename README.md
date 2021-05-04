@@ -105,8 +105,8 @@ be sure to set the environment variable `CLOUD_ENV` to either:
 When running in Azure 
 two additional environment variables need to be specified:
 
-- `AZURE_INSTRUMENTATION_KEY`
-- `AZURE_INGESTION_ENDPOINT`
+- `AZURE_APPI_INSTRUMENTATION_KEY`
+- `AZURE_APPI_INGESTION_ENDPOINT`
 
 These are used to determine where 
 Azure specific
