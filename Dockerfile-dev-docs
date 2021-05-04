@@ -1,0 +1,28 @@
+FROM amsterdam/python:3.8-buster AS builder
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
+      graphviz \
+      fonts-liberation \
+      make \
+      git \
+ && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /docs
+COPY dev-docs/requirements.txt /docs
+RUN pip install -r requirements.txt
+
+COPY dev-docs/ /docs/
+COPY src/ /sources/
+RUN pip install -e /sources/
+RUN pip install -r /sources/requirements_dev.txt
+
+# Added arg here, so build step is invalidated each time
+ARG BUILD_NUMBER=unknown
+RUN mkdir -p /docs/_static \
+ && make html
+
+# Static serving runtime
+FROM nginx
+RUN mkdir -p /usr/share/nginx/html/v1/docs/
+COPY --from=builder /docs/build/html/ /usr/share/nginx/html/

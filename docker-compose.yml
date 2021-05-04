@@ -64,3 +64,16 @@ services:
       - "./docs/build/html:/usr/share/nginx/html"
     ports:
       - "8081:80"
+
+  dev-docs:
+    build:
+      context:  .
+      dockerfile: Dockerfile-dev-docs
+    environment:
+      PYTHONPATH: "/dev-docs/"
+      DATABASE_URL: "postgres://dataservices:insecure@database/dataservices"
+    volumes:
+      - "./dev-docs:/docs"
+      - "./dev-docs/build/html:/usr/share/nginx/html"
+    ports:
+      - "8082:80"
