@@ -208,7 +208,6 @@ class DynamicSerializer(DSOModelSerializer):
     table_schema: DatasetTableSchema = None
 
     id_based_fetcher = staticmethod(temporal_id_based_fetcher)
-    hal_relations_serializer_class = None
 
     def get_request(self):
         """
@@ -243,18 +242,6 @@ class DynamicSerializer(DSOModelSerializer):
             expanded_fields=super().expanded_fields,
             skip_unauth=auto_expand_all,
         )
-
-    @cached_property
-    def hal_relations_serializer(self):
-        # Serializer needs to be instantiated once, so it also determines it's .fields once.
-        # Otherwise, the cached properties on that class are recalculated per object in a list.
-        return self.hal_relations_serializer_class(
-            context=self.context, fields_to_expand=self.fields_to_expand
-        )
-
-    @extend_schema_field(OpenApiTypes.OBJECT)
-    def get__links(self, instance):
-        return self.hal_relations_serializer.to_representation(instance)
 
     @extend_schema_field(OpenApiTypes.URI)
     def get_schema(self, instance):
@@ -392,6 +379,12 @@ class DynamicBodySerializer(DynamicSerializer):
     def get_fields(self):
         """Remove fields that shouldn't be in the body."""
         fields = super().get_fields()
+
+        # Pass the current state to the DynamicLinksSerializer instance
+        links_field = fields.get("_links")
+        if links_field is not None and isinstance(links_field, DynamicLinksSerializer):
+            links_field.fields_to_expand = self.fields_to_expand
+
         hal_fields = self._get_hal_field_names(fields)
         for hal_field in hal_fields:
             fields.pop(hal_field, None)
@@ -524,9 +517,9 @@ def serializer_factory(
         _generate_embedded_relations(model, fields, new_attrs, nesting_level)
 
     if "_links" in fields:
-        # Generate the serializer for the _links field
-        # containing the relations according to HAL
-        new_attrs["hal_relations_serializer_class"] = _links_serializer_factory(model, depth)
+        # Generate the serializer for the _links field containing the relations according to HAL.
+        # This is attached as a normal field, so it's recognized by prefetch optimizations.
+        new_attrs["_links"] = _links_serializer_factory(model, depth)(source="*")
 
     # Generate Meta section and serializer class
     new_attrs["Meta"] = type(
