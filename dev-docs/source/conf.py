@@ -31,6 +31,7 @@ class GDALMockModule(_MockModule):
     GDAL_VERSION = (3, 0)
 
 
+sys.modules["django.contrib.gis.geos.libgeos"] = _MockModule("django.contrib.gis.geos.libgeos")
 sys.modules["django.contrib.gis.gdal.libgdal"] = GDALMockModule("django.contrib.gis.gdal.libgdal")
 
 django.setup()
