@@ -2,7 +2,7 @@
 # See https://docs.readthedocs.io/en/stable/config-file/v2.html for details
 version: 2
 sphinx:
-   configuration: dev-docs/conf.py
+   configuration: dev-docs/source/conf.py
 formats: []
 
 python:
