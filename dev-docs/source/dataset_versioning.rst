@@ -61,8 +61,8 @@ All tables within default version of Dataset will have :code:`<dataset.id>_` nam
 Other Dataset versions will have major version taken into table name prefix:
 :code:`<dataset.id>_<dataset.version.major>_`
 
-Examples:
-=========
+Examples
+--------
 
 Given following Dataset definition:
 
@@ -70,13 +70,7 @@ Given following Dataset definition:
  - :code:`test` dataset with version :code:`0.1.1` is default and single table :code:`users` (fields: :code:`id`, :code:`name`, :code:`age`) defined
  - :code:`test` dataset with version :code:`1.0.1` and 2 tables defined: :code:`users` (fields: :code:`id`, :code:`firstName`, :code:`lastName`) and :code:`locations` (fields: :code:`id`, :code:`name`)
 
-API structure:
---------------
-
 Non-default versions of datasets will not be exposed via REST or WFS API.
-
-Database structure:
--------------------
 
 Database will have 3 tables defined:
 
@@ -86,10 +80,9 @@ Database will have 3 tables defined:
 
 
 Relation versioning
-===================
+-------------------
 
 Cross dataset relation tables will have major version numbers at all times, making relations persistent.
 
 This means relation from :code:`sportparken@1.0.0.sportparken.buurten` and :code:`bag@2.0.0.buurt.id` and will look like:
-
 :code:`sportparken_1_sportparken_buurten`
