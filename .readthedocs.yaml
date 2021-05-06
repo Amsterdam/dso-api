@@ -9,4 +9,3 @@ python:
    version: 3.8
    install:
    - requirements: dev-docs/requirements.txt
-   - requirements: src/requirements.txt

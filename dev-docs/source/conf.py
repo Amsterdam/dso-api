@@ -16,6 +16,7 @@ import sys
 import django
 
 sys.path.insert(0, os.path.abspath("../../src"))
+os.environ["DJANGO_DEBUG"] = "false"
 os.environ["DJANGO_SETTINGS_MODULE"] = "dso_api.settings"
 os.environ["SCHEMA_URL"] = "https://schemas.data.amsterdam.nl/"
 django.setup()
@@ -74,7 +75,7 @@ html_static_path = ["_static"]
 
 
 intersphinx_mapping = {
-    "python": ("http://docs.python.org/", None),
+    "python": ("https://docs.python.org/3/", None),
     "django": (
         "http://docs.djangoproject.com/en/stable/",
         "http://docs.djangoproject.com/en/stable/_objects/",
