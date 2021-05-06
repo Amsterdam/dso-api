@@ -94,7 +94,7 @@ html_static_path = ["_static"]
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3/", None),
     "django": (
-        "http://docs.djangoproject.com/en/stable/",
-        "http://docs.djangoproject.com/en/stable/_objects/",
+        f"http://docs.djangoproject.com/en/{django.VERSION[0]}.{django.VERSION[1]}/",
+        f"http://docs.djangoproject.com/en/{django.VERSION[0]}.{django.VERSION[1]}/_objects/",
     ),
 }
