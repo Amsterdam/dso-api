@@ -13,7 +13,7 @@ This caused inconsistencies and maintenance issues.
 
 To solve that problem, the dataset definitions are decoupled from the code.
 The dataset definitions are written in an an extended JSON Schema definition (called "Amsterdam Schema"),
-which is loaded on startup. This way, any dataset are be exposed in the same way.
+which is loaded on startup. This way, all dataset are exposed in the same way.
 
 Multiple datasets can be loaded in the same server instance. This turns the project into a central API-server,
 that hosts multiple datasets and even supports interlinking relations between the datasets.
