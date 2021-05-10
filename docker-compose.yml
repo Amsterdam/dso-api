@@ -13,17 +13,6 @@ services:
       - .:/host
     extra_hosts:
       admin.data.amsterdam.nl: 10.243.16.4
-  bag_v11_database:
-    image: amsterdam/postgres11
-    ports:
-      - "5434:5432"
-    environment:
-      POSTGRES_DB: bag_v11
-      POSTGRES_USER: bag_v11
-      POSTGRES_PASSWORD: insecure
-    volumes:
-      - "~/.ssh/datapunt.key:/root/.ssh/datapunt.key"
-      - .:/host
   web:
     build:
       context: src/
