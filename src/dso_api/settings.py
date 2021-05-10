@@ -137,11 +137,6 @@ DATABASES = {
         engine="django.contrib.gis.db.backends.postgis",
     ),
 }
-# Important to have keys define in DATABASE_SCHEMAS available as in DATABASES.
-DATABASE_SCHEMAS = {}
-DATABASE_DISABLE_MIGRATIONS = []
-
-DATABASE_ROUTERS = ["dso_api.dbrouters.DatabaseSchemasRouter"]
 
 locals().update(env.email_url(default="smtp://"))
 
