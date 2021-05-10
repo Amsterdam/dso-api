@@ -61,6 +61,7 @@ def render_dataset_docs(dataset: DatasetSchema):
             "main_title": main_title,
             "tables": tables,
             "wfs_url": wfs_url,
+            "swagger_url": f"{BASE_URL}/v1/swagger/{snake_name}",
         },
     )
 

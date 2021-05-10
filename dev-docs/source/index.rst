@@ -21,6 +21,7 @@ for government API's. Most logic of DSO is based on the HAL-JSON API style.
    wfs
    remote
    auth
+   ad_oauth_configuration
    environment
    dataset_versioning
    compliance
