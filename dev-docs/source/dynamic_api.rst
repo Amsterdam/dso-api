@@ -46,3 +46,11 @@ and fill in the attributes for the "dataset", "model" and fields.
 When all viewsets are constructed, reading ``router.urls`` returns all available endpoints
 as if it was hard-coded. The ``urls.py`` logic of :mod:`dso_api.dynamic_api.urls` module
 exposes those endpoints to Django.
+
+.. tip::
+    To debug datasets and use their models, you can reuse the router logic
+    which already created those models. The following can be used inside ``./manage.py shell``::
+
+        >>> from dso_api.dynamic_api.urls import router
+        >>> Model = router.all_models["dataset"]["tablename"]
+        >>> Model.objects.all()  # etc..

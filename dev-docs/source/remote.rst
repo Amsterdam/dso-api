@@ -4,7 +4,7 @@ Remote Endpoints
 Datasets can be configured to retrieve data from a remote endpoint,
 as opposed to an internal database table. This is currently implemented by calling:
 
-.. code-block:: bash
+.. code-block:: console
 
     manage.py change_dataset $DATASET --endpoint-url=...
 
@@ -21,7 +21,7 @@ In fact, the remote endpoints still behave mostly as a reverse proxy.
 The endpoint is retrieved, validated against the schema, and authentication/authorization is applied.
 
 The logic for remote endpoints exists in :mod:`dso_api.dynamic_api.remote`.
-It's serializers build upon the DSO base classes:
+Its serializers build upon the DSO base classes:
 
 .. graphviz::
 

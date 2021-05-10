@@ -4,36 +4,31 @@ DSO-API's Developer Documentation
 This documentation gives an introduction behind the scenes of the DSO-API.
 For end-user documentation, see https://api.data.amsterdam.nl/v1/docs/.
 
-The DSO-API project is designed as a central API-server component,
-which hosts multiple datasets based on an extended JSON schema definition (called "Amsterdam Schema").
-The datasets are exposed over both REST and WFS endpoints.
-The REST endpoints follow the DSO (Digitaal Stelsel Omgevingswet) which is the recommended design
-for government API's. Most logic of DSO is based on the HAL-JSON API style.
+A Brief Introduction
+--------------------
 
-.. toctree::
-   :maxdepth: 1
-   :caption: Topics:
+The DSO-API project was started by the Gemeente Amsterdam to create consistent API interfaces.
+Before DSO-API existed, each dataset had to be exposed by a standalone project.
+This caused inconsistencies and maintenance issues.
 
-   features
-   dynamic_models
-   dynamic_api
-   layers
-   wfs
-   remote
-   auth
-   ad_oauth_configuration
-   environment
-   dataset_versioning
-   compliance
+To solve that problem, the dataset definitions are decoupled from the code.
+The dataset definitions are written in an an extended JSON Schema definition (called "Amsterdam Schema"),
+which is loaded on startup. This way, any dataset are be exposed in the same way.
 
-.. toctree::
-   :caption: API Documentation:
-   :maxdepth: 4
+Multiple datasets can be loaded in the same server instance. This turns the project into a central API-server,
+that hosts multiple datasets and even supports interlinking relations between the datasets.
 
-   api/dso_api.dynamic_api
-   api/rest_framework_dso
-   api/schematools
-   api/schematools.contrib.django
+.. note::
+    The name "DSO" comes from `Digitaal Stelsel Omgevingswet`_ and describes
+    the design and guidelines for JSON-based API's by government agencies in The Netherlands.
+    Using this format, clients can to communicate with different JSON API's in a generic and consistent manner.
+
+Aside from REST endpoints, the datasets are also exposed as WFS endpoints.
+The REST endpoints follow the DSO (`Digitaal Stelsel Omgevingswet`_) guidelines.
+Most guidelines from DSO are based on the expired `HAL-JSON API style`_.
+
+Project Dependencies:
+---------------------
 
 A simplified diagram of the main project dependencies:
 
@@ -60,3 +55,45 @@ A simplified diagram of the main project dependencies:
       ams -> dso_api [style=dotted, label="import"]
       airflow -> dso_api [style=dotted, label="data"]
    }
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Topics:
+
+   intro
+   features
+   dynamic_models
+   dynamic_api
+   layers
+   wfs
+   remote
+   auth
+   openapi
+   schemas
+   dataset_versioning
+   environment
+   compliance
+
+.. toctree::
+   :maxdepth: 1
+   :caption: HOW-TO:
+
+   howto/install
+   howto/freebsd
+   howto/pip
+   howto/testruns
+   howto/schemas
+   howto/openapi
+   howto/azure_oauth
+
+.. toctree::
+   :caption: API Documentation:
+   :maxdepth: 2
+
+   api/dso_api.dynamic_api
+   api/rest_framework_dso
+   api/schematools
+   api/schematools.contrib.django
+
+.. _Digitaal Stelsel Omgevingswet: https://aandeslagmetdeomgevingswet.nl/digitaal-stelsel/aansluiten/standaarden/api-en-uri-strategie/
+.. _HAL-JSON API style: https://datatracker.ietf.org/doc/html/draft-kelly-json-hal-08
