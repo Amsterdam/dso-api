@@ -8,21 +8,17 @@ RUN apt-get update \
       git \
  && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /docs
-COPY dev-docs/requirements.txt /docs
-RUN pip install -r requirements.txt
-
-COPY dev-docs/ /docs/
-COPY src/ /sources/
-RUN pip install -e /sources/
-RUN pip install -r /sources/requirements_dev.txt
+WORKDIR /tmp/docs
+COPY dev-docs/ /tmp/docs/
+COPY src/ /tmp/src/
+RUN pip install -r /tmp/docs/requirements.txt
 
 # Added arg here, so build step is invalidated each time
 ARG BUILD_NUMBER=unknown
-RUN mkdir -p /docs/_static \
+RUN mkdir -p /tmp/docs/_static \
  && make html
 
 # Static serving runtime
 FROM nginx
 RUN mkdir -p /usr/share/nginx/html/v1/docs/
-COPY --from=builder /docs/build/html/ /usr/share/nginx/html/
+COPY --from=builder /tmp/docs/build/html/ /usr/share/nginx/html/

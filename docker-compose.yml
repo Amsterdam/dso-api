@@ -73,7 +73,7 @@ services:
       PYTHONPATH: "/dev-docs/"
       DATABASE_URL: "postgres://dataservices:insecure@database/dataservices"
     volumes:
-      - "./dev-docs:/docs"
+      - "./dev-docs:/tmp/docs"
       - "./dev-docs/build/html:/usr/share/nginx/html"
     ports:
       - "8082:80"
