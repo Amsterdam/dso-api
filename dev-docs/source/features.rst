@@ -24,7 +24,7 @@ The following features are implemented in the application:
  * CSV export (``?_format=csv``)
  * GeoJSON export (``?_format=csv``)
 
-* OpenAPI spec.
+* :doc:`OpenAPI spec <openapi>`.
 * Audit logging for requests.
 * Browsable API (default for browsers).
 * Azure BLOB fields for large documents.

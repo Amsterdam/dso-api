@@ -9,7 +9,7 @@ we need to create Application Registration.
 3. Click on ``+ New Registration``
 
 
-.. figure:: images/azure_ad_config_1.png
+.. figure:: /images/azure_ad_config_1.png
    :width: 818
    :height: 592
    :scale: 100%
@@ -23,7 +23,7 @@ Now it's time to create Application Registration:
 3. Enter ``http://localhost:8000/v1/oauth2-redirect.html`` as Redirect URI
 4. Press "Register"
 
-.. figure:: images/azure_ad_config_2.png
+.. figure:: /images/azure_ad_config_2.png
    :width: 827 
    :height: 1087
    :scale: 100%
@@ -37,7 +37,7 @@ From Overview page we can get settings for environment variables used by DSO API
 1. Application ID for ``AZURE_AD_CLIENT_ID``
 2. Directory ID for ``AZURE_AD_TENANT_ID``
 
-.. figure:: images/azure_ad_config_4.png
+.. figure:: /images/azure_ad_config_4.png
    :width: 712
    :height: 507
    :scale: 100%
@@ -45,7 +45,7 @@ From Overview page we can get settings for environment variables used by DSO API
 
 Last, but not least:
 
-.. figure:: images/azure_ad_config_3.png
+.. figure:: /images/azure_ad_config_3.png
    :width: 848
    :height: 996
    :scale: 100%

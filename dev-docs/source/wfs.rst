@@ -18,8 +18,8 @@ The DSO-API build upon the generic functionality of django-gisserver_ by extendi
 
 .. seealso::
     To learn more about the WFS server component, it's useful to read
-    it's development documentation at: https://django-gisserver.readthedocs.io/.
-    This explains how to define features, override logic and understand it's internal design.
+    its development documentation at: https://django-gisserver.readthedocs.io/.
+    This explains how to define features, override logic and understand its internal design.
 
     The DSO-API end user documentation also describes how to access the WFS server:
     https://api.data.amsterdam.nl/v1/docs/generic/wfs.html
