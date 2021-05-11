@@ -224,6 +224,39 @@ def _expand_parse_error(allowed_names, field_name, prefix=""):
         )
 
 
+def get_serializer_lookups(serializer: serializers.BaseSerializer, prefix="") -> List[str]:
+    """Find all relations that a serializer instance would request.
+    This allows to prepare a ``prefetch_related()`` call on the queryset.
+    """
+    # Unwrap the list serializer construct for the one-to-many relationships.
+    if isinstance(serializer, serializers.ListSerializer):
+        serializer = serializer.child
+
+    lookups = []
+    for field in serializer.fields.values():
+        if field.source == "*":
+            if isinstance(field, serializers.BaseSerializer):
+                # When a serializer receives the same data as the parent instance, it can be
+                # seen as being a part of the parent. The _links field is implemented this way.
+                lookups.extend(get_serializer_lookups(field, prefix=prefix))
+        elif isinstance(
+            field,
+            (
+                serializers.BaseSerializer,  # also ListSerializer
+                serializers.RelatedField,
+                serializers.ManyRelatedField,
+            ),
+        ):
+            lookup = f"{prefix}{field.source.replace('.', '__')}"
+            lookups.append(lookup)
+
+            if isinstance(field, serializers.BaseSerializer):
+                lookups.extend(get_serializer_lookups(field, prefix=f"{lookup}__"))
+
+    # Deduplicate the final result, as embedded fields could overlap with _links.
+    return sorted(set(lookups)) if not prefix else lookups
+
+
 class ChunkedQuerySetIterator(Iterable[M]):
     """An optimal strategy to perform ``prefetch_related()`` on large datasets.
 

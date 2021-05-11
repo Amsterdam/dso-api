@@ -38,6 +38,7 @@ from rest_framework_dso.embedding import (
     EmbeddedResultSet,
     ObservableIterator,
     get_expanded_fields_by_scope,
+    get_serializer_lookups,
     parse_expand_scope,
 )
 from rest_framework_dso.fields import DSOGeometryField, LinksField
@@ -181,22 +182,7 @@ class DSOModelListSerializer(DSOListSerializer):
 
     def get_prefetch_lookups(self) -> List[Union[models.Prefetch, str]]:
         """Tell which fields should be included for a ``prefetch_related()``."""
-        lookups = []
-
-        def _walk_serializer_lookups(serializer, prefix=""):
-            # Recursively find all lookups that need to be added.
-            for f in serializer.fields.values():
-                if f.source != "*" and isinstance(
-                    f, (serializers.Serializer, serializers.RelatedField)
-                ):
-                    lookup = f"{prefix}{f.source.replace('.', '__')}"
-                    lookups.append(lookup)
-
-                    if isinstance(f, serializers.Serializer):
-                        _walk_serializer_lookups(f, prefix=f"{f.source}__")
-
-        _walk_serializer_lookups(self.child)
-        return lookups
+        return get_serializer_lookups(self)
 
     def to_representation(self, data):
         """Improved list serialization.
