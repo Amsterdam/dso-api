@@ -45,8 +45,15 @@ Profiles
 
 The ``auth`` fields define the basic rules for authentication.
 Unfortunately, this is a "all or nothing" approach that isn't sufficient in complex cases.
-To overcome this problem, "authentication profiles" were introduced.
-The file format provides various options, such as:
+*Profiles* provide a more fine-grained approach to authorization.
+
+Profiles are stored in the DSO-API database.
+They have a name, a set of scopes, and rules that grant additional permissions
+to requests that carry those scopes in their JWT.
+When a request comes in, all profiles are checked against the request's scopes
+and the matching profiles are applied.
+
+Here's an example profile in JSON:
 
 .. code-block:: json
 
@@ -59,7 +66,7 @@ The file format provides various options, such as:
                     "ingeschrevenpersonen": {
                         "permissions": "read",
                         "fields": {
-                            "bsn": "encoded"
+                            "bsn": "read"
                         },
                         "mandatoryFilterSets": [
                             ["bsn", "lastname"],
@@ -71,18 +78,28 @@ The file format provides various options, such as:
         }
     }
 
-A user may have multiple profiles.
-Each profile gives the user additional rights to view a particular resource.
+This scope is called ``medewerker``.
+It applies to all requests that carry the scope ``BRP/R``.
+If more than one scope is listed, all scopes must be carried for the profile to apply.
+By implication, an empty ``scopes`` denotes a profile that always applies.
 
-The ``mandatoryFilterSets`` setting ensures that a listing can only be requested
-when a certain set of filters is are given. For example, a frontend office employee
+The ``datasets`` part of the profile lists permissions granted beyond those
+that are granted to the scope(s) by the schema.
+Permissions already granted by the schema are never taken away.
+The permissions granted may be restricted to requests that query particular fields.
+With the example profile, requests with scope ``BRP/R``
+gain permission to read the field ``bsn`` on the table ``ingeschrevenpersonen``,
+provided that the request queries for either ``bsn`` and ``lastname``,
+or ``postcode`` and ``lastname`` (or all three fields).
+
+The intention behind ``mandatoryFilterSets`` is to ensure
+that listings are restricted on a need-to-know basis.
+For example, a profile might express that a frontend office employee
 may only access data of someone when they can provide their last name and postal code.
-
-Another case for profiles would be a statistician, that may only read the age and neighbourhood
+Or a statistician might be allowed to read age and neighbourhood
 fields to aggregate data, without ever having access to identifiable data.
-Encoding such feature into the schema file amongst other rules would produce
-very complex ``auth`` fields, while the profile file gives a
-fitting definition of such role and permissions.
+Encoding such rules in the schema file using a custom scope
+would require every other request that accesses the dataset to also have this scope.
 
 
 WFS Logic
