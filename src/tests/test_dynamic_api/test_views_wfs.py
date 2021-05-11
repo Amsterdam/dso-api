@@ -171,9 +171,9 @@ class TestDatasetWFSViewAuth:
     @pytest.mark.parametrize(
         "scopes,expect",
         [
-            ([], {"boundedBy": None, "id": "1"}),
-            (["TEST/GEO"], {"boundedBy": None, "id": "1", "geometry": None}),
-            (["TEST/META"], {"boundedBy": None, "id": "1", "metadata": "secret"}),
+            (["TEST/TOP"], {"boundedBy": None, "id": "1"}),
+            (["TEST/TOP", "TEST/GEO"], {"boundedBy": None, "id": "1", "geometry": None}),
+            (["TEST/TOP", "TEST/META"], {"boundedBy": None, "id": "1", "metadata": "secret"}),
         ],
     )
     def test_wfs_field_auth(
