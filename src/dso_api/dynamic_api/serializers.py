@@ -98,13 +98,9 @@ def temporal_id_based_fetcher(embedded_field: AbstractEmbeddedField):
     def _fetcher(id_list):
         if is_loose:
             identifier = model.get_dataset_schema().identifier
-            return (
-                filter_latest_temporal(model.objects)
-                .filter(**{f"{identifier}__in": id_list})
-                .iterator()
-            )
+            return filter_latest_temporal(model.objects).filter(**{f"{identifier}__in": id_list})
         else:
-            return model.objects.filter(pk__in=id_list).iterator()
+            return model.objects.filter(pk__in=id_list)
 
     return _fetcher
 

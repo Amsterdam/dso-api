@@ -437,13 +437,27 @@ class EmbeddedResultSet(ReturnGenerator):
 
     def get_objects(self):
         """Retrieve the objects to render"""
-        if self.id_fetcher is not None:
-            # e.g. retrieve from a remote API, or filtered database table.
-            return self.id_fetcher(self.id_list)
-        else:
+        if self.id_fetcher is None:
             # Standard Django foreign-key like behavior.
-            model = self.embedded_field.related_model
-            return model.objects.filter(pk__in=self.id_list).iterator()
+            queryset = self.embedded_field.related_model.objects.filter(pk__in=self.id_list)
+        else:
+            # e.g. retrieve from a remote API, or filtered database table.
+            queryset = self.id_fetcher(self.id_list)
+            if not isinstance(queryset, models.QuerySet):
+                return queryset  # may return an iterator, can't optimize
+
+        return self.optimize_queryset(queryset)
+
+    def optimize_queryset(self, queryset):
+        """Optimize the queryset, see if N-query calls can be avoided."""
+        lookups = get_serializer_lookups(self.serializer)
+        if lookups:
+            # To make prefetch_related() work, the queryset needs to be read in chunks.
+            return ChunkedQuerySetIterator(queryset.prefetch_related(*lookups))
+        else:
+            # Don't need to analyse intermediate results,
+            # read the queryset in the most efficient way.
+            return queryset.iterator()
 
     def __iter__(self):
         """Create the generator on demand when iteration starts.
