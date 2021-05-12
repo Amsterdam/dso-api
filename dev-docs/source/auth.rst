@@ -6,7 +6,8 @@ Authentication
 
 Authentication happens by checking a JSON Web Token (JWT)
 against the public key of a trusted authentication service.
-These scopes are tested by the
+The token carries *scopes*, strings that denote permissions,
+which are tested by the
 `datapunt-authorization-django <https://github.com/Amsterdam/authorization_django>`_
 package.
 
@@ -25,13 +26,15 @@ A request's JWT must contain this scope in its ``scopes`` claim
 to meet an ``auth`` field's requirements.
 The absence of an ``auth`` field marks a publicly available resource.
 
-The presence of ``auth`` fields on multiple levels
-means that all listed scopes must be carried in the JWT.
-So, if the dataset has ``"auth": "FOO/BAR"`` and a field has ``"auth": "FOO/BAZ``,
-then access to the field is only available
-with a token that carries the ``FOO/BAR`` and ``FOO/BAZ`` scopes.
+Scopes at higher levels of the schema override scopes at lower levels.
+That is, a dataset scope overrides a table scope
+and a table scope overrides field scopes.
+So, if the dataset has ``"auth": "FOO/BAR"``,
+then this scope is required for any access to the dataset
+and any lower-level scopes are ignored.
 
 The effect of an ``auth`` on a dataset or table is that attempts to access it
+without the proper scopes
 result in an HTTP 403 Forbidden error.
 The effect on a field is that the field is omitted when from the response
 when the table is queried.
