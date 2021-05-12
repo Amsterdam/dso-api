@@ -11,7 +11,7 @@ from __future__ import annotations
 import re
 from collections import OrderedDict
 from functools import lru_cache
-from typing import List, Optional, Tuple, Type, Union
+from typing import List, Optional, Tuple, Type, Union, cast
 from urllib.parse import quote, urlencode
 
 from django.core.exceptions import ImproperlyConfigured
@@ -50,6 +50,7 @@ from dso_api.dynamic_api.permissions import (
     get_permission_key_for_field,
     get_unauthorized_fields,
 )
+from dso_api.dynamic_api.utils import resolve_model_lookup
 from rest_framework_dso.embedding import EmbeddedFieldMatch
 from rest_framework_dso.fields import AbstractEmbeddedField, EmbeddedField, EmbeddedManyToManyField
 from rest_framework_dso.serializers import DSOModelListSerializer, DSOModelSerializer
@@ -147,6 +148,21 @@ class DynamicListSerializer(DSOModelListSerializer):
     """This serializer class is used internally when :class:`DynamicSerializer`
     is initialized with the ``many=True`` init kwarg to process a list of objects.
     """
+
+    def get_prefetch_lookups(self) -> List[Union[models.Prefetch, str]]:
+        """Optimize M2M prefetch lookups to return latest temporal records only."""
+        parent_model = self.child.Meta.model
+        lookups = super().get_prefetch_lookups()
+
+        for i, lookup in enumerate(lookups):
+            related_model, is_many = resolve_model_lookup(parent_model, lookup)
+            if cast(DynamicModel, related_model).is_temporal() and is_many:
+                # When the model is a temporal relationship, make sure the prefetch only
+                # returns the latest objects. The Prefetch objects allow adding these filters.
+                lookups[i] = models.Prefetch(
+                    lookup, queryset=filter_latest_temporal(related_model.objects)
+                )
+        return lookups
 
     @cached_property
     def expanded_fields(self) -> List[EmbeddedFieldMatch]:

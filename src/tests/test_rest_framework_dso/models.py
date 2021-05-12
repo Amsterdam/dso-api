@@ -47,7 +47,7 @@ class Movie(models.Model, NonTemporalMixin):
     category = models.ForeignKey(
         Category, related_name="movies", on_delete=models.SET_NULL, null=True
     )
-    actors = models.ManyToManyField(Actor, blank=True)
+    actors = models.ManyToManyField(Actor, blank=True, related_name="movies")
     date_added = models.DateTimeField(null=True)
     url = models.URLField(null=True)
 
