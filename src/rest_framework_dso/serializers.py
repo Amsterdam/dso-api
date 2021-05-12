@@ -68,19 +68,26 @@ class _SideloadMixin:
         """Retrieve the requested expand, 2 possible values:
 
         * A bool (True) for "expand all"
-        * A explicit list of field names to expand.
+        * A explicit list of field names to expand, allowing dotted notations for sub-expands.
         """
         if self.has_fields_to_expand_override():
             # Instead of retrieving this from request,
             # the expand can be defined using the serializer __init__.
             return False if self._fields_to_expand is False else cast(list, self._fields_to_expand)
-        else:
-            # Parse from request
+        elif (self.root is self) or (
+            isinstance(self.parent, serializers.ListSerializer)
+            and self.parent is self.parent.root  # serializer initialized with many=True
+        ):
+            # This is the top-level serializer. Parse from request
             request = self.context["request"]
             return parse_expand_scope(
                 expand=request.GET.get(self.expand_all_param),
                 expand_scope=request.GET.get(self.expand_param),
             )
+        else:
+            # Sub field should have received it's fields_to_expand override via __init__().
+            # This exists for consistency with DSOListSerializer.to_representation() behavior.
+            return False
 
     @fields_to_expand.setter
     def fields_to_expand(self, fields: List[str]):
