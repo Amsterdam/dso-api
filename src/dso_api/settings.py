@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import sys
@@ -161,30 +162,30 @@ if SENTRY_DSN:
     )
     sentry_sdk.utils.MAX_STRING_LENGTH = 2048  # for WFS FILTER exceptions
 
+base_log_fmt = {"time": "%(asctime)s", "name": "%(name)s", "level": "%(levelname)s"}
+log_fmt = base_log_fmt.copy()
+log_fmt["message"] = "%(message)s"
+
+audit_log_fmt = {"audit": True}
+audit_log_fmt.update(log_fmt)
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": True,
     "formatters": {
-        "console": {"format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"},
-        "structured_console": {
-            "format": (
-                '{"time": "%(asctime)s", '
-                '"name": "%(name)s", '
-                '"level": "%(levelname)s", '
-                '"message": %(message)s}'
-            )
-        },
+        "json": {"format": json.dumps(log_fmt)},
+        "audit_json": {"format": json.dumps(audit_log_fmt)},
     },
     "handlers": {
         "console": {
             "level": "DEBUG",
             "class": "logging.StreamHandler",
-            "formatter": "console",
+            "formatter": "json",
         },
-        "structured_console": {
+        "audit_console": {
             "level": "DEBUG",
             "class": "logging.StreamHandler",
-            "formatter": "structured_console",
+            "formatter": "audit_json",
         },
     },
     "root": {"level": "INFO", "handlers": ["console"]},
@@ -192,7 +193,7 @@ LOGGING = {
         "django": {"handlers": ["console"], "level": DJANGO_LOG_LEVEL, "propagate": False},
         "dso_api": {"handlers": ["console"], "level": DSO_API_LOG_LEVEL, "propagate": False},
         "dso_api.audit": {
-            "handlers": ["structured_console"],
+            "handlers": ["audit_console"],
             "level": DSO_API_AUDIT_LOG_LEVEL,
             "propagate": False,
         },
@@ -224,25 +225,28 @@ if CLOUD_ENV.lower().startswith("azure"):
         }
     }
     config_integration.trace_integrations(["logging"])
-    LOGGING["formatters"]["azure"] = {
-        "format": (
-            '{"time": "%(asctime)s", '
-            '"name": "%(name)s", '
-            '"level": "%(levelname)s", '
-            '"trace_id": "%(traceId)s", '
-            '"span_id": "%(spanId)s" '
-            '"message": %(message)s}'
-        )
-    }
+    azure_json = base_log_fmt.copy()
+    azure_json.update(
+        {"trace_id": "%(traceId)s", "span_id": "%(spanId)s", "message": "%(message)s"}
+    )
+    audit_azure_json = {"audit": True}
+    audit_azure_json.update(azure_json)
+    LOGGING["formatters"]["azure"] = {"format": json.dumps(azure_json)}
+    LOGGING["formatters"]["audit_azure"] = {"format": json.dumps(audit_azure_json)}
     LOGGING["handlers"]["azure"] = {
         "level": "DEBUG",
         "class": "opencensus.ext.azure.log_exporter.AzureLogHandler",
         "connection_string": connection_string,
         "formatter": "azure",
     }
+    LOGGING["handlers"]["audit_azure"] = LOGGING["handlers"]["azure"].copy()
+    LOGGING["handlers"]["audit_azure"]["formatter"] = "audit_azure"
     LOGGING["root"]["handlers"] = ["azure"]
     for logger in LOGGING["loggers"]:
-        LOGGING["loggers"][logger]["handlers"] = ["azure"]
+        if "audit" in logger:
+            LOGGING["loggers"][logger]["handlers"] = ["audit_azure"]
+        else:
+            LOGGING["loggers"][logger]["handlers"] = ["azure"]
 
 # -- Third party app settings
 
