@@ -108,6 +108,8 @@ def _get_table_context(table: DatasetTableSchema):
     return {
         "title": snake_id.replace("_", " ").capitalize(),
         "uri": uri,
+        "rest_csv": f"{uri}?_format=csv",
+        "rest_geojson": f"{uri}?_format=geojson",
         "description": table.get("description"),
         "fields": [_get_field_context(field) for field in fields],
         "relations": [
