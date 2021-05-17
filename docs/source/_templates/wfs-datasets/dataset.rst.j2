@@ -16,8 +16,9 @@
 
 {{ table.description or '' }}
 
-{%- if not table.has_geometry %}
+{% if not table.has_geometry %}
 .. note::
+
    Deze tabel heeft geen geometrie velden, en kan daarom alleen gebruikt worden in embeds van andere features.
 {% endif %}
 
