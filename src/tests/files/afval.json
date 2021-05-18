@@ -2,6 +2,8 @@
   "id": "afvalwegingen",
   "type": "dataset",
   "title": "Afvalwegingen",
+  "description": "unit testing version of afvalwegingen",
+  "license": "CC0 1.0",
   "version": "0.0.1",
   "crs": "EPSG:28992",
   "tables": [

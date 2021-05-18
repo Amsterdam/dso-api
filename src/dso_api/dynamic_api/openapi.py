@@ -11,18 +11,22 @@ from django.utils.functional import lazy
 from rest_framework import permissions, renderers
 from rest_framework.schemas import get_schema_view
 from rest_framework.views import APIView
+from schematools.contrib.django.models import Dataset
+from schematools.types import DatasetSchema
 
 from rest_framework_dso.openapi import DSOSchemaGenerator
 
 __all__ = (
     "get_openapi_json_view",
     "get_openapi_yaml_view",
-    "ExtendedSchemaGenerator",
+    "DynamicApiSchemaGenerator",
 )
 
 
-class ExtendedSchemaGenerator(DSOSchemaGenerator):
-    """drf_spectacular also provides 'components' which DRF doesn't do."""
+class DynamicApiSchemaGenerator(DSOSchemaGenerator):
+    """This further extends the generic schema generator from :mod:`rest_framework_dso`
+    with the application-specific knowledge found in DSO-API.
+    """
 
     # Provide the missing data that DRF get_schema_view() doesn't yet offer
     if settings.AZURE_AD_CLIENT_ID and settings.AZURE_AD_TENANT_ID:
@@ -79,36 +83,53 @@ class ExtendedSchemaGenerator(DSOSchemaGenerator):
         schema_overrides["servers"] = [{"url": settings.DATAPUNT_API_URL}]
 
 
-def get_openapi_json_view(*dataset_ids):
+def get_openapi_json_view(dataset: Dataset):
     """Provide the OpenAPI view, which renders as JSON."""
-    return _get_openapi_view(*dataset_ids, renderer_classes=[renderers.JSONOpenAPIRenderer])
+    return _get_openapi_view(dataset, renderer_classes=[renderers.JSONOpenAPIRenderer])
 
 
-def get_openapi_yaml_view(*dataset_ids):
+def get_openapi_yaml_view(dataset: Dataset):
     """Provide the OpenAPI view, which renders as YAML."""
-    return _get_openapi_view(*dataset_ids, renderer_classes=[renderers.OpenAPIRenderer])
+    return _get_openapi_view(dataset, renderer_classes=[renderers.OpenAPIRenderer])
 
 
-def _get_openapi_view(*dataset_ids, renderer_classes=None):
+def _get_openapi_view(dataset: Dataset, renderer_classes=None):
     # To reduce the OpenAPI endpoints in the view there are 2 possible stategies:
     # 1. Override the generator_class.get_schema() and set .endpoints manually.
     #    This requires overriding the inner workings for the generator,
     #    override EndpointEnumerator.should_include_endpoint() etc..
     # 2. Provide a new list of URL patterns.
     #
+    dataset_schema: DatasetSchema = dataset.schema
+
     # The second strategy is chosen here to keep the whole endpoint enumeration logic intact.
     # Patterns is a lazy object so it's not evaluated yet while the URLconf is being constructed.
-    patterns = None if not dataset_ids else _lazy_get_dataset_patterns(*dataset_ids)
-
-    return get_schema_view(
+    view = get_schema_view(
+        title=dataset_schema.title,
+        description=dataset_schema.description or "",
         renderer_classes=renderer_classes,
-        patterns=patterns,
-        generator_class=ExtendedSchemaGenerator,
+        patterns=_lazy_get_dataset_patterns(dataset_schema.id),
+        generator_class=DynamicApiSchemaGenerator,
         permission_classes=(permissions.AllowAny,),
+        version=dataset_schema.version,
     )
 
+    # As get_schema_view() offers no **initkwargs to the view, it's not possible to pass
+    # additional parameters to the generator/view. Instead, our schema generator is directly
+    # accessed here, and the override logic is reused.
+    # The schema_override needs to be copied so the class attribute is not altered globally.
+    schema_generator: DSOSchemaGenerator = view.view_initkwargs["schema_generator"]
+    schema_generator.schema_overrides = {
+        "info": {
+            "license": dataset_schema.get("license", ""),
+        },
+        **schema_generator.schema_overrides,
+    }
 
-def get_dataset_patterns(*dataset_ids) -> List[Union[URLPattern, URLResolver]]:
+    return view
+
+
+def get_dataset_patterns(dataset_id: str) -> List[Union[URLPattern, URLResolver]]:
     """Find the URL patterns for a specific dataset.
 
     This returns a subtree of the URLConf that only contains the
@@ -116,10 +137,9 @@ def get_dataset_patterns(*dataset_ids) -> List[Union[URLPattern, URLResolver]]:
     """
     from .views import DynamicApiViewSet
 
-    dataset_ids = set(dataset_ids)
     return _get_patterns(
         matcher=lambda view_cls: (
-            issubclass(view_cls, DynamicApiViewSet) and view_cls.dataset_id in dataset_ids
+            issubclass(view_cls, DynamicApiViewSet) and view_cls.dataset_id == dataset_id
         )
     )
 
