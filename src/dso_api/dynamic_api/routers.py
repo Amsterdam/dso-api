@@ -41,6 +41,7 @@ from dso_api.dynamic_api.openapi import get_openapi_json_view
 from dso_api.dynamic_api.remote import remote_serializer_factory, remote_viewset_factory
 from dso_api.dynamic_api.serializers import get_view_name, serializer_factory
 from dso_api.dynamic_api.views import viewset_factory
+from dso_api.dynamic_api.views.wfs import dataset_has_geometry_fields
 
 logger = logging.getLogger(__name__)
 reload_counter = 0
@@ -64,7 +65,35 @@ class DynamicAPIRootView(APIView):
         return Response(
             {
                 "datasets": {
-                    id: base + reverse(f"dynamic_api:openapi-{id}") for id in self.dataset_ids
+                    ds.schema.id: {
+                        "id": ds.schema.id,
+                        "name": ds.name,
+                        "title": ds.schema.get("title", ""),
+                        "status": ds.schema.get("status", "Beschikbaar"),
+                        "description": ds.schema.get("description", ""),
+                        "api_type": "rest_json",
+                        "api_url": base + reverse(f"dynamic_api:openapi-{ds.schema.id}"),
+                        "documentation_url": base + f"/v1/docs/datasets/{ds.schema.id}.html",
+                        "specification_url": base
+                        + reverse("dynamic_api:swagger-ui", kwargs={"dataset_name": ds.name}),
+                        "terms_of_use": {
+                            "government_only": "auth" in ds.schema,
+                            "pay_per_use": False,
+                            "license": ds.schema.get("license", "CC0 1.0 Universal"),
+                        },
+                        "related_apis": (
+                            [
+                                {
+                                    "type": "wfs",
+                                    "url": base
+                                    + reverse("dynamic_api:wfs", kwargs={"dataset_name": ds.name}),
+                                },
+                                {"type": "tiles", "url": base + reverse("dynamic_api:mvt-index")},
+                            ],
+                            [],
+                        )[dataset_has_geometry_fields(ds)],
+                    }
+                    for ds in list(Dataset.objects.filter(id__in=self.dataset_ids))
                 }
             }
         )
@@ -139,7 +168,7 @@ class DynamicRouter(routers.DefaultRouter):
         # Atomically copy the new viewset registrations
         self.registry = self.static_routes + dataset_routes + remote_routes
         self._openapi_urls = openapi_urls
-        self._dataset_ids = [ds.schema.id for ds in db_datasets + api_datasets]
+        self._dataset_ids = [ds.id for ds in db_datasets + api_datasets]
 
         # invalidate the urls cache
         if hasattr(self, "_urls"):
