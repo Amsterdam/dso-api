@@ -50,6 +50,15 @@ RE_SIMPLE_NAME = re.compile(
 )
 
 
+def dataset_has_geometry_fields(dataset) -> bool:
+    for table in dataset.schema["tables"]:
+        for field in table["schema"]["properties"].values():
+            ref_type = field.get("$ref")
+            if ref_type and ref_type.startswith("https://geojson.org/schema/"):
+                return True
+    return False
+
+
 class AuthenticatedFeatureType(FeatureType):
     """Extended WFS feature type definition that also performs authentication."""
 
@@ -88,20 +97,11 @@ class DatasetWFSIndexView(TemplateView):
         datasets = [
             (ds.name, ds.schema)
             for ds in Dataset.objects.db_enabled().order_by("name")
-            if ds.name in dataset_names and self._has_geometry_fields(ds.schema_data)
+            if ds.name in dataset_names and dataset_has_geometry_fields(ds)
         ]
 
         context["datasets"] = datasets
         return context
-
-    def _has_geometry_fields(self, schema) -> bool:
-        for table in schema["tables"]:
-            for field in table["schema"]["properties"].values():
-                ref_type = field.get("$ref")
-                if ref_type and ref_type.startswith("https://geojson.org/schema/"):
-                    return True
-
-        return False
 
 
 class DatasetWFSView(WFSView):
