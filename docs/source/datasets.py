@@ -22,24 +22,27 @@ TEMPLATE_ENV = jinja2.Environment(
 re_camel_case = re.compile(
     r"(((?<=[^A-Z])[A-Z])|([A-Z](?![A-Z]))|((?<=[a-z])[0-9])|(?<=[0-9])[a-z])"
 )
-_integer_lookups = ["gt", "gte", "lt", "lte", "in", "not", "isnull"]
-_date_lookups = _integer_lookups
-_array_lookups = ["contains"]  # comma separated list of strings
-_identifier_lookups = [
-    "in",
-    "not",
-    "isnull",
-]
+# This should match DEFAULT_LOOKUPS_BY_TYPE in DSO-API (except for the "exact" lookup)
+_comparison_lookups = ["gte", "gt", "lt", "lte", "not", "isnull"]
+_identifier_lookups = ["in", "not", "isnull"]
+_polygon_lookups = ["contains", "isnull", "not"]
+_string_lookups = ["isnull", "not", "isempty", "like"]
+_number_lookups = _comparison_lookups + ["in"]
 VALUE_EXAMPLES = {
-    "string": ("Tekst exacte match", []),
+    "string": ("Tekst exacte match", _string_lookups),
     "boolean": ("``true`` | ``false``", []),
-    "integer": ("Geheel getal", _integer_lookups),
-    "number": ("Getal", _integer_lookups),
-    "time": ("``hh:mm[:ss[.ms]]``", _date_lookups),
-    "date": ("``yyyy-mm-dd``", _date_lookups),
-    "date-time": ("``yyyy-mm-dd`` or ``yyyy-mm-ddThh:mm[:ss[.ms]]``", _date_lookups),
-    "uri": ("https://....", []),
-    "array": ("value,value", _array_lookups),
+    "integer": ("Geheel getal", _number_lookups),
+    "number": ("Getal", _number_lookups),
+    "time": ("``hh:mm[:ss[.ms]]``", _comparison_lookups),
+    "date": ("``yyyy-mm-dd``", _comparison_lookups),
+    "date-time": ("``yyyy-mm-dd`` or ``yyyy-mm-ddThh:mm[:ss[.ms]]``", _comparison_lookups),
+    "uri": ("https://....", _string_lookups),
+    "array": ("value,value", ["contains"]),  # comma separated list of strings
+    "https://geojson.org/schema/Polygon.json": ("GeoJSON | POLYGON(x y ...)", _polygon_lookups),
+    "https://geojson.org/schema/MultiPolygon.json": (
+        "GeoJSON | MULTIPOLYGON(x y ...)",
+        _polygon_lookups,
+    ),
 }
 
 
@@ -220,6 +223,7 @@ def _get_field_context(field: DatasetFieldSchema):
 
     # This closely mimics what the Django filter+serializer logic does
     if type.startswith("https://geojson.org/schema/"):
+        # Catch-all for other geometry types
         type = type[27:-5]
         value_example = f"GeoJSON | {type.upper()}(x y ...)"
         lookups = []
@@ -233,7 +237,7 @@ def _get_field_context(field: DatasetFieldSchema):
         "type": (type or "").capitalize(),
         "value_example": value_example or "",
         "description": field.description,
-        "lookups": lookups,
+        "lookups": sorted(lookups),
         "source": field,
     }
 
