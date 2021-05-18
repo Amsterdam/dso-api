@@ -236,7 +236,7 @@ class DynamicRouter(routers.DefaultRouter):
             results.append(
                 path(
                     self.make_url(dataset.url_prefix, dataset_id) + "/",
-                    get_openapi_json_view(dataset_id),
+                    get_openapi_json_view(dataset),
                     name=f"openapi-{dataset_id}",
                 )
             )

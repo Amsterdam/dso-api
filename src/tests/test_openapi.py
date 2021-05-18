@@ -35,6 +35,16 @@ def test_openapi_json(api_client, afval_dataset, fietspaaltjes_dataset, filled_r
     assert response["content-type"] == "application/vnd.oai.openapi+json"
     schema = response.data
 
+    # Prove that the main info block is correctly rendered
+    assert schema["info"] == {
+        "title": "Afvalwegingen",
+        "description": "unit testing version of afvalwegingen",
+        "version": "0.0.1",
+        "license": "CC0 1.0",
+        "contact": {"email": "datapunt@amsterdam.nl"},
+        "termsOfService": "https://data.amsterdam.nl/",
+    }
+
     # Prove that only afvalwegingen are part of this OpenAPI page:
     paths = sorted(schema["paths"].keys())
     assert paths == [

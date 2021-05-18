@@ -37,6 +37,8 @@ class DSOSchemaGenerator(generators.SchemaGenerator):
 
     * Override OpenAPI parts (via: :attr:`schema_overrides`)
     * GeoJSON components (added to ``components.schemas``).
+
+    drf_spectacular also provides 'components' which DRF doesn't do.
     """
 
     #: Allow to override the schema
@@ -193,11 +195,25 @@ class DSOSchemaGenerator(generators.SchemaGenerator):
         },
     }
 
-    extra_schema = {}
-
     def get_schema(self, request=None, public=False):
-        """Provide the missing data that DRF get_schema_view() doesn't yet offer."""
+        """Improved schema generation, include more OpenAPI fields"""
         schema = super().get_schema(request=request, public=public)
+
+        # Fix missing 'fields' that drf-spectacular doesn't read from self,
+        # it only reads the 'SPECTACULAR_SETTINGS' for this.
+        if self.version is not None:
+            schema["info"]["version"] = self.version
+        if self.title is not None:
+            schema["info"]["title"] = self.title
+        if self.description is not None:
+            schema["info"]["description"] = self.description
+
+        # Provide the missing data that DRF get_schema_view() doesn't yet offer.
+        self._apply_overrides(schema)
+        return schema
+
+    def _apply_overrides(self, schema: dict):
+        """Apply any schema overrides defined in the static attributes of this class."""
         for key, value in self.schema_overrides.items():
             if isinstance(value, dict):
                 try:
@@ -207,9 +223,9 @@ class DSOSchemaGenerator(generators.SchemaGenerator):
             else:
                 schema[key] = value
 
+        # Include geojson field references.
         if components_schemas := schema["components"].get("schemas"):
             components_schemas.update(self.schema_override_components)
-        return schema
 
 
 class DSOAutoSchema(openapi.AutoSchema):
