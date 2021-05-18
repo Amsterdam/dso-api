@@ -95,7 +95,7 @@ class AbstractEmbeddedField:
         return isinstance(self.source_field, models.ManyToManyField)
 
     @cached_property
-    def attname(self):
+    def attname(self) -> str:
         try:
             # For ForeignKey/OneToOneField this resolves to "{field_name}_id"
             # For ManyToManyField this resolves to a manager object

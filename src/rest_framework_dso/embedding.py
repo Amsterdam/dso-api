@@ -435,7 +435,7 @@ class EmbeddedResultSet(ReturnGenerator):
         if ids:
             self.id_list.extend(ids)
 
-    def get_objects(self):
+    def get_objects(self) -> Iterator[models.Model]:
         """Retrieve the objects to render"""
         if self.id_fetcher is None:
             # Standard Django foreign-key like behavior.
