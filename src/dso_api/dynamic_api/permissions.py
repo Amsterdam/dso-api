@@ -15,7 +15,7 @@ class TableScopes:
     """OAuth scopes for tables and fields."""
 
     # Table and dataset scopes.
-    table: Set[str] = field(default=None)
+    table: Set[str] = field(default_factory=set)
     # Scope per field.
     fields: Dict[str, str] = field(default_factory=dict)
 
