@@ -339,5 +339,5 @@ class DSOViewMixin:
 
     def get_view_description(self, **kwargs):
         if self.action == "retrieve":
-            return ""
+            return ""  # hide description for detail view
         return super().get_view_description(**kwargs)
