@@ -103,7 +103,7 @@ if (BRANCH == "master") {
         }
     }
    
-    /*  node { 
+    node {
         stage('OWASP vulnerability scan') {
             tryStep "owasp vulnerability check", {
                 sh  "docker-compose -p owasp_check -f src/.jenkins/owasp_vulnerability_scan/docker-compose.yml build --pull && " +
@@ -111,7 +111,8 @@ if (BRANCH == "master") {
             }, {
                 sh  "docker-compose -p owasp_check -f src/.jenkins/owasp_vulnerability_scan/docker-compose.yml down"
             }
-        }*/
+        }
+    }
         /* stage('OpenAPI specification check') { */
         /*     tryStep "openapi specification check", { */
         /*         sh  "docker-compose -p openapi_validator -f src/.jenkins/openapi_validator/docker-compose.yml build --pull && " + */
