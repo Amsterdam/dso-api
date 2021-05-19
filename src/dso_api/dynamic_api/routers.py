@@ -75,7 +75,7 @@ class DynamicAPIRootView(APIView):
                         "description": ds.schema.description or "",
                         "api_type": "rest_json",
                         "api_url": base + reverse(f"dynamic_api:openapi-{ds.schema.id}"),
-                        "documentation_url": base + f"/v1/docs/datasets/{ds.schema.id}.html",
+                        "documentation_url": f"{base}/v1/docs/datasets/{ds.schema.id}.html",
                         "specification_url": base
                         + reverse("dynamic_api:swagger-ui", kwargs={"dataset_name": ds.name}),
                         "terms_of_use": {
