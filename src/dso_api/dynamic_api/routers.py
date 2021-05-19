@@ -62,6 +62,8 @@ class DynamicAPIRootView(APIView):
 
     def get(self, request, *args, **kwargs):
         base = request.build_absolute_uri("/").rstrip("/")
+        datasets = list(Dataset.objects.filter(id__in=self.dataset_ids))
+
         return Response(
             {
                 "datasets": {
@@ -93,7 +95,7 @@ class DynamicAPIRootView(APIView):
                             [],
                         )[dataset_has_geometry_fields(ds)],
                     }
-                    for ds in list(Dataset.objects.filter(id__in=self.dataset_ids))
+                    for ds in datasets
                 }
             }
         )
