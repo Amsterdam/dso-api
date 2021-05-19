@@ -231,6 +231,14 @@ class DSOSchemaGenerator(generators.SchemaGenerator):
 class DSOAutoSchema(openapi.AutoSchema):
     """Default schema for API views that don't define a ``schema`` attribute."""
 
+    def get_description(self):
+        """Override what _get_viewset_api_docs() does."""
+        action = getattr(self.view, "action", self.method.lower())
+        if action == "retrieve":
+            return ""  # detail view.
+
+        return self.view.table_schema.description or ""
+
     def get_tags(self) -> List[str]:
         """Auto-generate tags based on the path, take last bit of path."""
         tokenized_path = self._tokenize_path()
