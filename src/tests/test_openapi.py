@@ -5,7 +5,7 @@ from django.urls import reverse
 
 
 @pytest.mark.django_db
-def test_root_view(api_client, afval_dataset, fietspaaltjes_dataset, filled_router):
+def test_root_view(api_client, afval_dataset, fietspaaltjes_dataset, filled_router, drf_request):
     """Prove that the OpenAPI page can be rendered."""
     url = reverse("dynamic_api:api-root")
     assert url == "/v1/"
@@ -13,22 +13,44 @@ def test_root_view(api_client, afval_dataset, fietspaaltjes_dataset, filled_rout
     response = api_client.get(url)
     assert response.status_code == 200, response.data
 
-    # Prove that response containes datasets
-    assert "datasets" in response.data
-
-    # Prove that datasets contains the datasets and noting else
-    assert set(response.data["datasets"].keys()) == set(["afvalwegingen","fietspaaltjes"])  
-
-    # Prove that both dataset elements are dictionaries
-    assert type(response.data["datasets"]["afvalwegingen"]) == dict
-    assert type(response.data["datasets"]["fietspaaltjes"]) == dict
-
-    # Prove that both dataset elements have the required keys
-    keys_afvalwegingen = list(response.data["datasets"]["afvalwegingen"].keys()) 
-    keys_fietspaaltjes = list(response.data["datasets"]["fietspaaltjes"].keys()) 
-    required_keys = ["id", "name", "api_url"]
-    assert set(keys_afvalwegingen + required_keys) == set(keys_afvalwegingen)
-    assert set(keys_fietspaaltjes + required_keys) == set(keys_fietspaaltjes)
+    # Prove that response contains the correct data
+    base = drf_request.build_absolute_uri("/").rstrip("/")
+    assert response.data == {
+        "datasets": {
+            "afvalwegingen": {
+                "id": "afvalwegingen",
+                "name": "afvalwegingen",
+                "title": "Afvalwegingen",
+                "status": "Beschikbaar",
+                "description": "",
+                "api_type": "rest_json",
+                "api_url": f"{base}/v1/afvalwegingen/",
+                "documentation_url": f"{base}/v1/docs/datasets/afvalwegingen.html",
+                "specification_url": f"{base}/v1/swagger/afvalwegingen/",
+                "terms_of_use": {"government_only": False, "pay_per_use": False, "license": None},
+                "related_apis": [
+                    {"type": "wfs", "url": f"{base}/v1/wfs/afvalwegingen/"},
+                    {"type": "tiles", "url": f"{base}/v1/mvt/"},
+                ],
+            },
+            "fietspaaltjes": {
+                "id": "fietspaaltjes",
+                "name": "fietspaaltjes",
+                "title": "fietspaaltjes",
+                "status": "beschikbaar",
+                "description": "",
+                "api_type": "rest_json",
+                "api_url": f"{base}/v1/fietspaaltjes/",
+                "documentation_url": f"{base}/v1/docs/datasets/fietspaaltjes.html",
+                "specification_url": f"{base}/v1/swagger/fietspaaltjes/",
+                "terms_of_use": {"government_only": False, "pay_per_use": False, "license": None},
+                "related_apis": [
+                    {"type": "wfs", "url": f"{base}/v1/wfs/fietspaaltjes/"},
+                    {"type": "tiles", "url": f"{base}/v1/mvt/"},
+                ],
+            },
+        }
+    }
 
 
 @pytest.mark.django_db
