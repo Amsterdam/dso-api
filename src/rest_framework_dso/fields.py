@@ -32,9 +32,9 @@ class AbstractEmbeddedField:
         return f"<{self.__class__.__name__}: {self.field_name}, {self.serializer_class.__name__}>"
 
     def __set_name__(self, owner, name):
-        from .serializers import _SideloadMixin
+        from .serializers import ExpandMixin
 
-        if not issubclass(owner, _SideloadMixin):
+        if not issubclass(owner, ExpandMixin):
             raise TypeError(f"{owner} does not extend from DSO serializer classes") from None
 
         self.parent_serializer_class = owner
