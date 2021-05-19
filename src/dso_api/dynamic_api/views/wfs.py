@@ -51,12 +51,11 @@ RE_SIMPLE_NAME = re.compile(
 
 
 def dataset_has_geometry_fields(dataset) -> bool:
-    for table in dataset.schema["tables"]:
-        for field in table["schema"]["properties"].values():
-            ref_type = field.get("$ref")
-            if ref_type and ref_type.startswith("https://geojson.org/schema/"):
-                return True
-    return False
+    return any(
+        field.is_geo
+        for table in dataset.schema.tables
+        for field in table.fields
+    )
 
 
 class AuthenticatedFeatureType(FeatureType):
