@@ -13,12 +13,22 @@ def test_root_view(api_client, afval_dataset, fietspaaltjes_dataset, filled_rout
     response = api_client.get(url)
     assert response.status_code == 200, response.data
 
-    assert response.data == {
-        "datasets": {
-            "afvalwegingen": "http://testserver/v1/afvalwegingen/",
-            "fietspaaltjes": "http://testserver/v1/fietspaaltjes/",
-        }
-    }
+    # Prove that response containes datasets
+    assert "datasets" in response.data
+
+    # Prove that datasets contains the datasets and noting else
+    assert set(response.data["datasets"].keys()) == set(["afvalwegingen","fietspaaltjes"])  
+
+    # Prove that both dataset elements are dictionaries
+    assert type(response.data["datasets"]["afvalwegingen"]) == dict
+    assert type(response.data["datasets"]["fietspaaltjes"]) == dict
+
+    # Prove that both dataset elements have the required keys
+    keys_afvalwegingen = list(response.data["datasets"]["afvalwegingen"].keys()) 
+    keys_fietspaaltjes = list(response.data["datasets"]["fietspaaltjes"].keys()) 
+    required_keys = ["id", "name", "api_url"]
+    assert set(keys_afvalwegingen + required_keys) == set(keys_afvalwegingen)
+    assert set(keys_fietspaaltjes + required_keys) == set(keys_fietspaaltjes)
 
 
 @pytest.mark.django_db
