@@ -187,6 +187,28 @@ def get_all_embedded_field_names(
     return result
 
 
+def get_all_embedded_fields_by_name(
+    serializer_class: Type[serializers.Serializer], allow_m2m=True, prefix=""
+) -> Dict[str, AbstractEmbeddedField]:
+    """Find all possible embedded fields, as lookup table with their dotted names."""
+    result = {}
+
+    for field_name in getattr(serializer_class.Meta, "embedded_fields", ()):
+        field: AbstractEmbeddedField = get_embedded_field(serializer_class, field_name)
+        if field.is_array and not allow_m2m:
+            continue
+
+        lookup = f"{prefix}{field_name}"
+        result[lookup] = field
+        result.update(
+            get_all_embedded_fields_by_name(
+                field.serializer_class, allow_m2m=allow_m2m, prefix=f"{lookup}."
+            )
+        )
+
+    return result
+
+
 def group_dotted_names(fields_to_expand: List[str]) -> DictOfDicts:
     """Convert a list of dotted names to tree."""
     result = {}

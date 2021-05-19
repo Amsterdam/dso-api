@@ -106,22 +106,45 @@ def test_openapi_json(api_client, afval_dataset, fietspaaltjes_dataset, filled_r
         param["name"]: param
         for param in schema["paths"]["/v1/afvalwegingen/containers/"]["get"]["parameters"]
     }
-    assert "datumCreatie" in afval_parameters, ", ".join(afval_parameters.keys())
+    all_keys = ", ".join(afval_parameters.keys())
+    assert "datumCreatie" in afval_parameters, all_keys
     assert afval_parameters["datumCreatie"]["description"] == "yyyy-mm-dd"
 
     # Prove that DSOOrderingFilter exposes parameters
-    assert "_sort" in afval_parameters, ", ".join(afval_parameters.keys())
+    assert "_sort" in afval_parameters, all_keys
 
     # Prove that general page parameters are exposed
-    assert "_pageSize" in afval_parameters, ", ".join(afval_parameters.keys())
+    assert "_pageSize" in afval_parameters, all_keys
+
+    # Prove that expansion is documented
+    assert "_expand" in afval_parameters, all_keys
+    assert "_expandScope" in afval_parameters, all_keys
+    assert afval_parameters["_expandScope"] == {
+        "name": "_expandScope",
+        "description": "Comma separated list of named relations to expand.",
+        "in": "query",
+        "schema": {"type": "string"},
+        "examples": {
+            "AllValues": {
+                "summary": "All Values",
+                "value": "cluster",
+                "description": "Expand all fields, identical to only using _expand=true.",
+            },
+            "Cluster": {
+                "summary": "cluster",
+                "value": "cluster",
+                "description": "Cluster-ID",
+            },
+        },
+    }
 
     # Prove that the lookups of LOOKUPS_BY_TYPE are parsed
     # ([lt] for dates, [in] for keys)
-    assert "datumCreatie[lt]" in afval_parameters, ", ".join(afval_parameters.keys())
-    assert "clusterId[in]" in afval_parameters, ", ".join(afval_parameters.keys())
+    assert "datumCreatie[lt]" in afval_parameters, all_keys
+    assert "clusterId[in]" in afval_parameters, all_keys
 
     # Prove that the extra headers are included
-    assert "Accept-Crs" in afval_parameters, ", ".join(afval_parameters.keys())
+    assert "Accept-Crs" in afval_parameters, all_keys
     assert afval_parameters["Accept-Crs"]["in"] == "header"
 
     log_messages = [m for m in caplog.messages if "DisableMigrations" not in m]
