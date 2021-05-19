@@ -70,9 +70,9 @@ class DynamicAPIRootView(APIView):
                     ds.schema.id: {
                         "id": ds.schema.id,
                         "name": ds.name,
-                        "title": ds.schema.get("title", ""),
+                        "title": ds.schema.title or "",
                         "status": ds.schema.get("status", "Beschikbaar"),
-                        "description": ds.schema.get("description", ""),
+                        "description": ds.schema.description or "",
                         "api_type": "rest_json",
                         "api_url": base + reverse(f"dynamic_api:openapi-{ds.schema.id}"),
                         "documentation_url": base + f"/v1/docs/datasets/{ds.schema.id}.html",
@@ -81,7 +81,7 @@ class DynamicAPIRootView(APIView):
                         "terms_of_use": {
                             "government_only": "auth" in ds.schema,
                             "pay_per_use": False,
-                            "license": ds.schema.get("license", "CC0 1.0 Universal"),
+                            "license": ds.schema.license,
                         },
                         "related_apis": (
                             [
