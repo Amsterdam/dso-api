@@ -26,7 +26,7 @@
       
       <h2>Deze dataset is ook beschikbaar als</h2>
       <ul>
-        <li><a href='{{ request.scheme }}://{{ request.get_host }}/v1/docs/datasets/{{ name }}.html'>Rest API</a></li>
+        <li><a href='/v1/docs/datasets/{{ name }}.html'>Rest API</a></li>
         <li><a href='{% url "dynamic_api:wfs" dataset_name=name %}'>WFS kaartlaag</a></li>
       </ul>
     </main>
