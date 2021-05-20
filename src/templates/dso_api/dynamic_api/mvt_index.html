@@ -9,7 +9,7 @@
     <h1>Index of datasets supporting Mapbox Vector Tiles (MVT)</h1>
 
     {% for name, fields, schema in datasets %}
-      <h2>{% if schema.title %}{{ schema.title }}{% else %}{{ name|title }}{% endif %}</h2>
+      <h2><a href="{{ request.scheme }}://{{ request.get_host }}{{ request.path }}{{ name }}">{% if schema.title %}{{ schema.title }}{% else %}{{ name|title }}{% endif %}</a></h2>
       <ul>
       {% for field in fields %}
         <li><kbd>{{ request.scheme }}://{{ request.get_host }}/v1/mvt/{{ name }}/{{ field }}/{z}/{x}/{y}.pbf</kbd></li>
