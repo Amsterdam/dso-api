@@ -424,6 +424,11 @@ class DynamicLinksSerializer(DynamicSerializer):
         """
         return False
 
+    def to_representation(self, validated_data):
+        """Hide "None" and empty list [] values in the _links section."""
+        data = super().to_representation(validated_data)
+        return {field: value for field, value in data.items() if value}
+
 
 def get_view_name(model: Type[DynamicModel], suffix: str):
     """Return the URL pattern for a dynamically generated model.

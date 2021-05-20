@@ -186,7 +186,6 @@ class TestDynamicSerializer:
                     "href": "http://testserver/v1/afvalwegingen/containers/3/",
                     "title": "3",
                 },
-                "cluster": None,
             },
             "id": 3,
             "clusterId": None,
@@ -224,7 +223,6 @@ class TestDynamicSerializer:
                     "title": "4",
                 },
                 "schema": "https://schemas.data.amsterdam.nl/datasets/afvalwegingen/afvalwegingen#containers",  # noqa: E501
-                "cluster": None,
             },
             "id": 4,
             "clusterId": 99,
@@ -435,7 +433,6 @@ class TestDynamicSerializer:
                     "href": "http://testserver/v1/vestiging/adres/3/",
                     "title": "3",
                 },
-                "vestigingenBezoek": [],
                 "vestigingenPost": [
                     {
                         "href": "http://testserver/v1/vestiging/vestiging/1/",
