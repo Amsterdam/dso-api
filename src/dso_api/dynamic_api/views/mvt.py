@@ -5,6 +5,7 @@ from typing import Tuple
 from django.contrib.gis.db.models import GeometryField
 from django.core.exceptions import FieldDoesNotExist, PermissionDenied
 from django.http import Http404
+from django.shortcuts import get_object_or_404
 from django.views.generic import TemplateView
 from schematools.contrib.django.models import Dataset
 from schematools.utils import to_snake_case, toCamelCase
