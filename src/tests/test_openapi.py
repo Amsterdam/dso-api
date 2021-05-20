@@ -22,12 +22,16 @@ def test_root_view(api_client, afval_dataset, fietspaaltjes_dataset, filled_rout
                 "name": "afvalwegingen",
                 "title": "Afvalwegingen",
                 "status": "Beschikbaar",
-                "description": "",
+                "description": "unit testing version of afvalwegingen",
                 "api_type": "rest_json",
                 "api_url": f"{base}/v1/afvalwegingen/",
                 "documentation_url": f"{base}/v1/docs/datasets/afvalwegingen.html",
                 "specification_url": f"{base}/v1/swagger/afvalwegingen/",
-                "terms_of_use": {"government_only": False, "pay_per_use": False, "license": None},
+                "terms_of_use": {
+                    "government_only": False,
+                    "pay_per_use": False,
+                    "license": "CC0 1.0",
+                },
                 "related_apis": [
                     {"type": "wfs", "url": f"{base}/v1/wfs/afvalwegingen/"},
                     {"type": "tiles", "url": f"{base}/v1/mvt/afvalwegingen/"},
