@@ -92,7 +92,13 @@ class DynamicAPIRootView(APIView):
                         "type": "wfs",
                         "url": base + reverse("dynamic_api:wfs", kwargs={"dataset_name": ds.name}),
                     },
-                    {"type": "tiles", "url": base + reverse("dynamic_api:mvt-index")},
+                    {
+                        "type": "tiles",
+                        "url": base
+                        + reverse(
+                            "dynamic_api:mvt-single-dataset", kwargs={"dataset_name": ds.name}
+                        ),
+                    },
                 ]
 
         return Response(result)
