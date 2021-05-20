@@ -1,0 +1,34 @@
+<!doctype html>{% load i18n %}
+<html>
+<head>
+  <title>MVT dataset {% if schema.title %}{{ schema.title }}{% else %}{{ name|title }}{% endif %}</title>
+  {% block extrahead %}{% endblock %}
+</head>
+<body>
+  <main>
+    <h1>{% if schema.title %}{{ schema.title }}{% else %}{{ name|title }}{% endif %} MVT</h1>
+    <p>{% if schema.description %}{{ schema.description }}{% endif %}</p>
+    <dl>
+      <p>ID: {{ schema.id }}</p>
+      <p>Status: {{ schema.status }}</p>
+      <p>Openbaar: {% if schema.auth %} Nee {% else %} Ja {% endif %}</p>
+      <p>Licentie: {{ schema.license }}</p>
+    </dl> 
+  </p>
+      <h2>Gebruik van deze dataset</h2>
+        <p>Voeg de volgende urls toe aan uw GIS applicatie:</p>
+      <ul>
+      {% for table in tables %}
+        <li><kbd>{{ request.scheme }}://{{ request.get_host }}{{ request.path }}{{ table }}/{z}/{x}/{y}.pbf</kbd></li>
+      {% endfor %}
+      </ul>
+      <p>Voor uitgebreide Mapbox Vector Tile gebruikshandleiding zie <a href='/v1/docs/generic/mvt.html'>Vector tiles uitlezen (MVT)</a></p>
+      
+      <h2>Deze dataset is ook beschikbaar als</h2>
+      <ul>
+        <li><a href='/v1/docs/datasets/{{ name }}.html'>Rest API</a></li>
+        <li><a href='{% url "dynamic_api:wfs" dataset_name=name %}'>WFS kaartlaag</a></li>
+      </ul>
+    </main>
+</body>
+</html>

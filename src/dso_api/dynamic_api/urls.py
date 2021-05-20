@@ -13,13 +13,17 @@ def get_patterns(router_urls):
     """Generate the actual URL patterns for this file."""
     return [
         path("reload/", views.reload_patterns),
-        path("mvt/", views.DatasetMVTIndexView.as_view()),
+        path("mvt/", views.DatasetMVTIndexView.as_view(), name="mvt-index"),
+        path(
+            "mvt/<dataset_name>/", views.DatasetMVTSingleView.as_view(), name="mvt-single-dataset"
+        ),
         path(
             "mvt/<dataset_name>/<table_name>/<int:z>/<int:x>/<int:y>.pbf",
             views.DatasetMVTView.as_view(),
+            name="mvt-pbf",
         ),
         path("wfs/", views.DatasetWFSIndexView.as_view()),
-        path("wfs/<dataset_name>/", views.DatasetWFSView.as_view()),
+        path("wfs/<dataset_name>/", views.DatasetWFSView.as_view(), name="wfs"),
         path("", include(router_urls)),
         # Swagger, OpenAPI and OAuth2 login logic.
         path(

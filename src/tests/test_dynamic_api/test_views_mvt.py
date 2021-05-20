@@ -23,6 +23,14 @@ def test_mvt_index(api_client, afval_container, filled_router):
 
 
 @pytest.mark.django_db
+def test_mvt_single(api_client, afval_container, filled_router):
+    """Prove that the MVT single view works."""
+    response = api_client.get("/v1/mvt/afvalwegingen/")
+    assert response.status_code == 200
+    assert b"/v1/mvt/afvalwegingen/containers/{z}/{x}/{y}.pbf" in response.content
+
+
+@pytest.mark.django_db
 def test_mvt_content(api_client, afval_container, filled_router):
     """Prove that the MVT view produces vector tiles."""
     url = "/v1/mvt/afvalwegingen/containers/1/0/0.pbf"
