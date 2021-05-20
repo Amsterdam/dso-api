@@ -30,7 +30,7 @@ def test_root_view(api_client, afval_dataset, fietspaaltjes_dataset, filled_rout
                 "terms_of_use": {"government_only": False, "pay_per_use": False, "license": None},
                 "related_apis": [
                     {"type": "wfs", "url": f"{base}/v1/wfs/afvalwegingen/"},
-                    {"type": "tiles", "url": f"{base}/v1/mvt/"},
+                    {"type": "tiles", "url": f"{base}/v1/mvt/afvalwegingen/"},
                 ],
             },
             "fietspaaltjes": {
@@ -46,7 +46,7 @@ def test_root_view(api_client, afval_dataset, fietspaaltjes_dataset, filled_rout
                 "terms_of_use": {"government_only": False, "pay_per_use": False, "license": None},
                 "related_apis": [
                     {"type": "wfs", "url": f"{base}/v1/wfs/fietspaaltjes/"},
-                    {"type": "tiles", "url": f"{base}/v1/mvt/"},
+                    {"type": "tiles", "url": f"{base}/v1/mvt/fietspaaltjes/"},
                 ],
             },
         }
