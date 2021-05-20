@@ -13,6 +13,14 @@ from vectortiles.postgis.views import MVTView
 from dso_api.dynamic_api import permissions
 
 
+def get_geo_tables(schema):
+    """Yields names of tables that have a geometry field."""
+    for table in schema.tables:
+        for field in table.fields:
+            if field.is_geo:
+                yield to_snake_case(table.name)
+
+
 class DatasetMVTIndexView(TemplateView):
     """Overview of available MVT endpoints."""
 
@@ -24,7 +32,7 @@ class DatasetMVTIndexView(TemplateView):
 
         dataset_names = set(router.all_models.keys())
         datasets = (
-            (ds.name, sorted(self._get_geo_tables(ds.schema)), ds.schema)
+            (ds.name, sorted(get_geo_tables(ds.schema)), ds.schema)
             for ds in Dataset.objects.db_enabled().order_by("name")
             if ds.name in dataset_names
         )
@@ -34,12 +42,30 @@ class DatasetMVTIndexView(TemplateView):
 
         return context
 
-    def _get_geo_tables(self, schema):
-        """Yields names of tables that have a geometry field."""
-        for table in schema.tables:
-            for field in table.fields:
-                if field.is_geo:
-                    yield to_snake_case(table.name)
+
+class DatasetMVTSingleView(TemplateView):
+    """Shows info about a dataset and its geo-tables."""
+
+    template_name = "dso_api/dynamic_api/mvt_single.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        try:
+            ds = Dataset.objects.get(name=kwargs["dataset_name"])
+        except Dataset.DoesNotExist:
+            raise Http404("Invalid dataset") from None
+
+        geo_tables = sorted(get_geo_tables(ds.schema))
+
+        if len(geo_tables) == 0:
+            raise Http404("Dataset does not support MVT") from None
+
+        context["name"] = ds.name
+        context["tables"] = geo_tables
+        context["schema"] = ds.schema
+
+        return context
 
 
 class DatasetMVTView(MVTView):
