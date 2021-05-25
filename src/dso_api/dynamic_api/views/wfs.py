@@ -51,11 +51,7 @@ RE_SIMPLE_NAME = re.compile(
 
 
 def dataset_has_geometry_fields(dataset) -> bool:
-    return any(
-        field.is_geo
-        for table in dataset.schema.tables
-        for field in table.fields
-    )
+    return any(field.is_geo for table in dataset.schema.tables for field in table.fields)
 
 
 class AuthenticatedFeatureType(FeatureType):
