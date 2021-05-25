@@ -18,7 +18,6 @@ from rest_framework_dso.openapi import DSOSchemaGenerator
 
 __all__ = (
     "get_openapi_json_view",
-    "get_openapi_yaml_view",
     "DynamicApiSchemaGenerator",
 )
 
@@ -84,16 +83,6 @@ class DynamicApiSchemaGenerator(DSOSchemaGenerator):
 
 
 def get_openapi_json_view(dataset: Dataset):
-    """Provide the OpenAPI view, which renders as JSON."""
-    return _get_openapi_view(dataset, renderer_classes=[renderers.JSONOpenAPIRenderer])
-
-
-def get_openapi_yaml_view(dataset: Dataset):
-    """Provide the OpenAPI view, which renders as YAML."""
-    return _get_openapi_view(dataset, renderer_classes=[renderers.OpenAPIRenderer])
-
-
-def _get_openapi_view(dataset: Dataset, renderer_classes=None):
     # To reduce the OpenAPI endpoints in the view there are 2 possible stategies:
     # 1. Override the generator_class.get_schema() and set .endpoints manually.
     #    This requires overriding the inner workings for the generator,
@@ -107,7 +96,7 @@ def _get_openapi_view(dataset: Dataset, renderer_classes=None):
     view = get_schema_view(
         title=dataset_schema.title,
         description=dataset_schema.description or "",
-        renderer_classes=renderer_classes,
+        renderer_classes=[renderers.JSONOpenAPIRenderer],
         patterns=_lazy_get_dataset_patterns(dataset_schema.id),
         generator_class=DynamicApiSchemaGenerator,
         permission_classes=(permissions.AllowAny,),
