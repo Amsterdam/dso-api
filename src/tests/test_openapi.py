@@ -3,6 +3,8 @@ import logging
 import pytest
 from django.urls import reverse
 
+from tests.utils import read_response
+
 
 @pytest.mark.django_db
 def test_root_view(api_client, afval_dataset, fietspaaltjes_dataset, filled_router, drf_request):
@@ -55,6 +57,19 @@ def test_root_view(api_client, afval_dataset, fietspaaltjes_dataset, filled_rout
             },
         }
     }
+
+
+@pytest.mark.django_db
+def test_openapi_swagger(api_client, afval_dataset, filled_router):
+    """Prove that the OpenAPI page can be rendered."""
+    url = reverse("dynamic_api:openapi-afvalwegingen")
+    assert url == "/v1/afvalwegingen/"
+
+    response = api_client.get(url, HTTP_ACCEPT="text/html")
+    assert response.status_code == 200
+    assert response["content-type"] == "text/html; charset=utf-8"
+    content = read_response(response)
+    assert "ui.initOAuth(" in content
 
 
 @pytest.mark.django_db

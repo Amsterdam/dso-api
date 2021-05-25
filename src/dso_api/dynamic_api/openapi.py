@@ -3,11 +3,13 @@
 The main logic can be found in :mod:`rest_framework_dso.openapi`.
 """
 from copy import copy
+from functools import wraps
 from typing import Callable, List, Optional, Union
 
 from django.conf import settings
 from django.urls import URLPattern, URLResolver, get_resolver, get_urlconf
 from django.utils.functional import lazy
+from drf_spectacular.views import SpectacularSwaggerView
 from rest_framework import permissions, renderers
 from rest_framework.schemas import get_schema_view
 from rest_framework.views import APIView
@@ -20,6 +22,19 @@ __all__ = (
     "get_openapi_json_view",
     "DynamicApiSchemaGenerator",
 )
+
+
+class DSOSwaggerView(SpectacularSwaggerView):
+    """Overwritten SwaggerUI to support Azure OAuth."""
+
+    template_name_js = "dso_api/dynamic_api/swagger_ui.js"
+    schema = None  # exclude from schema detection
+
+    def get(self, request, *args, **kwargs):
+        if self.url.startswith("?"):
+            # Better visual appearance on the UI page
+            self.url = f"{request.path}{self.url}"
+        return super().get(request, *args, **kwargs)
 
 
 class DynamicApiSchemaGenerator(DSOSchemaGenerator):
@@ -93,7 +108,7 @@ def get_openapi_json_view(dataset: Dataset):
 
     # The second strategy is chosen here to keep the whole endpoint enumeration logic intact.
     # Patterns is a lazy object so it's not evaluated yet while the URLconf is being constructed.
-    view = get_schema_view(
+    openapi_view = get_schema_view(
         title=dataset_schema.title,
         description=dataset_schema.description or "",
         renderer_classes=[renderers.JSONOpenAPIRenderer],
@@ -107,7 +122,7 @@ def get_openapi_json_view(dataset: Dataset):
     # additional parameters to the generator/view. Instead, our schema generator is directly
     # accessed here, and the override logic is reused.
     # The schema_override needs to be copied so the class attribute is not altered globally.
-    schema_generator: DSOSchemaGenerator = view.view_initkwargs["schema_generator"]
+    schema_generator: DSOSchemaGenerator = openapi_view.view_initkwargs["schema_generator"]
     schema_generator.schema_overrides = {
         "info": {
             "license": dataset_schema.get("license", ""),
@@ -115,7 +130,32 @@ def get_openapi_json_view(dataset: Dataset):
         **schema_generator.schema_overrides,
     }
 
-    return view
+    # Wrap the view in a "decorator" that shows the Swagger interface for browsers.
+    return _swagger_on_browser(openapi_view)
+
+
+def _swagger_on_browser(openapi_view):
+    """A 'decorator' that shows the swagger interface on browser requests.
+    This is a separate function to reduce the closure context data.
+    """
+    # The ?format=json isn't really needed, but makes the fetch/XMLHttpRequest explicit
+    # to request the OpenAPI JSON and avoids any possible browser-interaction.
+    swagger_view = DSOSwaggerView.as_view(url="?format=json")
+
+    @wraps(openapi_view)
+    def _switching_view(request):
+        is_browser = "text/html" in request.META.get("HTTP_ACCEPT", "")
+        format = request.GET.get("format", "")
+        if not is_browser or format == "json":
+            # Not a browser, give the JSON view.
+            return openapi_view(request)
+        else:
+            # Browser that accepts HTML, showing the swagger view.
+            # This doesn't redirect to /swagger/
+            # Using the view so the addressbar path remains the same.
+            return swagger_view(request)
+
+    return _switching_view
 
 
 def get_dataset_patterns(dataset_id: str) -> List[Union[URLPattern, URLResolver]]:
