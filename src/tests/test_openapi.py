@@ -176,7 +176,6 @@ def test_openapi_json(api_client, afval_dataset, fietspaaltjes_dataset, filled_r
             "Cluster": {
                 "summary": "cluster",
                 "value": "cluster",
-                "description": "Cluster-ID",
             },
         },
     }
