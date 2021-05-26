@@ -24,7 +24,7 @@ class DSOFilterSet(FilterSet):
     it translates the Django model fields to proper filter class.
     Usage in views::
 
-        class MyFilterSet(DSOFilterSetBackend):
+        class MyFilterSet(DSOFilterBackend):
             class Meta:
                 model = MyModel
                 fields = {
@@ -34,7 +34,7 @@ class DSOFilterSet(FilterSet):
 
 
         class View(GenericAPIView):
-            filter_backends = [filters.DSOFilterSetBackend]
+            filter_backends = [filters.DSOFilterBackend]
             filterset_class = MyFilterSet
     """
 
