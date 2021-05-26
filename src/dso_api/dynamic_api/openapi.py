@@ -5,6 +5,7 @@ The main logic can be found in :mod:`rest_framework_dso.openapi`.
 from copy import copy
 from functools import wraps
 from typing import Callable, List, Optional, Union
+from urllib.parse import urljoin
 
 from django.conf import settings
 from django.urls import URLPattern, URLResolver, get_resolver, get_urlconf
@@ -118,15 +119,26 @@ def get_openapi_json_view(dataset: Dataset):
         version=dataset_schema.version,
     )
 
+    # Specific data to override in the OpenAPI
+    openapi_overrides = {
+        "info": {
+            "license": dataset_schema.get("license", ""),
+        },
+        "externalDocs": {
+            "url": urljoin(
+                settings.SPECTACULAR_SETTINGS["EXTERNAL_DOCS"]["url"],  # to preserve hostname
+                f"/v1/docs/datasets/{dataset_schema.id}.html",
+            )
+        },
+    }
+
     # As get_schema_view() offers no **initkwargs to the view, it's not possible to pass
     # additional parameters to the generator/view. Instead, our schema generator is directly
     # accessed here, and the override logic is reused.
     # The schema_override needs to be copied so the class attribute is not altered globally.
     schema_generator: DSOSchemaGenerator = openapi_view.view_initkwargs["schema_generator"]
     schema_generator.schema_overrides = {
-        "info": {
-            "license": dataset_schema.get("license", ""),
-        },
+        **openapi_overrides,
         **schema_generator.schema_overrides,
     }
 

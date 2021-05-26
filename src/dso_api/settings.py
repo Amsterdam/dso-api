@@ -320,7 +320,7 @@ These are located at:
     "CONTACT": {"email": "datapunt@amsterdam.nl"},
     "LICENSE": {"name": "CC0 1.0 Universal"},
     "EXTERNAL_DOCS": {
-        "description": "API usage Documentation",
+        "description": "API Usage Documentation",
         "url": "https://api.data.amsterdam.nl/v1/docs/",
     },
     "SCHEMA_PATH_PREFIX": r"^/v?\d+(\.\d+)?/",  # strip /v1/ from tags.
