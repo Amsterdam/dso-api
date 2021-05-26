@@ -9,7 +9,7 @@ from schematools.utils import to_snake_case
 from .filtersets import DSOFilterSet
 
 
-class DSOFilterSetBackend(DjangoFilterBackend):
+class DSOFilterBackend(DjangoFilterBackend):
     """DSF fields filter.
 
     This loads the filterset logic of django-filter into the
@@ -20,7 +20,7 @@ class DSOFilterSetBackend(DjangoFilterBackend):
     Usage in views::
 
         class View(GenericAPIView):
-            filter_backends = [filters.DSOFilterSetBackend]
+            filter_backends = [filters.DSOFilterBackend]
             filterset_class = ... # subclass of DSOFilterSet
 
     The ``filterset_class`` defines how each querystring field is parsed and processed.

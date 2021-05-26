@@ -4,7 +4,7 @@ import pytest
 from django.db.models import Value
 from django.http import QueryDict
 
-from rest_framework_dso.filters import DSOFilterSet, DSOFilterSetBackend
+from rest_framework_dso.filters import DSOFilterBackend, DSOFilterSet
 from rest_framework_dso.filters.lookups import Wildcard
 
 from .models import Category, Movie
@@ -111,10 +111,10 @@ class TestDSOFilterSet:
         assert set(obj.name for obj in qs) == expect, str(qs.query)
 
 
-class TestDSOFilterSetBackend:
+class TestDSOFilterBackend:
     def test_is_unfiltered(self, api_rf):
         """Prove that is_unfiltered() correctly detects non-standard fields"""
-        backend = DSOFilterSetBackend()
+        backend = DSOFilterBackend()
         assert backend.is_unfiltered(api_rf.get("/", data={"_format": "csv", "_fields": "foo"}))
         assert backend.is_unfiltered(api_rf.get("/", data={"_pageSize": "100", "_format": "csv"}))
 

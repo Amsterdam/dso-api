@@ -4,7 +4,7 @@ which does the heavy lifting of argument parsing and processing.
 
 There are 2 distinct object types: a "filter set backend" and "filter set".
 
-**Backends**, like the  :class:`~rest_framework_dso.filters.DSOFilterSetBackend`
+**Backends**, like the  :class:`~rest_framework_dso.filters.DSOFilterBackend`
 and :class:`~rest_framework_dso.filters.DSOOrderingFilter` are linked
 into the standard Django REST Framework logic for "filter backends".
 Those classes receive the Django :class:`~django.models.db.QuerySet` and
@@ -23,9 +23,9 @@ In code, this works as following:
 
     class View(GenericAPIView):
         # Standard Django REST Framework logic:
-        filter_backends = [DSOFilterSetBackend, DSOOrderingFilter]
+        filter_backends = [DSOFilterBackend, DSOOrderingFilter]
 
-        # Additional attribute for the filterset backend.
+        # Additional attribute for the filter backend.
         filterset_class = [...]  # list of DSOFilterSet subclasses
 
 Filterset internals
@@ -83,13 +83,13 @@ additional lookup classes are implemented that provide this functionality within
 .. _django-filter: https://django-filter.readthedocs.io/
 """
 from . import lookups  # noqa (import is needed for registration)
-from .backends import DSOFilterSetBackend, DSOOrderingFilter
+from .backends import DSOFilterBackend, DSOOrderingFilter
 from .filters import MultipleValueFilter, RangeFilter
 from .filtersets import DSOFilterSet
 
 __all__ = [
     "DSOFilterSet",
-    "DSOFilterSetBackend",
+    "DSOFilterBackend",
     "DSOOrderingFilter",
     "RangeFilter",
     "MultipleValueFilter",
