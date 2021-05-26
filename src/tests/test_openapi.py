@@ -116,20 +116,48 @@ def test_openapi_json(api_client, afval_dataset, fietspaaltjes_dataset, filled_r
     assert container_properties["id"]["type"] == "integer"
     assert container_properties["datumLeegmaken"]["format"] == "date-time"
 
-    # Prove that the filter help text is exposed as description
+    # Prove that various filters are properly exposed.
     afval_parameters = {
         param["name"]: param
         for param in schema["paths"]["/v1/afvalwegingen/containers/"]["get"]["parameters"]
     }
     all_keys = ", ".join(afval_parameters.keys())
     assert "datumCreatie" in afval_parameters, all_keys
-    assert afval_parameters["datumCreatie"]["description"] == "yyyy-mm-dd"
+    assert afval_parameters["datumCreatie"] == {
+        "name": "datumCreatie",
+        "in": "query",
+        "description": "yyyy-mm-dd",
+        "schema": {"format": "date", "type": "string"},
+    }
 
     # Prove that DSOOrderingFilter exposes parameters
+    assert "_format" in afval_parameters, all_keys
+    assert afval_parameters["_format"] == {
+        "name": "_format",
+        "in": "query",
+        "schema": {
+            "type": "string",
+            "enum": ["csv", "geojson", "json"],
+        },
+    }
     assert "_sort" in afval_parameters, all_keys
+    assert afval_parameters["_sort"] == {
+        "name": "_sort",
+        "in": "query",
+        "required": False,
+        "description": "Which field to use when ordering the results.",
+        "schema": {"type": "string"},
+    }
 
     # Prove that general page parameters are exposed
     assert "_pageSize" in afval_parameters, all_keys
+    assert afval_parameters["_pageSize"] == {
+        "name": "_pageSize",
+        "in": "query",
+        "required": False,
+        "description": "Number of results to return per page.",
+        "schema": {"type": "integer"},
+    }
 
     # Prove that expansion is documented
     assert "_expand" in afval_parameters, all_keys
@@ -157,6 +185,23 @@ def test_openapi_json(api_client, afval_dataset, fietspaaltjes_dataset, filled_r
     # ([lt] for dates, [in] for keys)
     assert "datumCreatie[lt]" in afval_parameters, all_keys
     assert "clusterId[in]" in afval_parameters, all_keys
+    assert afval_parameters["clusterId[in]"] == {
+        "name": "clusterId[in]",
+        "in": "query",
+        "description": "Multiple values may be separated by commas.",
+        "explode": False,
+        "schema": {
+            "type": "array",
+            "items": {"nullable": True, "type": "string"},
+        },
+        "style": "form",
+    }
+    assert afval_parameters["clusterId[isnull]"] == {
+        "name": "clusterId[isnull]",
+        "in": "query",
+        "description": "true | false",
+        "schema": {"type": "boolean"},
+    }
 
     # Prove that the extra headers are included
     assert "Accept-Crs" in afval_parameters, all_keys

@@ -9,11 +9,13 @@ import logging
 from typing import List
 
 from drf_spectacular import generators, openapi
+from drf_spectacular.contrib.django_filters import DjangoFilterExtension
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiExample, OpenApiParameter
 from rest_framework.settings import api_settings
 from rest_framework_gis.fields import GeometryField
 
+from rest_framework_dso import filters
 from rest_framework_dso.embedding import get_all_embedded_fields_by_name
 from rest_framework_dso.fields import LinksField
 from rest_framework_dso.serializers import ExpandMixin
@@ -352,3 +354,27 @@ class DSOAutoSchema(openapi.AutoSchema):
             # In Python, the token \Z does what \z does in other engines.
             # https://stackoverflow.com/questions/53283160
             schema["pattern"] = schema["pattern"].replace("\\Z", "\\z")
+
+
+class DSOFilterExtension(DjangoFilterExtension):
+    """A DRF-Spectacular extension that improves the OpenAPI data for django-filter fields.
+
+    This makes sure our extensions to DjangoFilterBackend are still handled by drf-spectacular.
+    By default, drf-spectacular only matches filter backends when the class is exactly
+    ``django_filters.rest_framework.DjangoFilterBackend``. Subclasses are completely ignored.
+
+    The existence of this class is enough to trigger registration in the extension mechanism.
+    Without this class, drf-spectacular calls ``get_schema_operation_parameters()`` directly
+    on the filter backend class. Now it's called on this class instead.
+
+    This changes the following OpenAPI data on filter fields from standard django-filter logic:
+
+    * Adds nullable
+    * Uses "format: date-time" for datetime filters instead of string.
+    * Uses "type: boolean" for isempty/isnull filters instead of string.
+    * Uses "type: array", "explode: true" for model-multiple-choice fields (M2M).
+    * Removes unneeded "required: false" on filters.
+    """
+
+    target_class = filters.DSOFilterBackend
+    match_subclasses = True
