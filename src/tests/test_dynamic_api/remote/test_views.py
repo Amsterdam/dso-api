@@ -3,9 +3,10 @@ import pytest
 import urllib3
 from django.urls import reverse
 from schematools.contrib.django import models
+from schematools.types import DatasetTableSchema
 from urllib3_mock import Responses
 
-from dso_api.dynamic_api.remote import remote_viewset_factory
+from dso_api.dynamic_api.remote.clients import RemoteClient
 from tests.utils import read_response_json
 
 DEFAULT_RESPONSE = {
@@ -336,6 +337,17 @@ def test_remote_timeout(api_client, router, brp_dataset, urllib3_mocker):
     }
 
 
+REMOTE_SCHEMA = DatasetTableSchema.from_dict(
+    {
+        "id": "mytable",
+        "type": "table",
+        "schema": {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+        },
+    }
+)
+
+
 @pytest.mark.parametrize(
     "case",
     [
@@ -347,5 +359,5 @@ def test_remote_timeout(api_client, router, brp_dataset, urllib3_mocker):
 )
 def test_make_url(case):
     base, expect = case
-    viewset = remote_viewset_factory(base, type(None), None, "mytable", None)()
-    assert viewset._make_url("foo", {"bar": "baz"}) == expect
+    client = RemoteClient(base, REMOTE_SCHEMA)
+    assert client._make_url("foo", {"bar": "baz"}) == expect

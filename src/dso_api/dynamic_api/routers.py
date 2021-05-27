@@ -250,8 +250,6 @@ class DynamicRouter(routers.DefaultRouter):
                 viewset = remote_viewset_factory(
                     endpoint_url=dataset.endpoint_url,
                     serializer_class=serializer_class,
-                    dataset_id=dataset_id,
-                    table_id=table.id,
                     table_schema=table,
                 )
                 tmp_router.register(
