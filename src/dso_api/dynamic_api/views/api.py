@@ -16,9 +16,12 @@ from typing import List, Type
 
 from django.db import models
 from django.http import Http404, JsonResponse
+from django.urls import reverse
 from django.utils.translation import gettext as _
 from rest_framework import viewsets
-from schematools.contrib.django.models import DynamicModel
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from schematools.contrib.django.models import Dataset, DynamicModel
 
 from dso_api.dynamic_api import filterset, locking, permissions, serializers
 from rest_framework_dso import fields
@@ -224,3 +227,72 @@ def viewset_factory(model: Type[DynamicModel]) -> Type[DynamicApiViewSet]:
         "table_id": model._table_schema["id"],
     }
     return type(f"{model.__name__}ViewSet", (DynamicApiViewSet,), attrs)
+
+
+class APIIndexView(APIView):
+    """An overview of API endpoints for a list of Datasets,
+    in a JSON format compatible with developer.overheid.nl.
+    """
+
+    schema = None  # exclude from schema
+
+    # For browsable API
+    name = "DSO-API"
+    description = (
+        "To use the DSO-API, see the documentation at <https://api.data.amsterdam.nl/v1/docs/>. "
+    )
+
+    # Set by as_view
+    api_type = "rest_json"
+    dataset_ids: List[str] = []
+    datasets: List[Dataset] = []
+
+    def get_environments(self, ds: Dataset, base: str) -> List[dict]:
+        return [
+            {
+                "name": "production",
+                "api_url": base + reverse(f"dynamic_api:openapi-{ds.schema.id}"),
+                "specification_url": "",
+                "documentation_url": "",
+            }
+        ]
+
+    def get_related_apis(self, ds: Dataset, base: str) -> List[dict]:
+        """ Get list of other APIs exposing the same dataset """
+        return []
+
+    def get(self, request, *args, **kwargs):
+        base = request.build_absolute_uri("/").rstrip("/")
+        datasets = self.datasets
+
+        # Get datasets from dataset_ids if dataset_ids are given
+        if len(self.dataset_ids):
+            datasets = list(Dataset.objects.filter(id__in=self.dataset_ids))
+
+        result = {"datasets": {}}
+        for ds in datasets:
+            result["datasets"][ds.schema.id] = {
+                "id": ds.schema.id,
+                "short_name": ds.name,
+                "service_name": ds.schema.title or ds.name,
+                "status": ds.schema.get("status", "Beschikbaar"),
+                "description": ds.schema.description or "",
+                "tags": ds.schema.get("theme", []),
+                "terms_of_use": {
+                    "government_only": "auth" in ds.schema,
+                    "pay_per_use": False,
+                    "license": ds.schema.license,
+                },
+                "environments": self.get_environments(ds, base),
+                "related_apis": self.get_related_apis(ds, base),
+                "api_authentication": ds.schema.auth,
+                "api_type": "unknown",
+                "organization_name": "Gemeente Amsterdam",
+                "organization_oin": "00000001002564440000",
+                "contact": {
+                    "email": "datapunt@amsterdam.nl",
+                    "url": "https://github.com/Amsterdam/dso-api/issues",
+                },
+            }
+
+        return Response(result)
