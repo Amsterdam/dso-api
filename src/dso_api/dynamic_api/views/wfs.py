@@ -33,8 +33,8 @@ from django.conf import settings
 from django.contrib.gis.db.models import GeometryField
 from django.db import models
 from django.http import Http404
+from django.urls import reverse
 from django.utils.functional import cached_property
-from django.views.generic import TemplateView
 from gisserver.exceptions import InvalidParameterValue, PermissionDenied
 from gisserver.features import ComplexFeatureField, FeatureField, FeatureType, ServiceDescription
 from gisserver.views import WFSView
@@ -42,20 +42,13 @@ from schematools.contrib.django.models import Dataset
 from schematools.utils import toCamelCase
 
 from dso_api.dynamic_api import permissions
+from dso_api.dynamic_api.views import APIIndexView
 from rest_framework_dso import crs
 
 FieldDef = Union[str, FeatureField]
 RE_SIMPLE_NAME = re.compile(
     r"^(?P<ns>[a-z0-9_]+:)?(?P<name>[a-z0-9_]+)(?P<variant>-[a-z0-9_]+)?$", re.I
 )
-
-
-def dataset_has_geometry_fields(dataset) -> bool:
-    return any(
-        field.is_geo
-        for table in dataset.schema.tables
-        for field in table.fields
-    )
 
 
 class AuthenticatedFeatureType(FeatureType):
@@ -81,26 +74,47 @@ class AuthenticatedFeatureType(FeatureType):
         self.wfs_view.check_permissions(request, models)
 
 
-class DatasetWFSIndexView(TemplateView):
+class DatasetWFSIndexView(APIIndexView):
     """An overview of the available WFS endpoints.
     This makes sure a request to ``/wfs/`` renders a reasonable index page.
     """
 
-    template_name = "dso_api/dynamic_api/wfs_index.html"
+    name = "DSO-API WFS Endpoints"  # for browsable API.
+    description = "To use the DSO-API, see the documentation at \
+        <https://api.data.amsterdam.nl/v1/docs/>. \
+        For information on using WFS see WFS documentation at \
+        <https://api.data.amsterdam.nl/v1/docs/generic/wfs.html>"
+    api_type = "WFS"
+    datasets = [
+        ds for ds in Dataset.objects.db_enabled().order_by("name") if ds.has_geometry_fields
+    ]
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        from ..urls import router
-
-        dataset_names = set(router.all_models.keys())
-        datasets = [
-            (ds.name, ds.schema)
-            for ds in Dataset.objects.db_enabled().order_by("name")
-            if ds.name in dataset_names and dataset_has_geometry_fields(ds)
+    def get_environments(self, ds: Dataset, base: str):
+        return [
+            {
+                "name": "production",
+                "api_url": base + reverse("dynamic_api:wfs", kwargs={"dataset_name": ds.name}),
+                "specification_url": base
+                + reverse("dynamic_api:swagger-ui", kwargs={"dataset_name": ds.name}),
+                "documentation_url": f"{base}/v1/docs/wfs-datasets/{ds.schema.id}.html",
+            }
         ]
 
-        context["datasets"] = datasets
-        return context
+    def get_related_apis(self, ds: Dataset, base: str):
+        related_apis = []
+        if ds.has_geometry_fields:
+            related_apis = [
+                {
+                    "type": "rest_json",
+                    "url": base + reverse(f"dynamic_api:openapi-{ds.schema.id}"),
+                },
+                {
+                    "type": "MVT",
+                    "url": base
+                    + reverse("dynamic_api:mvt-single-dataset", kwargs={"dataset_name": ds.name}),
+                },
+            ]
+        return related_apis
 
 
 class DatasetWFSView(WFSView):

@@ -6,12 +6,14 @@ from django.contrib.gis.db.models import GeometryField
 from django.core.exceptions import FieldDoesNotExist, PermissionDenied
 from django.http import Http404
 from django.shortcuts import get_object_or_404
+from django.urls.base import reverse
 from django.views.generic import TemplateView
 from schematools.contrib.django.models import Dataset
 from schematools.utils import to_snake_case, toCamelCase
 from vectortiles.postgis.views import MVTView
 
 from dso_api.dynamic_api import permissions
+from dso_api.dynamic_api.views import APIIndexView
 
 
 def get_geo_tables(schema):
@@ -22,26 +24,45 @@ def get_geo_tables(schema):
                 yield to_snake_case(table.name)
 
 
-class DatasetMVTIndexView(TemplateView):
+class DatasetMVTIndexView(APIIndexView):
     """Overview of available MVT endpoints."""
 
-    template_name = "dso_api/dynamic_api/mvt_index.html"
+    name = "DSO-API MVT endpoints"  # for browsable API.
+    description = "To use the DSO-API, see the documentation at <https://api.data.amsterdam.nl/v1/docs/>.\
+        For information on using MVT Tiles see documentation at \
+        https://api.data.amsterdam.nl/v1/docs/generic/mvt.html"
+    api_type = "MVT"
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        from ..urls import router
+    datasets = [
+        ds for ds in Dataset.objects.db_enabled().order_by("name") if ds.has_geometry_fields
+    ]
 
-        dataset_names = set(router.all_models.keys())
-        datasets = (
-            (ds.name, sorted(get_geo_tables(ds.schema)), ds.schema)
-            for ds in Dataset.objects.db_enabled().order_by("name")
-            if ds.name in dataset_names
-        )
-        context["datasets"] = [
-            (name, fields, schema) for name, fields, schema in datasets if fields
+    def get_environments(self, ds: Dataset, base: str):
+        return [
+            {
+                "name": "production",
+                "api_url": base
+                + reverse("dynamic_api:mvt-single-dataset", kwargs={"dataset_name": ds.name}),
+                "specification_url": base
+                + reverse("dynamic_api:mvt-single-dataset", kwargs={"dataset_name": ds.name}),
+                "documentation_url": f"{base}/v1/docs/generic/mvt.html",
+            }
         ]
 
-        return context
+    def get_related_apis(self, ds: Dataset, base: str):
+        related_apis = []
+        if ds.has_geometry_fields:
+            related_apis = [
+                {
+                    "type": "rest_json",
+                    "url": base + reverse(f"dynamic_api:openapi-{ds.schema.id}"),
+                },
+                {
+                    "type": "WFS",
+                    "url": base + reverse("dynamic_api:wfs", kwargs={"dataset_name": ds.name}),
+                },
+            ]
+        return related_apis
 
 
 class DatasetMVTSingleView(TemplateView):
