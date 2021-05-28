@@ -19,39 +19,65 @@ def test_root_view(api_client, afval_dataset, fietspaaltjes_dataset, filled_rout
         "datasets": {
             "afvalwegingen": {
                 "id": "afvalwegingen",
-                "name": "afvalwegingen",
-                "title": "Afvalwegingen",
+                "short_name": "afvalwegingen",
+                "service_name": "Afvalwegingen",
                 "status": "Beschikbaar",
                 "description": "unit testing version of afvalwegingen",
-                "api_type": "rest_json",
-                "api_url": f"{base}/v1/afvalwegingen/",
-                "documentation_url": f"{base}/v1/docs/datasets/afvalwegingen.html",
-                "specification_url": f"{base}/v1/swagger/afvalwegingen/",
+                "tags": [],
                 "terms_of_use": {
                     "government_only": False,
                     "pay_per_use": False,
                     "license": "CC0 1.0",
                 },
-                "related_apis": [
-                    {"type": "wfs", "url": f"{base}/v1/wfs/afvalwegingen/"},
-                    {"type": "tiles", "url": f"{base}/v1/mvt/afvalwegingen/"},
+                "environments": [
+                    {
+                        "name": "production",
+                        "api_url": f"{base}/v1/afvalwegingen/",
+                        "specification_url": f"{base}/v1/swagger/afvalwegingen/",
+                        "documentation_url": f"{base}/v1/docs/datasets/afvalwegingen.html",
+                    }
                 ],
+                "related_apis": [
+                    {"type": "WFS", "url": f"{base}/v1/wfs/afvalwegingen/"},
+                    {"type": "MVT", "url": f"{base}/v1/mvt/afvalwegingen/"},
+                ],
+                "api_authentication": None,
+                "api_type": "unknown",
+                "organization_name": "Gemeente Amsterdam",
+                "organization_oin": "00000001002564440000",
+                "contact": {
+                    "email": "datapunt@amsterdam.nl",
+                    "url": "https://github.com/Amsterdam/dso-api/issues",
+                },
             },
             "fietspaaltjes": {
                 "id": "fietspaaltjes",
-                "name": "fietspaaltjes",
-                "title": "fietspaaltjes",
+                "short_name": "fietspaaltjes",
+                "service_name": "fietspaaltjes",
                 "status": "beschikbaar",
                 "description": "",
-                "api_type": "rest_json",
-                "api_url": f"{base}/v1/fietspaaltjes/",
-                "documentation_url": f"{base}/v1/docs/datasets/fietspaaltjes.html",
-                "specification_url": f"{base}/v1/swagger/fietspaaltjes/",
+                "tags": [],
                 "terms_of_use": {"government_only": False, "pay_per_use": False, "license": None},
-                "related_apis": [
-                    {"type": "wfs", "url": f"{base}/v1/wfs/fietspaaltjes/"},
-                    {"type": "tiles", "url": f"{base}/v1/mvt/fietspaaltjes/"},
+                "environments": [
+                    {
+                        "name": "production",
+                        "api_url": f"{base}/v1/fietspaaltjes/",
+                        "specification_url": f"{base}/v1/swagger/fietspaaltjes/",
+                        "documentation_url": f"{base}/v1/docs/datasets/fietspaaltjes.html",
+                    }
                 ],
+                "related_apis": [
+                    {"type": "WFS", "url": f"{base}/v1/wfs/fietspaaltjes/"},
+                    {"type": "MVT", "url": f"{base}/v1/mvt/fietspaaltjes/"},
+                ],
+                "api_authentication": None,
+                "api_type": "unknown",
+                "organization_name": "Gemeente Amsterdam",
+                "organization_oin": "00000001002564440000",
+                "contact": {
+                    "email": "datapunt@amsterdam.nl",
+                    "url": "https://github.com/Amsterdam/dso-api/issues",
+                },
             },
         }
     }
