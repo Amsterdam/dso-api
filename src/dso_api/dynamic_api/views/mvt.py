@@ -50,18 +50,16 @@ class DatasetMVTIndexView(APIIndexView):
         ]
 
     def get_related_apis(self, ds: Dataset, base: str):
-        related_apis = []
-        if ds.has_geometry_fields:
-            related_apis = [
-                {
-                    "type": "rest_json",
-                    "url": base + reverse(f"dynamic_api:openapi-{ds.schema.id}"),
-                },
-                {
-                    "type": "WFS",
-                    "url": base + reverse("dynamic_api:wfs", kwargs={"dataset_name": ds.name}),
-                },
-            ]
+        related_apis = [
+            {
+                "type": "rest_json",
+                "url": base + reverse(f"dynamic_api:openapi-{ds.schema.id}"),
+            },
+            {
+                "type": "WFS",
+                "url": base + reverse("dynamic_api:wfs", kwargs={"dataset_name": ds.name}),
+            },
+        ]
         return related_apis
 
 
