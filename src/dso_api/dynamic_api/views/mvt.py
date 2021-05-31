@@ -29,9 +29,11 @@ class DatasetMVTIndexView(APIIndexView):
     """Overview of available MVT endpoints."""
 
     name = "DSO-API MVT endpoints"  # for browsable API.
-    description = "To use the DSO-API, see the documentation at <https://api.data.amsterdam.nl/v1/docs/>.\
-        For information on using MVT Tiles see documentation at \
-        https://api.data.amsterdam.nl/v1/docs/generic/mvt.html"
+    description = (
+        "To use the DSO-API, see the documentation at <https://api.data.amsterdam.nl/v1/docs/>. "
+        "For information on using MVT Tiles see documentation at "
+        "https://api.data.amsterdam.nl/v1/docs/generic/mvt.html"
+    )
     api_type = "MVT"
 
     def get_datasets(self):
