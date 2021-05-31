@@ -200,6 +200,7 @@ def test_openapi_json(api_client, afval_dataset, fietspaaltjes_dataset, filled_r
                 "description": "Expand all fields, identical to only using _expand=true.",
             },
             "Cluster": {
+                "description": "Cluster-ID",
                 "summary": "cluster",
                 "value": "cluster",
             },
