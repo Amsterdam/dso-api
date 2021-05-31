@@ -81,10 +81,11 @@ class DatasetWFSIndexView(APIIndexView):
     """
 
     name = "DSO-API WFS Endpoints"  # for browsable API.
-    description = "To use the DSO-API, see the documentation at \
-        <https://api.data.amsterdam.nl/v1/docs/>. \
-        For information on using WFS see WFS documentation at \
-        <https://api.data.amsterdam.nl/v1/docs/generic/wfs.html>"
+    description = (
+        "To use the DSO-API, see the documentation at <https://api.data.amsterdam.nl/v1/docs/>. "
+        "For information on using WFS see WFS documentation at "
+        "<https://api.data.amsterdam.nl/v1/docs/generic/wfs.html>"
+    )
     api_type = "WFS"
 
     def get_datasets(self):
