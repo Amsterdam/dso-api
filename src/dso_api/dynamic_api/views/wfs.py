@@ -42,7 +42,7 @@ from schematools.contrib.django.models import Dataset
 from schematools.utils import toCamelCase
 
 from dso_api.dynamic_api import permissions
-from dso_api.dynamic_api.datasets import get_published_datasets
+from dso_api.dynamic_api.datasets import get_active_datasets
 from dso_api.dynamic_api.views import APIIndexView
 from rest_framework_dso import crs
 
@@ -88,7 +88,7 @@ class DatasetWFSIndexView(APIIndexView):
     api_type = "WFS"
 
     def get_datasets(self):
-        return [ds for ds in get_published_datasets().order_by("name") if ds.has_geometry_fields]
+        return [ds for ds in get_active_datasets().order_by("name") if ds.has_geometry_fields]
 
     def get_environments(self, ds: Dataset, base: str):
         return [

@@ -12,7 +12,7 @@ and model layer of this application.
 """
 from __future__ import annotations
 
-from typing import List, Type
+from typing import Iterable, List, Type
 
 from django.db import models
 from django.http import Http404, JsonResponse
@@ -24,7 +24,7 @@ from rest_framework.views import APIView
 from schematools.contrib.django.models import Dataset, DynamicModel
 
 from dso_api.dynamic_api import filterset, locking, permissions, serializers
-from dso_api.dynamic_api.datasets import get_published_datasets
+from dso_api.dynamic_api.datasets import get_active_datasets
 from rest_framework_dso import fields
 from rest_framework_dso.views import DSOViewMixin
 
@@ -250,8 +250,8 @@ class APIIndexView(APIView):
     # Set by as_view
     api_type = "rest_json"
 
-    def get_datasets(self) -> List[Dataset]:
-        return list(get_published_datasets().order_by("name"))
+    def get_datasets(self) -> Iterable[Dataset]:
+        return get_active_datasets().order_by("name")
 
     def get_environments(self, ds: Dataset, base: str) -> List[dict]:
         return [

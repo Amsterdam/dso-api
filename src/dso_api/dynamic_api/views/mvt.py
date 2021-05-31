@@ -13,7 +13,7 @@ from schematools.utils import to_snake_case, toCamelCase
 from vectortiles.postgis.views import MVTView
 
 from dso_api.dynamic_api import permissions
-from dso_api.dynamic_api.datasets import get_published_datasets
+from dso_api.dynamic_api.datasets import get_active_datasets
 from dso_api.dynamic_api.views import APIIndexView
 
 
@@ -35,7 +35,7 @@ class DatasetMVTIndexView(APIIndexView):
     api_type = "MVT"
 
     def get_datasets(self):
-        return [ds for ds in get_published_datasets().order_by("name") if ds.has_geometry_fields]
+        return [ds for ds in get_active_datasets().order_by("name") if ds.has_geometry_fields]
 
     def get_environments(self, ds: Dataset, base: str):
         return [
