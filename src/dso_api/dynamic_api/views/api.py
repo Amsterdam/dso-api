@@ -24,6 +24,7 @@ from rest_framework.views import APIView
 from schematools.contrib.django.models import Dataset, DynamicModel
 
 from dso_api.dynamic_api import filterset, locking, permissions, serializers
+from dso_api.dynamic_api.datasets import get_published_datasets
 from rest_framework_dso import fields
 from rest_framework_dso.views import DSOViewMixin
 
@@ -244,8 +245,9 @@ class APIIndexView(APIView):
 
     # Set by as_view
     api_type = "rest_json"
-    dataset_ids: List[str] = []
-    datasets: List[Dataset] = []
+
+    def get_datasets(self) -> List[Dataset]:
+        return list(get_published_datasets().order_by("name"))
 
     def get_environments(self, ds: Dataset, base: str) -> List[dict]:
         return [
@@ -263,11 +265,7 @@ class APIIndexView(APIView):
 
     def get(self, request, *args, **kwargs):
         base = request.build_absolute_uri("/").rstrip("/")
-        datasets = self.datasets
-
-        # Get datasets from dataset_ids if dataset_ids are given
-        if len(self.dataset_ids):
-            datasets = list(Dataset.objects.filter(id__in=self.dataset_ids))
+        datasets = self.get_datasets()
 
         result = {"datasets": {}}
         for ds in datasets:

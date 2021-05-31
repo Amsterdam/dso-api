@@ -95,11 +95,10 @@ class DynamicRouter(routers.DefaultRouter):
         self.all_models = {}
         self.static_routes = []
         self._openapi_urls = []
-        self._dataset_ids = []
 
     def get_api_root_view(self, api_urls=None):
         """Show the OpenAPI specification as root view."""
-        return DynamicAPIRootView.as_view(dataset_ids=sorted(self._dataset_ids))
+        return DynamicAPIRootView.as_view()
 
     def is_initialized(self) -> bool:
         """Tell whether the router initialization was used to create viewsets."""
@@ -154,7 +153,6 @@ class DynamicRouter(routers.DefaultRouter):
         # Atomically copy the new viewset registrations
         self.registry = self.static_routes + dataset_routes + remote_routes
         self._openapi_urls = openapi_urls
-        self._dataset_ids = [ds.id for ds in db_datasets + api_datasets]
 
         # invalidate the urls cache
         if hasattr(self, "_urls"):
@@ -318,7 +316,6 @@ class DynamicRouter(routers.DefaultRouter):
         # Clear URLs and routes
         self.registry = self.static_routes.copy()
         self._openapi_urls.clear()
-        self._dataset_ids.clear()
         if hasattr(self, "_urls"):
             del self._urls
 
