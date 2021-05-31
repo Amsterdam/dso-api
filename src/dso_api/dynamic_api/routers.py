@@ -27,21 +27,19 @@ from typing import TYPE_CHECKING, Dict, Iterable, List, Type
 
 from django.conf import settings
 from django.db import connection
-from django.db.models import Q
 from django.urls import NoReverseMatch, URLPattern, path, reverse
 from rest_framework import routers
-from rest_framework.response import Response
-from rest_framework.views import APIView
 from schematools.contrib.django.factories import remove_dynamic_models
 from schematools.contrib.django.models import Dataset
 from schematools.utils import to_snake_case
 
+from dso_api.dynamic_api.datasets import get_active_datasets
 from dso_api.dynamic_api.locking import lock_for_writing
 from dso_api.dynamic_api.openapi import get_openapi_json_view
 from dso_api.dynamic_api.remote import remote_serializer_factory, remote_viewset_factory
 from dso_api.dynamic_api.serializers import get_view_name, serializer_factory
 from dso_api.dynamic_api.views import viewset_factory
-from dso_api.dynamic_api.views.wfs import dataset_has_geometry_fields
+from dso_api.dynamic_api.views.api import APIIndexView
 
 logger = logging.getLogger(__name__)
 reload_counter = 0
@@ -50,58 +48,40 @@ if TYPE_CHECKING:
     from schematools.contrib.django.models import DynamicModel
 
 
-class DynamicAPIRootView(APIView):
+class DynamicAPIRootView(APIIndexView):
     """An overview of API endpoints."""
 
     name = "DSO-API"  # for browsable API.
     description = (
         "To use the DSO-API, see the documentation at <https://api.data.amsterdam.nl/v1/docs/>. "
     )
-    schema = None  # exclude from schema
-    dataset_ids: List[str] = []  # set by as_view()
+    api_type = "rest_json"
 
-    def get(self, request, *args, **kwargs):
-        base = request.build_absolute_uri("/").rstrip("/")
-        datasets = list(Dataset.objects.filter(id__in=self.dataset_ids))
-        result = {"datasets": {}}
-
-        for ds in datasets:
-            dataset_id = ds.schema.id
-            result["datasets"][ds.schema.id] = {
-                "id": ds.schema.id,
-                "name": ds.name,
-                "title": ds.schema.title or "",
-                "status": ds.schema.get("status", "Beschikbaar"),
-                "description": ds.schema.description or "",
-                "api_type": "rest_json",
-                "api_url": base + reverse(f"dynamic_api:openapi-{dataset_id}"),
-                "documentation_url": f"{base}/v1/docs/datasets/{dataset_id}.html",
-                "specification_url": base + reverse(f"dynamic_api:openapi-{dataset_id}"),
-                "terms_of_use": {
-                    "government_only": "auth" in ds.schema,
-                    "pay_per_use": False,
-                    "license": ds.schema.license,
-                },
-                "related_apis": [],
+    def get_environments(self, ds: Dataset, base: str):
+        return [
+            {
+                "name": "production",
+                "api_url": base + reverse(f"dynamic_api:openapi-{ds.schema.id}"),
+                "specification_url": base + reverse(f"dynamic_api:openapi-{ds.schema.id}"),
+                "documentation_url": f"{base}/v1/docs/datasets/{ds.schema.id}.html",
             }
+        ]
 
-            # Add link to wfs and mvt api's when available
-            if dataset_has_geometry_fields(ds):
-                result["datasets"][ds.schema.id]["related_apis"] = [
-                    {
-                        "type": "wfs",
-                        "url": base + reverse("dynamic_api:wfs", kwargs={"dataset_name": ds.name}),
-                    },
-                    {
-                        "type": "tiles",
-                        "url": base
-                        + reverse(
-                            "dynamic_api:mvt-single-dataset", kwargs={"dataset_name": ds.name}
-                        ),
-                    },
-                ]
-
-        return Response(result)
+    def get_related_apis(self, ds: Dataset, base: str):
+        related_apis = []
+        if ds.has_geometry_fields:
+            related_apis = [
+                {
+                    "type": "WFS",
+                    "url": base + reverse("dynamic_api:wfs", kwargs={"dataset_name": ds.name}),
+                },
+                {
+                    "type": "MVT",
+                    "url": base
+                    + reverse("dynamic_api:mvt-single-dataset", kwargs={"dataset_name": ds.name}),
+                },
+            ]
+        return related_apis
 
 
 class DynamicRouter(routers.DefaultRouter):
@@ -114,11 +94,10 @@ class DynamicRouter(routers.DefaultRouter):
         self.all_models = {}
         self.static_routes = []
         self._openapi_urls = []
-        self._dataset_ids = []
 
     def get_api_root_view(self, api_urls=None):
         """Show the OpenAPI specification as root view."""
-        return DynamicAPIRootView.as_view(dataset_ids=sorted(self._dataset_ids))
+        return DynamicAPIRootView.as_view()
 
     def is_initialized(self) -> bool:
         """Tell whether the router initialization was used to create viewsets."""
@@ -159,12 +138,12 @@ class DynamicRouter(routers.DefaultRouter):
         """Build all viewsets, serializers, models and URL routes."""
         # Generate new viewsets for dynamic models
         serializer_factory.cache_clear()  # Avoid old cached data
-        db_datasets = list(self.filter_datasets(Dataset.objects.db_enabled()))
+        db_datasets = list(get_active_datasets().db_enabled())
         generated_models = self._build_db_models(db_datasets)
         dataset_routes = self._build_db_viewsets(db_datasets)
 
         # Same for remote API's
-        api_datasets = list(self.filter_datasets(Dataset.objects.endpoint_enabled()))
+        api_datasets = list(get_active_datasets().endpoint_enabled())
         remote_routes = self._build_remote_viewsets(api_datasets)
 
         # OpenAPI views
@@ -173,7 +152,6 @@ class DynamicRouter(routers.DefaultRouter):
         # Atomically copy the new viewset registrations
         self.registry = self.static_routes + dataset_routes + remote_routes
         self._openapi_urls = openapi_urls
-        self._dataset_ids = [ds.id for ds in db_datasets + api_datasets]
 
         # invalidate the urls cache
         if hasattr(self, "_urls"):
@@ -335,24 +313,9 @@ class DynamicRouter(routers.DefaultRouter):
         # Clear URLs and routes
         self.registry = self.static_routes.copy()
         self._openapi_urls.clear()
-        self._dataset_ids.clear()
         if hasattr(self, "_urls"):
             del self._urls
 
         # Clear models, serializers and app registries
         self.all_models.clear()
         remove_dynamic_models()
-
-    def filter_datasets(self, queryset):
-        """Filter datasets:
-        - remove Non-default datasets
-        - include only datasets defined in DATASETS_LIST (if settings.DATASETS_LIST is defined)
-        - exclude any datasets in DATASETS_EXCLUDE list (if settings.DATASETS_EXCLUDE is defined)
-        """
-        queryset = queryset.filter(Q(version=None) | Q(is_default_version=True))
-
-        if settings.DATASETS_LIST is not None:
-            queryset = queryset.filter(name__in=settings.DATASETS_LIST)
-        if settings.DATASETS_EXCLUDE is not None:
-            queryset = queryset.exclude(name__in=settings.DATASETS_EXCLUDE)
-        return queryset
