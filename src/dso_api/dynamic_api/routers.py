@@ -27,13 +27,13 @@ from typing import TYPE_CHECKING, Dict, Iterable, List, Type
 
 from django.conf import settings
 from django.db import connection
-from django.db.models import Q
 from django.urls import NoReverseMatch, URLPattern, path, reverse
 from rest_framework import routers
 from schematools.contrib.django.factories import remove_dynamic_models
 from schematools.contrib.django.models import Dataset
 from schematools.utils import to_snake_case
 
+from dso_api.dynamic_api.datasets import get_published_datasets
 from dso_api.dynamic_api.locking import lock_for_writing
 from dso_api.dynamic_api.openapi import get_openapi_json_view
 from dso_api.dynamic_api.remote import remote_serializer_factory, remote_viewset_factory
@@ -140,12 +140,12 @@ class DynamicRouter(routers.DefaultRouter):
         """Build all viewsets, serializers, models and URL routes."""
         # Generate new viewsets for dynamic models
         serializer_factory.cache_clear()  # Avoid old cached data
-        db_datasets = list(self.filter_datasets(Dataset.objects.db_enabled()))
+        db_datasets = list(get_published_datasets().db_enabled())
         generated_models = self._build_db_models(db_datasets)
         dataset_routes = self._build_db_viewsets(db_datasets)
 
         # Same for remote API's
-        api_datasets = list(self.filter_datasets(Dataset.objects.endpoint_enabled()))
+        api_datasets = list(get_published_datasets().endpoint_enabled())
         remote_routes = self._build_remote_viewsets(api_datasets)
 
         # OpenAPI views
@@ -325,17 +325,3 @@ class DynamicRouter(routers.DefaultRouter):
         # Clear models, serializers and app registries
         self.all_models.clear()
         remove_dynamic_models()
-
-    def filter_datasets(self, queryset):
-        """Filter datasets:
-        - remove Non-default datasets
-        - include only datasets defined in DATASETS_LIST (if settings.DATASETS_LIST is defined)
-        - exclude any datasets in DATASETS_EXCLUDE list (if settings.DATASETS_EXCLUDE is defined)
-        """
-        queryset = queryset.filter(Q(version=None) | Q(is_default_version=True))
-
-        if settings.DATASETS_LIST is not None:
-            queryset = queryset.filter(name__in=settings.DATASETS_LIST)
-        if settings.DATASETS_EXCLUDE is not None:
-            queryset = queryset.exclude(name__in=settings.DATASETS_EXCLUDE)
-        return queryset
