@@ -23,7 +23,7 @@ that hosts multiple datasets and even supports interlinking relations between th
     the design and guidelines for JSON-based API's by government agencies in The Netherlands.
     Using this format, clients can to communicate with different JSON API's in a generic and consistent manner.
 
-Aside from REST endpoints, the datasets are also exposed as WFS endpoints.
+Aside from REST endpoints, the datasets are also exposed as WFS and MVT (Mapbox Vector Tile) endpoints.
 The REST endpoints follow the DSO (`Digitaal Stelsel Omgevingswet`_) guidelines.
 Most guidelines from DSO are based on the expired `HAL-JSON API style`_.
 
@@ -36,6 +36,7 @@ A simplified diagram of the main project dependencies:
 
    digraph foo {
 
+      django [label="Django"]
       dso_api [label="DSO-API"]
       drf [label="Django Rest Framework"]
       wfs [label="django-gisserver (WFS)"]

@@ -100,9 +100,10 @@ class EmbeddedFieldMatch:
         """Provide the serializer for the embedded relation."""
         # The nested 'fields_to_expand' data is provided to the child serializer,
         # so it can expand the next nesting if needed.
+        from .serializers import ExpandMixin
+
         kwargs = {}
-        if hasattr(self.field.serializer_class, "fields_to_expand"):
-            # _SideLoadMixin subclass.
+        if issubclass(self.field.serializer_class, ExpandMixin):
             kwargs["fields_to_expand"] = list(self.nested_fields_to_expand.keys())
 
         serializer = self.field.get_serializer(parent=self.serializer, **kwargs)
@@ -181,6 +182,28 @@ def get_all_embedded_field_names(
         # otherwise the value becomes an empty dict.
         result[field_name] = get_all_embedded_field_names(
             field.serializer_class, allow_m2m=allow_m2m
+        )
+
+    return result
+
+
+def get_all_embedded_fields_by_name(
+    serializer_class: Type[serializers.Serializer], allow_m2m=True, prefix=""
+) -> Dict[str, AbstractEmbeddedField]:
+    """Find all possible embedded fields, as lookup table with their dotted names."""
+    result = {}
+
+    for field_name in getattr(serializer_class.Meta, "embedded_fields", ()):
+        field: AbstractEmbeddedField = get_embedded_field(serializer_class, field_name)
+        if field.is_array and not allow_m2m:
+            continue
+
+        lookup = f"{prefix}{field_name}"
+        result[lookup] = field
+        result.update(
+            get_all_embedded_fields_by_name(
+                field.serializer_class, allow_m2m=allow_m2m, prefix=f"{lookup}."
+            )
         )
 
     return result

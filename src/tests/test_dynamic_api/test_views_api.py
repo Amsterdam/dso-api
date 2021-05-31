@@ -772,8 +772,6 @@ class TestEmbedTemporalTables:
         assert response.status_code == 200, data
         assert data == {
             "_links": {
-                "bestaatUitBuurtenGgwgebieden": [],
-                "buurtenWoningbouwplan": [],
                 "ligtInWijk": {
                     "href": "http://testserver/v1/gebieden/wijken/03630012052035/?volgnummer=1",
                     "identificatie": "03630012052035",
@@ -850,8 +848,6 @@ class TestEmbedTemporalTables:
                         "identificatie": "03630950000000",
                     }
                 ],
-                "buurtenWoningbouwplan": [],
-                "ligtInWijk": None,
                 "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/gebieden#buurten",
                 "self": {
                     "href": "http://testserver/v1/gebieden/buurten/03630000000078/?volgnummer=1",
@@ -961,9 +957,6 @@ class TestEmbedTemporalTables:
                             "volgnummer": 2,
                             "identificatie": "03630000000078",
                         },
-                        "bestaatUitBuurtenGgwgebieden": [],
-                        "buurtenWoningbouwplan": [],
-                        "ligtInWijk": None,
                     },
                     "code": None,
                     "naam": None,

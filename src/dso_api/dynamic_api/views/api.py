@@ -145,14 +145,16 @@ class DynamicApiViewSet(
 
 
 def _get_viewset_api_docs(
+    model: Type[DynamicModel],
     serializer_class: Type[serializers.DynamicSerializer],
     filterset_class: Type[filterset.DynamicFilterSet],
     ordering_fields: list,
 ) -> str:
-    """Generate the API documentation header for the viewset.
-    This documentation is also shown in the Swagger / DRF HTML browser.
-    """
+    """Generate the API documentation header for the viewset."""
     lines = []
+    if description := model.table_schema().description:
+        lines.append(f"{description}\n\n")
+
     if filterset_class and filterset_class.base_filters:
         lines.append("The following fields can be used as filter with `?FIELDNAME=...`:\n")
         for name, filter_field in filterset_class.base_filters.items():
@@ -218,7 +220,9 @@ def viewset_factory(model: Type[DynamicModel]) -> Type[DynamicApiViewSet]:
     ordering_fields = _get_ordering_fields(serializer_class)
 
     attrs = {
-        "__doc__": _get_viewset_api_docs(serializer_class, filterset_class, ordering_fields),
+        "__doc__": _get_viewset_api_docs(
+            model, serializer_class, filterset_class, ordering_fields
+        ),
         "model": model,
         "queryset": model.objects.all(),  # also for OpenAPI schema parsing.
         "serializer_class": serializer_class,

@@ -62,8 +62,7 @@ class DynamicAPIRootView(APIIndexView):
             {
                 "name": "production",
                 "api_url": base + reverse(f"dynamic_api:openapi-{ds.schema.id}"),
-                "specification_url": base
-                + reverse("dynamic_api:swagger-ui", kwargs={"dataset_name": ds.name}),
+                "specification_url": base + reverse(f"dynamic_api:openapi-{ds.schema.id}"),
                 "documentation_url": f"{base}/v1/docs/datasets/{ds.schema.id}.html",
             }
         ]

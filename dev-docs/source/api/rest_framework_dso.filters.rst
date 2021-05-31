@@ -6,7 +6,7 @@ rest\_framework\_dso.filters module
 Filter Backends
 ---------------
 
-.. autoclass:: rest_framework_dso.filters.DSOFilterSetBackend
+.. autoclass:: rest_framework_dso.filters.DSOFilterBackend
 
 .. autoclass:: rest_framework_dso.filters.DSOOrderingFilter
 

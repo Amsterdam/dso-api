@@ -3,6 +3,8 @@ import logging
 import pytest
 from django.urls import reverse
 
+from tests.utils import read_response
+
 
 @pytest.mark.django_db
 def test_root_view(api_client, afval_dataset, fietspaaltjes_dataset, filled_router, drf_request):
@@ -33,7 +35,7 @@ def test_root_view(api_client, afval_dataset, fietspaaltjes_dataset, filled_rout
                     {
                         "name": "production",
                         "api_url": f"{base}/v1/afvalwegingen/",
-                        "specification_url": f"{base}/v1/swagger/afvalwegingen/",
+                        "specification_url": f"{base}/v1/afvalwegingen/",
                         "documentation_url": f"{base}/v1/docs/datasets/afvalwegingen.html",
                     }
                 ],
@@ -62,7 +64,7 @@ def test_root_view(api_client, afval_dataset, fietspaaltjes_dataset, filled_rout
                     {
                         "name": "production",
                         "api_url": f"{base}/v1/fietspaaltjes/",
-                        "specification_url": f"{base}/v1/swagger/fietspaaltjes/",
+                        "specification_url": f"{base}/v1/fietspaaltjes/",
                         "documentation_url": f"{base}/v1/docs/datasets/fietspaaltjes.html",
                     }
                 ],
@@ -81,6 +83,19 @@ def test_root_view(api_client, afval_dataset, fietspaaltjes_dataset, filled_rout
             },
         }
     }
+
+
+@pytest.mark.django_db
+def test_openapi_swagger(api_client, afval_dataset, filled_router):
+    """Prove that the OpenAPI page can be rendered."""
+    url = reverse("dynamic_api:openapi-afvalwegingen")
+    assert url == "/v1/afvalwegingen/"
+
+    response = api_client.get(url, HTTP_ACCEPT="text/html")
+    assert response.status_code == 200
+    assert response["content-type"] == "text/html; charset=utf-8"
+    content = read_response(response)
+    assert "ui.initOAuth(" in content
 
 
 @pytest.mark.django_db
@@ -127,27 +142,94 @@ def test_openapi_json(api_client, afval_dataset, fietspaaltjes_dataset, filled_r
     assert container_properties["id"]["type"] == "integer"
     assert container_properties["datumLeegmaken"]["format"] == "date-time"
 
-    # Prove that the filter help text is exposed as description
+    # Prove that various filters are properly exposed.
     afval_parameters = {
         param["name"]: param
         for param in schema["paths"]["/v1/afvalwegingen/containers/"]["get"]["parameters"]
     }
-    assert "datumCreatie" in afval_parameters, ", ".join(afval_parameters.keys())
-    assert afval_parameters["datumCreatie"]["description"] == "yyyy-mm-dd"
+    all_keys = ", ".join(afval_parameters.keys())
+    assert "datumCreatie" in afval_parameters, all_keys
+    assert afval_parameters["datumCreatie"] == {
+        "name": "datumCreatie",
+        "in": "query",
+        "description": "yyyy-mm-dd",
+        "schema": {"format": "date", "type": "string"},
+    }
 
     # Prove that DSOOrderingFilter exposes parameters
-    assert "_sort" in afval_parameters, ", ".join(afval_parameters.keys())
+    assert "_format" in afval_parameters, all_keys
+    assert afval_parameters["_format"] == {
+        "name": "_format",
+        "in": "query",
+        "schema": {
+            "type": "string",
+            "enum": ["csv", "geojson", "json"],
+        },
+    }
+    assert "_sort" in afval_parameters, all_keys
+    assert afval_parameters["_sort"] == {
+        "name": "_sort",
+        "in": "query",
+        "required": False,
+        "description": "Which field to use when ordering the results.",
+        "schema": {"type": "string"},
+    }
 
     # Prove that general page parameters are exposed
-    assert "_pageSize" in afval_parameters, ", ".join(afval_parameters.keys())
+    assert "_pageSize" in afval_parameters, all_keys
+    assert afval_parameters["_pageSize"] == {
+        "name": "_pageSize",
+        "in": "query",
+        "required": False,
+        "description": "Number of results to return per page.",
+        "schema": {"type": "integer"},
+    }
+
+    # Prove that expansion is documented
+    assert "_expand" in afval_parameters, all_keys
+    assert "_expandScope" in afval_parameters, all_keys
+    assert afval_parameters["_expandScope"] == {
+        "name": "_expandScope",
+        "description": "Comma separated list of named relations to expand.",
+        "in": "query",
+        "schema": {"type": "string"},
+        "examples": {
+            "AllValues": {
+                "summary": "All Values",
+                "value": "cluster",
+                "description": "Expand all fields, identical to only using _expand=true.",
+            },
+            "Cluster": {
+                "summary": "cluster",
+                "value": "cluster",
+            },
+        },
+    }
 
     # Prove that the lookups of LOOKUPS_BY_TYPE are parsed
     # ([lt] for dates, [in] for keys)
-    assert "datumCreatie[lt]" in afval_parameters, ", ".join(afval_parameters.keys())
-    assert "clusterId[in]" in afval_parameters, ", ".join(afval_parameters.keys())
+    assert "datumCreatie[lt]" in afval_parameters, all_keys
+    assert "clusterId[in]" in afval_parameters, all_keys
+    assert afval_parameters["clusterId[in]"] == {
+        "name": "clusterId[in]",
+        "in": "query",
+        "description": "Multiple values may be separated by commas.",
+        "explode": False,
+        "schema": {
+            "type": "array",
+            "items": {"nullable": True, "type": "string"},
+        },
+        "style": "form",
+    }
+    assert afval_parameters["clusterId[isnull]"] == {
+        "name": "clusterId[isnull]",
+        "in": "query",
+        "description": "true | false",
+        "schema": {"type": "boolean"},
+    }
 
     # Prove that the extra headers are included
-    assert "Accept-Crs" in afval_parameters, ", ".join(afval_parameters.keys())
+    assert "Accept-Crs" in afval_parameters, all_keys
     assert afval_parameters["Accept-Crs"]["in"] == "header"
 
     log_messages = [m for m in caplog.messages if "DisableMigrations" not in m]

@@ -96,7 +96,7 @@ class DatasetWFSIndexView(APIIndexView):
                 "name": "production",
                 "api_url": base + reverse("dynamic_api:wfs", kwargs={"dataset_name": ds.name}),
                 "specification_url": base
-                + reverse("dynamic_api:swagger-ui", kwargs={"dataset_name": ds.name}),
+                + reverse("dynamic_api:wfs", kwargs={"dataset_name": ds.name}),
                 "documentation_url": f"{base}/v1/docs/wfs-datasets/{ds.schema.id}.html",
             }
         ]

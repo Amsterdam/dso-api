@@ -55,6 +55,8 @@ def render_dataset_docs(dataset: DatasetSchema):
     else:
         wfs_url = None
 
+    path = f"{dataset.url_prefix}/{snake_name}" if dataset.url_prefix else snake_name
+
     render_template(
         "datasets/dataset.rst.j2",
         f"datasets/{snake_name}.rst",
@@ -64,7 +66,7 @@ def render_dataset_docs(dataset: DatasetSchema):
             "main_title": main_title,
             "tables": tables,
             "wfs_url": wfs_url,
-            "swagger_url": f"{BASE_URL}/v1/swagger/{snake_name}",
+            "swagger_url": f"{BASE_URL}/v1/{path}/",
         },
     )
 

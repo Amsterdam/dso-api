@@ -1,3 +1,6 @@
+.. seealso::
+    Bekijk ook de :ref:`algemene uitleg <rest_api_generic>` voor REST API's voor het gebruik van de parameters.
+
 {{ main_title|underline("=") }}
 
 {{ schema.description or '' }}
@@ -9,9 +12,9 @@
    .. raw:: html
 
       <ul>
-          <li>Swagger UI:<a href="{{ swagger_url }}">{{ swagger_url|strip_base_url }}</a></li>
+          <li>Swagger UI: <a href="{{ swagger_url }}">{{ swagger_url|strip_base_url }}</a></li>
         {% for table in tables %}
-          <li>REST URI:<a href="{{ table.uri }}">{{ table.uri|strip_base_url }}</a></li>
+          <li>REST URI: <a href="{{ table.uri }}">{{ table.uri|strip_base_url }}</a></li>
         {% endfor %}
       </ul>
 

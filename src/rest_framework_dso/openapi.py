@@ -9,12 +9,17 @@ import logging
 from typing import List
 
 from drf_spectacular import generators, openapi
+from drf_spectacular.contrib.django_filters import DjangoFilterExtension
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import OpenApiParameter
+from drf_spectacular.utils import OpenApiExample, OpenApiParameter
 from rest_framework.settings import api_settings
 from rest_framework_gis.fields import GeometryField
 
+from rest_framework_dso import filters
+from rest_framework_dso.embedding import get_all_embedded_fields_by_name
 from rest_framework_dso.fields import LinksField
+from rest_framework_dso.serializers import ExpandMixin
+from rest_framework_dso.views import DSOViewMixin
 
 logger = logging.getLogger(__name__)
 
@@ -231,6 +236,14 @@ class DSOSchemaGenerator(generators.SchemaGenerator):
 class DSOAutoSchema(openapi.AutoSchema):
     """Default schema for API views that don't define a ``schema`` attribute."""
 
+    def get_description(self):
+        """Override what _get_viewset_api_docs() does."""
+        action = getattr(self.view, "action", self.method.lower())
+        if action == "retrieve":
+            return ""  # detail view.
+
+        return self.view.table_schema.description or ""
+
     def get_tags(self) -> List[str]:
         """Auto-generate tags based on the path, take last bit of path."""
         tokenized_path = self._tokenize_path()
@@ -260,20 +273,6 @@ class DSOAutoSchema(openapi.AutoSchema):
     def get_override_parameters(self):
         """Expose the DSO-specific HTTP headers in all API methods."""
         extra = [
-            OpenApiParameter(
-                "Accept-Crs",
-                type=OpenApiTypes.STR,
-                location=OpenApiParameter.HEADER,
-                description="Accept-Crs header for Geo queries",
-                required=False,
-            ),
-            OpenApiParameter(
-                "Content-Crs",
-                type=OpenApiTypes.STR,
-                location=OpenApiParameter.HEADER,
-                description="Content-Crs header for Geo queries",
-                required=False,
-            ),
             {
                 "in": OpenApiParameter.QUERY,
                 "name": api_settings.URL_FORMAT_OVERRIDE,
@@ -290,6 +289,63 @@ class DSOAutoSchema(openapi.AutoSchema):
             },
         ]
 
+        if isinstance(self.view, DSOViewMixin):
+            extra += [
+                OpenApiParameter(
+                    "Accept-Crs",
+                    type=OpenApiTypes.STR,
+                    location=OpenApiParameter.HEADER,
+                    description="Accept-Crs header for Geo queries",
+                    required=False,
+                ),
+                OpenApiParameter(
+                    "Content-Crs",
+                    type=OpenApiTypes.STR,
+                    location=OpenApiParameter.HEADER,
+                    description="Content-Crs header for Geo queries",
+                    required=False,
+                ),
+            ]
+
+        # Expose expand parameters too.
+        if issubclass(self.view.serializer_class, ExpandMixin):
+            embeds = get_all_embedded_fields_by_name(self.view.serializer_class)
+            examples = []
+            if embeds:
+                examples = [
+                    OpenApiExample(
+                        name=dotted_name,
+                        value=dotted_name,
+                        description=field.source_field.help_text,
+                    )
+                    for dotted_name, field in sorted(embeds.items())
+                ]
+                examples.append(
+                    OpenApiExample(
+                        name="All Values",
+                        value=",".join(sorted(embeds.keys())),
+                        description="Expand all fields, identical to only using _expand=true.",
+                    )
+                )
+
+            extra += [
+                OpenApiParameter(
+                    "_expand",
+                    type=OpenApiTypes.BOOL,
+                    location=OpenApiParameter.QUERY,
+                    description="Allow to expand relations.",
+                    required=False,
+                ),
+                OpenApiParameter(
+                    "_expandScope",
+                    type=OpenApiTypes.STR,
+                    location=OpenApiParameter.QUERY,
+                    description="Comma separated list of named relations to expand.",
+                    required=False,
+                    examples=examples,
+                ),
+            ]
+
         return extra
 
     def _map_field_validators(self, field, schema):
@@ -298,3 +354,27 @@ class DSOAutoSchema(openapi.AutoSchema):
             # In Python, the token \Z does what \z does in other engines.
             # https://stackoverflow.com/questions/53283160
             schema["pattern"] = schema["pattern"].replace("\\Z", "\\z")
+
+
+class DSOFilterExtension(DjangoFilterExtension):
+    """A DRF-Spectacular extension that improves the OpenAPI data for django-filter fields.
+
+    This makes sure our extensions to DjangoFilterBackend are still handled by drf-spectacular.
+    By default, drf-spectacular only matches filter backends when the class is exactly
+    ``django_filters.rest_framework.DjangoFilterBackend``. Subclasses are completely ignored.
+
+    The existence of this class is enough to trigger registration in the extension mechanism.
+    Without this class, drf-spectacular calls ``get_schema_operation_parameters()`` directly
+    on the filter backend class. Now it's called on this class instead.
+
+    This changes the following OpenAPI data on filter fields from standard django-filter logic:
+
+    * Adds nullable
+    * Uses "format: date-time" for datetime filters instead of string.
+    * Uses "type: boolean" for isempty/isnull filters instead of string.
+    * Uses "type: array", "explode: true" for model-multiple-choice fields (M2M).
+    * Removes unneeded "required: false" on filters.
+    """
+
+    target_class = filters.DSOFilterBackend
+    match_subclasses = True

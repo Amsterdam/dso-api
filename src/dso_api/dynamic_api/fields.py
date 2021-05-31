@@ -5,6 +5,7 @@ from django.conf import settings
 from more_ds.network.url import URL
 from rest_framework import serializers
 from rest_framework.reverse import reverse
+from schematools.contrib.django.models import DynamicModel
 from schematools.utils import to_snake_case
 
 from rest_framework_dso.fields import LinksField
@@ -50,9 +51,12 @@ class TemporalHyperlinkedRelatedField(serializers.HyperlinkedRelatedField):
 class HALTemporalHyperlinkedRelatedField(TemporalHyperlinkedRelatedField):
     """Wrap the url from the HyperlinkedRelatedField according to HAL specs"""
 
-    def to_representation(self, value):
+    def to_representation(self, value: DynamicModel):
         href = super().to_representation(value)
-        output = {"href": href, "title": str(value.pk)}
+        output = {"href": href}
+        if value.has_display_field():
+            output["title"] = str(value)
+
         if href and value.is_temporal():
             dataset_schema = value.get_dataset_schema()
             temporal_fieldname = dataset_schema.temporal["identifier"]
@@ -164,7 +168,11 @@ class HALLooseRelationUrlField(LooseRelationUrlField):
         view = self.context["view"]
         relation = view.model._meta.get_field(to_snake_case(self.field_name)).relation
         dataset_name, table_name = [to_snake_case(part) for part in relation.split(":")]
-        result = {"href": href, "title": str(value)}
+        result = {"href": href}
+
+        if view.model.has_display_field():
+            result["title"] = str(value)
+
         related_ds = view.table_schema.get_dataset_schema(dataset_name)
         related_identifier = related_ds.identifier
         result[related_identifier] = value

@@ -40,7 +40,7 @@ def test_wfs_index(api_client, afval_dataset, fietspaaltjes_dataset, filled_rout
                     {
                         "name": "production",
                         "api_url": f"{base}/v1/wfs/afvalwegingen/",
-                        "specification_url": f"{base}/v1/swagger/afvalwegingen/",
+                        "specification_url": f"{base}/v1/wfs/afvalwegingen/",
                         "documentation_url": f"{base}/v1/docs/wfs-datasets/afvalwegingen.html",
                     }
                 ],
@@ -69,7 +69,7 @@ def test_wfs_index(api_client, afval_dataset, fietspaaltjes_dataset, filled_rout
                     {
                         "name": "production",
                         "api_url": f"{base}/v1/wfs/fietspaaltjes/",
-                        "specification_url": f"{base}/v1/swagger/fietspaaltjes/",
+                        "specification_url": f"{base}/v1/wfs/fietspaaltjes/",
                         "documentation_url": f"{base}/v1/docs/wfs-datasets/fietspaaltjes.html",
                     }
                 ],

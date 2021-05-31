@@ -241,7 +241,7 @@ class DSOViewMixin:
     accept_crs_required = False
 
     # Using standard fields
-    filter_backends = [filters.DSOFilterSetBackend, filters.DSOOrderingFilter]
+    filter_backends = [filters.DSOFilterBackend, filters.DSOOrderingFilter]
 
     #: Class to configure the filterset
     #: (auto-generated when filterset_fields is defined, but this is slower).
@@ -339,5 +339,5 @@ class DSOViewMixin:
 
     def get_view_description(self, **kwargs):
         if self.action == "retrieve":
-            return ""
+            return ""  # hide description for detail view
         return super().get_view_description(**kwargs)

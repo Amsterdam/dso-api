@@ -45,7 +45,7 @@ from rest_framework_dso.fields import DSOGeometryField, LinksField
 from rest_framework_dso.serializer_helpers import ReturnGenerator, peek_iterable
 
 
-class _SideloadMixin:
+class ExpandMixin:
     """Handling ?_expand / ?_expandScope parameter.
 
     This is only a separate mixin because the parameter needs to be handled
@@ -101,7 +101,7 @@ class _SideloadMixin:
         raise NotImplementedError("child serializer should implement this")
 
 
-class DSOListSerializer(_SideloadMixin, serializers.ListSerializer):
+class DSOListSerializer(ExpandMixin, serializers.ListSerializer):
     """Fix pagination for lists.
 
     This should be used together with the DSO...Pagination class when results are paginated.
@@ -251,7 +251,7 @@ class DSOModelListSerializer(DSOListSerializer):
             return {self.results_field: items, **embedded_fields}
 
 
-class DSOSerializer(_SideloadMixin, serializers.Serializer):
+class DSOSerializer(ExpandMixin, serializers.Serializer):
     """Basic non-model serializer logic.
 
     This class implements all logic that can be used by all serializers,
