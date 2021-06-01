@@ -81,12 +81,18 @@ We support Azure logging and tracing when the ``CLOUD_ENV=azure`` setting is use
 When running in Azure two additional environment variables need to be
 specified:
 
--  ``AZURE_APPI_INSTRUMENTATION_KEY``
--  ``AZURE_APPI_INGESTION_ENDPOINT``
+-  ``AZURE_APPI_CONNECTION_STRING``
 
 This defines where Azure Application Insights
 (`appi <https://docs.microsoft.com/en-us/azure/cloud-adoption-framework/ready/azure-best-practices/resource-abbreviations>`_)
 information should be sent to.
+
+Optionally Audit logs can be sent to separate Azure Application Insights instance:
+
+-  ``AZURE_APPI_AUDIT_CONNECTION_STRING``
+
+This value defaults to ``AZURE_APPI_CONNECTION_STRING`` if not defined.
+
 
 If ``CLOUD_ENV`` is not set is assumes its value to be a regular hosting provider.
 
