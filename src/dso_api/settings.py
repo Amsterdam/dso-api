@@ -38,8 +38,10 @@ SCHEMA_DEFS_URL = env.str("SCHEMA_DEFS_URL", "https://schemas.data.amsterdam.nl/
 # -- Azure specific settings
 
 # Microsoft recommended abbreviation for Application Insights is `APPI`
-AZURE_APPI_INSTRUMENTATION_KEY: Optional[str] = env.str("AZURE_APPI_INSTRUMENTATION_KEY", None)
-AZURE_APPI_INGESTION_ENDPOINT: Optional[str] = env.str("AZURE_APPI_INGESTION_ENDPOINT", None)
+AZURE_APPI_CONNECTION_STRING: Optional[str] = env.str("AZURE_APPI_CONNECTION_STRING", None)
+AZURE_APPI_AUDIT_CONNECTION_STRING: Optional[str] = env.str(
+    "AZURE_APPI_AUDIT_CONNECTION_STRING", None
+)
 
 # -- Security
 
@@ -192,28 +194,31 @@ LOGGING = {
             "level": DSO_API_AUDIT_LOG_LEVEL,
             "propagate": False,
         },
+        "authorization_django.jwks": {
+            "handlers": ["audit_console"],
+            "level": DSO_API_AUDIT_LOG_LEVEL,
+            "propagate": False,
+        },
     },
 }
 
 if CLOUD_ENV.lower().startswith("azure"):
-    if AZURE_APPI_INSTRUMENTATION_KEY is None:
+
+    if AZURE_APPI_CONNECTION_STRING is None:
         raise ImproperlyConfigured(
-            "Please specify the 'AZURE_APPI_INSTRUMENTATION_KEY' environment variable."
+            "Please specify the 'AZURE_APPI_CONNECTION_STRING' environment variable."
         )
-    if AZURE_APPI_INGESTION_ENDPOINT is None:
-        raise ImproperlyConfigured(
-            "Please specify the 'AZURE_APPI_INGESTION_ENDPOINT' environment variable."
+    if AZURE_APPI_AUDIT_CONNECTION_STRING is None:
+        logging.warning(
+            "Using AZURE_APPI_CONNECTION_STRING as AZURE_APPI_AUDIT_CONNECTION_STRING."
         )
+
     MIDDLEWARE.append("opencensus.ext.django.middleware.OpencensusMiddleware")
-    connection_string = (
-        f"InstrumentationKey={AZURE_APPI_INSTRUMENTATION_KEY}"
-        f";IngestionEndpoint={AZURE_APPI_INGESTION_ENDPOINT}"
-    )
     OPENCENSUS = {
         "TRACE": {
             "SAMPLER": "opencensus.trace.samplers.ProbabilitySampler(rate=1)",
             "EXPORTER": f"""opencensus.ext.azure.trace_exporter.AzureExporter(
-                connection_string='{connection_string}',
+                connection_string='{AZURE_APPI_CONNECTION_STRING}',
                 service_name='dso-api'
             )""",
             "EXCLUDELIST_PATHS": [],
@@ -231,17 +236,22 @@ if CLOUD_ENV.lower().startswith("azure"):
     LOGGING["handlers"]["azure"] = {
         "level": "DEBUG",
         "class": "opencensus.ext.azure.log_exporter.AzureLogHandler",
-        "connection_string": connection_string,
+        "connection_string": AZURE_APPI_CONNECTION_STRING,
         "formatter": "azure",
     }
-    LOGGING["handlers"]["audit_azure"] = LOGGING["handlers"]["azure"].copy()
-    LOGGING["handlers"]["audit_azure"]["formatter"] = "audit_azure"
+    LOGGING["handlers"]["audit_azure"] = {
+        "level": "DEBUG",
+        "class": "opencensus.ext.azure.log_exporter.AzureLogHandler",
+        "connection_string": AZURE_APPI_AUDIT_CONNECTION_STRING,
+        "formatter": "audit_azure",
+    }
+
     LOGGING["root"]["handlers"] = ["azure"]
-    for logger in LOGGING["loggers"]:
-        if "audit" in logger:
-            LOGGING["loggers"][logger]["handlers"] = ["audit_azure"]
+    for logger_name, logger_details in LOGGING["loggers"].items():
+        if "audit_console" in logger_details["handlers"]:
+            LOGGING["loggers"][logger_name]["handlers"] = ["audit_azure"]
         else:
-            LOGGING["loggers"][logger]["handlers"] = ["azure"]
+            LOGGING["loggers"][logger_name]["handlers"] = ["azure"]
 
 # -- Third party app settings
 
