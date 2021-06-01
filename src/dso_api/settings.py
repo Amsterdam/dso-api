@@ -243,10 +243,9 @@ if CLOUD_ENV.lower().startswith("azure"):
         "level": "DEBUG",
         "class": "opencensus.ext.azure.log_exporter.AzureLogHandler",
         "connection_string": AZURE_APPI_AUDIT_CONNECTION_STRING,
-        "formatter": "azure",
+        "formatter": "audit_azure",
     }
 
-    LOGGING["handlers"]["audit_azure"]["formatter"] = "audit_azure"
     LOGGING["root"]["handlers"] = ["azure"]
     for logger_name, logger_details in LOGGING["loggers"].items():
         if "audit_console" in logger_details["handlers"]:
