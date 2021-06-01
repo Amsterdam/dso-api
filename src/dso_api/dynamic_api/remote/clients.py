@@ -6,7 +6,7 @@ to avoid the overhead of the requests library.
 
 import logging
 import threading
-from typing import Union
+from typing import Type, Union
 from urllib.parse import urlparse
 
 import certifi
@@ -77,7 +77,8 @@ class RemoteClient:
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug("  Response body: %s", response.data)
 
-        return self._raise_http_error(response)
+        self._raise_http_error(response)
+        assert False, "_raise_http_error should raise an exception"
 
     def _get_headers(self, request):  # noqa: C901
         """Collect the headers to submit to the remote service.
@@ -124,7 +125,7 @@ class RemoteClient:
 
     def _make_url(self, path: str, query_params: dict) -> str:
         if not self._endpoint_url:
-            raise ImproperlyConfigured(f"{self.__class__.__name__}.endpoint_url is not set")
+            raise ImproperlyConfigured(f"{self.__class__.__name__}._endpoint_url is not set")
 
         if not path:
             url = self._endpoint_url
@@ -222,12 +223,6 @@ class HCBRKClient(RemoteClient):
     __http_pool = None
     __http_pool_lock = threading.Lock()
 
-    def _init__(
-        self, endpoint_url: str, dataset_id: str, table_id: str, table_schema: DatasetTableSchema
-    ):
-        super().__init__(endpoint_url, dataset_id, table_id)
-        self._table_schema = table_schema
-
     def get_headers(self, request):
         headers = super().get_headers(self, request)
 
@@ -239,7 +234,7 @@ class HCBRKClient(RemoteClient):
         return headers
 
     def _get_http_pool(self) -> urllib3.PoolManager:
-        if ".acceptatie." in urlparse(self.endpoint_url).netloc:
+        if ".acceptatie." in urlparse(self._endpoint_url).netloc:
             return _http_pool_generic
 
         with self.__http_pool_lock:
@@ -256,7 +251,7 @@ class HCBRKClient(RemoteClient):
 def make_client(endpoint_url: str, table_schema: DatasetTableSchema) -> RemoteClient:
     """Construct client for a remote API."""
 
-    client_class = AuthForwardingClient
+    client_class: Type[RemoteClient] = AuthForwardingClient
     if table_schema.dataset.id == "hcbrk":
         client_class = HCBRKClient
 
