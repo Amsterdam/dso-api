@@ -192,6 +192,11 @@ LOGGING = {
             "level": DSO_API_AUDIT_LOG_LEVEL,
             "propagate": False,
         },
+        "authorization_django.jwks": {
+            "handlers": ["audit_console"],
+            "level": DSO_API_AUDIT_LOG_LEVEL,
+            "propagate": False,
+        },
     },
 }
 
@@ -237,11 +242,9 @@ if CLOUD_ENV.lower().startswith("azure"):
     LOGGING["handlers"]["audit_azure"] = LOGGING["handlers"]["azure"].copy()
     LOGGING["handlers"]["audit_azure"]["formatter"] = "audit_azure"
     LOGGING["root"]["handlers"] = ["azure"]
-    for logger in LOGGING["loggers"]:
-        if "audit" in logger:
-            LOGGING["loggers"][logger]["handlers"] = ["audit_azure"]
-        else:
-            LOGGING["loggers"][logger]["handlers"] = ["azure"]
+    for logger_name, logger_details in LOGGING["loggers"].items():
+        if "audit_console" in logger_details["handlers"]:
+            LOGGING["loggers"][logger_name]["handlers"] = ["audit_azure"]
 
 # -- Third party app settings
 
