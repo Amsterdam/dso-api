@@ -44,7 +44,7 @@ def test_root_view(api_client, afval_dataset, fietspaaltjes_dataset, filled_rout
                     {"type": "MVT", "url": f"{base}/v1/mvt/afvalwegingen/"},
                 ],
                 "api_authentication": None,
-                "api_type": "unknown",
+                "api_type": "rest_json",
                 "organization_name": "Gemeente Amsterdam",
                 "organization_oin": "00000001002564440000",
                 "contact": {
@@ -73,7 +73,7 @@ def test_root_view(api_client, afval_dataset, fietspaaltjes_dataset, filled_rout
                     {"type": "MVT", "url": f"{base}/v1/mvt/fietspaaltjes/"},
                 ],
                 "api_authentication": None,
-                "api_type": "unknown",
+                "api_type": "rest_json",
                 "organization_name": "Gemeente Amsterdam",
                 "organization_oin": "00000001002564440000",
                 "contact": {
