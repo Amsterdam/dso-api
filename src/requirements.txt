@@ -316,7 +316,7 @@ uritemplate==3.0.1
     # via drf-spectacular
 urllib3-mock==0.3.3
     # via -r requirements.in
-urllib3==1.26.4
+urllib3==1.26.5
     # via
     #   -r requirements.in
     #   requests
