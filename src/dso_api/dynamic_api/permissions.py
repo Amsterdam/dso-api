@@ -128,32 +128,30 @@ class HasOAuth2Scopes(permissions.BasePermission):
                 return True
         return False
 
-    def has_permission(self, request, view, models=None):
-        """Based on the model that is associated with the view
-        the Dataset and DatasetTable (if available)
-        are checked for their 'auth' field."""
-        if models:
-            return all(
-                self._has_permission(
-                    request,
-                    view,
-                    dataset_id=model._dataset_schema["id"],
-                    table_id=model._table_schema["id"],
-                )
-                for model in models
-            )
-        elif hasattr(view, "dataset_id") and hasattr(view, "table_id"):
-            return self._has_permission(
-                request, view, dataset_id=view.dataset_id, table_id=view.table_id
-            )
-        else:
-            model = view.get_serializer_class().Meta.model
-            return self._has_permission(
+    def has_permission_for_models(self, request, view, models):
+        return all(
+            self._has_permission(
                 request,
                 view,
                 dataset_id=model._dataset_schema["id"],
                 table_id=model._table_schema["id"],
             )
+            for model in models
+        )
+
+    def has_permission(self, request, view):
+        """Based on the model that is associated with the view
+        the Dataset and DatasetTable (if available)
+        are checked for their 'auth' field.
+
+        This method overrides BasePermission.has_permission."""
+        if hasattr(view, "dataset_id") and hasattr(view, "table_id"):
+            return self._has_permission(
+                request, view, dataset_id=view.dataset_id, table_id=view.table_id
+            )
+        else:
+            model = view.get_serializer_class().Meta.model
+            return self.has_permission_for_models(request, view, [model])
 
     def has_object_permission(self, request, view, obj):
         """ This method is not called for list views """

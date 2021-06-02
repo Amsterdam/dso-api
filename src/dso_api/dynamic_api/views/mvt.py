@@ -135,7 +135,7 @@ class DatasetMVTView(MVTView):
 
     def check_permissions(self, request) -> None:
         for permission in self.permission_classes:
-            if not permission().has_permission(request, self, [self.model]):
+            if not permission().has_permission_for_models(request, self, [self.model]):
                 raise PermissionDenied()
         if self.vector_tile_geom_name in self._unauthorized:
             raise PermissionDenied()

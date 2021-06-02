@@ -340,7 +340,7 @@ class DatasetWFSView(WFSView):
         Check if the request should be permitted.
         """
         for permission in self.get_permissions():
-            if not permission.has_permission(request, self, models):
+            if not permission.has_permission_for_models(request, self, models):
                 self.permission_denied(request, message=getattr(permission, "message", None))
 
     def get_permissions(self):
