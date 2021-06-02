@@ -133,15 +133,15 @@ class HasOAuth2Scopes(permissions.BasePermission):
         the Dataset and DatasetTable (if available)
         are checked for their 'auth' field."""
         if models:
-            for model in models:
-                if not self._has_permission(
+            return all(
+                self._has_permission(
                     request,
                     view,
                     dataset_id=model._dataset_schema["id"],
                     table_id=model._table_schema["id"],
-                ):
-                    return False
-            return True
+                )
+                for model in models
+            )
         elif hasattr(view, "dataset_id") and hasattr(view, "table_id"):
             return self._has_permission(
                 request, view, dataset_id=view.dataset_id, table_id=view.table_id
