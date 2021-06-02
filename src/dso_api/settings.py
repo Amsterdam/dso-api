@@ -10,7 +10,6 @@ import sentry_sdk
 import sentry_sdk.utils
 from corsheaders.defaults import default_headers
 from django.core.exceptions import ImproperlyConfigured
-from opencensus.trace import config_integration
 from sentry_sdk.integrations.django import DjangoIntegration
 from sentry_sdk.integrations.logging import LoggingIntegration
 
@@ -187,14 +186,15 @@ LOGGING = {
     },
     "root": {"level": "INFO", "handlers": ["console"]},
     "loggers": {
+        "opencensus": {"handlers": ["console"], "level": "DEBUG", "propagate": False},
         "django": {"handlers": ["console"], "level": DJANGO_LOG_LEVEL, "propagate": False},
         "dso_api": {"handlers": ["console"], "level": DSO_API_LOG_LEVEL, "propagate": False},
         "dso_api.audit": {
             "handlers": ["audit_console"],
-            "level": DSO_API_AUDIT_LOG_LEVEL,
+            "level": DSO_API_LOG_LEVEL,
             "propagate": False,
         },
-        "authorization_django.jwks": {
+        "authorization_django": {
             "handlers": ["audit_console"],
             "level": DSO_API_AUDIT_LOG_LEVEL,
             "propagate": False,
@@ -213,22 +213,20 @@ if CLOUD_ENV.lower().startswith("azure"):
             "Using AZURE_APPI_CONNECTION_STRING as AZURE_APPI_AUDIT_CONNECTION_STRING."
         )
 
-    MIDDLEWARE.append("opencensus.ext.django.middleware.OpencensusMiddleware")
-    OPENCENSUS = {
-        "TRACE": {
-            "SAMPLER": "opencensus.trace.samplers.ProbabilitySampler(rate=1)",
-            "EXPORTER": f"""opencensus.ext.azure.trace_exporter.AzureExporter(
-                connection_string='{AZURE_APPI_CONNECTION_STRING}',
-                service_name='dso-api'
-            )""",
-            "EXCLUDELIST_PATHS": [],
-        }
-    }
-    config_integration.trace_integrations(["logging"])
+    # MIDDLEWARE.append("opencensus.ext.django.middleware.OpencensusMiddleware")
+    # OPENCENSUS = {
+    #     "TRACE": {
+    #         "SAMPLER": "opencensus.trace.samplers.ProbabilitySampler(rate=1)",
+    #         "EXPORTER": f"""opencensus.ext.azure.trace_exporter.AzureExporter(
+    #             connection_string='{AZURE_APPI_CONNECTION_STRING}',
+    #             service_name='dso-api'
+    #         )""",
+    #         "EXCLUDELIST_PATHS": [],
+    #     }
+    # }
+    # config_integration.trace_integrations(["logging"])
     azure_json = base_log_fmt.copy()
-    azure_json.update(
-        {"trace_id": "%(traceId)s", "span_id": "%(spanId)s", "message": "%(message)s"}
-    )
+    azure_json.update({"message": "%(message)s"})
     audit_azure_json = {"audit": True}
     audit_azure_json.update(azure_json)
     LOGGING["formatters"]["azure"] = {"format": json.dumps(azure_json)}
@@ -249,9 +247,11 @@ if CLOUD_ENV.lower().startswith("azure"):
     LOGGING["root"]["handlers"] = ["azure"]
     for logger_name, logger_details in LOGGING["loggers"].items():
         if "audit_console" in logger_details["handlers"]:
-            LOGGING["loggers"][logger_name]["handlers"] = ["audit_azure"]
+            print(f"X|{logger_name}|{repr(logger_details)}")
+            LOGGING["loggers"][logger_name]["handlers"] = ["audit_azure", "audit_console"]
         else:
-            LOGGING["loggers"][logger_name]["handlers"] = ["azure"]
+            print(f"Y|{logger_name}|{repr(logger_details)}")
+            LOGGING["loggers"][logger_name]["handlers"] = ["azure", "console"]
 
 # -- Third party app settings
 

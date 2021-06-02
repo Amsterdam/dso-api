@@ -30,11 +30,18 @@ services:
       UWSGI_STATIC_MAP: "/dso_api/static=/static"
       SECRET_KEY: insecure
       DATABASE_URL: "postgres://dataservices:insecure@database/dataservices"
-      DJANGO_DEBUG: 1
+      AZURE_APPI_CONNECTION_STRING: "InstrumentationKey=fbd9c207-5c24-4294-97cb-ea7de23f90b8;IngestionEndpoint=https://westeurope-1.in.applicationinsights.azure.com/"
+      AZURE_APPI_AUDIT_CONNECTION_STRING: "InstrumentationKey=e2eaaa05-ae44-4e9d-9ab4-74dc5c417e8a;IngestionEndpoint=https://westeurope-5.in.applicationinsights.azure.com/"
+      AZURE_AD_TENANT_ID: "72fca1b1-2c2e-4376-a445-294d80196804"
+      AZURE_AD_CLIENT_ID: "4f49c72a-d82b-4d5e-8063-a93470854d12"
+      CLOUD_ENV: "azure_localhost_mf"
+      AZURE_AD_TENANT_ID: "72fca1b1-2c2e-4376-a445-294d80196804"
+      AZURE_AD_CLIENT_ID: "4f49c72a-d82b-4d5e-8063-a93470854d12"
+      DJANGO_DEBUG: 0
     volumes:
       - ./src:/app
       - ./docs/build/html:/docs-static
-    command: uwsgi --py-auto-reload=1
+    command: uwsgi --py-auto-reload=1 --enable-threads --lazy-apps
 
   schemas:
     image: nginx
