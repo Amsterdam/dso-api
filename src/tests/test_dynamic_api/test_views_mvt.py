@@ -49,7 +49,7 @@ def test_mvt_index(api_client, afval_dataset, fietspaaltjes_dataset, filled_rout
                     {"type": "WFS", "url": f"{base}/v1/wfs/afvalwegingen/"},
                 ],
                 "api_authentication": None,
-                "api_type": "unknown",
+                "api_type": "MVT",
                 "organization_name": "Gemeente Amsterdam",
                 "organization_oin": "00000001002564440000",
                 "contact": {
@@ -78,7 +78,7 @@ def test_mvt_index(api_client, afval_dataset, fietspaaltjes_dataset, filled_rout
                     {"type": "WFS", "url": f"{base}/v1/wfs/fietspaaltjes/"},
                 ],
                 "api_authentication": None,
-                "api_type": "unknown",
+                "api_type": "MVT",
                 "organization_name": "Gemeente Amsterdam",
                 "organization_oin": "00000001002564440000",
                 "contact": {
