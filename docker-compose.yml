@@ -30,11 +30,19 @@ services:
       UWSGI_STATIC_MAP: "/dso_api/static=/static"
       SECRET_KEY: insecure
       DATABASE_URL: "postgres://dataservices:insecure@database/dataservices"
+      DJANGO_LOG_LEVEL: "${DJANGO_LOG_LEVEL}"
+      DSO_API_LOG_LEVEL: "${DSO_API_LOG_LEVEL}"
+      DSO_API_AUDIT_LOG_LEVEL: "${DSO_API_AUDIT_LOG_LEVEL}"
+      AZURE_APPI_CONNECTION_STRING: "${AZURE_APPI_CONNECTION_STRING}"
+      AZURE_APPI_AUDIT_CONNECTION_STRING: "${AZURE_APPI_AUDIT_CONNECTION_STRING}"
+      AZURE_AD_TENANT_ID: "${AZURE_AD_TENANT_ID}"
+      AZURE_AD_CLIENT_ID: "${AZURE_AD_CLIENT_ID}"
+      CLOUD_ENV: "${CLOUD_ENV}"
       DJANGO_DEBUG: 1
     volumes:
       - ./src:/app
       - ./docs/build/html:/docs-static
-    command: uwsgi --py-auto-reload=1
+    command: uwsgi --py-auto-reload=1 --enable-threads --lazy-apps
 
   schemas:
     image: nginx

@@ -187,14 +187,15 @@ LOGGING = {
     },
     "root": {"level": "INFO", "handlers": ["console"]},
     "loggers": {
+        "opencensus": {"handlers": ["console"], "level": DJANGO_LOG_LEVEL, "propagate": False},
         "django": {"handlers": ["console"], "level": DJANGO_LOG_LEVEL, "propagate": False},
         "dso_api": {"handlers": ["console"], "level": DSO_API_LOG_LEVEL, "propagate": False},
         "dso_api.audit": {
             "handlers": ["audit_console"],
-            "level": DSO_API_AUDIT_LOG_LEVEL,
+            "level": DSO_API_LOG_LEVEL,
             "propagate": False,
         },
-        "authorization_django.jwks": {
+        "authorization_django": {
             "handlers": ["audit_console"],
             "level": DSO_API_AUDIT_LOG_LEVEL,
             "propagate": False,
@@ -226,9 +227,7 @@ if CLOUD_ENV.lower().startswith("azure"):
     }
     config_integration.trace_integrations(["logging"])
     azure_json = base_log_fmt.copy()
-    azure_json.update(
-        {"trace_id": "%(traceId)s", "span_id": "%(spanId)s", "message": "%(message)s"}
-    )
+    azure_json.update({"message": "%(message)s"})
     audit_azure_json = {"audit": True}
     audit_azure_json.update(azure_json)
     LOGGING["formatters"]["azure"] = {"format": json.dumps(azure_json)}
