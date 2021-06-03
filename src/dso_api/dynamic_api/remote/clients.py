@@ -78,7 +78,7 @@ class RemoteClient:
             logger.debug("  Response body: %s", response.data)
 
         self._raise_http_error(response)
-        assert False, "_raise_http_error should raise an exception"
+        raise Exception("_raise_http_error should have raised an exception")
 
     def _get_headers(self, request):  # noqa: C901
         """Collect the headers to submit to the remote service.
