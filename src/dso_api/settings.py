@@ -187,7 +187,7 @@ LOGGING = {
     },
     "root": {"level": "INFO", "handlers": ["console"]},
     "loggers": {
-        "opencensus": {"handlers": ["console"], "level": "DEBUG", "propagate": False},
+        "opencensus": {"handlers": ["console"], "level": DJANGO_LOG_LEVEL, "propagate": False},
         "django": {"handlers": ["console"], "level": DJANGO_LOG_LEVEL, "propagate": False},
         "dso_api": {"handlers": ["console"], "level": DSO_API_LOG_LEVEL, "propagate": False},
         "dso_api.audit": {
