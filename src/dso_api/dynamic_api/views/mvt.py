@@ -1,5 +1,7 @@
 """Mapbox Vector Tiles (MVT) views of geographic datasets."""
 
+import logging
+import time
 from typing import Tuple
 
 from django.contrib.gis.db.models import GeometryField
@@ -15,6 +17,8 @@ from vectortiles.postgis.views import MVTView
 from dso_api.dynamic_api import permissions
 from dso_api.dynamic_api.datasets import get_active_datasets
 from dso_api.dynamic_api.views import APIIndexView
+
+logger = logging.getLogger(__name__)
 
 
 def get_geo_tables(schema):
@@ -111,7 +115,17 @@ class DatasetMVTView(MVTView):
     def get(self, request, *args, **kwargs):
         kwargs.pop("dataset_name")
         kwargs.pop("table_name")
-        return super().get(request, *args, **kwargs)
+
+        t0 = time.perf_counter_ns()
+        result = super().get(request, *args, **kwargs)
+        logging.info(
+            "retrieved tile for %s (%d bytes) in %.3fs",
+            request.path,
+            len(result.content),
+            (time.perf_counter_ns() - t0) * 1e-9,
+        )
+
+        return result
 
     def get_queryset(self):
         return self.model.objects.all()
