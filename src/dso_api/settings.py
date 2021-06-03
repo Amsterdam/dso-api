@@ -248,9 +248,9 @@ if CLOUD_ENV.lower().startswith("azure"):
     LOGGING["root"]["handlers"] = ["azure"]
     for logger_name, logger_details in LOGGING["loggers"].items():
         if "audit_console" in logger_details["handlers"]:
-            LOGGING["loggers"][logger_name]["handlers"] = ["audit_azure", "audit_console"]
+            LOGGING["loggers"][logger_name]["handlers"] = ["audit_azure"]
         else:
-            LOGGING["loggers"][logger_name]["handlers"] = ["azure", "console"]
+            LOGGING["loggers"][logger_name]["handlers"] = ["azure"]
 
 # -- Third party app settings
 
