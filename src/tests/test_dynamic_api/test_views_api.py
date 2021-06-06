@@ -1,7 +1,6 @@
 import inspect
 import json
 import math
-from unittest import mock
 
 import orjson
 import pytest
@@ -686,43 +685,6 @@ class TestAuth:
         data = read_response_json(response)
         assert response.status_code == 400, data
         assert data["x-validation-errors"] == ["Invalid sort fields: datum_creatie"], data
-
-    def test_api_request_audit_logging(self, api_client, afval_container, filled_router):
-        """Prove that every request is logged into audit log."""
-
-        base_url = reverse("dynamic_api:afvalwegingen-containers-list")
-        url = f"{base_url}?_sort=datumCreatie"
-        with mock.patch("dso_api.dynamic_api.middleware.audit_log") as log_mock:
-            api_client.get(url)
-
-        assert len(log_mock.mock_calls) == 1
-
-        log_data = json.loads(log_mock.mock_calls[0].args[0])
-        assert log_data["path"] == base_url
-        assert log_data["method"] == "GET"
-        assert log_data["data"] == {"_sort": "datumCreatie"}
-        assert log_data["subject"] is None
-        assert "request_headers" in log_data
-
-    def test_api_authorized_request_audit_logging(
-        self, api_client, afval_container, fetch_auth_token, filled_router
-    ):
-        """Prove that every authorized request is logged into audit log."""
-
-        token = fetch_auth_token(["BAG/R"])
-        base_url = reverse("dynamic_api:afvalwegingen-containers-list")
-        url = f"{base_url}?_sort=datumCreatie"
-        with mock.patch("dso_api.dynamic_api.middleware.audit_log") as log_mock:
-            api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
-
-        assert len(log_mock.mock_calls) == 1
-
-        log_data = json.loads(log_mock.mock_calls[0].args[0])
-        assert log_data["path"] == base_url
-        assert log_data["method"] == "GET"
-        assert log_data["data"] == {"_sort": "datumCreatie"}
-        assert log_data["subject"] == "test@tester.nl"
-        assert "request_headers" in log_data
 
     def test_auth_on_table_schema_protects_camel_case(
         self, api_client, afval_schema, afval_dataset, filled_router
