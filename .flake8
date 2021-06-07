@@ -1,5 +1,5 @@
 [flake8]
-ignore=
+extend-ignore=
   # Black may add spaces in slice[func(v) : end] syntax
   E203,
   # Black leaves commas after combining lines
@@ -9,8 +9,6 @@ ignore=
   F405,
   # Allow lambdas:
   E731,
-  # line break before binary operator (incompatible with black):
-  W503,
   # Allow raise Exception()
   R102,
 exclude=.git,
