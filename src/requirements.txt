@@ -70,7 +70,7 @@ django-postgres-unlimited-varchar==1.1.0
     #   amsterdam-schema-tools
 django-vectortiles==0.1.0
     # via -r requirements.in
-django==3.1.9
+django==3.1.10
     # via
     #   -r requirements.in
     #   amsterdam-schema-tools
