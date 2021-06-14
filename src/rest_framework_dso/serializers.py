@@ -100,6 +100,18 @@ class ExpandMixin:
         """Retrieve the embedded fields for this request."""
         raise NotImplementedError("child serializer should implement this")
 
+    @property
+    def field_name_prefix(self) -> str:
+        """For debugging, give the fully dotted field name."""
+        serializer = self
+        path = [""]  # end with dot
+        while serializer is not None:
+            if serializer.field_name:  # is empty for ListSerializer
+                path.append(serializer.field_name)
+            serializer = serializer.parent
+
+        return ".".join(reversed(path)) if len(path) > 1 else ""
+
 
 class DSOListSerializer(ExpandMixin, serializers.ListSerializer):
     """Fix pagination for lists.
@@ -150,6 +162,7 @@ class DSOListSerializer(ExpandMixin, serializers.ListSerializer):
             self.child,
             expand_scope,
             allow_m2m=request.accepted_renderer.supports_m2m,
+            prefix=self.field_name_prefix,
         )
 
     @property
@@ -395,7 +408,10 @@ class DSOSerializer(ExpandMixin, serializers.Serializer):
             raise ParseError("Embedding objects is not supported for this output format")
 
         return get_expanded_fields_by_scope(
-            self, expand_scope, allow_m2m=request.accepted_renderer.supports_m2m
+            self,
+            expand_scope,
+            allow_m2m=request.accepted_renderer.supports_m2m,
+            prefix=self.field_name_prefix,
         )
 
     @cached_property

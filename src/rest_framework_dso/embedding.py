@@ -120,6 +120,7 @@ def get_expanded_fields_by_scope(
     parent_serializer: serializers.Serializer,
     expand_scope: Union[bool, List[str]],
     allow_m2m=True,
+    prefix="",
 ) -> List[EmbeddedFieldMatch]:
     """Find the expanded fields in a serializer that are requested.
     This translates the ``_expand`` query into a dict of embedded fields.
@@ -132,7 +133,7 @@ def get_expanded_fields_by_scope(
     )
 
     return get_expanded_fields(
-        parent_serializer, fields_to_expand=fields_to_expand, allow_m2m=allow_m2m
+        parent_serializer, fields_to_expand=fields_to_expand, allow_m2m=allow_m2m, prefix=prefix
     )
 
 
@@ -237,10 +238,10 @@ def get_embedded_field(
 
 def _expand_parse_error(allowed_names, field_name, prefix=""):
     """Generate the proper exception for the invalid expand name"""
-    available = ", {prefix}".format(prefix=prefix).join(sorted(allowed_names))
-    if not available:
-        return ParseError("Eager loading is not supported for this endpoint")
+    if not allowed_names:
+        return ParseError(f"Eager loading is not supported for field '{prefix}{field_name}'")
     else:
+        available = f", {prefix}".join(sorted(allowed_names))
         return ParseError(
             f"Eager loading is not supported for field '{prefix}{field_name}', "
             f"available options are: {prefix}{available}"
