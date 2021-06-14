@@ -64,9 +64,7 @@ class TestDynamicSerializer:
 
         # Generate serializers from models
         ContainerSerializer = serializer_factory(afval_container_model)
-        # Important note is that ClusterSerializer is initiated as flat,
-        # not allowing relations to resolve.
-        ClusterSerializer = serializer_factory(afval_cluster_model, flat=True)
+        ClusterSerializer = serializer_factory(afval_cluster_model)
 
         # Prove that EmbeddedField is created.
         assert ContainerSerializer.Meta.embedded_fields == ["cluster"]
