@@ -47,7 +47,7 @@ def api_request(api_rf) -> WSGIRequest:
     request.auth_profile = RequestProfile(request)
     request.is_authorized_for = lambda *scopes: True
 
-    # Temporal modifications. Usually done via TemporalDatasetMiddleware
+    # Temporal modifications. Usually done via TemporalTableMiddleware
     request.versioned = False
     return request
 

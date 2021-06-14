@@ -302,7 +302,7 @@ class TestDynamicSerializer:
     ):
         """Show backwards"""
         drf_request.dataset = gebieden_schema
-        drf_request.dataset_temporal_slice = None
+        drf_request.table_temporal_slice = None
         stadsdelen_model = gebieden_models["stadsdelen"]
         wijken_model = gebieden_models["wijken"]
         stadsdeel = stadsdelen_model.objects.create(
