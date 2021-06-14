@@ -75,13 +75,14 @@ class URLencodingURLfields:
 
 def filter_latest_temporal(queryset: models.QuerySet) -> models.QuerySet:
     """Make sure a queryset will only return the latest temporal models"""
+    table_schema = queryset.model.table_schema()
     dataset_schema = queryset.model.get_dataset_schema()
-    temporal_config = dataset_schema.temporal
+    temporal_config = table_schema.temporal
     if not temporal_config:
         return queryset
 
     identifier = dataset_schema.identifier
-    sequence_name = dataset_schema.temporal["identifier"]
+    sequence_name = table_schema.temporal["identifier"]
 
     # does SELECT DISTINCT ON(identifier) ... ORDER BY identifier, sequence DESC
     return queryset.distinct(identifier).order_by(identifier, f"-{sequence_name}")
@@ -132,9 +133,9 @@ class _RelatedSummaryField(Field):
         q_params = {toCamelCase(filter_field + "_id"): value.instance.pk}
 
         # If this is a temporary slice, add the extra parameter to the qs.
-        if request.dataset_temporal_slice is not None:
-            key = request.dataset_temporal_slice["key"]
-            q_params[key] = request.dataset_temporal_slice["value"]
+        if request.table_temporal_slice is not None:
+            key = request.table_temporal_slice["key"]
+            q_params[key] = request.table_temporal_slice["value"]
 
         query_string = ("&" if "?" in url else "?") + urlencode(q_params)
         return {"count": value.count(), "href": f"{url}{query_string}"}
@@ -391,8 +392,9 @@ class DynamicBodySerializer(DynamicSerializer):
         but in the respective HAL envelopes in _links
         """
         ds = self.Meta.model.get_dataset_schema()
+        table = self.Meta.model.table_schema()
         hal_fields = [ds.identifier]
-        temporal = ds.temporal
+        temporal = table.temporal
         if temporal is not None and "identifier" in temporal:
             hal_fields.append(temporal["identifier"])
         capitalized_identifier_fields = [

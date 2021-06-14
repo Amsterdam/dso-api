@@ -27,28 +27,29 @@ class DatasetMiddleware(MiddlewareMixin):
         return None
 
 
-class TemporalDatasetMiddleware(MiddlewareMixin):
+class TemporalTableMiddleware(MiddlewareMixin):
     """
-    Assign `versioned`, `dateset_verison` and `temporal_slice` to request.
+    Assign `versioned`, `table_version` and `temporal_slice` to request.
     """
 
     def process_request(self, request):
         request.versioned = False
-        request.dataset_version = None
-        request.dataset_temporal_slice = None
+        request.table_version = None
+        request.table_temporal_slice = None
 
     def process_view(self, request, view_func, view_args, view_kwargs):
-        if not hasattr(request, "dataset") or request.dataset.temporal is None:
+        if not hasattr(request, "dataset") or not view_func.cls.model.is_temporal():
             return None
 
         request.versioned = True
-        if request.GET.get(request.dataset.temporal["identifier"]):
-            request.dataset_version = request.GET.get(request.dataset.temporal["identifier"])
+        table = view_func.cls.model.table_schema()
+        if request.GET.get(table.temporal["identifier"]):
+            request.table_version = request.GET.get(table.temporal["identifier"])
 
-        if "dimensions" in request.dataset.temporal:
-            for key, fields in request.dataset.temporal["dimensions"].items():
+        if "dimensions" in table.temporal:
+            for key, fields in table.temporal["dimensions"].items():
                 if request.GET.get(key):
-                    request.dataset_temporal_slice = dict(
+                    request.table_temporal_slice = dict(
                         key=key, value=request.GET.get(key), fields=fields
                     )
 
