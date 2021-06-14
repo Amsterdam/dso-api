@@ -1,4 +1,4 @@
-from typing import Type
+from typing import Optional, Type
 
 from django.db import models
 from django.db.models.fields.related import RelatedField
@@ -6,6 +6,14 @@ from django.db.models.fields.reverse_related import ForeignObjectRel
 from django.utils.functional import cached_property
 from rest_framework import serializers
 from rest_framework_gis.fields import GeometryField
+
+
+def parse_request_fields(fields: Optional[str]):
+    if not fields:
+        return None
+
+    # TODO: support nesting, perform validation
+    return fields.split(",")
 
 
 class AbstractEmbeddedField:
