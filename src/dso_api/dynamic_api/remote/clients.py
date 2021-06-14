@@ -97,7 +97,7 @@ class RemoteClient:
             forward = client_ip
 
         headers = {
-            "Accept": "application/json; charset=utf-8",
+            "Accept": "application/json",
             "X-Forwarded-For": forward,
         }
 
