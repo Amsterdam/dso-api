@@ -54,9 +54,9 @@ class TemporalRetrieveModelMixin:
         queryset = super().get_queryset()
 
         if self.request.versioned and self.model.is_temporal():
-            if self.request.dataset_temporal_slice is not None:
-                temporal_value = self.request.dataset_temporal_slice["value"]
-                start_field, end_field = self.request.dataset_temporal_slice["fields"]
+            if self.request.table_temporal_slice is not None:
+                temporal_value = self.request.table_temporal_slice["value"]
+                start_field, end_field = self.request.table_temporal_slice["fields"]
                 queryset = queryset.filter(**{f"{start_field}__lte": temporal_value}).filter(
                     models.Q(**{f"{end_field}__gte": temporal_value})
                     | models.Q(**{f"{end_field}__isnull": True})
@@ -81,8 +81,7 @@ class TemporalRetrieveModelMixin:
             )  # fallback to full id search.
         else:
             queryset = queryset.filter(pk=pk)
-
-        identifier = self.request.dataset.temporal.get("identifier", None)
+        identifier = queryset.model._table_schema.temporal.get("identifier", None)
 
         # Filter queryset using GET parameters, if any.
         for field in queryset.model._table_schema.fields:

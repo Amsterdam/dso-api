@@ -82,7 +82,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "authorization_django.authorization_middleware",
     "dso_api.dynamic_api.middleware.DatasetMiddleware",
-    "dso_api.dynamic_api.middleware.TemporalDatasetMiddleware",
+    "dso_api.dynamic_api.middleware.TemporalTableMiddleware",
 ]
 
 AUTHENTICATION_BACKENDS = [
