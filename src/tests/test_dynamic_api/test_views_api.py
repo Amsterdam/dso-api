@@ -824,6 +824,10 @@ class TestEmbedTemporalTables:
             "eindGeldigheid": None,
             "beginGeldigheid": None,
             "id": "03630000000078.1",
+            "ligtInWijkId": "03630012052035",
+            "_embedded": {
+                "ligtInWijk": None,
+            },
         }
         assert dict(data["_embedded"]["ggwgebieden"][0]) == {
             "_links": {
@@ -926,6 +930,10 @@ class TestEmbedTemporalTables:
                     "eindGeldigheid": None,
                     "beginGeldigheid": None,
                     "id": "03630000000078.2",
+                    "ligtInWijkId": None,
+                    "_embedded": {
+                        "ligtInWijk": None,
+                    },
                 }
             },
         }
