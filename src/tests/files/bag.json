@@ -6,12 +6,6 @@
   "version": "0.0.1",
   "crs": "EPSG:28992",
   "identifier": "identificatie",
-  "temporal": {
-    "identifier": "volgnummer",
-    "dimensions": {
-      "geldigOp": ["beginGeldigheid", "eindGeldigheid"]
-    }
-  },
   "tables": [
     {
       "id": "panden",
@@ -24,6 +18,12 @@
         "identifier": ["identificatie", "volgnummer"],
         "required": ["schema", "id", "identificatie", "volgnummer"],
         "display": "id",
+        "temporal": {
+          "identifier": "volgnummer",
+          "dimensions": {
+            "geldigOp": ["beginGeldigheid", "eindGeldigheid"]
+          }
+        },
         "properties": {
           "schema": {
             "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.1#/definitions/schema"
@@ -70,7 +70,6 @@
         "identifier": "dossier",
         "required": ["schema", "dossier"],
         "display": "dossier",
-        "isTemporal": false,
         "properties": {
           "schema": {
             "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.1#/definitions/schema"
