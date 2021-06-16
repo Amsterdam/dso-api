@@ -10,6 +10,12 @@
     {
       "id": "buurten",
       "type": "table",
+      "temporal": {
+        "identifier": "volgnummer",
+        "dimensions": {
+          "geldigOp": ["beginGeldigheid", "eindGeldigheid"]
+        }
+      },
       "schema": {
         "$id": "https://github.com/Amsterdam/schemas/gebieden/buurten.json",
         "$schema": "http://json-schema.org/draft-07/schema#",
@@ -19,12 +25,6 @@
         "identifier": ["identificatie", "volgnummer"],
         "required": ["schema", "identificatie", "volgnummer"],
         "display": "id",
-        "temporal": {
-          "identifier": "volgnummer",
-          "dimensions": {
-            "geldigOp": ["beginGeldigheid", "eindGeldigheid"]
-          }
-        },
         "properties": {
           "schema": {
             "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.1#/definitions/schema"
@@ -78,6 +78,12 @@
     {
       "id": "wijken",
       "type": "table",
+      "temporal": {
+        "identifier": "volgnummer",
+        "dimensions": {
+          "geldigOp": ["beginGeldigheid", "eindGeldigheid"]
+        }
+      },
       "schema": {
         "$id": "https://github.com/Amsterdam/schemas/gebieden/wijken.json",
         "$schema": "http://json-schema.org/draft-07/schema#",
@@ -87,12 +93,6 @@
         "identifier": ["identificatie", "volgnummer"],
         "required": ["schema", "identificatie", "volgnummer"],
         "display": "id",
-        "temporal": {
-          "identifier": "volgnummer",
-          "dimensions": {
-            "geldigOp": ["beginGeldigheid", "eindGeldigheid"]
-          }
-        },
         "additionalRelations": {
           "buurt": {
             "table": "buurten",
@@ -149,6 +149,12 @@
     {
       "id": "ggwgebieden",
       "type": "table",
+      "temporal": {
+        "identifier": "volgnummer",
+        "dimensions": {
+          "geldigOp": ["beginGeldigheid", "eindGeldigheid"]
+        }
+      },
       "schema": {
         "$id": "https://github.com/Amsterdam/schemas/gebieden/ggwgebieden.json",
         "$schema": "http://json-schema.org/draft-07/schema#",
@@ -158,12 +164,6 @@
         "identifier": ["identificatie", "volgnummer"],
         "required": ["schema", "identificatie", "volgnummer"],
         "display": "id",
-        "temporal": {
-          "identifier": "volgnummer",
-          "dimensions": {
-            "geldigOp": ["beginGeldigheid", "eindGeldigheid"]
-          }
-        },
         "properties": {
           "schema": {
             "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.1#/definitions/schema"
@@ -221,6 +221,12 @@
     {
       "id": "stadsdelen",
       "type": "table",
+      "temporal": {
+        "identifier": "volgnummer",
+        "dimensions": {
+          "geldigOp": ["beginGeldigheid", "eindGeldigheid"]
+        }
+      },
       "schema": {
         "$id": "https://github.com/Amsterdam/schemas/gebieden/stadsdelen.json",
         "$schema": "http://json-schema.org/draft-07/schema#",
@@ -230,12 +236,6 @@
         "identifier": ["identificatie", "volgnummer"],
         "required": ["schema", "identificatie", "volgnummer"],
         "display": "id",
-        "temporal": {
-          "identifier": "volgnummer",
-          "dimensions": {
-            "geldigOp": ["beginGeldigheid", "eindGeldigheid"]
-          }
-        },
         "additionalRelations": {
           "wijk": {
             "table": "wijken",
