@@ -81,10 +81,10 @@ class TemporalRetrieveModelMixin:
             )  # fallback to full id search.
         else:
             queryset = queryset.filter(pk=pk)
-        identifier = queryset.model._table_schema.temporal.get("identifier", None)
+        identifier = queryset.model.table_schema().temporal.identifier
 
         # Filter queryset using GET parameters, if any.
-        for field in queryset.model._table_schema.fields:
+        for field in queryset.model.table_schema().fields:
             if field.name != pk_field and field.name in self.request.GET:
                 queryset = queryset.filter(**{field.name: self.request.GET[field.name]})
 
@@ -228,7 +228,7 @@ def viewset_factory(model: Type[DynamicModel]) -> Type[DynamicApiViewSet]:
         "filterset_class": filterset_class,
         "ordering_fields": ordering_fields,
         "dataset_id": model._dataset_schema["id"],
-        "table_id": model._table_schema["id"],
+        "table_id": model.table_schema()["id"],
     }
     return type(f"{model.__name__}ViewSet", (DynamicApiViewSet,), attrs)
 

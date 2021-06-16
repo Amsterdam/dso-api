@@ -82,7 +82,7 @@ def filter_latest_temporal(queryset: models.QuerySet) -> models.QuerySet:
         return queryset
 
     identifier = dataset_schema.identifier
-    sequence_name = table_schema.temporal["identifier"]
+    sequence_name = table_schema.temporal.identifier
 
     # does SELECT DISTINCT ON(identifier) ... ORDER BY identifier, sequence DESC
     return queryset.distinct(identifier).order_by(identifier, f"-{sequence_name}")
@@ -395,8 +395,8 @@ class DynamicBodySerializer(DynamicSerializer):
         table = self.Meta.model.table_schema()
         hal_fields = [ds.identifier]
         temporal = table.temporal
-        if temporal is not None and "identifier" in temporal:
-            hal_fields.append(temporal["identifier"])
+        if temporal is not None:
+            hal_fields.append(temporal.identifier)
         capitalized_identifier_fields = [
             identifier_field.capitalize() for identifier_field in hal_fields
         ]

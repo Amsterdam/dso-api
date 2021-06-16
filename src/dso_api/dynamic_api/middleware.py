@@ -38,19 +38,21 @@ class TemporalTableMiddleware(MiddlewareMixin):
         request.table_temporal_slice = None
 
     def process_view(self, request, view_func, view_args, view_kwargs):
-        if not hasattr(request, "dataset") or not view_func.cls.model.is_temporal():
+        try:
+            if not view_func.cls.model.is_temporal():
+                return None
+        except AttributeError:
             return None
 
         request.versioned = True
         table = view_func.cls.model.table_schema()
-        if request.GET.get(table.temporal["identifier"]):
-            request.table_version = request.GET.get(table.temporal["identifier"])
+        if version := request.GET.get(table.temporal.identifier):
+            request.table_version = version
 
-        if "dimensions" in table.temporal:
-            for key, fields in table.temporal["dimensions"].items():
-                if request.GET.get(key):
-                    request.table_temporal_slice = dict(
-                        key=key, value=request.GET.get(key), fields=fields
-                    )
+        for key, fields in table.temporal.dimensions.items():
+            if request.GET.get(key):
+                request.table_temporal_slice = dict(
+                    key=key, value=request.GET.get(key), fields=fields
+                )
 
         return None

@@ -182,7 +182,7 @@ class LinksField(serializers.HyperlinkedIdentityField):
             output.update({"title": str(value)})
 
         if value.is_temporal():
-            temporal_fieldname = value.table_schema().temporal.get("identifier")
+            temporal_fieldname = value.table_schema().temporal.identifier
             temporal_value = getattr(value, temporal_fieldname)
             id_fieldname = value.get_dataset_schema().get("identifier")
             id_value = getattr(value, id_fieldname)
