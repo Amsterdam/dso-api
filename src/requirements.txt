@@ -94,7 +94,7 @@ djangorestframework==3.12.4
     #   djangorestframework-csv
     #   djangorestframework-gis
     #   drf-spectacular
-drf-spectacular==0.15.0
+drf-spectacular==0.17.1
     # via -r requirements.in
 flake8-blind-except==0.2.0
     # via -r requirements.in
