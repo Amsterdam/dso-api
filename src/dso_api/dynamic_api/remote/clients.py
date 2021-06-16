@@ -223,8 +223,8 @@ class HCBRKClient(RemoteClient):
     __http_pool = None
     __http_pool_lock = threading.Lock()
 
-    def get_headers(self, request):
-        headers = super().get_headers(self, request)
+    def _get_headers(self, request):
+        headers = super()._get_headers(request)
 
         headers["X-Api-Key"] = settings.HAAL_CENTRAAL_API_KEY
         headers["accept"] = "application/hal+json"
