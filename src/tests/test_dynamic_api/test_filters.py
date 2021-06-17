@@ -382,6 +382,13 @@ class TestDynamicFilterSet:
         data = read_response_json(response)
         assert len(data["_embedded"]["parkeervakken"]) == 1
 
+        response = APIClient().get(
+            "/v1/parkeervakken/parkeervakken/",
+            data={"geometry[contains]": "52.388231,48897865"},
+            headers={"Accept-CRS": 4326},
+        )
+        assert response.status_code == 400
+
     @staticmethod
     def test_filter_isempty(parkeervakken_parkeervak_model, filled_router):
         parkeervakken_parkeervak_model.objects.create(

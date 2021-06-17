@@ -1,6 +1,7 @@
 import re
 
 from django.contrib.gis.geos import GEOSGeometry
+from django.contrib.gis.geos.error import GEOSException
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter
@@ -74,7 +75,10 @@ class DSOFilterBackend(DjangoFilterBackend):
                         if srid in (4326, 28992) and (x_lon is None or y_lat is None):
                             raise ValueError(f"Invalid x,y values : {x},{y}")
                         # longitude, latitude for 4326 x,y otherwise
-                        value = GEOSGeometry(f"POINT({x_lon} {y_lat})", srid)
+                        try:
+                            value = GEOSGeometry(f"POINT({x_lon} {y_lat})", srid)
+                        except GEOSException as e:
+                            raise ValidationError(f"Invalid x,y values : {x},{y}") from e
                         new_data = filterset.data.copy()
                         new_data[name] = value
                         filterset.data = new_data
