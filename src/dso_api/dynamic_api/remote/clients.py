@@ -47,7 +47,6 @@ class RemoteClient:
         url = self._make_url(path, query_params)
 
         # Using urllib directly instead of requests for performance
-        logger.debug("Forwarding call to %s", url)
         headers = self._get_headers(request)
 
         http_pool = self._get_http_pool()
@@ -62,18 +61,19 @@ class RemoteClient:
             )
         except (TimeoutError, urllib3.exceptions.TimeoutError) as e:
             # Socket timeout
-            logger.error("Proxy call failed, timeout from remote server: %s", e)
+            logger.error("Proxy call to %s failed, timeout from remote server: %s", url, e)
             raise GatewayTimeout() from e
         except (OSError, urllib3.exceptions.HTTPError) as e:
             # Socket connect / SSL error (HTTPError is the base class for errors)
-            logger.error("Proxy call failed, error when connecting to server: %s", e)
+            logger.error("Proxy call to %s failed, error when connecting to server: %s", url, e)
             raise ServiceUnavailable(str(e)) from e
+
+        level = logging.ERROR if response.status >= 500 else logging.INFO
+        logger.log(level, "Proxy call to %s, status %s: %s", url, response.status, response.reason)
 
         if response.status == 200:
             return orjson.loads(response.data)
 
-        level = logging.ERROR if response.status >= 500 else logging.DEBUG
-        logger.log(level, "Proxy call failed, status %s: %s", response.status, response.reason)
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug("  Response body: %s", response.data)
 
