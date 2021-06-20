@@ -80,7 +80,7 @@ def sort_fields(
     Args:
         fields: A list of DatasetFieldSchema instances.
         table_identifier: If present, the table identifier(s) field(s) are placed
-            the first in the output.
+            first in the output.
 
     Returns:
         A list of DatasetFieldSchema instances ordered based on field name,
