@@ -5,7 +5,7 @@
 
 {{ schema.description or '' }}
 
-* **ID:** {{ schema_name }}
+* **ID:** {{ schema_name }}{% if schema_auth %} (autorisatie: {{ schema_auth }}){% endif %}
 * **Versie:** {{ schema.version }}
 * **Endpoints:**
 
@@ -14,7 +14,7 @@
       <ul>
           <li>Swagger UI: <a href="{{ swagger_url }}">{{ swagger_url|strip_base_url }}</a></li>
         {% for table in tables %}
-          <li>REST URI: <a href="{{ table.uri }}">{{ table.uri|strip_base_url }}</a></li>
+          <li>REST URI{% if (table.auth or schema_auth) %} (autorisatie:{{ (table.auth or schema_auth) }}){% endif %}:<a href="{{ table.uri }}">{{ table.uri|strip_base_url }}</a></li>
         {% endfor %}
       </ul>
 
@@ -34,6 +34,7 @@
 
    <ul>
      <li><b>REST URI:</b> <a href="{{ table.uri }}">{{ table.uri|strip_base_url }}</a></li>
+     <li><b>AUTORISATIE:</b>{% if (table.auth or schema_auth) %} (autorisatie:{{ (table.auth or schema_auth) }}){% endif %}</a></li>
      <li><b>CSV Export:</b> {% if table.rest_csv %}<a type="text/csv" download href="{{ table.rest_csv }}">{{ table.rest_csv|strip_base_url }}</a>{% else %}N.B.{% endif %}</li>
      <li><b>GeoJSON Export:</b> {% if table.rest_geojson %}<a type="application/json" download href="{{ table.rest_geojson }}">{{ table.rest_geojson|strip_base_url }}</a>{% else %}N.B.{% endif %}</li>
    </ul>
@@ -48,7 +49,7 @@ Velden
      - Type
      - Omschrijving
 {%- for field in table.fields %}
-   * - ``{{ field.camel_name }}``
+   * - ``{{ field.camel_name }}``{% if ((field.auth or schema_auth) or table.auth) %} (autorisatie:{{ ((field.auth or table.auth) or schema_auth) }}){% endif %}
      - {{ field.type|default('') }}
      - {{ field.description|default('') }}
 {%- endfor %}

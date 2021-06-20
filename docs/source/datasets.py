@@ -2,7 +2,7 @@
 import os
 import re
 from pathlib import Path
-from typing import List
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import jinja2
 from schematools.types import DatasetFieldSchema, DatasetSchema, DatasetTableSchema
@@ -46,10 +46,67 @@ VALUE_EXAMPLES = {
 }
 
 
+def sort_schemas(schemas: Tuple[str, DatasetSchema]) -> List[Union[str, DatasetSchema]]:
+    """Sort datasets (schemas) alphabetically.
+
+    Args:
+        schemas: A set containing a pair of schemas id (name) and DatasetSchema instance.
+
+    Returns:
+        A list of alphabetically ordered schemas instances based on their schema id (name).
+    """
+    return sorted(schemas, key=lambda schema: schema[0])
+
+
+def sort_tables(tables: List[DatasetTableSchema]) -> List[DatasetTableSchema]:
+    """Sort tables alphabetically.
+
+    Args:
+        tables: A list of DatasetTableSchema instances
+
+    Returns:
+        A list of DatasetTableSchema instances ordered based on table id (equals name).
+    """
+    return sorted(tables, key=lambda table: table.id)
+
+
+def sort_fields(
+    fields: List[DatasetFieldSchema], table_identifier: Optional[List[str]]
+) -> List[DatasetFieldSchema]:
+    """Sort fields of an table alphabetically.
+    Put the identifier field(s) always first, after that, fields are
+    alphabetically ordered based on field name.
+
+    Args:
+        fields: A list of DatasetFieldSchema instances.
+        table_identifier: If present, the table identifier(s) field(s) are placed
+            the first in the output.
+
+    Returns:
+        A list of DatasetFieldSchema instances ordered based on field name,
+            and places identifier fields first if exists.
+    """
+    sorted_fields = []
+
+    if table_identifier:
+
+        fields_to_sort = [field for field in fields if field.name not in table_identifier]
+        sorted_fields = sorted(fields_to_sort, key=lambda field: field.name)
+        identifier_fields = [
+            field for field in fields if table_identifier and field.name in table_identifier
+        ]
+        for field in identifier_fields:
+            sorted_fields.insert(0, field)
+    else:
+        sorted_fields = sorted([field for field in fields], key=lambda field: field.name)
+
+    return sorted_fields
+
+
 def render_dataset_docs(dataset: DatasetSchema):
     snake_name = to_snake_case(dataset.id)
     main_title = dataset.title or snake_name.replace("_", " ").capitalize()
-    tables = [_get_table_context(t) for t in dataset.tables]
+    tables = [_get_table_context(t) for t in sort_tables(dataset.tables)]
     if any(t["has_geometry"] for t in tables):
         wfs_url = f"{BASE_URL}/v1/wfs/{snake_name}/"
     else:
@@ -63,6 +120,7 @@ def render_dataset_docs(dataset: DatasetSchema):
         {
             "schema": dataset,
             "schema_name": snake_name,
+            "schema_auth": dataset.auth,
             "main_title": main_title,
             "tables": tables,
             "wfs_url": wfs_url,
@@ -77,7 +135,7 @@ def render_wfs_dataset_docs(dataset: DatasetSchema):
     """Render the docs for the WFS dataset."""
     snake_name = to_snake_case(dataset.id)
     main_title = dataset.title or snake_name.replace("_", " ").capitalize()
-    tables = [_get_feature_type_context(t) for t in dataset.tables]
+    tables = [_get_feature_type_context(t) for t in sort_tables(dataset.tables)]
     if all(not t["has_geometry"] for t in tables):
         return None
 
@@ -108,7 +166,7 @@ def _get_table_context(table: DatasetTableSchema):
     snake_id = to_snake_case(table["id"])
     uri = f"{BASE_URL}/v1/{snake_name}/{snake_id}/"
 
-    fields = _get_fields(table.fields)
+    fields = _get_fields(table.fields, table_identifier=table.identifier)
 
     return {
         "title": snake_id.replace("_", " ").capitalize(),
@@ -116,7 +174,8 @@ def _get_table_context(table: DatasetTableSchema):
         "rest_csv": f"{uri}?_format=csv",
         "rest_geojson": f"{uri}?_format=geojson",
         "description": table.get("description"),
-        "fields": [_get_field_context(field) for field in fields],
+        "fields": [_get_field_context(field, table.identifier) for field in fields],
+        "auth": table.auth,
         "relations": [
             {
                 "id": relation_name,
@@ -147,7 +206,7 @@ def _get_feature_type_context(table: DatasetTableSchema):
     snake_id = to_snake_case(table["id"])
     uri = f"{BASE_URL}/v1/{snake_name}/{snake_id}/"
 
-    fields = _get_fields(table.fields)
+    fields = _get_fields(table.fields, table_identifier=table.identifier)
     has_geometry = _has_geometry(table)
 
     return {
@@ -155,7 +214,8 @@ def _get_feature_type_context(table: DatasetTableSchema):
         "typenames": [f"app:{snake_id}", snake_id],
         "uri": uri,
         "description": table.get("description"),
-        "fields": [_get_field_context(field) for field in fields],
+        "fields": [_get_field_context(field, table.identifier) for field in fields],
+        "auth": table.auth,
         "embeds": [
             {
                 "id": relation_name,
@@ -182,7 +242,9 @@ def _get_feature_type_context(table: DatasetTableSchema):
     }
 
 
-def _get_fields(table_fields, parent_field=None) -> List[DatasetFieldSchema]:
+def _get_fields(
+    table_fields, table_identifier=None, parent_field=None
+) -> List[DatasetFieldSchema]:
     """Flatten a nested listing of fields."""
     result_fields = []
     for field in table_fields:
@@ -194,10 +256,10 @@ def _get_fields(table_fields, parent_field=None) -> List[DatasetFieldSchema]:
         if field.is_array_of_objects or field.is_object:
             result_fields.extend(_get_fields(field.sub_fields, parent_field=field))
 
-    return result_fields
+    return sort_fields(result_fields, table_identifier)
 
 
-def _get_field_context(field: DatasetFieldSchema):
+def _get_field_context(field: DatasetFieldSchema, identifier: List[str]) -> Dict[str, Any]:
     """Get context data for a field."""
     type = field.type
     format = field.format
@@ -235,12 +297,13 @@ def _get_field_context(field: DatasetFieldSchema):
     return {
         "name": field.name,
         "snake_name": snake_name,
-        "camel_name": camel_name,
+        "camel_name": f"{camel_name} (identificatie)" if field.name in identifier else camel_name,
         "type": (type or "").capitalize(),
         "value_example": value_example or "",
         "description": field.description,
         "lookups": sorted(lookups),
         "source": field,
+        "auth": field.auth,
     }
 
 
@@ -249,13 +312,13 @@ def render_datasets():
     schemas = schema_defs_from_url(SCHEMA_URL)
 
     documents = []
-    for name, dataset in schemas.items():
+    for name, dataset in sort_schemas(schemas.items()):
         documents.append(render_dataset_docs(dataset))
 
     render_template("datasets/index.rst.j2", "datasets/index.rst", {"documents": documents})
 
     wfs_documents = []
-    for name, dataset in schemas.items():
+    for name, dataset in sort_schemas(schemas.items()):
         name = render_wfs_dataset_docs(dataset)
         if name:
             wfs_documents.append(name)
