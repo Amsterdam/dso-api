@@ -46,11 +46,12 @@ VALUE_EXAMPLES = {
 }
 
 
-def sort_schemas(schemas: Tuple[str, DatasetSchema]) -> List[Union[str, DatasetSchema]]:
+def sort_schemas(schemas: List[Tuple[str, DatasetSchema]]) -> List[Union[str, DatasetSchema]]:
     """Sort datasets (schemas) alphabetically.
 
     Args:
-        schemas: A set containing a pair of schemas id (name) and DatasetSchema instance.
+        schemas: A list of tuples containing a pair of schemas id (name) and
+            DatasetSchema instance.
 
     Returns:
         A list of alphabetically ordered schemas instances based on their schema id (name).
