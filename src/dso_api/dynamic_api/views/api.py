@@ -73,15 +73,16 @@ class TemporalRetrieveModelMixin:
         if not self.request.versioned or not self.model.is_temporal():
             return super().get_object()
 
+        table_schema = self.model.table_schema()
         pk = self.kwargs.get("pk")
-        pk_field = self.request.dataset.identifier
+        pk_field = table_schema.identifier[0]
         if pk_field != "pk":
             queryset = queryset.filter(
                 models.Q(**{pk_field: pk}) | models.Q(pk=pk)
             )  # fallback to full id search.
         else:
             queryset = queryset.filter(pk=pk)
-        identifier = queryset.model.table_schema().temporal.identifier
+        identifier = table_schema.temporal.identifier
 
         # Filter queryset using GET parameters, if any.
         for field in queryset.model.table_schema().fields:
