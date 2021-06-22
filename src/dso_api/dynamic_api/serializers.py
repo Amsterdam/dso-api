@@ -76,12 +76,11 @@ class URLencodingURLfields:
 def filter_latest_temporal(queryset: models.QuerySet) -> models.QuerySet:
     """Make sure a queryset will only return the latest temporal models"""
     table_schema = queryset.model.table_schema()
-    dataset_schema = queryset.model.get_dataset_schema()
     temporal_config = table_schema.temporal
     if not temporal_config:
         return queryset
 
-    identifier = dataset_schema.identifier
+    identifier = table_schema.identifier[0]
     sequence_name = table_schema.temporal.identifier
 
     # does SELECT DISTINCT ON(identifier) ... ORDER BY identifier, sequence DESC
@@ -98,7 +97,7 @@ def temporal_id_based_fetcher(embedded_field: AbstractEmbeddedField):
 
     def _fetcher(id_list):
         if is_loose:
-            identifier = model.get_dataset_schema().identifier
+            identifier = model.table_schema().identifier[0]
             return filter_latest_temporal(model.objects).filter(**{f"{identifier}__in": id_list})
         else:
             return model.objects.filter(pk__in=id_list)
@@ -297,8 +296,9 @@ class DynamicSerializer(DSOModelSerializer):
                     to_snake_case(part) for part in field.relation.split(":")
                 ]
                 url_name = f"{app_name}:{dataset_name}-{table_name}-detail"
-                related_ds = field.related_model.get_dataset_schema()
-                related_identifier_field = related_ds.identifier
+                related_table = field.related_model.table_schema()
+
+                related_identifier_field = related_table.identifier[0]
                 result.append(
                     (f.attname, toCamelCase(f.attname), url_name, related_identifier_field)
                 )
@@ -393,6 +393,7 @@ class DynamicBodySerializer(DynamicSerializer):
         """
         ds = self.Meta.model.get_dataset_schema()
         table = self.Meta.model.table_schema()
+
         hal_fields = [ds.identifier]
         temporal = table.temporal
         if temporal is not None:
