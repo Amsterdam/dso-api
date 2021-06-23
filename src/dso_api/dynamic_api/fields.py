@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 import azure.storage.blob
 from django.conf import settings
 from more_ds.network.url import URL
+from more_itertools import first
 from rest_framework import serializers
 from rest_framework.reverse import reverse
 from schematools.contrib.django.models import DynamicModel
@@ -59,7 +60,7 @@ class HALTemporalHyperlinkedRelatedField(TemporalHyperlinkedRelatedField):
         if href and value.is_temporal():
             table_schema = value.table_schema()
             temporal_fieldname = table_schema.temporal.identifier
-            id_fieldname = table_schema.identifier[0]
+            id_fieldname = first(table_schema.identifier)
             output.update(
                 {
                     temporal_fieldname: getattr(value, temporal_fieldname),
@@ -100,7 +101,7 @@ class TemporalLinksField(LinksField):
             return super().get_url(obj, view_name, request, format)
 
         table_schema = obj.table_schema()
-        lookup_value = getattr(obj, table_schema.identifier[0])
+        lookup_value = getattr(obj, first(table_schema.identifier))
 
         kwargs = {self.lookup_field: lookup_value}
         base_url = self.reverse(view_name, kwargs=kwargs, request=request, format=format)
@@ -175,7 +176,7 @@ class HALLooseRelationUrlField(LooseRelationUrlField):
         if view.model.has_display_field():
             result["title"] = str(value)
 
-        related_identifier = field.related_model.table_schema().identifier[0]
+        related_identifier = first(field.related_model.table_schema().identifier)
         result[related_identifier] = value
         return result
 

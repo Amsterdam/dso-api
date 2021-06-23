@@ -21,6 +21,7 @@ from django.db.models.fields.reverse_related import ForeignObjectRel
 from django.utils.functional import cached_property
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
+from more_itertools import first
 from rest_framework import serializers
 from rest_framework.relations import HyperlinkedRelatedField
 from rest_framework.reverse import reverse
@@ -80,7 +81,7 @@ def filter_latest_temporal(queryset: models.QuerySet) -> models.QuerySet:
     if not temporal_config:
         return queryset
 
-    identifier = table_schema.identifier[0]
+    identifier = first(table_schema.identifier)
     sequence_name = table_schema.temporal.identifier
 
     # does SELECT DISTINCT ON(identifier) ... ORDER BY identifier, sequence DESC
@@ -97,7 +98,7 @@ def temporal_id_based_fetcher(embedded_field: AbstractEmbeddedField):
 
     def _fetcher(id_list):
         if is_loose:
-            identifier = model.table_schema().identifier[0]
+            identifier = first(model.table_schema().identifier)
             return filter_latest_temporal(model.objects).filter(**{f"{identifier}__in": id_list})
         else:
             return model.objects.filter(pk__in=id_list)
@@ -298,7 +299,7 @@ class DynamicSerializer(DSOModelSerializer):
                 url_name = f"{app_name}:{dataset_name}-{table_name}-detail"
                 related_table = field.related_model.table_schema()
 
-                related_identifier_field = related_table.identifier[0]
+                related_identifier_field = first(related_table.identifier)
                 result.append(
                     (f.attname, toCamelCase(f.attname), url_name, related_identifier_field)
                 )
