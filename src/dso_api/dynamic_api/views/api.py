@@ -18,6 +18,7 @@ from django.db import models
 from django.http import Http404, JsonResponse
 from django.urls import reverse
 from django.utils.translation import gettext as _
+from more_itertools import first
 from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -75,7 +76,7 @@ class TemporalRetrieveModelMixin:
 
         table_schema = self.model.table_schema()
         pk = self.kwargs.get("pk")
-        pk_field = table_schema.identifier[0]
+        pk_field = first(table_schema.identifier)
         if pk_field != "pk":
             queryset = queryset.filter(
                 models.Q(**{pk_field: pk}) | models.Q(pk=pk)
