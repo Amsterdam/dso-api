@@ -4,7 +4,7 @@
 #
 #    pip-compile --output-file=requirements.txt requirements.in
 #
-amsterdam-schema-tools[django]==0.21.5
+amsterdam-schema-tools[django]==0.21.7
     # via -r requirements.in
 asgiref==3.3.4
     # via django
@@ -167,7 +167,9 @@ more-ds==0.0.4
     #   -r requirements.in
     #   amsterdam-schema-tools
 more-itertools==8.8.0
-    # via -r requirements.in
+    # via
+    #   -r requirements.in
+    #   amsterdam-schema-tools
 msrest==0.6.21
     # via azure-storage-blob
 ndjson==0.3.1
