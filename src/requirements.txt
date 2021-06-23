@@ -166,6 +166,8 @@ more-ds==0.0.4
     # via
     #   -r requirements.in
     #   amsterdam-schema-tools
+more-itertools==8.8.0
+    # via -r requirements.in
 msrest==0.6.21
     # via azure-storage-blob
 ndjson==0.3.1
