@@ -15,7 +15,7 @@ import urllib3
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from more_ds.network.url import URL
-from rest_framework.exceptions import NotAuthenticated, NotFound, ParseError, PermissionDenied
+from rest_framework.exceptions import NotFound, ParseError, PermissionDenied
 from schematools.types import DatasetTableSchema
 from urllib3 import HTTPResponse
 
@@ -211,7 +211,7 @@ class AuthForwardingClient(RemoteClient):
         if 300 <= response.status <= 399 and (
             "/oauth/authorize" in response.headers.get("Location", "")
         ):
-            raise NotAuthenticated("Invalid token")
+            raise PermissionDenied("Invalid token")
 
 
 class HCBRKClient(RemoteClient):
