@@ -16,6 +16,7 @@ from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from more_ds.network.url import URL
 from rest_framework.exceptions import NotFound, ParseError, PermissionDenied
+from rest_framework.status import HTTP_401_UNAUTHORIZED, HTTP_403_FORBIDDEN
 from schematools.types import DatasetTableSchema
 from urllib3 import HTTPResponse
 
@@ -161,7 +162,7 @@ class RemoteClient:
                 )
             else:
                 raise BadGateway(detail_message)
-        elif response.status in (401, 403):  # "unauthorized", "forbidden"
+        elif response.status in (HTTP_401_UNAUTHORIZED, HTTP_403_FORBIDDEN):
             # We translate 401 to 403 because 401 must always have a
             # WWW-Authenticate header in the response and we can't easily
             # set that from here.
