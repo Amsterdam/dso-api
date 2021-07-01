@@ -37,7 +37,7 @@ Bijvoorbeeld:
 Wanneer een pagina direct met de browser opgevraagd wordt
 dan worden de resultaten als een doorklikbare HTML pagina getoond.
 Bijvoorbeeld: https://api.data.amsterdam.nl/v1/gebieden/buurten/.
-Door de ``Accept-Type: application/json`` header te sturen wordt
+Door de header ``Accept: application/hal+json`` te sturen wordt
 altijd een JSON response geforceerd. Dit kan ook met de query parameter :samp:`_format=json`
 
 
