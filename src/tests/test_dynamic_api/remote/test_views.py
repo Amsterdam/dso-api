@@ -309,6 +309,25 @@ def test_remote_404_problem_json(api_client, router, brp_dataset, urllib3_mocker
 
 
 @pytest.mark.django_db
+@pytest.mark.parametrize("remote_status", [401, 403])
+def test_brp_not_authenticated(
+    api_client, filled_router, brp_dataset, urllib3_mocker, remote_status
+):
+    """Test auth error handling: 401 and 403 should both become 403."""
+
+    urllib3_mocker.add_callback(
+        "GET",
+        "/unittest/brp/ingeschrevenpersonen/999990901",
+        callback=lambda request: (remote_status, {}, None),
+        content_type="application/json",
+    )
+
+    url = reverse("dynamic_api:brp-ingeschrevenpersonen-detail", kwargs={"pk": "999990901"})
+    response = api_client.get(url)
+    assert response.status_code == 403
+
+
+@pytest.mark.django_db
 def test_remote_timeout(api_client, router, brp_dataset, urllib3_mocker):
     """Prove that the remote router can proxy the other service."""
 

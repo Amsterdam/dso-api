@@ -15,7 +15,8 @@ import urllib3
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from more_ds.network.url import URL
-from rest_framework.exceptions import NotAuthenticated, NotFound, ParseError
+from rest_framework.exceptions import NotFound, ParseError, PermissionDenied
+from rest_framework.status import HTTP_401_UNAUTHORIZED, HTTP_403_FORBIDDEN
 from schematools.types import DatasetTableSchema
 from urllib3 import HTTPResponse
 
@@ -68,7 +69,7 @@ class RemoteClient:
             logger.error("Proxy call to %s failed, error when connecting to server: %s", url, e)
             raise ServiceUnavailable(str(e)) from e
 
-        level = logging.ERROR if response.status >= 500 else logging.INFO
+        level = logging.ERROR if response.status >= 400 else logging.INFO
         logger.log(level, "Proxy call to %s, status %s: %s", url, response.status, response.reason)
 
         if response.status == 200:
@@ -151,11 +152,7 @@ class RemoteClient:
             detail_message = response.data.decode()
 
         if response.status == 400:  # "bad request"
-            if response.data == b"Missing required MKS headers":
-                # Didn't pass the MKS_APPLICATIE / MKS_GEBRUIKER headers.
-                # Shouldn't occur anymore since it's JWT-token based now.
-                raise NotAuthenticated("Internal credentials are missing")
-            elif content_type == "application/problem+json":
+            if content_type == "application/problem+json":
                 # Translate proper "Bad Request" to REST response
                 raise RemoteAPIException(
                     title=ParseError.default_detail,
@@ -165,9 +162,11 @@ class RemoteClient:
                 )
             else:
                 raise BadGateway(detail_message)
-        elif response.status == 403:  # "forbidden"
-            # Return 403 to client as well
-            raise NotAuthenticated(detail_message)
+        elif response.status in (HTTP_401_UNAUTHORIZED, HTTP_403_FORBIDDEN):
+            # We translate 401 to 403 because 401 must always have a
+            # WWW-Authenticate header in the response and we can't easily
+            # set that from here.
+            raise PermissionDenied(detail_message)
         elif response.status == 404:  # "not found"
             # Return 404 to client (in DRF format)
             if content_type == "application/problem+json":
@@ -213,7 +212,7 @@ class AuthForwardingClient(RemoteClient):
         if 300 <= response.status <= 399 and (
             "/oauth/authorize" in response.headers.get("Location", "")
         ):
-            raise NotAuthenticated("Invalid token")
+            raise PermissionDenied("Invalid token")
 
 
 class HCBRKClient(RemoteClient):
