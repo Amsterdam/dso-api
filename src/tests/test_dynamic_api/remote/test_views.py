@@ -1,7 +1,10 @@
+from typing import Any
+
 import orjson
 import pytest
 import urllib3
 from django.urls import reverse
+from rest_framework.status import HTTP_200_OK, HTTP_403_FORBIDDEN
 from schematools.contrib.django import models
 from schematools.types import DatasetTableSchema
 from urllib3_mock import Responses
@@ -110,6 +113,21 @@ def urllib3_mocker() -> Responses:
         yield responses
 
 
+class AuthorizedResponse:
+    """Callback for urllib3_mock that sends a fixed response
+    only if the client sends an Authentication header.
+    """
+
+    def __init__(self, body: Any):
+        self._body = orjson.dumps(body)
+
+    def __call__(self, request):
+        if "Authorization" in request.headers:
+            return (HTTP_200_OK, {}, self._body)
+        else:
+            return (HTTP_403_FORBIDDEN, {}, "no Authorization received")
+
+
 @pytest.mark.django_db
 def test_remote_detail_view_with_profile_scope(
     api_client,
@@ -148,10 +166,10 @@ def test_remote_detail_view_with_profile_scope(
     )
     remote_response, local_response = SUCCESS_TESTS["default"]
     router.reload()
-    urllib3_mocker.add(
+    urllib3_mocker.add_callback(
         "GET",
         "/unittest/brp_test/ingeschrevenpersonen/999990901",
-        body=orjson.dumps(remote_response),
+        callback=AuthorizedResponse(remote_response),
         content_type="application/json",
     )
     # Prove that URLs can now be resolved.
