@@ -243,16 +243,9 @@ class DynamicSerializer(DSOModelSerializer):
     @extend_schema_field(OpenApiTypes.URI)
     def get_schema(self, instance):
         """The schema field is exposed with every record"""
-        name = instance.get_dataset_id()
         table = instance.get_table_id()
-        url_parts = [name]
-        url_prefix = instance.get_dataset().url_prefix
-        if url_prefix:
-            url_parts.insert(0, url_prefix.strip("/"))
-        else:
-            url_parts.append(name)
-
-        return f"https://schemas.data.amsterdam.nl/datasets/{'/'.join(url_parts)}#{table}"
+        dataset_path = instance.get_dataset_path()
+        return f"https://schemas.data.amsterdam.nl/datasets/{dataset_path}/dataset#{table}"
 
     def build_url_field(self, field_name, model_class):
         """Make sure the generated URLs point to our dynamic models"""

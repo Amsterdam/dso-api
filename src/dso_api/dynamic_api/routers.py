@@ -197,10 +197,9 @@ class DynamicRouter(routers.DefaultRouter):
                     continue
 
                 dataset_id = model.get_dataset_id()
-                dataset = db_datasets[dataset_id]
 
                 # Determine the URL prefix for the model
-                url_prefix = self.make_url(dataset.url_prefix, dataset_id, model.get_table_id())
+                url_prefix = self.make_url(model.get_dataset_path(), model.get_table_id())
 
                 logger.debug("Created viewset %s", url_prefix)
                 viewset = viewset_factory(model)
@@ -218,12 +217,11 @@ class DynamicRouter(routers.DefaultRouter):
         tmp_router = routers.SimpleRouter()
 
         for dataset in api_datasets:
-            schema = dataset.schema
-            dataset_id = schema.id
+            dataset_id = dataset.schema.id
 
-            for table in schema.tables:
+            for table in dataset.schema.tables:
                 # Determine the URL prefix for the model
-                url_prefix = self.make_url(dataset.url_prefix, dataset_id, table.id)
+                url_prefix = self.make_url(dataset.path, table.id)
                 serializer_class = remote_serializer_factory(table)
                 viewset = remote_viewset_factory(
                     endpoint_url=dataset.endpoint_url,
@@ -245,7 +243,7 @@ class DynamicRouter(routers.DefaultRouter):
             dataset_id = dataset.schema.id
             results.append(
                 path(
-                    self.make_url(dataset.url_prefix, dataset_id) + "/",
+                    dataset.path + "/",
                     get_openapi_json_view(dataset),
                     name=f"openapi-{dataset_id}",
                 )

@@ -10,6 +10,7 @@ from django.conf import settings
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
+from schematools.contrib.django.models import Dataset
 from schematools.types import DatasetFieldSchema, DatasetTableSchema
 from schematools.utils import to_snake_case, toCamelCase
 
@@ -50,7 +51,6 @@ class RemoteSerializer(DSOSerializer):
     """Serializer that takes remote data"""
 
     table_schema = None  # defined by factory
-
     schema = serializers.SerializerMethodField()
 
     _default_list_serializer_class = RemoteListSerializer
@@ -60,7 +60,8 @@ class RemoteSerializer(DSOSerializer):
         """The schema field is exposed with every record"""
         name = self.table_schema._parent_schema.id
         table = self.table_schema.id
-        return f"https://schemas.data.amsterdam.nl/datasets/{name}/{name}#{table}"
+        dataset_path = Dataset.objects.get(name=name).path
+        return f"https://schemas.data.amsterdam.nl/datasets/{dataset_path}/dataset#{table}"
 
 
 class RemoteObjectSerializer(DSOSerializer):
