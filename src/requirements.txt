@@ -4,7 +4,7 @@
 #
 #    pip-compile --output-file=requirements.txt requirements.in
 #
-amsterdam-schema-tools[django]==0.21.7
+amsterdam-schema-tools[django]==0.21.8
     # via -r requirements.in
 asgiref==3.3.4
     # via django
