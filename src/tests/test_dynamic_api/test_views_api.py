@@ -740,7 +740,7 @@ class TestEmbedTemporalTables:
                     "title": "03630012052035.1",
                     "volgnummer": 1,
                 },
-                "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/gebieden#buurten",
+                "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/dataset#buurten",
                 "self": {
                     "href": "http://testserver/v1/gebieden/buurten/03630000000078/?volgnummer=1",
                     "identificatie": "03630000000078",
@@ -810,7 +810,7 @@ class TestEmbedTemporalTables:
                         "identificatie": "03630950000000",
                     }
                 ],
-                "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/gebieden#buurten",
+                "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/dataset#buurten",
                 "self": {
                     "href": "http://testserver/v1/gebieden/buurten/03630000000078/?volgnummer=1",
                     "title": "03630000000078.1",
@@ -831,7 +831,7 @@ class TestEmbedTemporalTables:
         }
         assert dict(data["_embedded"]["ggwgebieden"][0]) == {
             "_links": {
-                "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/gebieden#ggwgebieden",  # noqa: E501
+                "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/dataset#ggwgebieden",  # noqa: E501
                 "self": {
                     "href": "http://testserver/v1/gebieden/ggwgebieden/03630950000000/?volgnummer=1",  # noqa: E501
                     "title": "03630950000000.1",
@@ -877,7 +877,7 @@ class TestEmbedTemporalTables:
                     "title": "03630000000078",
                     "identificatie": "03630000000078",
                 },
-                "schema": "https://schemas.data.amsterdam.nl/datasets/meldingen/meldingen#statistieken",  # noqa: E501
+                "schema": "https://schemas.data.amsterdam.nl/datasets/meldingen/dataset#statistieken",  # noqa: E501
                 "self": {
                     "href": "http://testserver/v1/meldingen/statistieken/1/",
                     "title": "1",
@@ -900,7 +900,7 @@ class TestEmbedTemporalTables:
         assert response.status_code == 200, data
         assert data == {
             "_links": {
-                "schema": "https://schemas.data.amsterdam.nl/datasets/meldingen/meldingen#statistieken",  # noqa: E501
+                "schema": "https://schemas.data.amsterdam.nl/datasets/meldingen/dataset#statistieken",  # noqa: E501
                 "self": {
                     "href": "http://testserver/v1/meldingen/statistieken/1/",
                     "title": "1",
@@ -916,7 +916,7 @@ class TestEmbedTemporalTables:
             "_embedded": {
                 "buurt": {
                     "_links": {
-                        "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/gebieden#buurten",  # noqa: E501
+                        "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/dataset#buurten",  # noqa: E501
                         "self": {
                             "href": "http://testserver/v1/gebieden/buurten/03630000000078/?volgnummer=2",  # noqa: E501
                             "title": "03630000000078.2",
