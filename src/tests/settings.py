@@ -11,7 +11,7 @@ INSTALLED_APPS += [
 DATABASES = {
     "default": env.db_url(
         "DATABASE_URL",
-        default="postgres://dataservices:insecure@localhost:5415/dataservices",
+        default="postgres://dataservices:insecure@localhost:5416/dataservices",
         engine="django.contrib.gis.db.backends.postgis",
     ),
 }

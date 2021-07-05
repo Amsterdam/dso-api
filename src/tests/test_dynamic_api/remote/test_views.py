@@ -75,7 +75,7 @@ SUCCESS_TESTS = {
     "default": (
         DEFAULT_RESPONSE,
         {
-            "schema": "https://schemas.data.amsterdam.nl/datasets/brp/brp#ingeschrevenpersonen",
+            "schema": "https://schemas.data.amsterdam.nl/datasets/remote/brp/dataset#ingeschrevenpersonen",  # noqa: E501
             "_links": {
                 "self": {"href": "http://testserver/v1/remote/brp/ingeschrevenpersonen/999990901/"}
             },
@@ -85,7 +85,7 @@ SUCCESS_TESTS = {
     "small": (
         SMALL_RESPONSE,
         {
-            "schema": "https://schemas.data.amsterdam.nl/datasets/brp/brp#ingeschrevenpersonen",
+            "schema": "https://schemas.data.amsterdam.nl/datasets/remote/brp/dataset#ingeschrevenpersonen",  # noqa: E501
             "_links": {
                 "self": {"href": "http://testserver/v1/remote/brp/ingeschrevenpersonen/999990901/"}
             },
@@ -403,7 +403,7 @@ HCBRK_NATUURLIJKPERSOON = (
 
 
 DSO_NATUURLIJK_PERSOON = {
-    "schema": "https://schemas.data.amsterdam.nl/datasets/hcbrk/hcbrk#kadasternatuurlijkpersonen",
+    "schema": "https://schemas.data.amsterdam.nl/datasets/remote/hcbrk/dataset#kadasternatuurlijkpersonen",  # noqa: E501
     "naam": {
         "aanhef": "Geachte heer Jansens",
         "voornamen": "Willem",
@@ -469,7 +469,7 @@ HCBRK_ONROERENDE_ZAAK = (
 
 
 DSO_ONROERENDE_ZAAK = {
-    "schema": "https://schemas.data.amsterdam.nl/datasets/hcbrk/hcbrk#kadastraalonroerendezaken",
+    "schema": "https://schemas.data.amsterdam.nl/datasets/remote/hcbrk/dataset#kadastraalonroerendezaken",  # noqa: E501
     "type": "perceel",
     "domein": "NL.IMKAD.KadastraalObject",
     "koopsom": {"koopsom": 185000, "koopjaar": 2015},
