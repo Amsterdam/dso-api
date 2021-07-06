@@ -2,7 +2,7 @@ Sphinx == 3.5.2
 sphinx-rtd-theme == 0.5.1
 Pillow == 8.2.0
 python-string-utils == 1.0.0
-amsterdam-schema-tools == 0.21.0
+amsterdam-schema-tools == 0.21.10
 
 # Required by Sphinx too
 jinja2 >= 2.11.3
