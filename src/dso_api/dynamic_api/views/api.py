@@ -27,6 +27,7 @@ from schematools.contrib.django.models import Dataset, DynamicModel
 from dso_api.dynamic_api import filterset, locking, permissions, serializers
 from dso_api.dynamic_api.datasets import get_active_datasets
 from rest_framework_dso import fields
+from rest_framework_dso.renderers import BrowsableAPIRenderer, HALJSONRenderer
 from rest_framework_dso.views import DSOViewMixin
 
 
@@ -241,6 +242,9 @@ class APIIndexView(APIView):
     """
 
     schema = None  # exclude from schema
+
+    # Restrict available formats to JSON and api
+    renderer_classes = [BrowsableAPIRenderer, HALJSONRenderer]
 
     # For browsable API
     name = "DSO-API"
