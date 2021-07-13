@@ -11,8 +11,16 @@ which are tested by the
 `datapunt-authorization-django <https://github.com/Amsterdam/authorization_django>`_
 package.
 
-Authorization
--------------
+Authorization Rulesets
+----------------------
+
+There are two mechanisms for authorization on schema level:
+
+* The ``auth`` fields in the Amsterdam Schema restrict access to resources.
+* The profiles grant permissions, which were restricted by the schema.
+
+Schema Files
+~~~~~~~~~~~~
 
 The schema definitions can add an ``auth`` field on various levels:
 
@@ -20,41 +28,36 @@ The schema definitions can add an ``auth`` field on various levels:
 * A single table
 * A single field
 
-At every level, the ``auth`` field contains a string that is called a *scope*.
-A request's JWT must contain this scope in its ``scopes`` claim
-(see the ``authorization_django`` source code for details)
-to meet an ``auth`` field's requirements.
-The absence of an ``auth`` field marks a publicly available resource.
+The absence of an ``auth`` field makes a resource publicly available.
 
-Scopes at higher levels of the schema override scopes at lower levels.
-That is, a dataset scope overrides a table scope
-and a table scope overrides field scopes.
-So, if the dataset has ``"auth": "FOO/BAR"``,
-then this scope is required for any access to the dataset
-and any lower-level scopes are ignored.
+At every level, the ``auth`` field contains a list of *scopes*.
+The JWT token of the request must contain one of these scopes to access the resource.
 
-The effect of an ``auth`` on a dataset or table is that attempts to access it
-without the proper scopes
-result in an HTTP 403 Forbidden error.
-The effect on a field is that the field is omitted when from the response
-when the table is queried.
-The Mapbox Vector Tiles (MVT) endpoint is an exception to this rule:
-since the MVT format requires a geometry field,
-the endpoint cannot produce valid MVT when access to the geometry field is prohibited
-and gives 403 in this case.
+When there is a scope at both the dataset, table and field level
+these should *all* be satisfied to have access to the field.
+
+The scopes of a dataset or table act as mandatory access control.
+When those scopes can't be satisfied, the API returns an HTTP 403 Forbidden error.
+The fields act a bit different: when the scope of a field is not satisfied,
+the field is omitted from the response.
+
+Sometimes it's not possible to remove a field (for example, a geometry field for Mapbox Vector Tiles).
+In that case, the endpoints produces a HTTP 403 error to completely deny access.
 
 Profiles
---------
+~~~~~~~~
 
-The ``auth`` fields define the basic rules for authentication.
-Unfortunately, this is a "all or nothing" approach that isn't sufficient in complex cases.
+While the ``auth`` fields define the basic rules for authentication,
 *Profiles* provide a more fine-grained approach to authorization.
 
-Profiles are stored in the DSO-API database.
-They have a name, a set of scopes, and rules that grant additional permissions
-to requests that carry those scopes in their JWT.
+This addresses the "all or nothing" approach of ``auth`` fields that isn't sufficient in complex cases.
+Note however, that profiles are only examined when authorization is already restricted.
+So in practice, the ``auth`` scope needs to be defined (e.g. superuser-only),
+and then profiles will be analysed to grant permissions for specific use-cases.
+
+Profiles have a name, a set of scopes, and rules that grant additional permissions.
 When a request comes in, all profiles are checked against the request's scopes
-and the matching profiles are applied.
+and only matching profiles are applied.
 
 Here's an example profile in JSON:
 
@@ -81,8 +84,7 @@ Here's an example profile in JSON:
         }
     }
 
-This scope is called ``medewerker``.
-It applies to all requests that carry the scope ``BRP/R``.
+This profile is only applied when requests have the ``BRP/R`` scope.
 If more than one scope is listed, all scopes must be carried for the profile to apply.
 By implication, an empty ``scopes`` denotes a profile that always applies.
 
@@ -95,18 +97,36 @@ gain permission to read the field ``bsn`` on the table ``ingeschrevenpersonen``,
 provided that the request queries for either ``bsn`` and ``lastname``,
 or ``postcode`` and ``lastname`` (or all three fields).
 
-The intention behind ``mandatoryFilterSets`` is to ensure
-that listings are restricted on a need-to-know basis.
-For example, a profile might express that a frontend office employee
-may only access data of someone when they can provide their last name and postal code.
-Or a statistician might be allowed to read age and neighbourhood
-fields to aggregate data, without ever having access to identifiable data.
-Encoding such rules in the schema file using a custom scope
-would require every other request that accesses the dataset to also have this scope.
+The ``mandatoryFilterSets`` ensures that listings are restricted on a need-to-know basis.
+Only when some information can be provided, the API grants access to see the remaining data.
+For example, a frontend office employee may only see data of someone when they can already
+provide their last name and postal code.
 
+Profiles can also be used to avoid cluttering the main schema with many ``auth`` rules.
+Instead, deny full access to the table, and open specific fields via profiles.
+For example, a statistician might be allowed to read age and neighbourhood fields to aggregate data,
+without ever having access to identifiable data.
+
+Application in DSO-API
+----------------------
+
+The dataset and profile files stored in the repository for Amsterdam Schema.
+Both are imported into the DSO-API database, and loaded once on startup.
+
+Schematools
+~~~~~~~~~~~
+
+The authorization engine is implemented within ``schematools`` as low-level Python objects.
+The ``UserScopes`` class provides the main logic, which is accessed within the DSO-API
+as ``request.user_scopes.has_..._access()``. Each access function returns a
+:class:`~schematools.types.Permission` object with the granted access level.
+When no permission is given, the object evaluates to ``False`` in boolean comparisons (e.g. ``if permission``).
+
+The :class:`~schematools.types.Permission` object provides a ``level``, ``sub_value`` and ``transform_function()``
+for fine granted access levels, such as only viewing a field as encoded or only it's first 3 letters.
 
 WFS Logic
----------
+~~~~~~~~~
 
 Authorization is also applied to the WFS server; it's one of the reasons
 for writing a custom WFS server in the first place.
