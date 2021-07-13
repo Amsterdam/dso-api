@@ -292,7 +292,7 @@ class APIIndexView(APIView):
                 },
                 "environments": self.get_environments(ds, base),
                 "related_apis": self.get_related_apis(ds, base),
-                "api_authentication": ds.schema.auth,
+                "api_authentication": list(ds.schema.auth) or None,
                 "api_type": self.api_type,
                 "organization_name": "Gemeente Amsterdam",
                 "organization_oin": "00000001002564440000",

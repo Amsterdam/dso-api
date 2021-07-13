@@ -17,8 +17,8 @@ from django.utils.timezone import get_current_timezone
 from jwcrypto.jwt import JWT
 from rest_framework.request import Request
 from rest_framework.test import APIClient, APIRequestFactory
-from schematools.contrib.django.auth_backend import RequestProfile
 from schematools.contrib.django.models import Dataset, DynamicModel, Profile
+from schematools.permissions import UserScopes
 from schematools.types import DatasetSchema, ProfileSchema
 
 from rest_framework_dso.crs import RD_NEW
@@ -44,8 +44,11 @@ def api_request(api_rf) -> WSGIRequest:
     request.response_content_crs = None
 
     request.user = AnonymousUser()
-    request.auth_profile = RequestProfile(request)
-    request.is_authorized_for = lambda *scopes: True
+    request.is_authorized_for = lambda *scopes: True  # note: this is copied into user_scopes
+    request.user_scopes = UserScopes(
+        query_params=request.GET,
+        is_authorized_for=request.is_authorized_for,
+    )
 
     # Temporal modifications. Usually done via TemporalTableMiddleware
     request.versioned = False

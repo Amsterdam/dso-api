@@ -9,9 +9,8 @@ in the DSO base classes as those classes are completely generic.
 from __future__ import annotations
 
 import re
-from collections import OrderedDict
-from functools import lru_cache
-from typing import List, Optional, Tuple, Type, Union, cast
+from functools import lru_cache, wraps
+from typing import Any, Callable, List, Optional, Tuple, Type, Union, cast
 from urllib.parse import quote, urlencode
 
 from django.core.exceptions import ImproperlyConfigured
@@ -31,9 +30,10 @@ from schematools.contrib.django.models import (
     DynamicModel,
     LooseRelationField,
     LooseRelationManyToManyField,
+    get_field_schema,
 )
 from schematools.contrib.django.signals import dynamic_models_removed
-from schematools.types import DatasetTableSchema
+from schematools.types import DatasetTableSchema, Json
 from schematools.utils import to_snake_case, toCamelCase
 
 from dso_api.dynamic_api.fields import (
@@ -46,11 +46,7 @@ from dso_api.dynamic_api.fields import (
     TemporalLinksField,
     TemporalReadOnlyField,
 )
-from dso_api.dynamic_api.permissions import (
-    filter_unauthorized_expands,
-    get_permission_key_for_field,
-    get_unauthorized_fields,
-)
+from dso_api.dynamic_api.permissions import filter_unauthorized_expands
 from dso_api.dynamic_api.utils import resolve_model_lookup
 from rest_framework_dso.embedding import EmbeddedFieldMatch
 from rest_framework_dso.fields import AbstractEmbeddedField, EmbeddedField, EmbeddedManyToManyField
@@ -166,7 +162,7 @@ class DynamicListSerializer(DSOModelListSerializer):
         """Filter unauthorized fields from the matched expands."""
         auto_expand_all = self.fields_to_expand is True
         return filter_unauthorized_expands(
-            self.context["request"],
+            self.context["request"].user_scopes,
             expanded_fields=super().expanded_fields,
             skip_unauth=auto_expand_all,
         )
@@ -214,28 +210,57 @@ class DynamicSerializer(DSOModelSerializer):
 
     def get_fields(self):
         """Remove fields that shouldn't be part of the response."""
-        fields = super().get_fields()
-        request = self.get_request()
+        user_scopes = self.get_request().user_scopes
+        model = self.Meta.model
 
-        # Adjust the serializer based on the request.
-        # request can be None for get_schema_view(public=True)
-        unauthorized_fields = get_unauthorized_fields(request, self.Meta.model)
-        if unauthorized_fields:
-            fields = OrderedDict(
-                [
-                    (field_name, field)
-                    for field_name, field in fields.items()
-                    if field_name not in unauthorized_fields
-                ]
-            )
+        # See what fields should really be included.
+        fields = {}
+        for field_name, field in super().get_fields().items():
+            if field.source == "*":
+                # e.g. _links field, always include. These sub serializers
+                # do their own permission checks for their fields.
+                fields[field_name] = field
+                continue
+
+            # field.source can be None as this point, because Field.bind() is not called yet.
+            model_field = model._meta.get_field(field.source or field_name)
+            field_schema = get_field_schema(model_field)
+            if permission := user_scopes.has_field_access(field_schema):
+                # field has permission
+                if transform_function := permission.transform_function():
+                    # Value must be transformed, decorate to_representation() for it.
+                    # Fields are a deepcopy, so this doesn't affect other serializer instances.
+                    # This strategy also avoids having to dig into the response data afterwards.
+                    field.to_representation = self._apply_transform(
+                        field.to_representation, transform_function
+                    )
+
+                fields[field_name] = field
+
         return fields
+
+    @staticmethod
+    def _apply_transform(
+        to_representation: Callable[[Any], Json], transform_function: Callable[[Json], Json]
+    ):
+        """Make sure an additional transformation happens before the field generated output.
+        :param to_representation: The bound method from the serializer
+        :param transform_function: A function that adjusts the rendered value.
+        """
+
+        @wraps(to_representation)
+        def _new_to_representation(data):
+            value = to_representation(data)
+            return transform_function(value)
+
+        return _new_to_representation
 
     @cached_property
     def expanded_fields(self) -> List[EmbeddedFieldMatch]:
         """Filter unauthorized fields from the matched expands."""
         auto_expand_all = self.fields_to_expand is True
         return filter_unauthorized_expands(
-            self.get_request(),
+            self.get_request().user_scopes,
             expanded_fields=super().expanded_fields,
             skip_unauth=auto_expand_all,
         )
@@ -334,30 +359,7 @@ class DynamicSerializer(DSOModelSerializer):
                     for item in related_ids
                 ]
 
-        if self.instance is not None:
-            data.update(self._profile_based_authorization_and_mutation(data))
         return data
-
-    def _profile_based_authorization_and_mutation(self, data):
-        authorized_data = dict()
-        if isinstance(self.instance, list):
-            # test workaround
-            model = self.instance[0]._meta.model
-        elif isinstance(self.instance, models.QuerySet):
-            # ListSerializer use
-            model = self.instance.model
-        else:
-            model = self.instance._meta.model
-        request = self.get_request()
-
-        for model_field in model._meta.get_fields():
-            permission_key = get_permission_key_for_field(model_field)
-            permission = request.auth_profile.get_read_permission(permission_key)
-            if permission is not None:
-                key = toCamelCase(model_field.name)
-                if key in data:
-                    authorized_data[key] = _mutate_value(permission, data[key])
-        return authorized_data
 
 
 class DynamicBodySerializer(DynamicSerializer):
@@ -600,12 +602,8 @@ def _build_serializer_field(
     else:
         # Regular fields
         # Re-map file to correct serializer
-        field_schema = model.table_schema().get_field_by_id(model_field.name)
-        if (
-            field_schema is not None
-            and field_schema.type == "string"
-            and field_schema.format == "blob-azure"
-        ):
+        field_schema = get_field_schema(model_field)
+        if field_schema.type == "string" and field_schema.format == "blob-azure":
             _build_serializer_blob_field(model_field, field_schema, fields, new_attrs)
 
     # Regular fields for the body, and some relation fields
@@ -623,7 +621,7 @@ def _build_serializer_embeddded_field(
         else EmbeddedField
     )
 
-    new_attrs[camel_name] = EmbeddedFieldClass(
+    embedded_field = EmbeddedFieldClass(
         serializer_class=serializer_factory(
             model_field.related_model,
             depth=1,
@@ -632,6 +630,10 @@ def _build_serializer_embeddded_field(
         ),
         source=model_field.name,
     )
+    # Attach the field schema so access rules can be applied here.
+    embedded_field.field_schema = get_field_schema(model_field)
+
+    new_attrs[camel_name] = embedded_field
 
 
 def _build_plain_serializer_field(model_field, fields, extra_kwargs):
@@ -724,16 +726,3 @@ def _generate_embedded_relations(model, fields, new_attrs, nesting_level):
             )
             fields.append(item.name)
             new_attrs[item.name] = related_serializer(many=True)
-
-
-def _mutate_value(permission, value):
-    params = None
-    if ":" in permission:
-        permission, params = permission.split(":")
-
-    if permission == "letters":
-        return value[0 : int(params)]
-    elif permission == "read":
-        return value
-    else:
-        raise NotImplementedError(f"Invalid permission {permission}")
