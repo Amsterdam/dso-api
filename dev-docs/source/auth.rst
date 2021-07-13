@@ -123,7 +123,7 @@ as ``request.user_scopes.has_..._access()``. Each access function returns a
 When no permission is given, the object evaluates to ``False`` in boolean comparisons (e.g. ``if permission``).
 
 The :class:`~schematools.types.Permission` object provides a ``level``, ``sub_value`` and ``transform_function()``
-for fine granted access levels, such as only viewing a field as encoded or only it's first 3 letters.
+for fine-grained access levels, such as only viewing a field as encoded or only its first three letters.
 
 WFS Logic
 ~~~~~~~~~
