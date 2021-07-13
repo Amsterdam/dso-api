@@ -6,7 +6,7 @@ import urllib3
 from django.urls import reverse
 from rest_framework.status import HTTP_200_OK, HTTP_403_FORBIDDEN
 from schematools.contrib.django import models
-from schematools.types import DatasetTableSchema
+from schematools.types import DatasetTableSchema, ProfileSchema
 from urllib3_mock import Responses
 
 from dso_api.dynamic_api.remote.clients import RemoteClient
@@ -137,22 +137,24 @@ def test_remote_detail_view_with_profile_scope(
     brp_schema_json,
     brp_endpoint_url,
 ):
-    models.Profile.objects.create(
-        name="profiel",
-        scopes=["PROFIEL/SCOPE"],
-        schema_data={
-            "datasets": {
-                "brp_test": {
-                    "tables": {
-                        "ingeschrevenpersonen": {
-                            "mandatoryFilterSets": [
-                                ["id"],
-                            ],
+    models.Profile.create_for_schema(
+        ProfileSchema.from_dict(
+            {
+                "name": "profiel",
+                "scopes": ["PROFIEL/SCOPE"],
+                "datasets": {
+                    "brp_test": {
+                        "tables": {
+                            "ingeschrevenpersonen": {
+                                "mandatoryFilterSets": [
+                                    ["id"],
+                                ],
+                            }
                         }
                     }
-                }
+                },
             }
-        },
+        )
     )
     # creating custom brp2 copy, as ttl_cache will keep auth value after this test
     # which breaks the other tests

@@ -35,14 +35,13 @@ from django.db import models
 from django.http import Http404
 from django.urls import reverse
 from django.utils.functional import cached_property
-from gisserver.exceptions import InvalidParameterValue, PermissionDenied
+from gisserver.exceptions import InvalidParameterValue
 from gisserver.features import ComplexFeatureField, FeatureField, FeatureType, ServiceDescription
 from gisserver.views import WFSView
-from schematools.contrib.django.models import Dataset
-from schematools.utils import toCamelCase
+from schematools.contrib.django.models import Dataset, get_field_schema
 
-from dso_api.dynamic_api import permissions
 from dso_api.dynamic_api.datasets import get_active_datasets
+from dso_api.dynamic_api.permissions import CheckPermissionsMixin
 from dso_api.dynamic_api.views import APIIndexView
 from rest_framework_dso import crs
 
@@ -118,7 +117,7 @@ class DatasetWFSIndexView(APIIndexView):
         return related_apis
 
 
-class DatasetWFSView(WFSView):
+class DatasetWFSView(CheckPermissionsMixin, WFSView):
     """A WFS view for a single dataset.
 
     This extends the logic of django-gisserver to expose the dynamically generated
@@ -137,9 +136,6 @@ class DatasetWFSView(WFSView):
     xml_namespace = f"{settings.DATAPUNT_API_URL}v1/wfs/"
 
     index_template_name = "dso_api/dynamic_api/wfs_dataset.html"
-
-    #: Custom permission that checks amsterdam schema auth settings
-    permission_classes = [permissions.HasOAuth2Scopes]
 
     def setup(self, request, *args, **kwargs):
         """Initial setup logic before request handling:
@@ -256,11 +252,10 @@ class DatasetWFSView(WFSView):
         Instead of opting for the "__all__" value of django-gisserver,
         provide an explicit list of fields so unauthorized fields are excluded.
         """
-        unauthorized_fields = permissions.get_unauthorized_fields(self.request, model)
         fields = []
         other_geo_fields = []
         for model_field in model._meta.get_fields():
-            if toCamelCase(model_field.name) in unauthorized_fields:
+            if not self.request.user_scopes.has_field_access(get_field_schema(model_field)):
                 continue
 
             if isinstance(model_field, models.ForeignKey):
@@ -306,18 +301,18 @@ class DatasetWFSView(WFSView):
         This is a shorter list, as including a geometry has no use here.
         Relations are also avoided as these won't be expanded anyway.
         """
-        unauthorized_fields = permissions.get_unauthorized_fields(self.request, model)
+        user_scopes = self.request.user_scopes
         return [
             model_field.name
             for model_field in model._meta.get_fields()  # type: models.Field
             if not model_field.is_relation
-            and toCamelCase(model_field.name) not in unauthorized_fields
             and not isinstance(model_field, GeometryField)
+            and user_scopes.has_field_access(get_field_schema(model_field))
         ]
 
     def get_embedded_fields(self, relation_name, model, pk_attr=None) -> List[FieldDef]:
         """Define which fields to embed as flattened fields."""
-        unauthorized_fields = permissions.get_unauthorized_fields(self.request, model)
+        user_scopes = self.request.user_scopes
         return [
             FeatureField(
                 name=f"{relation_name}.{model_field.name}",  # can differ if needed
@@ -329,34 +324,12 @@ class DatasetWFSView(WFSView):
             )
             for model_field in model._meta.get_fields()  # type: models.Field
             if not model_field.is_relation
-            and toCamelCase(model_field.name) not in unauthorized_fields
             and not isinstance(model_field, GeometryField)
+            and user_scopes.has_field_access(get_field_schema(model_field))
         ]
 
     def _get_geometry_fields(self, model) -> List[GeometryField]:
         return [f for f in model._meta.get_fields() if isinstance(f, GeometryField)]
-
-    def check_permissions(self, request, models):
-        """
-        Check if the request should be permitted.
-        """
-        for permission in self.get_permissions():
-            if not permission.has_permission_for_models(request, self, models):
-                self.permission_denied(request, message=getattr(permission, "message", None))
-
-    def get_permissions(self):
-        """
-        Instantiates and returns the list of permissions that this view requires.
-        """
-        return [permission() for permission in self.permission_classes]
-
-    def permission_denied(self, request, message=None):
-        """
-        If request is not permitted, determine what kind of exception to raise.
-        """
-        # if request.authenticators and not request.successful_authenticator:
-        #     raise exceptions.NotAuthenticated()
-        raise PermissionDenied("check_permissions")
 
 
 class LazyList(UserList):

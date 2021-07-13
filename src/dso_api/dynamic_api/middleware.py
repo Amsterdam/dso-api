@@ -1,7 +1,8 @@
 import logging
 
 from django.utils.deprecation import MiddlewareMixin
-from schematools.contrib.django.auth_backend import RequestProfile
+from schematools.contrib.django.models import Profile
+from schematools.permissions import UserScopes
 
 audit_log = logging.getLogger("dso_api.audit")
 
@@ -11,8 +12,14 @@ class DatasetMiddleware(MiddlewareMixin):
     Assign `dataset` to request, for easy access.
     """
 
+    def __init__(self, get_response):
+        super().__init__(get_response)
+        # Load the profiles once on startup of the application (just like datasets are read once).
+        self.all_profiles = [p.schema for p in Profile.objects.all()]
+
     def process_request(self, request):
-        request.auth_profile = RequestProfile(request)  # for OAS views
+        # This also installs the `user_scopes` for the OAS views.
+        request.user_scopes = UserScopes(request.GET, request.is_authorized_for, self.all_profiles)
 
     def process_view(self, request, view_func, view_args, view_kwargs):
         """

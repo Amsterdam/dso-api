@@ -2,11 +2,68 @@
 import itertools
 import json
 from types import GeneratorType
+from typing import List
 from xml.etree import ElementTree as ET
 
 import orjson
+from django.apps import apps
 from django.http.response import HttpResponseBase
 from django.utils.functional import SimpleLazyObject
+from schematools.types import DatasetSchema
+from schematools.utils import to_snake_case
+
+
+def patch_dataset_auth(schema: DatasetSchema, *, auth: List[str]):
+    """Monkeypatch an Amsterdam Schema to set "auth" on the complete dataset."""
+    schema["auth"] = auth
+
+    # Also patch models of this app
+    for model in apps.get_app_config(schema.id).get_models():
+        model.get_dataset_schema()["auth"] = auth
+
+
+def patch_table_auth(schema: DatasetSchema, table_id, *, auth: List[str]):
+    """Monkeypatch an Amsterdam Schema to set "auth" on a table."""
+    # This updates the low-level dict data so all high-level objects get it.
+    schema.get_table_by_id(table_id)  # checks errors
+
+    raw_table = next(t for t in schema["tables"] if t["id"] == table_id)
+    raw_table["auth"] = auth
+
+    # Also patch the active model, as that's already loaded and has a copy of the table schema
+    model = apps.get_model(schema.id, table_id)
+    model.table_schema()["auth"] = auth
+
+
+def patch_field_auth(schema: DatasetSchema, table_id, field_id, *sub_fields, auth: List[str]):
+    """Monkeypatch an Amsterdam Schema to set "auth" on a table."""
+    # This updates the low-level dict data so all high-level objects get it.
+    schema.get_table_by_id(table_id).get_field_by_id(field_id)  # check existence
+
+    raw_table = next(t for t in schema["tables"] if t["id"] == table_id)
+    raw_field = next(
+        f for f_id, f in raw_table["schema"]["properties"].items() if f_id == field_id
+    )
+
+    # Allow to resolve sub fields too
+    for sub_field in sub_fields:
+        # Auto jump over array, object or "array of objects"
+        if raw_field["type"] == "array":
+            raw_field = raw_field["items"]
+        if raw_field["type"] == "object":
+            raw_field = raw_field["properties"]
+
+        raw_field = raw_field[sub_field]
+
+    raw_field["auth"] = auth
+
+    # Also patch the active model
+    model = apps.get_model(schema.id, table_id)
+    model_field = model._meta.get_field(to_snake_case(field_id))
+    for sub_field in sub_fields:
+        model_field = model_field.related_model._meta.get_field(sub_field)
+
+    model_field.field_schema["auth"] = auth
 
 
 def read_response(response: HttpResponseBase) -> str:

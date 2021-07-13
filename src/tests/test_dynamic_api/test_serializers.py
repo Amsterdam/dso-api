@@ -3,13 +3,13 @@ from datetime import date
 import pytest
 from django.apps import apps
 from django.core.validators import EmailValidator, URLValidator
-from schematools.contrib.django.auth_backend import RequestProfile
-from schematools.contrib.django.models import Profile
+from schematools.permissions import UserScopes
+from schematools.types import ProfileSchema
 
 from dso_api.dynamic_api.serializers import serializer_factory
 from rest_framework_dso.fields import EmbeddedField
 from rest_framework_dso.views import DSOViewMixin
-from tests.utils import normalize_data, unlazy
+from tests.utils import normalize_data, patch_field_auth, unlazy
 
 
 @pytest.fixture(autouse=True)
@@ -705,27 +705,35 @@ class TestDynamicSerializer:
         drf_request, fietspaaltjes_schema, fietspaaltjes_model, fietspaaltjes_data
     ):
         """ Prove that only first letter is seen in Profile allows only it."""
-
-        Profile.objects.create(
-            name="test_1",
-            scopes="[]",
-            schema_data={
-                "datasets": {
-                    "fietspaaltjes": {
-                        "tables": {"fietspaaltjes": {"fields": {"area": "letters:1"}}}
-                    }
-                }
-            },
-        )
-        drf_request.auth_profile = RequestProfile(drf_request)
-
         # does not have scope for Dataset or Table
-        drf_request.is_authorized_for = lambda scopes=None: False
+        drf_request.is_authorized_for = lambda *scopes: False
+        drf_request.dataset = fietspaaltjes_schema
+        drf_request.user_scopes = UserScopes(
+            {},
+            is_authorized_for=drf_request.is_authorized_for,
+            all_profiles=[
+                ProfileSchema.from_dict(
+                    {
+                        "name": "only_first",
+                        "datasets": {
+                            "fietspaaltjes": {
+                                "tables": {
+                                    "fietspaaltjes": {
+                                        "fields": {"area": "letters:1"},
+                                    }
+                                }
+                            }
+                        },
+                    }
+                ),
+            ],
+        )
+
+        # Make sure the field is not readable by default, so profiles are activated
+        patch_field_auth(fietspaaltjes_schema, "fietspaaltjes", "area", auth=["FOO/BAR"])
+        assert drf_request.user_scopes.get_active_profile_datasets("fietspaaltjes")
 
         FietspaaltjesSerializer = serializer_factory(fietspaaltjes_model)
-
-        drf_request.dataset = fietspaaltjes_schema
-
         fietspaaltjes_serializer = FietspaaltjesSerializer(
             fietspaaltjes_data, context={"request": drf_request}
         )
@@ -737,26 +745,33 @@ class TestDynamicSerializer:
         drf_request, fietspaaltjes_schema, fietspaaltjes_model, fietspaaltjes_data
     ):
         """ Prove that only first letter is seen in Profile allows only it in listing. """
-
-        Profile.objects.create(
-            name="test_1",
-            scopes="[]",
-            schema_data={
-                "datasets": {
-                    "fietspaaltjes": {
-                        "tables": {"fietspaaltjes": {"fields": {"area": "letters:1"}}}
-                    }
-                }
-            },
-        )
-        drf_request.auth_profile = RequestProfile(drf_request)
-
-        # does not have scope for Dataset or Table
-        drf_request.is_authorized_for = lambda scopes=None: False
-        FietspaaltjesSerializer = serializer_factory(fietspaaltjes_model)
-
+        drf_request.is_authorized_for = lambda *scopes: False
         drf_request.dataset = fietspaaltjes_schema
+        drf_request.user_scopes = UserScopes(
+            {},
+            is_authorized_for=drf_request.is_authorized_for,
+            all_profiles=[
+                ProfileSchema.from_dict(
+                    {
+                        "name": "only_first",
+                        "datasets": {
+                            "fietspaaltjes": {
+                                "tables": {
+                                    "fietspaaltjes": {
+                                        "fields": {"area": "letters:1"},
+                                    }
+                                }
+                            }
+                        },
+                    }
+                )
+            ],
+        )
 
+        # Make sure the field is not readable by default, so profiles are activated
+        patch_field_auth(fietspaaltjes_schema, "fietspaaltjes", "area", auth=["FOO/BAR"])
+
+        FietspaaltjesSerializer = serializer_factory(fietspaaltjes_model)
         fietspaaltjes_serializer = FietspaaltjesSerializer(
             fietspaaltjes_model.objects.all(),
             context={"request": drf_request},
