@@ -338,13 +338,16 @@ def test_brp_not_authenticated(
     urllib3_mocker.add_callback(
         "GET",
         "/unittest/brp/ingeschrevenpersonen/999990901",
-        callback=lambda request: (remote_status, {}, None),
+        callback=lambda request: (remote_status, {}, "foo"),
         content_type="application/json",
     )
 
     url = reverse("dynamic_api:brp-ingeschrevenpersonen-detail", kwargs={"pk": "999990901"})
     response = api_client.get(url)
-    assert response.status_code == 403
+    data = read_response_json(response)
+
+    assert response.status_code == 403, data
+    assert data["detail"].startswith(str(remote_status))
 
 
 @pytest.mark.django_db

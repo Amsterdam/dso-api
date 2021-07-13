@@ -163,10 +163,16 @@ class RemoteClient:
             else:
                 raise BadGateway(detail_message)
         elif response.status in (HTTP_401_UNAUTHORIZED, HTTP_403_FORBIDDEN):
-            # We translate 401 to 403 because 401 must always have a
-            # WWW-Authenticate header in the response and we can't easily
-            # set that from here.
-            raise PermissionDenied(detail_message)
+            # We translate 401 to 403 because 401 MUST have a WWW-Authenticate
+            # header in the response and we can't easily set that from here.
+            # Also, RFC 7235 says we MUST NOT change such a header,
+            # which presumably includes making one up.
+            raise RemoteAPIException(
+                title=PermissionDenied.default_detail,
+                detail=f"{response.status} from remote: {response.data!r}",
+                status_code=HTTP_403_FORBIDDEN,
+                code=PermissionDenied.default_code,
+            )
         elif response.status == 404:  # "not found"
             # Return 404 to client (in DRF format)
             if content_type == "application/problem+json":
