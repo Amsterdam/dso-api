@@ -107,7 +107,7 @@ def sort_fields(
 def render_dataset_docs(dataset: DatasetSchema):
     snake_name = to_snake_case(dataset.id)
     main_title = dataset.title or snake_name.replace("_", " ").capitalize()
-    tables = [_get_table_context(t) for t in sort_tables(dataset.tables)]
+    tables = [_get_table_context(t) for t in dataset.tables]
     if any(t["has_geometry"] for t in tables):
         wfs_url = f"{BASE_URL}/v1/wfs/{snake_name}/"
     else:
@@ -134,7 +134,7 @@ def render_wfs_dataset_docs(dataset: DatasetSchema):
     """Render the docs for the WFS dataset."""
     snake_name = to_snake_case(dataset.id)
     main_title = dataset.title or snake_name.replace("_", " ").capitalize()
-    tables = [_get_feature_type_context(t) for t in sort_tables(dataset.tables)]
+    tables = [_get_feature_type_context(t) for t in dataset.tables]
     if all(not t["has_geometry"] for t in tables):
         return None
 
