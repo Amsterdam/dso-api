@@ -63,6 +63,7 @@ class TemporalRetrieveModelMixin:
                     models.Q(**{f"{end_field}__gte": temporal_value})
                     | models.Q(**{f"{end_field}__isnull": True})
                 )
+
         return queryset
 
     def get_object(self, queryset=None):

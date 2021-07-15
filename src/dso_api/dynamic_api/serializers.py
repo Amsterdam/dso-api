@@ -33,7 +33,7 @@ from schematools.contrib.django.models import (
     get_field_schema,
 )
 from schematools.contrib.django.signals import dynamic_models_removed
-from schematools.types import DatasetTableSchema, Json
+from schematools.types import DatasetTableSchema, Json, Temporal
 from schematools.utils import to_snake_case, toCamelCase
 
 from dso_api.dynamic_api.fields import (
@@ -150,6 +150,7 @@ class DynamicListSerializer(DSOModelListSerializer):
         for i, lookup in enumerate(lookups):
             related_model, is_many = resolve_model_lookup(parent_model, lookup)
             if cast(DynamicModel, related_model).is_temporal() and is_many:
+
                 # When the model is a temporal relationship, make sure the prefetch only
                 # returns the latest objects. The Prefetch objects allow adding these filters.
                 lookups[i] = models.Prefetch(
@@ -288,6 +289,7 @@ class DynamicSerializer(DSOModelSerializer):
             field_kwargs["view_name"] = get_view_name(model_class, "detail")
 
         # Only make it a temporal field if model is from a temporal dataset
+
         if field_class == HyperlinkedRelatedField and model_class.table_schema().is_temporal:
             field_class = TemporalHyperlinkedRelatedField
         return field_class, field_kwargs
@@ -311,6 +313,7 @@ class DynamicSerializer(DSOModelSerializer):
         for f in self.Meta.model._meta.many_to_many:
             field = self.Meta.model._meta.get_field(f.attname)
             if isinstance(field, LooseRelationManyToManyField):
+
                 dataset_name, table_name = [
                     to_snake_case(part) for part in field.relation.split(":")
                 ]
@@ -399,6 +402,7 @@ class DynamicBodySerializer(DynamicSerializer):
         ]
         for field_name, field in fields.items():
             if isinstance(field, TemporalHyperlinkedRelatedField):
+
                 hal_fields.append(field_name)
                 hal_fields += [f"{field_name}{suffix}" for suffix in capitalized_identifier_fields]
             elif isinstance(
@@ -438,6 +442,36 @@ def get_view_name(model: Type[DynamicModel], suffix: str):
     dataset_id = to_snake_case(model.get_dataset_id())
     table_id = to_snake_case(model.get_table_id())
     return f"dynamic_api:{dataset_id}-{table_id}-{suffix}"
+
+
+class ThroughSerializer(DynamicSerializer):
+    """The serializer for the through table of M2M relations.
+
+    Because temporal fields can be defined 'on the relation', like e.g.
+    beginGeldigheid and eindGeldigheid, we need a separate serializer.
+    For the 'target' of the M2M relation the HALTemporalHyperlinkedRelatedField
+    is used. This field is added in the factory for this serializer.
+
+    The content of this field is merged into this serializer.
+    To be able to fetch this field, a special attribute `target`
+    is added to the `Meta` object of this serializer.
+
+    """
+
+    serializer_related_field = HALTemporalHyperlinkedRelatedField
+
+    def to_representation(self, obj):
+        """Move fields from target to this representation."""
+        representation = super().to_representation(obj)
+
+        target_representation = representation.pop(self.Meta.target)
+
+        # if data is incomplete, target_representation could be None
+        # avoid crash
+        if target_representation is not None:
+            representation.update(target_representation)
+
+        return representation
 
 
 # When models are removed, clear the cache.
@@ -559,6 +593,12 @@ def _links_serializer_factory(model: Type[DynamicModel], depth: int) -> Type[Dyn
         # Only create fields for relations, avoid adding non-relation fields in _links.
         if isinstance(model_field, models.ManyToOneRel):
             _build_serializer_reverse_fk_field(model, model_field, new_attrs, fields)
+        # We need to handle LooseRelationManyToManyField first, because
+        # it is also a subclass of the regular ManyToManyField
+        elif isinstance(model_field, LooseRelationManyToManyField):
+            _build_plain_serializer_field(model_field, fields, extra_kwargs)
+        elif isinstance(model_field, models.ManyToManyField):
+            _build_m2m_serializer(model, model_field, new_attrs, fields, extra_kwargs)
         elif isinstance(model_field, (RelatedField, ForeignObjectRel, LooseRelationField)):
             _build_plain_serializer_field(model_field, fields, extra_kwargs)
 
@@ -634,6 +674,92 @@ def _build_serializer_embeddded_field(
     embedded_field.field_schema = get_field_schema(model_field)
 
     new_attrs[camel_name] = embedded_field
+
+
+def _through_serializer_factory(
+    model: Type[DynamicModel], target_model: DynamicModel, target_field_name: str
+) -> Type[DynamicSerializer]:
+    """Generate the DRF serializer class for a M2M model.
+
+    Args:
+        model: the `through` model
+        target_model: the target model for the M2M relation
+        target_field_name: the name of the M2M field in the source model
+
+        This factory adds a field `target_field_name`. A field with this
+        name is available on the through model. It is a FK pointing to the target.
+
+        This FK field will lead to a HALTemporalHyperlinkedRelatedField on the
+        through serializer. Because we do not want these field as subfields,
+        the ThroughSerializer is merging the ouput of this field
+        in its `to_representation` method.
+
+        Furthermore, temporal fields are add to the through serializer
+        if the target model is temporal.
+
+        In the creation of the ThroughSerializer, a special attribute `target`
+        is added to the `Meta` object. This is needed by the ThroughSerializer
+        to be able to pick the right field for embedding into its output.
+    """
+    fields = []
+    extra_kwargs = {}
+
+    safe_dataset_id = to_snake_case(model.get_dataset_id())
+    serializer_name = f"{safe_dataset_id.title()}{model.__name__}ThroughSerializer"
+    new_attrs = {
+        "table_schema": model.table_schema(),
+        "__module__": f"dso_api.dynamic_api.serializers.{safe_dataset_id}",
+    }
+
+    # The FK pointing to the target
+    fields.append(target_field_name)
+
+    if target_model.is_temporal():
+
+        table_schema = target_model.table_schema()
+        temporal: Temporal = cast(Temporal, table_schema.temporal)
+
+        # The fields that define the boundaries of a particular related object are
+        # added if they exist on the model.
+        # (e.g. "beginGeldigheid" and "eindGeldigheid" for the "geldigOp" dimension
+        # for GOB data)
+        # NB. the `Temporal` dataclass return the boundary_fieldnames as snakecased!
+        for dimension_fieldname, boundary_fieldnames in temporal.dimensions.items():
+            for fn in boundary_fieldnames:
+                snaked_fn = to_snake_case(fn)
+                camel_fn = toCamelCase(fn)
+                if hasattr(model, snaked_fn):
+                    fields.append(camel_fn)
+                    extra_kwargs[camel_fn] = {"source": snaked_fn}
+
+    new_attrs["Meta"] = type(
+        "Meta",
+        (),
+        {
+            "model": model,
+            "fields": fields,
+            "extra_kwargs": extra_kwargs,
+            "target": target_field_name,
+        },
+    )
+
+    return type(serializer_name, (ThroughSerializer,), new_attrs)
+
+
+def _build_m2m_serializer(model, model_field, new_attrs, fields, extra_kwargs):
+
+    camel_name = toCamelCase(model_field.name)
+
+    through_model = getattr(model, model_field.name).through
+    serializer_class = _through_serializer_factory(
+        through_model, model_field.related_model, model_field.name
+    )
+
+    source = to_snake_case(f"{through_model._meta.object_name}_through_{model.get_table_id()}")
+
+    new_attrs[camel_name] = serializer_class(source=source, many=True)
+
+    fields.append(camel_name)
 
 
 def _build_plain_serializer_field(model_field, fields, extra_kwargs):
@@ -725,4 +851,5 @@ def _generate_embedded_relations(model, fields, new_attrs, nesting_level):
                 nesting_level=nesting_level + 1,
             )
             fields.append(item.name)
+
             new_attrs[item.name] = related_serializer(many=True)

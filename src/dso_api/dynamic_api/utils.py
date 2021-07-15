@@ -34,6 +34,7 @@ def resolve_model_lookup(model: Type[Model], lookup: str) -> Tuple[Type[Model], 
     field = None
     for field_name in lookup.split("__"):
         field = model._meta.get_field(field_name)
+
         if isinstance(field, (RelatedField, ForeignObjectRel, LooseRelationField)):
             # RelatedField covers all forwards relations (ForeignKey, ManyToMany, OneToOne)
             # ForeignObjectRel covers backward relations (ManyToOneRel, ManyToManyRel, OneToOneRel)

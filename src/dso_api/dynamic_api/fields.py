@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from typing import Any, Dict, cast
 
 import azure.storage.blob
 from django.conf import settings
@@ -7,6 +8,7 @@ from more_itertools import first
 from rest_framework import serializers
 from rest_framework.reverse import reverse
 from schematools.contrib.django.models import DynamicModel
+from schematools.types import Temporal
 from schematools.utils import to_snake_case
 
 from rest_framework_dso.fields import LinksField
@@ -49,24 +51,32 @@ class TemporalHyperlinkedRelatedField(serializers.HyperlinkedRelatedField):
 
 
 class HALTemporalHyperlinkedRelatedField(TemporalHyperlinkedRelatedField):
-    """Wrap the url from the HyperlinkedRelatedField according to HAL specs"""
+    """Wrap the url from the HyperlinkedRelatedField according to HAL specs.
+
+    If the value is from a temporal table, extra info is added to the output.
+    """
 
     def to_representation(self, value: DynamicModel):
         href = super().to_representation(value)
-        output = {"href": href}
+        output: Dict[str, Any] = {"href": href}
         if value.has_display_field():
             output["title"] = str(value)
 
         if href and value.is_temporal():
             table_schema = value.table_schema()
-            temporal_fieldname = table_schema.temporal.identifier
+            temporal: Temporal = cast(Temporal, table_schema.temporal)
+            temporal_fieldname = temporal.identifier
             id_fieldname = first(table_schema.identifier)
+
+            # Add the temporal fields that uniquely identify the related object
+            # (e.g. "identificatie" and "volgnummer" for GOB data).
             output.update(
                 {
                     temporal_fieldname: getattr(value, temporal_fieldname),
                     id_fieldname: getattr(value, id_fieldname),
                 }
             )
+
         return output
 
 

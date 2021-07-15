@@ -220,6 +220,7 @@ class DSOModelListSerializer(DSOListSerializer):
 
         # Find the the best approach to iterate over the results.
         if prefetch_lookups := self.get_prefetch_lookups():
+
             # When there are related fields, avoid an N-query issue by prefetching.
             # ChunkedQuerySetIterator makes sure the queryset is still read in partial chunks.
             queryset_iterator = ChunkedQuerySetIterator(data.prefetch_related(*prefetch_lookups))

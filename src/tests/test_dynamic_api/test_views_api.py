@@ -820,6 +820,8 @@ class TestEmbedTemporalTables:
                     "identificatie": "03630012052035",
                     "title": "03630012052035.1",
                     "volgnummer": 1,
+                    "beginGeldigheid": None,
+                    "eindGeldigheid": None,
                 },
                 "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/dataset#buurten",
                 "self": {
@@ -889,6 +891,8 @@ class TestEmbedTemporalTables:
                         "title": "03630950000000.1",
                         "volgnummer": 1,
                         "identificatie": "03630950000000",
+                        "beginGeldigheid": None,
+                        "eindGeldigheid": None,
                     }
                 ],
                 "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/dataset#buurten",
@@ -925,6 +929,8 @@ class TestEmbedTemporalTables:
                         "title": "03630000000078.1",
                         "volgnummer": 1,
                         "identificatie": "03630000000078",
+                        "beginGeldigheid": None,
+                        "eindGeldigheid": None,
                     },
                 ],
             },
