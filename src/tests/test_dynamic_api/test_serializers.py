@@ -345,6 +345,8 @@ class TestDynamicSerializer:
                         "title": "03630000000001.1",
                         "volgnummer": 1,
                         "identificatie": "03630000000001",
+                        "beginGeldigheid": None,
+                        "eindGeldigheid": None,
                     }
                 ],
             },

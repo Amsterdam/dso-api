@@ -257,6 +257,7 @@ def get_serializer_lookups(serializer: serializers.BaseSerializer, prefix="") ->
         serializer = serializer.child
 
     lookups = []
+
     for field in serializer.fields.values():
         if field.source == "*":
             if isinstance(field, serializers.BaseSerializer):
