@@ -255,7 +255,7 @@ def _get_fields(
         if field.is_array_of_objects or field.is_object:
             result_fields.extend(_get_fields(field.sub_fields, parent_field=field))
 
-    return sort_fields(result_fields, table_identifier)
+    return result_fields
 
 
 def _get_field_context(field: DatasetFieldSchema, identifier: List[str]) -> Dict[str, Any]:
