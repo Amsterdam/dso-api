@@ -9,7 +9,13 @@ from schematools.types import ProfileSchema
 from dso_api.dynamic_api.serializers import serializer_factory
 from rest_framework_dso.fields import EmbeddedField
 from rest_framework_dso.views import DSOViewMixin
-from tests.utils import normalize_data, patch_field_auth, unlazy
+from tests.utils import (
+    api_request_with_scopes,
+    normalize_data,
+    patch_field_auth,
+    to_drf_request,
+    unlazy,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -109,11 +115,12 @@ class TestDynamicSerializer:
         }
 
     @staticmethod
-    def test_expand(drf_request, afval_schema, afval_container_model, afval_cluster):
+    def test_expand(afval_schema, afval_container_model, afval_cluster):
         """Prove expanding works.
 
         The _embedded section is generated, using the cluster serializer.
         """
+        drf_request = to_drf_request(api_request_with_scopes(["BAG/R"]))
         drf_request.dataset = afval_schema
         ContainerSerializer = serializer_factory(afval_container_model)
         afval_container = afval_container_model.objects.create(id=2, cluster=afval_cluster)
@@ -160,11 +167,12 @@ class TestDynamicSerializer:
         }
 
     @staticmethod
-    def test_expand_none(drf_request, afval_schema, afval_container_model):
+    def test_expand_none(afval_schema, afval_container_model):
         """Prove that expanding None values doesn't crash.
 
         The _embedded part has a None value instead.
         """
+        drf_request = to_drf_request(api_request_with_scopes(["BAG/R"]))
         drf_request.dataset = afval_schema
         ContainerSerializer = serializer_factory(afval_container_model)
         container_without_cluster = afval_container_model.objects.create(
@@ -196,12 +204,13 @@ class TestDynamicSerializer:
         }
 
     @staticmethod
-    def test_expand_broken_relation(drf_request, afval_schema, afval_container_model):
+    def test_expand_broken_relation(afval_schema, afval_container_model):
         """Prove that expanding non-existing FK values values doesn't crash.
            Cluster will not be expanded to a url, because the pk_only_optimization
            has been switched off for hyperlinked related fields.
         The _embedded part has a None value instead.
         """
+        drf_request = to_drf_request(api_request_with_scopes(["BAG/R"]))
         drf_request.dataset = afval_schema
         ContainerSerializer = serializer_factory(afval_container_model)
         container_invalid_cluster = afval_container_model.objects.create(
@@ -234,7 +243,6 @@ class TestDynamicSerializer:
 
     @staticmethod
     def test_dataset_path(
-        drf_request,
         afval_dataset,
         afval_container_model,
         afval_cluster,
@@ -245,6 +253,7 @@ class TestDynamicSerializer:
 
         The schema in _links contains correct URLs.
         """
+        drf_request = to_drf_request(api_request_with_scopes(["BAG/R"]))
         afval_dataset.path = "test/" + afval_dataset.path
 
         # Update dataset in instance cache
@@ -706,11 +715,10 @@ class TestDynamicSerializer:
     ):
         """ Prove that only first letter is seen in Profile allows only it."""
         # does not have scope for Dataset or Table
-        drf_request.is_authorized_for = lambda *scopes: False
         drf_request.dataset = fietspaaltjes_schema
         drf_request.user_scopes = UserScopes(
             {},
-            is_authorized_for=drf_request.is_authorized_for,
+            request_scopes=[],
             all_profiles=[
                 ProfileSchema.from_dict(
                     {
@@ -745,11 +753,10 @@ class TestDynamicSerializer:
         drf_request, fietspaaltjes_schema, fietspaaltjes_model, fietspaaltjes_data
     ):
         """ Prove that only first letter is seen in Profile allows only it in listing. """
-        drf_request.is_authorized_for = lambda *scopes: False
         drf_request.dataset = fietspaaltjes_schema
         drf_request.user_scopes = UserScopes(
             {},
-            is_authorized_for=drf_request.is_authorized_for,
+            request_scopes=[],
             all_profiles=[
                 ProfileSchema.from_dict(
                     {

@@ -7,10 +7,16 @@ from xml.etree import ElementTree as ET
 
 import orjson
 from django.apps import apps
+from django.contrib.auth.models import AnonymousUser
 from django.http.response import HttpResponseBase
 from django.utils.functional import SimpleLazyObject
+from rest_framework.request import Request
+from rest_framework.test import APIRequestFactory
+from schematools.permissions import UserScopes
 from schematools.types import DatasetSchema
 from schematools.utils import to_snake_case
+
+from rest_framework_dso.renderers import HALJSONRenderer
 
 
 def patch_dataset_auth(schema: DatasetSchema, *, auth: List[str]):
@@ -113,6 +119,29 @@ def normalize_data(data):
 
     # Using the Python JSON encoder, since it follows dictionary ordering.
     return orjson.loads(json.dumps(data, default=_default))
+
+
+def api_request_with_scopes(scopes) -> Request:
+    request = APIRequestFactory().get("/v1/dummy/")
+    request.accept_crs = None  # for DSOSerializer, expects to be used with DSOViewMixin
+    request.response_content_crs = None
+
+    request.user = AnonymousUser()
+    request.user_scopes = UserScopes(
+        query_params=request.GET,
+        request_scopes=scopes,
+    )
+
+    # Temporal modifications. Usually done via TemporalTableMiddleware
+    request.versioned = False
+    return request
+
+
+def to_drf_request(api_request):
+    """Turns an API request into a DRF request."""
+    request = Request(api_request)
+    request.accepted_renderer = HALJSONRenderer()
+    return request
 
 
 def unlazy(value: SimpleLazyObject):

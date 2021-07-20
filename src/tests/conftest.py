@@ -8,7 +8,6 @@ from typing import Type, cast
 
 import pytest
 from authorization_django import jwks
-from django.contrib.auth.models import AnonymousUser
 from django.contrib.gis.geos import GEOSGeometry, Point
 from django.core.handlers.wsgi import WSGIRequest
 from django.db import connection
@@ -18,12 +17,11 @@ from jwcrypto.jwt import JWT
 from rest_framework.request import Request
 from rest_framework.test import APIClient, APIRequestFactory
 from schematools.contrib.django.models import Dataset, DynamicModel, Profile
-from schematools.permissions import UserScopes
 from schematools.types import DatasetSchema, ProfileSchema
 
 from rest_framework_dso.crs import RD_NEW
-from rest_framework_dso.renderers import HALJSONRenderer
 from tests.test_rest_framework_dso.models import Actor, Category, Location, Movie, MovieUser
+from tests.utils import api_request_with_scopes, to_drf_request
 
 HERE = Path(__file__).parent
 
@@ -35,24 +33,11 @@ def api_rf() -> APIRequestFactory:
 
 
 @pytest.fixture()
-def api_request(api_rf) -> WSGIRequest:
+def api_request() -> WSGIRequest:
     """Return a very basic Request object. This can be used for the APIClient.
     The DRF views use a different request object internally, see `drf_request` for that.
     """
-    request = api_rf.get("/v1/dummy/")
-    request.accept_crs = None  # for DSOSerializer, expects to be used with DSOViewMixin
-    request.response_content_crs = None
-
-    request.user = AnonymousUser()
-    request.is_authorized_for = lambda *scopes: True  # note: this is copied into user_scopes
-    request.user_scopes = UserScopes(
-        query_params=request.GET,
-        is_authorized_for=request.is_authorized_for,
-    )
-
-    # Temporal modifications. Usually done via TemporalTableMiddleware
-    request.versioned = False
-    return request
+    return api_request_with_scopes([])
 
 
 @pytest.fixture()
@@ -60,9 +45,7 @@ def drf_request(api_request) -> Request:
     """The wrapped WSGI Request as a Django-Rest-Framework request.
     This is the 'request' object that APIView.dispatch() creates.
     """
-    request = Request(api_request)
-    request.accepted_renderer = HALJSONRenderer()
-    return request
+    return to_drf_request(api_request)
 
 
 @pytest.fixture()
