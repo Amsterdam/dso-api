@@ -146,40 +146,15 @@ class DynamicApiViewSet(
         return super().paginator
 
 
-def _get_viewset_api_docs(
-    model: Type[DynamicModel],
-    serializer_class: Type[serializers.DynamicSerializer],
-    filterset_class: Type[filterset.DynamicFilterSet],
-    ordering_fields: list,
-) -> str:
+def _get_viewset_api_docs(model: Type[DynamicModel]) -> str:
     """Generate the API documentation header for the viewset."""
-    lines = []
-    if description := model.table_schema().description:
-        lines.append(f"{description}\n\n")
-
-    if filterset_class and filterset_class.base_filters:
-        lines.append("The following fields can be used as filter with `?FIELDNAME=...`:\n")
-        for name, filter_field in filterset_class.base_filters.items():
-            description = filter_field.label  # other kwarg appear in .extra[".."]
-            lines.append(f"* {name}=*{description}*")
-
-    embedded_fields = getattr(serializer_class.Meta, "embedded_fields", [])
-    if embedded_fields:
-        if lines:
-            lines.append("")
-        lines.append("The following fields can be expanded with `?_expandScope=...`:\n")
-        lines.extend(f"* {name}" for name in embedded_fields)
-        lines.append("\nExpand everything using `_expand=true`.")
-
-    lines.append(
-        "\nUse `?_fields=field1,field2` to limit which fields to receive,"
-        "\nor `?_fields=-field3,-field4` to exclude specific fields from the response"
+    # NOTE: currently not using model.get_dataset_path() as the docs don't do either.
+    description = model.table_schema().description
+    docs_path = f"datasets/{model.get_dataset_id()}.html#{model.get_table_id()}"
+    return (
+        f"{description or ''}\n\nSee the documentation at: "
+        f"<https://api.data.amsterdam.nl/v1/docs/{docs_path}>"
     )
-
-    if ordering_fields:
-        lines.append("\nUse `?_sort=field,field2,-field3` to sort on fields")
-
-    return "\n".join(lines)
 
 
 def _get_ordering_fields(
@@ -222,9 +197,7 @@ def viewset_factory(model: Type[DynamicModel]) -> Type[DynamicApiViewSet]:
     ordering_fields = _get_ordering_fields(serializer_class)
 
     attrs = {
-        "__doc__": _get_viewset_api_docs(
-            model, serializer_class, filterset_class, ordering_fields
-        ),
+        "__doc__": _get_viewset_api_docs(model),
         "model": model,
         "queryset": model.objects.all(),  # also for OpenAPI schema parsing.
         "serializer_class": serializer_class,
