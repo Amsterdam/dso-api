@@ -2,7 +2,7 @@
 import os
 import re
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Tuple, Union
 
 import jinja2
 from schematools.types import DatasetFieldSchema, DatasetSchema, DatasetTableSchema
@@ -57,51 +57,6 @@ def sort_schemas(schemas: List[Tuple[str, DatasetSchema]]) -> List[Union[str, Da
         A list of alphabetically ordered schemas instances based on their schema id (name).
     """
     return sorted(schemas, key=lambda schema: schema[0])
-
-
-def sort_tables(tables: List[DatasetTableSchema]) -> List[DatasetTableSchema]:
-    """Sort tables alphabetically.
-
-    Args:
-        tables: A list of DatasetTableSchema instances
-
-    Returns:
-        A list of DatasetTableSchema instances ordered based on table id (equals name).
-    """
-    return sorted(tables, key=lambda table: table.id)
-
-
-def sort_fields(
-    fields: List[DatasetFieldSchema], table_identifier: Optional[List[str]]
-) -> List[DatasetFieldSchema]:
-    """Sort fields of an table alphabetically.
-    Put the identifier field(s) always first, after that, fields are
-    alphabetically ordered based on field name.
-
-    Args:
-        fields: A list of DatasetFieldSchema instances.
-        table_identifier: If present, the table identifier(s) field(s) are placed
-            first in the output.
-
-    Returns:
-        A list of DatasetFieldSchema instances ordered based on field name,
-            and places identifier fields first if exists.
-    """
-    sorted_fields = []
-
-    if table_identifier:
-
-        fields_to_sort = [field for field in fields if field.name not in table_identifier]
-        sorted_fields = sorted(fields_to_sort, key=lambda field: field.name)
-        identifier_fields = [
-            field for field in fields if table_identifier and field.name in table_identifier
-        ]
-        for field in identifier_fields:
-            sorted_fields.insert(0, field)
-    else:
-        sorted_fields = sorted([field for field in fields], key=lambda field: field.name)
-
-    return sorted_fields
 
 
 def render_dataset_docs(dataset: DatasetSchema):
