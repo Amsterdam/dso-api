@@ -1,3 +1,5 @@
+import json
+
 import pytest
 from schematools.contrib.django.models import Dataset
 
@@ -22,7 +24,7 @@ def test_save_empty_schema(bommen_schema_json, django_assert_num_queries):
 @pytest.mark.django_db
 def test_save_schema_tables_add(bommen_schema_json):
     """Prove that the dataset table models are created on save."""
-    dataset = Dataset(name="testing", schema_data=bommen_schema_json)
+    dataset = Dataset(name="testing", schema_data=json.dumps(bommen_schema_json))
     dataset.save()
     assert dataset.tables.count() == 1, dataset.tables.all()
     table = dataset.tables.get()
@@ -36,7 +38,7 @@ def test_save_schema_tables_with_disabled_geosearch(settings, bommen_schema_json
     """Prove that the dataset table models are created with geosearch disabled
     if dataset.name in settings.AMSTERDAM_SCHEMA['geosearch_disabled_datasets]."""
     settings.AMSTERDAM_SCHEMA["geosearch_disabled_datasets"] = ["bommen"]
-    dataset = Dataset(name="bommen", schema_data=bommen_schema_json)
+    dataset = Dataset(name="bommen", schema_data=json.dumps(bommen_schema_json))
     dataset.save()
     assert dataset.tables.count() == 1, dataset.tables.all()
     table = dataset.tables.get()
@@ -51,7 +53,7 @@ def test_save_schema_tables_with_geometry_type(bommen_schema_json):
     bommen_schema_json["tables"][0]["schema"]["properties"]["geometry"][
         "$ref"
     ] = "https://geojson.org/schema/Point.json"
-    dataset = Dataset(name="testing", schema_data=bommen_schema_json)
+    dataset = Dataset(name="testing", schema_data=json.dumps(bommen_schema_json))
     dataset.save()
     assert dataset.tables.count() == 1, dataset.tables.all()
     table = dataset.tables.get()
@@ -64,17 +66,19 @@ def test_save_schema_tables_with_geometry_type(bommen_schema_json):
 @pytest.mark.django_db
 def test_save_schema_tables_delete(bommen_schema_json):
     """Prove that the dataset table models are created on save."""
-    dataset = Dataset(name="bommen", schema_data=bommen_schema_json)
+    dataset = Dataset(name="bommen", schema_data=json.dumps(bommen_schema_json))
     dataset.save()
     assert dataset.tables.count() == 1
 
-    dataset.schema_data = {
-        "id": "bommen",
-        "type": "dataset",
-        "title": "",
-        "version": "0.0.1",
-        "crs": "EPSG:28992",
-        "tables": [],  # removed tables
-    }
+    dataset.schema_data = json.dumps(
+        {
+            "id": "bommen",
+            "type": "dataset",
+            "title": "",
+            "version": "0.0.1",
+            "crs": "EPSG:28992",
+            "tables": [],  # removed tables
+        }
+    )
     dataset.save()
     assert dataset.tables.count() == 0

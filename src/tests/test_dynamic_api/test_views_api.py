@@ -1177,9 +1177,9 @@ class TestExportFormats:
         "csv": (
             as_is,
             "text/csv; charset=utf-8",
-            b"Id,Clusterid,Geometry,Serienummer,Datumcreatie,Eigenaarnaam,Datumleegmaken\r\n"
-            b"1,c1,SRID=28992;POINT (10 10),foobar-123,2021-01-03,Dataservices,"
-            b"2021-01-03T12:13:14\r\n",
+            b"Id,Clusterid,Serienummer,Eigenaarnaam,Datumcreatie,Datumleegmaken,Geometry\r\n"
+            b"1,c1,foobar-123,Dataservices,2021-01-03,2021-01-03T12:13:14,SRID=28992;"
+            b"POINT (10 10)\r\n",
         ),
         "geojson": (
             orjson.loads,
@@ -1202,8 +1202,8 @@ class TestExportFormats:
                             "id": 1,
                             "clusterId": "c1",
                             "serienummer": "foobar-123",
-                            "datumCreatie": "2021-01-03",
                             "eigenaarNaam": "Dataservices",
+                            "datumCreatie": "2021-01-03",
                             "datumLeegmaken": "2021-01-03T12:13:14",
                         },
                     }
@@ -1248,15 +1248,15 @@ class TestExportFormats:
         "csv": (
             as_is,
             "text/csv; charset=utf-8",
-            b"Id,Clusterid,Geometry,Serienummer,Datumcreatie,Eigenaarnaam,Datumleegmaken\r\n"
-            b"1,c1,SRID=28992;POINT (10 10),foobar-123,2021-01-03,Dataservices,"
-            b"2021-01-03T12:13:14\r\n"
-            b"2,c1,SRID=28992;POINT (10 10),foobar-123,2021-01-03,Dataservices,"
-            b"2021-01-03T12:13:14\r\n"
-            b"3,c1,SRID=28992;POINT (10 10),foobar-123,2021-01-03,Dataservices,"
-            b"2021-01-03T12:13:14\r\n"
-            b"4,c1,SRID=28992;POINT (10 10),foobar-123,2021-01-03,Dataservices,"
-            b"2021-01-03T12:13:14\r\n",
+            b"Id,Clusterid,Serienummer,Eigenaarnaam,Datumcreatie,Datumleegmaken,Geometry\r\n"
+            b"1,c1,foobar-123,Dataservices,2021-01-03,2021-01-03T12:13:14,SRID=28992"
+            b";POINT (10 10)\r\n"
+            b"2,c1,foobar-123,Dataservices,2021-01-03,2021-01-03T12:13:14,SRID=28992"
+            b";POINT (10 10)\r\n"
+            b"3,c1,foobar-123,Dataservices,2021-01-03,2021-01-03T12:13:14,SRID=28992"
+            b";POINT (10 10)\r\n"
+            b"4,c1,foobar-123,Dataservices,2021-01-03,2021-01-03T12:13:14,SRID=28992"
+            b";POINT (10 10)\r\n",
         ),
         "geojson": (
             orjson.loads,
@@ -1337,7 +1337,7 @@ class TestExportFormats:
         "csv": (
             as_is,
             "text/csv; charset=utf-8",
-            b"Id,Clusterid,Geometry,Serienummer,Datumcreatie,Eigenaarnaam,Datumleegmaken\r\n",
+            b"Id,Clusterid,Serienummer,Eigenaarnaam,Datumcreatie,Datumleegmaken,Geometry\r\n",
         ),
         "geojson": (
             orjson.loads,
@@ -1389,9 +1389,9 @@ class TestExportFormats:
         assert isinstance(response, StreamingResponse)
         data = read_response(response)
         assert data == (
-            "Id,Clusterid,Geometry,Serienummer,Datumcreatie,Eigenaarnaam,Datumleegmaken"
+            "Id,Clusterid,Serienummer,Eigenaarnaam,Datumcreatie,Datumleegmaken,Geometry"
             ",Cluster.Id,Cluster.Status\r\n"
-            "1,c1,SRID=28992;POINT (10 10),foobar-123,2021-01-03,Dataservices,2021-01-03T12:13:14"
+            "1,c1,foobar-123,Dataservices,2021-01-03,2021-01-03T12:13:14,SRID=28992;POINT (10 10)"
             ",c1,valid\r\n"
         )
 
@@ -1422,7 +1422,7 @@ class TestExportFormats:
 
         # fields don't include bestaatUitBuurten
         assert data == (
-            "Naam,Geometrie,Eindgeldigheid,Begingeldigheid,Registratiedatum,Id\r\n"
+            "Registratiedatum,Naam,Begingeldigheid,Eindgeldigheid,Geometrie,Id\r\n"
             ",,,,,03630950000000.1\r\n"
         )
 
@@ -1430,9 +1430,9 @@ class TestExportFormats:
         "csv": (
             as_is,
             "text/csv; charset=utf-8",
-            b"Id,Clusterid,Geometry,Serienummer,Datumcreatie,Eigenaarnaam,Datumleegmaken\r\n"
-            b"1,c1,SRID=28992;POINT (10 10),foobar-123,2021-01-03,Dataservices,"
-            b"2021-01-03T12:13:14\r\n",
+            b"Id,Clusterid,Serienummer,Eigenaarnaam,Datumcreatie,Datumleegmaken,Geometry\r\n"
+            b"1,c1,foobar-123,Dataservices,2021-01-03,2021-01-03T12:13:14,SRID=28992"
+            b";POINT (10 10)\r\n",
         ),
         "geojson": (
             orjson.loads,
@@ -1445,12 +1445,12 @@ class TestExportFormats:
                     "type": "Point",
                 },
                 "properties": {
+                    "id": 1,
                     "clusterId": "c1",
+                    "serienummer": "foobar-123",
+                    "eigenaarNaam": "Dataservices",
                     "datumCreatie": "2021-01-03",
                     "datumLeegmaken": "2021-01-03T12:13:14",
-                    "eigenaarNaam": "Dataservices",
-                    "id": 1,
-                    "serienummer": "foobar-123",
                 },
                 "crs": {
                     "properties": {"name": "urn:ogc:def:crs:EPSG::4326"},

@@ -1,3 +1,4 @@
+import json
 from typing import Any
 
 import orjson
@@ -161,7 +162,7 @@ def test_remote_detail_view_with_profile_scope(
     brp_schema_json["id"] = "brp_test"
     models.Dataset.objects.create(
         name="brp_test",
-        schema_data=brp_schema_json,
+        schema_data=json.dumps(brp_schema_json),
         enable_db=False,
         endpoint_url=brp_endpoint_url.replace("brp", "brp_test"),
         auth=["DATASET/SCOPE"],

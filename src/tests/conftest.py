@@ -245,7 +245,7 @@ def afval_schema_backwards_summary(
 @pytest.fixture()
 def afval_dataset(afval_schema_json) -> Dataset:
     return Dataset.objects.create(
-        name="afvalwegingen", path="afvalwegingen", schema_data=afval_schema_json
+        name="afvalwegingen", path="afvalwegingen", schema_data=json.dumps(afval_schema_json)
     )
 
 
@@ -347,7 +347,7 @@ def brp_dataset(brp_schema_json, brp_endpoint_url) -> Dataset:
     """Create a remote dataset."""
     return Dataset.objects.create(
         name="brp",
-        schema_data=brp_schema_json,
+        schema_data=json.dumps(brp_schema_json),
         enable_db=False,
         endpoint_url=brp_endpoint_url,
         path="remote/brp",
@@ -358,7 +358,7 @@ def brp_dataset(brp_schema_json, brp_endpoint_url) -> Dataset:
 def hcbrk_dataset() -> Dataset:
     return Dataset.objects.create(
         name="hcbrk",
-        schema_data=json.loads((HERE / "files" / "hcbrk.json").read_text()),
+        schema_data=(HERE / "files" / "hcbrk.json").read_text(),
         enable_db=False,
         # URL netloc needs ".acceptatie." because of HTTP pool selection.
         endpoint_url="http://fake.acceptatie.kadaster/esd/bevragen/v1/{table_id}",
@@ -473,7 +473,9 @@ def parkeervakken_schema(parkeervakken_schema_json) -> DatasetSchema:
 @pytest.fixture()
 def parkeervakken_dataset(parkeervakken_schema_json) -> Dataset:
     return Dataset.objects.create(
-        name="parkeervakken", path="parkeervakken", schema_data=parkeervakken_schema_json
+        name="parkeervakken",
+        path="parkeervakken",
+        schema_data=json.dumps(parkeervakken_schema_json),
     )
 
 
@@ -546,7 +548,7 @@ def vestiging2(vestiging_vestiging_model, bezoek_adres2, post_adres1):
 @pytest.fixture()
 def vestiging_dataset(vestiging_schema_json) -> Dataset:
     return Dataset.objects.create(
-        name="vestiging", path="vestiging", schema_data=vestiging_schema_json
+        name="vestiging", path="vestiging", schema_data=json.dumps(vestiging_schema_json)
     )
 
 
@@ -608,7 +610,9 @@ def fietspaaltjes_schema_json() -> dict:
 @pytest.fixture()
 def fietspaaltjes_dataset(fietspaaltjes_schema_json) -> Dataset:
     return Dataset.objects.create(
-        name="fietspaaltjes", path="fietspaaltjes", schema_data=fietspaaltjes_schema_json
+        name="fietspaaltjes",
+        path="fietspaaltjes",
+        schema_data=json.dumps(fietspaaltjes_schema_json),
     )
 
 
@@ -661,7 +665,7 @@ def fietspaaltjes_dataset_no_display(fietspaaltjes_schema_json_no_display) -> Da
     return Dataset.objects.create(
         name="fietspaaltjesnodisplay",
         path="fietspaaltjesnodisplay",
-        schema_data=fietspaaltjes_schema_json_no_display,
+        schema_data=json.dumps(fietspaaltjes_schema_json_no_display),
     )
 
 
@@ -712,7 +716,7 @@ def explosieven_schema(
 @pytest.fixture()
 def explosieven_dataset(explosieven_schema_json) -> Dataset:
     return Dataset.objects.create(
-        name="explosieven", path="explosieven", schema_data=explosieven_schema_json
+        name="explosieven", path="explosieven", schema_data=json.dumps(explosieven_schema_json)
     )
 
 
@@ -746,7 +750,7 @@ def indirect_self_ref_dataset(indirect_self_ref_schema_json) -> Dataset:
     return Dataset.objects.create(
         name="indirect_self_ref",
         path="indirect_self_ref",
-        schema_data=indirect_self_ref_schema_json,
+        schema_data=json.dumps(indirect_self_ref_schema_json),
     )
 
 
@@ -772,7 +776,7 @@ def download_url_schema(download_url_schema_json) -> DatasetSchema:
 @pytest.fixture()
 def download_url_dataset(download_url_schema_json) -> Dataset:
     return Dataset.objects.create(
-        name="download", path="download", schema_data=download_url_schema_json
+        name="download", path="download", schema_data=json.dumps(download_url_schema_json)
     )
 
 
@@ -794,7 +798,7 @@ def meldingen_dataset(
     meldingen_schema_json,
 ) -> Dataset:
     return Dataset.objects.create(
-        name="meldingen", path="meldingen", schema_data=meldingen_schema_json
+        name="meldingen", path="meldingen", schema_data=json.dumps(meldingen_schema_json)
     )
 
 
@@ -822,7 +826,7 @@ def gebieden_schema(gebieden_schema_json) -> DatasetSchema:
 def _gebieden_dataset(gebieden_schema_json) -> Dataset:
     """Internal"""
     return Dataset.objects.create(
-        name="gebieden", path="gebieden", schema_data=gebieden_schema_json
+        name="gebieden", path="gebieden", schema_data=json.dumps(gebieden_schema_json)
     )
 
 
@@ -849,7 +853,7 @@ def bag_schema(bag_schema_json) -> DatasetSchema:
 
 @pytest.fixture()
 def bag_dataset(bag_schema_json) -> Dataset:
-    return Dataset.objects.create(name="bag", path="bag", schema_data=bag_schema_json)
+    return Dataset.objects.create(name="bag", path="bag", schema_data=json.dumps(bag_schema_json))
 
 
 @pytest.fixture()
@@ -871,7 +875,7 @@ def woningbouwplannen_dataset(woningbouwplannen_schema_json, _gebieden_dataset) 
     return Dataset.objects.create(
         name="woningbouwplannen",
         path="woningbouwplannen",
-        schema_data=woningbouwplannen_schema_json,
+        schema_data=json.dumps(woningbouwplannen_schema_json),
     )
 
 
