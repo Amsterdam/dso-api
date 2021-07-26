@@ -11,6 +11,23 @@ from rest_framework_dso.embedding import EmbeddedFieldMatch
 audit_log = logging.getLogger("dso_api.audit")
 
 
+def _log_access(request, access: bool):
+    if access:
+        audit_log.info(
+            "%s %s: access granted with %s",
+            request.method,
+            request.path,
+            request.user_scopes,
+        )
+    else:
+        audit_log.info(
+            "%s %s: access denied with %s",
+            request.method,
+            request.path,
+            request.user_scopes,
+        )
+
+
 def filter_unauthorized_expands(
     user_scopes: UserScopes, expanded_fields: List[EmbeddedFieldMatch], skip_unauth=False
 ) -> List[EmbeddedFieldMatch]:
@@ -55,13 +72,7 @@ class HasOAuth2Scopes(permissions.BasePermission):
 
         access = request.user_scopes.has_table_access(model.table_schema())
 
-        audit_log.info(
-            "%s %s: access %s with %s",
-            request.method,
-            request.path,
-            "granted" if access else "denied",
-            request.user_scopes,
-        )
+        _log_access(request, access)
         return access
 
     def has_object_permission(self, request, view, obj):
@@ -72,13 +83,7 @@ class HasOAuth2Scopes(permissions.BasePermission):
         # NOTE: For now, this is OK, later on we need to add row-level permissions.
         access = request.user_scopes.has_table_access(obj.table_schema())
 
-        audit_log.info(
-            "%s %s: access %s with %s",
-            request.method,
-            request.path,
-            "granted" if access else "denied",
-            request.user_scopes,
-        )
+        _log_access(request, access)
         return access
 
     def has_permission_for_models(self, request, view, models):
@@ -93,13 +98,7 @@ class HasOAuth2Scopes(permissions.BasePermission):
             request.user_scopes.has_table_access(model.table_schema()) for model in models
         )
 
-        audit_log.info(
-            "%s %s: access %s with %s",
-            request.method,
-            request.path,
-            "granted" if access else "denied",
-            request.user_scopes,
-        )
+        _log_access(request, access)
         return access
 
 
