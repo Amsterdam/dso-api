@@ -1,10 +1,6 @@
-import logging
-
 from django.utils.deprecation import MiddlewareMixin
 from schematools.contrib.django.models import Profile
 from schematools.permissions import UserScopes
-
-audit_log = logging.getLogger("dso_api.audit")
 
 
 class DatasetMiddleware(MiddlewareMixin):

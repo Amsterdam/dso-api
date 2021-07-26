@@ -1,3 +1,4 @@
+import logging
 from typing import List
 
 from django.core.exceptions import PermissionDenied
@@ -6,6 +7,8 @@ from rest_framework.viewsets import ViewSetMixin
 from schematools.permissions import UserScopes
 
 from rest_framework_dso.embedding import EmbeddedFieldMatch
+
+audit_log = logging.getLogger("dso_api.audit")
 
 
 def filter_unauthorized_expands(
@@ -50,7 +53,16 @@ class HasOAuth2Scopes(permissions.BasePermission):
             # This affects the mandatoryFilterSets matching on profile objects.
             request.user_scopes.add_query_params(view.table_schema.identifier)
 
-        return request.user_scopes.has_table_access(model.table_schema())
+        access = request.user_scopes.has_table_access(model.table_schema())
+
+        audit_log.info(
+            "%s %s: access %s with %s",
+            request.method,
+            request.path,
+            "granted" if access else "denied",
+            request.user_scopes,
+        )
+        return access
 
     def has_object_permission(self, request, view, obj):
         """Tests whether the view may access a particular object."""
@@ -58,7 +70,16 @@ class HasOAuth2Scopes(permissions.BasePermission):
             return True
 
         # NOTE: For now, this is OK, later on we need to add row-level permissions.
-        return request.user_scopes.has_table_access(obj.table_schema())
+        access = request.user_scopes.has_table_access(obj.table_schema())
+
+        audit_log.info(
+            "%s %s: access %s with %s",
+            request.method,
+            request.path,
+            "granted" if access else "denied",
+            request.user_scopes,
+        )
+        return access
 
     def has_permission_for_models(self, request, view, models):
         """Tests whether a set of models can be accessed.
@@ -68,7 +89,18 @@ class HasOAuth2Scopes(permissions.BasePermission):
         if request.method == "OPTIONS":
             return True
 
-        return all(request.user_scopes.has_table_access(model.table_schema()) for model in models)
+        access = all(
+            request.user_scopes.has_table_access(model.table_schema()) for model in models
+        )
+
+        audit_log.info(
+            "%s %s: access %s with %s",
+            request.method,
+            request.path,
+            "granted" if access else "denied",
+            request.user_scopes,
+        )
+        return access
 
 
 class CheckPermissionsMixin:
