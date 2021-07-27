@@ -893,6 +893,11 @@ def ggwgebieden_model(gebieden_dataset, dynamic_models):
 
 
 @pytest.fixture()
+def ggpgebieden_model(gebieden_dataset, dynamic_models):
+    return dynamic_models["gebieden"]["ggpgebieden"]
+
+
+@pytest.fixture()
 def woningbouwplan_model(woningbouwplannen_dataset, dynamic_models):
     return dynamic_models["woningbouwplannen"]["woningbouwplan"]
 
@@ -943,7 +948,25 @@ def ggwgebieden_data(ggwgebieden_model, buurten_data):
         id="03630950000000.1", identificatie="03630950000000", volgnummer=1
     )
     ggwgebieden_model.bestaat_uit_buurten.through.objects.create(
-        ggwgebieden_id="03630950000000.1", bestaat_uit_buurten_id="03630000000078.1"
+        ggwgebieden_id="03630950000000.1",
+        bestaat_uit_buurten_id="03630000000078.1",
+        bestaat_uit_buurten_identificatie="03630000000078",
+        bestaat_uit_buurten_volgnummer=1,
+    )
+
+
+@pytest.fixture()
+def ggpgebieden_data(ggpgebieden_model, buurten_data):
+    ggpgebieden_model.objects.create(
+        id="03630950000000.1", identificatie="03630950000000", volgnummer=1
+    )
+    ggpgebieden_model.bestaat_uit_buurten.through.objects.create(
+        ggpgebieden_id="03630950000000.1",
+        bestaat_uit_buurten_id="03630000000078.1",
+        bestaat_uit_buurten_identificatie="03630000000078",
+        bestaat_uit_buurten_volgnummer=1,
+        begin_geldigheid="2020-01-04",
+        eind_geldigheid=None,
     )
 
 
