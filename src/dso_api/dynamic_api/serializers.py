@@ -402,7 +402,6 @@ class DynamicBodySerializer(DynamicSerializer):
         ]
         for field_name, field in fields.items():
             if isinstance(field, TemporalHyperlinkedRelatedField):
-
                 hal_fields.append(field_name)
                 hal_fields += [f"{field_name}{suffix}" for suffix in capitalized_identifier_fields]
             elif isinstance(
@@ -453,7 +452,7 @@ class ThroughSerializer(DynamicSerializer):
     is used. This field is added in the factory for this serializer.
 
     The content of this field is merged into this serializer.
-    To be able to fetch this field, a special attribute `target`
+    To be able to fetch this field, a special attribute `target_field_name`
     is added to the `Meta` object of this serializer.
 
     """
@@ -461,10 +460,10 @@ class ThroughSerializer(DynamicSerializer):
     serializer_related_field = HALTemporalHyperlinkedRelatedField
 
     def to_representation(self, obj):
-        """Move fields from target to this representation."""
+        """Move output of field named target_field_name to this representation."""
         representation = super().to_representation(obj)
 
-        target_representation = representation.pop(self.Meta.target)
+        target_representation = representation.pop(self.Meta.target_field_name)
 
         # if data is incomplete, target_representation could be None
         # avoid crash
@@ -681,25 +680,24 @@ def _through_serializer_factory(
 ) -> Type[DynamicSerializer]:
     """Generate the DRF serializer class for a M2M model.
 
-    Args:
-        model: the `through` model
-        target_model: the target model for the M2M relation
-        target_field_name: the name of the M2M field in the source model
+    :param model: the `through` model
+    :param target_model: the target model for the M2M relation
+    :params target_field_name: the name of the M2M field in the source model
 
-        This factory adds a field `target_field_name`. A field with this
-        name is available on the through model. It is a FK pointing to the target.
+    This factory adds a field `target_field_name`. A field with this
+    name is available on the through model. It is a FK pointing to the target.
 
-        This FK field will lead to a HALTemporalHyperlinkedRelatedField on the
-        through serializer. Because we do not want these field as subfields,
-        the ThroughSerializer is merging the ouput of this field
-        in its `to_representation` method.
+    This FK field will lead to a HALTemporalHyperlinkedRelatedField on the
+    through serializer. Because we do not want these field as subfields,
+    the ThroughSerializer is merging the ouput of this field
+    in its `to_representation` method.
 
-        Furthermore, temporal fields are add to the through serializer
-        if the target model is temporal.
+    Furthermore, temporal fields are add to the through serializer
+    if the target model is temporal.
 
-        In the creation of the ThroughSerializer, a special attribute `target`
-        is added to the `Meta` object. This is needed by the ThroughSerializer
-        to be able to pick the right field for embedding into its output.
+    In the creation of the ThroughSerializer, a special attribute `target`
+    is added to the `Meta` object. This is needed by the ThroughSerializer
+    to be able to pick the right field for embedding into its output.
     """
     fields = []
     extra_kwargs = {}
@@ -724,11 +722,12 @@ def _through_serializer_factory(
         # (e.g. "beginGeldigheid" and "eindGeldigheid" for the "geldigOp" dimension
         # for GOB data)
         # NB. the `Temporal` dataclass return the boundary_fieldnames as snakecased!
+        existing_fields_names = {f.name for f in model._meta.get_fields()}
         for dimension_fieldname, boundary_fieldnames in temporal.dimensions.items():
             for fn in boundary_fieldnames:
                 snaked_fn = to_snake_case(fn)
                 camel_fn = toCamelCase(fn)
-                if hasattr(model, snaked_fn):
+                if snaked_fn in existing_fields_names:
                     fields.append(camel_fn)
                     extra_kwargs[camel_fn] = {"source": snaked_fn}
 
@@ -739,7 +738,7 @@ def _through_serializer_factory(
             "model": model,
             "fields": fields,
             "extra_kwargs": extra_kwargs,
-            "target": target_field_name,
+            "target_field_name": target_field_name,
         },
     )
 
@@ -747,18 +746,15 @@ def _through_serializer_factory(
 
 
 def _build_m2m_serializer(model, model_field, new_attrs, fields, extra_kwargs):
+    """Add a serializer for a m2m field to the output parameters."""
 
     camel_name = toCamelCase(model_field.name)
-
     through_model = getattr(model, model_field.name).through
     serializer_class = _through_serializer_factory(
         through_model, model_field.related_model, model_field.name
     )
-
     source = to_snake_case(f"{through_model._meta.object_name}_through_{model.get_table_id()}")
-
     new_attrs[camel_name] = serializer_class(source=source, many=True)
-
     fields.append(camel_name)
 
 
