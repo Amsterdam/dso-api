@@ -820,8 +820,6 @@ class TestEmbedTemporalTables:
                     "identificatie": "03630012052035",
                     "title": "03630012052035.1",
                     "volgnummer": 1,
-                    "beginGeldigheid": None,
-                    "eindGeldigheid": None,
                 },
                 "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/dataset#buurten",
                 "self": {
@@ -891,8 +889,6 @@ class TestEmbedTemporalTables:
                         "title": "03630950000000.1",
                         "volgnummer": 1,
                         "identificatie": "03630950000000",
-                        "beginGeldigheid": None,
-                        "eindGeldigheid": None,
                     }
                 ],
                 "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/dataset#buurten",
@@ -929,7 +925,44 @@ class TestEmbedTemporalTables:
                         "title": "03630000000078.1",
                         "volgnummer": 1,
                         "identificatie": "03630000000078",
-                        "beginGeldigheid": None,
+                    },
+                ],
+            },
+            "geometrie": None,
+            "id": "03630950000000.1",
+            "eindGeldigheid": None,
+            "beginGeldigheid": None,
+            "naam": None,
+            "registratiedatum": None,
+        }
+
+    def test_through_extra_fields_for_nm_relation(
+        self, api_client, buurten_data, ggpgebieden_data, filled_router
+    ):
+        """Prove that extra through fields are showing up
+        latest volgnummer
+        """
+
+        url = reverse("dynamic_api:gebieden-ggpgebieden-list")
+        response = api_client.get(url)
+        data = read_response_json(response)
+        assert response.status_code == 200, data
+        assert dict(data["_embedded"]["ggpgebieden"][0]) == {
+            "_links": {
+                "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/dataset#ggpgebieden",  # noqa: E501
+                "self": {
+                    "href": "http://testserver/v1/gebieden/ggpgebieden/03630950000000/?volgnummer=1",  # noqa: E501
+                    "title": "03630950000000.1",
+                    "volgnummer": 1,
+                    "identificatie": "03630950000000",
+                },
+                "bestaatUitBuurten": [
+                    {
+                        "href": "http://testserver/v1/gebieden/buurten/03630000000078/?volgnummer=1",  # noqa: E501
+                        "title": "03630000000078.1",
+                        "volgnummer": 1,
+                        "identificatie": "03630000000078",
+                        "beginGeldigheid": "2020-01-04",
                         "eindGeldigheid": None,
                     },
                 ],
