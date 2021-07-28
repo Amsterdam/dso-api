@@ -21,14 +21,6 @@ from dso_api.dynamic_api.views import APIIndexView
 logger = logging.getLogger(__name__)
 
 
-def get_geo_tables(schema):
-    """Yields names of tables that have a geometry field."""
-    for table in schema.tables:
-        for field in table.fields:
-            if field.is_geo:
-                yield to_snake_case(table.name)
-
-
 class DatasetMVTIndexView(APIIndexView):
     """Overview of available MVT endpoints."""
 
@@ -78,9 +70,11 @@ class DatasetMVTSingleView(TemplateView):
         context = super().get_context_data(**kwargs)
 
         ds = get_object_or_404(Dataset, name=kwargs["dataset_name"])
-
-        geo_tables = sorted(get_geo_tables(ds.schema))
-
+        geo_tables = sorted(
+            to_snake_case(table.name)
+            for table in ds.schema.tables
+            if any(field.is_geo for field in table.fields)
+        )
         if len(geo_tables) == 0:
             raise Http404("Dataset does not support MVT") from None
 
