@@ -11,9 +11,12 @@ class IsEmpty(lookups.Lookup):
     def as_sql(self, compiler, connection):
         lhs, lhs_params = self.process_lhs(compiler, connection)
         rhs, rhs_params = self.process_rhs(compiler, connection)
-        params = []
+
+        # This generates  (lhs = '') is false  or  (lhs = '') is not false.
+        # Both take into account the SQL rule that  (null = '')
+        # returns null instead of false.
         not_negation = "NOT " if len(rhs_params) == 1 and rhs_params[0] == "True" else ""
-        return f"({lhs} = '') IS {not_negation}FALSE", params
+        return f"({lhs} = '') IS {not_negation}FALSE", []
 
 
 @models.Field.register_lookup
