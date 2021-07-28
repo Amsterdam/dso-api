@@ -6,6 +6,7 @@ from typing import Type
 
 from django.core.exceptions import ImproperlyConfigured
 from rest_framework import status
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 from schematools.types import DatasetTableSchema
@@ -13,6 +14,7 @@ from schematools.types import DatasetTableSchema
 from rest_framework_dso.exceptions import RemoteAPIException
 from rest_framework_dso.views import DSOViewMixin
 
+from .. import permissions
 from . import clients, serializers
 
 logger = logging.getLogger(__name__)
@@ -56,6 +58,13 @@ class RemoteViewSet(DSOViewMixin, ViewSet):
 
     def list(self, request, *args, **kwargs):
         """The GET request for listings"""
+        access = request.user_scopes.has_dataset_access(
+            self.table_schema.dataset
+        ) and request.user_scopes.has_table_access(self.table_schema)
+        permissions.log_access(request, access)
+        if not access:
+            raise PermissionDenied()
+
         data = self.client.call(request, query_params=request.query_params)
         if "_embedded" in data and isinstance(data["_embedded"], dict):
             data = next(iter(data["_embedded"].values())) if data["_embedded"] else []
@@ -69,6 +78,13 @@ class RemoteViewSet(DSOViewMixin, ViewSet):
 
     def retrieve(self, request, *args, **kwargs):
         """The GET request for detail"""
+        access = request.user_scopes.has_dataset_access(
+            self.table_schema.dataset
+        ) and request.user_scopes.has_table_access(self.table_schema)
+        permissions.log_access(request, access)
+        if not access:
+            raise PermissionDenied()
+
         data = self.client.call(request, path=self.kwargs["pk"])
         serializer = self.get_serializer(data=data)
         # Validate data. Throw exception if not valid

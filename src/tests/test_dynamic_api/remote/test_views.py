@@ -157,18 +157,21 @@ def test_remote_detail_view_with_profile_scope(
             }
         )
     )
-    # creating custom brp2 copy, as ttl_cache will keep auth value after this test
-    # which breaks the other tests
+
+    # creating custom brp2 copy, so a freshly created remote view
+    # has a new copy of the patched schema object.
     brp_schema_json["id"] = "brp_test"
+    brp_schema_json["auth"] = ["DATASET/SCOPE"]
     models.Dataset.objects.create(
         name="brp_test",
         schema_data=json.dumps(brp_schema_json),
         enable_db=False,
         endpoint_url=brp_endpoint_url.replace("brp", "brp_test"),
-        auth=["DATASET/SCOPE"],
+        auth=brp_schema_json["auth"],
     )
-    remote_response, local_response = SUCCESS_TESTS["default"]
     router.reload()
+
+    remote_response, local_response = SUCCESS_TESTS["default"]
     urllib3_mocker.add_callback(
         "GET",
         "/unittest/brp_test/ingeschrevenpersonen/999990901",
@@ -177,14 +180,16 @@ def test_remote_detail_view_with_profile_scope(
     )
     # Prove that URLs can now be resolved.
     url = reverse("dynamic_api:brp_test-ingeschrevenpersonen-detail", kwargs={"pk": "999990901"})
-    token = fetch_auth_token(["PROFIEL/SCOPE"])
+    token = fetch_auth_token(["DATASET/SCOPE", "PROFIEL/SCOPE"])
     response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
     assert response.status_code == 200, response.data
 
 
 @pytest.mark.django_db
 @pytest.mark.parametrize("test_name", list(SUCCESS_TESTS.keys()))
-def test_remote_detail_view(api_client, brp_dataset, urllib3_mocker, test_name, filled_router):
+def test_remote_detail_view(
+    api_client, fetch_auth_token, brp_dataset, urllib3_mocker, test_name, filled_router
+):
     """Prove that the remote router can proxy the other service."""
     remote_response, local_response = SUCCESS_TESTS[test_name]
     urllib3_mocker.add(
@@ -196,14 +201,17 @@ def test_remote_detail_view(api_client, brp_dataset, urllib3_mocker, test_name, 
 
     # Prove that URLs can now be resolved.
     url = reverse("dynamic_api:brp-ingeschrevenpersonen-detail", kwargs={"pk": "999990901"})
-    response = api_client.get(url)
+    token = fetch_auth_token(["BRP/R"])
+    response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
     data = read_response_json(response)
     assert response.status_code == 200, data
     assert data == local_response, data
 
 
 @pytest.mark.django_db
-def test_remote_schema_validation(api_client, router, brp_dataset, urllib3_mocker, filled_router):
+def test_remote_schema_validation(
+    api_client, fetch_auth_token, router, brp_dataset, urllib3_mocker, filled_router
+):
     """Prove that the schema is validated."""
     urllib3_mocker.add(
         "GET",
@@ -214,7 +222,8 @@ def test_remote_schema_validation(api_client, router, brp_dataset, urllib3_mocke
 
     # Prove that URLs can now be resolved.
     url = reverse("dynamic_api:brp-ingeschrevenpersonen-detail", kwargs={"pk": "999990901"})
-    response = api_client.get(url)
+    token = fetch_auth_token(["BRP/R"])
+    response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
     data = read_response_json(response)
     assert response["content-type"] == "application/problem+json"  # check before reading
 
@@ -233,7 +242,9 @@ def test_remote_schema_validation(api_client, router, brp_dataset, urllib3_mocke
 
 
 @pytest.mark.django_db
-def test_remote_400_problem_json(api_client, router, brp_dataset, urllib3_mocker):
+def test_remote_400_problem_json(
+    api_client, fetch_auth_token, router, brp_dataset, urllib3_mocker
+):
     """Prove that the schema is validated."""
     router.reload()
     urllib3_mocker.add(
@@ -265,7 +276,8 @@ def test_remote_400_problem_json(api_client, router, brp_dataset, urllib3_mocker
 
     # Prove that URLs can now be resolved.
     url = reverse("dynamic_api:brp-ingeschrevenpersonen-detail", kwargs={"pk": "999990901342"})
-    response = api_client.get(url)
+    token = fetch_auth_token(["BRP/R"])
+    response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
     data = read_response_json(response)
     assert response["content-type"] == "application/problem+json"  # check before reading
 
@@ -288,7 +300,9 @@ def test_remote_400_problem_json(api_client, router, brp_dataset, urllib3_mocker
 
 
 @pytest.mark.django_db
-def test_remote_404_problem_json(api_client, router, brp_dataset, urllib3_mocker):
+def test_remote_404_problem_json(
+    api_client, fetch_auth_token, router, brp_dataset, urllib3_mocker
+):
     """Prove that the schema is validated."""
     router.reload()
     urllib3_mocker.add(
@@ -313,7 +327,8 @@ def test_remote_404_problem_json(api_client, router, brp_dataset, urllib3_mocker
 
     # Prove that URLs can now be resolved.
     url = reverse("dynamic_api:brp-ingeschrevenpersonen-detail", kwargs={"pk": "119990901"})
-    response = api_client.get(url)
+    token = fetch_auth_token(["BRP/R"])
+    response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
     assert response["content-type"] == "application/problem+json"  # check before reading
     data = read_response_json(response)
 
@@ -332,7 +347,7 @@ def test_remote_404_problem_json(api_client, router, brp_dataset, urllib3_mocker
 @pytest.mark.django_db
 @pytest.mark.parametrize("remote_status", [401, 403])
 def test_brp_not_authenticated(
-    api_client, filled_router, brp_dataset, urllib3_mocker, remote_status
+    api_client, fetch_auth_token, filled_router, brp_dataset, urllib3_mocker, remote_status
 ):
     """Test auth error handling: 401 and 403 should both become 403."""
 
@@ -344,7 +359,8 @@ def test_brp_not_authenticated(
     )
 
     url = reverse("dynamic_api:brp-ingeschrevenpersonen-detail", kwargs={"pk": "999990901"})
-    response = api_client.get(url)
+    token = fetch_auth_token(["BRP/R"])  # We need a token to get through the proxy.
+    response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
     data = read_response_json(response)
 
     assert response.status_code == 403, data
@@ -352,7 +368,7 @@ def test_brp_not_authenticated(
 
 
 @pytest.mark.django_db
-def test_remote_timeout(api_client, router, brp_dataset, urllib3_mocker):
+def test_remote_timeout(api_client, fetch_auth_token, router, brp_dataset, urllib3_mocker):
     """Prove that the remote router can proxy the other service."""
 
     def _raise_timeout(request):
@@ -368,7 +384,8 @@ def test_remote_timeout(api_client, router, brp_dataset, urllib3_mocker):
 
     # Prove that URLs can now be resolved.
     url = reverse("dynamic_api:brp-ingeschrevenpersonen-detail", kwargs={"pk": "999990901"})
-    response = api_client.get(url)
+    token = fetch_auth_token(["BRP/R"])
+    response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
     data = read_response_json(response)
 
     assert response.status_code == 504, data
@@ -537,7 +554,7 @@ DSO_ONROERENDE_ZAAK = {
         ("kadastraalonroerendezaken", 76870487970000, HCBRK_ONROERENDE_ZAAK, DSO_ONROERENDE_ZAAK),
     ],
 )
-def test_hcbrk_client(api_client, router, hcbrk_dataset, urllib3_mocker, case):
+def test_hcbrk_client(api_client, fetch_auth_token, router, hcbrk_dataset, urllib3_mocker, case):
     """Test HCBRK remote client."""
 
     table, ident, from_hcbrk, output = case
@@ -557,7 +574,8 @@ def test_hcbrk_client(api_client, router, hcbrk_dataset, urllib3_mocker, case):
     )
 
     url = reverse(f"dynamic_api:hcbrk-{table}-detail", kwargs={"pk": str(ident)})
-    response = api_client.get(url)
+    token = fetch_auth_token(["BRK/RS"])
+    response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
     data = read_response_json(response)
 
     assert response.status_code == 200, data
