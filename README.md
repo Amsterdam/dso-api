@@ -17,7 +17,7 @@ Part of that means that the API follows the HAL-JSON style.
 
 See the instructions at: <https://dso-api.readthedocs.io/en/latest/howto/install.html>
 
-These instructions can also be found in the ``dev-docs/howto/install.rst`` file.
+These instructions can also be found in the ``dev-docs/source/howto/install.rst`` file.
 
 # End User Documentation
 
