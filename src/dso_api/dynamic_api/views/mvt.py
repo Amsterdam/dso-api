@@ -4,11 +4,12 @@ import logging
 import time
 
 from django.contrib.gis.db.models import GeometryField
-from django.core.exceptions import FieldDoesNotExist, PermissionDenied
-from django.http import Http404
+from django.core.exceptions import EmptyResultSet, FieldDoesNotExist, PermissionDenied
+from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404
 from django.urls.base import reverse
 from django.views.generic import TemplateView
+from rest_framework.status import HTTP_204_NO_CONTENT
 from schematools.contrib.django.models import Dataset, get_field_schema
 from schematools.utils import to_snake_case
 from vectortiles.postgis.views import MVTView
@@ -101,24 +102,40 @@ class DatasetMVTView(CheckPermissionsMixin, MVTView):
 
         self.model = model
         self.check_permissions(request, [self.model])
+        self._zoom = int(kwargs["z"])
 
     def get(self, request, *args, **kwargs):
         kwargs.pop("dataset_name")
         kwargs.pop("table_name")
 
         t0 = time.perf_counter_ns()
-        result = super().get(request, *args, **kwargs)
-        logging.info(
-            "retrieved tile for %s (%d bytes) in %.3fs",
-            request.path,
-            len(result.content),
-            (time.perf_counter_ns() - t0) * 1e-9,
-        )
-
-        return result
+        try:
+            result = super().get(request, *args, **kwargs)
+            logging.info(
+                "retrieved tile for %s (%d bytes) in %.3fs",
+                request.path,
+                len(result.content),
+                (time.perf_counter_ns() - t0) * 1e-9,
+            )
+            return result
+        except EmptyResultSet:  # Raised for self.model.objects.none().query.sql_with_params().
+            return HttpResponse(None, content_type=self.content_type, status=HTTP_204_NO_CONTENT)
 
     def get_queryset(self):
-        return self.model.objects.all()
+        zoom = self.model.table_schema().zoom
+        qs = self.model.objects
+
+        if isinstance(zoom.min, int) and self._zoom < zoom.min:
+            return qs.none()
+        if isinstance(zoom.max, int) and self._zoom > zoom.max:
+            return qs.none()
+
+        if isinstance(zoom.min, str):
+            qs = qs.filter(**{zoom.min + "__lte": self._zoom})
+        if isinstance(zoom.max, str):
+            qs = qs.filter(**{zoom.max + "__gte": self._zoom})
+
+        return qs.all()
 
     @property
     def vector_tile_fields(self) -> tuple[str]:

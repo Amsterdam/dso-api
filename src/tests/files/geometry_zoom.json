@@ -1,0 +1,39 @@
+{
+  "id": "geometry_zoom",
+  "type": "dataset",
+  "title": "Geometry min/max zoom test",
+  "version": "0.0.1",
+  "crs": "EPSG:4326",
+  "tables": [
+    {
+      "id": "things",
+      "type": "table",
+      "zoom": {
+        "min": 3,
+        "max": "max_zoom"
+      },
+      "schema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "required": ["id", "schema"],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Identifier"
+          },
+          "schema": {
+            "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.0#/definitions/schema"
+          },
+          "geometry": {
+            "$ref": "https://geojson.org/schema/Point.json",
+            "description": "Geometrie"
+          },
+          "max_zoom": {
+              "type": "integer",
+              "description": "display only at this zoom level or further out"
+          }
+        }
+      }
+    }
+  ]
+}

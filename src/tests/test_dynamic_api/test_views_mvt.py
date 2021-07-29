@@ -123,6 +123,35 @@ def test_mvt_content(api_client, afval_container, filled_router):
 
 
 @pytest.mark.django_db
+def test_mvt_zoomlevels(api_client, geometry_zoom_things, filled_router):
+    """Prove that custom zoom levels in the schema work."""
+    # For the x/y grid coordindates, use https://oms.wff.ch/calc.htm.
+
+    # Fails min zoom for the table.
+    response = api_client.get("/v1/mvt/geometry_zoom/things/1/0/0.pbf")
+    assert response.status_code == 204
+    assert not response.content
+
+    # Meets min zoom for both rows.
+    response = api_client.get("/v1/mvt/geometry_zoom/things/4/8/7.pbf")
+    assert response.status_code == 200
+    rows = mapbox_vector_tile.decode(response.content)["default"]["features"]
+    assert len(rows) == 2
+
+    # Exceeds max zoom for only row id=2.
+    response = api_client.get("/v1/mvt/geometry_zoom/things/5/16/15.pbf")
+    assert response.status_code == 200
+    rows = mapbox_vector_tile.decode(response.content)["default"]["features"]
+    assert len(rows) == 1
+    assert rows[0]["properties"]["id"] == 2
+
+    # Exceeds max zoom for both rows.
+    response = api_client.get("/v1/mvt/geometry_zoom/things/7/67/60.pbf")
+    assert response.status_code == 204
+    assert not response.content
+
+
+@pytest.mark.django_db
 def test_mvt_forbidden(api_client, geometry_auth_thing, fetch_auth_token, filled_router):
     """Prove that an unauthorized geometry field gives 403 Forbidden"""
 
