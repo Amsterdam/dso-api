@@ -2,12 +2,11 @@
 import os
 import re
 from pathlib import Path
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Dict, List, NamedTuple, Optional, Tuple, Union
 
 import jinja2
 from schematools.types import DatasetFieldSchema, DatasetSchema, DatasetTableSchema
-from schematools.utils import schema_defs_from_url
-from string_utils import slugify
+from schematools.utils import schema_defs_from_url, to_snake_case, toCamelCase
 
 SCHEMA_URL = os.getenv("SCHEMA_URL", "https://schemas.data.amsterdam.nl/datasets/")
 BASE_URL = "https://api.data.amsterdam.nl"
@@ -19,30 +18,71 @@ TEMPLATE_ENV = jinja2.Environment(
     autoescape=False,
 )
 
+
+class LookupContext(NamedTuple):
+    operator: str
+    value_example: Optional[str]
+    description: str
+
+
 re_camel_case = re.compile(
     r"(((?<=[^A-Z])[A-Z])|([A-Z](?![A-Z]))|((?<=[a-z])[0-9])|(?<=[0-9])[a-z])"
 )
 # This should match DEFAULT_LOOKUPS_BY_TYPE in DSO-API (except for the "exact" lookup)
-_comparison_lookups = ["gte", "gt", "lt", "lte", "not", "isnull"]
+_comparison_lookups = ["gt", "gte", "lt", "lte", "not", "isnull"]
 _identifier_lookups = ["in", "not", "isnull"]
 _polygon_lookups = ["contains", "isnull", "not"]
-_string_lookups = ["isnull", "not", "isempty", "like"]
+_string_lookups = ["like", "not", "isnull", "isempty"]
 _number_lookups = _comparison_lookups + ["in"]
+
 VALUE_EXAMPLES = {
-    "string": ("Tekst exacte match", _string_lookups),
+    "string": ("Tekst", _string_lookups),
     "boolean": ("``true`` | ``false``", []),
     "integer": ("Geheel getal", _number_lookups),
     "number": ("Getal", _number_lookups),
     "time": ("``hh:mm[:ss[.ms]]``", _comparison_lookups),
     "date": ("``yyyy-mm-dd``", _comparison_lookups),
-    "date-time": ("``yyyy-mm-dd`` or ``yyyy-mm-ddThh:mm[:ss[.ms]]``", _comparison_lookups),
+    "date-time": ("``yyyy-mm-dd`` of ``yyyy-mm-ddThh:mm[:ss[.ms]]``", _comparison_lookups),
     "uri": ("https://....", _string_lookups),
     "array": ("value,value", ["contains"]),  # comma separated list of strings
-    "https://geojson.org/schema/Polygon.json": ("GeoJSON | POLYGON(x y ...)", _polygon_lookups),
-    "https://geojson.org/schema/MultiPolygon.json": (
-        "GeoJSON | MULTIPOLYGON(x y ...)",
+    "https://geojson.org/schema/Polygon.json": (
+        "GeoJSON of ``POLYGON(x y ...)``",
         _polygon_lookups,
     ),
+    "https://geojson.org/schema/MultiPolygon.json": (
+        "GeoJSON of ``MULTIPOLYGON(x y ...)``",
+        _polygon_lookups,
+    ),
+}
+
+LOOKUP_CONTEXT = {
+    lookup.operator: lookup
+    for lookup in [
+        LookupContext("gt", None, "Test op groter dan (``>``)."),
+        LookupContext("gte", None, "Test op groter dan of gelijk (``>=``)."),
+        LookupContext("lt", None, "Test op kleiner dan (``<``)."),
+        LookupContext("lte", None, "Test op kleiner dan of gelijk (``<=``)."),
+        LookupContext(
+            "like", "Tekst met jokertekens (``*`` en ``?``).", "Test op gedeelte van tekst."
+        ),
+        LookupContext(
+            "in",
+            "Lijst van waarden",
+            "Test of de waarde overeenkomst met 1 van de opties (``IN``).",
+        ),
+        LookupContext("not", None, "Test of waarde niet overeenkomt (``!=``)."),
+        LookupContext(
+            "contains", "Comma gescheiden lijst", "Test of er een intersectie is met de waarde."
+        ),
+        LookupContext(
+            "isnull",
+            "``true`` of ``false``",
+            "Test op ontbrekende waarden (``IS NULL`` / ``IS NOT NULL``).",
+        ),
+        LookupContext(
+            "isempty", "``true`` of ``false``", "Test of de waarde leeg is (``== ''`` / ``!= ''``)"
+        ),
+    ]
 }
 
 
@@ -243,7 +283,7 @@ def _get_field_context(field: DatasetFieldSchema, identifier: List[str]) -> Dict
     if type.startswith("https://geojson.org/schema/"):
         # Catch-all for other geometry types
         type = type[27:-5]
-        value_example = f"GeoJSON | {type.upper()}(x y ...)"
+        value_example = f"GeoJSON of ``{type.upper()}(x y ...)``"
         lookups = []
     elif field.relation or "://" in type:
         lookups = _identifier_lookups
@@ -251,11 +291,12 @@ def _get_field_context(field: DatasetFieldSchema, identifier: List[str]) -> Dict
     return {
         "name": field.name,
         "snake_name": snake_name,
-        "camel_name": f"{camel_name} (identificatie)" if field.name in identifier else camel_name,
+        "camel_name": camel_name,
+        "is_identifier": field.name in identifier,
         "type": (type or "").capitalize(),
         "value_example": value_example or "",
-        "description": field.description,
-        "lookups": sorted(lookups),
+        "description": field.description or "",
+        "lookups": [LOOKUP_CONTEXT[op] for op in lookups],
         "source": field,
         "auth": field.auth,
     }
@@ -298,26 +339,6 @@ def render_template(template_name, output_file, context_data: dict):
 
 def underline(text, symbol):
     return "{text}\n{underline}".format(text=text.capitalize(), underline=symbol * len(text))
-
-
-def toCamelCase(name):
-    """
-    Unify field/column/dataset name from Space separated/Snake Case/Camel case
-    to camelCase.
-    """
-    name = " ".join(name.split("_"))
-    words = re_camel_case.sub(r" \1", name).strip().lower().split(" ")
-    return "".join(w.lower() if i == 0 else w.title() for i, w in enumerate(words))
-
-
-def to_snake_case(name):
-    """
-    Convert field/column/dataset name from Space separated/Snake Case/Camel case
-    to snake_case.
-    """
-    # Convert to field name, avoiding snake_case to snake_case issues.
-    name = toCamelCase(name)
-    return slugify(re_camel_case.sub(r" \1", name).strip().lower(), separator="_")
 
 
 def strip_base_url(url):

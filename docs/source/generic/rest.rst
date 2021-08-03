@@ -10,11 +10,7 @@ De individuele datasets worden toegelicht op de :doc:`datasets <../datasets/inde
 .. tip::
     Een overzicht van alle DataPunt API's is te vinden op: https://api.data.amsterdam.nl/.
 
-
-Uitlezen van de API
--------------------
-
-De volgende HTTP operaties worden ondersteund:
+De datasets ondersteuneb de volgende HTTP operaties:
 
 .. list-table::
     :widths: 50 50
@@ -39,6 +35,15 @@ dan worden de resultaten als een doorklikbare HTML pagina getoond.
 Bijvoorbeeld: https://api.data.amsterdam.nl/v1/gebieden/buurten/.
 Door de header ``Accept: application/hal+json`` te sturen wordt
 altijd een JSON response geforceerd. Dit kan ook met de query parameter :samp:`_format=json`
+
+De API's ondersteunen daarnaast mogelijkheden tot:
+
+* `Paginering`_
+* `Filtering`_
+* `Sorteren van resultaten`_
+* `Embedding van relaties`_
+* `Exportformaat opgeven`_
+* `Geometrie projecties`_
 
 
 Paginering
@@ -91,27 +96,131 @@ De velden uit het ``page`` object worden ook als HTTP headers in de response ter
 * ``X-Pagination-Count``: Optioneel, het totaal aantal pagina's.
 * ``X-Total-Count``: Optioneel, het totaal aantal records over alle pagina's heen.
 
-Sortering van resultaten
-------------------------
 
-Gebruik de parameter :samp:`?_sort={veld1},{veld2},{...}` om resultaten te ordenen.
+Filtering
+---------
+
+Ieder veld kan gebruikt worden om op te filteren.
 Bijvoorbeeld:
 
 .. code-block:: bash
 
-    curl 'https://api.data.amsterdam.nl/v1/bag/stadsdeel/?_sort=naam'
+    curl 'https://api.data.amsterdam.nl/v1/gebieden/stadsdelen/?naam=Westpoort'
 
-Sorteren om meerdere velden is ook mogelijk met :samp:`?_sort={veld1},{veld2}`:
+Afhankelijk van het veldtype zijn er extra operatoren mogelijk.
+
+.. tip::
+    De exacte namen en mogelijke velden per tabel zijn op de :doc:`REST API Datasets <../datasets/index>` pagina te zien.
+
+Voor alle veldtypes
+~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+
+   * - Operator
+     - Werking
+     - SQL Equivalent
+   * - :samp:`?{veld}[in]={x},{y}`
+     - De waarde moet één van de opties zijn.
+     - :samp:`{veld} IN ({x}, {y})`
+   * - :samp:`?{veld}[not]={x}`
+     - De waarde moet niet voorkomen.
+     - :samp:`{veld} != {x}`.
+   * - :samp:`?{veld}[isnull]=true`
+     - Het veld mag niet ingevuld zijn.
+     - :samp:`{veld} IS NULL`
+   * - :samp:`?{veld}[isnull]=false`
+     - Het veld moet ingevuld zijn.
+     - :samp:`{veld} IS NOT NULL`
+
+Bij waarden met getallen
+~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+
+   * - Operator
+     - Werking
+     - SQL Equivalent
+   * - :samp:`?{veld}[lt]={x}`
+     - Test op kleiner dan (lt=Less Then)
+     - :samp:`{veld} < {x}`
+   * - :samp:`?{veld}[lte]={x}`
+     - Test op kleiner dan of gelijk (lte: less then or equal to)"
+     - :samp:`{veld} <= {x}`
+   * - :samp:`?{veld}[gt]={x}`
+     - Test op groter dan (gt=greater then)
+     - :samp:`{veld} > {x}`
+   * - :samp:`?{veld}[gte]={x}`
+     - Test op groter dan of gelijk aan (gte: greater then or equal to)
+     - :samp:`{veld} >= {x}`
+
+Bij waarden met tekst
+~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+
+   * - Operator
+     - Werking
+     - SQL Equivalent
+   * - :samp:`?{tekstveld}[like]={x}`
+     - Zoekt in tekstgedeelte met jokertekens (``*`` en ``?``).
+     - :samp:`{tekstveld} LIKE '{x}'`
+   * - :samp:`?{tekstveld}[isempty]=true`
+     - Waarde moet leeg zijn
+     - :samp:`{veld} IS NULL OR {veld} = ''`
+   * - :samp:`?{tekstveld}[isempty]=false`
+     - Waarde mag niet niet leeg zijn
+     - :samp:`{veld} IS NOT NULL AND {veld} != ''`
+
+De ``like`` operator ondersteund jokertekens (wildcards).
+Het teken ``*`` staat voor nul of meer willekeurige tekens, ``?`` staat voor precies één willekeurig teken.
+Bijvoorbeeld:
 
 .. code-block:: bash
 
-    curl 'https://api.data.amsterdam.nl/v1/bag/stadsdeel/?_sort=ingangCyclus,naam'
+    curl 'https://api.data.amsterdam.nl/v1/gebieden/stadsdelen/?naam[like]=West*'
 
-Gebruik het ``-``-teken om omgekeerd te sorteren :samp:`?_sort=-{veld1},-{veld2}`:
+    curl 'https://api.data.amsterdam.nl/v1/gebieden/stadsdelen/?naam[like]=Westp??rt'
 
-.. code-block:: bash
+Er is geen *escaping* van deze symbolen mogelijk.
 
-    curl 'https://api.data.amsterdam.nl/v1/bag/stadsdeel/?_sort=-ingangCyclus,naam'
+Bij waarden met lijsten
+~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+
+   * - Operator
+     - Werking
+     - SQL Equivalent
+
+   * - :samp:`?{arrayveld}[contains]={x},{y}`
+     - De lijst moet beide bevatten.
+     - :samp:`({x}, {y}) IN {arrayveld}`
+
+Bij waarden met een geometrie
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+
+   * - Operator
+     - Werking
+     - SQL Equivalent
+   * - :samp:`?{geoveld}[contains]={x},{y}`
+     - Geometrie moet voorkomen op een punt (intersectie)
+     - :samp:`ST_Intersects({geoveld}, POINT({x} {y}))`
+   * - :samp:`?{geoveld}[contains]=POINT(x y)`
+     - Idem, nu in de WKT (well-known text) notatie.
+     - :samp:`ST_Intersects({geoveld}, POINT({x} {y}))`
+
+Het gebruikte coordinatenstelsel en  Bij het doorzoeken van geometrie velden wordt gebruik gemaakt van de proje opgegeven ``Accept-CRS`` header.
+Afhankelijk van de projectie wordt x,y geïnterpreteerd als longitude, latitude of x,y in RD of anderszins.
+Indien ``Accept-CRS`` niet wordt meegegeven worden x en y, afhankelijk van de waardes,
+geinterpreteerd als longitude en latitude in ``EPSG:4326`` of ``EPSG:28992``.
 
 
 Specifieke velden opvragen
@@ -131,48 +240,27 @@ opgestuurd:
     curl 'https://api.data.amsterdam.nl/v1/fietspaaltjes/fietspaaltjes/?fields=-area,-noodzaak'
 
 
+Sorteren van resultaten
+-----------------------
 
-Filtering
----------
-
-Ieder veld kan gebruikt worden om op te filteren.
+Gebruik de parameter :samp:`?_sort={veld1},{veld2},{...}` om resultaten te ordenen.
 Bijvoorbeeld:
 
 .. code-block:: bash
 
-    curl 'https://api.data.amsterdam.nl/v1/bag/stadsdeel/?naam=Westpoort'
+    curl 'https://api.data.amsterdam.nl/v1/gebieden/stadsdelen/?_sort=naam'
 
-Naast een exacte match zijn er afhankelijk van het type veld ook andere operatoren mogelijk:
-
-* :samp:`?{veld}[lt]={x}` werkt als "less then": :samp:`{veld} < {x}`.
-* :samp:`?{veld}[lte]={x}` werkt als "less then or equal to": :samp:`{veld} <= {x}`.
-* :samp:`?{veld}[gt]={x}` werkt als "greather then": :samp:`{veld} > {x}`.
-* :samp:`?{veld}[gte]={x}` werkt als "greather then or equal to": :samp:`{veld} >= {x}`.
-* :samp:`?{veld}[in]={x},{y}` werkt als :samp:`{veld} IN ({x}, {y})`.
-* :samp:`?{veld}[contains]={x},{y}` werkt als :samp:`({x}, {y}) IN {veld}` (voor array velden).
-* :samp:`?{veld}[contains]={x},{y}|POINT(x y)` selecteert die objecten waarbij punt x,y in het
-  (multi-)polygon :samp:`veld` ligt. Afhankelijk van de waarde van header Accept-CRS wordt x,y
-  geinterpreteerd als longitude, latitude of x,y in RD of anderszins. Indien Accept-CRS niet wordt
-  meegegeven worden x en y, afhankelijk van de waardes, geinterpreteerd als longitude en latitude
-  in EPSG:4326 of EPSG:28992.
-* :samp:`?{veld}[not]={x}` werkt als :samp:`{veld} != {x}`.
-* :samp:`?{veld}[isnull]={true|false}` werkt als :samp:`{veld} IS NULL` of :samp:`{veld} IS NOT NULL`.
-* :samp:`?{veld}[isempty]={true|false}` werkt als :samp:`{veld} IS NULL OR {veld} = ''`
-  of :samp:`{veld} IS NOT NULL AND {veld} <> ''`.
-
-Tekstvelden ondersteunen wildcards. Maak daarvoor gebruik van de :samp:`?{veld}[like]` operator:
+Sorteren om meerdere velden is ook mogelijk met :samp:`?_sort={veld1},{veld2}`:
 
 .. code-block:: bash
 
-    curl 'https://api.data.amsterdam.nl/v1/bag/stadsdeel/?naam[like]=West*'
+    curl 'https://api.data.amsterdam.nl/v1/gebieden/stadsdelen/?_sort=ingangCyclus,naam'
 
-    curl 'https://api.data.amsterdam.nl/v1/bag/stadsdeel/?naam[like]=Westp??rt'
+Gebruik het ``-``-teken om omgekeerd te sorteren :samp:`?_sort=-{veld1},-{veld2}`:
 
-``*`` staat voor nul of meer willekeurige tekens. ``?`` staat voor precies
-één willekeurig teken. Er is geen *escaping* van deze symbolen mogelijk.
+.. code-block:: bash
 
-De namen van de velden en mogelijke operatoren zijn te vinden op
-de :doc:`datasets <../datasets/index>` pagina.
+    curl 'https://api.data.amsterdam.nl/v1/gebieden/stadsdelen/?_sort=-ingangCyclus,naam'
 
 
 Embedding van relaties
@@ -337,6 +425,43 @@ Veelgebruikte projecties zijn:
 De andere notatievormen (zoals ``urn:ogc:def:crs:EPSG::4326`` en ``www.opengis.net`` URI's)
 worden ook ondersteund.
 
+Exportformaat opgeven
+---------------------
+
+De API kan de resultaten in andere bestandsformaten presenteren,
+zodat deze gegegevens direct in de bijbehorende software ingeladen kan worden.
+Standaard wordt de HAL-JSON notatie gebruikt uit de DSO standaard.
+
+Met het CSV formaat kunnen de gegevens direct in Excel worden ingelezen.
+
+Met de ``?_format=`` parameter kan dit gewijzigd worden.
+De volgende formaten worden ondersteund:
+
+.. list-table::
+    :widths: 20 40 40
+    :header-rows: 1
+
+    * - Parameter
+      - Toelichting
+      - Media type
+    * - ``?_format=json``
+      - HAL-JSON notatie (standaard)
+      - ``application/hal+json``
+    * - ``?_format=geojson``
+      - GeoJSON notatie
+      - ``application/geo+json``
+    * - ``?_format=csv``
+      - Kommagescheiden bestand
+      - ``text/csv``
+
+.. warning::
+    Niet ieder exportformaat ondersteund alle veldtypen die een dataset kan bevatten.
+    Bij het gebruik van een CSV bestand worden de meer-op-meer relaties niet opgenomen in de export.
+    In een GeoJSON bestand worden ingesloten velden opgenomen als losse objecten.
+
+.. tip::
+   Voor het koppelen van de datasets in GIS-applicaties kun je naast het GeoJSON formaat
+   ook gebruik maken van de :doc:`WFS koppeling <wfs>`.
 
 De DSO Standaard
 ----------------

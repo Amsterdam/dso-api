@@ -9,15 +9,10 @@
 * **Versie:** {{ schema.version }}
 * **Endpoints:**
 
-   .. raw:: html
-
-      <ul>
-          <li>Swagger UI: <a href="{{ swagger_url }}">{{ swagger_url|strip_base_url }}</a></li>
-        {% for table in tables %}
-          <li>REST URI{% if (table.auth or schema_auth) %} (autorisatie:{{ (table.auth or schema_auth) }}){% endif %}:<a href="{{ table.uri }}">{{ table.uri|strip_base_url }}</a></li>
-        {% endfor %}
-      </ul>
-
+ * Swagger UI: `{{ swagger_url|strip_base_url }} <{{ swagger_url }}>`_
+ {%- for table in tables %}
+ * REST URI{% if (table.auth or schema_auth) %} (autorisatie:{{ (table.auth or schema_auth) }}){% endif %}: `{{ table.uri|strip_base_url }} <{{ table.uri }}>`_
+  {%- endfor %}
 
 .. contents:: Tabellen
       :local:
@@ -33,14 +28,13 @@
 .. raw:: html
 
    <ul>
+     <li><b>Autorisatie:</b>{% if (table.auth or schema_auth) %} (autorisatie:{{ (table.auth or schema_auth) }}){% else %}Geen, dit is openbare data.{% endif %}</a></li>
      <li><b>REST URI:</b> <a href="{{ table.uri }}">{{ table.uri|strip_base_url }}</a></li>
-     <li><b>AUTORISATIE:</b>{% if (table.auth or schema_auth) %} (autorisatie:{{ (table.auth or schema_auth) }}){% endif %}</a></li>
      <li><b>CSV Export:</b> {% if table.rest_csv %}<a type="text/csv" download href="{{ table.rest_csv }}">{{ table.rest_csv|strip_base_url }}</a>{% else %}N.B.{% endif %}</li>
      <li><b>GeoJSON Export:</b> {% if table.rest_geojson %}<a type="application/json" download href="{{ table.rest_geojson }}">{{ table.rest_geojson|strip_base_url }}</a>{% else %}N.B.{% endif %}</li>
    </ul>
 
-Velden
-~~~~~~
+De volgende velden zijn beschikbaar:
 
 .. list-table::
    :header-rows: 1
@@ -50,37 +44,28 @@ Velden
      - Omschrijving
 {%- for field in table.fields %}
    * - ``{{ field.camel_name }}``{% if ((field.auth or schema_auth) or table.auth) %} (autorisatie:{{ ((field.auth or table.auth) or schema_auth) }}){% endif %}
-     - {{ field.type|default('') }}
+     - {{ field.type|default('') }}{% if field.is_identifier %} *identificatie*{% endif %}
      - {{ field.description|default('') }}
 {%- endfor %}
 
-* Gebruik ``?_fields=field,field2`` om de teruggegeven velden te beperken.
-* Gebruik ``?_sort=field,field2,-field3`` om te de resultaten te sorteren.
-* Gebruik :samp:`?{veld}={waarde}` om op een exacte waarde te filteren.
-
-Filters
-~~~~~~~
-
-Daarnaast zijn de volgende velden te filteren:
+De volgende query-parameters zijn te gebruiken:
 
 .. list-table::
    :header-rows: 1
 
-   * - Veldnaam
-     - Notatie
-     - Extra operators
+   * - Parameter
+     - Mogelijke waarde
+     - Werking
 {%- for field in table.fields %}
-   * - ``{{ field.camel_name }}``
+   * - ``{{ field.camel_name }}=``
      - {{ field.value_example|default('') }}
-     - {% for op in field.lookups %}{% if not loop.first %}, {% endif %}``{{ op }}``{% endfor %}
+     - Test op exacte waarde (``==``).
+  {%- for lookup in field.lookups %}
+   * - ``{{ field.camel_name }}[{{ lookup.operator }}]=``
+     - {{ lookup.value_example or field.value_example|default('') }}
+     - {{ lookup.description }}
+  {%- endfor %}
 {%- endfor %}
-
-De velden kunnen in de query-string gebruikt worden.
-Bijvoorbeeld:
-
-* ``?id=1045``
-*  ``?id[gt]=10000``
-*  ``?id[in]=123,789``
 
 {% if table.relations %}
 Relaties
