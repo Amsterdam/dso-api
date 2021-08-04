@@ -135,7 +135,7 @@ Voor alle veldtypes
      - :samp:`{veld} IS NOT NULL`
 
 Bij waarden met getallen
-~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. list-table::
    :header-rows: 1
@@ -157,7 +157,7 @@ Bij waarden met getallen
      - :samp:`{veld} >= {x}`
 
 Bij waarden met tekst
-~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
 
 .. list-table::
    :header-rows: 1
