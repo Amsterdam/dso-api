@@ -638,7 +638,7 @@ def _build_serializer_field(
             _build_serializer_loose_relation_id_field(model_field, fields, new_attrs)
         else:
             _build_serializer_related_id_field(model_field, fields, extra_kwargs)
-    else:
+    elif not isinstance(model_field, models.AutoField):
         # Regular fields
         # Re-map file to correct serializer
         field_schema = get_field_schema(model_field)
