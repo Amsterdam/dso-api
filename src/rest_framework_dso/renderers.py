@@ -101,6 +101,8 @@ class RendererMixin:
 
 
 class BrowsableAPIRenderer(RendererMixin, renderers.BrowsableAPIRenderer):
+    template = "dso_api/dynamic_api/api.html"
+
     def get_context(self, data, accepted_media_type, renderer_context):
         context = super().get_context(data, accepted_media_type, renderer_context)
 
