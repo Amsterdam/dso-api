@@ -9,6 +9,7 @@ from rest_framework.exceptions import APIException, ErrorDetail, NotAcceptable, 
 from rest_framework.renderers import JSONRenderer
 from rest_framework.request import Request
 from rest_framework.serializers import ListSerializer
+from rest_framework.utils import formatting
 from rest_framework.views import exception_handler as drf_exception_handler
 from schematools.types import DatasetTableSchema
 
@@ -18,6 +19,35 @@ from rest_framework_dso.pagination import DSOPageNumberPagination
 from rest_framework_dso.response import StreamingResponse
 
 W3HTMLREF = "https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.5.1"
+
+
+def get_view_name(view):
+    """
+    Given a view instance, return a textual name to represent the view.
+    This name is used in the browsable API, and in OPTIONS responses.
+
+    This function replaces the Rest Framework default.
+    """
+    name = getattr(view, "name", None)
+    if name is not None:
+        return name
+
+    name = view.__class__.__name__
+    name = formatting.remove_trailing_string(name, "View")
+    name = formatting.remove_trailing_string(name, "ViewSet")
+    name = formatting.camelcase_to_spaces(name)
+
+    # Use title for datasets instead of the generic 'Schema'
+    if name == "Schema":
+        name = getattr(view.schema_generator, "title", "Schema")
+
+    # Add the title for instances
+    response = getattr(view, "response", None)
+    suffix = getattr(view, "suffix", None)
+
+    if suffix == "Instance" and response:
+        name = response.data["_links"]["self"]["title"]
+    return name
 
 
 def multiple_slashes(request):
