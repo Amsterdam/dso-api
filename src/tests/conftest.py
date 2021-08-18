@@ -233,6 +233,15 @@ def afval_dataset(afval_schema_json) -> Dataset:
 
 
 @pytest.fixture()
+def afval_dataset_subpath(afval_schema_json) -> Dataset:
+    return Dataset.objects.create(
+        name="afvalwegingen",
+        path="sub/path/afvalwegingen",
+        schema_data=json.dumps(afval_schema_json),
+    )
+
+
+@pytest.fixture()
 def afval_cluster_model(afval_dataset, dynamic_models):
     return dynamic_models["afvalwegingen"]["clusters"]
 
@@ -595,6 +604,15 @@ def fietspaaltjes_dataset(fietspaaltjes_schema_json) -> Dataset:
     return Dataset.objects.create(
         name="fietspaaltjes",
         path="fietspaaltjes",
+        schema_data=json.dumps(fietspaaltjes_schema_json),
+    )
+
+
+@pytest.fixture()
+def fietspaaltjes_dataset_subpath(fietspaaltjes_schema_json) -> Dataset:
+    return Dataset.objects.create(
+        name="fietspaaltjes",
+        path="sub/fietspaaltjes",
         schema_data=json.dumps(fietspaaltjes_schema_json),
     )
 
