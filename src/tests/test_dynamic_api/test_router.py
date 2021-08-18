@@ -105,3 +105,18 @@ def test_router_excludes_non_default_dataset_versions(settings, bommen_v2_datase
 
     with pytest.raises(NoReverseMatch):
         assert reverse("dynamic_api:bommen-bommen-list")
+
+
+@pytest.mark.django_db
+def test_router_creates_views_on_subpaths(
+    settings, router, fietspaaltjes_dataset_subpath, afval_dataset_subpath
+):
+    router.reload()
+
+    # Datasets on subpaths are registered
+    assert reverse("dynamic_api:fietspaaltjes-fietspaaltjes-list")
+    assert reverse("dynamic_api:afvalwegingen-containers-list")
+
+    # Indexviews are registered on the subpaths
+    assert reverse("dynamic_api:sub-index")
+    assert reverse("dynamic_api:sub/path-index")

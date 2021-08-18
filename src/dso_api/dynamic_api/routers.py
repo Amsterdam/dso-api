@@ -48,14 +48,21 @@ if TYPE_CHECKING:
     from schematools.contrib.django.models import DynamicModel
 
 
-class DynamicAPIRootView(APIIndexView):
+class DynamicAPIIndexView(APIIndexView):
     """An overview of API endpoints."""
 
-    name = "DSO-API"  # for browsable API.
+    name = "DSO-API Datasets"  # for browsable API.
     description = (
         "To use the DSO-API, see the documentation at <https://api.data.amsterdam.nl/v1/docs/>. "
     )
     api_type = "rest_json"
+    path = None
+
+    def get_datasets(self) -> Iterable[Dataset]:
+        datasets = super().get_datasets()
+        if self.path:
+            datasets = [ds for ds in datasets if ds.path.startswith(self.path)]
+        return datasets
 
     def get_environments(self, ds: Dataset, base: str):
         return [
@@ -94,10 +101,11 @@ class DynamicRouter(routers.DefaultRouter):
         self.all_models = {}
         self.static_routes = []
         self._openapi_urls = []
+        self._index_urls = []
 
     def get_api_root_view(self, api_urls=None):
         """Show the OpenAPI specification as root view."""
-        return DynamicAPIRootView.as_view()
+        return DynamicAPIIndexView.as_view()
 
     def is_initialized(self) -> bool:
         """Tell whether the router initialization was used to create viewsets."""
@@ -127,7 +135,7 @@ class DynamicRouter(routers.DefaultRouter):
 
     def get_urls(self):
         """Add extra URLs beside the registered viewsets."""
-        return super().get_urls() + self._openapi_urls
+        return super().get_urls() + self._openapi_urls + self._index_urls
 
     def register(self, prefix, viewset, basename=None):
         """Overwritten function to preserve any manually added routes on reloading."""
@@ -149,9 +157,13 @@ class DynamicRouter(routers.DefaultRouter):
         # OpenAPI views
         openapi_urls = self._build_openapi_views(db_datasets + api_datasets)
 
+        # Sub Index views for sub paths of datasets
+        index_urls = self._build_index_views(db_datasets + api_datasets)
+
         # Atomically copy the new viewset registrations
         self.registry = self.static_routes + dataset_routes + remote_routes
         self._openapi_urls = openapi_urls
+        self._index_urls = index_urls
 
         # invalidate the urls cache
         if hasattr(self, "_urls"):
@@ -246,6 +258,35 @@ class DynamicRouter(routers.DefaultRouter):
                     dataset.path + "/",
                     get_openapi_json_view(dataset),
                     name=f"openapi-{dataset_id}",
+                )
+            )
+        return results
+
+    def _build_index_views(self, datasets: Iterable[Dataset]) -> List[URLPattern]:
+        """Build index views for each sub path
+        Datasets can be grouped on subpaths. This generates a view
+        on each sub path with an index of datasets on that path.
+        """
+
+        # List unique sub paths in all datasets
+        paths = []
+        for ds in datasets:
+            path_components = ds.path.split("/")
+            ds_paths = [
+                "/".join(path_components[0 : i + 1]) for i, x in enumerate(path_components)
+            ]
+            paths += ds_paths[0:-1]
+        paths = set(paths)
+
+        # Create an index view for each path
+        results = []
+        for p in paths:
+            name = p.split("/")[-1].capitalize() + " Datasets"
+            results.append(
+                path(
+                    p + "/",
+                    DynamicAPIIndexView.as_view(path=p, name=name),
+                    name=f"{p}-index",
                 )
             )
         return results

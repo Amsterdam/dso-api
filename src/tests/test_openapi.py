@@ -86,6 +86,133 @@ def test_root_view(api_client, afval_dataset, fietspaaltjes_dataset, filled_rout
 
 
 @pytest.mark.django_db
+def test_subpath_view(
+    api_client, afval_dataset_subpath, fietspaaltjes_dataset_subpath, filled_router, drf_request
+):
+    """Prove that the OpenAPI sub index can be rendered.
+    And only the datasets on the sub path are shown.
+    """
+    url_sub = reverse("dynamic_api:sub-index")
+    url_subpath = reverse("dynamic_api:sub/path-index")
+    assert url_sub == "/v1/sub/"
+    assert url_subpath == "/v1/sub/path/"
+
+    response_sub = api_client.get(url_sub)
+    assert response_sub.status_code == 200, response_sub.data
+
+    response_subpath = api_client.get(url_subpath)
+    assert response_subpath.status_code == 200, response_subpath.data
+
+    # Prove that response contains the correct data with both datasets
+    base = drf_request.build_absolute_uri("/").rstrip("/")
+    assert response_sub.data == {
+        "datasets": {
+            "afvalwegingen": {
+                "id": "afvalwegingen",
+                "short_name": "afvalwegingen",
+                "service_name": "Afvalwegingen",
+                "status": "Beschikbaar",
+                "description": "unit testing version of afvalwegingen",
+                "tags": [],
+                "terms_of_use": {
+                    "government_only": False,
+                    "pay_per_use": False,
+                    "license": "CC0 1.0",
+                },
+                "environments": [
+                    {
+                        "name": "production",
+                        "api_url": f"{base}/v1/sub/path/afvalwegingen/",
+                        "specification_url": f"{base}/v1/sub/path/afvalwegingen/",
+                        "documentation_url": f"{base}/v1/docs/datasets/afvalwegingen.html",
+                    }
+                ],
+                "related_apis": [
+                    {"type": "WFS", "url": f"{base}/v1/wfs/afvalwegingen/"},
+                    {"type": "MVT", "url": f"{base}/v1/mvt/afvalwegingen/"},
+                ],
+                "api_authentication": None,
+                "api_type": "rest_json",
+                "organization_name": "Gemeente Amsterdam",
+                "organization_oin": "00000001002564440000",
+                "contact": {
+                    "email": "datapunt@amsterdam.nl",
+                    "url": "https://github.com/Amsterdam/dso-api/issues",
+                },
+            },
+            "fietspaaltjes": {
+                "id": "fietspaaltjes",
+                "short_name": "fietspaaltjes",
+                "service_name": "fietspaaltjes",
+                "status": "beschikbaar",
+                "description": "",
+                "tags": [],
+                "terms_of_use": {"government_only": False, "pay_per_use": False, "license": None},
+                "environments": [
+                    {
+                        "name": "production",
+                        "api_url": f"{base}/v1/sub/fietspaaltjes/",
+                        "specification_url": f"{base}/v1/sub/fietspaaltjes/",
+                        "documentation_url": f"{base}/v1/docs/datasets/fietspaaltjes.html",
+                    }
+                ],
+                "related_apis": [
+                    {"type": "WFS", "url": f"{base}/v1/wfs/fietspaaltjes/"},
+                    {"type": "MVT", "url": f"{base}/v1/mvt/fietspaaltjes/"},
+                ],
+                "api_authentication": None,
+                "api_type": "rest_json",
+                "organization_name": "Gemeente Amsterdam",
+                "organization_oin": "00000001002564440000",
+                "contact": {
+                    "email": "datapunt@amsterdam.nl",
+                    "url": "https://github.com/Amsterdam/dso-api/issues",
+                },
+            },
+        }
+    }
+
+    # Assert only afvalwegingen is shown on its path
+    assert response_subpath.data == {
+        "datasets": {
+            "afvalwegingen": {
+                "id": "afvalwegingen",
+                "short_name": "afvalwegingen",
+                "service_name": "Afvalwegingen",
+                "status": "Beschikbaar",
+                "description": "unit testing version of afvalwegingen",
+                "tags": [],
+                "terms_of_use": {
+                    "government_only": False,
+                    "pay_per_use": False,
+                    "license": "CC0 1.0",
+                },
+                "environments": [
+                    {
+                        "name": "production",
+                        "api_url": f"{base}/v1/sub/path/afvalwegingen/",
+                        "specification_url": f"{base}/v1/sub/path/afvalwegingen/",
+                        "documentation_url": f"{base}/v1/docs/datasets/afvalwegingen.html",
+                    }
+                ],
+                "related_apis": [
+                    {"type": "WFS", "url": f"{base}/v1/wfs/afvalwegingen/"},
+                    {"type": "MVT", "url": f"{base}/v1/mvt/afvalwegingen/"},
+                ],
+                "api_authentication": None,
+                "api_type": "rest_json",
+                "organization_name": "Gemeente Amsterdam",
+                "organization_oin": "00000001002564440000",
+                "contact": {
+                    "email": "datapunt@amsterdam.nl",
+                    "url": "https://github.com/Amsterdam/dso-api/issues",
+                },
+            },
+        }
+    }
+
+
+@pytest.mark.django_db
 def test_openapi_swagger(api_client, afval_dataset, filled_router):
     """Prove that the OpenAPI page can be rendered."""
     url = reverse("dynamic_api:openapi-afvalwegingen")
