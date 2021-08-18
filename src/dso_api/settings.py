@@ -304,6 +304,8 @@ REST_FRAMEWORK = dict(
     EXCEPTION_HANDLER="rest_framework_dso.views.exception_handler",
     COERCE_DECIMAL_TO_STRING=True,
     URL_FORMAT_OVERRIDE="_format",  # use ?_format=.. instead of ?format=..
+    # View configuration
+    VIEW_NAME_FUNCTION="rest_framework_dso.views.get_view_name",
 )
 
 SPECTACULAR_SETTINGS = {

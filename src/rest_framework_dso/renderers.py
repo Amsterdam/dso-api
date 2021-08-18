@@ -15,6 +15,7 @@ from rest_framework import renderers
 from rest_framework.exceptions import ValidationError
 from rest_framework.relations import HyperlinkedRelatedField
 from rest_framework.serializers import ListSerializer, Serializer, SerializerMethodField
+from rest_framework.utils.breadcrumbs import get_breadcrumbs as drf_get_breadcrumbs
 from rest_framework.utils.serializer_helpers import ReturnDict, ReturnList
 from rest_framework_csv.renderers import CSVStreamingRenderer
 from rest_framework_gis.fields import GeoJsonDict
@@ -120,6 +121,18 @@ class BrowsableAPIRenderer(RendererMixin, renderers.BrowsableAPIRenderer):
             content = sample.getvalue()
 
         return content
+
+    def get_breadcrumbs(self, request):
+        """
+        Given a request returns a list of breadcrumbs, which are each a
+        tuple of (name, url).
+
+        Extends the buildin function by using instance title from _links
+        for the last breadcrumb instead of the generic "Instance".
+        """
+        breadcrumbs = drf_get_breadcrumbs(request.path)
+        breadcrumbs[-1] = (self.get_name(self.renderer_context["view"]), breadcrumbs[-1][1])
+        return breadcrumbs
 
     def render(self, data, accepted_media_type=None, renderer_context=None):
         # Protect the browsable API from being used as DOS (Denial of Service) attack vector.
