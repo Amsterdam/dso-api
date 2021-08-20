@@ -23,6 +23,7 @@ the :func:`~schematools.contrib.django.factories.model_factory`,
 from __future__ import annotations
 
 import logging
+from itertools import chain
 from typing import TYPE_CHECKING, Dict, Iterable, List, Type
 
 from django.conf import settings
@@ -38,8 +39,13 @@ from dso_api.dynamic_api.locking import lock_for_writing
 from dso_api.dynamic_api.openapi import get_openapi_json_view
 from dso_api.dynamic_api.remote import remote_serializer_factory, remote_viewset_factory
 from dso_api.dynamic_api.serializers import get_view_name, serializer_factory
-from dso_api.dynamic_api.views import viewset_factory
-from dso_api.dynamic_api.views.api import APIIndexView
+from dso_api.dynamic_api.views import (
+    APIIndexView,
+    DatasetMVTSingleView,
+    DatasetMVTView,
+    DatasetWFSView,
+    viewset_factory,
+)
 
 logger = logging.getLogger(__name__)
 reload_counter = 0
@@ -92,7 +98,7 @@ class DynamicAPIIndexView(APIIndexView):
 
 
 class DynamicRouter(routers.DefaultRouter):
-    """Router that dynamically creates all viewsets based on the Dataset models."""
+    """Router that dynamically creates all views and viewsets based on the Dataset models."""
 
     include_format_suffixes = False
 
@@ -102,6 +108,8 @@ class DynamicRouter(routers.DefaultRouter):
         self.static_routes = []
         self._openapi_urls = []
         self._index_urls = []
+        self._mvt_urls = []
+        self._wfs_urls = []
 
     def get_api_root_view(self, api_urls=None):
         """Show the OpenAPI specification as root view."""
@@ -135,7 +143,15 @@ class DynamicRouter(routers.DefaultRouter):
 
     def get_urls(self):
         """Add extra URLs beside the registered viewsets."""
-        return super().get_urls() + self._openapi_urls + self._index_urls
+        return list(
+            chain(
+                super().get_urls(),
+                self._openapi_urls,
+                self._index_urls,
+                self._mvt_urls,
+                self._wfs_urls,
+            )
+        )
 
     def register(self, prefix, viewset, basename=None):
         """Overwritten function to preserve any manually added routes on reloading."""
@@ -154,16 +170,24 @@ class DynamicRouter(routers.DefaultRouter):
         api_datasets = list(get_active_datasets().endpoint_enabled())
         remote_routes = self._build_remote_viewsets(api_datasets)
 
+        datasets = db_datasets + api_datasets
+
         # OpenAPI views
-        openapi_urls = self._build_openapi_views(db_datasets + api_datasets)
+        openapi_urls = self._build_openapi_views(datasets)
 
         # Sub Index views for sub paths of datasets
-        index_urls = self._build_index_views(db_datasets + api_datasets)
+        index_urls = self._build_index_views(datasets)
+
+        # mvt and wfs views
+        mvt_urls = self._build_mvt_views(datasets)
+        wfs_urls = self._build_wfs_views(datasets)
 
         # Atomically copy the new viewset registrations
         self.registry = self.static_routes + dataset_routes + remote_routes
         self._openapi_urls = openapi_urls
         self._index_urls = index_urls
+        self._mvt_urls = mvt_urls
+        self._wfs_urls = wfs_urls
 
         # invalidate the urls cache
         if hasattr(self, "_urls"):
@@ -262,6 +286,42 @@ class DynamicRouter(routers.DefaultRouter):
             )
         return results
 
+    def _build_mvt_views(self, datasets: Iterable[Dataset]) -> List[URLPattern]:
+        """Build the mvt views per dataset"""
+        results = []
+        for dataset in datasets:
+            results.append(
+                path(
+                    "mvt/" + dataset.path + "/",
+                    DatasetMVTSingleView.as_view(),
+                    name="mvt-single-dataset",
+                    kwargs={"dataset_name": dataset.name},
+                )
+            )
+            results.append(
+                path(
+                    "mvt/" + dataset.path + "/<table_name>/<int:z>/<int:x>/<int:y>.pbf",
+                    DatasetMVTView.as_view(),
+                    name="mvt-pbf",
+                    kwargs={"dataset_name": dataset.name},
+                )
+            )
+        return results
+
+    def _build_wfs_views(self, datasets: Iterable[Dataset]) -> List[URLPattern]:
+        """Build the wfs views per dataset"""
+        results = []
+        for dataset in datasets:
+            results.append(
+                path(
+                    "wfs/" + dataset.path + "/",
+                    DatasetWFSView.as_view(),
+                    name="wfs",
+                    kwargs={"dataset_name": dataset.name},
+                )
+            )
+        return results
+
     def _build_index_views(self, datasets: Iterable[Dataset]) -> List[URLPattern]:
         """Build index views for each sub path
         Datasets can be grouped on subpaths. This generates a view
@@ -352,6 +412,9 @@ class DynamicRouter(routers.DefaultRouter):
         # Clear URLs and routes
         self.registry = self.static_routes.copy()
         self._openapi_urls.clear()
+        self._mvt_urls.clear()
+        self._wfs_urls.clear()
+        self._index_urls.clear()
         if hasattr(self, "_urls"):
             del self._urls
 
