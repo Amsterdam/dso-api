@@ -146,16 +146,16 @@ class DSOPageNumberPagination(DSOHTTPHeaderPageNumberPagination):
         if self_link.endswith(".api"):
             self_link = self_link[:-4]
 
-        next_link = self.get_next_link()
-        prev_link = self.get_previous_link()
-
         # As Python 3.6 preserves dict ordering, no longer using OrderedDict.
         # While DSO 2.0 shows "prev", the HAL-JSON standard uses "previous".
         _links = {
             "self": {"href": self_link},
-            "next": {"href": next_link},
-            "previous": {"href": prev_link},
         }
+
+        if (next_link := self.get_next_link()) is not None:
+            _links["next"] = {"href": next_link}
+        if (prev_link := self.get_previous_link()) is not None:
+            _links["previous"] = {"href": prev_link}
 
         paginator = self.page.paginator
         page = {

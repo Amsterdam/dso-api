@@ -108,8 +108,6 @@ def test_pagination_many(drf_request, movie):
     assert data == {
         "_links": {
             "self": {"href": "http://testserver/v1/dummy/"},
-            "next": {"href": None},
-            "previous": {"href": None},
         },
         "_embedded": {
             "movie": [{"name": "foo123", "category_id": movie.category_id, "date_added": None}],
@@ -125,6 +123,56 @@ def test_pagination_many(drf_request, movie):
     assert response["X-Pagination-Count"] == "1"
     assert response["X-Pagination-Page"] == "1"
     assert response["X-Pagination-Limit"] == "20"
+
+
+@pytest.mark.django_db
+def test_pagination_links(drf_request, movie):
+    """Prove that the previous and next _links are created when required"""
+
+    # Create enough items to fill multiple pages
+    for i in range(42):
+        Movie.objects.create(name=f"Fast and Furious {i}")
+
+    queryset = Movie.objects.all()
+
+    serializer = MovieSerializer(
+        many=True,
+        instance=queryset,
+        fields_to_expand=["actors", "category"],
+        context={"request": drf_request},
+    )
+
+    paginator = DSOPageNumberPagination()
+    paginator.paginate_queryset(queryset, drf_request)
+    response = paginator.get_paginated_response(serializer.data)
+
+    # Just the 'self' and 'next' _links on first page
+    assert response.data["_links"] == {
+        "self": {"href": "http://testserver/v1/dummy/"},
+        "next": {"href": "http://testserver/v1/dummy/?page=2"},
+    }
+
+    drf_request.query_params._mutable = True
+    drf_request.query_params["page"] = "2"
+    paginator.paginate_queryset(queryset, drf_request)
+    response = paginator.get_paginated_response(serializer.data)
+
+    # 'self', 'next' and 'previous' links on 2nd page
+    assert response.data["_links"] == {
+        "self": {"href": "http://testserver/v1/dummy/"},
+        "next": {"href": "http://testserver/v1/dummy/?page=3"},
+        "previous": {"href": "http://testserver/v1/dummy/"},
+    }
+
+    drf_request.query_params["page"] = "3"
+    paginator.paginate_queryset(queryset, drf_request)
+    response = paginator.get_paginated_response(serializer.data)
+
+    # Just 'self' and 'previous' links on 3rd page
+    assert response.data["_links"] == {
+        "self": {"href": "http://testserver/v1/dummy/"},
+        "previous": {"href": "http://testserver/v1/dummy/?page=2"},
+    }
 
 
 @pytest.mark.django_db
@@ -152,8 +200,6 @@ def test_fields_limit_works(api_rf, movie, fields):
     assert data == {
         "_links": {
             "self": {"href": "http://testserver/"},
-            "next": {"href": None},
-            "previous": {"href": None},
         },
         "_embedded": {"movie": [{"name": "foo123"}]},
         "page": {"number": 1, "size": 20, "totalElements": 1, "totalPages": 1},
