@@ -185,8 +185,6 @@ class TestExpand:
         assert data == {
             "_links": {
                 "self": {"href": "http://testserver/v1/movies"},
-                "next": {"href": None},
-                "previous": {"href": None},
             },
             "_embedded": {
                 "movie": [
@@ -229,8 +227,6 @@ class TestExpand:
         assert data == {
             "_links": {
                 "self": {"href": "http://testserver/v1/movies"},
-                "next": {"href": None},
-                "previous": {"href": None},
             },
             "_embedded": {
                 "movie": [
@@ -260,8 +256,6 @@ class TestExpand:
         assert data == {
             "_links": {
                 "self": {"href": "http://testserver/v1/movies"},
-                "next": {"href": None},
-                "previous": {"href": None},
             },
             "_embedded": {
                 "movie": [
@@ -287,8 +281,6 @@ class TestExpand:
         assert data == {
             "_links": {
                 "self": {"href": "http://testserver/v1/movies"},
-                "next": {"href": None},
-                "previous": {"href": None},
             },
             "_embedded": {
                 "movie": [
