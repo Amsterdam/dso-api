@@ -141,8 +141,7 @@ class DSOPageNumberPagination(DSOHTTPHeaderPageNumberPagination):
         return super().get_paginated_response(data)
 
     def _get_paginated_data(self, data: ReturnList) -> dict:
-        # Avoid adding ?_expand=.. and other parameters in the 'self' url.
-        self_link = self.request.build_absolute_uri(self.request.path)
+        self_link = self.request.build_absolute_uri()
         if self_link.endswith(".api"):
             self_link = self_link[:-4]
 

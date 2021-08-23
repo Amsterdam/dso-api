@@ -184,7 +184,7 @@ class TestExpand:
         data = read_response_json(response)
         assert data == {
             "_links": {
-                "self": {"href": "http://testserver/v1/movies"},
+                "self": {"href": "http://testserver/v1/movies?_expand=true"},
             },
             "_embedded": {
                 "movie": [
@@ -226,7 +226,9 @@ class TestExpand:
         data = read_response_json(response)
         assert data == {
             "_links": {
-                "self": {"href": "http://testserver/v1/movies"},
+                "self": {
+                    "href": f"http://testserver/v1/movies?{response.request['QUERY_STRING']}"
+                },
             },
             "_embedded": {
                 "movie": [
@@ -255,7 +257,9 @@ class TestExpand:
         data = read_response_json(response)
         assert data == {
             "_links": {
-                "self": {"href": "http://testserver/v1/movies"},
+                "self": {
+                    "href": f"http://testserver/v1/movies?{response.request['QUERY_STRING']}"
+                },
             },
             "_embedded": {
                 "movie": [
@@ -280,7 +284,7 @@ class TestExpand:
 
         assert data == {
             "_links": {
-                "self": {"href": "http://testserver/v1/movies"},
+                "self": {"href": "http://testserver/v1/movies?_expand=true"},
             },
             "_embedded": {
                 "movie": [
