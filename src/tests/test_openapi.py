@@ -125,7 +125,7 @@ def test_subpath_view(
                         "name": "production",
                         "api_url": BASE / "v1/sub/path/afvalwegingen/",
                         "specification_url": BASE / "v1/sub/path/afvalwegingen/",
-                        "documentation_url": BASE / "v1/docs/datasets/afvalwegingen.html",
+                        "documentation_url": BASE / "v1/docs/datasets/sub/path/afvalwegingen.html",
                     }
                 ],
                 "related_apis": [
@@ -154,7 +154,7 @@ def test_subpath_view(
                         "name": "production",
                         "api_url": BASE / "v1/sub/fietspaaltjes/",
                         "specification_url": BASE / "v1/sub/fietspaaltjes/",
-                        "documentation_url": BASE / "v1/docs/datasets/fietspaaltjes.html",
+                        "documentation_url": BASE / "v1/docs/datasets/sub/fietspaaltjes.html",
                     }
                 ],
                 "related_apis": [
@@ -193,7 +193,7 @@ def test_subpath_view(
                         "name": "production",
                         "api_url": BASE / "v1/sub/path/afvalwegingen/",
                         "specification_url": BASE / "v1/sub/path/afvalwegingen/",
-                        "documentation_url": BASE / "v1/docs/datasets/afvalwegingen.html",
+                        "documentation_url": BASE / "v1/docs/datasets/sub/path/afvalwegingen.html",
                     }
                 ],
                 "related_apis": [

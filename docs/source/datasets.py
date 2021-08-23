@@ -6,7 +6,12 @@ from typing import Any, Dict, List, NamedTuple, Optional, Tuple, Union
 
 import jinja2
 from schematools.types import DatasetFieldSchema, DatasetSchema, DatasetTableSchema
-from schematools.utils import schema_defs_from_url, to_snake_case, toCamelCase
+from schematools.utils import (
+    dataset_paths_from_url,
+    dataset_schemas_from_url,
+    to_snake_case,
+    toCamelCase,
+)
 
 SCHEMA_URL = os.getenv("SCHEMA_URL", "https://schemas.data.amsterdam.nl/datasets/")
 BASE_URL = "https://api.data.amsterdam.nl"
@@ -99,18 +104,18 @@ def sort_schemas(schemas: List[Tuple[str, DatasetSchema]]) -> List[Union[str, Da
     return sorted(schemas, key=lambda schema: schema[0])
 
 
-def render_dataset_docs(dataset: DatasetSchema):
+def render_dataset_docs(dataset: DatasetSchema, dataset_path: str):
     snake_name = to_snake_case(dataset.id)
     main_title = dataset.title or snake_name.replace("_", " ").capitalize()
-    tables = [_get_table_context(t) for t in dataset.tables]
+    tables = [_get_table_context(t, dataset_path) for t in dataset.tables]
     if any(t["has_geometry"] for t in tables):
-        wfs_url = f"{BASE_URL}/v1/wfs/{snake_name}/"
+        wfs_url = f"{BASE_URL}/v1/wfs/{dataset_path}/"
     else:
         wfs_url = None
 
     render_template(
         "datasets/dataset.rst.j2",
-        f"datasets/{snake_name}.rst",
+        f"datasets/{dataset_path}.rst",
         {
             "schema": dataset,
             "schema_name": snake_name,
@@ -118,18 +123,18 @@ def render_dataset_docs(dataset: DatasetSchema):
             "main_title": main_title,
             "tables": tables,
             "wfs_url": wfs_url,
-            "swagger_url": f"{BASE_URL}/v1/{dataset.id}/",
+            "swagger_url": f"{BASE_URL}/v1/{dataset_path}/",
         },
     )
 
-    return snake_name
+    return dataset_path
 
 
-def render_wfs_dataset_docs(dataset: DatasetSchema):
+def render_wfs_dataset_docs(dataset: DatasetSchema, dataset_path: str):
     """Render the docs for the WFS dataset."""
     snake_name = to_snake_case(dataset.id)
     main_title = dataset.title or snake_name.replace("_", " ").capitalize()
-    tables = [_get_feature_type_context(t) for t in dataset.tables]
+    tables = [_get_feature_type_context(t, dataset_path) for t in dataset.tables]
     if all(not t["has_geometry"] for t in tables):
         return None
 
@@ -140,25 +145,24 @@ def render_wfs_dataset_docs(dataset: DatasetSchema):
 
     render_template(
         "wfs-datasets/dataset.rst.j2",
-        f"wfs-datasets/{snake_name}.rst",
+        f"wfs-datasets/{dataset_path}.rst",
         {
             "schema": dataset,
             "schema_name": snake_name,
             "main_title": main_title,
             "tables": tables,
             "embeds": sorted(embeds.values(), key=lambda e: e["id"]),
-            "wfs_url": f"{BASE_URL}/v1/wfs/{snake_name}/",
+            "wfs_url": f"{BASE_URL}/v1/wfs/{dataset_path}/",
         },
     )
 
-    return snake_name
+    return dataset_path
 
 
-def _get_table_context(table: DatasetTableSchema):
+def _get_table_context(table: DatasetTableSchema, parent_path: str):
     """Collect all table data for the REST API spec."""
-    snake_name = to_snake_case(table.dataset.id)
     snake_id = to_snake_case(table["id"])
-    uri = f"{BASE_URL}/v1/{snake_name}/{snake_id}/"
+    uri = f"{BASE_URL}/v1/{parent_path}/{snake_id}/"
 
     fields = _get_fields(table.fields, table_identifier=table.identifier)
 
@@ -194,11 +198,11 @@ def _has_geometry(table: DatasetTableSchema) -> bool:
     )
 
 
-def _get_feature_type_context(table: DatasetTableSchema):
+def _get_feature_type_context(table: DatasetTableSchema, parent_path: str):
     """Collect all table data for the WFS server spec."""
     snake_name = to_snake_case(table.dataset.id)
     snake_id = to_snake_case(table["id"])
-    uri = f"{BASE_URL}/v1/{snake_name}/{snake_id}/"
+    uri = f"{BASE_URL}/v1/{parent_path}/{snake_id}/"
 
     fields = _get_fields(table.fields, table_identifier=table.identifier)
     has_geometry = _has_geometry(table)
@@ -222,13 +226,13 @@ def _get_feature_type_context(table: DatasetTableSchema):
         "has_geometry": has_geometry,
         "wfs_typename": f"app:{snake_name}",
         "wfs_csv": (
-            f"{BASE_URL}/v1/wfs/{snake_name}/?SERVICE=WFS&VERSION=2.0.0"
+            f"{BASE_URL}/v1/wfs/{parent_path}/?SERVICE=WFS&VERSION=2.0.0"
             f"&REQUEST=GetFeature&TYPENAMES={snake_id}&OUTPUTFORMAT=csv"
             if has_geometry
             else ""
         ),
         "wfs_geojson": (
-            f"{BASE_URL}/v1/wfs/{snake_name}/?SERVICE=WFS&VERSION=2.0.0"
+            f"{BASE_URL}/v1/wfs/{parent_path}/?SERVICE=WFS&VERSION=2.0.0"
             f"&REQUEST=GetFeature&TYPENAMES={snake_id}&OUTPUTFORMAT=geojson"
             if has_geometry
             else ""
@@ -304,17 +308,18 @@ def _get_field_context(field: DatasetFieldSchema, identifier: List[str]) -> Dict
 
 def render_datasets():
     print(f"fetching definitions from {SCHEMA_URL}")
-    schemas = schema_defs_from_url(SCHEMA_URL)
+    schemas = dataset_schemas_from_url(SCHEMA_URL)
+    paths = dataset_paths_from_url(SCHEMA_URL)
 
     documents = []
     for name, dataset in sort_schemas(schemas.items()):
-        documents.append(render_dataset_docs(dataset))
+        documents.append(render_dataset_docs(dataset, paths[dataset.id]))
 
     render_template("datasets/index.rst.j2", "datasets/index.rst", {"documents": documents})
 
     wfs_documents = []
     for name, dataset in sort_schemas(schemas.items()):
-        name = render_wfs_dataset_docs(dataset)
+        name = render_wfs_dataset_docs(dataset, paths[dataset.id])
         if name:
             wfs_documents.append(name)
 
@@ -334,6 +339,10 @@ def render_template(template_name, output_file, context_data: dict):
 
     print(f"writing {output_file}")
     output_file = BASE_PATH.joinpath(output_file)
+    try:
+        output_file.parent.mkdir(parents=True)
+    except FileExistsError:
+        pass
     output_file.write_text(template.render(**context_data))
 
 

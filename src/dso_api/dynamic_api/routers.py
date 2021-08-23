@@ -76,7 +76,7 @@ class DynamicAPIIndexView(APIIndexView):
                 "name": "production",
                 "api_url": base + reverse(f"dynamic_api:openapi-{ds.schema.id}"),
                 "specification_url": base + reverse(f"dynamic_api:openapi-{ds.schema.id}"),
-                "documentation_url": f"{base}/v1/docs/datasets/{ds.schema.id}.html",
+                "documentation_url": f"{base}/v1/docs/datasets/{ds.path}.html",
             }
         ]
 
