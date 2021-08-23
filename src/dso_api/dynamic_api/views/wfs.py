@@ -98,7 +98,7 @@ class DatasetWFSIndexView(APIIndexView):
                 "specification_url": base
                 + reverse("dynamic_api:wfs", kwargs={"dataset_name": ds.name})
                 + "?SERVICE=WFS&REQUEST=GetCapabilities",
-                "documentation_url": f"{base}/v1/docs/wfs-datasets/{ds.schema.id}.html",
+                "documentation_url": f"{base}/v1/docs/wfs-datasets/{ds.path}.html",
             }
         ]
 
