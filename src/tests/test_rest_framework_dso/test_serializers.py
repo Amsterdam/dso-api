@@ -199,7 +199,7 @@ def test_fields_limit_works(api_rf, movie, fields):
 
     assert data == {
         "_links": {
-            "self": {"href": "http://testserver/"},
+            "self": {"href": drf_request.build_absolute_uri()},
         },
         "_embedded": {"movie": [{"name": "foo123"}]},
         "page": {"number": 1, "size": 20, "totalElements": 1, "totalPages": 1},
