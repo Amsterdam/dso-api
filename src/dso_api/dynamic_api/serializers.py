@@ -547,7 +547,7 @@ def serializer_factory(
             )
 
     if not flat:
-        _generate_embedded_relations(model, fields, new_attrs, nesting_level)
+        _generate_nested_relations(model, fields, new_attrs, nesting_level)
 
     if "_links" in fields:
         # Generate the serializer for the _links field containing the relations according to HAL.
@@ -836,7 +836,8 @@ def _find_reverse_fk_relation(
     )
 
 
-def _generate_embedded_relations(model, fields, new_attrs, nesting_level):
+def _generate_nested_relations(model, fields, new_attrs, nesting_level):
+    """Include fields that are implemented using nested tables."""
     schema_fields = {to_snake_case(f.name): f for f in model.table_schema().fields}
     for item in model._meta.related_objects:
         # Do not create fields for django-created relations.
@@ -846,6 +847,6 @@ def _generate_embedded_relations(model, fields, new_attrs, nesting_level):
                 flat=(nesting_level + 1) >= MAX_EMBED_NESTING_LEVEL,
                 nesting_level=nesting_level + 1,
             )
-            fields.append(item.name)
 
             new_attrs[item.name] = related_serializer(many=True)
+            fields.append(item.name)
