@@ -52,7 +52,7 @@ from rest_framework_dso.embedding import EmbeddedFieldMatch
 from rest_framework_dso.fields import AbstractEmbeddedField, EmbeddedField, EmbeddedManyToManyField
 from rest_framework_dso.serializers import DSOModelListSerializer, DSOModelSerializer
 
-MAX_EMBED_NESTING_LEVEL = 2
+MAX_EMBED_NESTING_LEVEL = 10
 
 
 class URLencodingURLfields:

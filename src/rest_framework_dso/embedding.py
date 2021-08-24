@@ -23,7 +23,9 @@ from rest_framework_dso.serializer_helpers import ReturnGenerator, peek_iterable
 DictOfDicts = Dict[str, Dict[str, dict]]
 T = TypeVar("T")
 M = TypeVar("M", bound=models.Model)
+
 DEFAULT_SQL_CHUNK_SIZE = 2000  # allow unit tests to alter this.
+MAX_EXPAND_ALL_DEPTH = 2
 
 
 def parse_expand_scope(
@@ -56,7 +58,11 @@ def get_nested_fields_to_expand(
     if not expand_scope:
         return {}
     elif expand_scope is True:
-        return get_all_embedded_field_names(serializer_class, allow_m2m=allow_m2m)
+        return get_all_embedded_field_names(
+            serializer_class,
+            allow_m2m=allow_m2m,
+            max_depth=MAX_EXPAND_ALL_DEPTH,  # auto-expand only for 2 levels
+        )
     else:
         return group_dotted_names(expand_scope)
 
@@ -167,7 +173,9 @@ def get_expanded_fields(
 
 
 def get_all_embedded_field_names(
-    serializer_class: Type[serializers.Serializer], allow_m2m=True
+    serializer_class: Type[serializers.Serializer],
+    allow_m2m=True,
+    max_depth: int = 99,
 ) -> DictOfDicts:
     """Find all possible expands, including nested fields.
     The output format is identical to group_dotted_names().
@@ -179,11 +187,14 @@ def get_all_embedded_field_names(
         if field.is_array and not allow_m2m:
             continue
 
-        # If there are nested relations, these are found too.
-        # otherwise the value becomes an empty dict.
-        result[field_name] = get_all_embedded_field_names(
-            field.serializer_class, allow_m2m=allow_m2m
-        )
+        if max_depth >= 1:
+            # If there are nested relations, these are found too.
+            # otherwise the value becomes an empty dict.
+            result[field_name] = get_all_embedded_field_names(
+                field.serializer_class, allow_m2m=allow_m2m, max_depth=max_depth - 1
+            )
+        else:
+            result[field_name] = {}
 
     return result
 
