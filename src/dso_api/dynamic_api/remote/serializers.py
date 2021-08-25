@@ -3,6 +3,7 @@
 and not :class:`~rest_framework_dso.serializer.DSOModelSerializer`.
 The serializers mainly make sure the response is outputted in a DSO-compatible format.
 """
+import logging
 from typing import Dict, List
 from urllib.parse import urlparse
 
@@ -34,6 +35,35 @@ JSON_TYPE_TO_DRF = {
     "https://geojson.org/schema/GeometryCollection.json": DSOGeometryField,
 }
 
+audit_log = logging.getLogger("dso_api.audit")
+
+
+class _AuthMixin:
+    """Adds field filtering logic based on authorization."""
+
+    def _filter_authorized_fields(self, fields):
+        """Returns the fields for which the request has authorization."""
+        scopes = self.context.get("request").user_scopes
+
+        unauthorized = [
+            field
+            for field in fields
+            if field != "schema" and not scopes.has_field_access(self._get_field_by_id(field))
+        ]
+        if unauthorized:
+            audit_log.info(
+                "removing fields %s for request with scopes %s",
+                unauthorized,
+                scopes,
+            )
+        for field in unauthorized:
+            del fields[field]
+
+        return fields
+
+    def _get_field_by_id(self, id):
+        raise NotImplementedError()
+
 
 class RemoteListSerializer(DSOListSerializer):
     """ListSerializer that takes remote data.
@@ -47,13 +77,16 @@ class RemoteListSerializer(DSOListSerializer):
         return []
 
 
-class RemoteSerializer(DSOSerializer):
+class RemoteSerializer(DSOSerializer, _AuthMixin):
     """Serializer that takes remote data"""
 
     table_schema = None  # defined by factory
     schema = serializers.SerializerMethodField()
 
     _default_list_serializer_class = RemoteListSerializer
+
+    def get_fields(self):
+        return self._filter_authorized_fields(super().get_fields())
 
     @extend_schema_field(OpenApiTypes.URI)
     def get_schema(self, instance):
@@ -63,10 +96,24 @@ class RemoteSerializer(DSOSerializer):
         dataset_path = Dataset.objects.get(name=name).path
         return f"https://schemas.data.amsterdam.nl/datasets/{dataset_path}/dataset#{table}"
 
+    def _get_field_by_id(self, id):
+        return self.table_schema.get_field_by_id(id)
 
-class RemoteObjectSerializer(DSOSerializer):
+
+class RemoteFieldSerializer(DSOSerializer, _AuthMixin):
+    """Serializer for nested objects in the schema.
+    This can be a field in RemoteSerializer instances."""
+
     table_schema = None  # defined by factory
     field_schema = None  # defined by factory
+
+    def get_fields(self):
+        return self._filter_authorized_fields(super().get_fields())
+
+    def _get_field_by_id(self, id):
+        for field in self.field_schema.sub_fields:
+            if field.id == id:
+                return field
 
 
 def remote_serializer_factory(table_schema: DatasetTableSchema):
@@ -142,7 +189,7 @@ def _remote_field_factory(field: DatasetFieldSchema, **kwargs) -> serializers.Fi
         return field_cls(**kwargs)
 
 
-def _remote_object_field_factory(field: DatasetFieldSchema, **kwargs) -> RemoteObjectSerializer:
+def _remote_object_field_factory(field: DatasetFieldSchema, **kwargs) -> RemoteFieldSerializer:
     """Generate a serializer for an sub-object field"""
     table_schema = field.table
     dataset = table_schema.dataset
@@ -161,5 +208,5 @@ def _remote_object_field_factory(field: DatasetFieldSchema, **kwargs) -> RemoteO
     # Generate Meta section and serializer class
     new_attrs.update(declared_fields)
     new_attrs["Meta"] = type("Meta", (), {"fields": list(declared_fields.keys())})
-    serializer_class = type(serializer_name, (RemoteObjectSerializer,), new_attrs)
+    serializer_class = type(serializer_name, (RemoteFieldSerializer,), new_attrs)
     return serializer_class(**kwargs)

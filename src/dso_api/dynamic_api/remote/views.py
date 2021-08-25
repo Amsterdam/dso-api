@@ -91,6 +91,7 @@ class RemoteViewSet(DSOViewMixin, ViewSet):
         self.validate(serializer, data)
         serialized_data = serializer.data
         _del_none(serialized_data)
+
         # Add self url.
         self_link = self.request.build_absolute_uri(self.request.path)
         if "_links" not in serialized_data:
