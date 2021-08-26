@@ -38,7 +38,7 @@ from dso_api.dynamic_api.datasets import get_active_datasets
 from dso_api.dynamic_api.locking import lock_for_writing
 from dso_api.dynamic_api.openapi import get_openapi_json_view
 from dso_api.dynamic_api.remote import remote_serializer_factory, remote_viewset_factory
-from dso_api.dynamic_api.serializers import get_view_name, serializer_factory
+from dso_api.dynamic_api.serializers import get_view_name, serializer_factory_cache
 from dso_api.dynamic_api.views import (
     APIIndexView,
     DatasetMVTSingleView,
@@ -161,7 +161,7 @@ class DynamicRouter(routers.DefaultRouter):
     def _initialize_viewsets(self) -> List[Type[DynamicModel]]:
         """Build all viewsets, serializers, models and URL routes."""
         # Generate new viewsets for dynamic models
-        serializer_factory.cache_clear()  # Avoid old cached data
+        serializer_factory_cache.clear()  # Avoid old cached data
         db_datasets = list(get_active_datasets().db_enabled())
         generated_models = self._build_db_models(db_datasets)
         dataset_routes = self._build_db_viewsets(db_datasets)
