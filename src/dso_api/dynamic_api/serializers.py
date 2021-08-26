@@ -8,6 +8,7 @@ in the DSO base classes as those classes are completely generic.
 """
 from __future__ import annotations
 
+import logging
 import re
 from functools import wraps
 from typing import Any, Callable, List, Optional, Tuple, Type, Union, cast
@@ -19,7 +20,7 @@ from django.core.exceptions import ImproperlyConfigured
 from django.db import models
 from django.db.models.fields.related import RelatedField
 from django.db.models.fields.reverse_related import ForeignObjectRel
-from django.utils.functional import cached_property
+from django.utils.functional import SimpleLazyObject, cached_property
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from more_itertools import first
@@ -55,6 +56,7 @@ from rest_framework_dso.fields import AbstractEmbeddedField, EmbeddedField, Embe
 from rest_framework_dso.serializers import DSOModelListSerializer, DSOModelSerializer
 
 MAX_EMBED_NESTING_LEVEL = 10
+logger = logging.getLogger(__name__)
 
 
 class URLencodingURLfields:
@@ -533,6 +535,15 @@ def serializer_factory(
         ),  # avoid exposing our docstrings.
     }
 
+    # Debug how deep serializers are created, debug circular references
+    logger.debug(
+        "%sserializer_factory() %s %s %d",
+        " " * nesting_level,
+        serializer_name,
+        model.__name__,
+        nesting_level,
+    )
+
     # Parse fields for serializer
     extra_kwargs = {"depth": depth}  # 0 or 1
     for model_field in model._meta.get_fields():
@@ -670,13 +681,21 @@ def _build_serializer_embeddded_field(
         else EmbeddedField
     )
 
-    embedded_field = EmbeddedFieldClass(
-        serializer_class=serializer_factory(
+    # The serializer class is not actually created here, this happens on-demand.
+    # This avoids deep recursion (e.g. 9 levels deep) of the same serializer class
+    # when there is a circular reference. During recursion, the LRU-cache is not yet filled.
+    serializer_class = SimpleLazyObject(
+        lambda: serializer_factory(
             model_field.related_model,
             depth=1,
             flat=(nesting_level + 1) >= MAX_EMBED_NESTING_LEVEL,
             nesting_level=nesting_level + 1,
-        ),
+        )
+    )
+
+    embedded_field = EmbeddedFieldClass(
+        serializer_class=cast(Type[DynamicSerializer], serializer_class),
+        # serializer_class=serializer_class,
         source=model_field.name,
     )
     # Attach the field schema so access rules can be applied here.
