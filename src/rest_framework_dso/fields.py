@@ -8,6 +8,8 @@ from more_itertools import first
 from rest_framework import serializers
 from rest_framework_gis.fields import GeometryField
 
+from rest_framework_dso.utils import unlazy_object
+
 
 def parse_request_fields(fields: Optional[str]):
     if not fields:
@@ -74,6 +76,8 @@ class AbstractEmbeddedField:
         if not isinstance(parent, self.parent_serializer_class):
             raise TypeError(f"Invalid parent for {self.__class__.__name__}.get_serializer()")
 
+        # Make sure the serializer is the true object, or other isinstance() checks will fail.
+        self.serializer_class = unlazy_object(self.serializer_class)
         embedded_serializer = self.serializer_class(context=parent.context, **kwargs)
         embedded_serializer.bind(field_name=self.field_name, parent=parent)
         return embedded_serializer
@@ -81,6 +85,8 @@ class AbstractEmbeddedField:
     @cached_property
     def related_model(self) -> Type[models.Model]:
         """Return the Django model class"""
+        # Make sure the serializer is the true object, or other isinstance() checks will fail.
+        self.serializer_class = unlazy_object(self.serializer_class)
         return self.serializer_class.Meta.model
 
     @cached_property
