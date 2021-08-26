@@ -6,7 +6,7 @@ from django.core.validators import EmailValidator, URLValidator
 from schematools.permissions import UserScopes
 from schematools.types import ProfileSchema
 
-from dso_api.dynamic_api.serializers import serializer_factory
+from dso_api.dynamic_api.serializers import serializer_factory, serializer_factory_cache
 from rest_framework_dso.fields import EmbeddedField
 from rest_framework_dso.views import DSOViewMixin
 from tests.utils import (
@@ -21,7 +21,7 @@ from tests.utils import (
 @pytest.fixture(autouse=True)
 def clear_caches():
     yield  # run tests first
-    serializer_factory.cache_clear()
+    serializer_factory_cache.clear()
 
 
 @pytest.fixture()

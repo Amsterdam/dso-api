@@ -9,10 +9,12 @@ in the DSO base classes as those classes are completely generic.
 from __future__ import annotations
 
 import re
-from functools import lru_cache, wraps
+from functools import wraps
 from typing import Any, Callable, List, Optional, Tuple, Type, Union, cast
 from urllib.parse import quote, urlencode
 
+from cachetools import LRUCache, cached
+from cachetools.keys import hashkey
 from django.core.exceptions import ImproperlyConfigured
 from django.db import models
 from django.db.models.fields.related import RelatedField
@@ -474,10 +476,18 @@ class ThroughSerializer(DynamicSerializer):
 
 
 # When models are removed, clear the cache.
-dynamic_models_removed.connect(lambda **kwargs: serializer_factory.cache_clear())
+serializer_factory_cache = LRUCache(maxsize=100000)
+dynamic_models_removed.connect(lambda **kwargs: serializer_factory_cache.clear())
 
 
-@lru_cache()
+def _serializer_cache_key(model, depth=0, flat=False, nesting_level=0):
+    """The cachetools allow definining the cache key,
+    so the nesting level does not bypass the cache which it would with lru_cache().
+    """
+    return hashkey(model, depth, flat)
+
+
+@cached(cache=serializer_factory_cache, key=_serializer_cache_key)
 def serializer_factory(
     model: Type[DynamicModel], depth: int = 0, flat: bool = False, nesting_level=0
 ) -> Type[DynamicSerializer]:
