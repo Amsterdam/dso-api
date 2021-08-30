@@ -104,6 +104,7 @@ class ExpandScope:
         else:
             # Top-level, find all field that were requested.
             field_tree = group_dotted_names(self._expand_scope)
+            self._validate(parent_serializer.__class__, field_tree, allow_m2m)
 
         if not field_tree:
             return []
@@ -131,6 +132,19 @@ class ExpandScope:
             )
 
         return embedded_fields
+
+    def _validate(
+        self,
+        serializer_class: Type[serializers.Serializer],
+        field_tree: DictOfDicts,
+        allow_m2m: bool,
+    ):
+        """Validate whether all selected fields exist."""
+
+        for field_name, nested_fields_to_expand in field_tree.items():
+            field = get_embedded_field(serializer_class, field_name)
+            if nested_fields_to_expand:
+                self._validate(field.serializer_class, nested_fields_to_expand, allow_m2m)
 
 
 @dataclass
@@ -168,7 +182,7 @@ class EmbeddedFieldMatch:
         return f"{self.prefix}{self.name}"
 
     @cached_property
-    def embedded_serializer(self):
+    def embedded_serializer(self) -> serializers.Serializer:
         """Provide the serializer for the embedded relation."""
         # The nested 'fields_to_expand' data is provided to the child serializer,
         # so it can expand the next nesting if needed.
@@ -261,7 +275,7 @@ def get_embedded_field(
         return getattr(serializer_class, field_name)
     except AttributeError:
         raise RuntimeError(
-            f"{serializer_class.__name__}.{field_name}" f" does not refer to an embedded field."
+            f"{serializer_class.__name__}.{field_name} does not refer to an embedded field."
         ) from None
 
 
