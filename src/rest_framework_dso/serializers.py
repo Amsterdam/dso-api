@@ -36,10 +36,9 @@ from rest_framework_dso.embedding import (
     ChunkedQuerySetIterator,
     EmbeddedFieldMatch,
     EmbeddedResultSet,
+    ExpandScope,
     ObservableIterator,
-    get_expanded_fields_by_scope,
     get_serializer_lookups,
-    parse_expand_scope,
 )
 from rest_framework_dso.fields import DSOGeometryField, LinksField, parse_request_fields
 from rest_framework_dso.serializer_helpers import ReturnGenerator, peek_iterable
@@ -58,11 +57,11 @@ class ExpandMixin:
 
     def __init__(self, *args, fields_to_expand=empty, **kwargs):
         super().__init__(*args, **kwargs)
-        self._fields_to_expand = fields_to_expand
+        self._expand_scope = fields_to_expand
 
-    def has_fields_to_expand_override(self) -> bool:
+    def has_expand_scope_override(self) -> bool:
         """Tell whether the 'fields_to_expand' is set by the code instead of request."""
-        return self._fields_to_expand is not empty
+        return self._expand_scope is not empty
 
     @cached_property
     def is_toplevel(self):
@@ -76,32 +75,39 @@ class ExpandMixin:
         )
 
     @property
-    def fields_to_expand(self) -> Union[List[str], bool]:
-        """Retrieve the requested expand, 2 possible values:
-
-        * A bool (True) for "expand all"
-        * A explicit list of field names to expand, allowing dotted notations for sub-expands.
+    def expand_scope(self) -> ExpandScope:
+        """Retrieve the requested expand.
+        For the top-level serializer the request is parsed.
+        Deeper nested serializers only return expand information when
+        this is explicitly provided by their parent serializer.
         """
-        if self.has_fields_to_expand_override():
+        if self._expand_scope is not empty:
             # Instead of retrieving this from request,
             # the expand can be defined using the serializer __init__.
-            return False if self._fields_to_expand is False else cast(list, self._fields_to_expand)
+            if isinstance(self._expand_scope, ExpandScope):
+                # Typically when nested embedding happens, results are provided beforehand.
+                return self._expand_scope
+            else:
+                # List of fields, given via __init__, typically via unit tests
+                return ExpandScope(expand_scope=cast(list, self._expand_scope))
         elif self.is_toplevel:
             # This is the top-level serializer. Parse from request
             request = self.context["request"]
-            return parse_expand_scope(
+            return ExpandScope(
                 expand=request.GET.get(self.expand_all_param),
                 expand_scope=request.GET.get(self.expand_param),
             )
         else:
             # Sub field should have received it's fields_to_expand override via __init__().
             # This exists for consistency with DSOListSerializer.to_representation() behavior.
-            return False
+            return ExpandScope()
 
-    @fields_to_expand.setter
-    def fields_to_expand(self, fields: List[str]):
-        """Allow serializers to assign 'fields_to_expand' later (e.g. in bind())."""
-        self._fields_to_expand = fields
+    @expand_scope.setter
+    def expand_scope(self, scope: ExpandScope):
+        """Allow serializers to assign expanded fields.
+        This is used among others for nested expanding.
+        """
+        self._expand_scope = scope
 
     @property
     def expanded_fields(self) -> List[EmbeddedFieldMatch]:
@@ -149,14 +155,14 @@ class DSOListSerializer(ExpandMixin, serializers.ListSerializer):
         # but a deeper object (e.g. M2M relation), the fields_to_expand should be
         # known to the child subclass so it can perform expands itself.
         # This list wrapper will not perform the expands in such case.
-        if self.root is not self and self.fields_to_expand is not empty:
-            self.child.fields_to_expand = self.fields_to_expand
+        if self.root is not self and self._expand_scope is not empty:
+            self.child.expand_scope = self.expand_scope
 
     @cached_property
     def expanded_fields(self) -> List[EmbeddedFieldMatch]:
         """Retrieve the embedded fields for this serializer"""
         request = self.context["request"]
-        expand_scope = self.fields_to_expand
+        expand_scope = self.expand_scope
         if not expand_scope:
             return []
 
@@ -166,9 +172,8 @@ class DSOListSerializer(ExpandMixin, serializers.ListSerializer):
         ):
             raise ParseError("Embedding objects is not supported for this output format")
 
-        return get_expanded_fields_by_scope(
+        return expand_scope.get_expanded_fields(
             self.child,
-            expand_scope,
             allow_m2m=request.accepted_renderer.supports_m2m,
             prefix=self.field_name_prefix,
         )
@@ -435,7 +440,7 @@ class DSOSerializer(ExpandMixin, serializers.Serializer):
     def expanded_fields(self) -> List[EmbeddedFieldMatch]:
         """Retrieve the embedded fields for this serializer"""
         request = self.context["request"]
-        expand_scope = self.fields_to_expand
+        expand_scope = self.expand_scope
         if not expand_scope:
             return []
 
@@ -445,9 +450,8 @@ class DSOSerializer(ExpandMixin, serializers.Serializer):
         ):
             raise ParseError("Embedding objects is not supported for this output format")
 
-        return get_expanded_fields_by_scope(
+        return expand_scope.get_expanded_fields(
             self,
-            expand_scope,
             allow_m2m=request.accepted_renderer.supports_m2m,
             prefix=self.field_name_prefix,
         )
@@ -568,13 +572,15 @@ class DSOModelSerializer(DSOSerializer, serializers.HyperlinkedModelSerializer):
 
     def _include_embedded(self):
         """Determines if the _embedded field must be generated."""
-        return self.root is self or self.has_fields_to_expand_override()
+        return self.root is self or self.has_expand_scope_override()
 
     def to_representation(self, instance):
         """Check whether the geofields need to be transformed."""
         ret = super().to_representation(instance)
 
         # See if any HAL-style sideloading was requested
+        # This only happens for nested fields, or when this serializer
+        # is the top-level serializer (meaning it's a detail view).
         if self._include_embedded() and self.expanded_fields:
             ret[self.expand_field] = self._get_expand(instance, self.expanded_fields)
 
