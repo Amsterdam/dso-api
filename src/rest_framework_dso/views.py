@@ -357,7 +357,7 @@ class DSOViewMixin:
         # Workaround for DRF bug. When the response produces a generator, make sure the
         # Django middleware doesn't concat the stream. Unfortunately, it's not safe to
         # check what 'response.rendered_content' returns as that invokes the rendering.
-        if isgeneratorfunction(response.accepted_renderer.render):
+        if not response.exception and isgeneratorfunction(response.accepted_renderer.render):
             response = StreamingResponse.from_response(response)
 
         if hasattr(response.accepted_renderer, "finalize_response"):
