@@ -165,11 +165,10 @@ class DynamicListSerializer(DSOModelListSerializer):
     @cached_property
     def expanded_fields(self) -> List[EmbeddedFieldMatch]:
         """Filter unauthorized fields from the matched expands."""
-        auto_expand_all = self.fields_to_expand is True
         return filter_unauthorized_expands(
             self.context["request"].user_scopes,
             expanded_fields=super().expanded_fields,
-            skip_unauth=auto_expand_all,
+            skip_unauth=self.expand_scope.auto_expand_all,
         )
 
 
@@ -263,11 +262,10 @@ class DynamicSerializer(DSOModelSerializer):
     @cached_property
     def expanded_fields(self) -> List[EmbeddedFieldMatch]:
         """Filter unauthorized fields from the matched expands."""
-        auto_expand_all = self.fields_to_expand is True
         return filter_unauthorized_expands(
             self.get_request().user_scopes,
             expanded_fields=super().expanded_fields,
-            skip_unauth=auto_expand_all,
+            skip_unauth=self.expand_scope.auto_expand_all,
         )
 
     @extend_schema_field(OpenApiTypes.URI)
@@ -383,7 +381,7 @@ class DynamicBodySerializer(DynamicSerializer):
         # Pass the current state to the DynamicLinksSerializer instance
         links_field = fields.get("_links")
         if links_field is not None and isinstance(links_field, DynamicLinksSerializer):
-            links_field.fields_to_expand = self.fields_to_expand
+            links_field.expand_scope = self.expand_scope
 
         hal_fields = self._get_hal_field_names(fields)
         for hal_field in hal_fields:
@@ -674,7 +672,6 @@ def _build_serializer_embeddded_field(
     model_field: Union[RelatedField, LooseRelationField], nesting_level, new_attrs
 ):
     """Build a embedded field for the serializer"""
-    camel_name = toCamelCase(model_field.name)
     EmbeddedFieldClass = (
         EmbeddedManyToManyField
         if isinstance(model_field, models.ManyToManyField)
@@ -701,6 +698,7 @@ def _build_serializer_embeddded_field(
     # Attach the field schema so access rules can be applied here.
     embedded_field.field_schema = get_field_schema(model_field)
 
+    camel_name = toCamelCase(model_field.name)
     new_attrs[camel_name] = embedded_field
 
 

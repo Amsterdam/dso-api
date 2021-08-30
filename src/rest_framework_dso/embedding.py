@@ -7,6 +7,7 @@ the main objects are inspected while they are consumed by the output stream.
 from __future__ import annotations
 
 from collections import defaultdict
+from copy import copy
 from dataclasses import dataclass
 from functools import cached_property
 from itertools import islice
@@ -28,43 +29,108 @@ DEFAULT_SQL_CHUNK_SIZE = 2000  # allow unit tests to alter this.
 MAX_EXPAND_ALL_DEPTH = 2
 
 
-def parse_expand_scope(
-    expand: Optional[str], expand_scope: Optional[str]
-) -> Union[bool, List[str]]:
-    """Parse the raw request parameters"""
+class ExpandScope:
+    """The parsed expand query parameter.
 
-    # Initialize from request
-    if expand == "true":
-        # ?_expand=true should export all fields, unless `&_expandScope=..` is also given.
-        return expand_scope.split(",") if expand_scope else True
-    elif expand == "false":
-        return False
-    elif expand:
-        raise ParseError(
-            "Only _expand=true|false is allowed. Use _expandScope to expand specific fields."
-        ) from None
+    There are 2 possible scenario's:
 
-    # Backwards compatibility, also allow `?_expandScope` without stating `?_expand=true`
-    # otherwise, parse as a list of fields to expand.
-    return expand_scope.split(",") if expand_scope else False
+    * All fields should expand ("auto expand all"), e.g. a request with ``?_expand=true``.
+    * A explicit list of field names to expand, allowing dotted notations for sub-expands.
+      That includes requests with an ``?_expandScope=`` parameter.
+    """
 
+    def __init__(
+        self, expand: Optional[str] = None, expand_scope: Optional[Union[List[str], str]] = None
+    ):
+        """Parse the (raw) request parameters"""
+        self.auto_expand_all = False
+        self._expand_scope = None
+        self._nested_fields_to_expand = None
 
-def get_nested_fields_to_expand(
-    serializer_class: Type[serializers.Serializer],
-    expand_scope: Union[bool, List[str]],
-    allow_m2m=True,
-) -> DictOfDicts:
-    """Convert the string value of ?_expand/_expandScope to a browsable tree."""
-    if not expand_scope:
-        return {}
-    elif expand_scope is True:
-        return get_all_embedded_field_names(
-            serializer_class,
-            allow_m2m=allow_m2m,
-            max_depth=MAX_EXPAND_ALL_DEPTH,  # auto-expand only for 2 levels
-        )
-    else:
-        return group_dotted_names(expand_scope)
+        if expand_scope and isinstance(expand_scope, str):
+            expand_scope = expand_scope.split(",")
+
+        # Initialize from request
+        if expand == "true":
+            # ?_expand=true should export all fields, unless `&_expandScope=..` is also given.
+            if expand_scope:
+                self._expand_scope = expand_scope
+            else:
+                self.auto_expand_all = True
+        elif expand == "false":
+            self._expand_scope = None
+            self.auto_expand_all = False
+        elif expand:
+            raise ParseError(
+                "Only _expand=true|false is allowed. Use _expandScope to expand specific fields."
+            ) from None
+        elif expand_scope:
+            # Backwards compatibility, also allow `?_expandScope` without stating `?_expand=true`
+            # otherwise, parse as a list of fields to expand.
+            self._expand_scope = expand_scope
+
+    def __bool__(self):
+        """Whether fields need to be expanded."""
+        return bool(self.auto_expand_all or self._expand_scope)
+
+    def _as_nested(self, nested_fields_to_expand):
+        """Create a scope that starts from a sub-level"""
+        scope = copy(self)
+        scope._nested_fields_to_expand = nested_fields_to_expand
+        return scope
+
+    def get_expanded_fields(
+        self,
+        parent_serializer: serializers.Serializer,
+        allow_m2m=True,
+        prefix="",
+    ) -> List[EmbeddedFieldMatch]:
+        """Find the expanded fields in a serializer that are requested.
+        This translates the ``_expand`` query into a dict of embedded fields.
+        """
+        if not self:
+            return []
+
+        if self._nested_fields_to_expand is not None:
+            # Sub-level, overruled
+            field_tree = self._nested_fields_to_expand
+        elif self.auto_expand_all:
+            # Top-level, need to find all fields
+            field_tree = get_all_embedded_field_names(
+                parent_serializer.__class__,
+                allow_m2m=allow_m2m,
+                max_depth=MAX_EXPAND_ALL_DEPTH,  # auto-expand only for 2 levels
+            )
+        else:
+            # Top-level, find all field that were requested.
+            field_tree = group_dotted_names(self._expand_scope)
+
+        if not field_tree:
+            return []
+
+        embedded_fields = []
+
+        for field_name, nested_fields_to_expand in field_tree.items():
+            field = get_embedded_field(parent_serializer.__class__, field_name, prefix)
+
+            # Some output formats don't support M2M, so avoid expanding these.
+            if field.is_array and not allow_m2m:
+                raise ParseError(
+                    f"Eager loading is not supported for"
+                    f" field '{prefix}{field_name}' in this output format"
+                )
+
+            embedded_fields.append(
+                EmbeddedFieldMatch(
+                    parent_serializer,
+                    field_name,
+                    field,
+                    prefix,
+                    nested_expand_scope=self._as_nested(nested_fields_to_expand),
+                )
+            )
+
+        return embedded_fields
 
 
 @dataclass
@@ -86,14 +152,14 @@ class EmbeddedFieldMatch:
     prefix: str
 
     #: Additional nested expands that were requested for this field.
-    nested_fields_to_expand: DictOfDicts
+    nested_expand_scope: ExpandScope
 
     def __repr__(self):
         # Avoid long serializer repr which makes output unreadable.
         return (
             f"<{self.__class__.__name__}:"
             f" {self.field!r}"
-            f" nested={self.nested_fields_to_expand!r}>"
+            f" nested={self.nested_expand_scope!r}>"
         )
 
     @property
@@ -110,7 +176,9 @@ class EmbeddedFieldMatch:
 
         kwargs = {}
         if issubclass(self.field.serializer_class, ExpandMixin):
-            kwargs["fields_to_expand"] = list(self.nested_fields_to_expand.keys())
+            kwargs["fields_to_expand"] = self.nested_expand_scope
+        elif self.nested_expand_scope:
+            raise RuntimeError("EmbeddedField serializer does not support nesting embeds")
 
         serializer = self.field.get_serializer(parent=self.serializer, **kwargs)
 
@@ -120,56 +188,6 @@ class EmbeddedFieldMatch:
             renderer.tune_serializer(serializer)
 
         return serializer
-
-
-def get_expanded_fields_by_scope(
-    parent_serializer: serializers.Serializer,
-    expand_scope: Union[bool, List[str]],
-    allow_m2m=True,
-    prefix="",
-) -> List[EmbeddedFieldMatch]:
-    """Find the expanded fields in a serializer that are requested.
-    This translates the ``_expand`` query into a dict of embedded fields.
-    """
-    if not expand_scope:
-        return []
-
-    fields_to_expand = get_nested_fields_to_expand(
-        parent_serializer.__class__, expand_scope, allow_m2m=allow_m2m
-    )
-
-    return get_expanded_fields(
-        parent_serializer, fields_to_expand=fields_to_expand, allow_m2m=allow_m2m, prefix=prefix
-    )
-
-
-def get_expanded_fields(
-    serializer: serializers.Serializer,
-    fields_to_expand: DictOfDicts,
-    allow_m2m=True,
-    prefix="",
-) -> List[EmbeddedFieldMatch]:
-    """Find the expanded fields for a serializer object."""
-    if not fields_to_expand:
-        return []
-
-    embedded_fields = []
-
-    for field_name, nested_fields_to_expand in fields_to_expand.items():
-        field = get_embedded_field(serializer.__class__, field_name, prefix)
-
-        # Some output formats don't support M2M, so avoid expanding these.
-        if field.is_array and not allow_m2m:
-            raise ParseError(
-                f"Eager loading is not supported for"
-                f" field '{prefix}{field_name}' in this output format"
-            )
-
-        embedded_fields.append(
-            EmbeddedFieldMatch(serializer, field_name, field, prefix, nested_fields_to_expand)
-        )
-
-    return embedded_fields
 
 
 def get_all_embedded_field_names(
@@ -221,10 +239,10 @@ def get_all_embedded_fields_by_name(
     return result
 
 
-def group_dotted_names(fields_to_expand: List[str]) -> DictOfDicts:
+def group_dotted_names(dotted_field_names: List[str]) -> DictOfDicts:
     """Convert a list of dotted names to tree."""
     result = {}
-    for dotted_name in fields_to_expand:
+    for dotted_name in dotted_field_names:
         tree_level = result
         for path_item in dotted_name.split("."):
             tree_level = tree_level.setdefault(path_item, {})
