@@ -117,10 +117,8 @@ def test_pagination_many(drf_request, movie):
             ],
             "category": [{"name": "bar"}],
         },
-        "page": {"number": 1, "size": 20, "totalElements": 1, "totalPages": 1},
+        "page": {"number": 1, "size": 20},
     }
-    assert response["X-Total-Count"] == "1"
-    assert response["X-Pagination-Count"] == "1"
     assert response["X-Pagination-Page"] == "1"
     assert response["X-Pagination-Limit"] == "20"
 
@@ -135,41 +133,52 @@ def test_pagination_links(drf_request, movie):
 
     queryset = Movie.objects.all()
 
-    serializer = MovieSerializer(
-        many=True,
-        instance=queryset,
-        fields_to_expand=["actors", "category"],
-        context={"request": drf_request},
-    )
-
     paginator = DSOPageNumberPagination()
-    paginator.paginate_queryset(queryset, drf_request)
-    response = paginator.get_paginated_response(serializer.data)
+
+    def _setup_paginator(page=None, iterate_object_list=True):
+        if page is not None:
+            drf_request.query_params._mutable = True
+            drf_request.query_params["page"] = str(page)
+        object_list = paginator.paginate_queryset(queryset, drf_request)
+
+        # Iterate the object_list, as if the renderer is streaming it.
+        # If it is not iterated the paginator does not know the number of items
+        # on the page, or wether a next link is available.
+        if iterate_object_list:
+            _iterate_object_list(object_list)
+        return object_list
+
+    def _iterate_object_list(object_list):
+        return [movie for movie in iter(object_list)]
+
+    # Setup paginator without iterating object_list
+    object_list = _setup_paginator(iterate_object_list=False)
+
+    # Only the 'self' link  before queryset is iterated
+    assert paginator.get_footer()["_links"] == {"self": {"href": "http://testserver/v1/dummy/"}}
+
+    movies_on_page = _iterate_object_list(object_list)
+
+    # Make sure the sentinel object has been removed.
+    assert len(movies_on_page) == 20
 
     # Just the 'self' and 'next' _links on first page
-    assert response.data["_links"] == {
+    assert paginator.get_footer()["_links"] == {
         "self": {"href": "http://testserver/v1/dummy/"},
         "next": {"href": "http://testserver/v1/dummy/?page=2"},
     }
 
-    drf_request.query_params._mutable = True
-    drf_request.query_params["page"] = "2"
-    paginator.paginate_queryset(queryset, drf_request)
-    response = paginator.get_paginated_response(serializer.data)
-
     # 'self', 'next' and 'previous' links on 2nd page
-    assert response.data["_links"] == {
+    _setup_paginator(page=2)
+    assert paginator.get_footer()["_links"] == {
         "self": {"href": "http://testserver/v1/dummy/"},
         "next": {"href": "http://testserver/v1/dummy/?page=3"},
         "previous": {"href": "http://testserver/v1/dummy/"},
     }
 
-    drf_request.query_params["page"] = "3"
-    paginator.paginate_queryset(queryset, drf_request)
-    response = paginator.get_paginated_response(serializer.data)
-
     # Just 'self' and 'previous' links on 3rd page
-    assert response.data["_links"] == {
+    _setup_paginator(page=3)
+    assert paginator.get_footer()["_links"] == {
         "self": {"href": "http://testserver/v1/dummy/"},
         "previous": {"href": "http://testserver/v1/dummy/?page=2"},
     }
@@ -202,10 +211,8 @@ def test_fields_limit_works(api_rf, movie, fields):
             "self": {"href": drf_request.build_absolute_uri()},
         },
         "_embedded": {"movie": [{"name": "foo123"}]},
-        "page": {"number": 1, "size": 20, "totalElements": 1, "totalPages": 1},
+        "page": {"number": 1, "size": 20},
     }
-    assert response["X-Total-Count"] == "1"
-    assert response["X-Pagination-Count"] == "1"
     assert response["X-Pagination-Page"] == "1"
     assert response["X-Pagination-Limit"] == "20"
 

@@ -207,7 +207,7 @@ class TestExpand:
                     }
                 ],
             },
-            "page": {"number": 1, "size": 20, "totalElements": 1, "totalPages": 1},
+            "page": {"number": 1, "size": 20},
         }
         assert response["Content-Type"] == "application/hal+json"
 
@@ -240,7 +240,7 @@ class TestExpand:
                 ],
                 "category": [{"name": "bar"}],
             },
-            "page": {"number": 1, "size": 20, "totalElements": 1, "totalPages": 1},
+            "page": {"number": 1, "size": 20},
         }
         assert response["Content-Type"] == "application/hal+json"
 
@@ -266,7 +266,7 @@ class TestExpand:
                     {"name": "foo123", "category_id": movie.category_id, "date_added": None}
                 ],
             },
-            "page": {"number": 1, "size": 20, "totalElements": 1, "totalPages": 1},
+            "page": {"number": 1, "size": 20},
         }
         assert response["Content-Type"] == "application/hal+json"
 
@@ -307,7 +307,7 @@ class TestExpand:
                     }
                 ],
             },
-            "page": {"number": 1, "size": 20, "totalElements": 1, "totalPages": 1},
+            "page": {"number": 1, "size": 20},
         }
 
 
@@ -322,9 +322,8 @@ class TestListFilters:
         Movie.objects.create(name="test")
 
         response = api_client.get("/v1/movies", data={"name": "foo1?3"})
-        data = read_response_json(response)
+        read_response_json(response)
         assert response.status_code == 200, response
-        assert data["page"]["totalElements"] == 0
         assert response["Content-Type"] == "application/hal+json"
 
     @staticmethod
@@ -337,7 +336,6 @@ class TestListFilters:
         data = read_response_json(response)
         assert response.status_code == 200, response
         names = [movie["name"] for movie in data["_embedded"]["movie"]]
-        assert data["page"]["totalElements"] == 1, names
         assert names == ["foo123"]
         assert response["Content-Type"] == "application/hal+json"
 

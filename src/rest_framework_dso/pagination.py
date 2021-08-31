@@ -5,12 +5,18 @@ https://tools.ietf.org/html/draft-kelly-json-hal-08
 """
 from __future__ import annotations
 
+from typing import Union
+
 from django.core.paginator import InvalidPage
 from rest_framework import pagination
 from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
 from rest_framework.serializers import ListSerializer
-from rest_framework.utils.serializer_helpers import ReturnList
+from rest_framework.utils.serializer_helpers import ReturnDict, ReturnList
+
+from rest_framework_dso.serializer_helpers import ReturnGenerator
+
+from .paginator import DSOPaginator
 
 
 class DSOHTTPHeaderPageNumberPagination(pagination.PageNumberPagination):
@@ -23,6 +29,8 @@ class DSOHTTPHeaderPageNumberPagination(pagination.PageNumberPagination):
 
     This can be used for for non-JSON exports (e.g. CSV files).
     """
+
+    django_paginator_class = DSOPaginator
 
     # Using underscore as "escape" for DSO compliance.
 
@@ -40,18 +48,12 @@ class DSOHTTPHeaderPageNumberPagination(pagination.PageNumberPagination):
 
         paginator = self.django_paginator_class(queryset, page_size)
         page_number = request.query_params.get(self.page_query_param, 1)
-        if page_number in self.last_page_strings:
-            page_number = paginator.num_pages
 
         try:
             self.page = paginator.page(page_number)
         except InvalidPage as exc:
             msg = self.invalid_page_message.format(page_number=page_number, message=str(exc))
             raise NotFound(msg) from exc
-
-        if paginator.num_pages > 1 and self.template is not None:
-            # The browsable API should display pagination controls.
-            self.display_page_controls = True
 
         self.request = request
         return self.page.object_list  # original: list(self.page)
@@ -76,9 +78,6 @@ class DSOHTTPHeaderPageNumberPagination(pagination.PageNumberPagination):
 
         paginator = self.page.paginator
         response["X-Pagination-Limit"] = paginator.per_page
-        # Optional but available on this paginator:
-        response["X-Pagination-Count"] = paginator.num_pages
-        response["X-Total-Count"] = paginator.count
         return response
 
 
@@ -100,30 +99,31 @@ class DelegatedPageNumberPagination(DSOHTTPHeaderPageNumberPagination):
         return super().get_paginated_response(data)
 
 
-class DSOPageNumberPagination(DSOHTTPHeaderPageNumberPagination):
+class DSOPageNumberPagination(DelegatedPageNumberPagination):
     """Pagination style as the DSO requires.
 
     It wraps the response in a few standard objects::
 
         {
-            "_links": {
-                "self": {"href": ...},
-                "next": {"href": ...},
-                "previous": {"href": ...},
-            },
             "_embedded": {
                 "results_field": [
                     ...,
                     ...,
                 ]
             },
+            "_links": {
+                "self": {"href": ...},
+                "next": {"href": ...},
+                "previous": {"href": ...},
+            },
             "page": {
                 "number": ...,
                 "size": ...,
-                "totalElements": ...,
-                "totalPages": ...,
             }
         }
+
+        The '_links' and 'page' attribute can be retrieved with the get_footer method,
+        after the result_field has been streamed so the number of items in the result_set is known.
     """
 
     #: The field name for the results envelope
@@ -140,7 +140,31 @@ class DSOPageNumberPagination(DSOHTTPHeaderPageNumberPagination):
         data = self._get_paginated_data(data)
         return super().get_paginated_response(data)
 
-    def _get_paginated_data(self, data: ReturnList) -> dict:
+    def _get_paginated_data(self, data: Union[ReturnList, ReturnDict, ReturnGenerator]) -> dict:
+        if isinstance(data, dict):
+            # Used DSOListSerializer, already received multiple lists
+            return {
+                "_embedded": data,
+            }
+        else:
+            # Regular list serializer, wrap in HAL fields.
+            if self.results_field:
+                results_field = self.results_field
+            else:
+                serializer = data.serializer
+                if isinstance(data.serializer, ListSerializer):
+                    serializer = serializer.child
+                results_field = serializer.Meta.model._meta.model_name
+            return {
+                "_embedded": {results_field: data},
+            }
+
+    def get_footer(self) -> dict:
+        """Generate the links and page fields"""
+        return {"_links": self.get_links(), "page": self.get_page()}
+
+    def get_links(self) -> dict:
+        """Generate the links field"""
         self_link = self.request.build_absolute_uri()
         if self_link.endswith(".api"):
             self_link = self_link[:-4]
@@ -155,36 +179,15 @@ class DSOPageNumberPagination(DSOHTTPHeaderPageNumberPagination):
             _links["next"] = {"href": next_link}
         if (prev_link := self.get_previous_link()) is not None:
             _links["previous"] = {"href": prev_link}
+        return _links
 
-        paginator = self.page.paginator
+    def get_page(self) -> dict:
+        """Generate the page field"""
         page = {
             "number": self.page.number,
-            "size": paginator.per_page,
-            "totalElements": paginator.count,
-            "totalPages": paginator.num_pages,
+            "size": self.page.paginator.per_page,
         }
-
-        if isinstance(data, dict):
-            # Used DSOListSerializer, already received multiple lists
-            return {
-                "_links": _links,
-                "_embedded": data,
-                "page": page,
-            }
-        else:
-            # Regular list serializer, wrap in HAL fields.
-            if self.results_field:
-                results_field = self.results_field
-            else:
-                serializer = data.serializer
-                if isinstance(data.serializer, ListSerializer):
-                    serializer = serializer.child
-                results_field = serializer.Meta.model._meta.model_name
-            return {
-                "_links": _links,
-                "_embedded": {results_field: data},
-                "page": page,
-            }
+        return page
 
     def get_results(self, data):
         """Implement DRF hook for completeness, can be used by the browsable API."""

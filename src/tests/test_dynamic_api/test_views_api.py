@@ -67,12 +67,10 @@ def test_list_dynamic_view_reload(api_client, api_rf, router, bommen_dataset):
             "self": {"href": "http://testserver/v1/bommen/bommen/"},
         },
         "_embedded": {"bommen": []},
-        "page": {"number": 1, "size": 20, "totalElements": 0, "totalPages": 1},
+        "page": {"number": 1, "size": 20},
     }
     assert response["X-Pagination-Page"] == "1"
     assert response["X-Pagination-Limit"] == "20"
-    assert response["X-Pagination-Count"] == "1"
-    assert response["X-Total-Count"] == "0"
 
 
 @pytest.mark.django_db
@@ -1360,8 +1358,6 @@ class TestExportFormats:
         # Paginator was triggered
         assert response["X-Pagination-Page"] == "1"
         assert response["X-Pagination-Limit"] == "4"
-        assert response["X-Pagination-Count"] == "3"
-        assert response["X-Total-Count"] == "9"
 
         # proves middleware detected streaming response, and didn't break it:
         assert "Content-Length" not in response

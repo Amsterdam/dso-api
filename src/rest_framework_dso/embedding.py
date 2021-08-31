@@ -383,10 +383,15 @@ class ObservableIterator(Iterator[T]):
         self._iterable = iter(iterable)
         self._item_callbacks = list(observers) if observers else []
         self._has_items = None
+        self._is_iterated = False
 
     def add_observer(self, callback: Callable[[T], None]):
         """Install an observer callback that is notified when items are iterated"""
         self._item_callbacks.append(callback)
+
+    def clear_observers(self):
+        """Remove all observers"""
+        self._item_callbacks = []
 
     def __iter__(self) -> ObservableIterator[T]:
         return self
@@ -407,6 +412,10 @@ class ObservableIterator(Iterator[T]):
             notify_callback(value)
 
         return value
+
+    def is_iterated(self):
+        """Tell whether the iterator has finished."""
+        return self._is_iterated
 
     def __bool__(self):
         """Tell whether the generator would contain items."""
