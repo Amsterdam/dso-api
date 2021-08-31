@@ -151,7 +151,7 @@ def _get_viewset_api_docs(model: Type[DynamicModel]) -> str:
     """Generate the API documentation header for the viewset."""
     # NOTE: currently not using model.get_dataset_path() as the docs don't do either.
     description = model.table_schema().description
-    docs_path = f"datasets/{model.get_dataset_id()}.html#{model.get_table_id()}"
+    docs_path = f"datasets/{model.get_dataset_path()}.html#{model.get_table_id()}"
     return (
         f"{description or ''}\n\nSee the documentation at: "
         f"<https://api.data.amsterdam.nl/v1/docs/{docs_path}>"
