@@ -115,6 +115,8 @@ class BrowsableAPIRenderer(RendererMixin, renderers.BrowsableAPIRenderer):
 
     def get_content(self, renderer, data, accepted_media_type, renderer_context):
         """Fix showing generator content for browsable API, convert back to one string"""
+        # Pass paginator information to the actual renderer we wrapped.
+        renderer.setup_pagination(self.paginator)
         content = super().get_content(renderer, data, accepted_media_type, renderer_context)
         if inspect.isgenerator(content):
             # Convert back to string. Might become a very large response!
@@ -177,12 +179,20 @@ class HALJSONRenderer(RendererMixin, renderers.JSONRenderer):
         """Render the data as streaming."""
         if data is None:
             return
-
         indent = self.get_indent(accepted_media_type, renderer_context or {})
+        # indent = "indent" in renderer_context.get("request").query_params
         if indent:
-            yield self._render_json_indented(data)
+            yield self._render_json_indented(data)[0:-2]
+            if (footer := self._get_footer()) is not None:
+                yield b",\n%b" % (self._render_json_indented(footer)[2:-1])
+            yield b"\n}\n"
         else:
             yield from _chunked_output(self._render_json(data), chunk_size=self.chunk_size)
+
+    def _get_footer(self) -> dict:
+        """Get the footer"""
+        if self.paginator:
+            return self.paginator.get_footer()
 
     def _render_json_indented(self, data):
         """Render indented JSON for the browsable API"""
@@ -190,7 +200,7 @@ class HALJSONRenderer(RendererMixin, renderers.JSONRenderer):
             # The ReturnGenerator is rendered as empty list, so convert these values first.
             # Using orjson.dumps(data, default) here doesn't work, as the dict ordering
             # isn't honored by orjson.
-            for key, value in embedded.copy().items():
+            for key, value in embedded.items():
                 if isinstance(value, (ReturnGenerator, GeneratorType, itertools.chain)):
                     embedded[key] = list(value)
 
@@ -212,6 +222,9 @@ class HALJSONRenderer(RendererMixin, renderers.JSONRenderer):
                 else:
                     yield b"%b%b:%b" % (sep, orjson.dumps(key), orjson.dumps(value))
                 sep = b",\n  "
+            if level == 0:
+                if (footer := self._get_footer()) is not None:
+                    yield b"%b%b" % (sep, orjson.dumps(footer)[1:-1])
             yield b"\n}"
         elif hasattr(data, "__iter__") and not isinstance(data, str):
             # Streaming per item, outputs each record on a new row.
