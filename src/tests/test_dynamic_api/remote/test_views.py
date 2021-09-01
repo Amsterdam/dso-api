@@ -424,7 +424,6 @@ HCBRK_NATUURLIJKPERSOON = (
     "}]}}"
 )
 
-
 DSO_NATUURLIJK_PERSOON = {
     "schema": "https://schemas.data.amsterdam.nl/datasets/remote/hcbrk/dataset#kadasternatuurlijkpersonen",  # noqa: E501
     "naam": {
@@ -447,13 +446,26 @@ DSO_NATUURLIJK_PERSOON = {
     },
 }
 
-
 DSO_NATUURLIJK_PERSOON_UNAUTH = {
-    field: value
-    for field, value in DSO_NATUURLIJK_PERSOON.items()
-    if field != "kadastraalOnroerendeZaakIdentificaties"
+    "schema": "https://schemas.data.amsterdam.nl/datasets/remote/hcbrk/dataset#kadasternatuurlijkpersonen",  # noqa: E501
+    "naam": {
+        "aanhef": "Geachte heer Jansens",
+        "voornamen": "Willem",
+        "geslachtsnaam": "Jansens",
+        "aanschrijfwijze": "W. Jansens",
+        "gebruikInLopendeTekst": "de heer Jansens",
+    },
+    "domein": "NL.IMKAD.Persoon",
+    "geboorte": {"datum": {"dag": 1, "jaar": 1971, "datum": "1971-11-01", "maand": 11}},
+    "woonadres": {"adresregel1": "Burggang 1D-9", "adresregel2": "4331AD MIDDELBURG"},
+    "omschrijving": "Willem Jansens",
+    "identificatie": "70882239",
+    "heeftPartnerschap": [{"naam": {"geslachtsnaam": "Jansens"}}],
+    "geslachtsaanduiding": "man",
+    "_links": {
+        "self": {"href": "http://testserver/v1/remote/hcbrk/kadasternatuurlijkpersonen/70882239/"}
+    },
 }
-
 
 HCBRK_ONROERENDE_ZAAK = (
     '{"identificatie":"76870487970000","domein":"NL.IMKAD.KadastraalO'
@@ -496,7 +508,6 @@ HCBRK_ONROERENDE_ZAAK = (
     "r.nl/esd/huidigebevragingen/v1/adressen/adresseerbareobjecten/{a"
     'dressen.adresseerbaarObjectIdentificatie}","templated":true}]}}'
 )
-
 
 DSO_ONROERENDE_ZAAK = {
     "schema": "https://schemas.data.amsterdam.nl/datasets/remote/hcbrk/dataset#kadastraalonroerendezaken",  # noqa: E501
@@ -573,13 +584,15 @@ DSO_ONROERENDE_ZAAK_UNAUTH = {
     "case",
     [
         {
+            # Natuurlijke persoon, with full authorisation.
             "table": "kadasternatuurlijkpersonen",
             "ident": 70882239,
-            "scopes": ["BRK/RS", "BRK/RSN"],
+            "scopes": ["BRK/RS", "BRK/RSN", "TEST/VOORNAAMPARTNER"],
             "from_hcbrk": HCBRK_NATUURLIJKPERSOON,
             "output": DSO_NATUURLIJK_PERSOON,
         },
         {
+            # Natuurlijke persoon, with minimal authorisation.
             "table": "kadasternatuurlijkpersonen",
             "ident": 70882239,
             "scopes": ["BRK/RS"],
@@ -587,6 +600,7 @@ DSO_ONROERENDE_ZAAK_UNAUTH = {
             "output": DSO_NATUURLIJK_PERSOON_UNAUTH,
         },
         {
+            # Onroerende zaak, with full authorisation.
             "table": "kadastraalonroerendezaken",
             "ident": 76870487970000,
             "scopes": ["BRK/RS", "BRK/RO"],
@@ -594,6 +608,7 @@ DSO_ONROERENDE_ZAAK_UNAUTH = {
             "output": DSO_ONROERENDE_ZAAK,
         },
         {
+            # Onroerende zaak, with minimal authorisation.
             "table": "kadastraalonroerendezaken",
             "ident": 76870487970000,
             "scopes": ["BRK/RS"],
