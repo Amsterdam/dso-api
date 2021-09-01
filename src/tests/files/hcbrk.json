@@ -255,6 +255,7 @@
                       "type": "string"
                     },
                     "voornamen": {
+                      "auth": "TEST/VOORNAAMPARTNER",
                       "type": "string"
                     }
                   }
