@@ -212,11 +212,16 @@ class DSOModelListSerializer(DSOListSerializer):
         * It reads the database with a streaming iterator to reduce memory.
         * It collects any embedded sections, and queries them afterwards
         """
+
+        request = self.context["request"]
+
+        if getattr(request, "accepted_media_type", None) == "text/html":
+            # HTML page does not need data.
+            return []
+
         if self.root is not self or not isinstance(data, models.QuerySet):
             # When generating as part of an sub-object, just output the list.
             return super().to_representation(data)
-
-        request = self.context["request"]
 
         # Find the the best approach to iterate over the results.
         if prefetch_lookups := self.get_prefetch_lookups():

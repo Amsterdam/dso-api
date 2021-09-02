@@ -1,5 +1,16 @@
 {% extends "rest_framework/base.html" %}
-{% load static %}
+{% comment %} 
+  This template extends the DRF base template with some javascript.
+
+  Because DSOPaginator calculates page count during streaming, 
+  we setup the pagination links client-side after the page is loaded.
+ 
+  The page data is not included in the template, instead we load the data in a separate ajax call.
+  This improves responsiveness and makes rendering more efficient removing a
+  potential DOS-attackvector for large datasets.
+{% endcomment %}
+
+{% load i18n rest_framework static %}
 {% block title %} {% if name %}{{ name }} – {% endif %} Amsterdam Datadiensten {% endblock %}
 {% block branding %}
        <div>
@@ -10,9 +21,10 @@
        </div>
 {% endblock %}
 
-{% block bootstrap_theme %}
+{% block style %}
     <link rel="stylesheet" type="text/css" href="{% static "rest_framework/css/bootstrap.min.css" %}"/>
     <link rel="stylesheet" type="text/css" href="{% static "rest_framework/css/bootstrap-tweaks.css" %}"/>
+    <link rel="stylesheet" type="text/css" href="{% static "rest_framework/css/default.css" %}"/>
     <link rel="stylesheet" href="https://static.amsterdam.nl/fonts/fonts.css">
     <style>
         .navbar svg {
@@ -23,6 +35,7 @@
         }
         body {
             background: white;
+            overflow-y: scroll;
         }
         body a {
             color: #A30000
@@ -63,8 +76,396 @@
         .navbar-brand:hover {
             color: black;
         }
+        .string { color: black; }
+        .bool { color: darkcyan; }
+        .number { color: #195f91 }
+        .null { color: magenta; }
+        .key { 
+          color:  #EC0000; 
+          font-weight: 550;
+        }
+        .link { color: #A30000; }
+        .lit { color: #195f91; }
+        .collapsible {
+            cursor:pointer
+        }
+        .collapsible:not(.collapsed) .collapsible_summary {
+            display: none
+        }
+        .collapsible:hover .collapsible_summary {
+          background: #e4e4e4
+        }
+        .collapsible.collapsed .collapsible_content {
+            display: none
+        }
+        .collapsible:not(.collapsed) .collapsible_content {
+            display: inline-block;
+            vertical-align: top;
+        }
+        nav {
+          float: right;
+          visibility: hidden;
+          height: 56px;
+        }
+        nav.active {
+          visibility: initial;
+        }
+        #page-links .hidden {
+          display: none;
+        }
     </style>
+{% endblock %}
 
+{% block content %}
+
+<div class="region"  aria-label="{% trans "request form" %}">
+{% block request_forms %}{{ block.super }}{% endblock %}
+</div>
+
+  <div class="content-main" role="main"  aria-label="{% trans "main content" %}">
+    <div class="page-header">
+      <h1>{{ name }}</h1>
+    </div>
+    <div style="float:left">
+      {% block description %}{{ block.super }}{% endblock %}
+    </div>
+
+      <nav id="page-container">
+        <ul id="page-links" class="pagination" style="margin: 5px 0 10px 0">
+          <li class="disabled"><a href="" aria-label="Previous"><span aria-hidden="true">«</span></a></li>
+          <li class="hidden"><a href="">1</a></li>
+          <li class="hidden"><a href="#"><span aria-hidden="true">…</span></a></li>
+          <li class="hidden"><a href="#"></a></li>
+          <li class="hidden"><a href="#"></a></li>
+          <li class="active this-page"><a href="#"></a></li>
+          <li class="disabled"><a href="#" aria-label="Next"><span aria-hidden="true">»</span></a></li>
+        </ul>
+      </nav>
+
+    <div class="request-info" style="clear: both" aria-label="{% trans "request info" %}">
+      <pre ><b>{{ request.method }}</b> {{ request.get_full_path }}</pre>
+    </div>
+
+    <div class="response-info" aria-label="{% trans "response info" %}">
+      <pre ><span class="meta nocode"><span id="response-headers"></span></span> 
+<span id="response-content">Retrieving data...</span></pre>
+    </div>
+  </div>
+
+  {% if display_edit_forms %}
+    {% if post_form or raw_data_post_form %}
+      <div {% if post_form %}class="tabbable"{% endif %}>
+        {% if post_form %}
+          <ul class="nav nav-tabs form-switcher">
+            <li>
+              <a name='html-tab' href="#post-object-form" data-toggle="tab">HTML form</a>
+            </li>
+            <li>
+              <a name='raw-tab' href="#post-generic-content-form" data-toggle="tab">Raw data</a>
+            </li>
+          </ul>
+        {% endif %}
+
+        <div class="well tab-content">
+          {% if post_form %}
+            <div class="tab-pane" id="post-object-form">
+              {% with form=post_form %}
+                <form action="{{ request.get_full_path }}" method="POST" enctype="multipart/form-data" class="form-horizontal" novalidate>
+                  <fieldset>
+                    {% csrf_token %}
+                    {{ post_form }}
+                    <div class="form-actions">
+                      <button class="btn btn-primary js-tooltip" title="Make a POST request on the {{ name }} resource">POST</button>
+                    </div>
+                  </fieldset>
+                </form>
+              {% endwith %}
+            </div>
+          {% endif %}
+
+          <div {% if post_form %}class="tab-pane"{% endif %} id="post-generic-content-form">
+            {% with form=raw_data_post_form %}
+              <form action="{{ request.get_full_path }}" method="POST" class="form-horizontal">
+                <fieldset>
+                  {% include "rest_framework/raw_data_form.html" %}
+                  <div class="form-actions">
+                    <button class="btn btn-primary js-tooltip" title="Make a POST request on the {{ name }} resource">POST</button>
+                  </div>
+                </fieldset>
+              </form>
+            {% endwith %}
+          </div>
+        </div>
+      </div>
+    {% endif %}
+
+    {% if put_form or raw_data_put_form or raw_data_patch_form %}
+      <div {% if put_form %}class="tabbable"{% endif %}>
+        {% if put_form %}
+          <ul class="nav nav-tabs form-switcher">
+            <li>
+              <a name='html-tab' href="#put-object-form" data-toggle="tab">HTML form</a>
+            </li>
+            <li>
+              <a  name='raw-tab' href="#put-generic-content-form" data-toggle="tab">Raw data</a>
+            </li>
+          </ul>
+        {% endif %}
+
+        <div class="well tab-content">
+          {% if put_form %}
+            <div class="tab-pane" id="put-object-form">
+              <form action="{{ request.get_full_path }}" data-method="PUT" enctype="multipart/form-data" class="form-horizontal" novalidate>
+                <fieldset>
+                  {{ put_form }}
+                  <div class="form-actions">
+                    <button class="btn btn-primary js-tooltip" title="Make a PUT request on the {{ name }} resource">PUT</button>
+                  </div>
+                </fieldset>
+              </form>
+            </div>
+          {% endif %}
+
+          <div {% if put_form %}class="tab-pane"{% endif %} id="put-generic-content-form">
+            {% with form=raw_data_put_or_patch_form %}
+              <form action="{{ request.get_full_path }}" data-method="PUT" class="form-horizontal">
+                <fieldset>
+                  {% include "rest_framework/raw_data_form.html" %}
+                  <div class="form-actions">
+                    {% if raw_data_put_form %}
+                      <button class="btn btn-primary js-tooltip" title="Make a PUT request on the {{ name }} resource">PUT</button>
+                    {% endif %}
+                    {% if raw_data_patch_form %}
+                    <button data-method="PATCH" class="btn btn-primary js-tooltip" title="Make a PATCH request on the {{ name }} resource">PATCH</button>
+                      {% endif %}
+                  </div>
+                </fieldset>
+              </form>
+            {% endwith %}
+          </div>
+        </div>
+      </div>
+    {% endif %}
+  {% endif %}
+{% endblock content %}
+
+{% block script %}
+<script>
+  window.drf = {
+    csrfHeaderName: "{{ csrf_header_name|default:'X-CSRFToken' }}",
+    csrfToken: "{% if request %}{{ csrf_token }}{% endif %}"
+  };
+</script>
+<script>
+  const HEADERS = [ "Allow", "Content-Type","Content-Crs", "Vary", "X-Pagination-Limit", "X-Pagination-Page" ]
+  const PAGEURL = new URL(window.location.href);
+  const PAGELINKS = {
+    PREVIOUS:0,
+    ONE:1,
+    BACK3:2,
+    BACK2:3,
+    BACK1:4,
+    SELF:5,
+    NEXT:6
+  }
+  var isPaginated = false
+
+  if (document.readyState != 'loading') {
+    onPageLoad();
+  }
+  if(document.addEventListener) {
+      document.addEventListener("DOMContentLoaded", onPageLoad);
+  }
+
+  function onPageLoad() {
+    let page = PAGEURL.searchParams.get("page");
+    if(page) {
+      setPageLinks(page);
+    }
+    getData(PAGEURL).catch(exceptionHandler).then(parseData);
+  }
+
+  function getPageUrl(page) {
+    // Get the URL of another page of the same endpoint
+    let url = new URL(PAGEURL);
+    url.searchParams.set("page", page);
+    return url;
+  };
+
+  function setPageLinks(page) {
+    page = Number(page);
+    if(isNaN(page) || page<1){
+      return
+    }
+    isPaginated = true;
+    let pageLinksEl = document.getElementById("page-links");
+    let links = pageLinksEl.getElementsByTagName("li");
+    links = [...Array(links.length).keys()].map(
+      i => {
+      return {
+        "li":links.item(i), 
+        "a": links.item(i).getElementsByTagName("a")[0]
+      }
+    })
+    
+    // Set forward page link, but leave disabled for now.
+    links[PAGELINKS.NEXT]["a"].setAttribute("href", getPageUrl(page+1));
+
+    // Set self and previous links
+    for (let i = 0; page-i && i<4; i++) {
+      let el = links[5-i];
+      el["a"].setAttribute("href", getPageUrl(page-i));
+      el["a"].innerHTML = page-i;
+      el["li"].classList.remove("hidden");
+    }
+    
+    if(page > 1) {
+      // Set previous link
+      links[PAGELINKS.PREVIOUS]["a"].setAttribute("href", getPageUrl(page-1));
+      links[PAGELINKS.PREVIOUS]["li"].classList.remove("disabled");
+
+      if(page > 4) {
+        // Set page 1 link
+        links[PAGELINKS.ONE]["a"].setAttribute("href", getPageUrl(1));
+        links[PAGELINKS.ONE]["li"].classList.remove("hidden");
+      }
+      if(page > 5){
+        // Set ... link
+        links[PAGELINKS.BACK3]["a"].innerHTML = "...";
+        links[PAGELINKS.BACK3]["li"].classList.add("disabled");
+      }
+    }
+
+    // Show the links
+    let containerEl = document.getElementById("page-container");
+    containerEl.classList.add("active");
+  }
+
+  function getData(url) {
+    return new Promise(function(callback, err) {
+      let http = new XMLHttpRequest();
+      http.open("GET", url, true);
+      http.setRequestHeader("Accept", "application/hal+json");
+      http.send();
+      http.onreadystatechange = function () {
+        if (this.readyState == 2){
+            parseHeaders(this);
+        }
+        if (this.readyState == 4){
+          let result = JSON.parse(this.responseText);
+          try {   
+            callback(result);
+          } catch (error) {
+              err("Error: JSON corrupt");
+          }
+        }
+      }; 
+    }); 
+  }
+
+  function escapeString(string) {
+    let element = document.createElement('div');
+    element.innerHTML = string;
+    return element.innerHTML;
+  }
+
+  function parseHeaders(response) {
+    // Set header fields
+    let headersElement = document.getElementById("response-headers");
+    headersElement.innerHTML = `<b>HTTP ${response.status} ${response.statusText}</b>\n`;
+    
+    for(let header of HEADERS) {
+      let headerValue = response.getResponseHeader(header);
+      if (headerValue){
+        let headerline = `<b>${header}:</b> <span class="lit">${escapeString(headerValue)}</span>\n`;
+        headersElement.innerHTML += headerline;
+      }
+    }
+    
+    // Remove page links if no pagination (for error pages)
+    let page = response.getResponseHeader("X-Pagination-Page");
+    if (!page) {
+      document.getElementById("page-container").classList.remove("active");                                   
+    } else if (!isPaginated) {
+      // If paginated but pagination has not yet been set (for page 1)
+      setPageLinks(page);
+    }
+  }
+
+  function exceptionHandler(e) {
+    console.error("Failed to retrieve API response from server.");
+  }
+
+  function parseData(data) {
+    let contentElement = document.getElementById("response-content");
+
+    // We need to mark coordinates fields so we can make them collapsible.
+    let markCoordinates = (key, value) => {
+        if (key == "coordinates"){
+            return "__coordinatestring__" + JSON.stringify(value, null, 4);
+        }
+        return value;
+    }
+    
+    // Activate next link
+    if(data["_links"] && data["_links"]['next']) {
+      document.getElementById("page-links").getElementsByTagName("li").item(PAGELINKS.NEXT).classList.remove("disabled");
+    }
+
+    // Create highlighted html string and set content
+    let jsonString = JSON.stringify(data, markCoordinates, 4);
+    contentElement.innerHTML = syntaxHighlight(jsonString);
+  }
+
+  function syntaxHighlight(jsonString) {
+      // Escape HTML but leave quotemarks in place.
+      jsonString = escapeString(jsonString);
+      return jsonString.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+          let cls = 'number';
+          if (/^"https?:\/\//.test(match)) {
+              // Create a link for strings containing an url.
+              let uri = encodeURI(match.substring(1,match.length-1))
+              return `<a href="${uri}" rel="nofollow"><span class="link">${match}</span></a>`;
+          }
+          if (/^"__coordinatestring__/.test(match)) {
+              // Cut the marker and enclosing quotes from the coordinates string and unescape newlines.
+              match = match.substring(21,match.length-1).replace(/\\n/g, "\n");
+
+              // Grab the head and tail for the summary and remove whitespace.
+              let head = match.substring(0,100).replace(/\n| /g, "");
+              let tail = match.substring(match.length-100).replace(/\n| /g, "");
+
+              // Create an element that can be expanded with a click.
+              let result = `<span class="collapsible collapsed" onClick="this.classList.toggle(\'collapsed\')">`;
+              result += `<span class="collapsible_summary">${syntaxHighlight(head)} ... ${syntaxHighlight(tail)}</span>`;
+              result += `<span class="collapsible_content">${syntaxHighlight(match)}</span></span>`;
+              return result;
+          }
+          if (/^"/.test(match)) {
+              if (/:$/.test(match)) {
+                  cls = 'key';
+              } else {
+                  cls = 'string';
+              }
+          } else if (/true|false/.test(match)) {
+              cls = 'bool';
+          } else if (/null/.test(match)) {
+              cls = 'null';
+          }
+          return `<span class="${cls}">${match}</span>`;
+      });
+  }
+
+</script>
+<script src="{% static "rest_framework/js/jquery-3.5.1.min.js" %}"></script>
+<script src="{% static "rest_framework/js/ajax-form.js" %}"></script>
+<script src="{% static "rest_framework/js/csrf.js" %}"></script>
+<script src="{% static "rest_framework/js/bootstrap.min.js" %}"></script>
+<script>
+  $(document).ready(function() {
+    $('form').ajaxForm();
+  });
+</script>
 {% endblock %}
 
 {% block bootstrap_navbar_variant %}{% endblock %}

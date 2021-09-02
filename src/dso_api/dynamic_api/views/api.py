@@ -218,7 +218,7 @@ class APIIndexView(APIView):
     schema = None  # exclude from schema
 
     # Restrict available formats to JSON and api
-    renderer_classes = [BrowsableAPIRenderer, HALJSONRenderer]
+    renderer_classes = [HALJSONRenderer, BrowsableAPIRenderer]
 
     # For browsable API
     name = "DSO-API"
@@ -247,6 +247,10 @@ class APIIndexView(APIView):
         return []
 
     def get(self, request, *args, **kwargs):
+        # Data not needed for html view
+        if getattr(request, "accepted_media_type", None) == "text/html":
+            return Response()
+
         base = request.build_absolute_uri("/").rstrip("/")
         datasets = self.get_datasets()
 
