@@ -3,7 +3,6 @@
 This makes sure the response gets the desired ``application/hal+json``
 """
 import inspect
-import itertools
 from datetime import datetime
 from io import BytesIO, StringIO
 from types import GeneratorType
@@ -179,32 +178,13 @@ class HALJSONRenderer(RendererMixin, renderers.JSONRenderer):
         """Render the data as streaming."""
         if data is None:
             return
-        indent = self.get_indent(accepted_media_type, renderer_context or {})
-        # indent = "indent" in renderer_context.get("request").query_params
-        if indent:
-            yield self._render_json_indented(data)[0:-2]
-            if (footer := self._get_footer()) is not None:
-                yield b",\n%b" % (self._render_json_indented(footer)[2:-1])
-            yield b"\n}\n"
-        else:
-            yield from _chunked_output(self._render_json(data), chunk_size=self.chunk_size)
+
+        yield from _chunked_output(self._render_json(data), chunk_size=self.chunk_size)
 
     def _get_footer(self) -> dict:
         """Get the footer"""
         if self.paginator:
             return self.paginator.get_footer()
-
-    def _render_json_indented(self, data):
-        """Render indented JSON for the browsable API"""
-        if isinstance(data, dict) and (embedded := data.get("_embedded")):
-            # The ReturnGenerator is rendered as empty list, so convert these values first.
-            # Using orjson.dumps(data, default) here doesn't work, as the dict ordering
-            # isn't honored by orjson.
-            for key, value in embedded.items():
-                if isinstance(value, (ReturnGenerator, GeneratorType, itertools.chain)):
-                    embedded[key] = list(value)
-
-        return orjson.dumps(data, option=orjson.OPT_INDENT_2)
 
     def _render_json(self, data, level=0):
         if not data:
