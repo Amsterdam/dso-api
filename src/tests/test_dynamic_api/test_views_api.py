@@ -795,8 +795,347 @@ class TestEmbedTemporalTables:
         assert response.status_code == 200, data
         assert data["_embedded"]["ligtInWijk"]["id"] == "03630012052035.1"
         assert data["_embedded"]["ligtInWijk"]["buurt"] == {
-            "count": 1,
+            "count": 2,  # counts historical records too.
             "href": "http://testserver/v1/gebieden/buurten/?ligtInWijkId=03630012052035.1",
+        }
+
+        assert data == {
+            "_links": {
+                "ligtInWijk": {
+                    "href": "http://testserver/v1/gebieden/wijken/03630012052035/?volgnummer=1",
+                    "identificatie": "03630012052035",
+                    "title": "03630012052035.1",
+                    "volgnummer": 1,
+                },
+                "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/dataset#buurten",
+                "self": {
+                    "href": "http://testserver/v1/gebieden/buurten/03630000000078/?volgnummer=1",
+                    "identificatie": "03630000000078",
+                    "title": "03630000000078.1",
+                    "volgnummer": 1,
+                },
+            },
+            "beginGeldigheid": None,
+            "code": None,
+            "eindGeldigheid": None,
+            "geometrie": None,
+            "id": "03630000000078.1",
+            "ligtInWijkId": "03630012052035",
+            "naam": None,
+            "_embedded": {
+                "ligtInWijk": {
+                    "_links": {
+                        "schema": (
+                            "https://schemas.data.amsterdam.nl/datasets/gebieden/dataset#wijken"
+                        ),
+                        "self": {
+                            "href": (
+                                "http://testserver/v1/gebieden/wijken/03630012052035/?volgnummer=1"
+                            ),
+                            "identificatie": "03630012052035",
+                            "title": "03630012052035.1",
+                            "volgnummer": 1,
+                        },
+                        "buurt": {
+                            # See that the link is properly added
+                            "count": 2,  # counts historical records too.
+                            "href": (
+                                "http://testserver/v1/gebieden/buurten/"
+                                "?ligtInWijkId=03630012052035.1"
+                            ),
+                        },
+                        "ligtInStadsdeel": {
+                            "href": (
+                                "http://testserver/v1/gebieden/stadsdelen/03630000000018/"
+                                "?volgnummer=1"
+                            ),
+                            "identificatie": "03630000000018",
+                            "title": "03630000000018.1",
+                            "volgnummer": 1,
+                        },
+                    },
+                    "id": "03630012052035.1",
+                    "code": "A01",
+                    "naam": "Burgwallen-Nieuwe Zijde",
+                    "beginGeldigheid": None,
+                    "eindGeldigheid": None,
+                    "ligtInStadsdeelId": "03630000000018",
+                    "buurt": {
+                        # Note: still added by current API.
+                        "count": 2,
+                        "href": (
+                            "http://testserver/v1/gebieden/buurten/?ligtInWijkId=03630012052035.1"
+                        ),
+                    },
+                    "_embedded": {
+                        # second level embedded
+                        "ligtInStadsdeel": {
+                            "_links": {
+                                "schema": (
+                                    "https://schemas.data.amsterdam.nl"
+                                    "/datasets/gebieden/dataset#stadsdelen"
+                                ),
+                                "self": {
+                                    "href": (
+                                        "http://testserver/v1/gebieden/stadsdelen/03630000000018/"
+                                        "?volgnummer=1"
+                                    ),
+                                    "identificatie": "03630000000018",
+                                    "title": "03630000000018.1",
+                                    "volgnummer": 1,
+                                },
+                                "wijk": [
+                                    # Reverse relation
+                                    {
+                                        "href": (
+                                            "http://testserver/v1/gebieden/wijken/03630012052035/"
+                                            "?volgnummer=1"
+                                        ),
+                                        "identificatie": "03630012052035",
+                                        "title": "03630012052035.1",
+                                        "volgnummer": 1,
+                                    }
+                                ],
+                            },
+                            "beginGeldigheid": None,
+                            "code": "A",
+                            "documentdatum": None,
+                            "documentnummer": None,
+                            "eindGeldigheid": None,
+                            "geometrie": None,
+                            "id": "03630000000018.1",
+                            "naam": "Centrum",
+                            "registratiedatum": None,
+                        }
+                    },
+                }
+            },
+        }
+
+    def test_nested_expand_list(
+        self, api_client, panden_data, buurten_data, wijken_data, filled_router
+    ):
+        """Prove that nesting of nesting also works."""
+        url = reverse("dynamic_api:bag-panden-list")
+        response = api_client.get(
+            url,
+            data={
+                "_expand": "true",
+                "_expandScope": "ligtInBouwblok.ligtInBuurt.ligtInWijk.ligtInStadsdeel",
+            },
+        )
+        data = read_response_json(response)
+        assert response.status_code == 200, data
+        assert data == {
+            "_embedded": {
+                "panden": [
+                    {
+                        "_links": {
+                            "schema": (
+                                "https://schemas.data.amsterdam.nl/datasets/bag/dataset#panden"
+                            ),
+                            "self": {
+                                "href": (
+                                    "http://testserver/v1/bag/panden/0363100012061164/"
+                                    "?volgnummer=3"
+                                ),
+                                "identificatie": "0363100012061164",
+                                "title": "0363100012061164.3",
+                                "volgnummer": 3,
+                            },
+                            "heeftDossier": {
+                                "href": "http://testserver/v1/bag/dossiers/GV00000406/",
+                                "title": "GV00000406",
+                            },
+                            "ligtInBouwblok": {
+                                "href": (
+                                    "http://testserver/v1/gebieden/bouwblokken/03630012096483/"
+                                    "?volgnummer=1"
+                                ),
+                                "identificatie": "03630012096483",
+                                "title": "03630012096483.1",
+                                "volgnummer": 1,
+                            },
+                        },
+                        "id": "0363100012061164.3",
+                        "ligtInBouwblokId": "03630012096483",
+                        "naam": "Voorbeeldpand",
+                        "beginGeldigheid": None,
+                        "eindGeldigheid": None,
+                        "heeftDossierId": "GV00000406",
+                    }
+                ],
+                "ligtInBouwblok": [
+                    {
+                        "_links": {
+                            "schema": (
+                                "https://schemas.data.amsterdam.nl"
+                                "/datasets/gebieden/dataset#bouwblokken"
+                            ),
+                            "self": {
+                                "href": (
+                                    "http://testserver/v1/gebieden/bouwblokken/03630012096483/"
+                                    "?volgnummer=1"
+                                ),
+                                "identificatie": "03630012096483",
+                                "title": "03630012096483.1",
+                                "volgnummer": 1,
+                            },
+                            "ligtInBuurt": {
+                                "href": (
+                                    "http://testserver/v1/gebieden/buurten/03630000000078/"
+                                    "?volgnummer=2"
+                                ),
+                                "identificatie": "03630000000078",
+                                "title": "03630000000078.2",
+                                "volgnummer": 2,
+                            },
+                        },
+                        "beginGeldigheid": None,
+                        "code": None,
+                        "eindGeldigheid": None,
+                        "geometrie": None,
+                        "id": "03630012096483.1",
+                        "ligtInBuurtId": "03630000000078",
+                        "registratiedatum": None,
+                        "_embedded": {
+                            "ligtInBuurt": {
+                                "_links": {
+                                    "schema": (
+                                        "https://schemas.data.amsterdam.nl"
+                                        "/datasets/gebieden/dataset#buurten"
+                                    ),
+                                    "self": {
+                                        "href": (
+                                            "http://testserver/v1/gebieden/buurten/03630000000078/"
+                                            "?volgnummer=2"
+                                        ),
+                                        "identificatie": "03630000000078",
+                                        "title": "03630000000078.2",
+                                        "volgnummer": 2,
+                                    },
+                                    "ligtInWijk": {
+                                        "href": (
+                                            "http://testserver/v1/gebieden/wijken/03630012052035/"
+                                            "?volgnummer=1"
+                                        ),
+                                        "identificatie": "03630012052035",
+                                        "title": "03630012052035.1",
+                                        "volgnummer": 1,
+                                    },
+                                },
+                                "id": "03630000000078.2",
+                                "naam": None,
+                                "code": None,
+                                "geometrie": None,
+                                "beginGeldigheid": None,
+                                "eindGeldigheid": None,
+                                "ligtInWijkId": "03630012052035",
+                                "_embedded": {
+                                    "ligtInWijk": {
+                                        "_embedded": {
+                                            "ligtInStadsdeel": {
+                                                "_links": {
+                                                    "schema": (
+                                                        "https://schemas.data.amsterdam.nl"
+                                                        "/datasets/gebieden/dataset#stadsdelen"
+                                                    ),
+                                                    "self": {
+                                                        "href": (
+                                                            "http://testserver/v1"
+                                                            "/gebieden/stadsdelen/03630000000018/"
+                                                            "?volgnummer=1"
+                                                        ),
+                                                        "identificatie": "03630000000018",
+                                                        "title": "03630000000018.1",
+                                                        "volgnummer": 1,
+                                                    },
+                                                    "wijk": [
+                                                        {
+                                                            "href": (
+                                                                "http://testserver/v1"
+                                                                "/gebieden/wijken/03630012052035/"
+                                                                "?volgnummer=1"
+                                                            ),
+                                                            "identificatie": "03630012052035",
+                                                            "title": "03630012052035.1",
+                                                            "volgnummer": 1,
+                                                        }
+                                                    ],
+                                                },
+                                                "beginGeldigheid": None,
+                                                "code": "A",
+                                                "documentdatum": None,
+                                                "documentnummer": None,
+                                                "eindGeldigheid": None,
+                                                "geometrie": None,
+                                                "id": "03630000000018.1",
+                                                "naam": "Centrum",
+                                                "registratiedatum": None,
+                                            }
+                                        },
+                                        "_links": {
+                                            "schema": (
+                                                "https://schemas.data.amsterdam.nl"
+                                                "/datasets/gebieden/dataset#wijken"
+                                            ),
+                                            "self": {
+                                                "href": (
+                                                    "http://testserver/v1"
+                                                    "/gebieden/wijken/03630012052035/"
+                                                    "?volgnummer=1"
+                                                ),
+                                                "identificatie": "03630012052035",
+                                                "title": "03630012052035.1",
+                                                "volgnummer": 1,
+                                            },
+                                            "buurt": {
+                                                "count": 2,
+                                                "href": (
+                                                    "http://testserver/v1/gebieden/buurten/"
+                                                    "?ligtInWijkId=03630012052035.1"
+                                                ),
+                                            },
+                                            "ligtInStadsdeel": {
+                                                "href": (
+                                                    "http://testserver/v1"
+                                                    "/gebieden/stadsdelen/03630000000018/"
+                                                    "?volgnummer=1"
+                                                ),
+                                                "identificatie": "03630000000018",
+                                                "title": "03630000000018.1",
+                                                "volgnummer": 1,
+                                            },
+                                        },
+                                        "beginGeldigheid": None,
+                                        "buurt": {
+                                            "count": 2,
+                                            "href": (
+                                                "http://testserver/v1/gebieden/buurten/"
+                                                "?ligtInWijkId=03630012052035.1"
+                                            ),
+                                        },
+                                        "code": "A01",
+                                        "eindGeldigheid": None,
+                                        "id": "03630012052035.1",
+                                        "ligtInStadsdeelId": "03630000000018",
+                                        "naam": "Burgwallen-Nieuwe " "Zijde",
+                                    }
+                                },
+                            }
+                        },
+                    }
+                ],
+            },
+            "_links": {
+                "self": {
+                    "href": (
+                        "http://testserver/v1/bag/panden/?_expand=true"
+                        "&_expandScope=ligtInBouwblok.ligtInBuurt.ligtInWijk.ligtInStadsdeel"
+                    )
+                }
+            },
+            "page": {"number": 1, "size": 20},
         }
 
     def test_detail_no_expand_for_temporal_fk_relation(
@@ -848,7 +1187,7 @@ class TestEmbedTemporalTables:
         assert response.status_code == 200, data
         assert data["_embedded"]["ligtInWijk"][0]["id"] == "03630012052035.1"
         assert data["_embedded"]["ligtInWijk"][0]["buurt"] == {
-            "count": 1,
+            "count": 2,  # counts historical records too.
             "href": (
                 "http://testserver/v1/gebieden/buurten/"
                 "?_format=json&ligtInWijkId=03630012052035.1"
@@ -1046,7 +1385,7 @@ class TestEmbedTemporalTables:
                     "eindGeldigheid": None,
                     "beginGeldigheid": None,
                     "id": "03630000000078.2",
-                    "ligtInWijkId": None,
+                    "ligtInWijkId": "03630012052035.1",
                     "_embedded": {
                         "ligtInWijk": None,
                     },

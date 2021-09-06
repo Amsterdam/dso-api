@@ -853,7 +853,7 @@ def bag_schema(bag_schema_json) -> DatasetSchema:
 
 
 @pytest.fixture()
-def bag_dataset(bag_schema_json) -> Dataset:
+def bag_dataset(gebieden_dataset, bag_schema_json) -> Dataset:
     return Dataset.objects.create(name="bag", path="bag", schema_data=json.dumps(bag_schema_json))
 
 
@@ -896,6 +896,11 @@ def dossiers_model(bag_dataset, dynamic_models):
 
 
 @pytest.fixture()
+def bouwblokken_model(gebieden_dataset, dynamic_models):
+    return dynamic_models["gebieden"]["bouwblokken"]
+
+
+@pytest.fixture()
 def buurten_model(gebieden_dataset, dynamic_models):
     return dynamic_models["gebieden"]["buurten"]
 
@@ -903,6 +908,11 @@ def buurten_model(gebieden_dataset, dynamic_models):
 @pytest.fixture()
 def wijken_model(gebieden_dataset, dynamic_models):
     return dynamic_models["gebieden"]["wijken"]
+
+
+@pytest.fixture()
+def stadsdelen_model(gebieden_dataset, dynamic_models):
+    return dynamic_models["gebieden"]["stadsdelen"]
 
 
 @pytest.fixture()
@@ -929,34 +939,66 @@ def statistieken_data(statistieken_model, buurten_data):
 
 
 @pytest.fixture()
-def buurten_data(buurten_model):
+def buurten_data(buurten_model) -> DynamicModel:
+    # NOTE: 'wijken_data' is not included as fixture here.
+    # some tests appear to rely on having a broken relation.
     buurten_model.objects.create(
         id="03630000000078.1",
         identificatie="03630000000078",
         volgnummer=1,
         ligt_in_wijk_id="03630012052035.1",
     )
-    buurten_model.objects.create(
-        id="03630000000078.2", identificatie="03630000000078", volgnummer=2
+    return buurten_model.objects.create(
+        id="03630000000078.2",
+        identificatie="03630000000078",
+        volgnummer=2,
+        ligt_in_wijk_id="03630012052035.1",
     )
 
 
 @pytest.fixture()
-def panden_data(panden_model, dossiers_model):
+def bouwblokken_data(bouwblokken_model, buurten_data) -> DynamicModel:
+    return bouwblokken_model.objects.create(
+        id="03630012096483.1",
+        identificatie="03630012096483",
+        volgnummer=1,
+        ligt_in_buurt_id="03630000000078.2",  # example (not actual)
+    )
+
+
+@pytest.fixture()
+def panden_data(panden_model, dossiers_model, bouwblokken_data):
     panden_model.objects.create(
         id="0363100012061164.3",
         volgnummer=3,
         identificatie="0363100012061164",
         naam="Voorbeeldpand",
+        ligt_in_bouwblok_id="03630012096483.1",
         heeft_dossier_id="GV00000406",
     )
     dossiers_model.objects.create(dossier="GV00000406")
 
 
 @pytest.fixture()
-def wijken_data(wijken_model):
-    wijken_model.objects.create(
-        id="03630012052035.1", identificatie="03630012052035", volgnummer=1
+def wijken_data(wijken_model, stadsdelen_data) -> DynamicModel:
+    return wijken_model.objects.create(
+        id="03630012052035.1",
+        identificatie="03630012052035",
+        naam="Burgwallen-Nieuwe Zijde",
+        code="A01",
+        volgnummer=1,
+        ligt_in_stadsdeel=stadsdelen_data,
+    )
+
+
+@pytest.fixture()
+def stadsdelen_data(stadsdelen_model) -> DynamicModel:
+    return stadsdelen_model.objects.create(
+        id="03630000000018.1",
+        identificatie="03630000000018",
+        volgnummer=1,
+        naam="Centrum",
+        code="A",
     )
 
 
