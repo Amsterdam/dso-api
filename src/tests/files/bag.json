@@ -50,6 +50,19 @@
             "type": "string",
             "description": "Naamgeving van een pand (bv. naam van metrostation of bijzonder gebouw)."
           },
+          "ligtInBouwblok": {
+            "type": "object",
+            "properties": {
+              "identificatie": {
+                "type": "string"
+              },
+              "volgnummer": {
+                "type": "integer"
+              }
+            },
+            "relation": "gebieden:bouwblokken",
+            "description": "Het bouwblok waarin het pand ligt."
+          },
           "heeftDossier": {
             "type": "string",
             "relation": "bag:dossiers",
