@@ -119,7 +119,65 @@
 {% block content %}
 
 <div class="region"  aria-label="{% trans "request form" %}">
-{% block request_forms %}{{ block.super }}{% endblock %}
+  {% comment %} 
+    Add an id to the options button so we can override its behaviour.
+    Delete form is removed, as we do not expose this method.
+  {% endcomment %}
+  {% block request_forms %}
+
+  {% if 'GET' in allowed_methods %}
+    <form id="get-form" class="pull-right">
+      <fieldset>
+        {% if api_settings.URL_FORMAT_OVERRIDE %}
+          <div class="btn-group format-selection">
+            <a class="btn btn-primary js-tooltip" href="{{ request.get_full_path }}" rel="nofollow" title="Make a GET request on the {{ name }} resource">GET</a>
+
+            <button class="btn btn-primary dropdown-toggle js-tooltip" data-toggle="dropdown" title="Specify a format for the GET request">
+              <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu">
+              {% for format in available_formats %}
+                <li>
+                  <a class="js-tooltip format-option" href="{% add_query_param request api_settings.URL_FORMAT_OVERRIDE format %}" rel="nofollow" title="Make a GET request on the {{ name }} resource with the format set to `{{ format }}`">{{ format }}</a>
+                </li>
+              {% endfor %}
+            </ul>
+          </div>
+        {% else %}
+          <a class="btn btn-primary js-tooltip" href="{{ request.get_full_path }}" rel="nofollow" title="Make a GET request on the {{ name }} resource">GET</a>
+        {% endif %}
+      </fieldset>
+    </form>
+  {% endif %}
+
+  {% if options_form %}
+    <form class="button-form">
+      <button id="options-button" class="btn btn-primary js-tooltip" title="Make an OPTIONS request on the {{ name }} resource">OPTIONS</button>
+    </form>
+  {% endif %}
+
+  {% if extra_actions %}
+    <div class="dropdown" style="float: right; margin-right: 10px">
+      <button class="btn btn-default" id="extra-actions-menu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+        {% trans "Extra Actions" %}
+        <span class="caret"></span>
+      </button>
+      <ul class="dropdown-menu" aria-labelledby="extra-actions-menu">
+        {% for action_name, url in extra_actions|items %}
+        <li><a href="{{ url }}">{{ action_name }}</a></li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+
+  {% if filter_form %}
+    <button style="float: right; margin-right: 10px" data-toggle="modal" data-target="#filtersModal" class="btn btn-default">
+      <span class="glyphicon glyphicon-wrench" aria-hidden="true"></span>
+      {% trans "Filters" %}
+    </button>
+  {% endif %}
+
+  {% endblock request_forms %}
 </div>
 
   <div class="content-main" role="main"  aria-label="{% trans "main content" %}">
@@ -279,10 +337,19 @@
 
   function onPageLoad() {
     let page = PAGEURL.searchParams.get("page");
+
     if(page) {
       setPageLinks(page);
     }
     getData(PAGEURL).catch(exceptionHandler).then(parseData);
+
+    // Override the default DRF behaviour of the OPTIONS button,
+    // which does not work with our script.
+    // We make the request and replace the page content with the options response.
+    document.getElementById("options-button").onclick = e => {
+      getData(PAGEURL, "OPTIONS").catch(exceptionHandler).then(parseData);
+      e.preventDefault();
+    }
   }
 
   function getPageUrl(page) {
@@ -341,10 +408,10 @@
     containerEl.classList.add("active");
   }
 
-  function getData(url) {
+  function getData(url, method="GET") {
     return new Promise(function(callback, err) {
       let http = new XMLHttpRequest();
-      http.open("GET", url, true);
+      http.open(method, url, true);
       http.setRequestHeader("Accept", "application/hal+json");
       http.send();
       http.onreadystatechange = function () {
