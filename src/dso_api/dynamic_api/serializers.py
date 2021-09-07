@@ -633,9 +633,9 @@ def _build_serializer_field(
     model_field: models.Field,
     flat: bool,
     nesting_level: int,
-    new_attrs,
-    fields,
-    extra_kwargs,
+    new_attrs: dict,
+    fields: list,
+    extra_kwargs: dict,
 ):
     """Build a serializer field, results are written in 'output' parameters"""
     # Add extra embedded part for related fields
@@ -650,7 +650,7 @@ def _build_serializer_field(
         ),
     ):
         # Embedded relations are only added to the main serializer.
-        _build_serializer_embeddded_field(model_field, nesting_level, new_attrs)
+        _build_serializer_embedded_field(model_field, nesting_level, new_attrs)
 
         if isinstance(model_field, LooseRelationField):
             # For loose relations, add an id char field.
@@ -668,8 +668,8 @@ def _build_serializer_field(
     _build_plain_serializer_field(model_field, fields, extra_kwargs)
 
 
-def _build_serializer_embeddded_field(
-    model_field: Union[RelatedField, LooseRelationField], nesting_level, new_attrs
+def _build_serializer_embedded_field(
+    model_field: Union[RelatedField, LooseRelationField], nesting_level: int, new_attrs: dict
 ):
     """Build a embedded field for the serializer"""
     EmbeddedFieldClass = (
@@ -772,7 +772,13 @@ def _through_serializer_factory(
     return type(serializer_name, (ThroughSerializer,), new_attrs)
 
 
-def _build_m2m_serializer(model, model_field, new_attrs, fields, extra_kwargs):
+def _build_m2m_serializer(
+    model: Type[DynamicModel],
+    model_field: models.Field,
+    new_attrs: dict,
+    fields: List[str],
+    extra_kwargs: dict,
+):
     """Add a serializer for a m2m field to the output parameters."""
 
     camel_name = toCamelCase(model_field.name)
@@ -785,7 +791,9 @@ def _build_m2m_serializer(model, model_field, new_attrs, fields, extra_kwargs):
     fields.append(camel_name)
 
 
-def _build_plain_serializer_field(model_field, fields, extra_kwargs):
+def _build_plain_serializer_field(
+    model_field: models.Field, fields: List[str], extra_kwargs: dict
+):
     """Add the field to the output parameters"""
     camel_name = toCamelCase(model_field.name)
     fields.append(camel_name)
@@ -794,7 +802,7 @@ def _build_plain_serializer_field(model_field, fields, extra_kwargs):
         extra_kwargs[camel_name] = {"source": model_field.name}
 
 
-def _build_serializer_related_id_field(model_field, fields, extra_kwargs):
+def _build_serializer_related_id_field(model_field: models.Field, fields, extra_kwargs):
     """Build the ``FIELD_id`` field for an related field."""
     camel_id_name = toCamelCase(model_field.attname)
     fields.append(camel_id_name)
@@ -803,7 +811,9 @@ def _build_serializer_related_id_field(model_field, fields, extra_kwargs):
         extra_kwargs[camel_id_name] = {"source": model_field.attname}
 
 
-def _build_serializer_loose_relation_id_field(model_field, fields, new_attrs):
+def _build_serializer_loose_relation_id_field(
+    model_field: LooseRelationField, fields: List[str], new_attrs: dict
+):
     """Build the ``FIELD_id`` field for a loose relation."""
     camel_name = toCamelCase(model_field.name)
     loose_id_field_name = f"{camel_name}Id"
@@ -811,7 +821,9 @@ def _build_serializer_loose_relation_id_field(model_field, fields, new_attrs):
     fields.append(loose_id_field_name)
 
 
-def _build_serializer_blob_field(model_field, field_schema, fields, new_attrs):
+def _build_serializer_blob_field(
+    model_field: models.Field, field_schema: dict, fields: List[str], new_attrs: dict
+):
     """Build the blob field"""
     camel_name = toCamelCase(model_field.name)
     new_attrs[camel_name] = AzureBlobFileField(
@@ -820,7 +832,9 @@ def _build_serializer_blob_field(model_field, field_schema, fields, new_attrs):
     )
 
 
-def _build_serializer_reverse_fk_field(model, model_field: models.ManyToOneRel, new_attrs, fields):
+def _build_serializer_reverse_fk_field(
+    model: Type[DynamicModel], model_field: models.ManyToOneRel, new_attrs: dict, fields: List[str]
+):
     """Build the ManyToOneRel field"""
     table_schema = model.table_schema()
     match = _find_reverse_fk_relation(table_schema, model_field)
@@ -863,7 +877,9 @@ def _find_reverse_fk_relation(
     )
 
 
-def _generate_nested_relations(model, fields, new_attrs, nesting_level):
+def _generate_nested_relations(
+    model: Type[DynamicModel], fields: list, new_attrs: dict, nesting_level: int
+):
     """Include fields that are implemented using nested tables."""
     schema_fields = {to_snake_case(f.name): f for f in model.table_schema().fields}
     for item in model._meta.related_objects:
