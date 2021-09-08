@@ -16,7 +16,7 @@ from schematools.utils import (
 SCHEMA_URL = os.getenv("SCHEMA_URL", "https://schemas.data.amsterdam.nl/datasets/")
 BASE_URL = "https://api.data.amsterdam.nl"
 
-BASE_PATH = Path("./source/")
+BASE_PATH = Path(__file__).parent.resolve()
 TEMPLATE_PATH = BASE_PATH.joinpath("_templates")
 TEMPLATE_ENV = jinja2.Environment(
     loader=jinja2.FileSystemLoader(searchpath=TEMPLATE_PATH),
