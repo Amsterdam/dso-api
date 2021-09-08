@@ -102,11 +102,7 @@ class RemoteViewSet(DSOViewMixin, ViewSet):
         if not serializer.is_valid():
             raise RemoteAPIException(
                 title="Invalid remote data",
-                detail={
-                    "detail": "These schema fields did not validate:",
-                    "x-validation-errors": serializer.errors,
-                    "x-raw-response": raw_data,
-                },
+                detail="Some schema fields did not validate",
                 code="validation_errors",
                 status_code=status.HTTP_502_BAD_GATEWAY,
             )
