@@ -9,8 +9,8 @@ import jinja2
 from schematools.types import DatasetFieldSchema, DatasetSchema, DatasetTableSchema
 from schematools.utils import (
     dataset_paths_from_url,
+    dataset_schema_from_file,
     dataset_schemas_from_url,
-    schema_from_file,
     to_snake_case,
     toCamelCase,
 )
@@ -326,7 +326,7 @@ def render_datasets(*local_file_paths):
 
             ds_path = file_path[pos + 10 : file_path.rfind("/")]
             print(f"- reading {ds_path}")
-            schema = schema_from_file(file_path, prefetch_related=True)
+            schema = dataset_schema_from_file(file_path, prefetch_related=True)
             schemas[schema.id] = schema
             paths[schema.id] = ds_path
 
