@@ -502,11 +502,16 @@
               let head = match.substring(0,100).replace(/\n| /g, "");
               let tail = match.substring(match.length-100).replace(/\n| /g, "");
 
-              // Create an element that can be expanded with a click.
-              let result = `<span class="collapsible collapsed" onClick="this.classList.toggle(\'collapsed\')">`;
-              result += `<span class="collapsible_summary">${syntaxHighlight(head)} ... ${syntaxHighlight(tail)}</span>`;
-              result += `<span class="collapsible_content">${syntaxHighlight(match)}</span></span>`;
-              return result;
+              // If coordinates don't describe a point.
+              // Show a summary that can be expanded with a click.
+              if(/^\[\[/.test(head)) {
+                let result = `<span class="collapsible collapsed" onClick="this.classList.toggle(\'collapsed\')">`;
+                result += `<span class="collapsible_summary">${syntaxHighlight(head)} ... ${syntaxHighlight(tail)}</span>`;
+                result += `<span class="collapsible_content">${syntaxHighlight(match)}</span></span>`;
+                return result;
+              } else {
+                match = match.replace(/\n\s*/g, " ");
+              } 
           }
           if (/^"/.test(match)) {
               if (/:$/.test(match)) {
