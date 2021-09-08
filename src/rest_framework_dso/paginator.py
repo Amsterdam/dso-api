@@ -130,7 +130,8 @@ class ObservableQuerySet(QuerySet):
         # that return another QuerySet, like filter() and prefetch_related().
         # Overloading this method handles all of those in one go.
         clone = super()._clone(*args, **kwargs)
-        return self.__class__.from_queryset(clone, self._item_callbacks)
+        clone._item_callbacks = self._item_callbacks.copy()
+        return clone
 
     def iterator(self, *args, **kwargs):
         """Return observable iterator and add observer.
