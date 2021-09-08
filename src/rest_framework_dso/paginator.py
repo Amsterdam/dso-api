@@ -97,6 +97,10 @@ class ObservableQuerySet(QuerySet):
     and wraps the iterators returned by the base class
     in ObservableIterators.
 
+    All QuerySet methods that return another QuerySet,
+    return an ObservableQuerySet with the same observers
+    as the parent instance.
+
     Observers added to an instance will be notified of
     iteration events on the last iterator created by
     the instance.
@@ -114,6 +118,19 @@ class ObservableQuerySet(QuerySet):
         queryset._item_callbacks = list(observers) if observers else []
         queryset._obs_iterator = None
         return queryset
+
+    def _clone(self, *args, **kwargs):
+        """Clone this instance, including its observers.
+        So any iterators created by the clone will also call
+        the observers.
+        """
+        # It's not classy to touch privates, but we want to observe
+        # iteration on all chained objects as well.
+        # The _clone() method is used by Django in all methods
+        # that return another QuerySet, like filter() and prefetch_related().
+        # Overloading this method handles all of those in one go.
+        clone = super()._clone(*args, **kwargs)
+        return self.__class__.from_queryset(clone, self._item_callbacks)
 
     def iterator(self, *args, **kwargs):
         """Return observable iterator and add observer.
@@ -156,10 +173,6 @@ class ObservableQuerySet(QuerySet):
         for callback in self._item_callbacks:
             callback(item, self._obs_iterator, is_empty)
 
-    def is_iterated(self) -> bool:
-        """The iterator has finished"""
-        return self._obs_iterator is not None and self._obs_iterator._is_iterated
-
 
 class DSOPage(DjangoPage):
     """A page that can be streamed.
@@ -177,6 +190,7 @@ class DSOPage(DjangoPage):
         self.paginator = paginator
         self._length = 0
         self._has_next = None
+        self._object_list_iterator = None
         if isinstance(object_list, QuerySet):
             # We have to cast the queryset instance into an observable queryset here. Not pretty.
             # Pagination in DRF is handled early on in the pipeline where, because we stream the
@@ -220,17 +234,24 @@ class DSOPage(DjangoPage):
         """Check whether the all objects on this page have been iterated,
         so the number of items on the page is known.
         """
-        return self.object_list.is_iterated()
+        return self._object_list_iterator is not None and self._object_list_iterator.is_iterated()
 
     def _watch_object_list(
         self, item, observable_iterator: ObservableIterator = None, iterator_is_empty=False
     ):
         """Adjust page length and throw away the sentinel item"""
 
+        # Make sure we are not iterating again.
+        if self.is_iterated():
+            return
+
         # Observable queryset returns the iterator
         # Observable iterator does not
         if observable_iterator is None:
             observable_iterator = self.object_list
+
+        # Keep track of the iterator
+        self._object_list_iterator = observable_iterator
 
         # If this is not page 1 and the object list is empty
         # user navigated beyond the last page so we throw a 404.
