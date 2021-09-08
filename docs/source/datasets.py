@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import os
 import re
+import sys
 from pathlib import Path
 from typing import Any, Dict, List, NamedTuple, Optional, Tuple, Union
 
@@ -9,6 +10,7 @@ from schematools.types import DatasetFieldSchema, DatasetSchema, DatasetTableSch
 from schematools.utils import (
     dataset_paths_from_url,
     dataset_schemas_from_url,
+    schema_from_file,
     to_snake_case,
     toCamelCase,
 )
@@ -306,10 +308,27 @@ def _get_field_context(field: DatasetFieldSchema, identifier: List[str]) -> Dict
     }
 
 
-def render_datasets():
-    print(f"fetching definitions from {SCHEMA_URL}")
-    schemas = dataset_schemas_from_url(SCHEMA_URL)
-    paths = dataset_paths_from_url(SCHEMA_URL)
+def render_datasets(*local_file_paths):
+    if not local_file_paths:
+        print(f"fetching definitions from {SCHEMA_URL}")
+        schemas = dataset_schemas_from_url(SCHEMA_URL)
+        paths = dataset_paths_from_url(SCHEMA_URL)
+    else:
+        print("fetching datasets from local folders")
+        schemas = {}
+        paths = {}
+        for file_path in local_file_paths:
+            file_path = os.path.abspath(file_path)
+            if (pos := file_path.find("/datasets/")) == -1:
+                raise ValueError(
+                    f"The provided dataset ({file_path}) should exist in a `datasets` folder."
+                )
+
+            ds_path = file_path[pos + 10 : file_path.rfind("/")]
+            print(f"- reading {ds_path}")
+            schema = schema_from_file(file_path, prefetch_related=True)
+            schemas[schema.id] = schema
+            paths[schema.id] = ds_path
 
     documents = []
     for name, dataset in sort_schemas(schemas.items()):
@@ -363,4 +382,5 @@ TEMPLATE_ENV.filters["underline"] = underline
 TEMPLATE_ENV.filters["strip_base_url"] = strip_base_url
 
 if __name__ == "__main__":
-    render_datasets()
+    # Allow passing local filenames for debugging
+    render_datasets(*sys.argv[1:])
