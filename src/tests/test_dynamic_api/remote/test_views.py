@@ -216,7 +216,7 @@ def test_remote_schema_validation(
     urllib3_mocker.add(
         "GET",
         "/unittest/brp/ingeschrevenpersonen/999990901",
-        body=orjson.dumps({"foo": "bar"}),
+        body=orjson.dumps({"secret": "I should not appear in the error response or the log"}),
         content_type="application/json",
     )
 
@@ -235,7 +235,7 @@ def test_remote_schema_validation(
         "title": "Invalid remote data",
         "status": 502,
         "instance": "http://testserver/v1/remote/brp/ingeschrevenpersonen/999990901/",
-        "detail": "Some schema fields did not validate",
+        "detail": "Some fields in the remote's response did not match the schema",
     }
 
 
