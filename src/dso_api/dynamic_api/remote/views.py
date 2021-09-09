@@ -8,6 +8,7 @@ from django.core.exceptions import ImproperlyConfigured
 from rest_framework import status
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
+from rest_framework.serializers import BaseSerializer
 from rest_framework.viewsets import ViewSet
 from schematools.types import DatasetTableSchema
 
@@ -98,14 +99,22 @@ class RemoteViewSet(DSOViewMixin, ViewSet):
             serialized_data["_links"] = {"self": {"href": self_link}}
         return Response(serialized_data)
 
-    def validate(self, serializer, raw_data):
-        if not serializer.is_valid():
-            raise RemoteAPIException(
-                title="Invalid remote data",
-                detail="Some schema fields did not validate",
-                code="validation_errors",
-                status_code=status.HTTP_502_BAD_GATEWAY,
-            )
+    def validate(self, serializer: BaseSerializer, raw_data):
+        if serializer.is_valid():
+            return
+
+        # Log a sanitized version of serializer.errors with minimal information
+        # about the remote response's contents. errors is a map with field names as keys:
+        # https://www.django-rest-framework.org/api-guide/serializers/#validation
+        logger.error(
+            "Fields %s in the remote response did not validate", list(serializer.errors.keys())
+        )
+        raise RemoteAPIException(
+            title="Invalid remote data",
+            detail="Some fields in the remote's response did not match the schema",
+            code="validation_errors",
+            status_code=status.HTTP_502_BAD_GATEWAY,
+        )
 
 
 def remote_viewset_factory(
