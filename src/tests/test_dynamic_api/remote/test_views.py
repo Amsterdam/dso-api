@@ -235,9 +235,7 @@ def test_remote_schema_validation(
         "title": "Invalid remote data",
         "status": 502,
         "instance": "http://testserver/v1/remote/brp/ingeschrevenpersonen/999990901/",
-        "detail": "These schema fields did not validate:",
-        "x-validation-errors": {"burgerservicenummer": ["This field is required."]},
-        "x-raw-response": {"foo": "bar"},
+        "detail": "Some schema fields did not validate",
     }
 
 
