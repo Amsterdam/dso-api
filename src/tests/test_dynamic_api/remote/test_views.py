@@ -238,6 +238,31 @@ def test_remote_schema_validation(
         "detail": "Some fields in the remote's response did not match the schema",
     }
 
+    # Same, but now for a list view.
+    urllib3_mocker.add(
+        "GET",
+        "/unittest/brp/ingeschrevenpersonen",
+        body=orjson.dumps([{"secret": "I should not appear in the error response or the log"}]),
+        content_type="application/json",
+    )
+
+    # Prove that URLs can now be resolved.
+    url = reverse("dynamic_api:brp-ingeschrevenpersonen-list")
+    response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
+    data = read_response_json(response)
+    assert response["content-type"] == "application/problem+json"  # check before reading
+
+    assert response.status_code == 502, data
+    assert response["content-type"] == "application/problem+json"  # and after
+    assert data == {
+        "type": "urn:apiexception:validation_errors",
+        "code": "validation_errors",
+        "title": "Invalid remote data",
+        "status": 502,
+        "instance": "http://testserver/v1/remote/brp/ingeschrevenpersonen/",
+        "detail": "Some fields in the remote's response did not match the schema",
+    }
+
 
 @pytest.mark.django_db
 def test_remote_400_problem_json(
