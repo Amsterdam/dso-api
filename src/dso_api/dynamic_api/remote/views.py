@@ -103,12 +103,19 @@ class RemoteViewSet(DSOViewMixin, ViewSet):
         if serializer.is_valid():
             return
 
-        # Log a sanitized version of serializer.errors with minimal information
-        # about the remote response's contents. errors is a map with field names as keys:
-        # https://www.django-rest-framework.org/api-guide/serializers/#validation
-        logger.error(
-            "Fields %s in the remote response did not validate", list(serializer.errors.keys())
-        )
+        # Log a sanitized version of serializer.errors with minimal information about the
+        # remote response's contents. errors is supposed to be a map with field names as keys
+        # (https://www.django-rest-framework.org/api-guide/serializers/#validation),
+        # but in list views, it's a ReturnList of such dicts.
+        error_fields = set()
+        if isinstance(serializer.errors, dict):
+            error_fields = set(serializer.errors.keys())
+        else:
+            for error in serializer.errors:
+                error_fields |= error.keys()
+
+        logger.error("Fields %s in the remote response did not validate", sorted(error_fields))
+
         raise RemoteAPIException(
             title="Invalid remote data",
             detail="Some fields in the remote's response did not match the schema",
