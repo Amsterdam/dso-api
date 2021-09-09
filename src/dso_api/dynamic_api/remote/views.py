@@ -114,7 +114,7 @@ class RemoteViewSet(DSOViewMixin, ViewSet):
             for error in serializer.errors:
                 error_fields |= error.keys()
 
-        logger.error("Fields %s in the remote response did not validate", error_fields)
+        logger.error("Fields %s in the remote response did not validate", sorted(error_fields))
 
         raise RemoteAPIException(
             title="Invalid remote data",
