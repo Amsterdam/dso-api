@@ -349,12 +349,12 @@ def brp_dataset(brp_schema_json, brp_endpoint_url) -> Dataset:
 @pytest.fixture()
 def hcbrk_dataset() -> Dataset:
     return Dataset.objects.create(
-        name="hcbrk",
-        schema_data=(HERE / "files" / "hcbrk.json").read_text(),
+        name="haalcentraalbrk",
+        schema_data=(HERE / "files" / "haalcentraalbrk" / "schema.json").read_text(),
         enable_db=False,
         # URL netloc needs ".acceptatie." because of HTTP pool selection.
         endpoint_url="http://fake.acceptatie.kadaster/esd/bevragen/v1/{table_id}",
-        path="remote/hcbrk",
+        path="remote/haalcentraal/brk",
     )
 
 
