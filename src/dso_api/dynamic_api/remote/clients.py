@@ -257,7 +257,7 @@ def make_client(endpoint_url: str, table_schema: DatasetTableSchema) -> RemoteCl
     """Construct client for a remote API."""
 
     client_class: Type[RemoteClient] = AuthForwardingClient
-    if table_schema.dataset.id == "hcbrk":
+    if table_schema.dataset.id in ("haalcentraalbrk", "hcbrk"):
         client_class = HCBRKClient
 
     return client_class(endpoint_url, table_schema)

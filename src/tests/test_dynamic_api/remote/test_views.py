@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 from typing import Any
 
 import orjson
@@ -420,172 +421,15 @@ def test_remote_timeout(api_client, fetch_auth_token, router, brp_dataset, urlli
     }
 
 
-# https://vng-realisatie.github.io/Haal-Centraal-BRK-bevragen/getting-started
-HCBRK_NATUURLIJKPERSOON = (
-    '{"identificatie":"70882239","omschrijving":"Willem Jansens","dom'
-    'ein":"NL.IMKAD.Persoon","beschikkingsbevoegdheid":{"code":"6","w'
-    'aarde":"Voogdij"},"woonadres":{"straat":"Burggang","huisnummer":'
-    '1,"huisletter":"D","huisnummertoevoeging":"9","postcode":"4331AD'
-    '","woonplaats":"MIDDELBURG","adresregel1":"Burggang 1D-9","adres'
-    'regel2":"4331AD MIDDELBURG"},"postadres":{"straat":"Abdij","huis'
-    'nummer":2,"huisletter":"E","huisnummertoevoeging":"8","postcode"'
-    ':"4331BK","woonplaats":"MIDDELBURG","adresregel1":"Abdij 2E-8","'
-    'adresregel2":"4331BK MIDDELBURG"},"kadastraalOnroerendeZaakIdent'
-    'ificaties":["76870487970000","76870482670000"],"geslachtsaanduid'
-    'ing":"man","heeftPartnerschap":[{"naam":{"geslachtsnaam":"Jansen'
-    's","voornamen":"Sidonia"}}],"naam":{"geslachtsnaam":"Jansens","v'
-    'oornamen":"Willem","aanschrijfwijze":"W. Jansens","aanhef":"Geac'
-    'hte heer Jansens","gebruikInLopendeTekst":"de heer Jansens"},"ge'
-    'boorte":{"plaats":"OSS","datum":{"dag":1,"datum":"1971-11-01","j'
-    'aar":1971,"maand":11},"land":{"code":"6030","waarde":"Nederland"'
-    '}},"_links":{"self":{"href":"/kadasternatuurlijkpersonen/7088223'
-    '9"},"kadastraalOnroerendeZaken":[{"href":"/kadastraalonroerendez'
-    'aken/{kadastraalOnroerendeZaakIdentificaties}","templated":true}'
-    '],"zakelijkGerechtigden":[{"href":"/kadastraalonroerendezaken/76'
-    '870487970000/zakelijkgerechtigden/30493367"},{"href":"/kadastraa'
-    'lonroerendezaken/76870482670000/zakelijkgerechtigden/1000003519"'
-    "}]}}"
-)
-
-DSO_NATUURLIJK_PERSOON = {
-    "schema": "https://schemas.data.amsterdam.nl/datasets/remote/hcbrk/dataset#kadasternatuurlijkpersonen",  # noqa: E501
-    "naam": {
-        "aanhef": "Geachte heer Jansens",
-        "voornamen": "Willem",
-        "geslachtsnaam": "Jansens",
-        "aanschrijfwijze": "W. Jansens",
-        "gebruikInLopendeTekst": "de heer Jansens",
-    },
-    "domein": "NL.IMKAD.Persoon",
-    "geboorte": {"datum": {"dag": 1, "jaar": 1971, "datum": "1971-11-01", "maand": 11}},
-    "woonadres": {"adresregel1": "Burggang 1D-9", "adresregel2": "4331AD MIDDELBURG"},
-    "omschrijving": "Willem Jansens",
-    "identificatie": "70882239",
-    "heeftPartnerschap": [{"naam": {"voornamen": "Sidonia", "geslachtsnaam": "Jansens"}}],
-    "geslachtsaanduiding": "man",
-    "kadastraalOnroerendeZaakIdentificaties": ["76870487970000", "76870482670000"],
-    "_links": {
-        "self": {"href": "http://testserver/v1/remote/hcbrk/kadasternatuurlijkpersonen/70882239/"}
-    },
-}
-
-DSO_NATUURLIJK_PERSOON_UNAUTH = {
-    "schema": "https://schemas.data.amsterdam.nl/datasets/remote/hcbrk/dataset#kadasternatuurlijkpersonen",  # noqa: E501
-    "naam": {
-        "aanhef": "Geachte heer Jansens",
-        "voornamen": "Willem",
-        "geslachtsnaam": "Jansens",
-        "aanschrijfwijze": "W. Jansens",
-        "gebruikInLopendeTekst": "de heer Jansens",
-    },
-    "domein": "NL.IMKAD.Persoon",
-    "geboorte": {"datum": {"dag": 1, "jaar": 1971, "datum": "1971-11-01", "maand": 11}},
-    "woonadres": {"adresregel1": "Burggang 1D-9", "adresregel2": "4331AD MIDDELBURG"},
-    "omschrijving": "Willem Jansens",
-    "identificatie": "70882239",
-    "heeftPartnerschap": [{"naam": {"geslachtsnaam": "Jansens"}}],
-    "geslachtsaanduiding": "man",
-    "_links": {
-        "self": {"href": "http://testserver/v1/remote/hcbrk/kadasternatuurlijkpersonen/70882239/"}
-    },
-}
-
-HCBRK_ONROERENDE_ZAAK = (
-    '{"identificatie":"76870487970000","domein":"NL.IMKAD.KadastraalO'
-    'bject","begrenzingPerceel":{"type":"Polygon","coordinates":[[[19'
-    "4598.014,464150.355],[194607.893,464150.728],[194605.599,464174."
-    "244],[194603.893,464174.212],[194601.799,464174.231],[194599.706"
-    ",464174.307],[194598.925,464174.341],[194598.143,464174.324],[19"
-    "4597.363,464174.257],[194596.59,464174.14],[194597.354,464166.63"
-    '3],[194598.014,464150.355]]]},"perceelnummerRotatie":-86.1,"plaa'
-    'tscoordinaten":{"type":"Point","coordinates":[194602.722,464154.'
-    '308]},"koopsom":{"koopsom":185000,"koopjaar":2015},"toelichtingB'
-    'ewaarder":"Hier kan een toelichting staan van de bewaarder.","ty'
-    'pe":"perceel","aardCultuurBebouwd":{"code":"11","waarde":"Wonen"'
-    '},"kadastraleAanduiding":"Beekbergen K 4879","kadastraleGrootte"'
-    ':{"soortGrootte":{"code":"1","waarde":"Vastgesteld"},"waarde":22'
-    '4},"perceelnummerVerschuiving":{"deltax":-6.453,"deltay":2.075},'
-    '"adressen":[{"straat":"Atalanta","huisnummer":29,"postcode":"736'
-    '1EW","woonplaats":"Beekbergen","nummeraanduidingIdentificatie":"'
-    '0200200000003734","adresregel1":"Atalanta 29","adresregel2":"736'
-    '1EW Beekbergen","koppelingswijze":{"code":"ADM_GEO","waarde":"ad'
-    'ministratief en geometrisch"},"adresseerbaarObjectIdentificatie"'
-    ':"0200010000017317"}],"zakelijkGerechtigdeIdentificaties":["3049'
-    '3367","30493368"],"privaatrechtelijkeBeperkingIdentificaties":["'
-    '30336965"],"hypotheekIdentificaties":["35052041"],"isVermeldInSt'
-    'ukdeelIdentificaties":["1029999990"],"stukIdentificaties":["2017'
-    '0102999999"],"_links":{"self":{"href":"/kadastraalonroerendezake'
-    'n/76870487970000"},"zakelijkGerechtigden":[{"href":"/kadastraalo'
-    "nroerendezaken/76870487970000/zakelijkgerechtigden/{zakelijkGere"
-    'chtigdeIdentificaties}","templated":true}],"privaatrechtelijkeBe'
-    'perkingen":[{"href":"/kadastraalonroerendezaken/76870487970000/p'
-    "rivaatrechtelijkebeperkingen/{privaatrechtelijkeBeperkingIdentif"
-    'icaties}","templated":true}],"hypotheken":[{"href":"/kadastraalo'
-    "nroerendezaken/76870487970000/hypotheken/{hypotheekIdentificatie"
-    's}","templated":true}],"stukken":[{"href":"/stukken/{stukIdentif'
-    'icaties}","templated":true}],"stukdelen":[{"href":"/stukdelen/{i'
-    'sVermeldInStukdeelIdentificaties}","templated":true}],"adressen"'
-    ':[{"href":"https://api.bag.kadaster.nl/esd/huidigebevragingen/v1'
-    '/adressen/{adressen.nummeraanduidingIdentificatie}","templated":'
-    'true}],"adresseerbareObjecten":[{"href":"https://api.bag.kadaste'
-    "r.nl/esd/huidigebevragingen/v1/adressen/adresseerbareobjecten/{a"
-    'dressen.adresseerbaarObjectIdentificatie}","templated":true}]}}'
-)
-
-DSO_ONROERENDE_ZAAK = {
-    "schema": "https://schemas.data.amsterdam.nl/datasets/remote/hcbrk/dataset#kadastraalonroerendezaken",  # noqa: E501
-    "type": "perceel",
-    "domein": "NL.IMKAD.KadastraalObject",
-    "koopsom": {"koopsom": 185000, "koopjaar": 2015},
-    "adressen": [
-        {
-            "straat": "Atalanta",
-            "postcode": "7361EW",
-            "huisnummer": 29,
-            "woonplaats": "Beekbergen",
-            "adresregel1": "Atalanta 29",
-            "adresregel2": "7361EW Beekbergen",
-            "koppelingswijze": {"code": "ADM_GEO", "waarde": "administratief en geometrisch"},
-            "nummeraanduidingIdentificatie": "0200200000003734",
-        }
-    ],
-    "identificatie": "76870487970000",
-    "begrenzingPerceel": {
-        "type": "Polygon",
-        "coordinates": [
-            [
-                [194598.014, 464150.355],
-                [194607.893, 464150.728],
-                [194605.599, 464174.244],
-                [194603.893, 464174.212],
-                [194601.799, 464174.231],
-                [194599.706, 464174.307],
-                [194598.925, 464174.341],
-                [194598.143, 464174.324],
-                [194597.363, 464174.257],
-                [194596.59, 464174.14],
-                [194597.354, 464166.633],
-                [194598.014, 464150.355],
-            ]
-        ],
-    },
-    "kadastraleGrootte": {"waarde": "224", "soortGrootte": {"code": 1, "waarde": "Vastgesteld"}},
-    "plaatscoordinaten": {"type": "Point", "coordinates": [194602.722, 464154.308]},
-    "aardCultuurBebouwd": {"code": 11, "waarde": "Wonen"},
-    "kadastraleAanduiding": "Beekbergen K 4879",
-    "perceelnummerRotatie": -86.1,
-    "toelichtingBewaarder": "Hier kan een toelichting staan van de bewaarder.",
-    "hypotheekIdentificaties": ["35052041"],
-    "perceelnummerVerschuiving": {"deltax": -6.453, "deltay": 2.075},
-    "zakelijkGerechtigdeIdentificaties": ["30493367", "30493368"],
-    "privaatrechtelijkeBeperkingIdentificaties": ["30336965"],
-    "_links": {
-        "self": {
-            "href": "http://testserver/v1/remote/hcbrk/kadastraalonroerendezaken/76870487970000/"
-        }
-    },
-}
-
+# Load Haal Centraal BRK example data (from
+# https://vng-realisatie.github.io/Haal-Centraal-BRK-bevragen/getting-started)
+# and desired outputs.
+HCBRK_FILES = Path(__file__).parent.parent.parent / "files" / "haalcentraalbrk"
+HCBRK_NATUURLIJKPERSOON = (HCBRK_FILES / "hcbrk_natuurlijkpersoon.json").read_text()
+HCBRK_ONROERENDE_ZAAK = (HCBRK_FILES / "hcbrk_onroerendezaak.json").read_text()
+DSO_NATUURLIJKPERSOON = json.load(open(HCBRK_FILES / "dso_natuurlijkpersoon.json"))
+DSO_NATUURLIJKPERSOON_UNAUTH = json.load(open(HCBRK_FILES / "dso_natuurlijkpersoon_unauth.json"))
+DSO_ONROERENDE_ZAAK = json.load(open(HCBRK_FILES / "dso_onroerendezaak.json"))
 
 DSO_ONROERENDE_ZAAK_UNAUTH = {
     field: value
@@ -611,23 +455,23 @@ DSO_ONROERENDE_ZAAK_UNAUTH = {
             "table": "kadasternatuurlijkpersonen",
             "ident": 70882239,
             "scopes": ["BRK/RS", "BRK/RSN", "TEST/VOORNAAMPARTNER"],
-            "from_hcbrk": HCBRK_NATUURLIJKPERSOON,
-            "output": DSO_NATUURLIJK_PERSOON,
+            "from_kadaster": HCBRK_NATUURLIJKPERSOON,
+            "output": DSO_NATUURLIJKPERSOON,
         },
         {
             # Natuurlijke persoon, with minimal authorisation.
             "table": "kadasternatuurlijkpersonen",
             "ident": 70882239,
             "scopes": ["BRK/RS"],
-            "from_hcbrk": HCBRK_NATUURLIJKPERSOON,
-            "output": DSO_NATUURLIJK_PERSOON_UNAUTH,
+            "from_kadaster": HCBRK_NATUURLIJKPERSOON,
+            "output": DSO_NATUURLIJKPERSOON_UNAUTH,
         },
         {
             # Onroerende zaak, with full authorisation.
             "table": "kadastraalonroerendezaken",
             "ident": 76870487970000,
             "scopes": ["BRK/RS", "BRK/RO"],
-            "from_hcbrk": HCBRK_ONROERENDE_ZAAK,
+            "from_kadaster": HCBRK_ONROERENDE_ZAAK,
             "output": DSO_ONROERENDE_ZAAK,
         },
         {
@@ -635,19 +479,21 @@ DSO_ONROERENDE_ZAAK_UNAUTH = {
             "table": "kadastraalonroerendezaken",
             "ident": 76870487970000,
             "scopes": ["BRK/RS"],
-            "from_hcbrk": HCBRK_ONROERENDE_ZAAK,
+            "from_kadaster": HCBRK_ONROERENDE_ZAAK,
             "output": DSO_ONROERENDE_ZAAK_UNAUTH,
         },
     ],
 )
-def test_hcbrk_client(api_client, fetch_auth_token, router, hcbrk_dataset, urllib3_mocker, case):
-    """Test HCBRK remote client."""
+def test_haalcentraalbrk_client(
+    api_client, fetch_auth_token, router, hcbrk_dataset, urllib3_mocker, case
+):
+    """Test Haal Centraal BRK remote client."""
 
     def respond(request):
         assert "Authorization" not in request.headers
         assert "X-Api-Key" in request.headers
         assert request.body is None
-        return (200, set(), case["from_hcbrk"])
+        return (200, set(), case["from_kadaster"])
 
     table, ident = case["table"], case["ident"]
 
@@ -659,7 +505,7 @@ def test_hcbrk_client(api_client, fetch_auth_token, router, hcbrk_dataset, urlli
         content_type="application/json",
     )
 
-    url = reverse(f"dynamic_api:hcbrk-{table}-detail", kwargs={"pk": str(ident)})
+    url = reverse(f"dynamic_api:haalcentraalbrk-{table}-detail", kwargs={"pk": str(ident)})
     token = fetch_auth_token(case["scopes"])
     response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
     data = read_response_json(response)
