@@ -150,7 +150,9 @@ class BrowsableAPIRenderer(RendererMixin, renderers.BrowsableAPIRenderer):
             and view.paginator.get_page_size(request) > BROWSABLE_MAX_PAGE_SIZE
         ):
             raise ValidationError(
-                "Browsable HTML API does not support this page size.", code="_pageSize"
+                "Browsable HTML API does not support this page size. "
+                "Use ?_format=json if you want larger pages.",
+                code="_pageSize",
             )
 
         ret = super().render(

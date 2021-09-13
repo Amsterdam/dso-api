@@ -579,12 +579,18 @@ class TestExceptionHandler:
             "invalid-params": [
                 {
                     "name": "_pageSize",
-                    "reason": "Browsable HTML API does not support this page size.",
+                    "reason": (
+                        "Browsable HTML API does not support this page size. "
+                        "Use ?_format=json if you want larger pages."
+                    ),
                     "type": "urn:apiexception:invalid:_pageSize",
                 }
             ],
             "status": 400,
             "title": "Invalid input.",
             "type": "urn:apiexception:invalid",
-            "x-validation-errors": ["Browsable HTML API does not support this page size."],
+            "x-validation-errors": [
+                "Browsable HTML API does not support this page size. "
+                "Use ?_format=json if you want larger pages."
+            ],
         }
