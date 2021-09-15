@@ -159,7 +159,7 @@ def _generate_relation_filters(model: Type[DynamicModel]):  # noqa: C901
 
 def _generate_additional_filters(model: Type[DynamicModel]):
     filters = {}
-    for filter_name, options in model._table_schema.filters.items():
+    for filter_name, options in model._table_schema.additional_filters.items():
         try:
             filter_class = ADDITIONAL_FILTERS[options.get("type", "range")]
         except KeyError:
