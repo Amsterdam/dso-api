@@ -185,8 +185,8 @@ def _get_table_context(table: DatasetTableSchema, parent_path: str):
             for relation_name, field in table["schema"]["properties"].items()
             if field.get("relation") is not None
         ],
-        "additional_filters": table.filters,
-        "additional_relations": table.relations,
+        "additional_filters": table.additional_filters,
+        "additional_relations": table.additional_relations,
         "source": table,
         "has_geometry": _has_geometry(table),
     }
