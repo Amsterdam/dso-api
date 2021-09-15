@@ -1218,14 +1218,6 @@ class TestEmbedTemporalTables:
         assert response.status_code == 200, data
         assert dict(data["_embedded"]["bestaatUitBuurten"][0]) == {
             "_links": {
-                "bestaatUitBuurtenGgwgebieden": [
-                    {
-                        "href": "http://testserver/v1/gebieden/ggwgebieden/03630950000000/?volgnummer=1",  # noqa: E501
-                        "title": "03630950000000.1",
-                        "volgnummer": 1,
-                        "identificatie": "03630950000000",
-                    }
-                ],
                 "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/dataset#buurten",
                 "self": {
                     "href": "http://testserver/v1/gebieden/buurten/03630000000078/?volgnummer=1",
