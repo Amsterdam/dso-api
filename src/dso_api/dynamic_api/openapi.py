@@ -110,7 +110,7 @@ def get_openapi_json_view(dataset: Dataset):
     # The second strategy is chosen here to keep the whole endpoint enumeration logic intact.
     # Patterns is a lazy object so it's not evaluated yet while the URLconf is being constructed.
     openapi_view = get_schema_view(
-        title=dataset_schema.title,
+        title=dataset_schema.title or dataset_schema.id,
         description=dataset_schema.description or "",
         renderer_classes=[renderers.JSONOpenAPIRenderer],
         patterns=_lazy_get_dataset_patterns(dataset_schema.id),
