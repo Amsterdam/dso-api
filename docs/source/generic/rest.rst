@@ -302,28 +302,6 @@ De response bevat zowel het "buurt" object als de "wijk":
                             "volgnummer": 1,
                             "identificatie": "03630000000078"
                         },
-                        "bestaatUitBuurtenGgwgebieden": [
-                            {
-                                "href": "https://api.data.amsterdam.nl/v1/gebieden/ggwgebieden/03630950000000/?volgnummer=1",
-                                "title": "03630950000000.1",
-                                "volgnummer": 1,
-                                "identificatie": "03630950000000"
-                            },
-                            {
-                                "href": "https://api.data.amsterdam.nl/v1/gebieden/ggwgebieden/03630950000000/?volgnummer=2",
-                                "title": "03630950000000.2",
-                                "volgnummer": 2,
-                                "identificatie": "03630950000000"
-                            }
-                        ],
-                        "bestaatUitBuurtenGgpgebieden": [
-                            {
-                                "href": "https://api.data.amsterdam.nl/v1/gebieden/ggpgebieden/03630940000000/?volgnummer=1",
-                                "title": "03630940000000.1",
-                                "volgnummer": 1,
-                                "identificatie": "03630940000000"
-                            }
-                        ],
                         "buurtenWoningbouwplan": [],
                         "buurtenStrategischeruimtes": [],
                         "ligtInWijk": {
