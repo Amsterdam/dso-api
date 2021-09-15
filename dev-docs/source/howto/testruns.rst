@@ -26,12 +26,3 @@ To analyse the results, see which lines are touched::
 
     coverage html
     open htmlcov/index.html
-
-Integration Tests
------------------
-
-The integration tests require the ``HAAL_CENTRAAL_API_KEY`` environment
-variable to be set to an actual key::
-
-    export HAAL_CENTRAAL_API_KEY=...
-    DSO_API=http://localhost:8000 pytest integration_test
