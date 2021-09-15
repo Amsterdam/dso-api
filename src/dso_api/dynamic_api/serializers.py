@@ -11,7 +11,7 @@ from __future__ import annotations
 import logging
 import re
 from functools import wraps
-from typing import Any, Callable, List, Optional, Tuple, Type, Union, cast
+from typing import Any, Callable, List, Type, Union, cast
 from urllib.parse import quote, urlencode
 
 from cachetools import LRUCache, cached
@@ -836,14 +836,14 @@ def _build_serializer_reverse_fk_field(
     model: Type[DynamicModel], model_field: models.ManyToOneRel, new_attrs: dict, fields: List[str]
 ):
     """Build the ManyToOneRel field"""
-    table_schema = model.table_schema()
-    match = _find_reverse_fk_relation(table_schema, model_field)
-    if match is None:
+    field_schema = get_field_schema(model_field)
+    additional_relation = field_schema.reverse_relation
+    if additional_relation is None:
         return
 
-    name, relation = match
-    format1 = relation.get("format", "summary")
     att_name = model_field.name
+    name = additional_relation.id
+    format1 = additional_relation.format
 
     if format1 == "embedded":
         view_name = "dynamic_api:{}-{}-detail".format(
@@ -859,22 +859,6 @@ def _build_serializer_reverse_fk_field(
     elif format1 == "summary":
         new_attrs[name] = _RelatedSummaryField()
         fields.append(name)
-
-
-def _find_reverse_fk_relation(
-    table_schema: DatasetTableSchema, model_field: models.ManyToOneRel
-) -> Optional[Tuple[str, dict]]:
-    """Find the definition of the ManyToOne relation in the schema object."""
-    expect_table = toCamelCase(model_field.related_model._meta.model_name)
-    expect_field = toCamelCase(model_field.field.name)
-    return next(
-        (
-            (name, relation)
-            for name, relation in table_schema.relations.items()
-            if relation["table"] == expect_table and relation["field"] == expect_field
-        ),
-        None,
-    )
 
 
 def _generate_nested_relations(
