@@ -26,8 +26,10 @@ import logging
 from itertools import chain
 from typing import TYPE_CHECKING, Dict, Iterable, List, Type
 
+from django.apps import apps
 from django.conf import settings
-from django.db import connection
+from django.core.exceptions import ImproperlyConfigured
+from django.db import connection, models
 from django.urls import NoReverseMatch, URLPattern, path, reverse
 from rest_framework import routers
 from schematools.contrib.django.factories import remove_dynamic_models
@@ -228,6 +230,7 @@ class DynamicRouter(routers.DefaultRouter):
         # This makes sure the 'to' field is resolved to an actual model class.
         for app_label, models_by_name in self.all_models.items():
             for model in models_by_name.values():
+                _validate_model(model)
                 if model.has_parent_table():
                     # Do not create separate viewsets for nested tables.
                     continue
@@ -421,3 +424,21 @@ class DynamicRouter(routers.DefaultRouter):
         # Clear models, serializers and app registries
         self.all_models.clear()
         remove_dynamic_models()
+
+
+def _validate_model(model: Type[models.Model]):
+    """Validate whether the model's foreign keys point to actual resolved models.
+    This is a check against incorrect definitions, which eases debugging in case it happens.
+    Otherwise the error is likely something like "str has no attribute _meta" deep inside
+    a third party library (django-filter) without having any context on what model fails.
+    """
+    for field in model._meta.get_fields():
+        if field.remote_field is not None:
+            if isinstance(field.remote_field.model, str):
+                app_label = field.remote_field.model.split(".")[0]
+                dataset_app = apps.get_app_config(app_label)
+                available = sorted(model._meta.model_name for model in dataset_app.get_models())
+                raise ImproperlyConfigured(
+                    f"Field {field} does not point to an existing model:"
+                    f" {field.remote_field.model}. Loaded models are: {', '.join(available)}"
+                )
