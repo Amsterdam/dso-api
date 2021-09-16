@@ -10,7 +10,7 @@ Part of that means that the API follows the HAL-JSON style.
 
 # Requirements
 
-* Python >= 3.8
+* Python >= 3.9
 * Recommended: Docker/Docker Compose
 
 # Installation
