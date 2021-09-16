@@ -9,7 +9,7 @@ database running in a Docker container with an empty database.
 Requirements
 ------------
 
-* Python >= 3.8
+* Python >= 3.9
 * Recommended: Docker / docker-compose
 
 Preparation
