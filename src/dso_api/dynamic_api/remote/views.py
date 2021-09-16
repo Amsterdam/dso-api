@@ -70,7 +70,7 @@ class RemoteViewSet(DSOViewMixin, ViewSet):
         if "_embedded" in data and isinstance(data["_embedded"], dict):
             data = next(iter(data["_embedded"].values())) if data["_embedded"] else []
         serializer = self.get_serializer(data=data, many=True)
-        self.validate(serializer, data)
+        self.validate(serializer)
 
         # TODO: add pagination:
         # paginator = self.pagination_class()
@@ -89,7 +89,7 @@ class RemoteViewSet(DSOViewMixin, ViewSet):
         data = self.client.call(request, path=self.kwargs["pk"])
         serializer = self.get_serializer(data=data)
         # Validate data. Throw exception if not valid
-        self.validate(serializer, data)
+        self.validate(serializer)
         serialized_data = serializer.data
         _del_none(serialized_data)
 
@@ -99,7 +99,7 @@ class RemoteViewSet(DSOViewMixin, ViewSet):
             serialized_data["_links"] = {"self": {"href": self_link}}
         return Response(serialized_data)
 
-    def validate(self, serializer: BaseSerializer, raw_data):
+    def validate(self, serializer: BaseSerializer):
         if serializer.is_valid():
             return
 
