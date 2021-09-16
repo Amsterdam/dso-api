@@ -179,5 +179,5 @@ If the script called is ``maketoken.py``,
 you can now issue a curl command such as
 ::
 
-    curl http://localhost:8000/v1/hcbrk/kadastraalonroerendezaken/${id}/ \
+    curl http://localhost:8000/v1/haalcentraal/brk/kadastraalonroerendezaken/${id}/ \
         --header "Authorization: Bearer $(python maketoken.py BRK/RSN)"
