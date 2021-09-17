@@ -1,7 +1,7 @@
 import json
 import sys
 from inspect import isgeneratorfunction
-from typing import Optional, Type, Union
+from typing import Optional, Union
 
 from django.http import HttpResponseNotFound, JsonResponse
 from rest_framework import status
@@ -181,7 +181,7 @@ def exception_handler(exc, context):
             "instance": request.build_absolute_uri() if request else None,
         }
         # This merge strategy puts the normal fields first:
-        response.data = {**normalized_fields, **response.data}
+        response.data = normalized_fields | response.data
         response.data.update(normalized_fields)
         response.status_code = int(exc.status_code)
     elif isinstance(response.data.get("detail"), ErrorDetail):
@@ -278,7 +278,7 @@ class DSOViewMixin:
 
     #: Class to configure the filterset
     #: (auto-generated when filterset_fields is defined, but this is slower).
-    filterset_class: Type[filters.DSOFilterSet] = None
+    filterset_class: type[filters.DSOFilterSet] = None
 
     #: Enforce parsing Content-Crs for POST requests:
     parser_classes = [parsers.DSOJsonParser]

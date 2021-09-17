@@ -4,7 +4,7 @@ import json
 import time
 from datetime import date, datetime
 from pathlib import Path
-from typing import Type, cast
+from typing import cast
 
 import pytest
 from authorization_django import jwks
@@ -99,7 +99,7 @@ class _LazyDynamicModels:
             app = self.router.all_models[dataset_name]
         except KeyError:
             loaded = sorted(self.router.all_models.keys())
-            later = set(ds.schema.id for ds in Dataset.objects.db_enabled()).difference(loaded)
+            later = {ds.schema.id for ds in Dataset.objects.db_enabled()}.difference(loaded)
             if dataset_name in later:
                 raise KeyError(
                     "New dataset fixtures were loaded after the router "
@@ -125,11 +125,11 @@ class _LazyDynamicModels:
             self.parent = parent
             self.dataset_name = dataset_name
 
-        def __getitem__(self, model_name) -> Type[DynamicModel]:
+        def __getitem__(self, model_name) -> type[DynamicModel]:
             # Delay model creation as much as possible. Only when the attributes are read,
             # the actual model is constructed. This avoids early router reloads.
             return cast(
-                Type[DynamicModel],
+                type[DynamicModel],
                 SimpleLazyObject(lambda: self.parent._get_model(self.dataset_name, model_name)),
             )
 

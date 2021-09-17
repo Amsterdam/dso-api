@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from typing import Any, Dict, cast
+from typing import Any, cast
 
 import azure.storage.blob
 from django.conf import settings
@@ -58,7 +58,7 @@ class HALTemporalHyperlinkedRelatedField(TemporalHyperlinkedRelatedField):
 
     def to_representation(self, value: DynamicModel):
         href = super().to_representation(value)
-        output: Dict[str, Any] = {"href": href}
+        output: dict[str, Any] = {"href": href}
         if value.has_display_field():
             output["title"] = str(value)
 
@@ -161,7 +161,7 @@ class LooseRelationUrlField(serializers.CharField):
         request = self.context["request"]
         view = self.context["view"]
         relation = view.model._meta.get_field(to_snake_case(self.field_name)).relation
-        dataset_name, table_name = [to_snake_case(part) for part in relation.split(":")]
+        dataset_name, table_name = (to_snake_case(part) for part in relation.split(":"))
         # We force that the incoming value is interpreted as the
         # pk, although this is not always the 'real' pk, e.g. for temporal relations
         kwargs = {"pk": value}
@@ -180,7 +180,7 @@ class HALLooseRelationUrlField(LooseRelationUrlField):
         view = self.context["view"]
         field = view.model._meta.get_field(to_snake_case(self.field_name))
         relation = field.relation
-        dataset_name, table_name = [to_snake_case(part) for part in relation.split(":")]
+        dataset_name, table_name = (to_snake_case(part) for part in relation.split(":"))
         result = {"href": href}
 
         if view.model.has_display_field():

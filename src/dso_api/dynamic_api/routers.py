@@ -24,7 +24,7 @@ from __future__ import annotations
 
 import logging
 from itertools import chain
-from typing import TYPE_CHECKING, Dict, Iterable, List, Type
+from typing import TYPE_CHECKING, Iterable
 
 from django.apps import apps
 from django.conf import settings
@@ -160,7 +160,7 @@ class DynamicRouter(routers.DefaultRouter):
         super().register(prefix, viewset, basename=basename)
         self.static_routes.append(self.registry[-1])
 
-    def _initialize_viewsets(self) -> List[Type[DynamicModel]]:
+    def _initialize_viewsets(self) -> list[type[DynamicModel]]:
         """Build all viewsets, serializers, models and URL routes."""
         # Generate new viewsets for dynamic models
         serializer_factory_cache.clear()  # Avoid old cached data
@@ -197,7 +197,7 @@ class DynamicRouter(routers.DefaultRouter):
 
         return generated_models
 
-    def _build_db_models(self, db_datasets: Iterable[Dataset]) -> List[Type[DynamicModel]]:
+    def _build_db_models(self, db_datasets: Iterable[Dataset]) -> list[type[DynamicModel]]:
         """Generate the Django models based on the dataset definitions."""
         generated_models = []
 
@@ -275,7 +275,7 @@ class DynamicRouter(routers.DefaultRouter):
 
         return tmp_router.registry
 
-    def _build_openapi_views(self, datasets: Iterable[Dataset]) -> List[URLPattern]:
+    def _build_openapi_views(self, datasets: Iterable[Dataset]) -> list[URLPattern]:
         """Build the OpenAPI viewsets per dataset"""
         results = []
         for dataset in datasets:
@@ -289,7 +289,7 @@ class DynamicRouter(routers.DefaultRouter):
             )
         return results
 
-    def _build_mvt_views(self, datasets: Iterable[Dataset]) -> List[URLPattern]:
+    def _build_mvt_views(self, datasets: Iterable[Dataset]) -> list[URLPattern]:
         """Build the mvt views per dataset"""
         results = []
         for dataset in datasets:
@@ -311,7 +311,7 @@ class DynamicRouter(routers.DefaultRouter):
             )
         return results
 
-    def _build_wfs_views(self, datasets: Iterable[Dataset]) -> List[URLPattern]:
+    def _build_wfs_views(self, datasets: Iterable[Dataset]) -> list[URLPattern]:
         """Build the wfs views per dataset"""
         results = []
         for dataset in datasets:
@@ -325,7 +325,7 @@ class DynamicRouter(routers.DefaultRouter):
             )
         return results
 
-    def _build_index_views(self, datasets: Iterable[Dataset]) -> List[URLPattern]:
+    def _build_index_views(self, datasets: Iterable[Dataset]) -> list[URLPattern]:
         """Build index views for each sub path
         Datasets can be grouped on subpaths. This generates a view
         on each sub path with an index of datasets on that path.
@@ -368,7 +368,7 @@ class DynamicRouter(routers.DefaultRouter):
         return url_path
 
     @lock_for_writing
-    def reload(self) -> Dict[Type[DynamicModel], str]:
+    def reload(self) -> dict[type[DynamicModel], str]:
         """Regenerate all viewsets for this router."""
         from . import urls  # avoid cyclic imports
 
@@ -426,7 +426,7 @@ class DynamicRouter(routers.DefaultRouter):
         remove_dynamic_models()
 
 
-def _validate_model(model: Type[models.Model]):
+def _validate_model(model: type[models.Model]):
     """Validate whether the model's foreign keys point to actual resolved models.
     This is a check against incorrect definitions, which eases debugging in case it happens.
     Otherwise the error is likely something like "str has no attribute _meta" deep inside

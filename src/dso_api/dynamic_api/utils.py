@@ -1,6 +1,5 @@
 import re
 from functools import lru_cache
-from typing import Tuple, Type
 
 from django.db.models import Model
 from django.db.models.fields.related import RelatedField
@@ -21,8 +20,8 @@ def split_on_separator(value):
 dynamic_models_removed.connect(lambda **kwargs: resolve_model_lookup.cache_clear())
 
 
-@lru_cache()
-def resolve_model_lookup(model: Type[Model], lookup: str) -> Tuple[Type[Model], bool]:
+@lru_cache
+def resolve_model_lookup(model: type[Model], lookup: str) -> tuple[type[Model], bool]:
     """Find which model a lookup points to.
 
     :returns: The model that the relation points to,

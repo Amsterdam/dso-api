@@ -7,7 +7,6 @@ This file provides the translation and required bits for dynamic models.
 """
 import logging
 import re
-from typing import Type
 
 from django.contrib.gis.db.models.fields import MultiPolygonField, PolygonField
 from django.contrib.postgres.fields import ArrayField
@@ -73,7 +72,7 @@ class DynamicFilterSet(dso_filters.DSOFilterSet):
         return {filter_to_camel_case(attr_name): filter for attr_name, filter in filters.items()}
 
 
-def filterset_factory(model: Type[DynamicModel]) -> Type[DynamicFilterSet]:
+def filterset_factory(model: type[DynamicModel]) -> type[DynamicFilterSet]:
     """Generate the filterset based on the dynamic model."""
     # See https://django-filter.readthedocs.io/en/master/guide/usage.html on how filters are used.
     # Determine which fields are included:
@@ -97,7 +96,7 @@ def filterset_factory(model: Type[DynamicModel]) -> Type[DynamicFilterSet]:
     return type(f"{model.__name__}FilterSet", (DynamicFilterSet,), {"Meta": meta, **filters})
 
 
-def _generate_relation_filters(model: Type[DynamicModel]):  # noqa: C901
+def _generate_relation_filters(model: type[DynamicModel]):  # noqa: C901
     """
     Generates additional filters for relations, including sub items.
     """
@@ -105,7 +104,7 @@ def _generate_relation_filters(model: Type[DynamicModel]):  # noqa: C901
     filters = dict()
 
     for relation in model._meta.related_objects:
-        schema_fields = dict([(f.name, f) for f in model._table_schema.fields])
+        schema_fields = {f.name: f for f in model._table_schema.fields}
         if relation.name not in schema_fields:
             fields[relation.name] = ["exact"]
             continue
@@ -157,7 +156,7 @@ def _generate_relation_filters(model: Type[DynamicModel]):  # noqa: C901
     return filters
 
 
-def _generate_additional_filters(model: Type[DynamicModel]):
+def _generate_additional_filters(model: type[DynamicModel]):
     filters = {}
     for filter_name, options in model._table_schema.additional_filters.items():
         try:

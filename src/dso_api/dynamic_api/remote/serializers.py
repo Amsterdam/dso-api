@@ -4,7 +4,6 @@ and not :class:`~rest_framework_dso.serializer.DSOModelSerializer`.
 The serializers mainly make sure the response is outputted in a DSO-compatible format.
 """
 import logging
-from typing import Dict, List
 from urllib.parse import urlparse
 
 from django.conf import settings
@@ -143,8 +142,8 @@ def remote_serializer_factory(table_schema: DatasetTableSchema):
 
 
 def _build_declared_fields(
-    fields: List[DatasetFieldSchema],
-) -> Dict[str, serializers.Field]:
+    fields: list[DatasetFieldSchema],
+) -> dict[str, serializers.Field]:
     """Generate the serializer fields for a list of fields."""
     # Parse fields for serializer
     declared_fields = {}

@@ -1,5 +1,3 @@
-from typing import Type
-
 from django.contrib.gis.db import models as gis_models
 from django.contrib.postgres.fields.array import ArrayField
 from django.db import models
@@ -115,7 +113,7 @@ class DSOFilterSet(FilterSet):
         return filter_class, params
 
     @classmethod
-    def get_filter_help_text(cls, filter_class: Type[filters.Filter], lookup_type, params) -> str:
+    def get_filter_help_text(cls, filter_class: type[filters.Filter], lookup_type, params) -> str:
         """Get a brief default description for a filter in the API docs"""
         if issubclass(filter_class, GeometryFilter):
             geom_type = params.get("geom_type", "GEOMETRY")

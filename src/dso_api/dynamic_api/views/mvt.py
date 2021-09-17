@@ -2,7 +2,6 @@
 
 import logging
 import time
-from typing import Tuple
 
 from django.contrib.gis.db.models import GeometryField
 from django.core.exceptions import FieldDoesNotExist, PermissionDenied
@@ -122,7 +121,7 @@ class DatasetMVTView(CheckPermissionsMixin, MVTView):
         return self.model.objects.all()
 
     @property
-    def vector_tile_fields(self) -> Tuple[str]:
+    def vector_tile_fields(self) -> tuple[str]:
         geom_name = self.vector_tile_geom_name
         user_scopes = self.request.user_scopes
         return tuple(

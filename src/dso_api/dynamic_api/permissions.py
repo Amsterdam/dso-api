@@ -1,5 +1,4 @@
 import logging
-from typing import List
 
 from django.core.exceptions import PermissionDenied
 from rest_framework import permissions
@@ -30,8 +29,8 @@ def log_access(request, access: bool):
 
 
 def filter_unauthorized_expands(
-    user_scopes: UserScopes, expanded_fields: List[EmbeddedFieldMatch], skip_unauth=False
-) -> List[EmbeddedFieldMatch]:
+    user_scopes: UserScopes, expanded_fields: list[EmbeddedFieldMatch], skip_unauth=False
+) -> list[EmbeddedFieldMatch]:
     """Remove expanded fields if these are not accessible"""
 
     result = []

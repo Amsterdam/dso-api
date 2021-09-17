@@ -6,7 +6,6 @@ of `drf-spectacular <https://drf-spectacular.readthedocs.io/>`_ and the classes 
 This also inludes exposing geometery type classes in the OpenAPI schema.
 """
 import logging
-from typing import List
 
 from drf_spectacular import generators, openapi
 from drf_spectacular.contrib.django_filters import DjangoFilterExtension
@@ -244,7 +243,7 @@ class DSOAutoSchema(openapi.AutoSchema):
 
         return self.view.table_schema.description or ""
 
-    def get_tags(self) -> List[str]:
+    def get_tags(self) -> list[str]:
         """Auto-generate tags based on the path, take last bit of path."""
         tokenized_path = self._tokenize_path()
         return tokenized_path[-1:]

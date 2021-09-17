@@ -10,7 +10,7 @@ def test_model_factory_fields(afval_dataset):
     table = afval_dataset.schema.tables[0]
     model_cls = model_factory(afval_dataset, table, base_app_name="dso_api.dynamic_api")
     meta = model_cls._meta
-    assert set(f.name for f in meta.get_fields()) == {
+    assert {f.name for f in meta.get_fields()} == {
         "id",
         "cluster",
         "serienummer",

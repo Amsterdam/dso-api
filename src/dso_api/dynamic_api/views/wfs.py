@@ -27,7 +27,7 @@ from __future__ import annotations
 
 import re
 from collections import UserList
-from typing import List, Union
+from typing import Union
 
 from django.conf import settings
 from django.contrib.gis.db.models import GeometryField
@@ -186,7 +186,7 @@ class DatasetWFSView(CheckPermissionsMixin, WFSView):
             contact_person="Onderzoek, Informatie en Statistiek",
         )
 
-    def get_feature_types(self) -> List[FeatureType]:
+    def get_feature_types(self) -> list[FeatureType]:
         """Generate map feature layers for all models that have geometry data."""
         typenames = self.KVP.get("TYPENAMES")
         if not typenames:
@@ -196,9 +196,9 @@ class DatasetWFSView(CheckPermissionsMixin, WFSView):
             # Already filter the number of exported features, to avoid intense database queries.
             # The dash is used as variants of the same feature. The xmlns: prefix is also removed
             # since it can differ depending on the NAMESPACES parameter.
-            requested_names = set(
+            requested_names = {
                 RE_SIMPLE_NAME.sub(r"\g<name>", name) for name in typenames.split(",")
-            )
+            }
             subset = {
                 name: model for name, model in self.models.items() if name in requested_names
             }
@@ -246,7 +246,7 @@ class DatasetWFSView(CheckPermissionsMixin, WFSView):
                 features.append(feature)
         return features
 
-    def get_feature_fields(self, model, main_geometry_field_name) -> List[FieldDef]:
+    def get_feature_fields(self, model, main_geometry_field_name) -> list[FieldDef]:
         """Define which fields should be exposed with the model.
 
         Instead of opting for the "__all__" value of django-gisserver,
@@ -296,7 +296,7 @@ class DatasetWFSView(CheckPermissionsMixin, WFSView):
 
         return fields + other_geo_fields
 
-    def get_expanded_fields(self, model) -> List[FieldDef]:
+    def get_expanded_fields(self, model) -> list[FieldDef]:
         """Define which fields to include in an expanded relation.
         This is a shorter list, as including a geometry has no use here.
         Relations are also avoided as these won't be expanded anyway.
@@ -310,7 +310,7 @@ class DatasetWFSView(CheckPermissionsMixin, WFSView):
             and user_scopes.has_field_access(get_field_schema(model_field))
         ]
 
-    def get_embedded_fields(self, relation_name, model, pk_attr=None) -> List[FieldDef]:
+    def get_embedded_fields(self, relation_name, model, pk_attr=None) -> list[FieldDef]:
         """Define which fields to embed as flattened fields."""
         user_scopes = self.request.user_scopes
         return [
@@ -328,7 +328,7 @@ class DatasetWFSView(CheckPermissionsMixin, WFSView):
             and user_scopes.has_field_access(get_field_schema(model_field))
         ]
 
-    def _get_geometry_fields(self, model) -> List[GeometryField]:
+    def _get_geometry_fields(self, model) -> list[GeometryField]:
         return [f for f in model._meta.get_fields() if isinstance(f, GeometryField)]
 
 

@@ -1493,7 +1493,7 @@ class TestEmbedTemporalTables:
             AND table_name = 'woningbouwplannen_woningbouwplan_buurten';
             """
         )
-        column_names_before = set([column_name for (column_name,) in cursor.fetchall()])
+        column_names_before = {column_name for (column_name,) in cursor.fetchall()}
         assert "id" in column_names_before
         """ renaming the 'id' column to 'wbw_rel_woningbouwplan_buurt_id'
         to mimick the woningbouwplannen dataset"""
@@ -1508,7 +1508,7 @@ class TestEmbedTemporalTables:
             AND table_name = 'woningbouwplannen_woningbouwplan_buurten';
             """
         )
-        column_names_after = set([column_name for (column_name,) in cursor.fetchall()])
+        column_names_after = {column_name for (column_name,) in cursor.fetchall()}
         assert "wbw_rel_woningbouwplan_buurt_id" in column_names_after
         assert "id" not in column_names_after
         url = reverse("dynamic_api:woningbouwplannen-woningbouwplan-detail", args=[1])

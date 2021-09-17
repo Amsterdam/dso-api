@@ -12,7 +12,7 @@ and model layer of this application.
 """
 from __future__ import annotations
 
-from typing import Iterable, List, Type
+from typing import Iterable
 
 from django.db import models
 from django.http import Http404, JsonResponse
@@ -124,7 +124,7 @@ class DynamicApiViewSet(
     #: The table ID is filled in by the factory
     table_id = None
     #: The model is filled in by the factory
-    model: Type[DynamicModel] = None
+    model: type[DynamicModel] = None
 
     # Make sure composed keys like (112740.024|487843.078) are allowed.
     # The DefaultRouter won't allow '.' in URLs because it's used as format-type.
@@ -147,7 +147,7 @@ class DynamicApiViewSet(
         return super().paginator
 
 
-def _get_viewset_api_docs(model: Type[DynamicModel]) -> str:
+def _get_viewset_api_docs(model: type[DynamicModel]) -> str:
     """Generate the API documentation header for the viewset."""
     # NOTE: currently not using model.get_dataset_path() as the docs don't do either.
     description = model.table_schema().description
@@ -159,8 +159,8 @@ def _get_viewset_api_docs(model: Type[DynamicModel]) -> str:
 
 
 def _get_ordering_fields(
-    serializer_class: Type[serializers.DynamicSerializer],
-) -> List[str]:
+    serializer_class: type[serializers.DynamicSerializer],
+) -> list[str]:
     """Make sure the ordering doesn't happen on foreign relations.
     This creates an unnecessary join, which can be avoided by sorting on the _id field.
     """
@@ -172,7 +172,7 @@ def _get_ordering_fields(
     ]
 
 
-def viewset_factory(model: Type[DynamicModel]) -> Type[DynamicApiViewSet]:
+def viewset_factory(model: type[DynamicModel]) -> type[DynamicApiViewSet]:
     """Generate the viewset for a dynamic model.
 
     This generates a class in-memory, as if the following code was written:
@@ -232,7 +232,7 @@ class APIIndexView(APIView):
     def get_datasets(self) -> Iterable[Dataset]:
         return get_active_datasets().order_by("name")
 
-    def get_environments(self, ds: Dataset, base: str) -> List[dict]:
+    def get_environments(self, ds: Dataset, base: str) -> list[dict]:
         return [
             {
                 "name": "production",
@@ -242,7 +242,7 @@ class APIIndexView(APIView):
             }
         ]
 
-    def get_related_apis(self, ds: Dataset, base: str) -> List[dict]:
+    def get_related_apis(self, ds: Dataset, base: str) -> list[dict]:
         """ Get list of other APIs exposing the same dataset """
         return []
 

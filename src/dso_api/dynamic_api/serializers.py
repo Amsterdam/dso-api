@@ -11,7 +11,7 @@ from __future__ import annotations
 import logging
 import re
 from functools import wraps
-from typing import Any, Callable, List, Type, Union, cast
+from typing import Any, Callable, Union, cast
 from urllib.parse import quote, urlencode
 
 from cachetools import LRUCache, cached
@@ -146,7 +146,7 @@ class DynamicListSerializer(DSOModelListSerializer):
     is initialized with the ``many=True`` init kwarg to process a list of objects.
     """
 
-    def get_prefetch_lookups(self) -> List[Union[models.Prefetch, str]]:
+    def get_prefetch_lookups(self) -> list[Union[models.Prefetch, str]]:
         """Optimize M2M prefetch lookups to return latest temporal records only."""
         parent_model = self.child.Meta.model
         lookups = super().get_prefetch_lookups()
@@ -163,7 +163,7 @@ class DynamicListSerializer(DSOModelListSerializer):
         return lookups
 
     @cached_property
-    def expanded_fields(self) -> List[EmbeddedFieldMatch]:
+    def expanded_fields(self) -> list[EmbeddedFieldMatch]:
         """Filter unauthorized fields from the matched expands."""
         return filter_unauthorized_expands(
             self.context["request"].user_scopes,
@@ -260,7 +260,7 @@ class DynamicSerializer(DSOModelSerializer):
         return _new_to_representation
 
     @cached_property
-    def expanded_fields(self) -> List[EmbeddedFieldMatch]:
+    def expanded_fields(self) -> list[EmbeddedFieldMatch]:
         """Filter unauthorized fields from the matched expands."""
         return filter_unauthorized_expands(
             self.get_request().user_scopes,
@@ -316,9 +316,9 @@ class DynamicSerializer(DSOModelSerializer):
             field = self.Meta.model._meta.get_field(f.attname)
             if isinstance(field, LooseRelationManyToManyField):
 
-                dataset_name, table_name = [
+                dataset_name, table_name = (
                     to_snake_case(part) for part in field.relation.split(":")
-                ]
+                )
                 url_name = f"{app_name}:{dataset_name}-{table_name}-detail"
                 related_table = field.related_model.table_schema()
 
@@ -434,7 +434,7 @@ class DynamicLinksSerializer(DynamicSerializer):
         return {field: value for field, value in data.items() if value}
 
 
-def get_view_name(model: Type[DynamicModel], suffix: str):
+def get_view_name(model: type[DynamicModel], suffix: str):
     """Return the URL pattern for a dynamically generated model.
 
     :param model: The dynamic model.
@@ -489,8 +489,8 @@ def _serializer_cache_key(model, depth=0, flat=False, nesting_level=0):
 
 @cached(cache=serializer_factory_cache, key=_serializer_cache_key)
 def serializer_factory(
-    model: Type[DynamicModel], depth: int = 0, flat: bool = False, nesting_level=0
-) -> Type[DynamicSerializer]:
+    model: type[DynamicModel], depth: int = 0, flat: bool = False, nesting_level=0
+) -> type[DynamicSerializer]:
     """Generate the DRF serializer class for a specific dataset model.
 
     Internally, this creates all serializer fields based on the metadata
@@ -581,7 +581,7 @@ def serializer_factory(
     return type(serializer_name, (DynamicBodySerializer,), new_attrs)
 
 
-def _validate_model(model: Type[DynamicModel]):
+def _validate_model(model: type[DynamicModel]):
     if isinstance(model, str):
         raise ImproperlyConfigured(f"Model {model} could not be resolved.")
     elif not issubclass(model, DynamicModel):
@@ -591,7 +591,7 @@ def _validate_model(model: Type[DynamicModel]):
         raise RuntimeError("serializer_factory() received an older model reference")
 
 
-def _links_serializer_factory(model: Type[DynamicModel], depth: int) -> Type[DynamicSerializer]:
+def _links_serializer_factory(model: type[DynamicModel], depth: int) -> type[DynamicSerializer]:
     """Generate the DRF serializer class for the ``_links`` section."""
     fields = [
         "schema",
@@ -629,7 +629,7 @@ def _links_serializer_factory(model: Type[DynamicModel], depth: int) -> Type[Dyn
 
 
 def _build_serializer_field(
-    model: Type[DynamicModel],
+    model: type[DynamicModel],
     model_field: models.Field,
     flat: bool,
     nesting_level: int,
@@ -691,7 +691,7 @@ def _build_serializer_embedded_field(
     )
 
     embedded_field = EmbeddedFieldClass(
-        serializer_class=cast(Type[DynamicSerializer], serializer_class),
+        serializer_class=cast(type[DynamicSerializer], serializer_class),
         # serializer_class=serializer_class,
         source=model_field.name,
     )
@@ -703,8 +703,8 @@ def _build_serializer_embedded_field(
 
 
 def _through_serializer_factory(
-    model: Type[DynamicModel], target_model: DynamicModel, target_field_name: str
-) -> Type[DynamicSerializer]:
+    model: type[DynamicModel], target_model: DynamicModel, target_field_name: str
+) -> type[DynamicSerializer]:
     """Generate the DRF serializer class for a M2M model.
 
     :param model: the `through` model
@@ -773,10 +773,10 @@ def _through_serializer_factory(
 
 
 def _build_m2m_serializer(
-    model: Type[DynamicModel],
+    model: type[DynamicModel],
     model_field: models.Field,
     new_attrs: dict,
-    fields: List[str],
+    fields: list[str],
     extra_kwargs: dict,
 ):
     """Add a serializer for a m2m field to the output parameters."""
@@ -792,7 +792,7 @@ def _build_m2m_serializer(
 
 
 def _build_plain_serializer_field(
-    model_field: models.Field, fields: List[str], extra_kwargs: dict
+    model_field: models.Field, fields: list[str], extra_kwargs: dict
 ):
     """Add the field to the output parameters"""
     camel_name = toCamelCase(model_field.name)
@@ -812,7 +812,7 @@ def _build_serializer_related_id_field(model_field: models.Field, fields, extra_
 
 
 def _build_serializer_loose_relation_id_field(
-    model_field: LooseRelationField, fields: List[str], new_attrs: dict
+    model_field: LooseRelationField, fields: list[str], new_attrs: dict
 ):
     """Build the ``FIELD_id`` field for a loose relation."""
     camel_name = toCamelCase(model_field.name)
@@ -822,7 +822,7 @@ def _build_serializer_loose_relation_id_field(
 
 
 def _build_serializer_blob_field(
-    model_field: models.Field, field_schema: dict, fields: List[str], new_attrs: dict
+    model_field: models.Field, field_schema: dict, fields: list[str], new_attrs: dict
 ):
     """Build the blob field"""
     camel_name = toCamelCase(model_field.name)
@@ -833,7 +833,7 @@ def _build_serializer_blob_field(
 
 
 def _build_serializer_reverse_fk_field(
-    model: Type[DynamicModel], model_field: models.ManyToOneRel, new_attrs: dict, fields: List[str]
+    model: type[DynamicModel], model_field: models.ManyToOneRel, new_attrs: dict, fields: list[str]
 ):
     """Build the ManyToOneRel field"""
     field_schema = get_field_schema(model_field)
@@ -862,7 +862,7 @@ def _build_serializer_reverse_fk_field(
 
 
 def _generate_nested_relations(
-    model: Type[DynamicModel], fields: list, new_attrs: dict, nesting_level: int
+    model: type[DynamicModel], fields: list, new_attrs: dict, nesting_level: int
 ):
     """Include fields that are implemented using nested tables."""
     schema_fields = {to_snake_case(f.name): f for f in model.table_schema().fields}

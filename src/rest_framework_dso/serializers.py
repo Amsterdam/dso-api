@@ -20,7 +20,7 @@ and constructing serializer fields based on the model field metadata.
 """
 import inspect
 from collections import OrderedDict
-from typing import List, Optional, Union, cast
+from typing import Optional, Union, cast
 
 from django.contrib.gis.db import models as gis_models
 from django.db import models
@@ -110,7 +110,7 @@ class ExpandMixin:
         self._expand_scope = scope
 
     @property
-    def expanded_fields(self) -> List[EmbeddedFieldMatch]:
+    def expanded_fields(self) -> list[EmbeddedFieldMatch]:
         """Retrieve the embedded fields for this request."""
         raise NotImplementedError("child serializer should implement this")
 
@@ -159,7 +159,7 @@ class DSOListSerializer(ExpandMixin, serializers.ListSerializer):
             self.child.expand_scope = self.expand_scope
 
     @cached_property
-    def expanded_fields(self) -> List[EmbeddedFieldMatch]:
+    def expanded_fields(self) -> list[EmbeddedFieldMatch]:
         """Retrieve the embedded fields for this serializer"""
         request = self.context["request"]
         expand_scope = self.expand_scope
@@ -206,7 +206,7 @@ class DSOModelListSerializer(DSOListSerializer):
     # Fetcher function to be overridden by subclasses if needed
     id_based_fetcher = None
 
-    def get_prefetch_lookups(self) -> List[Union[models.Prefetch, str]]:
+    def get_prefetch_lookups(self) -> list[Union[models.Prefetch, str]]:
         """Tell which fields should be included for a ``prefetch_related()``."""
         return get_serializer_lookups(self)
 
@@ -344,12 +344,12 @@ class DSOSerializer(ExpandMixin, serializers.Serializer):
         return list_serializer_class(*args, **list_kwargs)
 
     @property
-    def fields_to_display(self) -> Optional[List[str]]:
+    def fields_to_display(self) -> Optional[list[str]]:
         """Define which fields should be included only."""
         if self._fields_to_display is not empty:
             # Instead of retrieving this from request,
             # the expand can be defined using the serializer __init__.
-            return cast(List[str], self._fields_to_display)
+            return cast(list[str], self._fields_to_display)
         elif self.is_toplevel:
             # This is the top-level serializer. Parse from request
             request = self.context["request"]
@@ -363,7 +363,7 @@ class DSOSerializer(ExpandMixin, serializers.Serializer):
             return None
 
     @fields_to_display.setter
-    def fields_to_display(self, fields: List[str]):
+    def fields_to_display(self, fields: list[str]):
         """Allow serializers to assign 'fields_to_expand' later (e.g. in bind())."""
         self._fields_to_display = fields
 
@@ -437,7 +437,7 @@ class DSOSerializer(ExpandMixin, serializers.Serializer):
         return display_fields
 
     @cached_property
-    def expanded_fields(self) -> List[EmbeddedFieldMatch]:
+    def expanded_fields(self) -> list[EmbeddedFieldMatch]:
         """Retrieve the embedded fields for this serializer"""
         request = self.context["request"]
         expand_scope = self.expand_scope
@@ -457,7 +457,7 @@ class DSOSerializer(ExpandMixin, serializers.Serializer):
         )
 
     @cached_property
-    def _geometry_fields(self) -> List[GeometryField]:
+    def _geometry_fields(self) -> list[GeometryField]:
         # Allow classes to exclude fields (e.g. a "point_wgs84" field shouldn't be used.)
         try:
             exclude_crs_fields = self.Meta.exclude_crs_fields
@@ -472,7 +472,7 @@ class DSOSerializer(ExpandMixin, serializers.Serializer):
         ]
 
     @cached_property
-    def _url_content_fields(self) -> List[URLField]:
+    def _url_content_fields(self) -> list[URLField]:
         """ indicates if model contains a URLField type so the content can be URL encoded """
         return [
             field_name
@@ -586,7 +586,7 @@ class DSOModelSerializer(DSOSerializer, serializers.HyperlinkedModelSerializer):
 
         return ret
 
-    def _get_expand(self, instance, expanded_fields: List[EmbeddedFieldMatch]):
+    def _get_expand(self, instance, expanded_fields: list[EmbeddedFieldMatch]):
         """Generate the expand section for a detail page.
 
         This reuses the machinery for a list processing,
