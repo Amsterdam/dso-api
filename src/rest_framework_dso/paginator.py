@@ -1,5 +1,5 @@
 import warnings
-from typing import Callable, Iterable, List, Optional
+from typing import Callable, Iterable, Optional
 
 from django.core.paginator import EmptyPage
 from django.core.paginator import Page as DjangoPage
@@ -112,7 +112,7 @@ class ObservableQuerySet(QuerySet):
         super().__init__(*args, **kwargs)
 
     @classmethod
-    def from_queryset(cls, queryset: QuerySet, observers: List[Callable] = None):
+    def from_queryset(cls, queryset: QuerySet, observers: list[Callable] = None):
         """Turn a QuerySet instance into an ObservableQuerySet"""
         queryset.__class__ = ObservableQuerySet
         queryset._item_callbacks = list(observers) if observers else []

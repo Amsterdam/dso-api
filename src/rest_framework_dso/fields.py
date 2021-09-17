@@ -1,4 +1,4 @@
-from typing import Optional, Type
+from typing import Optional
 
 from django.db import models
 from django.db.models.fields.related import RelatedField
@@ -29,7 +29,7 @@ class AbstractEmbeddedField:
 
     def __init__(
         self,
-        serializer_class: Type[serializers.Serializer],
+        serializer_class: type[serializers.Serializer],
         *,
         source=None,
     ):
@@ -83,14 +83,14 @@ class AbstractEmbeddedField:
         return embedded_serializer
 
     @cached_property
-    def related_model(self) -> Type[models.Model]:
+    def related_model(self) -> type[models.Model]:
         """Return the Django model class"""
         # Make sure the serializer is the true object, or other isinstance() checks will fail.
         self.serializer_class = unlazy_object(self.serializer_class)
         return self.serializer_class.Meta.model
 
     @cached_property
-    def parent_model(self) -> Type[models.Model]:
+    def parent_model(self) -> type[models.Model]:
         """Return the Django model class"""
         return self.parent_serializer_class.Meta.model
 

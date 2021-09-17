@@ -1,5 +1,3 @@
-from typing import List
-
 import pytest
 from schematools.contrib.django.db import create_tables
 
@@ -201,7 +199,7 @@ class TestDatasetWFSView:
 @pytest.mark.django_db
 class TestDatasetWFSViewAuth:
     @staticmethod
-    def request(client, fetch_auth_token, dataset: str, scopes: List[str]) -> str:
+    def request(client, fetch_auth_token, dataset: str, scopes: list[str]) -> str:
         url = (
             f"/v1/wfs/{dataset}/"
             "?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=things"

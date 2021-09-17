@@ -2,7 +2,6 @@
 import itertools
 import json
 from types import GeneratorType
-from typing import List
 from xml.etree import ElementTree as ET
 
 import orjson
@@ -19,7 +18,7 @@ from schematools.utils import to_snake_case
 from rest_framework_dso.renderers import HALJSONRenderer
 
 
-def patch_dataset_auth(schema: DatasetSchema, *, auth: List[str]):
+def patch_dataset_auth(schema: DatasetSchema, *, auth: list[str]):
     """Monkeypatch an Amsterdam Schema to set "auth" on the complete dataset."""
     schema["auth"] = auth
 
@@ -28,7 +27,7 @@ def patch_dataset_auth(schema: DatasetSchema, *, auth: List[str]):
         model.get_dataset_schema()["auth"] = auth
 
 
-def patch_table_auth(schema: DatasetSchema, table_id, *, auth: List[str]):
+def patch_table_auth(schema: DatasetSchema, table_id, *, auth: list[str]):
     """Monkeypatch an Amsterdam Schema to set "auth" on a table."""
     # This updates the low-level dict data so all high-level objects get it.
     schema.get_table_by_id(table_id)  # checks errors
@@ -41,7 +40,7 @@ def patch_table_auth(schema: DatasetSchema, table_id, *, auth: List[str]):
     model.table_schema()["auth"] = auth
 
 
-def patch_field_auth(schema: DatasetSchema, table_id, field_id, *sub_fields, auth: List[str]):
+def patch_field_auth(schema: DatasetSchema, table_id, field_id, *sub_fields, auth: list[str]):
     """Monkeypatch an Amsterdam Schema to set "auth" on a table."""
     # This updates the low-level dict data so all high-level objects get it.
     schema.get_table_by_id(table_id).get_field_by_id(field_id)  # check existence

@@ -2,7 +2,6 @@
 Currently it mainly performs authorization, data retrieval, and schema validation.
 """
 import logging
-from typing import Type
 
 from django.core.exceptions import ImproperlyConfigured
 from rest_framework import status
@@ -126,7 +125,7 @@ class RemoteViewSet(DSOViewMixin, ViewSet):
 
 def remote_viewset_factory(
     endpoint_url, serializer_class, table_schema: DatasetTableSchema
-) -> Type[RemoteViewSet]:
+) -> type[RemoteViewSet]:
     """Construct the viewset class that handles the remote serializer."""
 
     return type(

@@ -83,7 +83,7 @@ class TestDSOFilterSet:
         filterset = self.MovieFilterSet(filter_data)
         assert filterset.is_valid(), filterset.errors
         qs = filterset.filter_queryset(Movie.objects.all())
-        assert set(obj.name for obj in qs) == expect, str(qs.query)
+        assert {obj.name for obj in qs} == expect, str(qs.query)
 
     @pytest.mark.django_db
     @pytest.mark.parametrize(
@@ -108,7 +108,7 @@ class TestDSOFilterSet:
         filterset = self.MovieFilterSet(filter_data)
         assert filterset.is_valid(), filterset.errors
         qs = filterset.filter_queryset(Movie.objects.all())
-        assert set(obj.name for obj in qs) == expect, str(qs.query)
+        assert {obj.name for obj in qs} == expect, str(qs.query)
 
 
 class TestDSOFilterBackend:

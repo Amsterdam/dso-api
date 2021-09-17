@@ -135,7 +135,7 @@ class TestViews:
         """Prove that object can be requested by identification
         and response will contain only latest object."""
         url = reverse("dynamic_api:gebieden-stadsdelen-list")
-        response = api_client.get("{}{}/".format(url, stadsdelen[0].identificatie))
+        response = api_client.get(f"{url}{stadsdelen[0].identificatie}/")
         data = read_response_json(response)
 
         assert response.status_code == 200, data
@@ -145,9 +145,7 @@ class TestViews:
         """Prove that object can be requested by identification and date,
         resulting in correct for that date object."""
         url = reverse("dynamic_api:gebieden-stadsdelen-list")
-        response = api_client.get(
-            "{}{}/?geldigOp=2014-12-12".format(url, stadsdelen[0].identificatie)
-        )
+        response = api_client.get(f"{url}{stadsdelen[0].identificatie}/?geldigOp=2014-12-12")
         data = read_response_json(response)
 
         assert response.status_code == 200, data
@@ -157,7 +155,7 @@ class TestViews:
         """Prove that object can be requested by identification and version,
         resulting in correct for that version object."""
         url = reverse("dynamic_api:gebieden-stadsdelen-list")
-        response = api_client.get("{}{}/?volgnummer=1".format(url, stadsdelen[0].identificatie))
+        response = api_client.get(f"{url}{stadsdelen[0].identificatie}/?volgnummer=1")
         data = read_response_json(response)
 
         assert response.status_code == 200, data
@@ -170,11 +168,11 @@ class TestViews:
         Allowing follow up date filtering further."""
         url = reverse("dynamic_api:gebieden-ggwgebieden-list")
         # response = api_client.get(url)
-        response = api_client.get("{}{}/?geldigOp=2014-05-01".format(url, gebied.id))
+        response = api_client.get(f"{url}{gebied.id}/?geldigOp=2014-05-01")
         data = read_response_json(response)
 
         buurt = gebied.bestaat_uit_buurten.all()[0]
-        expected_url = "/{}/?geldigOp=2014-05-01".format(buurt.identificatie)
+        expected_url = f"/{buurt.identificatie}/?geldigOp=2014-05-01"
         assert data["_links"]["bestaatUitBuurten"][0]["href"].endswith(expected_url), data[
             "bestaatUitBuurten"
         ]

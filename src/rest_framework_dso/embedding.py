@@ -11,7 +11,7 @@ from copy import copy
 from dataclasses import dataclass
 from functools import cached_property
 from itertools import islice
-from typing import Callable, Dict, Iterable, Iterator, List, Optional, Type, TypeVar, Union
+from typing import Callable, Iterable, Iterator, Optional, TypeVar, Union
 
 from django.db import models
 from lru import LRU
@@ -21,7 +21,7 @@ from rest_framework.exceptions import ParseError
 from rest_framework_dso.fields import AbstractEmbeddedField
 from rest_framework_dso.serializer_helpers import ReturnGenerator, peek_iterable
 
-DictOfDicts = Dict[str, Dict[str, dict]]
+DictOfDicts = dict[str, dict[str, dict]]
 T = TypeVar("T")
 M = TypeVar("M", bound=models.Model)
 
@@ -40,7 +40,7 @@ class ExpandScope:
     """
 
     def __init__(
-        self, expand: Optional[str] = None, expand_scope: Optional[Union[List[str], str]] = None
+        self, expand: Optional[str] = None, expand_scope: Optional[Union[list[str], str]] = None
     ):
         """Parse the (raw) request parameters"""
         self.auto_expand_all = False
@@ -84,7 +84,7 @@ class ExpandScope:
         parent_serializer: serializers.Serializer,
         allow_m2m=True,
         prefix="",
-    ) -> List[EmbeddedFieldMatch]:
+    ) -> list[EmbeddedFieldMatch]:
         """Find the expanded fields in a serializer that are requested.
         This translates the ``_expand`` query into a dict of embedded fields.
         """
@@ -135,7 +135,7 @@ class ExpandScope:
 
     def _validate(
         self,
-        serializer_class: Type[serializers.Serializer],
+        serializer_class: type[serializers.Serializer],
         field_tree: DictOfDicts,
         allow_m2m: bool,
     ):
@@ -205,7 +205,7 @@ class EmbeddedFieldMatch:
 
 
 def get_all_embedded_field_names(
-    serializer_class: Type[serializers.Serializer],
+    serializer_class: type[serializers.Serializer],
     allow_m2m=True,
     max_depth: int = 99,
 ) -> DictOfDicts:
@@ -232,8 +232,8 @@ def get_all_embedded_field_names(
 
 
 def get_all_embedded_fields_by_name(
-    serializer_class: Type[serializers.Serializer], allow_m2m=True, prefix=""
-) -> Dict[str, AbstractEmbeddedField]:
+    serializer_class: type[serializers.Serializer], allow_m2m=True, prefix=""
+) -> dict[str, AbstractEmbeddedField]:
     """Find all possible embedded fields, as lookup table with their dotted names."""
     result = {}
 
@@ -253,7 +253,7 @@ def get_all_embedded_fields_by_name(
     return result
 
 
-def group_dotted_names(dotted_field_names: List[str]) -> DictOfDicts:
+def group_dotted_names(dotted_field_names: list[str]) -> DictOfDicts:
     """Convert a list of dotted names to tree."""
     result = {}
     for dotted_name in dotted_field_names:
@@ -264,7 +264,7 @@ def group_dotted_names(dotted_field_names: List[str]) -> DictOfDicts:
 
 
 def get_embedded_field(
-    serializer_class: Type[serializers.Serializer], field_name, prefix=""
+    serializer_class: type[serializers.Serializer], field_name, prefix=""
 ) -> AbstractEmbeddedField:
     """Retrieve an embedded field from the serializer class."""
     allowed_names = getattr(serializer_class.Meta, "embedded_fields", [])
@@ -291,7 +291,7 @@ def _expand_parse_error(allowed_names, field_name, prefix=""):
         )
 
 
-def get_serializer_lookups(serializer: serializers.BaseSerializer, prefix="") -> List[str]:
+def get_serializer_lookups(serializer: serializers.BaseSerializer, prefix="") -> list[str]:
     """Find all relations that a serializer instance would request.
     This allows to prepare a ``prefetch_related()`` call on the queryset.
     """
@@ -366,7 +366,7 @@ class ChunkedQuerySetIterator(Iterable[M]):
                 self._add_prefetches(instances)
             yield from instances
 
-    def _add_prefetches(self, instances: List[M]):
+    def _add_prefetches(self, instances: list[M]):
         """Merge the prefetched objects for this batch with the model instances."""
         if self._fk_caches:
             # Make sure prefetch_related_objects() doesn't have to fetch items again

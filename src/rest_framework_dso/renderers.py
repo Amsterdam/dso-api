@@ -279,7 +279,7 @@ class CSVRenderer(RendererMixin, CSVStreamingRenderer):
                 header.append(name)
                 labels[name] = field.label
 
-        return header + extra_headers, {**labels, **extra_labels}
+        return header + extra_headers, labels | extra_labels
 
     def render(self, data, media_type=None, renderer_context=None):
         if (serializer := get_data_serializer(data)) is not None:

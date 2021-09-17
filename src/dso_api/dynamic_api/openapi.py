@@ -4,7 +4,7 @@ The main logic can be found in :mod:`rest_framework_dso.openapi`.
 """
 from copy import copy
 from functools import wraps
-from typing import Callable, List, Optional, Union
+from typing import Callable, Optional, Union
 from urllib.parse import urljoin
 
 from django.conf import settings
@@ -170,7 +170,7 @@ def _swagger_on_browser(openapi_view):
     return _switching_view
 
 
-def get_dataset_patterns(dataset_id: str) -> List[Union[URLPattern, URLResolver]]:
+def get_dataset_patterns(dataset_id: str) -> list[Union[URLPattern, URLResolver]]:
     """Find the URL patterns for a specific dataset.
 
     This returns a subtree of the URLConf that only contains the

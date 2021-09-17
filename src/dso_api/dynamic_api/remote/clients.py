@@ -6,7 +6,7 @@ to avoid the overhead of the requests library.
 
 import logging
 import threading
-from typing import Type, Union
+from typing import Union
 from urllib.parse import urlparse
 
 import certifi
@@ -256,7 +256,7 @@ class HCBRKClient(RemoteClient):
 def make_client(endpoint_url: str, table_schema: DatasetTableSchema) -> RemoteClient:
     """Construct client for a remote API."""
 
-    client_class: Type[RemoteClient] = AuthForwardingClient
+    client_class: type[RemoteClient] = AuthForwardingClient
     if table_schema.dataset.id == "haalcentraalbrk":
         client_class = HCBRKClient
 
