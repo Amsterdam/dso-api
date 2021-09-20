@@ -487,6 +487,59 @@ def _serializer_cache_key(model, depth=0, flat=False, nesting_level=0):
     return hashkey(model, depth, flat)
 
 
+class SerializerAssemblyLine:
+    """The intermediate result of the serializer factory"""
+
+    def __init__(
+        self,
+        model: type[DynamicModel],
+        fields=None,
+        depth: int = 0,
+        openapi_docs: str = "",
+        **meta_kwargs,
+    ):
+        """
+        :param model: The model for which this serializer is created.
+        :param depth: Define whether Django REST Framework should expand or omit relations.
+                      Typically it's either 0 or 1.
+        """
+        safe_dataset_id = to_snake_case(model.get_dataset_id())
+        self.class_attrs = {
+            "__module__": f"dso_api.dynamic_api.serializers.{safe_dataset_id}",
+            "__doc__": openapi_docs,  # avoid exposing our docstrings.
+            "table_schema": model.table_schema(),
+            "Meta": type(
+                "Meta",
+                (),
+                {
+                    "model": model,
+                    "fields": fields or [],
+                    "extra_kwargs": {"depth": depth},
+                    **meta_kwargs,
+                },
+            ),
+        }
+
+    def add_field(self, name, field: serializers.Field):
+        """Add a field to the serializer assembly"""
+        self.class_attrs[name] = field
+        self.class_attrs["Meta"].fields.append(name)
+
+    def add_field_name(self, name, *, source=None):
+        """Add a field, but only by name.
+        The regular DRF ModelSerializer will generate the field (at every request!).
+        """
+        self.class_attrs["Meta"].fields.append(name)
+        if source is not None and source != name:
+            self.class_attrs["Meta"].extra_kwargs[name] = {"source": source}
+
+    def construct_class(
+        self, class_name, base_class: type[DynamicSerializer]
+    ) -> type[DynamicSerializer]:
+        """Perform dynamic class construction"""
+        return type(class_name, (base_class,), self.class_attrs)
+
+
 @cached(cache=serializer_factory_cache, key=_serializer_cache_key)
 def serializer_factory(
     model: type[DynamicModel], depth: int = 0, flat: bool = False, nesting_level=0
@@ -512,26 +565,23 @@ def serializer_factory(
         raise ValueError("flat should be False when nesting exceeds max nesting level")
 
     _validate_model(model)
+
+    # Get model data
     prefix = "Flat" if flat else ""
-
-    if model.has_parent_table():
-        # Inner tables have no schema or links defined
-        fields = []
-    else:
-        fields = [
-            "_links",
-        ]
-
     safe_dataset_id = to_snake_case(model.get_dataset_id())
     serializer_name = f"{prefix}{safe_dataset_id.title()}{model.__name__}Serializer"
     table_schema = model.table_schema()
-    new_attrs = {
-        "table_schema": table_schema,
-        "__module__": f"dso_api.dynamic_api.serializers.{safe_dataset_id}",
-        "__doc__": table_schema.get(
-            "description", table_schema.name
-        ),  # avoid exposing our docstrings.
-    }
+
+    # Start the assemblage of the serializer
+    serializer_part = SerializerAssemblyLine(
+        model, depth=depth, openapi_docs=table_schema.get("description", table_schema.name)
+    )
+
+    if not model.has_parent_table():
+        # Inner tables have no schema or links defined
+        # Generate the serializer for the _links field containing the relations according to HAL.
+        # This is attached as a normal field, so it's recognized by prefetch optimizations.
+        serializer_part.add_field("_links", _links_serializer_factory(model, depth)(source="*"))
 
     # Debug how deep serializers are created, debug circular references
     logger.debug(
@@ -543,7 +593,6 @@ def serializer_factory(
     )
 
     # Parse fields for serializer
-    extra_kwargs = {"depth": depth}  # 0 or 1
     for model_field in model._meta.get_fields():
         field_camel_case = toCamelCase(model_field.name)
 
@@ -559,26 +608,15 @@ def serializer_factory(
 
         if isinstance(model_field, models.ManyToOneRel):
             # Reverse relations are still part of the main body
-            _build_serializer_reverse_fk_field(model, model_field, new_attrs, fields)
+            _build_serializer_reverse_fk_field(serializer_part, model, model_field)
         else:
-            _build_serializer_field(
-                model, model_field, flat, nesting_level, new_attrs, fields, extra_kwargs
-            )
+            _build_serializer_field(serializer_part, model, model_field, flat, nesting_level)
 
     if not flat:
-        _generate_nested_relations(model, fields, new_attrs, nesting_level)
-
-    if "_links" in fields:
-        # Generate the serializer for the _links field containing the relations according to HAL.
-        # This is attached as a normal field, so it's recognized by prefetch optimizations.
-        new_attrs["_links"] = _links_serializer_factory(model, depth)(source="*")
+        _generate_nested_relations(serializer_part, model, nesting_level)
 
     # Generate Meta section and serializer class
-    new_attrs["Meta"] = type(
-        "Meta", (), {"model": model, "fields": fields, "extra_kwargs": extra_kwargs}
-    )
-
-    return type(serializer_name, (DynamicBodySerializer,), new_attrs)
+    return serializer_part.construct_class(serializer_name, base_class=DynamicBodySerializer)
 
 
 def _validate_model(model: type[DynamicModel]):
@@ -593,49 +631,35 @@ def _validate_model(model: type[DynamicModel]):
 
 def _links_serializer_factory(model: type[DynamicModel], depth: int) -> type[DynamicSerializer]:
     """Generate the DRF serializer class for the ``_links`` section."""
-    fields = [
-        "schema",
-        "self",
-    ]
-
     safe_dataset_id = to_snake_case(model.get_dataset_id())
     serializer_name = f"{safe_dataset_id.title()}{model.__name__}LinksSerializer"
-    new_attrs = {
-        "table_schema": model.table_schema(),
-        "__module__": f"dso_api.dynamic_api.serializers.{safe_dataset_id}",
-    }
+
+    serializer_part = SerializerAssemblyLine(model, fields=["schema", "self"], depth=depth)
 
     # Parse fields for serializer
-    extra_kwargs = {"depth": depth}  # 0 or 1
     for model_field in model._meta.get_fields():
         # Only create fields for relations, avoid adding non-relation fields in _links.
         if isinstance(model_field, models.ManyToOneRel):
-            _build_serializer_reverse_fk_field(model, model_field, new_attrs, fields)
+            _build_serializer_reverse_fk_field(serializer_part, model, model_field)
         # We need to handle LooseRelationManyToManyField first, because
         # it is also a subclass of the regular ManyToManyField
         elif isinstance(model_field, LooseRelationManyToManyField):
-            _build_plain_serializer_field(model_field, fields, extra_kwargs)
+            _build_plain_serializer_field(serializer_part, model_field)
         elif isinstance(model_field, models.ManyToManyField):
-            _build_m2m_serializer(model, model_field, new_attrs, fields, extra_kwargs)
+            _build_m2m_serializer(serializer_part, model, model_field)
         elif isinstance(model_field, (RelatedField, ForeignObjectRel, LooseRelationField)):
-            _build_plain_serializer_field(model_field, fields, extra_kwargs)
+            _build_plain_serializer_field(serializer_part, model_field)
 
-    # Generate Meta section and serializer class
-    new_attrs["Meta"] = type(
-        "Meta", (), {"model": model, "fields": fields, "extra_kwargs": extra_kwargs}
-    )
-
-    return type(serializer_name, (DynamicLinksSerializer,), new_attrs)
+    # Generate serializer class
+    return serializer_part.construct_class(serializer_name, base_class=DynamicLinksSerializer)
 
 
 def _build_serializer_field(
+    serializer_part: SerializerAssemblyLine,
     model: type[DynamicModel],
     model_field: models.Field,
     flat: bool,
     nesting_level: int,
-    new_attrs: dict,
-    fields: list,
-    extra_kwargs: dict,
 ):
     """Build a serializer field, results are written in 'output' parameters"""
     # Add extra embedded part for related fields
@@ -650,26 +674,28 @@ def _build_serializer_field(
         ),
     ):
         # Embedded relations are only added to the main serializer.
-        _build_serializer_embedded_field(model_field, nesting_level, new_attrs)
+        _build_serializer_embedded_field(serializer_part, model_field, nesting_level)
 
         if isinstance(model_field, LooseRelationField):
             # For loose relations, add an id char field.
-            _build_serializer_loose_relation_id_field(model_field, fields, new_attrs)
+            _build_serializer_loose_relation_id_field(serializer_part, model_field)
         else:
-            _build_serializer_related_id_field(model_field, fields, extra_kwargs)
+            _build_serializer_related_id_field(serializer_part, model_field)
     elif not isinstance(model_field, models.AutoField):
         # Regular fields
         # Re-map file to correct serializer
         field_schema = get_field_schema(model_field)
         if field_schema.type == "string" and field_schema.format == "blob-azure":
-            _build_serializer_blob_field(model_field, field_schema, fields, new_attrs)
+            _build_serializer_blob_field(serializer_part, model_field, field_schema)
 
     # Regular fields for the body, and some relation fields
-    _build_plain_serializer_field(model_field, fields, extra_kwargs)
+    _build_plain_serializer_field(serializer_part, model_field)
 
 
 def _build_serializer_embedded_field(
-    model_field: Union[RelatedField, LooseRelationField], nesting_level: int, new_attrs: dict
+    serializer_part: SerializerAssemblyLine,
+    model_field: Union[RelatedField, LooseRelationField],
+    nesting_level: int,
 ):
     """Build a embedded field for the serializer"""
     EmbeddedFieldClass = (
@@ -699,7 +725,7 @@ def _build_serializer_embedded_field(
     embedded_field.field_schema = get_field_schema(model_field)
 
     camel_name = toCamelCase(model_field.name)
-    new_attrs[camel_name] = embedded_field
+    serializer_part.class_attrs[camel_name] = embedded_field
 
 
 def _through_serializer_factory(
@@ -726,21 +752,14 @@ def _through_serializer_factory(
     is added to the `Meta` object. This is needed by the ThroughSerializer
     to be able to pick the right field for embedding into its output.
     """
-    fields = []
-    extra_kwargs = {}
-
     safe_dataset_id = to_snake_case(model.get_dataset_id())
     serializer_name = f"{safe_dataset_id.title()}{model.__name__}ThroughSerializer"
-    new_attrs = {
-        "table_schema": model.table_schema(),
-        "__module__": f"dso_api.dynamic_api.serializers.{safe_dataset_id}",
-    }
+    serializer_part = SerializerAssemblyLine(model, target_field_name=target_field_name)
 
     # The FK pointing to the target
-    fields.append(target_field_name)
+    serializer_part.add_field_name(target_field_name)
 
     if target_model.is_temporal():
-
         table_schema = target_model.table_schema()
         temporal: Temporal = cast(Temporal, table_schema.temporal)
 
@@ -755,85 +774,66 @@ def _through_serializer_factory(
                 snaked_fn = to_snake_case(fn)
                 camel_fn = toCamelCase(fn)
                 if snaked_fn in existing_fields_names:
-                    fields.append(camel_fn)
-                    extra_kwargs[camel_fn] = {"source": snaked_fn}
+                    serializer_part.add_field_name(camel_fn, source=snaked_fn)
 
-    new_attrs["Meta"] = type(
-        "Meta",
-        (),
-        {
-            "model": model,
-            "fields": fields,
-            "extra_kwargs": extra_kwargs,
-            "target_field_name": target_field_name,
-        },
-    )
-
-    return type(serializer_name, (ThroughSerializer,), new_attrs)
+    return serializer_part.construct_class(serializer_name, base_class=ThroughSerializer)
 
 
 def _build_m2m_serializer(
-    model: type[DynamicModel],
-    model_field: models.Field,
-    new_attrs: dict,
-    fields: list[str],
-    extra_kwargs: dict,
+    serializer_part: SerializerAssemblyLine, model: type[DynamicModel], model_field: models.Field
 ):
     """Add a serializer for a m2m field to the output parameters."""
-
     camel_name = toCamelCase(model_field.name)
     through_model = getattr(model, model_field.name).through
     serializer_class = _through_serializer_factory(
         through_model, model_field.related_model, model_field.name
     )
     source = to_snake_case(f"{through_model._meta.object_name}_through_{model.get_table_id()}")
-    new_attrs[camel_name] = serializer_class(source=source, many=True)
-    fields.append(camel_name)
+    serializer_part.add_field(camel_name, serializer_class(source=source, many=True))
 
 
 def _build_plain_serializer_field(
-    model_field: models.Field, fields: list[str], extra_kwargs: dict
+    serializer_part: SerializerAssemblyLine, model_field: models.Field
 ):
     """Add the field to the output parameters"""
-    camel_name = toCamelCase(model_field.name)
-    fields.append(camel_name)
-
-    if model_field.name != camel_name:
-        extra_kwargs[camel_name] = {"source": model_field.name}
+    serializer_part.add_field_name(toCamelCase(model_field.name), source=model_field.name)
 
 
-def _build_serializer_related_id_field(model_field: models.Field, fields, extra_kwargs):
+def _build_serializer_related_id_field(
+    serializer_part: SerializerAssemblyLine, model_field: models.Field
+):
     """Build the ``FIELD_id`` field for an related field."""
     camel_id_name = toCamelCase(model_field.attname)
-    fields.append(camel_id_name)
-
-    if model_field.attname != camel_id_name:
-        extra_kwargs[camel_id_name] = {"source": model_field.attname}
+    serializer_part.add_field_name(camel_id_name, source=model_field.attname)
 
 
 def _build_serializer_loose_relation_id_field(
-    model_field: LooseRelationField, fields: list[str], new_attrs: dict
+    serializer_part: SerializerAssemblyLine, model_field: LooseRelationField
 ):
     """Build the ``FIELD_id`` field for a loose relation."""
     camel_name = toCamelCase(model_field.name)
     loose_id_field_name = f"{camel_name}Id"
-    new_attrs[loose_id_field_name] = serializers.CharField(source=model_field.name)
-    fields.append(loose_id_field_name)
+    serializer_part.add_field(loose_id_field_name, serializers.CharField(source=model_field.name))
 
 
 def _build_serializer_blob_field(
-    model_field: models.Field, field_schema: dict, fields: list[str], new_attrs: dict
+    serializer_part: SerializerAssemblyLine, model_field: models.Field, field_schema: dict
 ):
     """Build the blob field"""
     camel_name = toCamelCase(model_field.name)
-    new_attrs[camel_name] = AzureBlobFileField(
-        account_name=field_schema["account_name"],
-        source=(model_field.name if model_field.name != camel_name else None),
+    serializer_part.add_field(
+        camel_name,
+        AzureBlobFileField(
+            account_name=field_schema["account_name"],
+            source=(model_field.name if model_field.name != camel_name else None),
+        ),
     )
 
 
 def _build_serializer_reverse_fk_field(
-    model: type[DynamicModel], model_field: models.ManyToOneRel, new_attrs: dict, fields: list[str]
+    serializer_part: SerializerAssemblyLine,
+    model: type[DynamicModel],
+    model_field: models.ManyToOneRel,
 ):
     """Build the ManyToOneRel field"""
     field_schema = get_field_schema(model_field)
@@ -850,19 +850,20 @@ def _build_serializer_reverse_fk_field(
             to_snake_case(model.get_dataset_id()),
             to_snake_case(model_field.related_model.table_schema().id),
         )
-        new_attrs[name] = HALTemporalHyperlinkedRelatedField(
-            many=True,
-            view_name=view_name,
-            queryset=getattr(model, att_name),
+        serializer_part.add_field(
+            name,
+            HALTemporalHyperlinkedRelatedField(
+                many=True,
+                view_name=view_name,
+                queryset=getattr(model, att_name),
+            ),
         )
-        fields.append(name)
     elif format1 == "summary":
-        new_attrs[name] = _RelatedSummaryField()
-        fields.append(name)
+        serializer_part.add_field(name, _RelatedSummaryField())
 
 
 def _generate_nested_relations(
-    model: type[DynamicModel], fields: list, new_attrs: dict, nesting_level: int
+    serializer_part: SerializerAssemblyLine, model: type[DynamicModel], nesting_level: int
 ):
     """Include fields that are implemented using nested tables."""
     schema_fields = {to_snake_case(f.name): f for f in model.table_schema().fields}
@@ -875,5 +876,4 @@ def _generate_nested_relations(
                 nesting_level=nesting_level + 1,
             )
 
-            new_attrs[item.name] = related_serializer(many=True)
-            fields.append(item.name)
+            serializer_part.add_field(item.name, related_serializer(many=True))
