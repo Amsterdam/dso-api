@@ -515,6 +515,7 @@ class SerializerAssemblyLine:
                     "model": model,
                     "fields": fields or [],
                     "extra_kwargs": {"depth": depth},
+                    "embedded_fields": {},
                     **meta_kwargs,
                 },
             ),
@@ -532,6 +533,11 @@ class SerializerAssemblyLine:
         self.class_attrs["Meta"].fields.append(name)
         if source is not None and source != name:
             self.class_attrs["Meta"].extra_kwargs[name] = {"source": source}
+
+    def add_embedded_field(self, name, field: AbstractEmbeddedField):
+        """Add an embedded field to the serializer-to-be."""
+        # field.__set_name__() handling will be triggered on class construction.
+        self.class_attrs[name] = field
 
     def construct_class(
         self, class_name, base_class: type[DynamicSerializer]
@@ -721,7 +727,7 @@ def _build_serializer_embedded_field(
     embedded_field.field_schema = get_field_schema(model_field)
 
     camel_name = toCamelCase(model_field.name)
-    serializer_part.class_attrs[camel_name] = embedded_field
+    serializer_part.add_embedded_field(camel_name, embedded_field)
 
 
 def _through_serializer_factory(

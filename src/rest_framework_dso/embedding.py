@@ -273,28 +273,15 @@ def get_embedded_field(
     serializer_class: type[serializers.Serializer], field_name, prefix=""
 ) -> AbstractEmbeddedField:
     """Retrieve an embedded field from the serializer class."""
-    allowed_names = getattr(serializer_class.Meta, "embedded_fields", [])
-    if field_name not in allowed_names:
-        raise _expand_parse_error(allowed_names, field_name, prefix) from None
-
+    embedded_fields = getattr(serializer_class.Meta, "embedded_fields", {})
     try:
-        return getattr(serializer_class, field_name)
-    except AttributeError:
-        raise RuntimeError(
-            f"{serializer_class.__name__}.{field_name} does not refer to an embedded field."
-        ) from None
-
-
-def _expand_parse_error(allowed_names, field_name, prefix=""):
-    """Generate the proper exception for the invalid expand name"""
-    if not allowed_names:
-        return ParseError(f"Eager loading is not supported for field '{prefix}{field_name}'")
-    else:
-        available = f", {prefix}".join(sorted(allowed_names))
-        return ParseError(
-            f"Eager loading is not supported for field '{prefix}{field_name}', "
-            f"available options are: {prefix}{available}"
-        )
+        return embedded_fields[field_name]
+    except KeyError:
+        msg = f"Eager loading is not supported for field '{prefix}{field_name}'"
+        if embedded_fields:
+            available = f", {prefix}".join(sorted(embedded_fields.keys()))
+            msg = f"{msg}, available options are: {prefix}{available}"
+        raise ParseError(msg) from None
 
 
 def get_serializer_lookups(serializer: serializers.BaseSerializer, prefix="") -> list[str]:

@@ -26,6 +26,12 @@ class AbstractEmbeddedField:
     Note this virtual field is *not* part of the serializer.fields,
     thus it's also **not** copied per instance. It's not possible to store
     request-state (such as the parent serializer object) in this class.
+
+    There are two ways to include an embedded field in the serializer.
+    Either add it as a class attribute (it will auto-register
+    in ``Meta.embedded_fields``), or add it directly in ``Meta.embedded_fields``.
+    Both styles require the serializer class to inherit
+    from :class:`rest_framework_dso.serializers.ExpandMixin`.
     """
 
     def __init__(
@@ -44,13 +50,18 @@ class AbstractEmbeddedField:
         return f"<{self.__class__.__name__}: {self.field_name}, {self.serializer_class.__name__}>"
 
     def __set_name__(self, owner, name):
+        self.bind(owner, name)
+
+    def bind(self, parent_serializer_class: type[serializers.Serializer], field_name: str):
         from .serializers import ExpandMixin
 
-        if not issubclass(owner, ExpandMixin):
-            raise TypeError(f"{owner} does not extend from DSO serializer classes") from None
+        if not issubclass(parent_serializer_class, ExpandMixin):
+            raise TypeError(
+                f"{parent_serializer_class} does not extend from DSO serializer classes"
+            ) from None
 
-        self.parent_serializer_class = owner
-        self.field_name = name
+        self.parent_serializer_class = parent_serializer_class
+        self.field_name = field_name
         if self.source is None:
             self.source = self.field_name
 
@@ -58,8 +69,8 @@ class AbstractEmbeddedField:
         # which makes it easier to collect embedded relations
         meta = self.parent_serializer_class.Meta
         if not hasattr(meta, "embedded_fields"):
-            meta.embedded_fields = []
-        meta.embedded_fields.append(name)
+            meta.embedded_fields = {}
+        meta.embedded_fields[field_name] = self
 
     def get_related_ids(self, instance):
         """Return the "ID" values that are referenced from a single instance
