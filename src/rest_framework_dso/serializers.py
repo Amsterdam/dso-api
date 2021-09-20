@@ -49,6 +49,9 @@ class ExpandMixin:
 
     This is only a separate mixin because the parameter needs to be handled
     in 2 separate classes: :class:`DSOListSerializer` and the regular :class:`DSOSerializer`.
+
+    This mixin should be added to serializers when adding embedded fields
+    to the serializer.
     """
 
     expand_all_param = "_expand"
@@ -125,6 +128,21 @@ class ExpandMixin:
             serializer = serializer.parent
 
         return ".".join(reversed(path)) if len(path) > 1 else ""
+
+    def __init_subclass__(cls, **kwargs):
+        """Initialize the embedded field to have knowledge of this class instance.
+        This is only needed when the embedded fields were not defined as class attributes,
+        but were directly loaded in Meta.embedded_fields. Otherwise, __set_name__
+        already did the binding.
+        """
+        super().__init_subclass__(**kwargs)
+        if issubclass(cls, serializers.ListSerializer) or not hasattr(cls, "Meta"):
+            return
+
+        embedded_fields = getattr(cls.Meta, "embedded_fields", {})
+        for name, embedded_field in embedded_fields.items():
+            if embedded_field.field_name is None:
+                embedded_field.bind(cls, name)
 
 
 class DSOListSerializer(ExpandMixin, serializers.ListSerializer):

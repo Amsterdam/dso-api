@@ -73,19 +73,20 @@ class TestDynamicSerializer:
         ClusterSerializer = serializer_factory(afval_cluster_model)
 
         # Prove that EmbeddedField is created.
-        assert ContainerSerializer.Meta.embedded_fields == ["cluster"]
-        assert isinstance(ContainerSerializer.cluster, EmbeddedField)
+        assert set(ContainerSerializer.Meta.embedded_fields.keys()) == {"cluster"}
+        embedded_field: EmbeddedField = ContainerSerializer.Meta.embedded_fields["cluster"]
+        assert isinstance(embedded_field, EmbeddedField)
 
         # Prove that the EmbeddedField references the proper models and serializers.
         # This also tests whether there aren't any old references left.
-        assert ContainerSerializer.cluster.related_model is afval_cluster_model, (
+        assert embedded_field.related_model is afval_cluster_model, (
             "Old Django models were still referenced: "
-            f"id {id(ContainerSerializer.cluster.related_model)} vs "
+            f"id {id(embedded_field.related_model)} vs "
             f"id {id(afval_cluster_model)} "
-            f"(creation counter {ContainerSerializer.cluster.related_model.CREATION_COUNTER}"
+            f"(creation counter {embedded_field.related_model.CREATION_COUNTER}"
             f" vs {afval_cluster_model.CREATION_COUNTER})",
         )
-        assert ContainerSerializer.cluster.serializer_class.__name__ == ClusterSerializer.__name__
+        assert embedded_field.serializer_class.__name__ == ClusterSerializer.__name__
 
         # Prove that data is serialized with relations.
         # Both the cluster_id field and 'cluster' field are generated.
