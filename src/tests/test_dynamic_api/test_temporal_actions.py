@@ -118,8 +118,8 @@ class TestViews:
         assert len(data["_embedded"]["wijken"]) == 1, data["_embedded"]["wijken"]
         wijken = data["_embedded"]["wijken"]
         assert wijken[0]["_links"]["self"]["volgnummer"] == 1, wijken[0]
-        assert wijken[0]["buurt"]["count"] == 1
-        query_params = parse.parse_qs(parse.urlparse(wijken[0]["buurt"]["href"]).query)
+        assert wijken[0]["_links"]["buurt"]["count"] == 1
+        query_params = parse.parse_qs(parse.urlparse(wijken[0]["_links"]["buurt"]["href"]).query)
         assert query_params["geldigOp"] == ["2015-01-02"]
 
     def test_details_record_can_be_requested_by_pk(self, api_client, stadsdelen):

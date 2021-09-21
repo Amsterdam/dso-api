@@ -606,11 +606,7 @@ def serializer_factory(
         ):
             continue
 
-        if isinstance(model_field, models.ManyToOneRel):
-            # Reverse relations are still part of the main body
-            _build_serializer_reverse_fk_field(serializer_part, model, model_field)
-        else:
-            _build_serializer_field(serializer_part, model, model_field, flat, nesting_level)
+        _build_serializer_field(serializer_part, model, model_field, flat, nesting_level)
 
     if not flat:
         _generate_nested_relations(serializer_part, model, nesting_level)
