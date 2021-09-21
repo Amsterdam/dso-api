@@ -794,7 +794,7 @@ class TestEmbedTemporalTables:
         data = read_response_json(response)
         assert response.status_code == 200, data
         assert data["_embedded"]["ligtInWijk"]["id"] == "03630012052035.1"
-        assert data["_embedded"]["ligtInWijk"]["buurt"] == {
+        assert data["_embedded"]["ligtInWijk"]["_links"]["buurt"] == {
             "count": 2,  # counts historical records too.
             "href": "http://testserver/v1/gebieden/buurten/?ligtInWijkId=03630012052035.1",
         }
@@ -860,13 +860,6 @@ class TestEmbedTemporalTables:
                     "beginGeldigheid": None,
                     "eindGeldigheid": None,
                     "ligtInStadsdeelId": "03630000000018",
-                    "buurt": {
-                        # Note: still added by current API.
-                        "count": 2,
-                        "href": (
-                            "http://testserver/v1/gebieden/buurten/?ligtInWijkId=03630012052035.1"
-                        ),
-                    },
                     "_embedded": {
                         # second level embedded
                         "ligtInStadsdeel": {
@@ -1108,13 +1101,6 @@ class TestEmbedTemporalTables:
                                             },
                                         },
                                         "beginGeldigheid": None,
-                                        "buurt": {
-                                            "count": 2,
-                                            "href": (
-                                                "http://testserver/v1/gebieden/buurten/"
-                                                "?ligtInWijkId=03630012052035.1"
-                                            ),
-                                        },
                                         "code": "A01",
                                         "eindGeldigheid": None,
                                         "id": "03630012052035.1",
@@ -1186,7 +1172,7 @@ class TestEmbedTemporalTables:
         data = read_response_json(response)
         assert response.status_code == 200, data
         assert data["_embedded"]["ligtInWijk"][0]["id"] == "03630012052035.1"
-        assert data["_embedded"]["ligtInWijk"][0]["buurt"] == {
+        assert data["_embedded"]["ligtInWijk"][0]["_links"]["buurt"] == {
             "count": 2,  # counts historical records too.
             "href": (
                 "http://testserver/v1/gebieden/buurten/"
