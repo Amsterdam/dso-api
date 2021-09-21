@@ -1,5 +1,6 @@
 from typing import Optional
 
+from django.core.exceptions import FieldDoesNotExist
 from django.db import models
 from django.db.models.fields.related import RelatedField
 from django.db.models.fields.reverse_related import ForeignObjectRel
@@ -115,7 +116,7 @@ class AbstractEmbeddedField:
             # For ForeignKey/OneToOneField this resolves to "{field_name}_id"
             # For ManyToManyField this resolves to a manager object
             return self.parent_model._meta.get_field(self.source).attname
-        except models.FieldDoesNotExist:
+        except FieldDoesNotExist:
             # Allow non-FK relations, e.g. a "bag_id" to a completely different database
             if not self.source.endswith("_id"):
                 return f"{self.source}_id"
