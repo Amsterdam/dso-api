@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import os
 import sys
+import warnings
 
 if __name__ == "__main__":
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "dso_api.settings")
@@ -12,4 +13,7 @@ if __name__ == "__main__":
             "available on your PYTHONPATH environment variable? Did you "
             "forget to activate a virtual environment?"
         ) from exc
-    execute_from_command_line(sys.argv)
+
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", message=".*Reloading models is not advised.*")
+        execute_from_command_line(sys.argv)
