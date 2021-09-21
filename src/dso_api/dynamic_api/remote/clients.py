@@ -6,6 +6,7 @@ to avoid the overhead of the requests library.
 
 import logging
 import threading
+import time
 from typing import Union
 from urllib.parse import urlparse
 
@@ -53,6 +54,7 @@ class RemoteClient:
         http_pool = self._get_http_pool()
 
         try:
+            t0 = time.perf_counter_ns()
             response: HTTPResponse = http_pool.request(
                 "GET",
                 url,
@@ -70,7 +72,14 @@ class RemoteClient:
             raise ServiceUnavailable(str(e)) from e
 
         level = logging.ERROR if response.status >= 400 else logging.INFO
-        logger.log(level, "Proxy call to %s, status %s: %s", url, response.status, response.reason)
+        logger.log(
+            level,
+            "Proxy call to %s, status %s: %s, took: %.3fs",
+            url,
+            response.status,
+            response.reason,
+            (time.perf_counter_ns() - t0) * 1e-9,
+        )
 
         if response.status == 200:
             return orjson.loads(response.data)
