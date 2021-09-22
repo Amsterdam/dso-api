@@ -66,7 +66,7 @@ def multiple_slashes(request):
 
 
 def _get_unique_trace_id(request):
-    unique_id = request.META.get("HTTP_X_UNIQUE_ID")  # X-Unique-ID wordt in haproxy gezet
+    unique_id = request.headers.get("X-Unique-ID")  # X-Unique-ID wordt in haproxy gezet
     if unique_id:
         instance = f"X-Unique-ID:{unique_id}"
     else:
@@ -292,7 +292,7 @@ class DSOViewMixin:
         super().initial(request, *args, **kwargs)
 
         # DSO spec allows clients to define the desired CRS.
-        accept_crs = request.META.get("HTTP_ACCEPT_CRS")
+        accept_crs = request.headers.get("Accept-Crs")
         if not accept_crs:
             # Allow the output format to overrule the default CRS.
             # e.g. GeoJSON defaults to WGS84, but we still allow the override.

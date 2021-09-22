@@ -98,7 +98,7 @@ class RemoteClient:
         client_ip = request.META["REMOTE_ADDR"]
         if isinstance(client_ip, str):
             client_ip = client_ip.encode("iso-8859-1")
-        forward = request.META.get("HTTP_X_FORWARDED_FOR", "")
+        forward = request.headers.get("X-Forwarded-For", "")
         if forward:
             if isinstance(forward, str):
                 forward = forward.encode("iso-8859-1")
@@ -112,15 +112,15 @@ class RemoteClient:
         }
 
         # We check if we already have a X-Correlation-ID header
-        x_correlation_id = request.META.get("HTTP_X_CORRELATION_ID")
+        x_correlation_id = request.headers.get("X-Correlation-ID")
         if not x_correlation_id:
             # Otherwise we set it to a part of the X-Unique-ID header
             # The X-Correlation-ID cannot be longer then 40 characters because MKS suite
             # cannot handle this. Therefore  we use only part of it.
-            # The X-Unique_ID is defined in Openstack with :
+            # The X-Unique-ID is defined in Openstack with :
             # [client_ip]:[client_port]_[bind_ip]:[bind_port]_[timestamp]_[request_counter]:[pid]
             # But bind_ip and bind_port are always the same. So we can remove them
-            x_unique_id = request.META.get("HTTP_X_UNIQUE_ID")
+            x_unique_id = request.headers.get("X-Unique-ID")
             if x_unique_id:
                 x_correlation_id = x_unique_id[:14] + x_unique_id[28:]
         if x_correlation_id:

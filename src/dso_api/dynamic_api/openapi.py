@@ -156,7 +156,7 @@ def _swagger_on_browser(openapi_view):
 
     @wraps(openapi_view)
     def _switching_view(request):
-        is_browser = "text/html" in request.META.get("HTTP_ACCEPT", "")
+        is_browser = "text/html" in request.headers.get("Accept", "")
         format = request.GET.get("format", "")
         if not is_browser or format == "json":
             # Not a browser, give the JSON view.
