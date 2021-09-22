@@ -254,7 +254,7 @@ if CLOUD_ENV.lower().startswith("azure"):
         "formatter": "azure",
     }
     LOGGING["handlers"]["audit_azure"] = {
-        "level": "INFO",
+        "level": "DEBUG",
         "class": "opencensus.ext.azure.log_exporter.AzureLogHandler",
         "connection_string": AZURE_APPI_AUDIT_CONNECTION_STRING,
         "formatter": "audit_azure",
