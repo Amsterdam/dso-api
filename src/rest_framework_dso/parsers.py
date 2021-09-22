@@ -52,7 +52,7 @@ class DSOJsonParser(JSONParser):
 
     def _get_content_crs(self, request):
         """Fetch the Content-Crs header."""
-        http_value = request.META.get("HTTP_CONTENT_CRS")
+        http_value = request.headers.get("Content-Crs")
         if not http_value:
             raise PreconditionFailed("The HTTP Content-Crs header is required")
 
