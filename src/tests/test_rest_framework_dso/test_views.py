@@ -2,12 +2,13 @@ from datetime import datetime
 
 import pytest
 from django.urls import path
-from rest_framework import generics
+from rest_framework import generics, viewsets
 from rest_framework.exceptions import ErrorDetail, ValidationError
+from rest_framework.routers import SimpleRouter
 
 from rest_framework_dso import views
 from rest_framework_dso.filters import DSOFilterSet
-from tests.utils import read_response_json
+from tests.utils import read_response, read_response_json
 
 from .models import Movie
 from .serializers import MovieSerializer
@@ -30,10 +31,20 @@ class MovieListAPIView(views.DSOViewMixin, generics.ListAPIView):
     filterset_class = MovieFilterSet
 
 
+class MovieViewSet(views.DSOViewMixin, viewsets.ReadOnlyModelViewSet):
+    serializer_class = MovieSerializer
+    queryset = Movie.objects.all()
+    filterset_class = MovieFilterSet
+
+
+router = SimpleRouter(trailing_slash=False)
+router.register("v1/viewset/movies", MovieViewSet, basename="viewset-movies")
+
 urlpatterns = [
     path("v1/movies", MovieListAPIView.as_view(), name="movies-list"),
     path("v1/movies/<pk>", MovieDetailAPIView.as_view(), name="movies-detail"),
-]
+] + router.get_urls()
+
 handler500 = views.server_error
 
 pytestmark = [pytest.mark.urls(__name__)]  # enable for all tests in this file
@@ -267,10 +278,74 @@ class TestExpand:
         }
         assert response["Content-Type"] == "application/hal+json"
 
+
+@pytest.mark.django_db
+class TestBrowsableAPIRenderer:
+    """Test the HTML view"""
+
     def test_list_expand_api(self, api_client, movie):
         """Prove that the browsable API returns HTML."""
         response = api_client.get("/v1/movies", data={"_expand": "true"}, HTTP_ACCEPT="text/html")
         assert response["content-type"] == "text/html; charset=utf-8"
+        read_response(response)  # Runs template rendering
+
+    @pytest.mark.parametrize(
+        ["base_url", "expect"],
+        [
+            ("/v1/movies", "Movie Detail Api"),  # regular APIView, can't detect request type
+            ("/v1/viewset/movies", "foo123"),  # ViewSet, can inspect request type and response
+        ],
+    )
+    def test_detail_title_fields(self, api_client, movie, base_url, expect):
+        """Prove that get_view_name() works for regular API views."""
+        response = api_client.get(
+            f"{base_url}/{movie.pk}", data={"_fields": "name"}, HTTP_ACCEPT="text/html"
+        )
+        assert response.status_code == 200, response
+        assert response["content-type"] == "text/html; charset=utf-8"
+        html = read_response(response)
+        title = next(line.strip() for line in html.splitlines() if "<h1>" in line)
+        assert title == f"<h1>{expect}</h1>"
+
+    @staticmethod
+    @pytest.mark.django_db
+    def test_extreme_page_size(api_client, api_rf):
+        """Prove that the browser-based view protects against a DOS attack vector"""
+        # First see that the API actually raises the exception
+        with pytest.raises(ValidationError):
+            api_client.get("/v1/movies", data={"_pageSize": "1001"}, HTTP_ACCEPT="text/html")
+
+        # See that the 'handler500' of our local "urls.py" also kicks in.
+        api_client.raise_request_exception = False
+        response = api_client.get(
+            "/v1/movies", data={"_pageSize": "1001"}, HTTP_ACCEPT="text/html"
+        )
+
+        assert response.status_code == ValidationError.status_code, response
+        assert response["content-type"] == "application/problem+json"  # check before reading
+        data = read_response_json(response)
+
+        assert response["content-type"] == "application/problem+json"  # and after
+        assert data == {
+            "instance": "http://testserver/v1/movies?_pageSize=1001",
+            "invalid-params": [
+                {
+                    "name": "_pageSize",
+                    "reason": (
+                        "Browsable HTML API does not support this page size. "
+                        "Use ?_format=json if you want larger pages."
+                    ),
+                    "type": "urn:apiexception:invalid:_pageSize",
+                }
+            ],
+            "status": 400,
+            "title": "Invalid input.",
+            "type": "urn:apiexception:invalid",
+            "x-validation-errors": [
+                "Browsable HTML API does not support this page size. "
+                "Use ?_format=json if you want larger pages."
+            ],
+        }
 
 
 @pytest.mark.django_db
@@ -553,44 +628,4 @@ class TestExceptionHandler:
                 "available options are: actors, category"
             ),
             "status": 400,
-        }
-
-    @staticmethod
-    @pytest.mark.django_db
-    def test_extreme_page_size(api_client, api_rf):
-        """Prove that the browser-based view protects against a DOS attack vector"""
-        # First see that the API actually raises the exception
-        with pytest.raises(ValidationError):
-            api_client.get("/v1/movies", data={"_pageSize": "1001"}, HTTP_ACCEPT="text/html")
-
-        # See that the 'handler500' of our local "urls.py" also kicks in.
-        api_client.raise_request_exception = False
-        response = api_client.get(
-            "/v1/movies", data={"_pageSize": "1001"}, HTTP_ACCEPT="text/html"
-        )
-
-        assert response.status_code == ValidationError.status_code, response
-        assert response["content-type"] == "application/problem+json"  # check before reading
-        data = read_response_json(response)
-
-        assert response["content-type"] == "application/problem+json"  # and after
-        assert data == {
-            "instance": "http://testserver/v1/movies?_pageSize=1001",
-            "invalid-params": [
-                {
-                    "name": "_pageSize",
-                    "reason": (
-                        "Browsable HTML API does not support this page size. "
-                        "Use ?_format=json if you want larger pages."
-                    ),
-                    "type": "urn:apiexception:invalid:_pageSize",
-                }
-            ],
-            "status": 400,
-            "title": "Invalid input.",
-            "type": "urn:apiexception:invalid",
-            "x-validation-errors": [
-                "Browsable HTML API does not support this page size. "
-                "Use ?_format=json if you want larger pages."
-            ],
         }

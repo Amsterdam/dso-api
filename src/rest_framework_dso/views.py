@@ -43,11 +43,19 @@ def get_view_name(view):
 
     # Use the title for instances
     response = getattr(view, "response", None)
-    suffix = getattr(view, "suffix", None)
+    suffix = getattr(view, "suffix", None)  # viewsets have this set to List or Instance
 
     if suffix == "Instance" and response:
         if response.status_code == 200:
-            name = response.data["_links"]["self"]["title"]
+            try:
+                name = response.data["_links"]["self"]["title"]
+            except KeyError:
+                # When the _links field is not rendered, this might happen because _fields
+                # is used to limit what the response returns. At the same time, this gives
+                # an opportunity to directly read the first response field as title.
+                if "_fields" in view.request.GET:
+                    first_field = view.request.GET["_fields"].split(",", 1)[0]
+                    name = response.data[first_field]
         else:
             name = f"{response.reason_phrase} ({response.status_code})"
     return name
