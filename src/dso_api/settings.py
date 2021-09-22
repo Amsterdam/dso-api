@@ -138,6 +138,22 @@ DATABASES = {
         engine="django.contrib.gis.db.backends.postgis",
     ),
 }
+
+if CLOUD_ENV.lower().startswith("azure"):
+    with open("/mnt/secrets-store/mdbdataservices-read") as secrets_file:
+        pgpassword = secrets_file.read()
+
+        DATABASES = {
+            "default": {
+                "ENGINE": "django.contrib.gis.db.backends.postgis",
+                "NAME": env.str("PGDATABASE"),
+                "USER": env.str("PGUSER"),
+                "PASSWORD": pgpassword,
+                "HOST": env.str("PGHOST"),
+                "PORT": env.str("PGPORT"),
+                "OPTIONS": {"sslmode": "require"},
+            }
+        }
 # Important to have keys define in DATABASE_SCHEMAS available as in DATABASES.
 DATABASE_SCHEMAS = {}
 DATABASE_DISABLE_MIGRATIONS = []
@@ -238,7 +254,7 @@ if CLOUD_ENV.lower().startswith("azure"):
         "formatter": "azure",
     }
     LOGGING["handlers"]["audit_azure"] = {
-        "level": "DEBUG",
+        "level": "INFO",
         "class": "opencensus.ext.azure.log_exporter.AzureLogHandler",
         "connection_string": AZURE_APPI_AUDIT_CONNECTION_STRING,
         "formatter": "audit_azure",

@@ -93,8 +93,26 @@ Optionally Audit logs can be sent to separate Azure Application Insights instanc
 
 This value defaults to ``AZURE_APPI_CONNECTION_STRING`` if not defined.
 
+Database configuration is fetched from environment variables while ``PGPASSWORD`` will be fetched from secret named ``mdbdataservices-read`` in KeyVault:
 
-If ``CLOUD_ENV`` is not set is assumes its value to be a regular hosting provider.
+- ``PGDATABASE``
+
+Database Name.
+
+- ``PGUSER``
+
+Database User Name.
+
+- ``PGHOST``
+
+Database Host Name.
+
+- ``PGPORT``
+
+Database Host Port.
+
+If ``CLOUD_ENV`` is not set or not starting with ``azure`` is assumes its value to be a regular hosting provider.
+
 
 
 Remaining Configuration
