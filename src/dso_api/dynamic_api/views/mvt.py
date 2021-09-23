@@ -118,22 +118,28 @@ class DatasetMVTView(CheckPermissionsMixin, MVTView):
                 (time.perf_counter_ns() - t0) * 1e-9,
             )
             return result
-        except EmptyResultSet:  # Raised for self.model.objects.none().query.sql_with_params().
+        except EmptyResultSet:
             return HttpResponse(None, content_type=self.content_type, status=HTTP_204_NO_CONTENT)
 
     def get_queryset(self):
-        zoom = self.model.table_schema().zoom
+        zoom = self.model.table_schema().get("zoom", _default_zoom)
+        minzoom = zoom.get("min", _default_zoom["min"])
+        maxzoom = zoom.get("max", _default_zoom["max"])
+
+        if not isinstance(minzoom, (int, str)) or not isinstance(maxzoom, (int, str)):
+            logger.warning("MVT: schema zoom value %r not understood", zoom)
+
+        if isinstance(minzoom, int) and self._zoom < minzoom:
+            raise EmptyResultSet()
+        if isinstance(maxzoom, int) and self._zoom > maxzoom:
+            raise EmptyResultSet()
+
         qs = self.model.objects
 
-        if isinstance(zoom.min, int) and self._zoom < zoom.min:
-            return qs.none()
-        if isinstance(zoom.max, int) and self._zoom > zoom.max:
-            return qs.none()
-
-        if isinstance(zoom.min, str):
-            qs = qs.filter(**{zoom.min + "__lte": self._zoom})
-        if isinstance(zoom.max, str):
-            qs = qs.filter(**{zoom.max + "__gte": self._zoom})
+        if isinstance(minzoom, str):
+            qs = qs.filter(**{minzoom + "__lte": self._zoom})
+        if isinstance(maxzoom, str):
+            qs = qs.filter(**{maxzoom + "__gte": self._zoom})
 
         return qs.all()
 
@@ -164,3 +170,6 @@ class DatasetMVTView(CheckPermissionsMixin, MVTView):
         field_schema = get_field_schema(model_field)
         if not self.request.user_scopes.has_field_access(field_schema):
             raise PermissionDenied()
+
+
+_default_zoom = {"min": 0, "max": 999}
