@@ -309,7 +309,7 @@ sqlalchemy==1.3.24
     # via
     #   amsterdam-schema-tools
     #   geoalchemy2
-sqlparse==0.4.1
+sqlparse==0.4.2
     # via django
 toml==0.10.2
     # via
