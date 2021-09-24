@@ -239,7 +239,13 @@ def get_all_embedded_fields_by_name(
 
     for field_name in getattr(serializer_class.Meta, "embedded_fields", ()):
         field: AbstractEmbeddedField = get_embedded_field(serializer_class, field_name)
-        if field.is_array and not allow_m2m:
+        if (
+            field.is_array
+            and not allow_m2m
+            # Avoid recursion (e.g. heeftHoofdadres.adresseertVerblijfsobject.heeftHoofdadres.)
+            or f".{field_name}." in prefix
+            or prefix.startswith(f"{field_name}.")
+        ):
             continue
 
         lookup = f"{prefix}{field_name}"
