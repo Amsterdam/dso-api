@@ -42,8 +42,9 @@ from schematools.contrib.django.models import Dataset, get_field_schema
 
 from dso_api.dynamic_api.datasets import get_active_datasets
 from dso_api.dynamic_api.permissions import CheckPermissionsMixin
-from dso_api.dynamic_api.views import APIIndexView
 from rest_framework_dso import crs
+
+from .index import APIIndexView
 
 FieldDef = Union[str, FeatureField]
 RE_SIMPLE_NAME = re.compile(

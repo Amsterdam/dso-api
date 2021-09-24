@@ -16,7 +16,8 @@ from vectortiles.postgis.views import MVTView
 
 from dso_api.dynamic_api.datasets import get_active_datasets
 from dso_api.dynamic_api.permissions import CheckPermissionsMixin
-from dso_api.dynamic_api.views import APIIndexView
+
+from .index import APIIndexView
 
 logger = logging.getLogger(__name__)
 
