@@ -52,7 +52,7 @@ from dso_api.dynamic_api.fields import (
 from dso_api.dynamic_api.permissions import filter_unauthorized_expands
 from dso_api.dynamic_api.utils import resolve_model_lookup
 from rest_framework_dso.embedding import EmbeddedFieldMatch
-from rest_framework_dso.fields import AbstractEmbeddedField, EmbeddedField, EmbeddedManyToManyField
+from rest_framework_dso.fields import AbstractEmbeddedField, get_embedded_field_class
 from rest_framework_dso.serializers import DSOModelListSerializer, DSOModelSerializer
 
 MAX_EMBED_NESTING_LEVEL = 10
@@ -96,12 +96,15 @@ def temporal_id_based_fetcher(embedded_field: AbstractEmbeddedField):
     model = embedded_field.related_model
     is_loose = embedded_field.is_loose
 
-    def _fetcher(id_list):
+    def _fetcher(id_list, id_field=None):
         if is_loose:
-            identifier = first(model.table_schema().identifier)
-            return filter_latest_temporal(model.objects).filter(**{f"{identifier}__in": id_list})
+            identifier = id_field or first(model.table_schema().identifier)
+            base_qs = filter_latest_temporal(model.objects)
         else:
-            return model.objects.filter(pk__in=id_list)
+            identifier = id_field or "pk"
+            base_qs = model.objects
+
+        return base_qs.filter(**{f"{identifier}__in": id_list})
 
     return _fetcher
 
@@ -682,7 +685,15 @@ def _build_serializer_field(
             # For loose relations, add an id char field.
             _build_serializer_loose_relation_id_field(serializer_part, model_field)
         else:
+            # Forward relation, add an id field in the main body.
             _build_serializer_related_id_field(serializer_part, model_field)
+    elif not flat and isinstance(model_field, ForeignObjectRel):
+        # Reverse relations, are only added as embedded field when there is an explicit declaration
+        field_schema = get_field_schema(model_field)
+        additional_relation = field_schema.reverse_relation
+        if additional_relation is None or additional_relation.format == "summary":
+            return
+        _build_serializer_embedded_field(serializer_part, model_field, nesting_level)
     elif not isinstance(model_field, models.AutoField):
         # Regular fields
         # Re-map file to correct serializer
@@ -696,15 +707,11 @@ def _build_serializer_field(
 
 def _build_serializer_embedded_field(
     serializer_part: SerializerAssemblyLine,
-    model_field: Union[RelatedField, LooseRelationField],
+    model_field: Union[RelatedField, LooseRelationField, ForeignObjectRel],
     nesting_level: int,
 ):
     """Build a embedded field for the serializer"""
-    EmbeddedFieldClass = (
-        EmbeddedManyToManyField
-        if isinstance(model_field, models.ManyToManyField)
-        else EmbeddedField
-    )
+    EmbeddedFieldClass = get_embedded_field_class(model_field)
 
     # The serializer class is not actually created here, this happens on-demand.
     # This avoids deep recursion (e.g. 9 levels deep) of the same serializer class

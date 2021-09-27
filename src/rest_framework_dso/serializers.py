@@ -277,9 +277,7 @@ class DSOModelListSerializer(DSOListSerializer):
                 # All embedded result sets are updated during the iteration over
                 # the main data with the relevant ID's to fetch on-demand.
                 embedded_fields = {
-                    expand_match.name: EmbeddedResultSet(
-                        expand_match.field, serializer=expand_match.embedded_serializer
-                    )
+                    expand_match.name: EmbeddedResultSet.from_match(expand_match)
                     for expand_match in self.expanded_fields
                 }
 
@@ -628,11 +626,8 @@ class DSOModelSerializer(DSOSerializer, serializers.HyperlinkedModelSerializer):
                 continue
 
             # This just reuses the machinery for listings
-            result_set = EmbeddedResultSet(
-                embed_match.field,
-                serializer=embed_match.embedded_serializer,
-                main_instances=[instance],
-            )
+            result_set = EmbeddedResultSet.from_match(embed_match)
+            result_set.inspect_instance(instance)
 
             if not embed_match.field.is_array:
                 # Single object, embed as dict directly
