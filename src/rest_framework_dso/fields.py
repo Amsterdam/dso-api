@@ -1,4 +1,6 @@
-from typing import Optional
+from __future__ import annotations
+
+from typing import Optional, Union
 
 from django.core.exceptions import FieldDoesNotExist
 from django.db import models
@@ -8,6 +10,7 @@ from django.utils.functional import cached_property
 from more_itertools import first
 from rest_framework import serializers
 from rest_framework_gis.fields import GeometryField
+from schematools.contrib.django.models import LooseRelationField
 
 from rest_framework_dso.utils import unlazy_object
 
@@ -18,6 +21,23 @@ def parse_request_fields(fields: Optional[str]):
 
     # TODO: support nesting, perform validation
     return fields.split(",")
+
+
+def get_embedded_field_class(
+    model_field: Union[RelatedField, LooseRelationField, ForeignObjectRel]
+) -> type[AbstractEmbeddedField]:
+    """Return the embedded field type that is suited for a particular model field."""
+    if isinstance(model_field, ForeignObjectRel):
+        # Reverse relations
+        if model_field.many_to_many:
+            raise NotImplementedError("Reverse embedding is not implemented for M2M fields.")
+        else:
+            return EmbeddedManyToOneRelField
+    else:
+        if model_field.one_to_many or model_field.many_to_many:
+            return EmbeddedManyToManyField
+        else:
+            return EmbeddedField
 
 
 class AbstractEmbeddedField:
@@ -101,6 +121,16 @@ class AbstractEmbeddedField:
         self.serializer_class = unlazy_object(self.serializer_class)
         return self.serializer_class.Meta.model
 
+    @property
+    def related_id_field(self) -> Optional[str]:
+        """The ID field is typically auto-detected.
+
+        It can however be overwritten to change the object retrieval query.
+        This is used by reverse relationships to retrieve objects
+        from a related foreign key instead.
+        """
+        return None
+
     @cached_property
     def parent_model(self) -> type[models.Model]:
         """Return the Django model class"""
@@ -118,15 +148,21 @@ class AbstractEmbeddedField:
     @cached_property
     def is_array(self) -> bool:
         """Whether the relation returns an list of items (e.g. ManyToMany)."""
-        # This includes LooseRelationManyToManyField
-        return isinstance(self.source_field, models.ManyToManyField)
+        # This includes ManyToManyField, LooseRelationManyToManyField and ForeignObjectRel
+        return self.source_field.many_to_many or self.source_field.one_to_many
+
+    @cached_property
+    def is_reverse(self) -> bool:
+        """Whether the relation is actually a reverse relationship."""
+        return isinstance(self.source_field, ForeignObjectRel)
 
     @cached_property
     def attname(self) -> str:
         try:
+            model_field = self.parent_model._meta.get_field(self.source)
             # For ForeignKey/OneToOneField this resolves to "{field_name}_id"
             # For ManyToManyField this resolves to a manager object
-            return self.parent_model._meta.get_field(self.source).attname
+            return model_field.attname
         except FieldDoesNotExist:
             # Allow non-FK relations, e.g. a "bag_id" to a completely different database
             if not self.source.endswith("_id"):
@@ -142,6 +178,29 @@ class EmbeddedField(AbstractEmbeddedField):
         """Find the _id field value(s)"""
         id_value = getattr(instance, self.attname, None)
         return [] if id_value is None else [id_value]
+
+
+class EmbeddedManyToOneRelField(EmbeddedField):
+    """An embedded field for reverse relations (of foreign keys)."""
+
+    def get_related_ids(self, instance):
+        """Reverse relations link to the given instance, hence we track the 'pk'."""
+        return [instance.pk]
+
+    @property
+    def attname(self) -> str:
+        """Reverse relations are based on the current object's identifier."""
+        if self.parent_model.is_temporal():
+            return first(self.parent_model.table_schema().identifier)
+        else:
+            return "pk"
+
+    @property
+    def related_id_field(self):
+        """Change the ID field to implement reverse relations.
+        This lets the results be read from the remote foreign key to retrieve the objects.
+        """
+        return self.source_field.remote_field.name
 
 
 class EmbeddedManyToManyField(AbstractEmbeddedField):
