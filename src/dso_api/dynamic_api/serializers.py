@@ -842,6 +842,7 @@ def _build_serializer_reverse_fk_field(
     format1 = additional_relation.format
 
     if format1 == "embedded":
+        # Shows the identifiers of each item inline.
         view_name = "dynamic_api:{}-{}-detail".format(
             to_snake_case(model.get_dataset_id()),
             to_snake_case(model_field.related_model.table_schema().id),
@@ -855,7 +856,10 @@ def _build_serializer_reverse_fk_field(
             ),
         )
     elif format1 == "summary":
+        # Only shows a count and href to the (potentially large) list of items.
         serializer_part.add_field(name, _RelatedSummaryField())
+    else:
+        logger.warning("Field %r uses unsupported format: %s", field_schema, format1)
 
 
 def _generate_nested_relations(
