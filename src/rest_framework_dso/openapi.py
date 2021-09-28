@@ -199,6 +199,10 @@ class DSOSchemaGenerator(generators.SchemaGenerator):
         },
     }
 
+    def has_view_permissions(self, *args, **kwargs):
+        """Schemas are public, so this is always true."""
+        return True
+
     def get_schema(self, request=None, public=False):
         """Improved schema generation, include more OpenAPI fields"""
         schema = super().get_schema(request=request, public=public)
