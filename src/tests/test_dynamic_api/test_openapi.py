@@ -64,6 +64,8 @@ def test_openapi_json(api_client, afval_dataset, fietspaaltjes_dataset, filled_r
     assert paths == [
         "/v1/afvalwegingen/adres_loopafstand/",
         "/v1/afvalwegingen/adres_loopafstand/{id}/",
+        "/v1/afvalwegingen/clusters/",
+        "/v1/afvalwegingen/clusters/{id}/",
         "/v1/afvalwegingen/containers/",
         "/v1/afvalwegingen/containers/{id}/",
     ]
