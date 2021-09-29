@@ -114,6 +114,40 @@ Database Host Port.
 If ``CLOUD_ENV`` is not set or not starting with ``azure`` is assumes its value to be a regular hosting provider.
 
 
+Querying Application Insights
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Regular logs can be queries in related Application Insights instance via `logs` screen with following query:
+
+```
+traces
+| extend stack = parse_json(message)
+| where stack.level == "DEBUG"
+| project stack.level, stack.message, timestamp
+```
+
+Note: `stack` is an object and contains a bit more information than just `level` and `message` (add: `stack` to `project ` line to see more)
+
+Exceptions are available via following query:
+
+```
+exceptions
+| extend x = split(outerMessage, "Traceback")
+| extend error_log = parse_json(tostring(x[0]))
+| extend path = split(error_log.message, "Error: ")[1]
+| project timestamp, path, error_log.level, x[1], x[2], x[3], x[4]
+```
+
+Where columns `x[1]`, `x[2]`, `x[3]` and `x[4]` can contain python stack trace parts.
+
+
+Audit logs are queries in separate Application Insights instance with:
+
+```
+traces
+| extend msg = parse_json(message)
+| project timestamp, msg.level, msg.message
+```
 
 Remaining Configuration
 -----------------------
