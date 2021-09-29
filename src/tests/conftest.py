@@ -1059,7 +1059,10 @@ def ggpgebieden_data(ggpgebieden_model, buurten_data):
 def woningbouwplannen_data(woningbouwplan_model, buurten_data):
     woningbouwplan_model.objects.create(id="1")
     woningbouwplan_model.buurten.through.objects.create(
-        woningbouwplan_id="1", buurten_id="03630000000078"
+        id=1000,
+        woningbouwplan_id="1",
+        buurten_id=buurten_data.id,
+        buurten_identificatie=buurten_data.identificatie,
     )
     # woningbouwplan_model.objects.create(id="2", testbuurt="03630000000078")
     # woningbouwplan_model.bestaat_uit_buurten.through.objects.create(

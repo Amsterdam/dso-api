@@ -30,7 +30,7 @@ def get_embedded_field_class(
     if isinstance(model_field, ForeignObjectRel):
         # Reverse relations
         if model_field.many_to_many:
-            raise NotImplementedError("Reverse embedding is not implemented for M2M fields.")
+            return EmbeddedManyToManyRelField
         else:
             return EmbeddedManyToOneRelField
     else:
@@ -52,6 +52,18 @@ class AbstractEmbeddedField:
     in ``Meta.embedded_fields``), or add it directly in ``Meta.embedded_fields``.
     Both styles require the serializer class to inherit
     from :class:`rest_framework_dso.serializers.ExpandMixin`.
+
+    The embedded fields are designed to be efficient during streaming rendering
+    of large datasets. Instead of collecting/prefetching the whole queryset in one go,
+    the required relationship data is incrementally collected as each individual rendered
+    object is written to the client. After rendering the whole first list of objects,
+    the related objects can now be queried in a single SQL statement and be written
+    to the next section in the ``"_embedded": { ... }`` dict.
+
+    Hence, there are 2 significant overrides to implement:
+    the :meth:`get_related_ids` method and :attr:`related_id_field` attribute.
+    These define how a relationship is queried and should allow spanning FK/M2M
+    and reverse ORM relations by playing with those 2 overrides.
     """
 
     def __init__(
@@ -137,7 +149,7 @@ class AbstractEmbeddedField:
         return self.parent_serializer_class.Meta.model
 
     @cached_property
-    def source_field(self) -> models.Field:
+    def source_field(self) -> Union[models.Field, models.ForeignObjectRel]:
         return self.parent_model._meta.get_field(self.source)
 
     @cached_property
@@ -156,13 +168,19 @@ class AbstractEmbeddedField:
         """Whether the relation is actually a reverse relationship."""
         return isinstance(self.source_field, ForeignObjectRel)
 
+
+class EmbeddedField(AbstractEmbeddedField):
+    """An embedded field for a foreign-key relation.
+
+    This collects the identifiers to the related foreign objects,
+    so these can be queried once all main objects have been written to the client.
+    """
+
     @cached_property
     def attname(self) -> str:
         try:
-            model_field = self.parent_model._meta.get_field(self.source)
             # For ForeignKey/OneToOneField this resolves to "{field_name}_id"
-            # For ManyToManyField this resolves to a manager object
-            return model_field.attname
+            return self.source_field.attname
         except FieldDoesNotExist:
             # Allow non-FK relations, e.g. a "bag_id" to a completely different database
             if not self.source.endswith("_id"):
@@ -170,18 +188,26 @@ class AbstractEmbeddedField:
             else:
                 return self.source
 
-
-class EmbeddedField(AbstractEmbeddedField):
-    """An embedded field for a foreign-key relation."""
-
     def get_related_ids(self, instance):
         """Find the _id field value(s)"""
+        # The identifier of the foreign objects is known in the parent object. Becomes the query:
+        # self.related_model.objects.filter({pk}__in=[ids to foreign instances])
         id_value = getattr(instance, self.attname, None)
         return [] if id_value is None else [id_value]
 
 
 class EmbeddedManyToOneRelField(EmbeddedField):
-    """An embedded field for reverse relations (of foreign keys)."""
+    """An embedded field for reverse relations (of foreign keys).
+
+    This collects the identifiers of all primary objects, so any objects
+    that link to those primary objects can be resolved afterwards in a single query.
+
+    The name of this object is somewhat awkward, but it follows Django conventions.
+    Django ForeignKey's have a OneToManyRel that describes the relationship.
+    That object is also placed on the foreign object as reverse field, thus giving the
+    funny ``ManyToOneRel.one_to_many == True`` situation. The reverse field should have
+    been called something like "OneToManyField" but Django reuses the "ManyToOneRel" there.
+    """
 
     def get_related_ids(self, instance):
         """Reverse relations link to the given instance, hence we track the 'pk'."""
@@ -200,51 +226,48 @@ class EmbeddedManyToOneRelField(EmbeddedField):
         """Change the ID field to implement reverse relations.
         This lets the results be read from the remote foreign key to retrieve the objects.
         """
+        # This causes the queryset to be constructed as:
+        # self.related_model.objects.filter({fk_field}__in=[ids to primary instances])
         return self.source_field.remote_field.name
 
 
 class EmbeddedManyToManyField(AbstractEmbeddedField):
-    """An embedded field for a n-m relation."""
+    """An embedded field for a M2M relation.
+
+    This collects all identifiers of the primary objects, so the through table
+    can be queried afterwards in a single call to find all related objects.
+    """
 
     def get_serializer(self, parent: serializers.Serializer, **kwargs) -> serializers.Serializer:
         kwargs.setdefault("many", True)
         return super().get_serializer(parent, **kwargs)
 
     def get_related_ids(self, instance):
-        """Find the _id field value(s)"""
-        related_mgr = getattr(instance, self.attname, None)
-        if related_mgr is None:
-            return []
-        # I guess, as long as it is Django we can use pk,
-        # because Django needs it
-        source_is_temporal = self.parent_model.is_temporal()
-        target_is_temporal = related_mgr.model.is_temporal()
-        if not source_is_temporal and target_is_temporal:
-            ids = self._get_temporal_ids(instance, related_mgr)
-        else:
-            ids = [r.pk for r in related_mgr.all()]
-        return ids
+        """The PK of this source object can be used to find the relation in the through table."""
+        return [instance.pk]
 
-    def _get_temporal_ids(self, instance, related_mgr):
-        (
-            identificatie_fieldname,
-            volgnummer_fieldname,
-        ) = related_mgr.model._table_schema.identifier
-        source_field_name = related_mgr.source_field_name
-        source_id = instance.id
-        through_tabel_filter_params = {source_field_name: source_id}
-        target_id_field = f"{related_mgr.target_field_name}_id"
-        through_tabel_items = related_mgr.through.objects.filter(
-            **through_tabel_filter_params
-        ).values_list(target_id_field, flat=True)
-        target_filter_params = {f"{identificatie_fieldname}__in": through_tabel_items}
-        order_param = f"-{volgnummer_fieldname}"
-        ids = (
-            related_mgr.model.objects.filter(**target_filter_params)
-            .order_by(order_param)
-            .values_list("pk", flat=True)[:1]
+    @cached_property
+    def related_id_field(self) -> Optional[str]:
+        # This causes the queryset to be constructed as:
+        # self.related_model.objects.filter({reverse_through_field}__{idfield}__in=[PKs])
+        return "__".join(
+            path_info.join_field.name for path_info in self.source_field.get_reverse_path_info()
         )
-        return ids
+
+
+class EmbeddedManyToManyRelField(EmbeddedManyToManyField):
+    """Embedded field for reverse M2M relations.
+
+    This performs roughly the same query as the forward M2M relation,
+    except that the relation to the through table is followed backwards.
+    """
+
+    def related_id_field(self) -> Optional[str]:
+        # This causes the queryset to be constructed as:
+        # self.related_model.objects.filter({forward_through_field}__{identifierfield}__in=[PKs])
+        return "__".join(
+            path_info.join_field.name for path_info in self.source_field.get_path_info()
+        )
 
 
 class LinksField(serializers.HyperlinkedIdentityField):
