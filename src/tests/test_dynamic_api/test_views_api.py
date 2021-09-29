@@ -1617,9 +1617,10 @@ class TestEmbedTemporalTables:
         assert data["_embedded"]["buurten"][0]["id"] == "03630000000078.2"
         assert data["_embedded"]["woningbouwplan"][0]["_links"]["buurten"] == [
             {
-                "href": "http://testserver/v1/gebieden/buurten/03630000000078/",
-                "title": "03630000000078",
+                "href": "http://testserver/v1/gebieden/buurten/03630000000078/?volgnummer=2",
+                "title": "03630000000078.2",
                 "identificatie": "03630000000078",
+                "volgnummer": 2,
             }
         ]
         #  Check that the embedded buurten contains the correct "identificatie",
@@ -1693,7 +1694,7 @@ class TestEmbedTemporalTables:
         # check that "buurten" still contains the correct list
         assert (
             data["_links"]["buurten"][0]["href"]
-            == "http://testserver/v1/gebieden/buurten/03630000000078/"
+            == "http://testserver/v1/gebieden/buurten/03630000000078/?volgnummer=2"
         )
 
 
