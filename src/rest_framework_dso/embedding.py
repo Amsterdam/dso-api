@@ -96,10 +96,11 @@ class ExpandScope:
             field_tree = self._nested_fields_to_expand
         elif self.auto_expand_all:
             # Top-level, need to find all fields
+            # We auto-expand only for a limited set of levels, to avoid returning way too much
             field_tree = get_all_embedded_field_names(
                 parent_serializer.__class__,
                 allow_m2m=allow_m2m,
-                max_depth=MAX_EXPAND_ALL_DEPTH,  # auto-expand only for 2 levels
+                max_depth=MAX_EXPAND_ALL_DEPTH,
             )
         else:
             # Top-level, find all field that were requested.
@@ -229,9 +230,11 @@ def get_all_embedded_field_names(
     The output format is identical to group_dotted_names().
     """
     result = {}
+    embedded_fields: dict[str, AbstractEmbeddedField] = getattr(
+        serializer_class.Meta, "embedded_fields", {}
+    )
 
-    for field_name in getattr(serializer_class.Meta, "embedded_fields", ()):
-        field: AbstractEmbeddedField = get_embedded_field(serializer_class, field_name)
+    for field_name, field in embedded_fields.items():
         if field.is_array and not allow_m2m:
             continue
 
