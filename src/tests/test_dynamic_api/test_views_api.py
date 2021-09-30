@@ -877,18 +877,7 @@ class TestEmbedTemporalTables:
                                     "title": "03630000000018.1",
                                     "volgnummer": 1,
                                 },
-                                "wijken": [
-                                    # Reverse relation (but already known by parent)
-                                    {
-                                        "href": (
-                                            "http://testserver/v1/gebieden/wijken/03630012052035/"
-                                            "?volgnummer=1"
-                                        ),
-                                        "identificatie": "03630012052035",
-                                        "title": "03630012052035.1",
-                                        "volgnummer": 1,
-                                    }
-                                ],
+                                # wijken is excluded (repeated relation)
                             },
                             "beginGeldigheid": None,
                             "code": "A",
@@ -899,39 +888,6 @@ class TestEmbedTemporalTables:
                             "id": "03630000000018.1",
                             "naam": "Centrum",
                             "registratiedatum": None,
-                            "_embedded": {
-                                "wijken": [
-                                    # Reverse relation (but already known by parent)
-                                    {
-                                        "_links": {
-                                            "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/dataset#wijken",  # noqa: E501
-                                            "self": {
-                                                "href": "http://testserver/v1/gebieden/wijken/03630012052035/?volgnummer=1",  # noqa: E501
-                                                "identificatie": "03630012052035",
-                                                "title": "03630012052035.1",
-                                                "volgnummer": 1,
-                                            },
-                                            "buurt": {
-                                                "count": 2,
-                                                "href": "http://testserver/v1/gebieden/buurten/?ligtInWijkId=03630012052035.1",  # noqa: E501
-                                            },
-                                            "ligtInStadsdeel": {
-                                                # Recursive embed back to parent
-                                                "href": "http://testserver/v1/gebieden/stadsdelen/03630000000018/?volgnummer=1",  # noqa: E501
-                                                "identificatie": "03630000000018",
-                                                "title": "03630000000018.1",
-                                                "volgnummer": 1,
-                                            },
-                                        },
-                                        "beginGeldigheid": None,
-                                        "code": "A01",
-                                        "eindGeldigheid": None,
-                                        "id": "03630012052035.1",
-                                        "ligtInStadsdeelId": "03630000000018",
-                                        "naam": "Burgwallen-Nieuwe " "Zijde",
-                                    }
-                                ]
-                            },
                         }
                     },
                 }
@@ -1076,18 +1032,7 @@ class TestEmbedTemporalTables:
                                                         "title": "03630000000018.1",
                                                         "volgnummer": 1,
                                                     },
-                                                    "wijken": [
-                                                        {
-                                                            "href": (
-                                                                "http://testserver/v1"
-                                                                "/gebieden/wijken/03630012052035/"
-                                                                "?volgnummer=1"
-                                                            ),
-                                                            "identificatie": "03630012052035",
-                                                            "title": "03630012052035.1",
-                                                            "volgnummer": 1,
-                                                        }
-                                                    ],
+                                                    # wijken is excluded (repeated relation)
                                                 },
                                                 "beginGeldigheid": None,
                                                 "code": "A",
@@ -1304,15 +1249,7 @@ class TestEmbedTemporalTables:
                                         "title": "03630000000018.1",
                                         "volgnummer": 1,
                                     },
-                                    "wijken": [
-                                        # Reverse relation
-                                        {
-                                            "href": "http://testserver/v1/gebieden/wijken/03630012052035/?_format=json&volgnummer=1",  # noqa: E501
-                                            "identificatie": "03630012052035",
-                                            "title": "03630012052035.1",
-                                            "volgnummer": 1,
-                                        }
-                                    ],
+                                    # wijken is excluded here (forward/reverse relation loop)
                                 },
                                 "beginGeldigheid": None,
                                 "code": "A",
@@ -1323,39 +1260,6 @@ class TestEmbedTemporalTables:
                                 "id": "03630000000018.1",
                                 "naam": "Centrum",
                                 "registratiedatum": None,
-                                "_embedded": {
-                                    "wijken": [
-                                        # Reverse relation (but already known by parent)
-                                        {
-                                            "_links": {
-                                                "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/dataset#wijken",  # noqa: E501
-                                                "self": {
-                                                    "href": "http://testserver/v1/gebieden/wijken/03630012052035/?_format=json&volgnummer=1",  # noqa: E501
-                                                    "identificatie": "03630012052035",
-                                                    "title": "03630012052035.1",
-                                                    "volgnummer": 1,
-                                                },
-                                                "buurt": {
-                                                    "count": 2,
-                                                    "href": "http://testserver/v1/gebieden/buurten/?_format=json&ligtInWijkId=03630012052035.1",  # noqa: E501
-                                                },
-                                                "ligtInStadsdeel": {
-                                                    # Recursive embed back to parent
-                                                    "href": "http://testserver/v1/gebieden/stadsdelen/03630000000018/?_format=json&volgnummer=1",  # noqa: E501
-                                                    "identificatie": "03630000000018",
-                                                    "title": "03630000000018.1",
-                                                    "volgnummer": 1,
-                                                },
-                                            },
-                                            "beginGeldigheid": None,
-                                            "code": "A01",
-                                            "eindGeldigheid": None,
-                                            "id": "03630012052035.1",
-                                            "ligtInStadsdeelId": "03630000000018",
-                                            "naam": "Burgwallen-Nieuwe " "Zijde",
-                                        }
-                                    ]
-                                },
                             }
                         },
                     }

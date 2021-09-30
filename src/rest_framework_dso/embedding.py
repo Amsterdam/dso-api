@@ -6,6 +6,7 @@ the main objects are inspected while they are consumed by the output stream.
 """
 from __future__ import annotations
 
+import logging
 from collections import defaultdict
 from copy import copy
 from dataclasses import dataclass
@@ -14,12 +15,15 @@ from itertools import islice
 from typing import Callable, Iterable, Iterator, Optional, TypeVar, Union
 
 from django.db import models
+from django.db.models import ForeignObjectRel
 from lru import LRU
 from rest_framework import serializers
 from rest_framework.exceptions import ParseError
 
 from rest_framework_dso.fields import AbstractEmbeddedField
 from rest_framework_dso.serializer_helpers import ReturnGenerator, peek_iterable
+
+logger = logging.getLogger(__name__)
 
 DictOfDicts = dict[str, dict[str, dict]]
 T = TypeVar("T")
@@ -225,6 +229,7 @@ def get_all_embedded_field_names(
     serializer_class: type[serializers.Serializer],
     allow_m2m=True,
     max_depth: int = 99,
+    source_fields: list[Union[models.Field, ForeignObjectRel]] = None,
 ) -> DictOfDicts:
     """Find all possible expands, including nested fields.
     The output format is identical to group_dotted_names().
@@ -238,11 +243,25 @@ def get_all_embedded_field_names(
         if field.is_array and not allow_m2m:
             continue
 
+        if source_fields and field.source_field.remote_field in source_fields:
+            # Avoid embedding the exact reverse of a parent relation.
+            logger.debug(
+                "Excluded %s from embedding, it will recurse back on itself through %s.%s",
+                field_name,
+                ".".join(f.name for f in source_fields),
+                field.source,
+            )
+            continue
+
         if max_depth >= 1:
+            child_source_fields = (source_fields or []) + [field.source_field]
             # If there are nested relations, these are found too.
             # otherwise the value becomes an empty dict.
             result[field_name] = get_all_embedded_field_names(
-                field.serializer_class, allow_m2m=allow_m2m, max_depth=max_depth - 1
+                field.serializer_class,
+                allow_m2m=allow_m2m,
+                max_depth=max_depth - 1,
+                source_fields=child_source_fields,
             )
         else:
             result[field_name] = {}
