@@ -123,7 +123,7 @@ class AbstractEmbeddedField:
         # Make sure the serializer is the true object, or other isinstance() checks will fail.
         self.serializer_class = unlazy_object(self.serializer_class)
         embedded_serializer = self.serializer_class(context=parent.context, **kwargs)
-        embedded_serializer.bind(field_name=self.field_name, parent=parent)
+        embedded_serializer.bind(field_name=self.source, parent=parent)
         return embedded_serializer
 
     @cached_property

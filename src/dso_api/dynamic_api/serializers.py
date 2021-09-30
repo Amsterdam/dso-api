@@ -425,6 +425,72 @@ class DynamicLinksSerializer(DynamicSerializer):
 
     serializer_related_field = HALTemporalHyperlinkedRelatedField
 
+    def get_fields(self):
+        """Avoid adding fields that loop back to a parent."""
+        fields = super().get_fields()
+
+        if self.parent_source_fields:
+            for name, field in fields.copy().items():
+                if self._is_repeated_relation(name, field):
+                    logger.debug(
+                        "Excluded %s from _links field, it resolves to a parent via %s.%s",
+                        name,
+                        ".".join(f.name for f in self.parent_source_fields),
+                        field.source,
+                    )
+                    del fields[name]
+
+        return fields
+
+    @cached_property
+    def parent_source_fields(self) -> list[Union[models.Field, ForeignObjectRel]]:
+        """Find the ORM relationship fields that lead to this serializer instance"""
+        source_fields = []
+        parent = self.parent
+
+        # The root-level obviously doesn't have a field name,
+        # hence the check for parent.parent to exclude the root object.
+        while parent.parent is not None:
+            if parent.source_attrs and hasattr(parent.parent, "Meta"):
+                model = parent.parent.Meta.model
+
+                for attr in parent.source_attrs:
+                    field = model._meta.get_field(attr)
+                    source_fields.append(field)
+                    model = field.related_model
+
+            parent = parent.parent
+        return source_fields
+
+    def _is_repeated_relation(self, name: str, field: serializers.Field) -> bool:
+        """Check whether the field references back to a parent relation.
+        This detects whether the field is a relation, and whether it's model fields
+        are references by the pre-calculated `source_fields`.
+        """
+        if field.source == "*" or not isinstance(
+            field,
+            (serializers.ModelSerializer, serializers.RelatedField, serializers.ManyRelatedField),
+        ):
+            return False
+
+        # Resolve the model field that this serializer field links to.
+        # The source_attrs is generated here as it's created later in field.bind().
+        source_attrs = (field.source or name).split(".")
+        model = self.Meta.model
+        for attr in source_attrs:
+            model_field = model._meta.get_field(attr)
+            model = model_field.related_model  # for deeper nesting
+
+            # Check whether the reverse relation of that model field
+            # is already walked through by a parent serializer
+            if (
+                model_field.remote_field is not None
+                and model_field.remote_field in self.parent_source_fields
+            ):
+                return True
+
+        return False
+
     def _include_embedded(self):
         """Never include embedded relations when the
         serializer is used for generating the _links section.
