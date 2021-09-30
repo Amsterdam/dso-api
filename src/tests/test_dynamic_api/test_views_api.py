@@ -894,6 +894,70 @@ class TestEmbedTemporalTables:
             },
         }
 
+    def test_detail_expand_true_reverse_fk_relation(self, api_client, wijken_data, filled_router):
+        """Prove that the reverse stadsdelen.wijken can be expanded"""
+
+        url = reverse("dynamic_api:gebieden-stadsdelen-detail", args=["03630000000018.1"])
+        response = api_client.get(url, data={"_expand": "true"})
+        data = read_response_json(response)
+        assert response.status_code == 200, data
+
+        assert data == {
+            "_links": {
+                "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/dataset#stadsdelen",
+                "self": {
+                    "href": "http://testserver/v1/gebieden/stadsdelen/03630000000018/?volgnummer=1",  # noqa: E501
+                    "identificatie": "03630000000018",
+                    "title": "03630000000018.1",
+                    "volgnummer": 1,
+                },
+                "wijken": [
+                    {
+                        "href": "http://testserver/v1/gebieden/wijken/03630012052035/?volgnummer=1",  # noqa: E501
+                        "identificatie": "03630012052035",
+                        "title": "03630012052035.1",
+                        "volgnummer": 1,
+                    }
+                ],
+            },
+            "id": "03630000000018.1",
+            "code": "A",
+            "naam": "Centrum",
+            "geometrie": None,
+            "documentdatum": None,
+            "documentnummer": None,
+            "registratiedatum": None,
+            "beginGeldigheid": None,
+            "eindGeldigheid": None,
+            "_embedded": {
+                "wijken": [
+                    # reverse relation
+                    {
+                        "_links": {
+                            "buurt": {
+                                "count": 0,
+                                "href": "http://testserver/v1/gebieden/buurten/?ligtInWijkId=03630012052035.1",  # noqa: E501
+                            },
+                            "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/dataset#wijken",  # noqa: E501
+                            "self": {
+                                "href": "http://testserver/v1/gebieden/wijken/03630012052035/?volgnummer=1",  # noqa: E501
+                                "identificatie": "03630012052035",
+                                "title": "03630012052035.1",
+                                "volgnummer": 1,
+                            },
+                            # ligtInStadsdeel is removed (as it's a backward->forward match)
+                        },
+                        "id": "03630012052035.1",
+                        "code": "A01",
+                        "naam": "Burgwallen-Nieuwe Zijde",
+                        "beginGeldigheid": None,
+                        "eindGeldigheid": None,
+                        "ligtInStadsdeelId": "03630000000018",
+                    }
+                ]
+            },
+        }
+
     def test_nested_expand_list(
         self, api_client, panden_data, buurten_data, wijken_data, filled_router
     ):
