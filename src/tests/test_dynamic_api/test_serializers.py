@@ -306,11 +306,7 @@ class TestDynamicSerializer:
         }
 
     @staticmethod
-    def test_backwards_relation(
-        drf_request,
-        gebieden_schema,
-        gebieden_models,
-    ):
+    def test_backwards_relation(drf_request, gebieden_schema, gebieden_models):
         """Show backwards"""
         drf_request.dataset = gebieden_schema
         drf_request.table_temporal_slice = None
@@ -340,7 +336,7 @@ class TestDynamicSerializer:
                     "identificatie": "0363",
                 },
                 "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/dataset#stadsdelen",  # NoQA
-                "wijk": [
+                "wijken": [
                     {
                         "href": "http://testserver/v1/gebieden/wijken/03630000000001/?volgnummer=1",  # NoQA
                         "title": "03630000000001.1",
