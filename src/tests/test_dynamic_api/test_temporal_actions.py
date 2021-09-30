@@ -193,5 +193,5 @@ class TestViews:
             "volgnummer",
         }
         assert fetch_query_keys(
-            data["_embedded"]["stadsdelen"][1]["_links"]["wijk"][0]["href"]
+            data["_embedded"]["stadsdelen"][1]["_links"]["wijken"][0]["href"]
         ) == {"_format", "volgnummer"}

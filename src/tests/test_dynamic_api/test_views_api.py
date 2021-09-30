@@ -877,7 +877,7 @@ class TestEmbedTemporalTables:
                                     "title": "03630000000018.1",
                                     "volgnummer": 1,
                                 },
-                                "wijk": [
+                                "wijken": [
                                     # Reverse relation (but already known by parent)
                                     {
                                         "href": (
@@ -900,7 +900,7 @@ class TestEmbedTemporalTables:
                             "naam": "Centrum",
                             "registratiedatum": None,
                             "_embedded": {
-                                "wijk": [
+                                "wijken": [
                                     # Reverse relation (but already known by parent)
                                     {
                                         "_links": {
@@ -1076,7 +1076,7 @@ class TestEmbedTemporalTables:
                                                         "title": "03630000000018.1",
                                                         "volgnummer": 1,
                                                     },
-                                                    "wijk": [
+                                                    "wijken": [
                                                         {
                                                             "href": (
                                                                 "http://testserver/v1"
@@ -1304,7 +1304,7 @@ class TestEmbedTemporalTables:
                                         "title": "03630000000018.1",
                                         "volgnummer": 1,
                                     },
-                                    "wijk": [
+                                    "wijken": [
                                         # Reverse relation
                                         {
                                             "href": "http://testserver/v1/gebieden/wijken/03630012052035/?_format=json&volgnummer=1",  # noqa: E501
@@ -1324,7 +1324,7 @@ class TestEmbedTemporalTables:
                                 "naam": "Centrum",
                                 "registratiedatum": None,
                                 "_embedded": {
-                                    "wijk": [
+                                    "wijken": [
                                         # Reverse relation (but already known by parent)
                                         {
                                             "_links": {

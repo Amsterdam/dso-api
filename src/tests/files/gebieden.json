@@ -389,7 +389,7 @@
         "required": ["schema", "identificatie", "volgnummer"],
         "display": "id",
         "additionalRelations": {
-          "wijk": {
+          "wijken": {
             "table": "wijken",
             "field": "ligtInStadsdeel",
             "format": "embedded"
