@@ -5,13 +5,13 @@
 
 {{ schema.description or '' }}
 
-* **ID:** {{ schema_name }}{% if schema_auth %} (autorisatie: {{ schema_auth }}){% endif %}
+* **ID:** {{ schema_name }}{% if schema_auth %} (autorisatie: {{ schema_auth|sort|join(', ') }}){% endif %}
 * **Versie:** {{ schema.version }}
 * **Endpoints:**
 
  * Swagger UI: `{{ swagger_url|strip_base_url }} <{{ swagger_url }}>`_
  {%- for table in tables %}
- * REST URI{% if (table.auth or schema_auth) %} (autorisatie:{{ (table.auth or schema_auth) }}){% endif %}: `{{ table.uri|strip_base_url }} <{{ table.uri }}>`_
+ * REST URI{% if table.auth %} (autorisatie:{{ table.auth|sort|join(', ') }}){% endif %}: `{{ table.uri|strip_base_url }} <{{ table.uri }}>`_
   {%- endfor %}
 
 .. contents:: Tabellen
@@ -28,7 +28,7 @@
 .. raw:: html
 
    <ul>
-     <li><b>Autorisatie:</b>{% if (table.auth or schema_auth) %} (autorisatie:{{ (table.auth or schema_auth) }}){% else %}Geen, dit is openbare data.{% endif %}</a></li>
+     <li><b>Autorisatie:</b>{% if table.auth %} (autorisatie: {{ table.auth|sort|join(', ') }}){% else %}Geen, dit is openbare data.{% endif %}</a></li>
      <li><b>REST URI:</b> <a href="{{ table.uri }}">{{ table.uri|strip_base_url }}</a></li>
      <li><b>CSV Export:</b> {% if table.rest_csv %}<a type="text/csv" download href="{{ table.rest_csv }}">{{ table.rest_csv|strip_base_url }}</a>{% else %}N.B.{% endif %}</li>
      <li><b>GeoJSON Export:</b> {% if table.rest_geojson %}<a type="application/json" download href="{{ table.rest_geojson }}">{{ table.rest_geojson|strip_base_url }}</a>{% else %}N.B.{% endif %}</li>
@@ -43,7 +43,7 @@ De volgende velden zijn beschikbaar:
      - Type
      - Omschrijving
 {%- for field in table.fields %}
-   * - ``{{ field.camel_name }}``{% if ((field.auth or schema_auth) or table.auth) %} (autorisatie:{{ ((field.auth or table.auth) or schema_auth) }}){% endif %}
+   * - ``{{ field.camel_name }}``{% if field.auth %} (autorisatie: {{ field.auth|sort|join(', ') }}){% endif %}
      - {{ field.type|default('') }}{% if field.is_identifier %} *identificatie*{% endif %}
      - {{ field.description|default('') }}
 {%- endfor %}

@@ -175,7 +175,7 @@ def _get_table_context(table: DatasetTableSchema, parent_path: str):
         "rest_geojson": f"{uri}?_format=geojson",
         "description": table.get("description"),
         "fields": [_get_field_context(field, table.identifier) for field in fields],
-        "auth": table.auth,
+        "auth": table.auth | table.dataset.auth,
         "relations": [
             {
                 "id": relation_name,
@@ -304,7 +304,7 @@ def _get_field_context(field: DatasetFieldSchema, identifier: List[str]) -> Dict
         "description": field.description or "",
         "lookups": [LOOKUP_CONTEXT[op] for op in lookups],
         "source": field,
-        "auth": field.auth,
+        "auth": field.auth | field.table.auth | field.table.dataset.auth,
     }
 
 
