@@ -15,7 +15,7 @@ help:
 .PHONY: help Makefile
 
 datasets:
-	rm -rf source/datasets
+	rm -rf source/datasets source/wfs-datasets
 	mkdir -p source/datasets source/wfs-datasets
 	python3 source/datasets.py
 
