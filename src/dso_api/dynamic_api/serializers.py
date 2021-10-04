@@ -443,7 +443,9 @@ class DynamicLinksSerializer(DynamicSerializer):
         return fields
 
     @cached_property
-    def parent_source_fields(self) -> list[Union[models.Field, ForeignObjectRel]]:
+    def parent_source_fields(
+        self,
+    ) -> list[Union[RelatedField, LooseRelationField, ForeignObjectRel]]:
         """Find the ORM relationship fields that lead to this serializer instance"""
         source_fields = []
         parent = self.parent

@@ -149,7 +149,9 @@ class AbstractEmbeddedField:
         return self.parent_serializer_class.Meta.model
 
     @cached_property
-    def source_field(self) -> Union[models.Field, models.ForeignObjectRel]:
+    def source_field(
+        self,
+    ) -> Union[RelatedField, LooseRelationField, models.ForeignObjectRel]:
         return self.parent_model._meta.get_field(self.source)
 
     @cached_property
