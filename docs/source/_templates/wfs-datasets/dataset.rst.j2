@@ -12,6 +12,8 @@
 {% for table in tables %}
 ----
 
+.. _{{ table.doc_id }}:
+
 {{ table.title|underline('-') }}
 
 {{ table.description or '' }}
@@ -45,19 +47,27 @@ Velden
      - {{ field.description|default('') }}
 {%- endfor %}
 
-{% if table.embeds %}
-Embeds
-~~~~~~
+{% if table.expands %}
+Insluitbare relaties
+~~~~~~~~~~~~~~~~~~~~
 
 De volgende velden kunnen ingesloten worden met ``?embed=...`` en ``?expand=...```:
 
-{% for relation in table.embeds -%}
-* ``{{ relation.snake_name }}``
-{% endfor %}
+.. list-table::
+   :header-rows: 1
 
-{% if table.embeds|length > 1 %}
+   * - Relatie
+     - Tabel
+     - Omschrijving
+{%- for expand in table.expands: %}
+   * - ``{{ expand.snake_name }}``
+     - :ref:`{{ expand.relation_id }} <{{ expand.target_doc_id }}>`
+     - {{ expand.related_table.description or '' }}
+{%- endfor %}
+
+{% if table.expands|length > 1 %}
 Je kan meerdere velden insluiten door te ze scheiden met een comma, bijvoorbeeld:
-``?embed={{ table.embeds.0.snake_name }},{{ table.embeds.1.snake_name }}``
+``?embed={{ table.expands.0.snake_name }},{{ table.expands.1.snake_name }}``
 {% endif %}
 
 {% endif %}
