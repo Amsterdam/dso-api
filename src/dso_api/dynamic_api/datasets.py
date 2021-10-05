@@ -1,9 +1,10 @@
 from django.conf import settings
 from django.db.models import Q
+from schematools.contrib.django.managers import DatasetQuerySet
 from schematools.contrib.django.models import Dataset
 
 
-def get_active_datasets(queryset=None):
+def get_active_datasets(queryset=None) -> DatasetQuerySet:
     """Get published datasets:
     Get all datasets that should be published.
     - remove Non-default datasets
