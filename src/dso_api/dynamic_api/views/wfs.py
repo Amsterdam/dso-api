@@ -89,7 +89,11 @@ class DatasetWFSIndexView(APIIndexView):
     api_type = "WFS"
 
     def get_datasets(self):
-        return [ds for ds in get_active_datasets().order_by("name") if ds.has_geometry_fields]
+        return [
+            ds
+            for ds in get_active_datasets().db_enabled().order_by("name")
+            if ds.has_geometry_fields
+        ]
 
     def get_environments(self, ds: Dataset, base: str):
         return [
@@ -150,7 +154,7 @@ class DatasetWFSView(CheckPermissionsMixin, WFSView):
         try:
             self.models = router.all_models[dataset_name]
         except KeyError:
-            raise Http404("Invalid dataset") from None
+            raise Http404(f"Invalid dataset: {dataset_name}") from None
 
         # Allow to define the expand or embed fields on request.
         expand = request.GET.get("expand", "")

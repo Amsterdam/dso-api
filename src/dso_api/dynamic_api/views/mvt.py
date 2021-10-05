@@ -34,7 +34,11 @@ class DatasetMVTIndexView(APIIndexView):
     api_type = "MVT"
 
     def get_datasets(self):
-        return [ds for ds in get_active_datasets().order_by("name") if ds.has_geometry_fields]
+        return [
+            ds
+            for ds in get_active_datasets().db_enabled().order_by("name")
+            if ds.has_geometry_fields
+        ]
 
     def get_environments(self, ds: Dataset, base: str):
         return [
@@ -70,7 +74,7 @@ class DatasetMVTSingleView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        ds = get_object_or_404(Dataset, name=kwargs["dataset_name"])
+        ds = get_object_or_404(Dataset.objects.db_enabled(), name=kwargs["dataset_name"])
         geo_tables = sorted(
             to_snake_case(table.name)
             for table in ds.schema.tables
@@ -99,7 +103,7 @@ class DatasetMVTView(CheckPermissionsMixin, MVTView):
         try:
             model = router.all_models[dataset_name][table_name]
         except KeyError:
-            raise Http404("Invalid dataset") from None
+            raise Http404(f"Invalid table: {dataset_name}.{table_name}") from None
 
         self.model = model
         self.check_permissions(request, [self.model])
