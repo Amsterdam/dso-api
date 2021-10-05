@@ -432,12 +432,13 @@ class DynamicLinksSerializer(DynamicSerializer):
         if self.parent_source_fields:
             for name, field in fields.copy().items():
                 if self._is_repeated_relation(name, field):
-                    logger.debug(
-                        "Excluded %s from _links field, it resolves to a parent via %s.%s",
-                        name,
-                        ".".join(f.name for f in self.parent_source_fields),
-                        field.source,
-                    )
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug(
+                            "Excluded %s from _links field, it resolves to a parent via %s.%s",
+                            name,
+                            ".".join(f.name for f in self.parent_source_fields),
+                            field.source,
+                        )
                     del fields[name]
 
         return fields
