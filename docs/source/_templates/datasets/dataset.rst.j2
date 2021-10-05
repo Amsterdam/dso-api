@@ -21,6 +21,8 @@
 {% for table in tables %}
 ----
 
+.. _{{ table.doc_id }}:
+
 {{ table.title|underline('-') }}
 
 {{ table.description or '' }}
@@ -67,15 +69,23 @@ De volgende query-parameters zijn te gebruiken:
   {%- endfor %}
 {%- endfor %}
 
-{% if table.relations %}
-Relaties
-~~~~~~~~
+{% if table.expands %}
+Insluitbare relaties
+~~~~~~~~~~~~~~~~~~~~
 
 De volgende velden kunnen ingesloten worden met ``?_expandScope=...``:
 
-{% for relation in table.relations: -%}
-* ``{{ relation.camel_name }}``
-{% endfor %}
+.. list-table::
+   :header-rows: 1
+
+   * - Relatie
+     - Tabel
+     - Omschrijving
+{%- for expand in table.expands: %}
+   * - ``{{ expand.camel_name }}``
+     - :ref:`{{ expand.relation_id }} <{{ expand.target_doc_id }}>`
+     - {{ expand.related_table.description or '' }}
+{%- endfor %}
 
 Gebruik ``?_expand=true`` om alle relaties in te sluiten.
 
