@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from typing import Any
+from typing import Any, NamedTuple, Union
 
 import orjson
 import pytest
@@ -12,7 +12,7 @@ from schematools.types import DatasetTableSchema, ProfileSchema
 from urllib3_mock import Responses
 
 from dso_api.dynamic_api.remote.clients import RemoteClient
-from tests.utils import read_response_json
+from tests.utils import read_response, read_response_json
 
 DEFAULT_RESPONSE = {
     "naam": {
@@ -103,6 +103,141 @@ SUCCESS_TESTS = {
             },
             "burgerservicenummer": "230164419",
             "geslachtsaanduiding": "",
+        },
+    ),
+}
+
+CSV_HEADER = (
+    "Schema,Geslachtsaanduiding,Leeftijd,Burgerservicenummer"
+    ",Naam.Aanduidingnaamgebruik,Naam.Voornamen,Naam.Voorletters"
+    ",Naam.Geslachtsnaam,Naam.Voorvoegsel"
+    ",Geboorte.Datum.Datum,Geboorte.Datum.Jaar,Geboorte.Datum.Maand,Geboorte.Datum.Dag"
+    ",Verblijfplaats.Functieadres,Verblijfplaats.Huisnummer,Verblijfplaats.Postcode"
+    ",Verblijfplaats.Straatnaam"
+    ",Verblijfplaats.Datumaanvangadreshouding.Datum"
+    ",Verblijfplaats.Datumaanvangadreshouding.Jaar"
+    ",Verblijfplaats.Datumaanvangadreshouding.Maand"
+    ",Verblijfplaats.Datumaanvangadreshouding.Dag"
+    ",Verblijfplaats.Datuminschrijvingingemeente.Datum"
+    ",Verblijfplaats.Datuminschrijvingingemeente.Jaar"
+    ",Verblijfplaats.Datuminschrijvingingemeente.Maand"
+    ",Verblijfplaats.Datuminschrijvingingemeente.Dag"
+    ",Verblijfplaats.Gemeentevaninschrijving.Code"
+    ",Verblijfplaats.Gemeentevaninschrijving.Omschrijving\r\n"
+)
+
+as_is = lambda data: data
+
+
+class FormatTestInput(NamedTuple):
+    remote_response: dict
+    format: str
+    parser: callable
+    expected_type: str
+    expected_data: Union[str, dict]
+
+
+SUCCESS_FORMAT_TESTS = {
+    "csv-default": FormatTestInput(
+        DEFAULT_RESPONSE,
+        "csv",
+        as_is,
+        "text/csv; charset=utf-8",
+        CSV_HEADER
+        + "https://schemas.data.amsterdam.nl/datasets/remote/brp/dataset#ingeschrevenpersonen"
+        + ",vrouw,77,999990901,eigen,Ria,R.,Amstel,van,1942-08-12,1942,8,12,woonadres,6,8603XM"
+        + ",Anjelierstraat,2011-01-01,2011,1,1,2011-01-01,2011,1,1,1900,Súdwest-Fryslân\r\n",
+    ),
+    "csv-small": FormatTestInput(
+        SMALL_RESPONSE,
+        "csv",
+        as_is,
+        "text/csv; charset=utf-8",
+        CSV_HEADER
+        + "https://schemas.data.amsterdam.nl/datasets/remote/brp/dataset#ingeschrevenpersonen"
+        + ",,,230164419,,,,,,,,,,woonadres,41,1060MB,Cycladenlaan,,,,,,,,,0363,Amsterdam\r\n",
+    ),
+    "geojson-default": FormatTestInput(
+        DEFAULT_RESPONSE,
+        "geojson",
+        orjson.loads,
+        "application/geo+json; charset=utf-8",
+        {
+            "type": "Feature",
+            "crs": {"properties": {"name": "urn:ogc:def:crs:EPSG::4326"}, "type": "name"},
+            "properties": {
+                "_links": {
+                    "self": {
+                        "href": "http://testserver/v1/remote/brp/ingeschrevenpersonen/999990901/"
+                    }
+                },
+                "burgerservicenummer": "999990901",
+                "geboorte": {
+                    "datum": {"dag": 12, "datum": "1942-08-12", "jaar": 1942, "maand": 8}
+                },
+                "geslachtsaanduiding": "vrouw",
+                "leeftijd": 77,
+                "naam": {
+                    "aanduidingNaamgebruik": "eigen",
+                    "geslachtsnaam": "Amstel",
+                    "voorletters": "R.",
+                    "voornamen": "Ria",
+                    "voorvoegsel": "van",
+                },
+                "schema": (
+                    "https://schemas.data.amsterdam.nl"
+                    "/datasets/remote/brp/dataset#ingeschrevenpersonen"
+                ),
+                "verblijfplaats": {
+                    "datumAanvangAdreshouding": {
+                        "dag": 1,
+                        "datum": "2011-01-01",
+                        "jaar": 2011,
+                        "maand": 1,
+                    },
+                    "datumInschrijvingInGemeente": {
+                        "dag": 1,
+                        "datum": "2011-01-01",
+                        "jaar": 2011,
+                        "maand": 1,
+                    },
+                    "functieAdres": "woonadres",
+                    "gemeenteVanInschrijving": {"code": "1900", "omschrijving": "Súdwest-Fryslân"},
+                    "huisnummer": "6",
+                    "postcode": "8603XM",
+                    "straatnaam": "Anjelierstraat",
+                },
+            },
+        },
+    ),
+    "geojson-small": FormatTestInput(
+        SMALL_RESPONSE,
+        "geojson",
+        orjson.loads,
+        "application/geo+json; charset=utf-8",
+        {
+            "type": "Feature",
+            "crs": {"properties": {"name": "urn:ogc:def:crs:EPSG::4326"}, "type": "name"},
+            "properties": {
+                "_links": {
+                    "self": {
+                        "href": "http://testserver/v1/remote/brp/ingeschrevenpersonen/999990901/"
+                    }
+                },
+                "burgerservicenummer": "230164419",
+                "geslachtsaanduiding": "",
+                "schema": (
+                    "https://schemas.data.amsterdam.nl"
+                    "/datasets/remote/brp/dataset#ingeschrevenpersonen"
+                ),
+                "verblijfplaats": {
+                    "functieAdres": "woonadres",
+                    "gemeenteVanInschrijving": {"code": "0363", "omschrijving": "Amsterdam"},
+                    "huisnummer": "41",
+                    "postcode": "1060MB",
+                    "straatnaam": "Cycladenlaan",
+                },
+            },
         },
     ),
 }
@@ -207,6 +342,32 @@ def test_remote_detail_view(
     data = read_response_json(response)
     assert response.status_code == 200, data
     assert data == local_response, data
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("test_name", list(SUCCESS_FORMAT_TESTS.keys()))
+def test_remote_detail_view_formats(
+    api_client, fetch_auth_token, brp_dataset, urllib3_mocker, test_name, filled_router
+):
+    """Prove that the remote router can proxy the other service."""
+    test_input: FormatTestInput = SUCCESS_FORMAT_TESTS[test_name]
+    urllib3_mocker.add(
+        "GET",
+        "/unittest/brp/ingeschrevenpersonen/999990901",
+        body=orjson.dumps(test_input.remote_response),
+        content_type="application/json",
+    )
+
+    # Prove that URLs can now be resolved.
+    url = reverse("dynamic_api:brp-ingeschrevenpersonen-detail", kwargs={"pk": "999990901"})
+    token = fetch_auth_token(["BRP/R"])
+    response = api_client.get(
+        url, data={"_format": test_input.format}, HTTP_AUTHORIZATION=f"Bearer {token}"
+    )
+    data = test_input.parser(read_response(response))
+    assert response.status_code == 200, data
+    assert response["content-type"] == test_input.expected_type
+    assert data == test_input.expected_data
 
 
 @pytest.mark.django_db
