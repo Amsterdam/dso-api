@@ -215,8 +215,8 @@ class DynamicSerializer(DSOModelSerializer):
         """
         return self.context["request"]
 
-    def get_fields(self):
-        """Remove fields that shouldn't be part of the response."""
+    def get_fields(self) -> dict[str, serializers.Field]:
+        """Override DRF to remove fields that shouldn't be part of the response."""
         user_scopes = self.get_request().user_scopes
         model = self.Meta.model
 
@@ -425,8 +425,8 @@ class DynamicLinksSerializer(DynamicSerializer):
 
     serializer_related_field = HALTemporalHyperlinkedRelatedField
 
-    def get_fields(self):
-        """Avoid adding fields that loop back to a parent."""
+    def get_fields(self) -> dict[str, serializers.Field]:
+        """Override to avoid adding fields that loop back to a parent."""
         fields = super().get_fields()
 
         if self.parent_source_fields:

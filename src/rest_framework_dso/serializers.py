@@ -383,7 +383,19 @@ class DSOSerializer(ExpandMixin, serializers.Serializer):
         """Allow serializers to assign 'fields_to_expand' later (e.g. in bind())."""
         self._fields_to_display = fields
 
-    def get_fields(self):
+    def get_fields(self) -> dict[str, serializers.Field]:
+        """Override DRF logic so fields can be removed from the response.
+
+        When looking deeper inside DRF logic, you'll find that ``get_fields()`` makes
+        a deepcopy of ``self._declared_fields``. This approach allows making changes to the
+        statically defined fields on this serializer instance. Only once all fields are created,
+        the mapping is assigned to self.fields and ``field.bind()`` is called on each field.
+        At that point, the fields know their own field name and serializer parent.
+
+        Omitting a field from the serializer is the most efficient way to avoid returning data,
+        since the serializer won't query/format the data at all. This may also avoid
+        additional queries in case of relational fields.
+        """
         # .get() is needed to print serializer fields during debugging
         request = self.context.get("request")
         fields = super().get_fields()
