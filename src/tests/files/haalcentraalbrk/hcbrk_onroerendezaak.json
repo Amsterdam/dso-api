@@ -1,1 +1,118 @@
-{"identificatie":"76870487970000","domein":"NL.IMKAD.KadastraalObject","begrenzingPerceel":{"type":"Polygon","coordinates":[[[194598.014,464150.355],[194607.893,464150.728],[194605.599,464174.244],[194603.893,464174.212],[194601.799,464174.231],[194599.706,464174.307],[194598.925,464174.341],[194598.143,464174.324],[194597.363,464174.257],[194596.59,464174.14],[194597.354,464166.633],[194598.014,464150.355]]]},"perceelnummerRotatie":-86.1,"plaatscoordinaten":{"type":"Point","coordinates":[194602.722,464154.308]},"koopsom":{"koopsom":185000,"koopjaar":2015},"toelichtingBewaarder":"Hier kan een toelichting staan van de bewaarder.","type":"perceel","aardCultuurBebouwd":{"code":"11","waarde":"Wonen"},"kadastraleAanduiding":"Beekbergen K 4879","kadastraleGrootte":{"soortGrootte":{"code":"1","waarde":"Vastgesteld"},"waarde":224},"perceelnummerVerschuiving":{"deltax":-6.453,"deltay":2.075},"adressen":[{"straat":"Atalanta","huisnummer":29,"postcode":"7361EW","woonplaats":"Beekbergen","nummeraanduidingIdentificatie":"0200200000003734","adresregel1":"Atalanta 29","adresregel2":"7361EW Beekbergen","koppelingswijze":{"code":"ADM_GEO","waarde":"administratief en geometrisch"},"adresseerbaarObjectIdentificatie":"0200010000017317"}],"zakelijkGerechtigdeIdentificaties":["30493367","30493368"],"privaatrechtelijkeBeperkingIdentificaties":["30336965"],"hypotheekIdentificaties":["35052041"],"isVermeldInStukdeelIdentificaties":["1029999990"],"stukIdentificaties":["20170102999999"],"_links":{"self":{"href":"/kadastraalonroerendezaken/76870487970000"},"zakelijkGerechtigden":[{"href":"/kadastraalonroerendezaken/76870487970000/zakelijkgerechtigden/{zakelijkGerechtigdeIdentificaties}","templated":true}],"privaatrechtelijkeBeperkingen":[{"href":"/kadastraalonroerendezaken/76870487970000/privaatrechtelijkebeperkingen/{privaatrechtelijkeBeperkingIdentificaties}","templated":true}],"hypotheken":[{"href":"/kadastraalonroerendezaken/76870487970000/hypotheken/{hypotheekIdentificaties}","templated":true}],"stukken":[{"href":"/stukken/{stukIdentificaties}","templated":true}],"stukdelen":[{"href":"/stukdelen/{isVermeldInStukdeelIdentificaties}","templated":true}],"adressen":[{"href":"https://api.bag.kadaster.nl/esd/huidigebevragingen/v1/adressen/{adressen.nummeraanduidingIdentificatie}","templated":true}],"adresseerbareObjecten":[{"href":"https://api.bag.kadaster.nl/esd/huidigebevragingen/v1/adressen/adresseerbareobjecten/{adressen.adresseerbaarObjectIdentificatie}","templated":true}]}}
+{
+  "identificatie": "76870487970000",
+  "domein": "NL.IMKAD.KadastraalObject",
+  "begrenzingPerceel": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [194598.014, 464150.355],
+        [194607.893, 464150.728],
+        [194605.599, 464174.244],
+        [194603.893, 464174.212],
+        [194601.799, 464174.231],
+        [194599.706, 464174.307],
+        [194598.925, 464174.341],
+        [194598.143, 464174.324],
+        [194597.363, 464174.257],
+        [194596.59, 464174.14],
+        [194597.354, 464166.633],
+        [194598.014, 464150.355]
+      ]
+    ]
+  },
+  "perceelnummerRotatie": -86.1,
+  "plaatscoordinaten": {
+    "type": "Point",
+    "coordinates": [194602.722, 464154.308]
+  },
+  "koopsom": {
+    "koopsom": 185000,
+    "koopjaar": 2015
+  },
+  "toelichtingBewaarder": "Hier kan een toelichting staan van de bewaarder.",
+  "type": "perceel",
+  "aardCultuurBebouwd": {
+    "code": "11",
+    "waarde": "Wonen"
+  },
+  "kadastraleAanduiding": "Beekbergen K 4879",
+  "kadastraleGrootte": {
+    "soortGrootte": {
+      "code": "1",
+      "waarde": "Vastgesteld"
+    },
+    "waarde": 224
+  },
+  "perceelnummerVerschuiving": {
+    "deltax": -6.453,
+    "deltay": 2.075
+  },
+  "adressen": [
+    {
+      "straat": "Atalanta",
+      "huisnummer": 29,
+      "postcode": "7361EW",
+      "woonplaats": "Beekbergen",
+      "nummeraanduidingIdentificatie": "0200200000003734",
+      "adresregel1": "Atalanta 29",
+      "adresregel2": "7361EW Beekbergen",
+      "koppelingswijze": {
+        "code": "ADM_GEO",
+        "waarde": "administratief en geometrisch"
+      },
+      "adresseerbaarObjectIdentificatie": "0200010000017317"
+    }
+  ],
+  "zakelijkGerechtigdeIdentificaties": ["30493367", "30493368"],
+  "privaatrechtelijkeBeperkingIdentificaties": ["30336965"],
+  "hypotheekIdentificaties": ["35052041"],
+  "isVermeldInStukdeelIdentificaties": ["1029999990"],
+  "stukIdentificaties": ["20170102999999"],
+  "_links": {
+    "self": {
+      "href": "/kadastraalonroerendezaken/76870487970000"
+    },
+    "zakelijkGerechtigden": [
+      {
+        "href": "/kadastraalonroerendezaken/76870487970000/zakelijkgerechtigden/{zakelijkGerechtigdeIdentificaties}",
+        "templated": true
+      }
+    ],
+    "privaatrechtelijkeBeperkingen": [
+      {
+        "href": "/kadastraalonroerendezaken/76870487970000/privaatrechtelijkebeperkingen/{privaatrechtelijkeBeperkingIdentificaties}",
+        "templated": true
+      }
+    ],
+    "hypotheken": [
+      {
+        "href": "/kadastraalonroerendezaken/76870487970000/hypotheken/{hypotheekIdentificaties}",
+        "templated": true
+      }
+    ],
+    "stukken": [
+      {
+        "href": "/stukken/{stukIdentificaties}",
+        "templated": true
+      }
+    ],
+    "stukdelen": [
+      {
+        "href": "/stukdelen/{isVermeldInStukdeelIdentificaties}",
+        "templated": true
+      }
+    ],
+    "adressen": [
+      {
+        "href": "https://api.bag.kadaster.nl/esd/huidigebevragingen/v1/adressen/{adressen.nummeraanduidingIdentificatie}",
+        "templated": true
+      }
+    ],
+    "adresseerbareObjecten": [
+      {
+        "href": "https://api.bag.kadaster.nl/esd/huidigebevragingen/v1/adressen/adresseerbareobjecten/{adressen.adresseerbaarObjectIdentificatie}",
+        "templated": true
+      }
+    ]
+  }
+}
