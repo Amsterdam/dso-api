@@ -493,7 +493,7 @@ def test_haalcentraalbrk_client(
         assert "Authorization" not in request.headers
         assert "X-Api-Key" in request.headers
         assert request.body is None
-        return (200, set(), case["from_kadaster"])
+        return (200, {"Content-Crs": "epsg:28992"}, case["from_kadaster"])
 
     table, ident = case["table"], case["ident"]
 
@@ -512,6 +512,43 @@ def test_haalcentraalbrk_client(
 
     assert response.status_code == 200, data
     assert data == case["output"]
+
+
+@pytest.mark.django_db
+def test_haalcentraalbrk_geojson(
+    api_client, fetch_auth_token, router, hcbrk_dataset, urllib3_mocker
+):
+    """Test whether remote API responses are properly converted."""
+
+    def respond(request):
+        assert "Authorization" not in request.headers
+        assert "X-Api-Key" in request.headers
+        assert request.body is None
+        return (200, {"Content-Crs": "epsg:28992"}, HCBRK_ONROERENDE_ZAAK)
+
+    router.reload()
+    urllib3_mocker.add_callback(
+        "GET",
+        "/esd/bevragen/v1/kadastraalonroerendezaken/76870487970000",
+        callback=respond,
+        content_type="application/json",
+    )
+
+    url = reverse(
+        "dynamic_api:haalcentraalbrk-kadastraalonroerendezaken-detail",
+        kwargs={"pk": "76870487970000"},
+    )
+    token = fetch_auth_token(["BRK/RS", "BRK/RO"])
+    response = api_client.get(url, {"_format": "geojson"}, HTTP_AUTHORIZATION=f"Bearer {token}")
+    data = read_response_json(response)
+
+    assert response.status_code == 200, data
+    rounder = lambda p: [round(c, 6) for c in p]
+
+    # Prove that coordinates are properly transformed from RD/NEW to WGS84
+    plaatscoordinaten = data["properties"]["plaatscoordinaten"]
+    assert plaatscoordinaten["type"] == "Point"
+    assert rounder(plaatscoordinaten["coordinates"]) == [5.966022, 52.164126]
 
 
 REMOTE_SCHEMA = DatasetTableSchema.from_dict(
