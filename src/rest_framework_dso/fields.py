@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Optional, Union
 
+from django.contrib.gis.geos import GEOSGeometry
 from django.core.exceptions import FieldDoesNotExist
 from django.db import models
 from django.db.models.fields.related import RelatedField
@@ -307,6 +308,18 @@ class DSOGeometryField(GeometryField):
             return None
 
         return request.accepted_renderer.format
+
+    def to_internal_value(self, value):
+        """Make sure that parsing remote data (e.g. proxy API) will set the correct CRS."""
+        geom: GEOSGeometry = super().to_internal_value(value)
+
+        # Assign the proper SRID value to the geometry, instead of the default EPSG:4326
+        # The 'content_crs' is not parsed from the request, as it may come
+        # from other sources such as a remote API that this serializer is parsing.
+        if (content_crs := self.context.get("content_crs")) is not None:
+            geom.srid = content_crs.srid
+
+        return geom
 
     def to_representation(self, value):
         """Avoid GeoJSON export format for e.g. CSV exports"""

@@ -290,3 +290,30 @@ def test_location_transform(drf_request, location):
 
     # Serializer assigned 'response_content_crs' (used accept_crs)
     assert drf_request.response_content_crs == WGS84
+
+
+@pytest.mark.django_db
+def test_location_transform_input(drf_request, location):
+    """Prove that the serializer transforms crs, even when it's (remote) dictionary input."""
+
+    drf_request.accept_crs = WGS84  # Force WGS84
+    serializer = LocationSerializer(
+        data={
+            "geometry": {"type": "Point", "coordinates": [10, 10]},  # GeoJSON data
+        },
+        context={
+            "request": drf_request,
+            "content_crs": RD_NEW,
+        },
+    )
+    assert serializer.is_valid(), serializer.errors
+    data = normalize_data(serializer.data)
+
+    # Tell that the input data is correctly transformed into WGS84,
+    # despite not having CRS defined in the input 'data'.
+    # The serializer read the content_crs for this.
+    rounder = lambda p: [round(c, 6) for c in p]
+    assert rounder(data["geometry"]["coordinates"]) == [3.313688, 47.974858]
+
+    # Serializer assigned 'response_content_crs' (used accept_crs)
+    assert drf_request.response_content_crs == WGS84

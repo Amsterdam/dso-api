@@ -39,7 +39,7 @@ class RemoteViewSet(DSOViewMixin, ViewSet):
     This viewset retrieves the data from a remote endpoint.
     """
 
-    client = None
+    client: clients.RemoteClient = None
     serializer_class = None
     pagination_class = None
     table_schema = None
@@ -49,12 +49,19 @@ class RemoteViewSet(DSOViewMixin, ViewSet):
         if self.serializer_class is None:
             raise ImproperlyConfigured(f"{self.__class__.__name__}.serializer_class is not set")
 
-        kwargs["context"] = self.get_serializer_context()
+        kwargs["context"] = self.get_serializer_context(
+            content_crs=kwargs.pop("content_crs", None)
+        )
         return self.serializer_class(*args, **kwargs)
 
-    def get_serializer_context(self):
+    def get_serializer_context(self, content_crs=None):
         """Extra context provided to the serializer class."""
-        return {"request": self.request, "format": self.format_kwarg, "view": self}
+        return {
+            "request": self.request,
+            "format": self.format_kwarg,
+            "view": self,
+            "content_crs": content_crs,
+        }
 
     def list(self, request, *args, **kwargs):
         """The GET request for listings"""
@@ -65,10 +72,16 @@ class RemoteViewSet(DSOViewMixin, ViewSet):
         if not access:
             raise PermissionDenied()
 
-        data = self.client.call(request, query_params=request.query_params)
+        # Retrieve the remote JSON data
+        response = self.client.call(request, query_params=request.query_params)
+        data = response.data
         if "_embedded" in data and isinstance(data["_embedded"], dict):
+            # unwrap list response from HAL-JSON / DSO standard
             data = next(iter(data["_embedded"].values())) if data["_embedded"] else []
-        serializer = self.get_serializer(data=data, many=True)
+
+        # Pass inside serializer so only the allowed fields are returned,
+        # and no fields will be added that didn't match the schema
+        serializer = self.get_serializer(data=data, many=True, content_crs=response.content_crs)
         self.validate(serializer)
 
         # TODO: add pagination:
@@ -85,9 +98,11 @@ class RemoteViewSet(DSOViewMixin, ViewSet):
         if not access:
             raise PermissionDenied()
 
-        data = self.client.call(request, path=self.kwargs["pk"])
-        serializer = self.get_serializer(data=data)
-        # Validate data. Throw exception if not valid
+        # Retrieve the remote JSON data
+        response = self.client.call(request, path=self.kwargs["pk"])
+        serializer = self.get_serializer(data=response.data, content_crs=response.content_crs)
+
+        # Validate data. This also excludes fields which the user doesn't have access to.
         self.validate(serializer)
         serialized_data = serializer.data
         _del_none(serialized_data)
@@ -96,6 +111,7 @@ class RemoteViewSet(DSOViewMixin, ViewSet):
         self_link = self.request.build_absolute_uri(self.request.path)
         if "_links" not in serialized_data:
             serialized_data["_links"] = {"self": {"href": self_link}}
+
         return Response(serialized_data)
 
     def validate(self, serializer: BaseSerializer):

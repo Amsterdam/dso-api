@@ -3,11 +3,11 @@
 Endpoints are queried with raw urllib3,
 to avoid the overhead of the requests library.
 """
-
 import logging
 import threading
 import time
-from typing import Union
+from dataclasses import dataclass
+from typing import Optional, Union
 from urllib.parse import urlparse
 
 import certifi
@@ -21,6 +21,7 @@ from rest_framework.status import HTTP_401_UNAUTHORIZED, HTTP_403_FORBIDDEN
 from schematools.types import DatasetTableSchema
 from urllib3 import HTTPResponse
 
+from rest_framework_dso.crs import CRS
 from rest_framework_dso.exceptions import (
     BadGateway,
     GatewayTimeout,
@@ -31,6 +32,14 @@ from rest_framework_dso.exceptions import (
 logger = logging.getLogger(__name__)
 
 _http_pool_generic = urllib3.PoolManager(cert_reqs="CERT_REQUIRED", ca_certs=certifi.where())
+
+
+@dataclass(frozen=True)
+class RemoteResponse:
+    """The response from the remote system"""
+
+    content_crs: Optional[CRS]
+    data: Union[list, dict]
 
 
 class RemoteClient:
@@ -44,17 +53,16 @@ class RemoteClient:
         self._endpoint_url = endpoint_url
         self._table_schema = table_schema
 
-    def call(self, request, path="", query_params={}) -> Union[dict, list]:  # noqa: C901
+    def call(self, request, path="", query_params=None) -> RemoteResponse:
         """Make a request to the remote server based on the client's request."""
-        url = self._make_url(path, query_params)
+        url = self._make_url(path, query_params or {})
 
-        # Using urllib directly instead of requests for performance
         headers = self._get_headers(request)
-
         http_pool = self._get_http_pool()
+        t0 = time.perf_counter_ns()
 
         try:
-            t0 = time.perf_counter_ns()
+            # Using urllib directly instead of requests for performance
             response: HTTPResponse = http_pool.request(
                 "GET",
                 url,
@@ -71,6 +79,7 @@ class RemoteClient:
             logger.error("Proxy call to %s failed, error when connecting to server: %s", url, e)
             raise ServiceUnavailable(str(e)) from e
 
+        # Log response and timing results
         level = logging.ERROR if response.status >= 400 else logging.INFO
         logger.log(
             level,
@@ -82,13 +91,21 @@ class RemoteClient:
         )
 
         if response.status == 200:
-            return orjson.loads(response.data)
+            return self._parse_response(response)
+        else:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug("  Response body: %s", response.data)
 
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug("  Response body: %s", response.data)
+            self._raise_http_error(response)
+            raise Exception("_raise_http_error should have raised an exception")
 
-        self._raise_http_error(response)
-        raise Exception("_raise_http_error should have raised an exception")
+    def _parse_response(self, response: HTTPResponse) -> RemoteResponse:
+        """Parse the retrieved HTTP response"""
+        content_crs = response.headers.get("Content-Crs")
+        return RemoteResponse(
+            content_crs=CRS.from_string(content_crs) if content_crs else None,
+            data=orjson.loads(response.data),
+        )
 
     def _get_headers(self, request):  # noqa: C901
         """Collect the headers to submit to the remote service.
