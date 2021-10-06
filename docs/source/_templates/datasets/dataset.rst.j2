@@ -11,7 +11,7 @@
 
  * Swagger UI: `{{ swagger_url|strip_base_url }} <{{ swagger_url }}>`_
  {%- for table in tables %}
- * REST URI{% if table.auth %} (autorisatie:{{ table.auth|sort|join(', ') }}){% endif %}: `{{ table.uri|strip_base_url }} <{{ table.uri }}>`_
+ * REST URI{% if table.auth %} (autorisatie: {{ table.auth|sort|join(', ') }}){% endif %}: `{{ table.uri|strip_base_url }} <{{ table.uri }}>`_
   {%- endfor %}
 
 .. contents:: Tabellen
