@@ -529,8 +529,9 @@ class DSOSerializer(ExpandMixin, serializers.Serializer):
 
     def _apply_crs(self, instance, accept_crs: CRS):
         """Make sure all geofields use the same CRS."""
+        is_dict = isinstance(instance, dict)  # happens with remote API proxy responses
         for field in self._geometry_fields:
-            geo_value = getattr(instance, field.source)
+            geo_value = instance[field.source] if is_dict else getattr(instance, field.source)
             if geo_value is not None:
                 accept_crs.apply_to(geo_value)
 
