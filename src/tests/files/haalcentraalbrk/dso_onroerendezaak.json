@@ -1,1 +1,65 @@
-{"schema":"https://schemas.data.amsterdam.nl/datasets/remote/haalcentraal/brk/dataset#kadastraalonroerendezaken","type":"perceel","domein":"NL.IMKAD.KadastraalObject","koopsom":{"koopsom":185000,"koopjaar":2015},"adressen":[{"straat":"Atalanta","postcode":"7361EW","huisnummer":29,"woonplaats":"Beekbergen","adresregel1":"Atalanta 29","adresregel2":"7361EW Beekbergen","koppelingswijze":{"code":"ADM_GEO","waarde":"administratief en geometrisch"},"nummeraanduidingIdentificatie":"0200200000003734"}],"identificatie":"76870487970000","begrenzingPerceel":{"type":"Polygon","coordinates":[[[194598.014,464150.355],[194607.893,464150.728],[194605.599,464174.244],[194603.893,464174.212],[194601.799,464174.231],[194599.706,464174.307],[194598.925,464174.341],[194598.143,464174.324],[194597.363,464174.257],[194596.59,464174.14],[194597.354,464166.633],[194598.014,464150.355]]]},"kadastraleGrootte":{"waarde":"224","soortGrootte":{"code":1,"waarde":"Vastgesteld"}},"plaatscoordinaten":{"type":"Point","coordinates":[194602.722,464154.308]},"aardCultuurBebouwd":{"code":11,"waarde":"Wonen"},"kadastraleAanduiding":"Beekbergen K 4879","perceelnummerRotatie":-86.1,"toelichtingBewaarder":"Hier kan een toelichting staan van de bewaarder.","hypotheekIdentificaties":["35052041"],"perceelnummerVerschuiving":{"deltax":-6.453,"deltay":2.075},"zakelijkGerechtigdeIdentificaties":["30493367","30493368"],"privaatrechtelijkeBeperkingIdentificaties":["30336965"],"_links":{"self":{"href":"http://testserver/v1/remote/haalcentraal/brk/kadastraalonroerendezaken/76870487970000/"}}}
+{
+  "schema": "https://schemas.data.amsterdam.nl/datasets/remote/haalcentraal/brk/dataset#kadastraalonroerendezaken",
+  "type": "perceel",
+  "domein": "NL.IMKAD.KadastraalObject",
+  "koopsom": {
+    "koopsom": 185000,
+    "koopjaar": 2015
+  },
+  "adressen": [
+    {
+      "straat": "Atalanta",
+      "postcode": "7361EW",
+      "huisnummer": 29,
+      "woonplaats": "Beekbergen",
+      "adresregel1": "Atalanta 29",
+      "adresregel2": "7361EW Beekbergen",
+      "koppelingswijze": {
+        "code": "ADM_GEO",
+        "waarde": "administratief en geometrisch"
+      },
+      "nummeraanduidingIdentificatie": "0200200000003734"
+    }
+  ],
+  "identificatie": "76870487970000",
+  "begrenzingPerceel": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [194598.014, 464150.355], [194607.893, 464150.728], [194605.599, 464174.244], [194603.893, 464174.212],
+        [194601.799, 464174.231], [194599.706, 464174.307], [194598.925, 464174.341], [194598.143, 464174.324],
+        [194597.363, 464174.257], [194596.59, 464174.14], [194597.354, 464166.633], [194598.014, 464150.355]
+      ]
+    ]
+  },
+  "kadastraleGrootte": {
+    "waarde": "224",
+    "soortGrootte": {
+      "code": 1,
+      "waarde": "Vastgesteld"
+    }
+  },
+  "plaatscoordinaten": {
+    "type": "Point",
+    "coordinates": [194602.722, 464154.308]
+  },
+  "aardCultuurBebouwd": {
+    "code": 11,
+    "waarde": "Wonen"
+  },
+  "kadastraleAanduiding": "Beekbergen K 4879",
+  "perceelnummerRotatie": -86.1,
+  "toelichtingBewaarder": "Hier kan een toelichting staan van de bewaarder.",
+  "hypotheekIdentificaties": ["35052041"],
+  "perceelnummerVerschuiving": {
+    "deltax": -6.453,
+    "deltay": 2.075
+  },
+  "zakelijkGerechtigdeIdentificaties": ["30493367", "30493368"],
+  "privaatrechtelijkeBeperkingIdentificaties": ["30336965"],
+  "_links": {
+    "self": {
+      "href": "http://testserver/v1/remote/haalcentraal/brk/kadastraalonroerendezaken/76870487970000/"
+    }
+  }
+}

@@ -1,1 +1,38 @@
-{"schema":"https://schemas.data.amsterdam.nl/datasets/remote/haalcentraal/brk/dataset#kadasternatuurlijkpersonen","naam":{"aanhef":"Geachte heer Jansens","voornamen":"Willem","geslachtsnaam":"Jansens","aanschrijfwijze":"W. Jansens","gebruikInLopendeTekst":"de heer Jansens"},"domein":"NL.IMKAD.Persoon","geboorte":{"datum":{"dag":1,"jaar":1971,"datum":"1971-11-01","maand":11}},"woonadres":{"adresregel1":"Burggang 1D-9","adresregel2":"4331AD MIDDELBURG"},"omschrijving":"Willem Jansens","identificatie":"70882239","heeftPartnerschap":[{"naam":{"geslachtsnaam":"Jansens"}}],"geslachtsaanduiding":"man","_links":{"self":{"href":"http://testserver/v1/remote/haalcentraal/brk/kadasternatuurlijkpersonen/70882239/"}}}
+{
+  "schema": "https://schemas.data.amsterdam.nl/datasets/remote/haalcentraal/brk/dataset#kadasternatuurlijkpersonen",
+  "naam": {
+    "aanhef": "Geachte heer Jansens",
+    "voornamen": "Willem",
+    "geslachtsnaam": "Jansens",
+    "aanschrijfwijze": "W. Jansens",
+    "gebruikInLopendeTekst": "de heer Jansens"
+  },
+  "domein": "NL.IMKAD.Persoon",
+  "geboorte": {
+    "datum": {
+      "dag": 1,
+      "jaar": 1971,
+      "datum": "1971-11-01",
+      "maand": 11
+    }
+  },
+  "woonadres": {
+    "adresregel1": "Burggang 1D-9",
+    "adresregel2": "4331AD MIDDELBURG"
+  },
+  "omschrijving": "Willem Jansens",
+  "identificatie": "70882239",
+  "heeftPartnerschap": [
+    {
+      "naam": {
+        "geslachtsnaam": "Jansens"
+      }
+    }
+  ],
+  "geslachtsaanduiding": "man",
+  "_links": {
+    "self": {
+      "href": "http://testserver/v1/remote/haalcentraal/brk/kadasternatuurlijkpersonen/70882239/"
+    }
+  }
+}
