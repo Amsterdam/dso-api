@@ -708,7 +708,15 @@ def _links_serializer_factory(model: type[DynamicModel], depth: int) -> type[Dyn
     safe_dataset_id = to_snake_case(model.get_dataset_id())
     serializer_name = f"{safe_dataset_id.title()}{model.__name__}LinksSerializer"
 
-    serializer_part = SerializerAssemblyLine(model, fields=["schema", "self"], depth=depth)
+    serializer_part = SerializerAssemblyLine(
+        model,
+        fields=["schema", "self"],
+        openapi_docs=(
+            f"The contents of the `{model.table_schema().name}._links` field."
+            " It contains all relationships with objects."
+        ),
+        depth=depth,
+    )
 
     # Parse fields for serializer
     for model_field in model._meta.get_fields():
