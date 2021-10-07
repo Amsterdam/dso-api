@@ -76,8 +76,6 @@ In de response zijn de volgende elementen te vinden:
         "page": {
             "number": 1,
             "size": 20,
-            "totalElements": 973,
-            "totalPages": 49
         }
     }
 
@@ -86,8 +84,6 @@ In het ``page`` object zijn de volgende velden opgenomen:
 
 * ``page.number``: Het huidige paginanummer.
 * ``page.size``: De grootte van een pagina.
-* ``page.totalElements``: Het totaal aantal records over alle pagina's heen.
-* ``page.totalPages``: Het totaal aantal pagina's,
 
 De velden uit het ``page`` object worden ook als HTTP headers in de response teruggegeven:
 
