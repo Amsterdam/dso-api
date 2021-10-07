@@ -17,6 +17,7 @@ from rest_framework_gis.fields import GeometryField
 from rest_framework_dso import filters
 from rest_framework_dso.embedding import get_all_embedded_fields_by_name
 from rest_framework_dso.fields import LinksField
+from rest_framework_dso.pagination import DSOPageNumberPagination
 from rest_framework_dso.serializers import ExpandMixin
 from rest_framework_dso.views import DSOViewMixin
 
@@ -251,6 +252,14 @@ class DSOAutoSchema(openapi.AutoSchema):
         """Auto-generate tags based on the path, take last bit of path."""
         tokenized_path = self._tokenize_path()
         return tokenized_path[-1:]
+
+    def _get_paginator(self):
+        """Make sure our paginator uses the proper field in the ``_embedded`` schema."""
+        paginator = super()._get_paginator()
+        if isinstance(paginator, DSOPageNumberPagination):
+            paginator.results_field = self.view.serializer_class.Meta.model._meta.model_name
+
+        return paginator
 
     def _map_serializer_field(self, field, direction, collect_meta=True):
         """Transform the serializer field into a OpenAPI definition.
