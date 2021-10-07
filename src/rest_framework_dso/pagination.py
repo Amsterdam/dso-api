@@ -192,3 +192,70 @@ class DSOPageNumberPagination(DelegatedPageNumberPagination):
     def get_results(self, data):
         """Implement DRF hook for completeness, can be used by the browsable API."""
         return data["_embedded"][self.results_field]
+
+    def get_paginated_response_schema(self, schema: dict) -> dict:
+        """Tell what the OpenAPI schema looks like.
+        This is directly used by the OpenAPI results for paginated views.
+        """
+        demo_url = "https://api.data.amsterdam.nl/v1/.../resource/"
+        return {
+            "type": "object",
+            "properties": {
+                "page": {
+                    "type": "object",
+                    "properties": {
+                        "number": {
+                            "type": "integer",
+                            "example": 3,
+                        },
+                        "size": {
+                            "type": "integer",
+                            "example": self.page_size,
+                        },
+                    },
+                },
+                "_links": {
+                    "type": "object",
+                    "properties": {
+                        "self": {
+                            "type": "object",
+                            "properties": {
+                                "href": {
+                                    "type": "string",
+                                    "format": "uri",
+                                    "example": f"{demo_url}?{self.page_query_param}=3",
+                                },
+                            },
+                        },
+                        "next": {
+                            "type": "object",
+                            "properties": {
+                                "href": {
+                                    "type": "string",
+                                    "nullable": True,
+                                    "format": "uri",
+                                    "example": f"{demo_url}?{self.page_query_param}=4",
+                                },
+                            },
+                        },
+                        "previous": {
+                            "type": "object",
+                            "properties": {
+                                "href": {
+                                    "type": "string",
+                                    "nullable": True,
+                                    "format": "uri",
+                                    "example": f"{demo_url}?{self.page_query_param}=2",
+                                },
+                            },
+                        },
+                    },
+                },
+                "_embedded": {
+                    "type": "object",
+                    "properties": {
+                        self.results_field or "OBJECT_NAME": schema,
+                    },
+                },
+            },
+        }
