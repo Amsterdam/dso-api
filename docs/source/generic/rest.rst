@@ -76,8 +76,6 @@ In de response zijn de volgende elementen te vinden:
         "page": {
             "number": 1,
             "size": 20,
-            "totalElements": 973,
-            "totalPages": 49
         }
     }
 
@@ -86,15 +84,11 @@ In het ``page`` object zijn de volgende velden opgenomen:
 
 * ``page.number``: Het huidige paginanummer.
 * ``page.size``: De grootte van een pagina.
-* ``page.totalElements``: Het totaal aantal records over alle pagina's heen.
-* ``page.totalPages``: Het totaal aantal pagina's,
 
 De velden uit het ``page`` object worden ook als HTTP headers in de response teruggegeven:
 
 * ``X-Pagination-Page``: Het huidige paginanummer.
 * ``X-Pagination-Limit``: de grootte van een pagina.
-* ``X-Pagination-Count``: Optioneel, het totaal aantal pagina's.
-* ``X-Total-Count``: Optioneel, het totaal aantal records over alle pagina's heen.
 
 
 Filtering
