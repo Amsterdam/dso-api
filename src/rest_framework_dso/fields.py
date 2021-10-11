@@ -333,14 +333,6 @@ class DSOGeometryField(GeometryField):
             return super().to_representation(value)
 
 
-class HALHyperlinkedRelatedField(serializers.HyperlinkedRelatedField):
-    """Wrap the url from the HyperlinkedRelatedField according to HAL specs"""
-
-    def to_representation(self, value):
-        href = super().to_representation(value)
-        return {"href": href, "title": str(value.pk)}
-
-
 class GeoJSONIdentifierField(serializers.Field):
     """A field that renders the "id" field for a GeoJSON feature."""
 
