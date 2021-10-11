@@ -100,9 +100,10 @@ def test_openapi_json(api_client, afval_dataset, fietspaaltjes_dataset, filled_r
     assert afval_parameters["_format"] == {
         "name": "_format",
         "in": "query",
+        "description": "Select the export format",
         "schema": {
             "type": "string",
-            "enum": ["csv", "geojson", "json"],
+            "enum": ["json", "csv", "geojson"],
         },
     }
     assert "_sort" in afval_parameters, all_keys
