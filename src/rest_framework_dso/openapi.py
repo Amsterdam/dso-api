@@ -76,7 +76,13 @@ class DSOSchemaGenerator(generators.SchemaGenerator):
                     "type": "string",
                     "enum": GEOJSON_TYPES,
                     "description": "the geometry type",
-                }
+                },
+                "coordinates": {
+                    "type": "array",
+                    "minItems": 2,
+                    "description": "Based on the geometry type, a point or collection of points.",
+                    "items": {"type": "number"},
+                },
             },
         },
         "Point3D": {
@@ -91,7 +97,12 @@ class DSOSchemaGenerator(generators.SchemaGenerator):
             "description": "GeoJSON geometry",
             "allOf": [
                 {"$ref": "#/components/schemas/Geometry"},
-                {"properties": {"coordinates": {"$ref": "#/components/schemas/Point3D"}}},
+                {
+                    "properties": {
+                        "type": {"type": "string", "enum": ["Point"]},
+                        "coordinates": {"$ref": "#/components/schemas/Point3D"},
+                    }
+                },
             ],
         },
         "LineString": {
@@ -101,10 +112,11 @@ class DSOSchemaGenerator(generators.SchemaGenerator):
                 {"$ref": "#/components/schemas/Geometry"},
                 {
                     "properties": {
+                        "type": {"type": "string", "enum": ["LineString"]},
                         "coordinates": {
                             "type": "array",
                             "items": {"$ref": "#/components/schemas/Point3D"},
-                        }
+                        },
                     }
                 },
             ],
@@ -116,13 +128,14 @@ class DSOSchemaGenerator(generators.SchemaGenerator):
                 {"$ref": "#/components/schemas/Geometry"},
                 {
                     "properties": {
+                        "type": {"type": "string", "enum": ["Polygon"]},
                         "coordinates": {
                             "type": "array",
                             "items": {
                                 "type": "array",
                                 "items": {"$ref": "#/components/schemas/Point3D"},
                             },
-                        }
+                        },
                     }
                 },
             ],
@@ -134,10 +147,11 @@ class DSOSchemaGenerator(generators.SchemaGenerator):
                 {"$ref": "#/components/schemas/Geometry"},
                 {
                     "properties": {
+                        "type": {"type": "string", "enum": ["MultiPoint"]},
                         "coordinates": {
                             "type": "array",
                             "items": {"$ref": "#/components/schemas/Point3D"},
-                        }
+                        },
                     }
                 },
             ],
@@ -148,6 +162,7 @@ class DSOSchemaGenerator(generators.SchemaGenerator):
             "allOf": [
                 {"$ref": "#/components/schemas/Geometry"},
                 {
+                    "type": {"type": "string", "enum": ["MultiLineString"]},
                     "properties": {
                         "coordinates": {
                             "type": "array",
@@ -156,7 +171,7 @@ class DSOSchemaGenerator(generators.SchemaGenerator):
                                 "items": {"$ref": "#/components/schemas/Point3D"},
                             },
                         }
-                    }
+                    },
                 },
             ],
         },
@@ -167,6 +182,7 @@ class DSOSchemaGenerator(generators.SchemaGenerator):
                 {"$ref": "#/components/schemas/Geometry"},
                 {
                     "properties": {
+                        "type": {"type": "string", "enum": ["MultiPolygon"]},
                         "coordinates": {
                             "type": "array",
                             "items": {
@@ -176,7 +192,7 @@ class DSOSchemaGenerator(generators.SchemaGenerator):
                                     "items": {"$ref": "#/components/schemas/Point3D"},
                                 },
                             },
-                        }
+                        },
                     }
                 },
             ],
