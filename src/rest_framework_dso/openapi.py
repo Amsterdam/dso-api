@@ -7,6 +7,7 @@ This also inludes exposing geometery type classes in the OpenAPI schema.
 """
 import logging
 
+from django.contrib.gis.db import models as gis_models
 from drf_spectacular import generators, openapi
 from drf_spectacular.contrib.django_filters import DjangoFilterExtension
 from drf_spectacular.types import OpenApiTypes
@@ -16,7 +17,6 @@ from rest_framework_gis.fields import GeometryField
 
 from rest_framework_dso import filters
 from rest_framework_dso.embedding import get_all_embedded_fields_by_name
-from rest_framework_dso.fields import LinksField
 from rest_framework_dso.pagination import DSOPageNumberPagination
 from rest_framework_dso.serializers import ExpandMixin
 from rest_framework_dso.views import DSOViewMixin
@@ -272,19 +272,29 @@ class DSOAutoSchema(openapi.AutoSchema):
 
         return paginator
 
+    def _map_model_field(self, model_field, direction):
+        schema = super()._map_model_field(model_field, direction=direction)
+
+        if isinstance(model_field, gis_models.GeometryField):
+            # In some code paths, drf-spectacular or doesn't even enter _map_serializer_field(),
+            # or calls it with a dummy field that doesn't have field.parent. That makes it
+            # impossible to resolve the model type. Hence, see if a better type can be resolved
+            geojson_type = GEOM_TYPES_TO_GEOJSON.get(model_field.geom_type, "Geometry")
+            return {"$ref": f"#/components/schemas/{geojson_type}"}
+
+        return schema
+
     def _map_serializer_field(self, field, direction, collect_meta=True):
         """Transform the serializer field into a OpenAPI definition.
         This method is overwritten to fix some missing field types.
         """
         if not hasattr(field, "_spectacular_annotation"):
-            if isinstance(field, LinksField):
-                return {"$ref": "#/components/schemas/_SelfLink"}
-
             # Fix support for missing field types:
             if isinstance(field, GeometryField):
-                # or use $ref when examples are included.
-                # model_field.geom_type is uppercase
-                if hasattr(field.parent.Meta, "model"):
+                # Not using `rest_framework_gis.schema.GeoFeatureAutoSchema` here,
+                # as it duplicates components instead of using $ref.
+                if field.parent and hasattr(field.parent.Meta, "model"):
+                    # model_field.geom_type is uppercase
                     model_field = field.parent.Meta.model._meta.get_field(field.source)
                     geojson_type = GEOM_TYPES_TO_GEOJSON.get(model_field.geom_type, "Geometry")
                 else:

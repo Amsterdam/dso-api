@@ -22,7 +22,7 @@ from django.db.models.fields.related import RelatedField
 from django.db.models.fields.reverse_related import ForeignObjectRel
 from django.utils.functional import SimpleLazyObject, cached_property
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import extend_schema_field
+from drf_spectacular.utils import extend_schema_field, inline_serializer
 from more_itertools import first
 from rest_framework import serializers
 from rest_framework.relations import HyperlinkedRelatedField
@@ -128,6 +128,17 @@ class DynamicLinksField(TemporalLinksField):
         return super().to_representation(value)
 
 
+@extend_schema_field(
+    # Tell what this field will generate as object structure
+    inline_serializer(
+        "RelatedSumary",
+        fields={
+            "count": serializers.IntegerField(),
+            "href": serializers.URLField(),
+        },
+    ),
+    component_name="RelatedSummary",
+)
 class _RelatedSummaryField(Field):
     def to_representation(self, value: models.Manager):
         request = self.context["request"]

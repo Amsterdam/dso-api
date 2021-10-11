@@ -8,6 +8,7 @@ from django.db import models
 from django.db.models.fields.related import RelatedField
 from django.db.models.fields.reverse_related import ForeignObjectRel
 from django.utils.functional import cached_property
+from drf_spectacular.utils import extend_schema_field, inline_serializer
 from more_itertools import first
 from rest_framework import serializers
 from rest_framework_gis.fields import GeometryField
@@ -273,6 +274,18 @@ class EmbeddedManyToManyRelField(EmbeddedManyToManyField):
         )
 
 
+@extend_schema_field(
+    # Tell what this field will generate as object structure
+    inline_serializer(
+        "LinkHref",
+        fields={
+            "href": serializers.URLField(),
+            "title": serializers.CharField(allow_null=True),
+            # TODO: mention temporal identifiers (define statically)!
+        },
+    ),
+    component_name="LinkHref",
+)
 class LinksField(serializers.HyperlinkedIdentityField):
     """Internal field to generate the _links bit"""
 
