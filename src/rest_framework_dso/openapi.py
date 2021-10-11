@@ -53,20 +53,15 @@ class DSOSchemaGenerator(generators.SchemaGenerator):
         "_SelfLink": {
             "type": "object",
             "properties": {
-                "self": {
-                    "type": "object",
-                    "properties": {
-                        "href": {
-                            "type": "string",
-                            "readOnly": True,
-                        },
-                        "title": {
-                            "type": "string",
-                            "format": "uri",
-                            "readOnly": True,
-                        },
-                    },
-                }
+                "href": {
+                    "type": "string",
+                    "readOnly": True,
+                },
+                "title": {
+                    "type": "string",
+                    "format": "uri",
+                    "readOnly": True,
+                },
             },
         },
         # Used from https://gist.github.com/codan-telcikt/e1d59ccc9a3af83e083f1a514c84026c
