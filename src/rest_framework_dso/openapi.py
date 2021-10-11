@@ -285,10 +285,9 @@ class DSOAutoSchema(openapi.AutoSchema):
     def get_override_parameters(self):
         """Expose the DSO-specific HTTP headers in all API methods."""
         extra = [
-            {
-                "in": OpenApiParameter.QUERY,
-                "name": api_settings.URL_FORMAT_OVERRIDE,
-                "schema": {
+            OpenApiParameter(
+                name=api_settings.URL_FORMAT_OVERRIDE,
+                type={
                     "type": "string",
                     "enum": [
                         renderer.format
@@ -296,9 +295,10 @@ class DSOAutoSchema(openapi.AutoSchema):
                         if renderer.format != "api"  # Exclude browser view
                     ],
                 },
-                "description": "Select the export format",
-                "required": False,
-            },
+                location=OpenApiParameter.QUERY,
+                description="Select the export format",
+                required=False,
+            ),
         ]
 
         if isinstance(self.view, DSOViewMixin):
