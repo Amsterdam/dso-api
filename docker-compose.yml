@@ -29,7 +29,7 @@ services:
       UWSGI_MASTER: 1
       UWSGI_STATIC_MAP: "/dso_api/static=/static"
       SECRET_KEY: insecure
-      DATABASE_URL: "postgres://dataservices:insecure@database/dataservices"
+      DATABASE_URL: "${DATABASE_URL:-postgres://dataservices:insecure@database/dataservices}"
       DJANGO_LOG_LEVEL: "${DJANGO_LOG_LEVEL}"
       DSO_API_LOG_LEVEL: "${DSO_API_LOG_LEVEL}"
       DSO_API_AUDIT_LOG_LEVEL: "${DSO_API_AUDIT_LOG_LEVEL}"
