@@ -56,6 +56,7 @@ class DSOHTTPHeaderPageNumberPagination(pagination.PageNumberPagination):
             raise NotFound(msg) from exc
 
         self.request = request
+        self.include_count = self.request.query_params.get("_count") == "true"
         return self.page.object_list  # original: list(self.page)
 
     def get_page_size(self, request):
@@ -78,6 +79,11 @@ class DSOHTTPHeaderPageNumberPagination(pagination.PageNumberPagination):
 
         paginator = self.page.paginator
         response["X-Pagination-Limit"] = paginator.per_page
+
+        if self.include_count:
+            response["X-Total-Count"] = self.page.paginator.count
+            response["X-Pagination-Count"] = self.page.paginator.num_pages
+
         return response
 
 
@@ -119,6 +125,8 @@ class DSOPageNumberPagination(DelegatedPageNumberPagination):
             "page": {
                 "number": ...,
                 "size": ...,
+                "totalElements": ...,
+                "totalPages": ...,
             }
         }
 
@@ -187,6 +195,11 @@ class DSOPageNumberPagination(DelegatedPageNumberPagination):
             "number": self.page.number,
             "size": self.page.paginator.per_page,
         }
+        # Is it guaranteed that paginate_queryset is invoked before this method?
+        if self.include_count:
+            page["totalElements"] = self.page.paginator.count
+            page["totalPages"] = self.page.paginator.num_pages
+
         return page
 
     def get_results(self, data):

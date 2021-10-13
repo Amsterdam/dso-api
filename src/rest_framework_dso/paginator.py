@@ -20,7 +20,9 @@ class DSOPaginator(DjangoPaginator):
     So num_pages() is not supported.
     """
 
-    def __init__(self, object_list, per_page, orphans=0, allow_empty_first_page=True):
+    def __init__(
+        self, object_list, per_page, orphans=0, allow_empty_first_page=True
+    ):
         if orphans != 0:
             warnings.warn(
                 "DSOPaginator instantiated with non-zero value in orphans. \
@@ -72,22 +74,6 @@ class DSOPaginator(DjangoPaginator):
         standard :cls:`Page` object.
         """
         return DSOPage(*args, **kwargs)
-
-    @cached_property
-    def num_pages(self):
-        """Total number of pages is unknown."""
-        raise NotImplementedError(
-            "DSOPaginator does not support method num_pages. The number of pages is unknown."
-        )
-
-    @property
-    def page_range(self):
-        """
-        Page Range not supported.
-        """
-        raise NotImplementedError(
-            "DSOPaginator does not support method page_range. The number of pages is unknown."
-        )
 
 
 class ObservableQuerySet(QuerySet):
