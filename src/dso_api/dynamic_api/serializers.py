@@ -22,7 +22,7 @@ from django.db.models.fields.related import RelatedField
 from django.db.models.fields.reverse_related import ForeignObjectRel
 from django.utils.functional import SimpleLazyObject, cached_property
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import extend_schema_field
+from drf_spectacular.utils import extend_schema_field, inline_serializer
 from more_itertools import first
 from rest_framework import serializers
 from rest_framework.relations import HyperlinkedRelatedField
@@ -128,6 +128,17 @@ class DynamicLinksField(TemporalLinksField):
         return super().to_representation(value)
 
 
+@extend_schema_field(
+    # Tell what this field will generate as object structure
+    inline_serializer(
+        "RelatedSumary",
+        fields={
+            "count": serializers.IntegerField(),
+            "href": serializers.URLField(),
+        },
+    ),
+    component_name="RelatedSummary",
+)
 class _RelatedSummaryField(Field):
     def to_representation(self, value: models.Manager):
         request = self.context["request"]
@@ -708,7 +719,15 @@ def _links_serializer_factory(model: type[DynamicModel], depth: int) -> type[Dyn
     safe_dataset_id = to_snake_case(model.get_dataset_id())
     serializer_name = f"{safe_dataset_id.title()}{model.__name__}LinksSerializer"
 
-    serializer_part = SerializerAssemblyLine(model, fields=["schema", "self"], depth=depth)
+    serializer_part = SerializerAssemblyLine(
+        model,
+        fields=["schema", "self"],
+        openapi_docs=(
+            f"The contents of the `{model.table_schema().name}._links` field."
+            " It contains all relationships with objects."
+        ),
+        depth=depth,
+    )
 
     # Parse fields for serializer
     for model_field in model._meta.get_fields():
@@ -807,12 +826,12 @@ def _build_serializer_embedded_field(
 
 
 def _through_serializer_factory(
-    model: type[DynamicModel], target_model: DynamicModel, target_field_name: str
+    through_model: type[DynamicModel], m2m_field: models.ManyToManyField
 ) -> type[DynamicSerializer]:
     """Generate the DRF serializer class for a M2M model.
 
-    :param model: the `through` model
-    :param target_model: the target model for the M2M relation
+    :param through_model: the `through` model of the M2M relation.
+    :param m2m_field: the ManyToMany field that describes the M2M relation
     :params target_field_name: the name of the M2M field in the source model
 
     This factory adds a field `target_field_name`. A field with this
@@ -820,7 +839,7 @@ def _through_serializer_factory(
 
     This FK field will lead to a HALTemporalHyperlinkedRelatedField on the
     through serializer. Because we do not want these field as subfields,
-    the ThroughSerializer is merging the ouput of this field
+    the ThroughSerializer is merging the output of this field
     in its `to_representation` method.
 
     Furthermore, temporal fields are add to the through serializer
@@ -830,13 +849,23 @@ def _through_serializer_factory(
     is added to the `Meta` object. This is needed by the ThroughSerializer
     to be able to pick the right field for embedding into its output.
     """
-    safe_dataset_id = to_snake_case(model.get_dataset_id())
-    serializer_name = f"{safe_dataset_id.title()}{model.__name__}ThroughSerializer"
-    serializer_part = SerializerAssemblyLine(model, target_field_name=target_field_name)
+    assert through_model == m2m_field.remote_field.through
+    safe_dataset_id = to_snake_case(through_model.get_dataset_id())
+    serializer_name = f"{safe_dataset_id.title()}{through_model.__name__}_M2M"
+    serializer_part = SerializerAssemblyLine(
+        through_model,
+        openapi_docs=(
+            "The M2M table"
+            f" for `{m2m_field.model.table_schema().name}.{toCamelCase(m2m_field.name)}`"
+            f" that links to `{m2m_field.related_model.table_schema().name}`"
+        ),
+        target_field_name=m2m_field.name,
+    )
 
     # The FK pointing to the target
-    serializer_part.add_field_name(target_field_name)
+    serializer_part.add_field_name(m2m_field.name)
 
+    target_model = m2m_field.related_model
     if target_model.is_temporal():
         table_schema = target_model.table_schema()
         temporal: Temporal = cast(Temporal, table_schema.temporal)
@@ -846,7 +875,7 @@ def _through_serializer_factory(
         # (e.g. "beginGeldigheid" and "eindGeldigheid" for the "geldigOp" dimension
         # for GOB data)
         # NB. the `Temporal` dataclass return the boundary_fieldnames as snakecased!
-        existing_fields_names = {f.name for f in model._meta.get_fields()}
+        existing_fields_names = {f.name for f in through_model._meta.get_fields()}
         for dimension_fieldname, boundary_fieldnames in temporal.dimensions.items():
             for fn in boundary_fieldnames:
                 snaked_fn = to_snake_case(fn)
@@ -858,14 +887,17 @@ def _through_serializer_factory(
 
 
 def _build_m2m_serializer(
-    serializer_part: SerializerAssemblyLine, model: type[DynamicModel], model_field: models.Field
+    serializer_part: SerializerAssemblyLine,
+    model: type[DynamicModel],
+    m2m_field: models.ManyToManyField,
 ):
     """Add a serializer for a m2m field to the output parameters."""
-    camel_name = toCamelCase(model_field.name)
-    through_model = getattr(model, model_field.name).through
-    serializer_class = _through_serializer_factory(
-        through_model, model_field.related_model, model_field.name
-    )
+    camel_name = toCamelCase(m2m_field.name)
+    through_model = m2m_field.remote_field.through
+    serializer_class = _through_serializer_factory(through_model, m2m_field)
+
+    # Add the field to the serializer, but let it navigate to the through model
+    # by using the reverse_name of it's first foreign key:
     source = to_snake_case(f"{through_model._meta.object_name}_through_{model.get_table_id()}")
     serializer_part.add_field(camel_name, serializer_class(source=source, many=True))
 

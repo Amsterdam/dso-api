@@ -7,6 +7,7 @@ This also inludes exposing geometery type classes in the OpenAPI schema.
 """
 import logging
 
+from django.contrib.gis.db import models as gis_models
 from drf_spectacular import generators, openapi
 from drf_spectacular.contrib.django_filters import DjangoFilterExtension
 from drf_spectacular.types import OpenApiTypes
@@ -16,7 +17,7 @@ from rest_framework_gis.fields import GeometryField
 
 from rest_framework_dso import filters
 from rest_framework_dso.embedding import get_all_embedded_fields_by_name
-from rest_framework_dso.fields import LinksField
+from rest_framework_dso.pagination import DSOPageNumberPagination
 from rest_framework_dso.serializers import ExpandMixin
 from rest_framework_dso.views import DSOViewMixin
 
@@ -52,20 +53,15 @@ class DSOSchemaGenerator(generators.SchemaGenerator):
         "_SelfLink": {
             "type": "object",
             "properties": {
-                "self": {
-                    "type": "object",
-                    "properties": {
-                        "href": {
-                            "type": "string",
-                            "readOnly": True,
-                        },
-                        "title": {
-                            "type": "string",
-                            "format": "uri",
-                            "readOnly": True,
-                        },
-                    },
-                }
+                "href": {
+                    "type": "string",
+                    "readOnly": True,
+                },
+                "title": {
+                    "type": "string",
+                    "format": "uri",
+                    "readOnly": True,
+                },
             },
         },
         # Used from https://gist.github.com/codan-telcikt/e1d59ccc9a3af83e083f1a514c84026c
@@ -80,7 +76,13 @@ class DSOSchemaGenerator(generators.SchemaGenerator):
                     "type": "string",
                     "enum": GEOJSON_TYPES,
                     "description": "the geometry type",
-                }
+                },
+                "coordinates": {
+                    "type": "array",
+                    "minItems": 2,
+                    "description": "Based on the geometry type, a point or collection of points.",
+                    "items": {"type": "number"},
+                },
             },
         },
         "Point3D": {
@@ -95,7 +97,12 @@ class DSOSchemaGenerator(generators.SchemaGenerator):
             "description": "GeoJSON geometry",
             "allOf": [
                 {"$ref": "#/components/schemas/Geometry"},
-                {"properties": {"coordinates": {"$ref": "#/components/schemas/Point3D"}}},
+                {
+                    "properties": {
+                        "type": {"type": "string", "enum": ["Point"]},
+                        "coordinates": {"$ref": "#/components/schemas/Point3D"},
+                    }
+                },
             ],
         },
         "LineString": {
@@ -105,10 +112,11 @@ class DSOSchemaGenerator(generators.SchemaGenerator):
                 {"$ref": "#/components/schemas/Geometry"},
                 {
                     "properties": {
+                        "type": {"type": "string", "enum": ["LineString"]},
                         "coordinates": {
                             "type": "array",
                             "items": {"$ref": "#/components/schemas/Point3D"},
-                        }
+                        },
                     }
                 },
             ],
@@ -120,13 +128,14 @@ class DSOSchemaGenerator(generators.SchemaGenerator):
                 {"$ref": "#/components/schemas/Geometry"},
                 {
                     "properties": {
+                        "type": {"type": "string", "enum": ["Polygon"]},
                         "coordinates": {
                             "type": "array",
                             "items": {
                                 "type": "array",
                                 "items": {"$ref": "#/components/schemas/Point3D"},
                             },
-                        }
+                        },
                     }
                 },
             ],
@@ -138,10 +147,11 @@ class DSOSchemaGenerator(generators.SchemaGenerator):
                 {"$ref": "#/components/schemas/Geometry"},
                 {
                     "properties": {
+                        "type": {"type": "string", "enum": ["MultiPoint"]},
                         "coordinates": {
                             "type": "array",
                             "items": {"$ref": "#/components/schemas/Point3D"},
-                        }
+                        },
                     }
                 },
             ],
@@ -152,6 +162,7 @@ class DSOSchemaGenerator(generators.SchemaGenerator):
             "allOf": [
                 {"$ref": "#/components/schemas/Geometry"},
                 {
+                    "type": {"type": "string", "enum": ["MultiLineString"]},
                     "properties": {
                         "coordinates": {
                             "type": "array",
@@ -160,7 +171,7 @@ class DSOSchemaGenerator(generators.SchemaGenerator):
                                 "items": {"$ref": "#/components/schemas/Point3D"},
                             },
                         }
-                    }
+                    },
                 },
             ],
         },
@@ -171,6 +182,7 @@ class DSOSchemaGenerator(generators.SchemaGenerator):
                 {"$ref": "#/components/schemas/Geometry"},
                 {
                     "properties": {
+                        "type": {"type": "string", "enum": ["MultiPolygon"]},
                         "coordinates": {
                             "type": "array",
                             "items": {
@@ -180,7 +192,7 @@ class DSOSchemaGenerator(generators.SchemaGenerator):
                                     "items": {"$ref": "#/components/schemas/Point3D"},
                                 },
                             },
-                        }
+                        },
                     }
                 },
             ],
@@ -252,19 +264,37 @@ class DSOAutoSchema(openapi.AutoSchema):
         tokenized_path = self._tokenize_path()
         return tokenized_path[-1:]
 
+    def _get_paginator(self):
+        """Make sure our paginator uses the proper field in the ``_embedded`` schema."""
+        paginator = super()._get_paginator()
+        if isinstance(paginator, DSOPageNumberPagination):
+            paginator.results_field = self.view.serializer_class.Meta.model._meta.model_name
+
+        return paginator
+
+    def _map_model_field(self, model_field, direction):
+        schema = super()._map_model_field(model_field, direction=direction)
+
+        if isinstance(model_field, gis_models.GeometryField):
+            # In some code paths, drf-spectacular or doesn't even enter _map_serializer_field(),
+            # or calls it with a dummy field that doesn't have field.parent. That makes it
+            # impossible to resolve the model type. Hence, see if a better type can be resolved
+            geojson_type = GEOM_TYPES_TO_GEOJSON.get(model_field.geom_type, "Geometry")
+            return {"$ref": f"#/components/schemas/{geojson_type}"}
+
+        return schema
+
     def _map_serializer_field(self, field, direction, collect_meta=True):
         """Transform the serializer field into a OpenAPI definition.
         This method is overwritten to fix some missing field types.
         """
         if not hasattr(field, "_spectacular_annotation"):
-            if isinstance(field, LinksField):
-                return {"$ref": "#/components/schemas/_SelfLink"}
-
             # Fix support for missing field types:
             if isinstance(field, GeometryField):
-                # or use $ref when examples are included.
-                # model_field.geom_type is uppercase
-                if hasattr(field.parent.Meta, "model"):
+                # Not using `rest_framework_gis.schema.GeoFeatureAutoSchema` here,
+                # as it duplicates components instead of using $ref.
+                if field.parent and hasattr(field.parent.Meta, "model"):
+                    # model_field.geom_type is uppercase
                     model_field = field.parent.Meta.model._meta.get_field(field.source)
                     geojson_type = GEOM_TYPES_TO_GEOJSON.get(model_field.geom_type, "Geometry")
                 else:
@@ -276,10 +306,9 @@ class DSOAutoSchema(openapi.AutoSchema):
     def get_override_parameters(self):
         """Expose the DSO-specific HTTP headers in all API methods."""
         extra = [
-            {
-                "in": OpenApiParameter.QUERY,
-                "name": api_settings.URL_FORMAT_OVERRIDE,
-                "schema": {
+            OpenApiParameter(
+                name=api_settings.URL_FORMAT_OVERRIDE,
+                type={
                     "type": "string",
                     "enum": [
                         renderer.format
@@ -287,9 +316,10 @@ class DSOAutoSchema(openapi.AutoSchema):
                         if renderer.format != "api"  # Exclude browser view
                     ],
                 },
-                "description": "Select the export format",
-                "required": False,
-            },
+                location=OpenApiParameter.QUERY,
+                description="Select the export format",
+                required=False,
+            ),
         ]
 
         if isinstance(self.view, DSOViewMixin):

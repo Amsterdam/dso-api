@@ -66,17 +66,27 @@ class DSOFilterSet(FilterSet):
         ArrayField: {"filter_class": CharArrayFilter},
     }
 
+    LOOKUP_HELP_TEXT = {
+        "like": "text with wildcards",
+        "isempty": "true | false",
+        "isnull": "true | false",
+    }
+
     FILTER_HELP_TEXT = {
         filters.BooleanFilter: "true | false",
         filters.CharFilter: "text",
-        WildcardCharFilter: "text with wildcards",
+        filters.NumberFilter: "number",
         filters.DateFilter: "yyyy-mm-dd",
-        FlexDateTimeFilter: "yyyy-mm-dd or yyyy-mm-ddThh:mm[:ss[.ms]]",
+        filters.TimeFilter: "hh:mm[:ss[.ms]]",
         filters.IsoDateTimeFilter: "yyyy-mm-ddThh:mm[:ss[.ms]]",
+        FlexDateTimeFilter: "yyyy-mm-dd or yyyy-mm-ddThh:mm[:ss[.ms]]",
         filters.ModelChoiceFilter: "id",
+        filters.ModelMultipleChoiceFilter: "id",
+        ExactCharFilter: "text (exact match)",
         ModelIdChoiceFilter: "id",
         GeometryFilter: "GeoJSON | GEOMETRY(...)",
         CharArrayFilter: "Comma separated list of strings",
+        WildcardCharFilter: "text with wildcards",
     }
 
     @classmethod
@@ -118,16 +128,17 @@ class DSOFilterSet(FilterSet):
         if issubclass(filter_class, GeometryFilter):
             geom_type = params.get("geom_type", "GEOMETRY")
             if lookup_type == "contains":
-                help = "x,y | POINT(x y)"
+                return "x,y | POINT(x y)"
             else:
-                help = f"GeoJSON | {geom_type}(x y ...)"
-            return help
+                return f"GeoJSON | {geom_type}(x y ...)"
         elif issubclass(filter_class, filters.BaseInFilter):
             # Auto-generated "ConcreteInFilter" class, e.g. ModelIdChoiceFilterIn
             if issubclass(filter_class, filters.ModelChoiceFilter):
                 return "id1,id2,...,idN"
+            else:
+                return "val,val,...,valN"
 
         try:
-            return cls.FILTER_HELP_TEXT[filter_class]
+            return cls.LOOKUP_HELP_TEXT.get(lookup_type) or cls.FILTER_HELP_TEXT[filter_class]
         except KeyError:
             return filter_class.__name__.replace("Filter", "").lower()
