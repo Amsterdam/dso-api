@@ -85,6 +85,25 @@ class DSOHTTPHeaderPageNumberPagination(pagination.PageNumberPagination):
             response["X-Pagination-Count"] = self.page.paginator.num_pages
 
         return response
+    
+    def get_schema_operation_parameters(self, view):
+        parameters = super().get_schema_operation_parameters(view)
+        return parameters + [
+            {
+                'name': "_count",
+                'required': False,
+                'in': 'query',
+                'description': """
+                    Include a count of the total result set and the number of pages.
+                    Only works for responses that return a page."""
+                ,
+                'schema': {
+                    'type': 'boolean',
+                },
+            },
+        ]
+
+
 
 
 class DelegatedPageNumberPagination(DSOHTTPHeaderPageNumberPagination):
@@ -224,6 +243,14 @@ class DSOPageNumberPagination(DelegatedPageNumberPagination):
                         "size": {
                             "type": "integer",
                             "example": self.page_size,
+                        },
+                        "totalElements": {
+                            "type": "integer",
+                            "example": 5,
+                        },
+                        "totalPages": {
+                            "type": "integer",
+                            "example": 3,
                         },
                     },
                 },
