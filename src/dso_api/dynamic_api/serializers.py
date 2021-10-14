@@ -49,7 +49,7 @@ from dso_api.dynamic_api.fields import (
     TemporalReadOnlyField,
 )
 from dso_api.dynamic_api.permissions import filter_unauthorized_expands
-from dso_api.dynamic_api.utils import resolve_model_lookup
+from dso_api.dynamic_api.utils import get_source_model_fields, resolve_model_lookup
 from rest_framework_dso.embedding import EmbeddedFieldMatch
 from rest_framework_dso.fields import AbstractEmbeddedField, get_embedded_field_class
 from rest_framework_dso.serializers import DSOModelListSerializer, DSOModelSerializer
@@ -219,42 +219,51 @@ class DynamicSerializer(DSOModelSerializer):
 
     id_based_fetcher = staticmethod(temporal_id_based_fetcher)
 
-    def get_request(self):
-        """
-        Get request from this or parent instance.
-        """
+    @cached_property
+    def _request(self):
+        """Get request from this or parent instance."""
+        # Avoids resolving self.root all the time:
         return self.context["request"]
 
     def get_fields(self) -> dict[str, serializers.Field]:
         """Override DRF to remove fields that shouldn't be part of the response."""
-        user_scopes = self.get_request().user_scopes
-        model = self.Meta.model
-
-        # See what fields should really be included.
         fields = {}
         for field_name, field in super().get_fields().items():
-            if field.source == "*":
-                # e.g. _links field, always include. These sub serializers
-                # do their own permission checks for their fields.
-                fields[field_name] = field
-                continue
-
-            # field.source can be None as this point, because Field.bind() is not called yet.
-            model_field = model._meta.get_field(field.source or field_name)
-            field_schema = get_field_schema(model_field)
-            if permission := user_scopes.has_field_access(field_schema):
-                # field has permission
-                if transform_function := permission.transform_function():
-                    # Value must be transformed, decorate to_representation() for it.
-                    # Fields are a deepcopy, so this doesn't affect other serializer instances.
-                    # This strategy also avoids having to dig into the response data afterwards.
-                    field.to_representation = self._apply_transform(
-                        field.to_representation, transform_function
-                    )
-
+            if self._apply_permission(field_name, field):
                 fields[field_name] = field
 
         return fields
+
+    def _apply_permission(self, field_name: str, field: serializers.Field) -> bool:
+        """Check permissions and apply any transforms."""
+        user_scopes = self._request.user_scopes
+
+        if field.source == "*":
+            # e.g. _links field, always include. These sub serializers
+            # do their own permission checks for their fields.
+            return True
+
+        # Find which ORM path is traversed for a field.
+        # (typically one field, except when field.source has a dotted notation)
+        model_fields = get_source_model_fields(self, field_name, field)
+        for model_field in model_fields:
+            field_schema = get_field_schema(model_field)
+
+            # Check access
+            permission = user_scopes.has_field_access(field_schema)
+            if not permission:
+                return False
+
+            # Check transform from permission
+            if transform_function := permission.transform_function():
+                # Value must be transformed, decorate to_representation() for it.
+                # Fields are a deepcopy, so this doesn't affect other serializer instances.
+                # This strategy also avoids having to dig into the response data afterwards.
+                field.to_representation = self._apply_transform(
+                    field.to_representation, transform_function
+                )
+
+        return True
 
     @staticmethod
     def _apply_transform(
@@ -276,7 +285,7 @@ class DynamicSerializer(DSOModelSerializer):
     def expanded_fields(self) -> list[EmbeddedFieldMatch]:
         """Filter unauthorized fields from the matched expands."""
         return filter_unauthorized_expands(
-            self.get_request().user_scopes,
+            self._request.user_scopes,
             expanded_fields=super().expanded_fields,
             skip_unauth=self.expand_scope.auto_expand_all,
         )
@@ -345,8 +354,6 @@ class DynamicSerializer(DSOModelSerializer):
     def to_representation(self, validated_data):
         data = super().to_representation(validated_data)
 
-        request = self.get_request()
-
         # URL encoding of the data, i.e. spaces to %20, only if urlfield is present
         if self._url_content_fields:
             data = URLencodingURLfields().to_representation(self._url_content_fields, data)
@@ -370,7 +377,7 @@ class DynamicSerializer(DSOModelSerializer):
 
                 data[camel_name] = [
                     {
-                        "href": reverse(url_name, kwargs={"pk": item}, request=request),
+                        "href": reverse(url_name, kwargs={"pk": item}, request=self._request),
                         "title": item,
                         related_identifier_field: item,
                     }
@@ -459,12 +466,8 @@ class DynamicLinksSerializer(DynamicSerializer):
 
         # Resolve the model field that this serializer field links to.
         # The source_attrs is generated here as it's created later in field.bind().
-        source_attrs = (field.source or name).split(".")
-        model = self.Meta.model
-        for attr in source_attrs:
-            model_field = model._meta.get_field(attr)
-            model = model_field.related_model  # for deeper nesting
-
+        model_fields = get_source_model_fields(self, name, field)
+        for model_field in model_fields:
             # Check whether the reverse relation of that model field
             # is already walked through by a parent serializer
             if (
