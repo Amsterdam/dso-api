@@ -7,7 +7,6 @@ from django.core.paginator import PageNotAnInteger
 from django.core.paginator import Paginator as DjangoPaginator
 from django.db.models.query import QuerySet
 from django.http import Http404
-from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework_dso.embedding import ObservableIterator
@@ -20,9 +19,7 @@ class DSOPaginator(DjangoPaginator):
     So num_pages() is not supported.
     """
 
-    def __init__(
-        self, object_list, per_page, orphans=0, allow_empty_first_page=True
-    ):
+    def __init__(self, object_list, per_page, orphans=0, allow_empty_first_page=True):
         if orphans != 0:
             warnings.warn(
                 "DSOPaginator instantiated with non-zero value in orphans. \

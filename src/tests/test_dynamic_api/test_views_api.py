@@ -1664,10 +1664,8 @@ class TestEmbedTemporalTables:
             data["_links"]["buurten"][0]["href"]
             == "http://testserver/v1/gebieden/buurten/03630000000078/?volgnummer=2"
         )
-    
-    def test_list_count_true(
-        self, api_client, afval_container, filled_router
-    ):
+
+    def test_list_count_true(self, api_client, afval_container, filled_router):
         url = reverse("dynamic_api:afvalwegingen-containers-list")
         response = api_client.get(url, data={"_count": "true"})
         data = read_response_json(response)
@@ -1675,13 +1673,11 @@ class TestEmbedTemporalTables:
         assert response.status_code == 200, data
         assert data["page"]["totalElements"] == 1
         assert data["page"]["totalPages"] == 1
-        assert response["X-Pagination-Count"]  == "1"
-        assert response["X-Total-Count"]  == "1"
+        assert response["X-Pagination-Count"] == "1"
+        assert response["X-Total-Count"] == "1"
 
     @pytest.mark.parametrize("data", [{}, {"_count": "false"}, {"_count": "0"}, {"_count": "1"}])
-    def test_list_count_falsy(
-        self, api_client, afval_container, filled_router, data
-    ):
+    def test_list_count_falsy(self, api_client, afval_container, filled_router, data):
         url = reverse("dynamic_api:afvalwegingen-containers-list")
         response = api_client.get(url, data=data)
         data = read_response_json(response)
@@ -1692,7 +1688,6 @@ class TestEmbedTemporalTables:
         assert "totalElements" not in data["page"]
         assert "totalPages" not in data["page"]
 
-    
 
 @pytest.mark.django_db
 class TestExportFormats:
@@ -2043,29 +2038,25 @@ class TestExportFormats:
         # Paginator was NOT triggered
         assert "X-Pagination-Page" not in response
 
-
     @pytest.mark.parametrize("format", sorted(PAGINATED_FORMATS.keys()))
-    def test_list_count_true(
-        self, api_client, afval_container, filled_router, format
-    ):
+    def test_list_count_true(self, api_client, afval_container, filled_router, format):
         url = reverse("dynamic_api:afvalwegingen-containers-list")
         # triger pagination with _pageSize
-        response = api_client.get(url, data={"_count": "true", "_format": format, "_pageSize": 1000})
+        response = api_client.get(
+            url, data={"_count": "true", "_format": format, "_pageSize": 1000}
+        )
 
-        assert response.status_code == 200, data
-        assert response["X-Pagination-Count"]  == "1"
-        assert response["X-Total-Count"]  == "1"
+        assert response.status_code == 200, response.getvalue()
+        assert response["X-Pagination-Count"] == "1"
+        assert response["X-Total-Count"] == "1"
 
     @pytest.mark.parametrize("format", sorted(PAGINATED_FORMATS.keys()))
     @pytest.mark.parametrize("data", [{}, {"_count": "false"}, {"_count": "0"}, {"_count": "1"}])
-    def test_list_count_falsy(
-        self, api_client, bommen_dataset, filled_router, data, format
-    ):
+    def test_list_count_falsy(self, api_client, bommen_dataset, filled_router, data, format):
         url = reverse("dynamic_api:bommen-bommen-list")
         # trigger pagination with _pageSize but dont count
         response = api_client.get(url, data=data | {"_format": format, "_pageSize": 1000})
 
-        assert response.status_code == 200, data
+        assert response.status_code == 200, response.getvalue()
         assert "X-Total-Count" not in response
         assert "X-Pagination-Count" not in response
-
