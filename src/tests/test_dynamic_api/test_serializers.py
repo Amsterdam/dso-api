@@ -535,69 +535,6 @@ class TestDynamicSerializer:
         }
 
     @staticmethod
-    def test_flat_serializer_has_no_nested_table(
-        drf_request,
-        parkeervakken_schema,
-        parkeervakken_parkeervak_model,
-        parkeervakken_regime_model,
-    ):
-        """Prove that the serializer factory properly skipping generation of reverse
-        relations if `flat=True`.
-        Flat serialiser should not contain any reverse relations,
-        as flat serializers are used to represet instances of sub-serializers.
-        """
-        drf_request.dataset = parkeervakken_schema
-        parkeervak = parkeervakken_parkeervak_model.objects.create(
-            type="File",
-            soort="MULDER",
-            aantal=1.0,
-            e_type="E9",
-            buurtcode="A05d",
-            id="121138489047",
-            straatnaam="Zoutkeetsgracht",
-        )
-        parkeervakken_regime_model.objects.create(
-            id=1,
-            parent=parkeervak,
-            bord="",
-            dagen=["ma", "di", "wo", "do", "vr", "za", "zo"],
-            soort="MULDER",
-            aantal=None,
-            e_type="E6b",
-            kenteken="69-SF-NT",
-            opmerking="",
-            eind_tijd="23:59:00",
-            begin_tijd="00:00:00",
-            eind_datum=None,
-            begin_datum=None,
-        )
-
-        ParkeervakSerializer = serializer_factory(parkeervakken_parkeervak_model, flat=True)
-
-        # Prove that no reverse relation to containers here.
-        assert "regimes" not in ParkeervakSerializer._declared_fields
-
-        # Prove that data is serialized with relations.
-        # Both the cluster_id field and 'cluster' field are generated.
-
-        parkeervak_serializer = ParkeervakSerializer(parkeervak, context={"request": drf_request})
-        data = normalize_data(parkeervak_serializer.data)
-        assert data == {
-            "_links": {
-                "self": {"href": "http://testserver/v1/parkeervakken/parkeervakken/121138489047/"},
-                "schema": "https://schemas.data.amsterdam.nl/datasets/parkeervakken/dataset#parkeervakken",  # noqa: E501
-            },
-            "geometry": None,
-            "id": "121138489047",
-            "type": "File",
-            "soort": "MULDER",
-            "aantal": 1.0,
-            "eType": "E9",
-            "buurtcode": "A05d",
-            "straatnaam": "Zoutkeetsgracht",
-        }
-
-    @staticmethod
     def test_display_title_present(
         drf_request,
         fietspaaltjes_schema,
@@ -625,7 +562,7 @@ class TestDynamicSerializer:
     ):
         """ Prove that title element is omitted if display field is not specified """
 
-        FietsplaatjesSerializer = serializer_factory(fietspaaltjes_model_no_display, flat=True)
+        FietsplaatjesSerializer = serializer_factory(fietspaaltjes_model_no_display)
 
         drf_request.dataset = fietspaaltjes_schema_no_display
 
@@ -647,7 +584,7 @@ class TestDynamicSerializer:
     ):
         """ Prove that a URLfield can be validated by the URIValidator """
 
-        ExplosievenSerializer = serializer_factory(explosieven_model, flat=True)
+        ExplosievenSerializer = serializer_factory(explosieven_model)
 
         drf_request.dataset = explosieven_schema
 
@@ -666,7 +603,7 @@ class TestDynamicSerializer:
     ):
         """ Prove that a URLfield content is URL encoded i.e. space to %20 """
 
-        ExplosievenSerializer = serializer_factory(explosieven_model, flat=True)
+        ExplosievenSerializer = serializer_factory(explosieven_model)
 
         drf_request.dataset = explosieven_schema
 
@@ -685,7 +622,7 @@ class TestDynamicSerializer:
     ):
         """ Prove that a EmailField can be validated by the EmailValidator """
 
-        ExplosievenSerializer = serializer_factory(explosieven_model, flat=True)
+        ExplosievenSerializer = serializer_factory(explosieven_model)
 
         drf_request.dataset = explosieven_schema
 
