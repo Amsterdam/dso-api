@@ -533,11 +533,11 @@ serializer_factory_cache = LRUCache(maxsize=100000)
 dynamic_models_removed.connect(lambda **kwargs: serializer_factory_cache.clear())
 
 
-def _serializer_cache_key(model, depth=0, flat=False, nesting_level=0):
+def _serializer_cache_key(model, depth=0, nesting_level=0):
     """The cachetools allow definining the cache key,
     so the nesting level does not bypass the cache which it would with lru_cache().
     """
-    return hashkey(model, depth, flat)
+    return hashkey(model, depth)
 
 
 class SerializerAssemblyLine:
@@ -601,7 +601,7 @@ class SerializerAssemblyLine:
 
 @cached(cache=serializer_factory_cache, key=_serializer_cache_key)
 def serializer_factory(
-    model: type[DynamicModel], depth: int = 0, flat: bool = False, nesting_level=0
+    model: type[DynamicModel], depth: int = 0, nesting_level=0
 ) -> type[DynamicSerializer]:
     """Generate the DRF serializer class for a specific dataset model.
 
@@ -617,18 +617,15 @@ def serializer_factory(
     :param model: The dynamic model.
     :param depth: Matches the depth parameter for the serializer ``Meta`` field.
       This allows Django Rest Framework to auto-expand relations or omit them.
-    :param flat: When true, embedded relations will not be generated.
     """
-    if not flat and nesting_level >= MAX_EMBED_NESTING_LEVEL:
-        # Won't auto-correct this, as it would open up cache bypassing for lru_cache()
-        raise ValueError("flat should be False when nesting exceeds max nesting level")
+    if nesting_level >= MAX_EMBED_NESTING_LEVEL:
+        raise RuntimeError("recursion in embedded nesting")
 
     _validate_model(model)
 
     # Get model data
-    prefix = "Flat" if flat else ""
     safe_dataset_id = to_snake_case(model.get_dataset_id())
-    serializer_name = f"{prefix}{safe_dataset_id.title()}{model.__name__}Serializer"
+    serializer_name = f"{safe_dataset_id.title()}{model.__name__}Serializer"
     table_schema = model.table_schema()
 
     # Start the assemblage of the serializer
@@ -676,10 +673,9 @@ def serializer_factory(
         ):
             continue
 
-        _build_serializer_field(serializer_part, model, model_field, flat, nesting_level)
+        _build_serializer_field(serializer_part, model_field, nesting_level)
 
-    if not flat:
-        _generate_nested_relations(serializer_part, model, nesting_level)
+    _generate_nested_relations(serializer_part, model, nesting_level)
 
     # Generate Meta section and serializer class
     return serializer_part.construct_class(serializer_name, base_class=DynamicBodySerializer)
@@ -729,16 +725,12 @@ def _links_serializer_factory(model: type[DynamicModel], depth: int) -> type[Dyn
 
 
 def _build_serializer_field(
-    serializer_part: SerializerAssemblyLine,
-    model: type[DynamicModel],
-    model_field: models.Field,
-    flat: bool,
-    nesting_level: int,
+    serializer_part: SerializerAssemblyLine, model_field: models.Field, nesting_level: int
 ):  # noqa: C901
     """Build a serializer field, results are written in 'output' parameters"""
     # Add extra embedded part for related fields
     # For NM relations, we need another type of EmbeddedField
-    if not flat and isinstance(
+    if isinstance(
         model_field,
         (
             models.ForeignKey,
@@ -757,7 +749,7 @@ def _build_serializer_field(
             # Forward relation, add an id field in the main body.
             _build_serializer_related_id_field(serializer_part, model_field)
         return
-    elif not flat and isinstance(model_field, ForeignObjectRel):
+    elif isinstance(model_field, ForeignObjectRel):
         # Reverse relations, are only added as embedded field when there is an explicit declaration
         field_schema = get_field_schema(model_field)
         additional_relation = field_schema.reverse_relation
@@ -794,7 +786,6 @@ def _build_serializer_embedded_field(
         lambda: serializer_factory(
             model_field.related_model,
             depth=1,
-            flat=(nesting_level + 1) >= MAX_EMBED_NESTING_LEVEL,
             nesting_level=nesting_level + 1,
         )
     )
@@ -972,7 +963,6 @@ def _generate_nested_relations(
         if item.name in schema_fields and schema_fields[item.name].is_nested_table:
             related_serializer = serializer_factory(
                 item.related_model,
-                flat=(nesting_level + 1) >= MAX_EMBED_NESTING_LEVEL,
                 nesting_level=nesting_level + 1,
             )
 
