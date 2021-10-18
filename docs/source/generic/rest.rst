@@ -89,6 +89,8 @@ In het ``page`` object zijn de volgende velden opgenomen:
 * ``page.totalElements``: Het aantal objecten in de (gefilterde) resultaat set.
 * ``page.totalPages``: Het aantal paginas in de (gefilterde) resultaat set.
 
+`page.totalPages` en `page.totalElements` worden alleen teruggegeven als de `_count` parameter wordt gebruikt.
+
 De velden uit het ``page`` object worden ook als HTTP headers in de response teruggegeven:
 
 * ``X-Pagination-Page``: Het huidige paginanummer.

@@ -87,15 +87,19 @@ class DSOHTTPHeaderPageNumberPagination(pagination.PageNumberPagination):
         return response
 
     def get_schema_operation_parameters(self, view):
+        """Return the supported query parameters for this Pagination style.
+        Used by the SchemaGenerator to supply these to the openapi schema.
+        """
         parameters = super().get_schema_operation_parameters(view)
         return parameters + [
             {
                 "name": "_count",
                 "required": False,
                 "in": "query",
-                "description": """
-                    Include a count of the total result set and the number of pages.
-                    Only works for responses that return a page.""",
+                "description": (
+                    "Include a count of the total result set and the number of pages."
+                    "Only works for responses that return a page."
+                ),
                 "schema": {
                     "type": "boolean",
                 },
