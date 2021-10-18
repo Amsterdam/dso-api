@@ -531,16 +531,15 @@ class ThroughSerializer(DynamicSerializer):
         return representation
 
 
+_serializer_factory_cache = LRUCache(maxsize=100000)
+
+
+def clear_serializer_factory_cache():
+    _serializer_factory_cache.clear()
+
+
 # When models are removed, clear the cache.
-serializer_factory_cache = LRUCache(maxsize=100000)
-dynamic_models_removed.connect(lambda **kwargs: serializer_factory_cache.clear())
-
-
-def _serializer_cache_key(model, depth=0, nesting_level=0):
-    """The cachetools allow definining the cache key,
-    so the nesting level does not bypass the cache which it would with lru_cache().
-    """
-    return hashkey(model, depth)
+dynamic_models_removed.connect(lambda **kwargs: clear_serializer_factory_cache())
 
 
 class SerializerAssemblyLine:
@@ -602,7 +601,14 @@ class SerializerAssemblyLine:
         return type(class_name, (base_class,), self.class_attrs)
 
 
-@cached(cache=serializer_factory_cache, key=_serializer_cache_key)
+def _serializer_cache_key(model, depth=0, nesting_level=0):
+    """The cachetools allow definining the cache key,
+    so the nesting level does not bypass the cache which it would with lru_cache().
+    """
+    return hashkey(model, depth)
+
+
+@cached(cache=_serializer_factory_cache, key=_serializer_cache_key)
 def serializer_factory(
     model: type[DynamicModel], depth: int = 0, nesting_level=0
 ) -> type[DynamicSerializer]:
