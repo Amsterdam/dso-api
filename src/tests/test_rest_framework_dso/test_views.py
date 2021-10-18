@@ -656,11 +656,16 @@ class TestListCount:
         assert data["page"]["totalPages"] == 2
 
     @pytest.mark.parametrize("data", [{}, {"_count": "false"}, {"_count": "0"}, {"_count": "1"}])
-    def test_list_count_excluded(self, api_client, data):
+    def test_list_count_excluded(self, api_client, django_assert_num_queries, data):
         Movie.objects.create(name="foo123")
         Movie.objects.create(name="test")
 
-        response = api_client.get("/v1/movies", data=data)
+        with django_assert_num_queries(2) as captured:
+            response = api_client.get("/v1/movies", data=data)
+
+        # Make sure we are not inadvertently executing a COUNT
+        assert all(["COUNT" not in q["sql"] for q in captured.captured_queries])
+
         data = read_response_json(response)
         assert response.status_code == 200
         assert "X-Total-Count" not in response

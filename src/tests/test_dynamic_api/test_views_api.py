@@ -2052,7 +2052,7 @@ class TestExportFormats:
 
     @pytest.mark.parametrize("format", sorted(PAGINATED_FORMATS.keys()))
     @pytest.mark.parametrize("data", [{}, {"_count": "false"}, {"_count": "0"}, {"_count": "1"}])
-    def test_list_count_falsy(self, api_client, bommen_dataset, filled_router, data, format):
+    def test_list_count_false(self, api_client, bommen_dataset, filled_router, data, format):
         url = reverse("dynamic_api:bommen-bommen-list")
         # trigger pagination with _pageSize but dont count
         response = api_client.get(url, data=data | {"_format": format, "_pageSize": 1000})
