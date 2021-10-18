@@ -50,7 +50,7 @@ def gebied(gebieden_models, stadsdelen, buurt):
         naam="Bijlmer-Centrum",
     )
     Gebied.bestaat_uit_buurten.through.objects.create(
-        ggwgebieden_id="03630950000019.1", bestaat_uit_buurten_id="03630000000078.1"
+        id="11", ggwgebieden_id="03630950000019.1", bestaat_uit_buurten_id="03630000000078.1"
     )
     return gebied
 
@@ -167,14 +167,17 @@ class TestViews:
         """Prove that in case of temporal request links to objects will have request date.
         Allowing follow up date filtering further."""
         url = reverse("dynamic_api:gebieden-ggwgebieden-list")
-        # response = api_client.get(url)
         response = api_client.get(f"{url}{gebied.id}/?geldigOp=2014-05-01")
         data = read_response_json(response)
-
-        buurt = gebied.bestaat_uit_buurten.all()[0]
-        expected_url = f"/{buurt.identificatie}/?geldigOp=2014-05-01"
-        assert data["_links"]["bestaatUitBuurten"][0]["href"].endswith(expected_url), data[
-            "bestaatUitBuurten"
+        assert data["_links"]["bestaatUitBuurten"] == [
+            {
+                "href": (
+                    "http://testserver/v1/gebieden/buurten/03630000000078/?geldigOp=2014-05-01"
+                ),
+                "identificatie": None,
+                "title": "03630000000078.1",
+                "volgnummer": None,
+            }
         ]
 
     def test_correct_handling_of_extra_url_params(
