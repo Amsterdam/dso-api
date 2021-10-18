@@ -1033,6 +1033,7 @@ def ggwgebieden_data(ggwgebieden_model, buurten_data):
         id="03630950000000.1", identificatie="03630950000000", volgnummer=1
     )
     ggwgebieden_model.bestaat_uit_buurten.through.objects.create(
+        id="22",
         ggwgebieden_id="03630950000000.1",
         bestaat_uit_buurten_id="03630000000078.1",
         bestaat_uit_buurten_identificatie="03630000000078",
@@ -1046,6 +1047,7 @@ def ggpgebieden_data(ggpgebieden_model, buurten_data):
         id="03630950000000.1", identificatie="03630950000000", volgnummer=1
     )
     ggpgebieden_model.bestaat_uit_buurten.through.objects.create(
+        id="33",
         ggpgebieden_id="03630950000000.1",
         bestaat_uit_buurten_id="03630000000078.1",
         bestaat_uit_buurten_identificatie="03630000000078",
