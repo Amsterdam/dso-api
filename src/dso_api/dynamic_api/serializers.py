@@ -27,7 +27,7 @@ from more_itertools import first
 from rest_framework import serializers
 from rest_framework.relations import HyperlinkedRelatedField
 from rest_framework.reverse import reverse
-from rest_framework.serializers import Field, ManyRelatedField
+from rest_framework.serializers import Field
 from schematools.contrib.django.factories import is_dangling_model
 from schematools.contrib.django.models import (
     DynamicModel,
@@ -43,7 +43,6 @@ from dso_api.dynamic_api.fields import (
     AzureBlobFileField,
     HALLooseRelationUrlField,
     HALTemporalHyperlinkedRelatedField,
-    LooseRelationUrlField,
     LooseRelationUrlListField,
     TemporalHyperlinkedRelatedField,
     TemporalLinksField,
@@ -397,36 +396,7 @@ class DynamicBodySerializer(DynamicSerializer):
         if links_field is not None and isinstance(links_field, DynamicLinksSerializer):
             links_field.expand_scope = self.expand_scope
 
-        hal_fields = self._get_hal_field_names(fields)
-        for hal_field in hal_fields:
-            fields.pop(hal_field, None)
         return fields
-
-    def _get_hal_field_names(self, fields):  # noqa: C901
-        """Get the relational and other identifier fields which should not appear in the body
-        but in the respective HAL envelopes in _links
-        """
-        ds = self.Meta.model.get_dataset_schema()
-        table = self.Meta.model.table_schema()
-
-        hal_fields = [ds.identifier]
-        temporal = table.temporal
-        if temporal is not None:
-            hal_fields.append(temporal.identifier)
-        capitalized_identifier_fields = [
-            identifier_field.capitalize() for identifier_field in hal_fields
-        ]
-        for field_name, field in fields.items():
-            if isinstance(field, TemporalHyperlinkedRelatedField):
-                hal_fields.append(field_name)
-                hal_fields += [f"{field_name}{suffix}" for suffix in capitalized_identifier_fields]
-            elif isinstance(
-                field,
-                (HyperlinkedRelatedField, ManyRelatedField, LooseRelationUrlField),
-            ):
-                hal_fields.append(field_name)
-
-        return hal_fields
 
 
 class DynamicLinksSerializer(DynamicSerializer):
@@ -681,17 +651,28 @@ def serializer_factory(
         nesting_level,
     )
 
+    if table_schema.temporal:
+        unwanted_identifiers = list(map(toCamelCase, table_schema.identifier))
+    else:
+        unwanted_identifiers = []
+
     # Parse fields for serializer
     for model_field in model._meta.get_fields():
         field_camel_case = toCamelCase(model_field.name)
+        field_schema = get_field_schema(model_field)
 
         # Exclusions:
         if (
             # Do not render PK and FK to parent on nested tables
             (model.has_parent_table() and model_field.name in ["id", "parent"])
-            # "identificatie", "volgnummer" are part of `_links.self` only
+            # Do not render temporal "identificatie" or "volgnummer" fields.
             # Yet "id" / "pk" is still part of the main body.
-            or (table_schema.temporal and field_camel_case in table_schema.identifier)
+            or (table_schema.temporal and field_camel_case in unwanted_identifiers)
+            # Do not render intermediate keys "relation_identificatie" / "relation_volgnummer"
+            or (
+                field_schema.parent_field is not None
+                and field_schema.parent_field.is_through_table
+            )
         ):
             continue
 
@@ -753,7 +734,7 @@ def _build_serializer_field(
     model_field: models.Field,
     flat: bool,
     nesting_level: int,
-):
+):  # noqa: C901
     """Build a serializer field, results are written in 'output' parameters"""
     # Add extra embedded part for related fields
     # For NM relations, we need another type of EmbeddedField
@@ -772,9 +753,10 @@ def _build_serializer_field(
         if isinstance(model_field, LooseRelationField):
             # For loose relations, add an id char field.
             _build_serializer_loose_relation_id_field(serializer_part, model_field)
-        else:
+        elif isinstance(model_field, models.ForeignKey):
             # Forward relation, add an id field in the main body.
             _build_serializer_related_id_field(serializer_part, model_field)
+        return
     elif not flat and isinstance(model_field, ForeignObjectRel):
         # Reverse relations, are only added as embedded field when there is an explicit declaration
         field_schema = get_field_schema(model_field)
@@ -788,6 +770,10 @@ def _build_serializer_field(
         field_schema = get_field_schema(model_field)
         if field_schema.type == "string" and field_schema.format == "blob-azure":
             _build_serializer_blob_field(serializer_part, model_field, field_schema)
+            return
+
+    if model_field.is_relation:
+        return
 
     # Regular fields for the body, and some relation fields
     _build_plain_serializer_field(serializer_part, model_field)
