@@ -99,6 +99,7 @@ class TestDynamicSerializer:
                 "cluster": {
                     "href": "http://testserver/v1/afvalwegingen/clusters/123.456/",
                     "title": "123.456",
+                    "id": "123.456",
                 },
                 "schema": "https://schemas.data.amsterdam.nl/datasets/afvalwegingen/dataset#containers",  # noqa: E501
                 "self": {
@@ -143,6 +144,7 @@ class TestDynamicSerializer:
                 "cluster": {
                     "href": "http://testserver/v1/afvalwegingen/clusters/123.456/",
                     "title": "123.456",
+                    "id": "123.456",
                 },
             },
             "id": 2,
@@ -281,6 +283,7 @@ class TestDynamicSerializer:
                 "cluster": {
                     "href": "http://testserver/v1/afvalwegingen/clusters/123.456/",
                     "title": "123.456",
+                    "id": "123.456",
                 },
             },
             "id": 2,
@@ -386,10 +389,12 @@ class TestDynamicSerializer:
                 "postAdres": {
                     "href": "http://testserver/v1/vestiging/adres/3/",
                     "title": "3",
+                    "id": 3,
                 },
                 "bezoekAdres": {
                     "href": "http://testserver/v1/vestiging/adres/1/",
                     "title": "1",
+                    "id": 1,
                 },
             },
             "id": 1,
@@ -413,10 +418,12 @@ class TestDynamicSerializer:
                 "postAdres": {
                     "href": "http://testserver/v1/vestiging/adres/3/",
                     "title": "3",
+                    "id": 3,
                 },
                 "bezoekAdres": {
                     "href": "http://testserver/v1/vestiging/adres/2/",
                     "title": "2",
+                    "id": 2,
                 },
             },
             "id": 2,
@@ -442,11 +449,9 @@ class TestDynamicSerializer:
                     {
                         "href": "http://testserver/v1/vestiging/vestiging/1/",
                         "title": "1",
+                        "id": 1,
                     },
-                    {
-                        "href": "http://testserver/v1/vestiging/vestiging/2/",
-                        "title": "2",
-                    },
+                    {"href": "http://testserver/v1/vestiging/vestiging/2/", "title": "2", "id": 2},
                 ],
             },
             "id": 3,

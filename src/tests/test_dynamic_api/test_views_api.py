@@ -992,6 +992,7 @@ class TestEmbedTemporalTables:
                             "heeftDossier": {
                                 "href": "http://testserver/v1/bag/dossiers/GV00000406/",
                                 "title": "GV00000406",
+                                "dossier": "GV00000406",
                             },
                             "ligtInBouwblok": {
                                 "href": (

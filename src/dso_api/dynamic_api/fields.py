@@ -58,22 +58,22 @@ class HALTemporalHyperlinkedRelatedField(TemporalHyperlinkedRelatedField):
 
     def to_representation(self, value: DynamicModel):
         href = super().to_representation(value)
-        output: dict[str, Any] = {"href": href}
+        table_schema = value.table_schema()
+        id_fieldname = first(table_schema.identifier)
+
+        output: dict[str, Any] = {"href": href, id_fieldname: getattr(value, id_fieldname)}
         if value.has_display_field():
             output["title"] = str(value)
 
         if href and value.is_temporal():
-            table_schema = value.table_schema()
             temporal: Temporal = cast(Temporal, table_schema.temporal)
             temporal_fieldname = temporal.identifier
-            id_fieldname = first(table_schema.identifier)
 
             # Add the temporal fields that uniquely identify the related object
             # (e.g. "identificatie" and "volgnummer" for GOB data).
             output.update(
                 {
                     temporal_fieldname: getattr(value, temporal_fieldname),
-                    id_fieldname: getattr(value, id_fieldname),
                 }
             )
 
