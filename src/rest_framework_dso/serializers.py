@@ -40,7 +40,12 @@ from rest_framework_dso.embedding import (
     ObservableIterator,
     get_serializer_lookups,
 )
-from rest_framework_dso.fields import DSOGeometryField, LinksField, parse_request_fields
+from rest_framework_dso.fields import (
+    DSOGeometryField,
+    DSORelatedLinkField,
+    DSOSelfLinkField,
+    parse_request_fields,
+)
 from rest_framework_dso.serializer_helpers import ReturnGenerator, peek_iterable
 
 
@@ -57,6 +62,9 @@ class ExpandMixin:
     expand_all_param = "_expand"
     expand_param = "_expandScope"  # so ?_expandScope=.. gives a result
     expand_field = "_embedded"  # with _embedded in the result
+
+    #: Fetcher function for embedded objects, can be redefined by subclasses.
+    id_based_fetcher = None
 
     def __init__(self, *args, fields_to_expand=empty, **kwargs):
         super().__init__(*args, **kwargs)
@@ -561,19 +569,19 @@ class DSOModelSerializer(DSOSerializer, serializers.HyperlinkedModelSerializer):
 
     This supports the following extra's:
 
-    * The self-URL is generated in a ``_links`` section.
+    * The self-URL can be generated when this serializer is used for a ``_links`` section.
     * Embedded relations are returned in an ``_embedded`` section.
 
     To use the embedding feature, include an ``EmbeddedField`` field in the class::
 
-        class SomeSerializer(HALEmbeddedSerializer):
+        class SomeSerializer(DSOModelSerializer):
             embedded_field = EmbeddedField(SerializerClass)
 
             class Meta:
                 model = ...
                 fields = [...]
 
-    The embedded support works on ``ForeignKey`` fields.
+    The embedded support works on all relational fields.
     """
 
     _default_list_serializer_class = DSOModelListSerializer
@@ -590,14 +598,13 @@ class DSOModelSerializer(DSOSerializer, serializers.HyperlinkedModelSerializer):
         gis_models.GeometryCollectionField: DSOGeometryField,
     }
 
-    #: Define the field name inside the URL object.
+    #: Define that having an unknown field named "self" will be rendered as a hyperlink
+    # to this object, using a field class that output a {"href": ..., "title": ...} structure.
     url_field_name = "self"
+    serializer_url_field = DSOSelfLinkField
 
-    #: Define the object that renders the object URL (e.g. ``_links``).
-    serializer_url_field = LinksField
-
-    #: Fetcher function for embedded objects, can be redefined by subclasses.
-    id_based_fetcher = None
+    #: Define that relations will also be generated as {"href": ..., "title": ...}.
+    serializer_related_field = DSORelatedLinkField
 
     def _include_embedded(self):
         """Determines if the _embedded field must be generated."""

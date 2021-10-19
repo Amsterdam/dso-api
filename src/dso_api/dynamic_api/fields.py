@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-from typing import Any, cast
 
 import azure.storage.blob
 from django.conf import settings
@@ -7,11 +6,8 @@ from more_ds.network.url import URL
 from more_itertools import first
 from rest_framework import serializers
 from rest_framework.reverse import reverse
-from schematools.contrib.django.models import DynamicModel
 from schematools.types import Temporal
 from schematools.utils import to_snake_case
-
-from rest_framework_dso.fields import LinksField
 
 from .utils import split_on_separator
 
@@ -21,63 +17,37 @@ class TemporalHyperlinkedRelatedField(serializers.HyperlinkedRelatedField):
 
     Used for forward relations in serializers."""
 
+    def __init__(self, temporal: Temporal, *args, **kwargs):
+        # Init adds temporal definitions at construction, removing runtime model lookups.
+        # It also allows the PK optimization to be used.
+        super().__init__(*args, **kwargs)
+        self.temporal = temporal
+
     def use_pk_only_optimization(self):
-        # disable, breaks obj.is_temporal()
-        return False
+        return True  # only need to have an "id" here.
 
     def get_url(self, obj, view_name, request, format=None):
-        # Unsaved objects will not yet have a valid URL.
+        """Generate /path/{identificatie}/?volgnummer=... links."""
         if hasattr(obj, "pk") and obj.pk in (None, ""):
+            # Unsaved objects will not yet have a valid URL.
             return None
 
-        if obj.is_temporal():
-            # note that `obj` has only PK field.
-            lookup_value, version = split_on_separator(obj.pk)
-            kwargs = {self.lookup_field: lookup_value}
+        # NOTE: this one splits on the Django "id" field instead of
+        # reading the "identificatie" / "volgnummer" fields directly.
+        # It does allow use_pk_only_optimization() when lookup_field == "pk".
+        id_value, id_version = split_on_separator(getattr(obj, self.lookup_field))
+        base_url = self.reverse(
+            view_name, kwargs={self.lookup_url_kwarg: id_value}, request=request, format=format
+        )
 
-            base_url = self.reverse(view_name, kwargs=kwargs, request=request, format=format)
-            if request.table_temporal_slice is None:
-                key = obj.table_schema().temporal.identifier
-                value = version
-            else:
-                key = request.table_temporal_slice["key"]
-                value = request.table_temporal_slice["value"]
-
-            base_url = URL(base_url) // {key: value}
+        if request.table_temporal_slice is None:
+            key = self.temporal.identifier
+            value = id_version
         else:
-            kwargs = {self.lookup_field: obj.pk}
-            base_url = self.reverse(view_name, kwargs=kwargs, request=request, format=format)
-        return base_url
+            key = request.table_temporal_slice["key"]
+            value = request.table_temporal_slice["value"]
 
-
-class HALTemporalHyperlinkedRelatedField(TemporalHyperlinkedRelatedField):
-    """Wrap the url from the HyperlinkedRelatedField according to HAL specs.
-
-    If the value is from a temporal table, extra info is added to the output.
-    """
-
-    def to_representation(self, value: DynamicModel):
-        href = super().to_representation(value)
-        output: dict[str, Any] = {"href": href}
-        if value.has_display_field():
-            output["title"] = str(value)
-
-        if href and value.is_temporal():
-            table_schema = value.table_schema()
-            temporal: Temporal = cast(Temporal, table_schema.temporal)
-            temporal_fieldname = temporal.identifier
-            id_fieldname = first(table_schema.identifier)
-
-            # Add the temporal fields that uniquely identify the related object
-            # (e.g. "identificatie" and "volgnummer" for GOB data).
-            output.update(
-                {
-                    temporal_fieldname: getattr(value, temporal_fieldname),
-                    id_fieldname: getattr(value, id_fieldname),
-                }
-            )
-
-        return output
+        return URL(base_url) // {key: value}
 
 
 class TemporalReadOnlyField(serializers.ReadOnlyField):
@@ -90,36 +60,10 @@ class TemporalReadOnlyField(serializers.ReadOnlyField):
         """Remove the version number from the relation value,
         typically done for RELATION_identificatie, RELATION_volgnummer fields.
         """
-        if "request" in self.parent.context and self.parent.context["request"].versioned:
+        request = self.context["request"]
+        if request.versioned:
             value = split_on_separator(value)[0]
         return value
-
-
-class TemporalLinksField(LinksField):
-    """Versioned Links Field
-
-    Correcting URLs inside Links field with proper versions.
-    """
-
-    def get_url(self, obj, view_name, request, format):
-        if hasattr(obj, "pk") and obj.pk in (None, ""):
-            return None
-
-        kwargs = {self.lookup_field: obj.pk}
-
-        if not obj.is_temporal():
-            return super().get_url(obj, view_name, request, format)
-
-        table_schema = obj.table_schema()
-        lookup_value = getattr(obj, first(table_schema.identifier))
-
-        kwargs = {self.lookup_field: lookup_value}
-        base_url = self.reverse(view_name, kwargs=kwargs, request=request, format=format)
-
-        table_schema = obj.table_schema()
-        temporal_identifier = table_schema.temporal.identifier
-        version = getattr(obj, temporal_identifier)
-        return URL(base_url) // {temporal_identifier: version}
 
 
 class AzureBlobFileField(serializers.ReadOnlyField):

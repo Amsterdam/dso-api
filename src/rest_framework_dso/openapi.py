@@ -17,6 +17,7 @@ from rest_framework_gis.fields import GeometryField
 
 from rest_framework_dso import filters
 from rest_framework_dso.embedding import get_all_embedded_fields_by_name
+from rest_framework_dso.fields import AbstractEmbeddedField
 from rest_framework_dso.pagination import DSOPageNumberPagination
 from rest_framework_dso.serializers import ExpandMixin
 from rest_framework_dso.views import DSOViewMixin
@@ -50,20 +51,6 @@ class DSOSchemaGenerator(generators.SchemaGenerator):
     schema_overrides = {}
 
     schema_override_components = {
-        "_SelfLink": {
-            "type": "object",
-            "properties": {
-                "href": {
-                    "type": "string",
-                    "readOnly": True,
-                },
-                "title": {
-                    "type": "string",
-                    "format": "uri",
-                    "readOnly": True,
-                },
-            },
-        },
         # Used from https://gist.github.com/codan-telcikt/e1d59ccc9a3af83e083f1a514c84026c
         # Parsed with yaml.load()
         "Geometry": {
@@ -349,7 +336,7 @@ class DSOAutoSchema(openapi.AutoSchema):
                     OpenApiExample(
                         name=dotted_name,
                         value=dotted_name,
-                        description=field.source_field.help_text,
+                        description=self._get_expand_description(field),
                     )
                     for dotted_name, field in sorted(embeds.items())
                 ]
@@ -380,6 +367,13 @@ class DSOAutoSchema(openapi.AutoSchema):
             ]
 
         return extra
+
+    def _get_expand_description(self, field: AbstractEmbeddedField):
+        """Generate a description for the embed, this uses the help text."""
+        if field.is_reverse:
+            return field.source_field.target_field.help_text
+        else:
+            return field.source_field.help_text
 
     def _map_field_validators(self, field, schema):
         super()._map_field_validators(field, schema)
