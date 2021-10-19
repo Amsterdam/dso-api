@@ -491,7 +491,7 @@
           let cls = 'number';
           if (/^"https?:\/\//.test(match)) {
               // Create a link for strings containing an url.
-              let uri = encodeURI(match.substring(1,match.length-1))
+              let uri = match.substring(1,match.length-1)
               return `<a href="${uri}" rel="nofollow"><span class="link">${match}</span></a>`;
           }
           if (/^"__coordinatestring__/.test(match)) {
