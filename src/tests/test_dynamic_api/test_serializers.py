@@ -6,7 +6,7 @@ from django.core.validators import EmailValidator, URLValidator
 from schematools.permissions import UserScopes
 from schematools.types import ProfileSchema
 
-from dso_api.dynamic_api.serializers import serializer_factory, serializer_factory_cache
+from dso_api.dynamic_api.serializers import clear_serializer_factory_cache, serializer_factory
 from rest_framework_dso.fields import EmbeddedField
 from rest_framework_dso.views import DSOViewMixin
 from tests.utils import (
@@ -21,7 +21,7 @@ from tests.utils import (
 @pytest.fixture(autouse=True)
 def clear_caches():
     yield  # run tests first
-    serializer_factory_cache.clear()
+    clear_serializer_factory_cache()
 
 
 @pytest.fixture()
@@ -231,6 +231,12 @@ class TestDynamicSerializer:
                     "title": "4",
                 },
                 "schema": "https://schemas.data.amsterdam.nl/datasets/afvalwegingen/dataset#containers",  # noqa: E501
+                "cluster": {
+                    # as the DSORelatedLinkField uses the cluster_id,
+                    # it can still generate this link. It doesn't read the DB object.
+                    "href": "http://testserver/v1/afvalwegingen/clusters/99/",
+                    "title": "99",
+                },
             },
             "id": 4,
             "clusterId": 99,
