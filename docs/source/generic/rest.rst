@@ -10,7 +10,7 @@ De individuele datasets worden toegelicht op de :doc:`datasets <../datasets/inde
 .. tip::
     Een overzicht van alle DataPunt API's is te vinden op: https://api.data.amsterdam.nl/.
 
-De datasets ondersteuneb de volgende HTTP operaties:
+De datasets ondersteunen de volgende HTTP operaties:
 
 .. list-table::
     :widths: 50 50
@@ -76,6 +76,8 @@ In de response zijn de volgende elementen te vinden:
         "page": {
             "number": 1,
             "size": 20,
+            "totalElements": 117,
+            "totalPages": 6,
         }
     }
 
@@ -84,11 +86,17 @@ In het ``page`` object zijn de volgende velden opgenomen:
 
 * ``page.number``: Het huidige paginanummer.
 * ``page.size``: De grootte van een pagina.
+* ``page.totalElements``: Het aantal objecten in de (gefilterde) resultaat set.
+* ``page.totalPages``: Het aantal paginas in de (gefilterde) resultaat set.
+
+`page.totalPages` en `page.totalElements` worden alleen teruggegeven als de `_count` parameter wordt gebruikt.
 
 De velden uit het ``page`` object worden ook als HTTP headers in de response teruggegeven:
 
 * ``X-Pagination-Page``: Het huidige paginanummer.
 * ``X-Pagination-Limit``: de grootte van een pagina.
+* ``X-Total-Count``: de grootte van een pagina.
+* ``X-Pagination-Count``: het aantal paginas voor de gegeven ``_pageSize``.
 
 
 Filtering

@@ -7,7 +7,6 @@ from django.core.paginator import PageNotAnInteger
 from django.core.paginator import Paginator as DjangoPaginator
 from django.db.models.query import QuerySet
 from django.http import Http404
-from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework_dso.embedding import ObservableIterator
@@ -72,22 +71,6 @@ class DSOPaginator(DjangoPaginator):
         standard :cls:`Page` object.
         """
         return DSOPage(*args, **kwargs)
-
-    @cached_property
-    def num_pages(self):
-        """Total number of pages is unknown."""
-        raise NotImplementedError(
-            "DSOPaginator does not support method num_pages. The number of pages is unknown."
-        )
-
-    @property
-    def page_range(self):
-        """
-        Page Range not supported.
-        """
-        raise NotImplementedError(
-            "DSOPaginator does not support method page_range. The number of pages is unknown."
-        )
 
 
 class ObservableQuerySet(QuerySet):

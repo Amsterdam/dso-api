@@ -629,3 +629,46 @@ class TestExceptionHandler:
             ),
             "status": 400,
         }
+
+
+@pytest.mark.django_db
+class TestListCount:
+    def test_list_count_included(self, api_client):
+        Movie.objects.create(name="foo123")
+        Movie.objects.create(name="test")
+
+        response = api_client.get("/v1/movies", data={"_count": "true"})
+        data = read_response_json(response)
+        assert response.status_code == 200
+        assert response["X-Total-Count"] == "2"
+        assert data["page"]["totalElements"] == 2
+        assert response["X-Pagination-Count"] == "1"
+        assert data["page"]["totalPages"] == 1
+
+        Movie.objects.create(name="bla")
+
+        response = api_client.get("/v1/movies", data={"_count": "true", "_pageSize": 2})
+        data = read_response_json(response)
+        assert response.status_code == 200
+        assert response["X-Total-Count"] == "3"
+        assert data["page"]["totalElements"] == 3
+        assert response["X-Pagination-Count"] == "2"
+        assert data["page"]["totalPages"] == 2
+
+    @pytest.mark.parametrize("data", [{}, {"_count": "false"}, {"_count": "0"}, {"_count": "1"}])
+    def test_list_count_excluded(self, api_client, django_assert_num_queries, data):
+        Movie.objects.create(name="foo123")
+        Movie.objects.create(name="test")
+
+        with django_assert_num_queries(2) as captured:
+            response = api_client.get("/v1/movies", data=data)
+
+        # Make sure we are not inadvertently executing a COUNT
+        assert all(["COUNT" not in q["sql"] for q in captured.captured_queries])
+
+        data = read_response_json(response)
+        assert response.status_code == 200
+        assert "X-Total-Count" not in response
+        assert "X-Pagination-Count" not in response
+        assert "totalElements" not in data["page"]
+        assert "totalPages" not in data["page"]
