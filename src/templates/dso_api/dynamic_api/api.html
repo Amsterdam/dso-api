@@ -196,6 +196,10 @@
           <li class="hidden"><a href="#"></a></li>
           <li class="hidden"><a href="#"></a></li>
           <li class="active this-page"><a href="#"></a></li>
+          <li class="hidden"><a href="#"></a></li>
+          <li class="hidden"><a href=""></a></li>
+          <li class="hidden"><a href="#"><span aria-hidden="true">…</span></a></li>
+          <li class="hidden"><a href=""></a></li>
           <li class="disabled"><a href="#" aria-label="Next"><span aria-hidden="true">»</span></a></li>
         </ul>
       </nav>
@@ -324,8 +328,14 @@
     BACK2:3,
     BACK1:4,
     SELF:5,
-    NEXT:6
+    FORWARD1: 6,
+    FORWARD2: 7,
+    FORWARD3: 8,
+    LAST: 9,
+    NEXT:10,
   }
+  // max number of extra pagination links shown
+  const NUM_EXTRA_PAGES = 4
   var isPaginated = false
 
   if (document.readyState != 'loading') {
@@ -374,13 +384,22 @@
         "a": links.item(i).getElementsByTagName("a")[0]
       }
     })
+    console.log(links)
     
-    // Set forward page link, but leave disabled for now.
+    // Set forward page links, but leave disabled for now.
     links[PAGELINKS.NEXT]["a"].setAttribute("href", getPageUrl(page+1));
+    links[PAGELINKS.FORWARD1]["a"].setAttribute("href", getPageUrl(page+1));
+    links[PAGELINKS.FORWARD1]["a"].innerHTML = page + 1
+    links[PAGELINKS.FORWARD2]["a"].setAttribute("href", getPageUrl(page+2));
+    links[PAGELINKS.FORWARD2]["a"].innerHTML = page + 2
+    links[PAGELINKS.FORWARD3]["a"].setAttribute("href", getPageUrl(page+3));
+    links[PAGELINKS.FORWARD3]["a"].innerHTML = page + 3
+    links[PAGELINKS.LAST]["a"].setAttribute("href", getPageUrl(page+4));
+    links[PAGELINKS.LAST]["a"].innerHTML = page + 4
 
     // Set self and previous links
-    for (let i = 0; page-i && i<4; i++) {
-      let el = links[5-i];
+    for (let i = 0; page-i && i<NUM_EXTRA_PAGES; i++) {
+      let el = links[PAGELINKS.SELF-i];
       el["a"].setAttribute("href", getPageUrl(page-i));
       el["a"].innerHTML = page-i;
       el["li"].classList.remove("hidden");
@@ -474,10 +493,41 @@
         return value;
     }
     
-    // Activate next link
+    // Activate next links
     if(data["_links"] && data["_links"]['next']) {
-      document.getElementById("page-links").getElementsByTagName("li").item(PAGELINKS.NEXT).classList.remove("disabled");
+      let links = document.getElementById("page-links").getElementsByTagName("li")
+      links = [...Array(links.length).keys()].map(
+        i => {
+        return {
+          "li":links.item(i), 
+          "a": links.item(i).getElementsByTagName("a")[0]
+        }
+      })
+      links[PAGELINKS.NEXT]["li"].classList.remove("disabled");
+      links[PAGELINKS.FORWARD1]["li"].classList.remove("hidden");
+
+      // If the count is known (because user explicitly requested),
+      // we can show a bit more information
+      if(data["page"] && data["page"]['totalPages']) {
+        const numPages = data["page"]["totalPages"]
+        const available = numPages - data["page"]["number"]
+        if (available > 5) {
+          links[PAGELINKS.LAST]["a"].setAttribute("href", getPageUrl(numPages));
+          links[PAGELINKS.FORWARD3]["a"].innerHTML = numPages
+          links[PAGELINKS.FORWARD3]["a"].innerHTML = "..."
+          links[PAGELINKS.FORWARD3]["li"].classList.add("disabled");
+        }
+
+        for (var i = 0; i < available; i++) {
+          links[PAGELINKS.FORWARD2 + i]["li"].classList.remove("hidden")
+        }
+
+      }
+  
     }
+    
+
+    
 
     // Create highlighted html string and set content
     let jsonString = JSON.stringify(data, markCoordinates, 4);
