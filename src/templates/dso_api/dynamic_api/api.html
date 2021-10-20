@@ -511,15 +511,15 @@
       if(data["page"] && data["page"]['totalPages']) {
         const numPages = data["page"]["totalPages"]
         const available = numPages - data["page"]["number"]
-        if (available > 5) {
+        if (available > NUM_EXTRA_PAGES) {
           links[PAGELINKS.LAST]["a"].setAttribute("href", getPageUrl(numPages));
-          links[PAGELINKS.FORWARD3]["a"].innerHTML = numPages
+          links[PAGELINKS.LAST]["a"].innerHTML = numPages
           links[PAGELINKS.FORWARD3]["a"].innerHTML = "..."
           links[PAGELINKS.FORWARD3]["li"].classList.add("disabled");
         }
 
-        for (var i = 0; i < available; i++) {
-          links[PAGELINKS.FORWARD2 + i]["li"].classList.remove("hidden")
+        for (var i = 1; i < NUM_EXTRA_PAGES && i < available; i++) {
+          links[PAGELINKS.FORWARD1 + i]["li"].classList.remove("hidden")
         }
 
       }
