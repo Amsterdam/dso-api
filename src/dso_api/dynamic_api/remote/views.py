@@ -44,6 +44,9 @@ class RemoteViewSet(DSOViewMixin, ViewSet):
     pagination_class = None
     table_schema = None
 
+    # The 'bronhouder' of the associated dataset
+    authorization_grantor: str = None
+
     def get_serializer(self, *args, **kwargs) -> serializers.RemoteSerializer:
         """Instantiate the serializer that validates the remote data."""
         if self.serializer_class is None:
@@ -154,5 +157,6 @@ def remote_viewset_factory(
             "dataset_id": table_schema.dataset.id,
             "table_id": table_schema.id,
             "table_schema": table_schema,
+            "authorization_grantor": table_schema.dataset.get("authorizationGrantor"),
         },
     )
