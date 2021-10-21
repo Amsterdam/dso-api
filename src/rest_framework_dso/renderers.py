@@ -191,7 +191,7 @@ class HALJSONRenderer(RendererMixin, renderers.JSONRenderer):
         if self.paginator:
             return self.paginator.get_footer()
 
-    def _render_json(self, data, level=0):
+    def _render_json(self, data, level=0):  # noqa: C901
         if not data:
             yield orjson.dumps(data)
             return

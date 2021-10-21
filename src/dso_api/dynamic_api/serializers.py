@@ -759,9 +759,9 @@ def _temporal_link_serializer_factory(
     return serializer_part.construct_class(serializer_name, serializers.ModelSerializer)
 
 
-def _build_serializer_field(
+def _build_serializer_field(  # noqa: C901
     serializer_part: SerializerAssemblyLine, model_field: models.Field, nesting_level: int
-):  # noqa: C901
+):
     """Build a serializer field, results are written in 'output' parameters"""
     # Add extra embedded part for related fields
     # For NM relations, we need another type of EmbeddedField
