@@ -1,5 +1,5 @@
 {
-  "type": "dataset",
+  "schemaType": "dataset",
   "id": "vestiging",
   "title": "vestiging",
   "status": "beschikbaar",
@@ -8,7 +8,7 @@
   "tables": [
     {
       "id": "adres",
-      "type": "table",
+      "schemaType": "table",
       "schema": {
         "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
@@ -58,7 +58,7 @@
     },
     {
       "id": "vestiging",
-      "type": "table",
+      "schemaType": "table",
       "schema": {
         "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",

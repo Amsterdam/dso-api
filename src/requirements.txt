@@ -4,7 +4,7 @@
 #
 #    pip-compile --output-file=requirements.txt requirements.in
 #
-amsterdam-schema-tools[django]==1.0.2
+amsterdam-schema-tools[django]==2.1.2
     # via -r requirements.in
 asgiref==3.3.4
     # via django
@@ -49,6 +49,8 @@ deepdiff==5.2.3
     # via amsterdam-schema-tools
 defusedxml==0.7.1
     # via django-gisserver
+deprecated==1.2.13
+    # via amsterdam-schema-tools
 django-cors-headers==3.7.0
     # via -r requirements.in
 django-environ==0.4.5
@@ -330,6 +332,8 @@ urllib3==1.26.5
     #   sentry-sdk
 wirerope==0.4.2
     # via methodtools
+wrapt==1.13.2
+    # via deprecated
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools

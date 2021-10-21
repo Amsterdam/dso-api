@@ -1,5 +1,5 @@
 {
-  "type": "dataset",
+  "schemaType": "dataset",
   "id": "woningbouwplannen",
   "title": "Woningbouwplannen en Strategische ruimtes",
   "status": "beschikbaar",
@@ -8,7 +8,7 @@
   "tables": [
     {
       "id": "woningbouwplan",
-      "type": "table",
+      "schemaType": "table",
       "schema": {
         "$id": "https://github.com/Amsterdam/schemas/woningbouwplannen/woningbouwplan.json",
         "$schema": "http://json-schema.org/draft-07/schema#",

@@ -1,5 +1,5 @@
 {
-  "type": "dataset",
+  "schemaType": "dataset",
   "id": "download",
   "title": "download",
   "status": "niet_beschikbaar",
@@ -8,7 +8,7 @@
   "tables": [
     {
       "id": "dossiers",
-      "type": "table",
+      "schemaType": "table",
       "schema": {
         "$id": "https://github.com/Amsterdam/schemas/bag/ligplaatsen.json",
         "$schema": "http://json-schema.org/draft-07/schema#",
