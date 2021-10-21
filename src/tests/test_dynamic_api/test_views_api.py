@@ -1346,7 +1346,33 @@ class TestEmbedTemporalTables:
         response = api_client.get(url, data={"_expand": "true"})
         data = read_response_json(response)
         assert response.status_code == 200, data
-        assert data["_embedded"]["bestaatUitBuurten"][0]["id"] == "03630000000078.1"
+        assert data["_embedded"]["bestaatUitBuurten"] == [
+            {
+                "_links": {
+                    "schema": (
+                        "https://schemas.data.amsterdam.nl/datasets/gebieden/dataset#buurten"
+                    ),
+                    "self": {
+                        "href": (
+                            "http://testserver/v1/gebieden/buurten/03630000000078/?volgnummer=1"
+                        ),
+                        "identificatie": "03630000000078",
+                        "title": "03630000000078.1",
+                        "volgnummer": 1,
+                    },
+                },
+                "beginGeldigheid": None,
+                "code": None,
+                "eindGeldigheid": None,
+                "geometrie": None,
+                "id": "03630000000078.1",
+                "ligtInWijkId": "03630012052035",
+                "naam": None,
+                "_embedded": {
+                    "ligtInWijk": None,
+                },
+            }
+        ]
 
     def test_list_expand_true_for_nm_relation(
         self, api_client, buurten_data, ggwgebieden_data, woningbouwplannen_data, filled_router
