@@ -6,7 +6,7 @@ from rest_framework.viewsets import ViewSetMixin
 from schematools.permissions import UserScopes
 
 from rest_framework_dso.embedding import EmbeddedFieldMatch
-from rest_framework_dso.serializers import ExpandMixin
+from rest_framework_dso.serializers import ExpandableSerializer
 
 audit_log = logging.getLogger("dso_api.audit")
 
@@ -45,7 +45,7 @@ def filter_unauthorized_expands(
             # Otherwise, the checks happen on-demand during streaming response rendering.
             if not skip_unauth and match.nested_expand_scope:
                 embedded_serializer = match.embedded_serializer
-                if isinstance(embedded_serializer, ExpandMixin):
+                if isinstance(embedded_serializer, ExpandableSerializer):
                     filter_unauthorized_expands(
                         user_scopes, embedded_serializer.expanded_fields, skip_unauth
                     )

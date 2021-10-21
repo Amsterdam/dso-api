@@ -191,10 +191,10 @@ class EmbeddedFieldMatch:
         """Provide the serializer for the embedded relation."""
         # The nested 'fields_to_expand' data is provided to the child serializer,
         # so it can expand the next nesting if needed.
-        from .serializers import ExpandMixin
+        from .serializers import ExpandableSerializer
 
         kwargs = {}
-        if issubclass(self.field.serializer_class, ExpandMixin):
+        if issubclass(self.field.serializer_class, ExpandableSerializer):
             kwargs["fields_to_expand"] = self.nested_expand_scope
         elif self.nested_expand_scope:
             raise RuntimeError("EmbeddedField serializer does not support nesting embeds")
