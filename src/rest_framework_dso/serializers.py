@@ -41,6 +41,7 @@ from rest_framework_dso.embedding import (
     get_serializer_lookups,
 )
 from rest_framework_dso.fields import (
+    AbstractEmbeddedField,
     DSOGeometryField,
     DSORelatedLinkField,
     DSOSelfLinkField,
@@ -136,6 +137,19 @@ class ExpandMixin:
             serializer = serializer.parent
 
         return ".".join(reversed(path)) if len(path) > 1 else ""
+
+    @classmethod
+    def get_embedded_field(cls, field_name, prefix="") -> AbstractEmbeddedField:
+        """Retrieve an embedded field from the serializer class."""
+        embedded_fields = getattr(cls.Meta, "embedded_fields", {})
+        try:
+            return embedded_fields[field_name]
+        except KeyError:
+            msg = f"Eager loading is not supported for field '{prefix}{field_name}'"
+            if embedded_fields:
+                available = f", {prefix}".join(sorted(embedded_fields.keys()))
+                msg = f"{msg}, available options are: {prefix}{available}"
+            raise ParseError(msg) from None
 
     def __init_subclass__(cls, **kwargs):
         """Initialize the embedded field to have knowledge of this class instance.

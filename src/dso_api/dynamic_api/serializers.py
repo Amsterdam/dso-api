@@ -25,6 +25,7 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field, inline_serializer
 from more_itertools import first
 from rest_framework import serializers
+from rest_framework.exceptions import ParseError
 from rest_framework.relations import HyperlinkedRelatedField
 from rest_framework.reverse import reverse
 from rest_framework.serializers import Field
@@ -273,6 +274,35 @@ class DynamicSerializer(DSOModelSerializer):
             expanded_fields=super().expanded_fields,
             skip_unauth=self.expand_scope.auto_expand_all,
         )
+
+    @classmethod
+    def get_embedded_field(cls, field_name, prefix="") -> AbstractEmbeddedField:
+        """Overridden to improve error messages.
+        At this layer, information about the Amsterdam schema
+        can be used to provide a better error message.
+        """
+        try:
+            return super().get_embedded_field(field_name, prefix=prefix)
+        except ParseError:
+            # Raise a better message, or fallback to the original message
+            cls._raise_better_embed_error(field_name)
+            raise
+
+    @classmethod
+    def _raise_better_embed_error(cls, field_name, prefix=""):
+        """Improve the error message for embedded fields."""
+        # Check whether there is a RelatedSummaryField for a link,
+        # to tell that this field doesn't get expanded.
+        try:
+            link_field = cls._declared_fields["_links"]._declared_fields[field_name]
+        except KeyError:
+            return
+        else:
+            if isinstance(link_field, RelatedSummaryField):
+                raise ParseError(
+                    f"The field '{prefix}{field_name}' is not available"
+                    f" for embedding as it's a summary of a huge listing."
+                ) from None
 
     @extend_schema_field(OpenApiTypes.URI)
     def get_schema(self, instance):
@@ -788,9 +818,9 @@ def _build_serializer_field(  # noqa: C901
         # Reverse relations, are only added as embedded field when there is an explicit declaration
         field_schema = get_field_schema(model_field)
         additional_relation = field_schema.reverse_relation
-        if additional_relation is None or additional_relation.format == "summary":
-            return
-        _build_serializer_embedded_field(serializer_part, model_field, nesting_level)
+        if additional_relation is not None and additional_relation.format != "summary":
+            _build_serializer_embedded_field(serializer_part, model_field, nesting_level)
+        return
     elif not isinstance(model_field, models.AutoField):
         # Regular fields
         # Re-map file to correct serializer
