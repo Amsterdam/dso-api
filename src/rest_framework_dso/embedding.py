@@ -109,7 +109,7 @@ class ExpandScope:
         else:
             # Top-level, find all field that were requested.
             field_tree = group_dotted_names(self._expand_scope)
-            self._validate(parent_serializer.__class__, field_tree, allow_m2m)
+            self._validate(parent_serializer.__class__, field_tree, allow_m2m, prefix=prefix)
 
         if not field_tree:
             return []
@@ -117,7 +117,7 @@ class ExpandScope:
         embedded_fields = []
 
         for field_name, nested_fields_to_expand in field_tree.items():
-            field = get_embedded_field(parent_serializer.__class__, field_name, prefix)
+            field = get_embedded_field(parent_serializer.__class__, field_name, prefix=prefix)
 
             # Some output formats don't support M2M, so avoid expanding these.
             if field.is_array and not allow_m2m:
@@ -143,11 +143,12 @@ class ExpandScope:
         serializer_class: type[serializers.Serializer],
         field_tree: DictOfDicts,
         allow_m2m: bool,
+        prefix: str = "",
     ):
         """Validate whether all selected fields exist."""
 
         for field_name, nested_fields_to_expand in field_tree.items():
-            field = get_embedded_field(serializer_class, field_name)
+            field = get_embedded_field(serializer_class, field_name, prefix=prefix)
             if nested_fields_to_expand:
                 self._validate(field.serializer_class, nested_fields_to_expand, allow_m2m)
 
