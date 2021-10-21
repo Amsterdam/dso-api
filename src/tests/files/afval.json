@@ -1,6 +1,6 @@
 {
   "id": "afvalwegingen",
-  "type": "dataset",
+  "schemaType": "dataset",
   "title": "Afvalwegingen",
   "description": "unit testing version of afvalwegingen",
   "license": "CC0 1.0",
@@ -9,7 +9,7 @@
   "tables": [
     {
       "id": "containers",
-      "type": "table",
+      "schemaType": "table",
       "schema": {
         "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
@@ -56,7 +56,7 @@
     },
     {
       "id": "clusters",
-      "type": "table",
+      "schemaType": "table",
       "auth": ["BAG/R"],
       "schema": {
         "$schema": "http://json-schema.org/draft-07/schema#",
@@ -80,7 +80,7 @@
     },
     {
       "id": "adresLoopafstand",
-      "type": "table",
+      "schemaType": "table",
       "schema": {
         "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
