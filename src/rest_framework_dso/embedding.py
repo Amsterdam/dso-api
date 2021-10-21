@@ -308,18 +308,21 @@ def group_dotted_names(dotted_field_names: list[str]) -> DictOfDicts:
 
 
 def get_embedded_field(
-    serializer_class: type[serializers.Serializer], field_name, prefix=""
+    serializer_class: type[serializers.Serializer], field_name: str, prefix: str = ""
 ) -> AbstractEmbeddedField:
-    """Retrieve an embedded field from the serializer class."""
-    embedded_fields = getattr(serializer_class.Meta, "embedded_fields", {})
+    """Retrieve the embedded fields.
+    This method can be called with any type of serializer,
+    but only returns returns results for an ``ExpandableSerializer``.
+    """
     try:
-        return embedded_fields[field_name]
-    except KeyError:
-        msg = f"Eager loading is not supported for field '{prefix}{field_name}'"
-        if embedded_fields:
-            available = f", {prefix}".join(sorted(embedded_fields.keys()))
-            msg = f"{msg}, available options are: {prefix}{available}"
-        raise ParseError(msg) from None
+        # Delegate the actual logic to the serializer so it can be overwritten.
+        _real_get_embedded_field = serializer_class.get_embedded_field
+    except AttributeError:
+        raise ParseError(
+            f"Eager loading is not supported for field '{prefix}{field_name}'"
+        ) from None
+    else:
+        return _real_get_embedded_field(field_name, prefix=prefix)
 
 
 def get_serializer_lookups(serializer: serializers.BaseSerializer, prefix="") -> list[str]:

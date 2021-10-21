@@ -1337,6 +1337,26 @@ class TestEmbedTemporalTables:
             "page": {"number": 1, "size": 20},
         }
 
+    def test_expand_warning_reverse_summary(
+        self, api_client, buurten_data, wijken_data, filled_router
+    ):
+        """Prove that expanding on an additionalRelations with format=summary is not possible,
+        AND that it shows a custom error message to improve developer experience.
+        """
+        url = reverse("dynamic_api:gebieden-wijken-list")
+        response = api_client.get(url, {"_format": "json", "_expandScope": "buurt"})
+        data = read_response_json(response)
+        assert response.status_code == 400, data
+        assert data == {
+            "detail": (
+                "The field 'buurt' is not available for embedding"
+                " as it's a summary of a huge listing."
+            ),
+            "status": 400,
+            "title": "Malformed request.",
+            "type": "urn:apiexception:parse_error",
+        }
+
     def test_detail_expand_true_for_nm_relation(
         self, api_client, buurten_data, ggwgebieden_data, filled_router
     ):
