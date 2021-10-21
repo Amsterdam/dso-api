@@ -554,7 +554,7 @@ def test_haalcentraalbrk_geojson(
 REMOTE_SCHEMA = DatasetTableSchema.from_dict(
     {
         "id": "mytable",
-        "type": "table",
+        "schemaType": "table",
         "schema": {
             "$schema": "http://json-schema.org/draft-07/schema#",
         },
