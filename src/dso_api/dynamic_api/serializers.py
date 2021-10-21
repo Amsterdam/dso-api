@@ -198,8 +198,6 @@ class DynamicSerializer(DSOModelSerializer):
 
     schema = serializers.SerializerMethodField()
 
-    _links = serializers.SerializerMethodField()
-
     table_schema: DatasetTableSchema = None
 
     id_based_fetcher = staticmethod(temporal_id_based_fetcher)
