@@ -1,6 +1,5 @@
 import django_healthchecks.urls
 from django.conf import settings
-from django.conf.urls.static import static
 from django.urls import include, path, re_path
 from django.views.generic import RedirectView
 
@@ -16,7 +15,7 @@ urlpatterns = [
         views.multiple_slashes,
         name="error-trailing-slashes",
     ),
-] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+]
 
 handler400 = views.bad_request
 handler404 = views.not_found

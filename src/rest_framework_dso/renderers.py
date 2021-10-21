@@ -105,6 +105,9 @@ class BrowsableAPIRenderer(RendererMixin, renderers.BrowsableAPIRenderer):
     def get_context(self, data, accepted_media_type, renderer_context):
         context = super().get_context(data, accepted_media_type, renderer_context)
 
+        # Maintain compatibility with other types of ViewSets
+        context["authorization_grantor"] = getattr(context["view"], "authorization_grantor", None)
+
         # Fix response content-type when it's filled in by the exception_handler
         response = renderer_context["response"]
         if response.content_type:

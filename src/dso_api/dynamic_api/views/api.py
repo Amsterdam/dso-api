@@ -126,6 +126,9 @@ class DynamicApiViewSet(
     # Custom permission that checks amsterdam schema auth settings
     permission_classes = [permissions.HasOAuth2Scopes]
 
+    # The 'bronhouder' of the associated dataset
+    authorization_grantor: str = None
+
     @property
     def paginator(self):
         """The paginator is disabled when a output format supports unlimited sizes."""
@@ -180,6 +183,7 @@ def viewset_factory(model: type[DynamicModel]) -> type[DynamicApiViewSet]:
             queryset = model.objects.all()
             serializer_class = serializer_factory(model)
             filterset_class = filterset_factory(model)
+            authorization_grantor = "OIS
             ordering_fields = ...
 
     Internally, the :func:`~dso_api.dynamic_api.serializers.serializer_factory`,
@@ -199,5 +203,6 @@ def viewset_factory(model: type[DynamicModel]) -> type[DynamicApiViewSet]:
         "ordering_fields": ordering_fields,
         "dataset_id": model._dataset_schema["id"],
         "table_id": model.table_schema()["id"],
+        "authorization_grantor": model.get_dataset_schema().get("authorizationGrantor"),
     }
     return type(f"{model.__name__}ViewSet", (DynamicApiViewSet,), attrs)
