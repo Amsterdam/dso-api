@@ -183,7 +183,7 @@ def viewset_factory(model: type[DynamicModel]) -> type[DynamicApiViewSet]:
             queryset = model.objects.all()
             serializer_class = serializer_factory(model)
             filterset_class = filterset_factory(model)
-            authorization_grantor = "OIS
+            authorization_grantor = "OIS"
             ordering_fields = ...
 
     Internally, the :func:`~dso_api.dynamic_api.serializers.serializer_factory`,
