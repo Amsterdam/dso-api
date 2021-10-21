@@ -53,7 +53,7 @@ class AbstractEmbeddedField:
     Either add it as a class attribute (it will auto-register
     in ``Meta.embedded_fields``), or add it directly in ``Meta.embedded_fields``.
     Both styles require the serializer class to inherit
-    from :class:`rest_framework_dso.serializers.ExpandMixin`.
+    from :class:`rest_framework_dso.serializers.ExpandableSerializer`.
 
     The embedded fields are designed to be efficient during streaming rendering
     of large datasets. Instead of collecting/prefetching the whole queryset in one go,
@@ -87,9 +87,9 @@ class AbstractEmbeddedField:
         self.bind(owner, name)
 
     def bind(self, parent_serializer_class: type[serializers.Serializer], field_name: str):
-        from .serializers import ExpandMixin
+        from .serializers import ExpandableSerializer
 
-        if not issubclass(parent_serializer_class, ExpandMixin):
+        if not issubclass(parent_serializer_class, ExpandableSerializer):
             raise TypeError(
                 f"{parent_serializer_class} does not extend from DSO serializer classes"
             ) from None

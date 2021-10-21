@@ -28,6 +28,7 @@ from django.utils.functional import cached_property
 from rest_framework import serializers
 from rest_framework.exceptions import ParseError, ValidationError
 from rest_framework.fields import URLField, empty
+from rest_framework.serializers import BaseSerializer
 from rest_framework.utils.serializer_helpers import ReturnDict, ReturnList
 from rest_framework_gis.fields import GeometryField
 
@@ -49,14 +50,14 @@ from rest_framework_dso.fields import (
 from rest_framework_dso.serializer_helpers import ReturnGenerator, peek_iterable
 
 
-class ExpandMixin:
-    """Handling ?_expand / ?_expandScope parameter.
+class ExpandableSerializer(BaseSerializer):
+    """A serializer class that handles ?_expand / ?_expandScope parameters.
 
-    This is only a separate mixin because the parameter needs to be handled
+    This is a separate class because the parameter needs to be handled
     in 2 separate classes: :class:`DSOListSerializer` and the regular :class:`DSOSerializer`.
 
-    This mixin should be added to serializers when adding embedded fields
-    to the serializer.
+    This class can be added as a mixin in case the serializer
+    should be a ``ModelSerializer`` or ``ListSerializer``.
     """
 
     expand_all_param = "_expand"
@@ -153,7 +154,7 @@ class ExpandMixin:
                 embedded_field.bind(cls, name)
 
 
-class DSOListSerializer(ExpandMixin, serializers.ListSerializer):
+class DSOListSerializer(ExpandableSerializer, serializers.ListSerializer):
     """Fix pagination for lists.
 
     This should be used together with the DSO...Pagination class when results are paginated.
@@ -307,7 +308,7 @@ class DSOModelListSerializer(DSOListSerializer):
             return {self.results_field: items, **embedded_fields}
 
 
-class DSOSerializer(ExpandMixin, serializers.Serializer):
+class DSOSerializer(ExpandableSerializer, serializers.Serializer):
     """Basic non-model serializer logic.
 
     This class implements all logic that can be used by all serializers,

@@ -19,7 +19,7 @@ from rest_framework_dso import filters
 from rest_framework_dso.embedding import get_all_embedded_fields_by_name
 from rest_framework_dso.fields import AbstractEmbeddedField
 from rest_framework_dso.pagination import DSOPageNumberPagination
-from rest_framework_dso.serializers import ExpandMixin
+from rest_framework_dso.serializers import ExpandableSerializer
 from rest_framework_dso.views import DSOViewMixin
 
 logger = logging.getLogger(__name__)
@@ -328,7 +328,7 @@ class DSOAutoSchema(openapi.AutoSchema):
             ]
 
         # Expose expand parameters too.
-        if issubclass(self.view.serializer_class, ExpandMixin):
+        if issubclass(self.view.serializer_class, ExpandableSerializer):
             embeds = get_all_embedded_fields_by_name(self.view.serializer_class)
             examples = []
             if embeds:
