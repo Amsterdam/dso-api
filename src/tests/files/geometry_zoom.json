@@ -1,13 +1,13 @@
 {
   "id": "geometry_zoom",
-  "type": "dataset",
+  "schemaType": "dataset",
   "title": "Geometry min/max zoom test",
   "version": "0.0.1",
   "crs": "EPSG:4326",
   "tables": [
     {
       "id": "things",
-      "type": "table",
+      "schemaType": "table",
       "zoom": {
         "min": 3,
         "max": "max_zoom"

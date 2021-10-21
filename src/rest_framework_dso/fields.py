@@ -277,36 +277,37 @@ class EmbeddedManyToManyRelField(EmbeddedManyToManyField):
 @extend_schema_field(
     # Tell what this field will generate as object structure
     inline_serializer(
-        "LinkHref",
+        "HALLink",
         fields={
             "href": serializers.URLField(),
             "title": serializers.CharField(allow_null=True),
-            # TODO: mention temporal identifiers (define statically)!
         },
-    ),
-    component_name="LinkHref",
+    )
 )
-class LinksField(serializers.HyperlinkedIdentityField):
-    """Internal field to generate the _links bit"""
+class DSORelatedLinkField(serializers.HyperlinkedRelatedField):
+    """A field that generates the proper structure of an object in the ``_links`` section.
+    This generates a "title" and "href"..
+    """
 
-    def to_representation(self, value):
-        request = self.context.get("request")
+    def to_representation(self, value: models.Model):
+        request = self.context["request"]
+        output = {
+            "href": self.get_url(value, self.view_name, request, None),
+        }
 
-        output = {"href": self.get_url(value, self.view_name, request, None)}
-
-        # if no display field, ommit the title element from output
-        if value._display_field:
-            output.update({"title": str(value)})
-
-        if value.is_temporal():
-            temporal_fieldname = value.table_schema().temporal.identifier
-            temporal_value = getattr(value, temporal_fieldname)
-            id_fieldname = first(value.table_schema().identifier)
-
-            id_value = getattr(value, id_fieldname)
-            output.update({temporal_fieldname: temporal_value, id_fieldname: id_value})
+        # Little typesafe hack to allow models that disable the title field (e.g. DynamicModel)
+        if getattr(value, "_display_field", True):
+            output["title"] = str(value)
 
         return output
+
+
+class DSOSelfLinkField(DSORelatedLinkField, serializers.HyperlinkedIdentityField):
+    """The link object for a link to 'self'.
+
+    This implementation is solely done by inheritance, as the 'HyperlinkedIdentityField' is
+    an 'HyperlinkedRelatedField' underneath with the parameters ``source="*", read_only="True"``.
+    """
 
 
 class DSOGeometryField(GeometryField):
