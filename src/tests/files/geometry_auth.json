@@ -1,13 +1,13 @@
 {
   "id": "geometry_auth",
-  "schemaType": "dataset",
+  "type": "dataset",
   "title": "Geometry authorization test",
   "version": "0.0.1",
   "crs": "EPSG:28992",
   "tables": [
     {
       "id": "things",
-      "schemaType": "table",
+      "type": "table",
       "schema": {
         "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",

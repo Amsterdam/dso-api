@@ -1,6 +1,6 @@
 {
   "id": "geometry_authdataset",
-  "schemaType": "dataset",
+  "type": "dataset",
   "title": "Geometry authorization test with dataset scopes",
   "version": "0.0.1",
   "auth": "TEST/TOP",
@@ -8,7 +8,7 @@
   "tables": [
     {
       "id": "things",
-      "schemaType": "table",
+      "type": "table",
       "schema": {
         "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",

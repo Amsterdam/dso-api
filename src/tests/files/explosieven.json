@@ -1,5 +1,5 @@
 {
-  "schemaType": "dataset",
+  "type": "dataset",
   "id": "explosieven",
   "title": "explosieven",
   "description": "Informatie over bominslagen, gevrijwaarde gebieden, verdachte gebieden en uitgevoerde onderzoeken",
@@ -16,7 +16,7 @@
     {
       "id": "verdachtgebied",
       "title": "Verdachtgebied",
-      "schemaType": "table",
+      "type": "table",
       "schema": {
         "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",

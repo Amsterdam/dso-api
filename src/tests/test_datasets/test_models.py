@@ -73,7 +73,7 @@ def test_save_schema_tables_delete(bommen_schema_json):
     dataset.schema_data = json.dumps(
         {
             "id": "bommen",
-            "schemaType": "dataset",
+            "type": "dataset",
             "title": "",
             "version": "0.0.1",
             "crs": "EPSG:28992",
