@@ -1,5 +1,5 @@
 {
-    "schemaType": "dataset",
+    "type": "dataset",
     "id": "fietspaaltjesnodisplay",
     "title": "fietspaaltjesnodisplay",
     "status": "beschikbaar",
@@ -8,7 +8,7 @@
     "tables": [
       {
         "id": "fietspaaltjesnodisplay",
-        "schemaType": "table",
+        "type": "table",
         "schema": {
           "$schema": "http://json-schema.org/draft-07/schema#",
           "type": "object",          

@@ -1,5 +1,5 @@
 {
-  "schemaType": "dataset",
+  "type": "dataset",
   "id": "selfref",
   "title": "bag",
   "status": "niet_beschikbaar",
@@ -8,7 +8,7 @@
   "tables": [
     {
       "id": "nummeraanduidingen",
-      "schemaType": "table",
+      "type": "table",
       "schema": {
         "$id": "https://github.com/Amsterdam/schemas/bag/nummeraanduidingen.json",
         "$schema": "http://json-schema.org/draft-07/schema#",
@@ -41,7 +41,7 @@
 
     {
       "id": "ligplaatsen",
-      "schemaType": "table",
+      "type": "table",
       "schema": {
         "$id": "https://github.com/Amsterdam/schemas/bag/ligplaatsen.json",
         "$schema": "http://json-schema.org/draft-07/schema#",
