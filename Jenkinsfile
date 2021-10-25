@@ -22,10 +22,10 @@ node {
 
     stage('Test') {
         tryStep "test", {
-            sh "docker-compose -p dso_api -f src/.jenkins/test/docker-compose.yml build --pull && " +
-               "docker-compose -p dso_api -f src/.jenkins/test/docker-compose.yml run -u root --rm test"
+            sh "docker-compose -f src/.jenkins/test/docker-compose.yml build --pull && " +
+               "docker-compose -f src/.jenkins/test/docker-compose.yml run -u root --rm test"
         }, {
-            sh "docker-compose -p dso_api -f src/.jenkins/test/docker-compose.yml down"
+            sh "docker-compose -f src/.jenkins/test/docker-compose.yml down"
         }
     }   
     
