@@ -52,7 +52,7 @@ Then point to that PostgreSQL in the environment::
     Add a ``.envrc`` to your project folder, and direnv ensures the proper
     environment variables are loaded when you cd into your project directory.
 
-Using a virtual machine
+Using a Virtual Machine
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 If you are not running Docker locally (as on Linux) but in a virtual
