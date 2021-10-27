@@ -209,22 +209,6 @@ class EmbeddedFieldMatch:
 
         return serializer
 
-    def get_id_fetcher(self) -> Callable[[list[Union[int, str]], str], models.QuerySet]:
-        """Provide the function that allows to collect objects by ID.
-        This hook allows the serializer to override this logic,
-        e.g. to retrieve only active records.
-        """
-        if self.embedded_serializer.parent.id_based_fetcher:
-            # Use to serializer based ID-fetcher if needed.
-            return self.embedded_serializer.parent.id_based_fetcher(self.field)
-        else:
-            model = self.field.related_model
-
-            def fetcher(id_list, id_field=None):
-                return model.objects.filter(**{f"{id_field or 'pk'}__in": id_list})
-
-            return fetcher
-
 
 def get_all_embedded_field_names(
     serializer_class: type[serializers.Serializer],
@@ -525,16 +509,13 @@ class EmbeddedResultSet(ReturnGenerator):
         The result set also implements the generator-like behavior
         that the rendering needs to preserve streaming.
         """
-        return cls(
-            match.field, serializer=match.embedded_serializer, id_fetcher=match.get_id_fetcher()
-        )
+        return cls(match.field, serializer=match.embedded_serializer)
 
     def __init__(
         self,
         embedded_field: AbstractEmbeddedField,
         serializer: serializers.Serializer,
         main_instances: Optional[list] = None,
-        id_fetcher=None,
     ):
         # Embedded result sets always work on child elements,
         # as the source queryset is iterated over within this class.
@@ -544,7 +525,6 @@ class EmbeddedResultSet(ReturnGenerator):
         super().__init__(generator=None, serializer=serializer)
         self.embedded_field = embedded_field
         self.id_list = []
-        self.id_fetcher = id_fetcher
 
         # Allow to pre-feed with instances (e.g for detail view)
         if main_instances is not None:
@@ -559,19 +539,9 @@ class EmbeddedResultSet(ReturnGenerator):
 
     def get_objects(self) -> Iterator[models.Model]:
         """Retrieve the objects to render."""
-        # The ID field is used to override which field is used to find objects.
-        # This is used by the reverse relations to filter on foreign keys instead.
-        id_field = self.embedded_field.related_id_field
-        if self.id_fetcher is None:
-            # Standard Django foreign-key like behavior.
-            queryset = self.embedded_field.related_model.objects.filter(
-                **{f"{id_field or 'pk'}__in": self.id_list}
-            )
-        else:
-            # e.g. retrieve from a remote API, or filtered database table.
-            queryset = self.id_fetcher(self.id_list, id_field=id_field)
-            if not isinstance(queryset, models.QuerySet):
-                return queryset  # may return an iterator, can't optimize
+        queryset = self.serializer.get_embedded_objects_by_id(self.embedded_field, self.id_list)
+        if not isinstance(queryset, models.QuerySet):
+            return queryset  # may return an iterator, can't optimize
 
         return self.optimize_queryset(queryset)
 
