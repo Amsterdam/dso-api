@@ -6,6 +6,7 @@ from django.core.validators import EmailValidator, URLValidator
 from schematools.permissions import UserScopes
 from schematools.types import ProfileSchema
 
+from dso_api.dynamic_api.fields import LooseRelationUrlField
 from dso_api.dynamic_api.serializers import clear_serializer_factory_cache, serializer_factory
 from rest_framework_dso.fields import EmbeddedField
 from rest_framework_dso.views import DSOViewMixin
@@ -749,6 +750,9 @@ class TestDynamicSerializer:
         statistieken_serializer = StatistiekenSerializer(
             statistiek,
             context={"request": drf_request, "view": DummyView(statistieken_model)},
+        )
+        assert isinstance(
+            statistieken_serializer.fields["_links"].fields["buurt"], LooseRelationUrlField
         )
 
         assert (

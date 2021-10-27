@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import logging
 from functools import wraps
-from typing import Any, Callable, Optional, TypeVar, Union, cast
+from typing import Any, Callable, Iterable, Optional, TypeVar, Union, cast
 from urllib.parse import urlencode
 
 from cachetools import LRUCache, cached
@@ -75,27 +75,6 @@ def filter_latest_temporal(queryset: models.QuerySet) -> models.QuerySet:
 
     # does SELECT DISTINCT ON(identifier) ... ORDER BY identifier, sequence DESC
     return queryset.distinct(identifier).order_by(identifier, f"-{sequence_name}")
-
-
-def temporal_id_based_fetcher(embedded_field: AbstractEmbeddedField):
-    """Helper function to return a fetcher function.
-    For temporal data tables, that need to be accessed by identifier only,
-    we need to get the objects with the highest sequence number.
-    """
-    model = embedded_field.related_model
-    is_loose = embedded_field.is_loose
-
-    def _fetcher(id_list, id_field=None):
-        if is_loose:
-            identifier = id_field or first(model.table_schema().identifier)
-            base_qs = filter_latest_temporal(model.objects)
-        else:
-            identifier = id_field or "pk"
-            base_qs = model.objects
-
-        return base_qs.filter(**{f"{identifier}__in": id_list})
-
-    return _fetcher
 
 
 @extend_schema_field(
@@ -183,8 +162,6 @@ class DynamicSerializer(DSOModelSerializer):
     schema = serializers.SerializerMethodField()
 
     table_schema: DatasetTableSchema = None
-
-    id_based_fetcher = staticmethod(temporal_id_based_fetcher)
 
     @cached_property
     def _request(self):
@@ -285,6 +262,21 @@ class DynamicSerializer(DSOModelSerializer):
                     f"The field '{prefix}{field_name}' is not available"
                     f" for embedding as it's a summary of a huge listing."
                 ) from None
+
+    def get_embedded_objects_by_id(
+        self, embedded_field: AbstractEmbeddedField, id_list: list[Union[str, int]]
+    ) -> Union[models.QuerySet, Iterable[models.Model]]:
+        """Retrieve a number of embedded objects by their identifier.
+
+        This override makes sure the correct temporal slice is returned.
+        """
+        if embedded_field.is_loose:
+            # Special handling for embedding temporal relationships.
+            model = embedded_field.related_model
+            id_field = embedded_field.related_id_field or model.table_schema().identifier[0]
+            return filter_latest_temporal(model.objects).filter(**{f"{id_field}__in": id_list})
+        else:
+            return super().get_embedded_objects_by_id(embedded_field, id_list=id_list)
 
     @extend_schema_field(OpenApiTypes.URI)
     def get_schema(self, instance):

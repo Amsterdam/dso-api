@@ -20,7 +20,7 @@ and constructing serializer fields based on the model field metadata.
 """
 import inspect
 from collections import OrderedDict
-from typing import Optional, Union, cast
+from typing import Iterable, Optional, Union, cast
 
 from django.contrib.gis.db import models as gis_models
 from django.db import models
@@ -58,9 +58,6 @@ class ExpandableSerializer(BaseSerializer):
     expand_all_param = "_expand"
     expand_param = "_expandScope"  # so ?_expandScope=.. gives a result
     expand_field = "_embedded"  # with _embedded in the result
-
-    #: Fetcher function for embedded objects, can be redefined by subclasses.
-    id_based_fetcher = None
 
     def __init__(self, *args, fields_to_expand=empty, **kwargs):
         super().__init__(*args, **kwargs)
@@ -145,6 +142,25 @@ class ExpandableSerializer(BaseSerializer):
                 available = f", {prefix}".join(sorted(embedded_fields.keys()))
                 msg = f"{msg}, available options are: {prefix}{available}"
             raise ParseError(msg) from None
+
+    def get_embedded_objects_by_id(
+        self, embedded_field: fields.AbstractEmbeddedField, id_list: list[Union[str, int]]
+    ) -> Union[models.QuerySet, Iterable[models.Model]]:
+        """Retrieve a number of embedded objects by their identifier.
+
+        While the embedded field typically collects the related objects by
+        their primary key, the reverse and M2M field types use a custom identifier
+        to find the related objects through a different/reverse relationship.
+
+        This method can be overwritten to support other means of object retrieval,
+        e.g. fetching the objects from a remote endpoint. When an queryset is
+        returned, it will be optimized to run most efficiently with relationships.
+        """
+        # Use standard Django foreign-key like behavior.
+        # The ID field can be overwritten by the embedded field.
+        # This allows to retrieve reverse relations and M2M objects through foreign keys.
+        id_field = embedded_field.related_id_field or "pk"
+        return embedded_field.related_model.objects.filter(**{f"{id_field}__in": id_list})
 
     def __init_subclass__(cls, **kwargs):
         """Initialize the embedded field to have knowledge of this class instance.
@@ -237,9 +253,6 @@ class DSOModelListSerializer(DSOListSerializer):
     It outputs the ``_embedded`` section for the HAL-JSON spec:
     https://tools.ietf.org/html/draft-kelly-json-hal-08
     """
-
-    # Fetcher function to be overridden by subclasses if needed
-    id_based_fetcher = None
 
     def get_prefetch_lookups(self) -> list[Union[models.Prefetch, str]]:
         """Tell which fields should be included for a ``prefetch_related()``."""
