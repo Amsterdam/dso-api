@@ -32,7 +32,7 @@ Install the tools::
 Database Setup
 --------------
 
-dso-api talks to a PostgreSQL instance that contains its data.
+DSO-API talks to a PostgreSQL instance that contains its data.
 Normally, you should use the one from the dataservices-airflow project.
 If you don't already have it running, do::
 
