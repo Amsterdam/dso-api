@@ -30,18 +30,6 @@ class DatasetMiddleware(MiddlewareMixin):
         scopes = request.get_token_scopes
         request.user_scopes = UserScopes(request.GET, scopes, self.all_profiles)
 
-    def process_view(self, request, view_func, view_args, view_kwargs):
-        """
-        Make current dataset available across whole application.
-        """
-        if not hasattr(request, "dataset"):
-            try:
-                request.dataset = view_func.cls.model._dataset_schema
-            except AttributeError:
-                pass
-
-        return None
-
 
 class TemporalTableMiddleware(MiddlewareMixin):
     """
