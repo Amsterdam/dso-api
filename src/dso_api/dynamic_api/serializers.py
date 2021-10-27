@@ -9,10 +9,9 @@ in the DSO base classes as those classes are completely generic.
 from __future__ import annotations
 
 import logging
-import re
 from functools import wraps
 from typing import Any, Callable, Optional, TypeVar, Union, cast
-from urllib.parse import quote, urlencode
+from urllib.parse import urlencode
 
 from cachetools import LRUCache, cached
 from cachetools.keys import hashkey
@@ -62,21 +61,6 @@ MAX_EMBED_NESTING_LEVEL = 10
 logger = logging.getLogger(__name__)
 
 S = TypeVar("S", bound=serializers.Serializer)
-
-
-class URLencodingURLfields:
-    """ URL encoding mechanism for URL content """
-
-    def to_representation(self, fields_to_be_encoded: list, data):
-        for field_name in fields_to_be_encoded:
-            try:
-                protocol_uri = re.search("([a-z,A-z,0-9,:/]+)(.*)", data[field_name])
-                protocol = protocol_uri.group(1)
-                uri = protocol_uri.group(2)
-                data[field_name] = protocol + quote(uri)
-            except (TypeError, AttributeError):
-                data = data
-        return data
 
 
 def filter_latest_temporal(queryset: models.QuerySet) -> models.QuerySet:
@@ -351,15 +335,6 @@ class DynamicSerializer(DSOModelSerializer):
             return TemporalReadOnlyField, {}
         else:
             return super().build_property_field(field_name, model_class)
-
-    def to_representation(self, validated_data):
-        data = super().to_representation(validated_data)
-
-        # URL encoding of the data, i.e. spaces to %20, only if urlfield is present
-        if self._url_content_fields:
-            data = URLencodingURLfields().to_representation(self._url_content_fields, data)
-
-        return data
 
 
 class DynamicBodySerializer(DynamicSerializer):

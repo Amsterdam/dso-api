@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Optional, Union
+from urllib.parse import quote, urlsplit, urlunsplit
 
 from django.contrib.gis.geos import GEOSGeometry
 from django.core.exceptions import FieldDoesNotExist
@@ -345,6 +346,20 @@ class DSOGeometryField(GeometryField):
         else:
             # Return GeoJSON for json/html/api formats
             return super().to_representation(value)
+
+
+class DSOURLField(serializers.URLField):
+    """Ensure the URL is properly encoded"""
+
+    def to_representation(self, value):
+        try:
+            bits = urlsplit(value)
+        except ValueError:
+            return value
+        else:
+            return urlunsplit(
+                (bits.scheme, bits.netloc, quote(bits.path), quote(bits.query), bits.fragment)
+            )
 
 
 class GeoJSONIdentifierField(serializers.Field):

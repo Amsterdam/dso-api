@@ -596,6 +596,8 @@ class DSOModelSerializer(DSOSerializer, serializers.HyperlinkedModelSerializer):
     _default_list_serializer_class = DSOModelListSerializer
     serializer_field_mapping = {
         **serializers.HyperlinkedModelSerializer.serializer_field_mapping,
+        # Override the URL field
+        models.URLField: fields.DSOURLField,
         # Override what django_rest_framework_gis installs in the app ready() signal:
         gis_models.GeometryField: fields.DSOGeometryField,
         gis_models.PointField: fields.DSOGeometryField,
