@@ -1,5 +1,9 @@
 version: "3.7"
 services:
+  # This Postgres container is used for testing by Jenkins.
+  # The actual deployment uses a database configured separately.
+  # For development, use the one from dataservices-airflow;
+  # see dev-docs/source/howto/install.rst.
   database:
     image: amsterdam/postgres11
     ports:

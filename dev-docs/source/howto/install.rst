@@ -32,32 +32,17 @@ Install the tools::
 Database Setup
 --------------
 
-No PostgreSQL server has to be installed, as one is provided via docker-compose.
+dso-api talks to a PostgreSQL instance that contains its data.
+Normally, you should use the one from the dataservices-airflow project.
+If you don't already have it running, do::
 
-.. admonition:: Database Reuse Between Projects
+    git clone https://github.com/Amsterdam/dataservices-airflow
+    cd dataservices-airflow
+    docker-compose up dso_database
 
-    In practice, this project is developed in tandem with an Airflow instance for importing data.
-    The Airflow project has instructions to run its two dependent database in Docker containers as well.
-    When following the installation instructions of both projects separately, you will end up with two
-    instances of the DSO API database in two separate Docker containers.
+Then point to that PostgreSQL in the environment::
 
-    Hence, the best way to setup both projects is to follow the Airflow setup instructions and point the
-    ``DATABASE_URL`` environment variable for this project to the DSO API
-    database container of the Airflow project.
-
-These instructions vary depending on your setup:
-
-Using Docker-Compose
-~~~~~~~~~~~~~~~~~~~~
-
-The docker-compose file assumes there is an SSH identity file at ``~/.ssh/datapunt.key``.
-So create it::
-
-    cp -i ~/.ssh/id_rsa.key ~/.ssh/datapunt.key
-
-Now we can start the container with the database::
-
-    docker-compose up -d database
+    DATABASE_URL=postgres://dataservices:insecure@localhost:5416/dataservices
 
 .. tip::
     To make sure the environment variables are automatically set
@@ -67,11 +52,11 @@ Now we can start the container with the database::
     Add a ``.envrc`` to your project folder, and direnv ensures the proper
     environment variables are loaded when you cd into your project directory.
 
-Using Virtual Machine
-~~~~~~~~~~~~~~~~~~~~~
+Using a virtual machine
+~~~~~~~~~~~~~~~~~~~~~~~
 
-If you are not running Docker locally (eg in Linux) but in a virtual
-machine (eg MacOS, FreeBSD, Windows) you might want to adjust the
+If you are not running Docker locally (as on Linux) but in a virtual
+machine (as needed on MacOS, FreeBSD, Windows) you might want to adjust the
 ``DATABASE_URL`` to point it to the IP address of the virtual machine
 instead of simply ``localhost``.
 
@@ -101,7 +86,7 @@ Create database tables::
 
     ./manage.py migrate
 
-Import schema's::
+Import schemas::
 
     ./manage.py import_schemas
 
