@@ -352,63 +352,12 @@ class DynamicSerializer(DSOModelSerializer):
         else:
             return super().build_property_field(field_name, model_class)
 
-    @cached_property
-    def _loose_relation_m2m_fields(self):
-        """The M2M field metadata, retrieved once for this serializer.
-        The caching makes sure this is only calculated once in a list serializer.
-        """
-        from .urls import app_name
-
-        result = []
-        for f in self.Meta.model._meta.many_to_many:
-            field = self.Meta.model._meta.get_field(f.attname)
-            if isinstance(field, LooseRelationManyToManyField):
-
-                dataset_name, table_name = (
-                    to_snake_case(part) for part in field.relation.split(":")
-                )
-                url_name = f"{app_name}:{dataset_name}-{table_name}-detail"
-                related_table = field.related_model.table_schema()
-
-                related_identifier_field = first(related_table.identifier)
-                result.append(
-                    (f.attname, toCamelCase(f.attname), url_name, related_identifier_field)
-                )
-
-        return result
-
     def to_representation(self, validated_data):
         data = super().to_representation(validated_data)
 
         # URL encoding of the data, i.e. spaces to %20, only if urlfield is present
         if self._url_content_fields:
             data = URLencodingURLfields().to_representation(self._url_content_fields, data)
-
-        for (
-            attname,
-            camel_name,
-            url_name,
-            related_identifier_field,
-        ) in self._loose_relation_m2m_fields:
-            if attname in data and not data[camel_name]:
-                # TODO: N-query issue, which needs to be addressed later.
-                related_mgr = getattr(validated_data, attname)
-                related_ids = (
-                    related_mgr.through.objects.filter(
-                        **{related_mgr.source_field_name: validated_data.id}
-                    )
-                    .order_by()
-                    .values_list(f"{related_mgr.target_field_name}_id", flat=True)
-                )
-
-                data[camel_name] = [
-                    {
-                        "href": reverse(url_name, kwargs={"pk": item}, request=self._request),
-                        "title": item,
-                        related_identifier_field: item,
-                    }
-                    for item in related_ids
-                ]
 
         return data
 
