@@ -59,7 +59,6 @@ class TestDynamicSerializer:
         assert afval_cluster_model is apps.get_model("afvalwegingen.clusters")
         assert afval_container_model is apps.get_model("afvalwegingen.containers")
 
-        drf_request.dataset = afval_schema
         afval_container = afval_container_model.objects.create(
             id=2,
             cluster_id=afval_cluster.pk,
@@ -116,13 +115,12 @@ class TestDynamicSerializer:
         }
 
     @staticmethod
-    def test_expand(afval_schema, afval_container_model, afval_cluster):
+    def test_expand(afval_container_model, afval_cluster):
         """Prove expanding works.
 
         The _embedded section is generated, using the cluster serializer.
         """
         drf_request = to_drf_request(api_request_with_scopes(["BAG/R"]))
-        drf_request.dataset = afval_schema
         ContainerSerializer = serializer_factory(afval_container_model)
         afval_container = afval_container_model.objects.create(id=2, cluster=afval_cluster)
 
@@ -168,13 +166,12 @@ class TestDynamicSerializer:
         }
 
     @staticmethod
-    def test_expand_none(afval_schema, afval_container_model):
+    def test_expand_none(afval_container_model):
         """Prove that expanding None values doesn't crash.
 
         The _embedded part has a None value instead.
         """
         drf_request = to_drf_request(api_request_with_scopes(["BAG/R"]))
-        drf_request.dataset = afval_schema
         ContainerSerializer = serializer_factory(afval_container_model)
         container_without_cluster = afval_container_model.objects.create(
             id=3,
@@ -205,14 +202,13 @@ class TestDynamicSerializer:
         }
 
     @staticmethod
-    def test_expand_broken_relation(afval_schema, afval_container_model):
+    def test_expand_broken_relation(afval_container_model):
         """Prove that expanding non-existing FK values values doesn't crash.
            Cluster will not be expanded to a url, because the pk_only_optimization
            has been switched off for hyperlinked related fields.
         The _embedded part has a None value instead.
         """
         drf_request = to_drf_request(api_request_with_scopes(["BAG/R"]))
-        drf_request.dataset = afval_schema
         ContainerSerializer = serializer_factory(afval_container_model)
         container_invalid_cluster = afval_container_model.objects.create(
             id=4,
@@ -266,7 +262,6 @@ class TestDynamicSerializer:
         # Update dataset in instance cache
         afval_container_model._dataset = afval_dataset
         afval_cluster_model._dataset = afval_dataset
-        drf_request.dataset = afval_dataset.schema
         ContainerSerializer = serializer_factory(afval_container_model, 0)
         afval_container = afval_container_model.objects.create(id=2, cluster=afval_cluster)
 
@@ -312,9 +307,8 @@ class TestDynamicSerializer:
         }
 
     @staticmethod
-    def test_backwards_relation(drf_request, gebieden_schema, gebieden_models):
+    def test_backwards_relation(drf_request, gebieden_models):
         """Show backwards"""
-        drf_request.dataset = gebieden_schema
         drf_request.table_temporal_slice = None
         stadsdelen_model = gebieden_models["stadsdelen"]
         wijken_model = gebieden_models["wijken"]
@@ -365,7 +359,6 @@ class TestDynamicSerializer:
     @staticmethod
     def test_multiple_backwards_relations(
         drf_request,
-        vestiging_schema,
         vestiging_adres_model,
         vestiging_vestiging_model,
         vestiging1,
@@ -373,8 +366,6 @@ class TestDynamicSerializer:
         post_adres1,
     ):
         """Show backwards"""
-        drf_request.dataset = vestiging_schema
-
         VestigingSerializer = serializer_factory(vestiging_vestiging_model)
 
         vestiging_serializer = VestigingSerializer(
@@ -464,15 +455,11 @@ class TestDynamicSerializer:
 
     @staticmethod
     def test_serializer_has_nested_table(
-        drf_request,
-        parkeervakken_schema,
-        parkeervakken_parkeervak_model,
-        parkeervakken_regime_model,
+        drf_request, parkeervakken_parkeervak_model, parkeervakken_regime_model
     ):
         """Prove that the serializer factory properly generates nested tables.
         Serialiser should contain reverse relations.
         """
-        drf_request.dataset = parkeervakken_schema
         parkeervak = parkeervakken_parkeervak_model.objects.create(
             id="121138489047",
             type="File",
@@ -541,17 +528,10 @@ class TestDynamicSerializer:
         }
 
     @staticmethod
-    def test_display_title_present(
-        drf_request,
-        fietspaaltjes_schema,
-        fietspaaltjes_model,
-        fietspaaltjes_data,
-    ):
+    def test_display_title_present(drf_request, fietspaaltjes_model, fietspaaltjes_data):
         """ Prove that title element shows display value if display field is specified """
 
         FietsplaatjesSerializer = serializer_factory(fietspaaltjes_model)
-
-        drf_request.dataset = fietspaaltjes_schema
 
         fietsplaatjes_serializer = FietsplaatjesSerializer(
             fietspaaltjes_data, context={"request": drf_request}
@@ -561,17 +541,11 @@ class TestDynamicSerializer:
 
     @staticmethod
     def test_no_display_title_present(
-        drf_request,
-        fietspaaltjes_schema_no_display,
-        fietspaaltjes_model_no_display,
-        fietspaaltjes_data_no_display,
+        drf_request, fietspaaltjes_model_no_display, fietspaaltjes_data_no_display
     ):
         """ Prove that title element is omitted if display field is not specified """
 
         FietsplaatjesSerializer = serializer_factory(fietspaaltjes_model_no_display)
-
-        drf_request.dataset = fietspaaltjes_schema_no_display
-
         fietsplaatjes_serializer = FietsplaatjesSerializer(
             fietspaaltjes_data_no_display, context={"request": drf_request}
         )
@@ -585,34 +559,22 @@ class TestDynamicSerializer:
         assert explosieven_model._meta.get_field("pdf").max_length == 200
 
     @staticmethod
-    def test_uri_field_can_validate(
-        drf_request, explosieven_schema, explosieven_model, explosieven_data
-    ):
+    def test_uri_field_can_validate(drf_request, explosieven_model, explosieven_data):
         """ Prove that a URLfield can be validated by the URIValidator """
 
         ExplosievenSerializer = serializer_factory(explosieven_model)
-
-        drf_request.dataset = explosieven_schema
-
-        validate_uri = URLValidator()
-
         explosieven_serializer = ExplosievenSerializer(
             explosieven_data, context={"request": drf_request}
         )
 
         # Validation passes if outcome is None
-        assert validate_uri(explosieven_serializer.data["pdf"]) is None
+        assert URLValidator()(explosieven_serializer.data["pdf"]) is None
 
     @staticmethod
-    def test_uri_field_is_URL_encoded(
-        drf_request, explosieven_schema, explosieven_model, explosieven_data
-    ):
+    def test_uri_field_is_URL_encoded(drf_request, explosieven_model, explosieven_data):
         """ Prove that a URLfield content is URL encoded i.e. space to %20 """
 
         ExplosievenSerializer = serializer_factory(explosieven_model)
-
-        drf_request.dataset = explosieven_schema
-
         explosieven_serializer = ExplosievenSerializer(
             explosieven_data, context={"request": drf_request}
         )
@@ -624,22 +586,17 @@ class TestDynamicSerializer:
 
     @staticmethod
     def test_email_field_can_validate_with_validator(
-        drf_request, explosieven_schema, explosieven_model, explosieven_data
+        drf_request, explosieven_model, explosieven_data
     ):
         """ Prove that a EmailField can be validated by the EmailValidator """
 
         ExplosievenSerializer = serializer_factory(explosieven_model)
-
-        drf_request.dataset = explosieven_schema
-
-        validate_email = EmailValidator()
-
         explosieven_serializer = ExplosievenSerializer(
             explosieven_data, context={"request": drf_request}
         )
 
         # Validation passes if outcome is None
-        assert validate_email(explosieven_serializer.data["emailadres"]) is None
+        assert EmailValidator()(explosieven_serializer.data["emailadres"]) is None
 
     @staticmethod
     def test_indirect_self_reference(ligplaatsen_model, filled_router):
@@ -655,7 +612,6 @@ class TestDynamicSerializer:
     ):
         """ Prove that only first letter is seen in Profile allows only it."""
         # does not have scope for Dataset or Table
-        drf_request.dataset = fietspaaltjes_schema
         drf_request.user_scopes = UserScopes(
             {},
             request_scopes=[],
@@ -693,7 +649,6 @@ class TestDynamicSerializer:
         drf_request, fietspaaltjes_schema, fietspaaltjes_model, fietspaaltjes_data
     ):
         """ Prove that only first letter is seen in Profile allows only it in listing. """
-        drf_request.dataset = fietspaaltjes_schema
         drf_request.user_scopes = UserScopes(
             {},
             request_scopes=[],
@@ -729,9 +684,7 @@ class TestDynamicSerializer:
         assert fietspaaltjes[0]["area"] == "A", fietspaaltjes_serializer.data
 
     @staticmethod
-    def test_download_url_field(
-        drf_request, download_url_dataset, download_url_schema, filled_router
-    ):
+    def test_download_url_field(drf_request, download_url_dataset, filled_router):
         """ Prove that download url will contain correct identifier. """
 
         dossier_model = filled_router.all_models["download"]["dossiers"]
@@ -743,9 +696,6 @@ class TestDynamicSerializer:
             ),
         )
         DossiersSerializer = serializer_factory(dossier_model)
-
-        drf_request.dataset = download_url_schema
-
         dossiers_serializer = DossiersSerializer(
             dossier_model.objects.all(),
             context={"request": drf_request},
@@ -762,9 +712,7 @@ class TestDynamicSerializer:
         assert "sp=r" in url
 
     @staticmethod
-    def test_download_url_field_empty_field(
-        drf_request, download_url_dataset, download_url_schema, filled_router
-    ):
+    def test_download_url_field_empty_field(drf_request, download_url_dataset, filled_router):
         """ Prove that empty download url not crashing api. """
 
         dossier_model = filled_router.all_models["download"]["dossiers"]
@@ -773,9 +721,6 @@ class TestDynamicSerializer:
             url="",
         )
         DossiersSerializer = serializer_factory(dossier_model)
-
-        drf_request.dataset = download_url_schema
-
         dossiers_serializer = DossiersSerializer(
             dossier_model.objects.all(),
             context={"request": drf_request},
@@ -786,11 +731,7 @@ class TestDynamicSerializer:
         assert dossiers[0]["url"] == ""
 
     @staticmethod
-    def test_loose_relation_serialization(
-        drf_request,
-        meldingen_schema,
-        statistieken_model,
-    ):
+    def test_loose_relation_serialization(drf_request, statistieken_model):
         """Prove that the serializer factory generates the right link
         for a loose relation field
         """
@@ -799,7 +740,6 @@ class TestDynamicSerializer:
             def __init__(self, model):
                 self.model = model
 
-        drf_request.dataset = meldingen_schema
         statistiek = statistieken_model.objects.create(
             id=1,
             buurt="03630000000078",
