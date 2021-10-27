@@ -32,6 +32,7 @@ from rest_framework.serializers import BaseSerializer
 from rest_framework.utils.serializer_helpers import ReturnDict, ReturnList
 from rest_framework_gis.fields import GeometryField
 
+from rest_framework_dso import fields
 from rest_framework_dso.crs import CRS
 from rest_framework_dso.embedding import (
     ChunkedQuerySetIterator,
@@ -40,13 +41,6 @@ from rest_framework_dso.embedding import (
     ExpandScope,
     ObservableIterator,
     get_serializer_lookups,
-)
-from rest_framework_dso.fields import (
-    AbstractEmbeddedField,
-    DSOGeometryField,
-    DSORelatedLinkField,
-    DSOSelfLinkField,
-    parse_request_fields,
 )
 from rest_framework_dso.serializer_helpers import ReturnGenerator, peek_iterable
 
@@ -140,7 +134,7 @@ class ExpandableSerializer(BaseSerializer):
         return ".".join(reversed(path)) if len(path) > 1 else ""
 
     @classmethod
-    def get_embedded_field(cls, field_name, prefix="") -> AbstractEmbeddedField:
+    def get_embedded_field(cls, field_name, prefix="") -> fields.AbstractEmbeddedField:
         """Retrieve an embedded field from the serializer class."""
         embedded_fields = getattr(cls.Meta, "embedded_fields", {})
         try:
@@ -396,7 +390,7 @@ class DSOSerializer(ExpandableSerializer, serializers.Serializer):
             if not request_fields and "fields" in request.GET:
                 request_fields = request.GET["fields"]  # DSO 1.0
 
-            return parse_request_fields(request_fields)
+            return fields.parse_request_fields(request_fields)
         else:
             # Sub field should have received it's fields_to_display override via __init__().
             return None
@@ -603,23 +597,23 @@ class DSOModelSerializer(DSOSerializer, serializers.HyperlinkedModelSerializer):
     serializer_field_mapping = {
         **serializers.HyperlinkedModelSerializer.serializer_field_mapping,
         # Override what django_rest_framework_gis installs in the app ready() signal:
-        gis_models.GeometryField: DSOGeometryField,
-        gis_models.PointField: DSOGeometryField,
-        gis_models.LineStringField: DSOGeometryField,
-        gis_models.PolygonField: DSOGeometryField,
-        gis_models.MultiPointField: DSOGeometryField,
-        gis_models.MultiLineStringField: DSOGeometryField,
-        gis_models.MultiPolygonField: DSOGeometryField,
-        gis_models.GeometryCollectionField: DSOGeometryField,
+        gis_models.GeometryField: fields.DSOGeometryField,
+        gis_models.PointField: fields.DSOGeometryField,
+        gis_models.LineStringField: fields.DSOGeometryField,
+        gis_models.PolygonField: fields.DSOGeometryField,
+        gis_models.MultiPointField: fields.DSOGeometryField,
+        gis_models.MultiLineStringField: fields.DSOGeometryField,
+        gis_models.MultiPolygonField: fields.DSOGeometryField,
+        gis_models.GeometryCollectionField: fields.DSOGeometryField,
     }
 
     #: Define that having an unknown field named "self" will be rendered as a hyperlink
     # to this object, using a field class that output a {"href": ..., "title": ...} structure.
     url_field_name = "self"
-    serializer_url_field = DSOSelfLinkField
+    serializer_url_field = fields.DSOSelfLinkField
 
     #: Define that relations will also be generated as {"href": ..., "title": ...}.
-    serializer_related_field = DSORelatedLinkField
+    serializer_related_field = fields.DSORelatedLinkField
 
     def _include_embedded(self):
         """Determines if the _embedded field must be generated."""
