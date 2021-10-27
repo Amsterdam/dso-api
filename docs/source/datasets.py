@@ -3,7 +3,7 @@ import os
 import re
 import sys
 from pathlib import Path
-from typing import Any, List, NamedTuple, Optional, Tuple, Union
+from typing import Any, List, NamedTuple, Optional
 
 import jinja2
 from schematools.types import DatasetFieldSchema, DatasetSchema, DatasetTableSchema
@@ -91,19 +91,6 @@ LOOKUP_CONTEXT = {
         ),
     ]
 }
-
-
-def sort_schemas(schemas: List[Tuple[str, DatasetSchema]]) -> List[Union[str, DatasetSchema]]:
-    """Sort datasets (schemas) alphabetically.
-
-    Args:
-        schemas: A list of tuples containing a pair of schemas id (name) and
-            DatasetSchema instance.
-
-    Returns:
-        A list of alphabetically ordered schemas instances based on their schema id (name).
-    """
-    return sorted(schemas, key=lambda schema: schema[0])
 
 
 def render_dataset_docs(dataset: DatasetSchema, paths: dict[str, str]):
@@ -328,6 +315,19 @@ def _get_field_context(field: DatasetFieldSchema, identifier: List[str]) -> dict
     }
 
 
+def _dataset_name(name):
+    return name.replace(".rst", "")
+
+
+def _documents(dir_names, file_names):
+    """Filter a set of dir and filenames as given by os.walk
+    to be included in a dataset directory toc tree"""
+    return sorted(
+        [f"{dir_name}/index" for dir_name in dir_names]
+        + [_dataset_name(fname) for fname in file_names if fname != "index.rst"]
+    )
+
+
 def render_datasets(*local_file_paths):
     if not local_file_paths:
         print(f"fetching definitions from {SCHEMA_URL}")
@@ -350,22 +350,59 @@ def render_datasets(*local_file_paths):
             schemas[schema.id] = schema
             paths[schema.id] = ds_path
 
-    documents = []
-    for name, dataset in sort_schemas(schemas.items()):
-        documents.append(render_dataset_docs(dataset, paths))
+    for dataset in schemas.values():
+        render_dataset_docs(dataset, paths)
 
-    render_template("datasets/index.rst.j2", "datasets/index.rst", {"documents": documents})
+    # Leverage the fact that the dataset rendering has written the same
+    # directory structure as the remote datasets listing in order
+    # to generate subpaths in the TOC-tree.
+    dir_tree = os.walk("datasets", topdown=True)
+    _, root_dirs, root_files = next(dir_tree)
 
-    wfs_documents = []
-    for name, dataset in sort_schemas(schemas.items()):
-        name = render_wfs_dataset_docs(dataset, paths)
-        if name:
-            wfs_documents.append(name)
+    # Add a sub TOC-tree to all sub-directories
+    for dir_path, dir_names, file_names in dir_tree:
+        node_title = dir_path.split("/")[-1].title()
+        render_template(
+            "datasets/sub-index.rst.j2",
+            f"{dir_path}/index.rst",
+            {
+                "documents": _documents(dir_names, file_names),
+                "node_title": node_title,
+                "section_marker": "-" * len(node_title),
+            },
+        )
 
+    # Add the root TOC-tree
+    render_template(
+        "datasets/index.rst.j2",
+        "datasets/index.rst",
+        {"documents": _documents(root_dirs, root_files)},
+    )
+
+    for dataset in schemas.values():
+        render_wfs_dataset_docs(dataset, paths)
+
+    dir_tree = os.walk("wfs-datasets", topdown=True)
+    _, root_dirs, root_files = next(dir_tree)
+
+    # Add a sub TOC-tree to all sub-directories
+    for dir_path, dir_names, file_names in dir_tree:
+        node_title = dir_path.split("/")[-1].title()
+        render_template(
+            "wfs-datasets/sub-index.rst.j2",
+            f"{dir_path}/index.rst",
+            {
+                "documents": _documents(dir_names, file_names),
+                "node_title": node_title,
+                "section_marker": "-" * len(node_title),
+            },
+        )
+
+    # Add the root TOC-tree
     render_template(
         "wfs-datasets/index.rst.j2",
         "wfs-datasets/index.rst",
-        {"documents": wfs_documents},
+        {"documents": _documents(root_dirs, root_files)},
     )
 
 

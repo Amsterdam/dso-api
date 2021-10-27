@@ -1,0 +1,9 @@
+{{ node_title }}
+{{ section_marker }}
+
+.. toctree::
+
+{% for document in documents %}
+   {{ document }}
+{%- endfor %}
+
