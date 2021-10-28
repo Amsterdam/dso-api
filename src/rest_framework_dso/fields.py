@@ -13,7 +13,7 @@ from drf_spectacular.utils import extend_schema_field, inline_serializer
 from more_itertools import first
 from rest_framework import serializers
 from rest_framework_gis.fields import GeometryField
-from schematools.contrib.django.models import DynamicModel, LooseRelationField
+from schematools.contrib.django.models import LooseRelationField
 
 from rest_framework_dso.utils import unlazy_object
 
@@ -296,10 +296,6 @@ class DSORelatedLinkField(serializers.HyperlinkedRelatedField):
         output = {
             "href": self.get_url(value, self.view_name, request, None),
         }
-
-        if isinstance(value, DynamicModel):
-            id_fieldname = first(value.table_schema().identifier)
-            output[id_fieldname] = getattr(value, id_fieldname)
 
         # Little typesafe hack to allow models that disable the title field (e.g. DynamicModel)
         if getattr(value, "_display_field", True):
