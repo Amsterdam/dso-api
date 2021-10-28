@@ -350,13 +350,15 @@ def render_datasets(*local_file_paths):
             schemas[schema.id] = schema
             paths[schema.id] = ds_path
 
+    datasets_path = BASE_PATH / Path("datasets")
+
     for dataset in schemas.values():
         render_dataset_docs(dataset, paths)
 
     # Leverage the fact that the dataset rendering has written the same
     # directory structure as the remote datasets listing in order
     # to generate subpaths in the TOC-tree.
-    dir_tree = os.walk("datasets", topdown=True)
+    dir_tree = os.walk(datasets_path, topdown=True)
     _, root_dirs, root_files = next(dir_tree)
 
     # Add a sub TOC-tree to all sub-directories
@@ -382,7 +384,9 @@ def render_datasets(*local_file_paths):
     for dataset in schemas.values():
         render_wfs_dataset_docs(dataset, paths)
 
-    dir_tree = os.walk("wfs-datasets", topdown=True)
+    datasets_path = BASE_PATH / Path("wfs-datasets")
+
+    dir_tree = os.walk(datasets_path, topdown=True)
     _, root_dirs, root_files = next(dir_tree)
 
     # Add a sub TOC-tree to all sub-directories
