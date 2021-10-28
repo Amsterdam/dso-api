@@ -292,7 +292,6 @@ class DSORelatedLinkField(serializers.HyperlinkedRelatedField):
 
     def to_representation(self, value: models.Model):
         request = self.context["request"]
-
         output = {
             "href": self.get_url(value, self.view_name, request, None),
         }
