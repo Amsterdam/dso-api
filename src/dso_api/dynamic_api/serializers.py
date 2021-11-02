@@ -800,9 +800,8 @@ def _through_serializer_factory(m2m_field: models.ManyToManyField) -> type[Throu
     target_model = m2m_field.related_model
     target_table_schema = m2m_field.related_model.table_schema()
     try:
-        target_fk_name = (
-            m2m_field.m2m_reverse_field_name()
-        )  # second foreign key of the through model
+        # second foreign key of the through model
+        target_fk_name = m2m_field.m2m_reverse_field_name()
     except AttributeError as e:
         # Adorn this exception with a clue about what we're trying to do,
         # as a debugging aid for the occasional "'ManyToManyField' object has no attribute
