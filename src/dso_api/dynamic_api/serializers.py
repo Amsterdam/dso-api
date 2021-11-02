@@ -810,7 +810,7 @@ def _through_serializer_factory(m2m_field: models.ManyToManyField) -> type[Throu
 
         # In Python 3.10, AttributeError has a name attribute, but we support 3.9.
         if "_m2m_reverse_name_cache" in str(e):
-            raise AttributeError(f"{e} ({m2m_field})")
+            raise AttributeError(f"{e} ({m2m_field})") from e
         else:
             raise
 
