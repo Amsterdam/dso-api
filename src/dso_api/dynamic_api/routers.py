@@ -442,7 +442,7 @@ def _validate_model(model: type[DynamicModel]):
                     if "No installed app with label" not in str(e):
                         raise
                     # Report the dataset we're working with.
-                    raise LookupError(str(e) + f" (model = {model.get_dataset_schema()})") from e
+                    raise LookupError(f"{e} (model = {model.get_dataset_schema()})") from e
                 available = sorted(model._meta.model_name for model in dataset_app.get_models())
                 raise ImproperlyConfigured(
                     f"Field {field} does not point to an existing model:"
