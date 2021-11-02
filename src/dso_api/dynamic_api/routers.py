@@ -29,7 +29,7 @@ from typing import TYPE_CHECKING, Iterable
 from django.apps import apps
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
-from django.db import connection, models
+from django.db import connection
 from django.urls import NoReverseMatch, URLPattern, path, reverse
 from rest_framework import routers
 from schematools.contrib.django.factories import remove_dynamic_models
@@ -426,7 +426,7 @@ class DynamicRouter(routers.DefaultRouter):
         remove_dynamic_models()
 
 
-def _validate_model(model: type[models.Model]):
+def _validate_model(model: type[DynamicModel]):
     """Validate whether the model's foreign keys point to actual resolved models.
     This is a check against incorrect definitions, which eases debugging in case it happens.
     Otherwise the error is likely something like "str has no attribute _meta" deep inside
@@ -436,7 +436,13 @@ def _validate_model(model: type[models.Model]):
         if field.remote_field is not None:
             if isinstance(field.remote_field.model, str):
                 app_label = field.remote_field.model.split(".")[0]
-                dataset_app = apps.get_app_config(app_label)
+                try:
+                    dataset_app = apps.get_app_config(app_label)
+                except LookupError as e:
+                    if "No installed app with label" not in str(e):
+                        raise
+                    # Report the dataset we're working with.
+                    raise LookupError(f"{e} (model = {model.get_dataset_schema()})") from e
                 available = sorted(model._meta.model_name for model in dataset_app.get_models())
                 raise ImproperlyConfigured(
                     f"Field {field} does not point to an existing model:"

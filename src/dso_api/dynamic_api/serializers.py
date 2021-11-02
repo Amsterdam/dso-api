@@ -799,7 +799,19 @@ def _through_serializer_factory(m2m_field: models.ManyToManyField) -> type[Throu
     through_model = m2m_field.remote_field.through
     target_model = m2m_field.related_model
     target_table_schema = m2m_field.related_model.table_schema()
-    target_fk_name = m2m_field.m2m_reverse_field_name()  # second foreign key of the through model
+    try:
+        # second foreign key of the through model
+        target_fk_name = m2m_field.m2m_reverse_field_name()
+    except AttributeError as e:
+        # Adorn this exception with a clue about what we're trying to do,
+        # as a debugging aid for the occasional "'ManyToManyField' object has no attribute
+        # '_m2m_reverse_name_cache'".
+
+        # In Python 3.10, AttributeError has a name attribute, but we support 3.9.
+        if "_m2m_reverse_name_cache" in str(e):
+            raise AttributeError(f"{e} ({m2m_field})") from e
+        else:
+            raise
 
     # Start serializer construction.
     # The "href" field reads the target of the M2M table.
