@@ -48,6 +48,7 @@ from dso_api.dynamic_api.fields import (
     TemporalReadOnlyField,
 )
 from dso_api.dynamic_api.permissions import filter_unauthorized_expands
+from dso_api.dynamic_api.temporal import TemporalTableQuery, filter_temporal_slice
 from dso_api.dynamic_api.utils import get_source_model_fields, resolve_model_lookup
 from rest_framework_dso.embedding import EmbeddedFieldMatch
 from rest_framework_dso.fields import (
@@ -61,20 +62,6 @@ MAX_EMBED_NESTING_LEVEL = 10
 logger = logging.getLogger(__name__)
 
 S = TypeVar("S", bound=serializers.Serializer)
-
-
-def filter_latest_temporal(queryset: models.QuerySet) -> models.QuerySet:
-    """Make sure a queryset will only return the latest temporal models"""
-    table_schema = queryset.model.table_schema()
-    temporal_config = table_schema.temporal
-    if not temporal_config:
-        return queryset
-
-    identifier = first(table_schema.identifier)
-    sequence_name = table_schema.temporal.identifier
-
-    # does SELECT DISTINCT ON(identifier) ... ORDER BY identifier, sequence DESC
-    return queryset.distinct(identifier).order_by(identifier, f"-{sequence_name}")
 
 
 @extend_schema_field(
@@ -91,13 +78,17 @@ class RelatedSummaryField(Field):
     def to_representation(self, value: models.Manager):
         request = self.context["request"]
         url = reverse(get_view_name(value.model, "list"), request=request)
+
+        # the "core_filters" attribute is available on all related managers
         filter_field = next(iter(value.core_filters.keys()))
         q_params = {toCamelCase(filter_field + "_id"): value.instance.pk}
 
-        # If this is a temporary slice, add the extra parameter to the qs.
-        if request.table_temporal_slice is not None:
-            key = request.table_temporal_slice["key"]
-            q_params[key] = request.table_temporal_slice["value"]
+        # If this is a temporal table, only return the appropriate records.
+        if value.model.is_temporal():
+            # The essence of filter_temporal_slice()
+            query = TemporalTableQuery(request, value.model.table_schema())
+            q_params.update(query.url_parameters)
+            value = query.filter_queryset(value)
 
         query_string = ("&" if "?" in url else "?") + urlencode(q_params)
         return {"count": value.count(), "href": f"{url}{query_string}"}
@@ -109,18 +100,20 @@ class DynamicListSerializer(DSOModelListSerializer):
     """
 
     def get_prefetch_lookups(self) -> list[Union[models.Prefetch, str]]:
-        """Optimize M2M prefetch lookups to return latest temporal records only."""
+        """Optimize M2M prefetch lookups to return correct temporal records only."""
         parent_model = self.child.Meta.model
         lookups = super().get_prefetch_lookups()
+        request = self.context["request"]
 
         for i, lookup in enumerate(lookups):
             related_model, is_many = resolve_model_lookup(parent_model, lookup)
             if cast(DynamicModel, related_model).is_temporal() and is_many:
 
-                # When the model is a temporal relationship, make sure the prefetch only
-                # returns the latest objects. The Prefetch objects allow adding these filters.
+                # When the model is a temporal relationship, make sure the prefetch only returns
+                # the proper temporal slice. The Prefetch objects allow adding these filters.
                 lookups[i] = models.Prefetch(
-                    lookup, queryset=filter_latest_temporal(related_model.objects)
+                    lookup,
+                    queryset=filter_temporal_slice(request, related_model.objects.all()),
                 )
         return lookups
 
@@ -271,10 +264,13 @@ class DynamicSerializer(DSOModelSerializer):
         This override makes sure the correct temporal slice is returned.
         """
         if embedded_field.is_loose:
-            # Special handling for embedding temporal relationships.
+            # Special handling for embedding temporal relationships, if they are loose relations
+            # When 'identifier' is ["identificatie", "volgnummer"], take the first as grouper.
             model = embedded_field.related_model
             id_field = embedded_field.related_id_field or model.table_schema().identifier[0]
-            return filter_latest_temporal(model.objects).filter(**{f"{id_field}__in": id_list})
+            return filter_temporal_slice(self._request, model.objects.all()).filter(
+                **{f"{id_field}__in": id_list}
+            )
         else:
             return super().get_embedded_objects_by_id(embedded_field, id_list=id_list)
 

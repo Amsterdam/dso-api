@@ -84,15 +84,29 @@ def wijk(gebieden_models, stadsdelen):
 
 
 @pytest.mark.django_db
-class TestViews:
-    def test_list_contains_all_objects(self, api_client, stadsdelen):
-        """ Prove that default API response contains ALL versions."""
+class TestTemporalViews:
+    def test_list_all_objects(self, api_client, stadsdelen):
+        """Prove that API response can return ALL versions if requested."""
+        url = reverse("dynamic_api:gebieden-stadsdelen-list")
+        response = api_client.get(url, {"geldigOp": "*"})
+        data = read_response_json(response)
+
+        assert response.status_code == 200, data
+        stadsdelen = data["_embedded"]["stadsdelen"]
+        assert len(stadsdelen) == 2, stadsdelen
+        assert stadsdelen[0]["_links"]["self"]["volgnummer"] == 1, stadsdelen[0]
+        assert stadsdelen[1]["_links"]["self"]["volgnummer"] == 2, stadsdelen[1]
+
+    def test_list_default_active_objects(self, api_client, stadsdelen):
+        """Prove that default API response contains only active versions."""
         url = reverse("dynamic_api:gebieden-stadsdelen-list")
         response = api_client.get(url)
         data = read_response_json(response)
 
         assert response.status_code == 200, data
-        assert len(data["_embedded"]["stadsdelen"]) == 2, data["_embedded"]["stadsdelen"]
+        stadsdelen = data["_embedded"]["stadsdelen"]
+        assert len(stadsdelen) == 1, stadsdelen
+        assert stadsdelen[0]["_links"]["self"]["volgnummer"] == 2, stadsdelen[0]
 
     def test_filtered_list_contains_only_correct_objects(self, api_client, stadsdelen, buurt):
         """Prove that date filter displays only active-on-that-date objects."""
@@ -125,9 +139,11 @@ class TestViews:
         assert query_params == {"geldigOp": ["2015-01-02"], "ligtInWijkId": ["03630012052022.1"]}
 
     def test_details_record_can_be_requested_by_pk(self, api_client, stadsdelen):
-        """ Prove that request with PK (combined field) is allowed."""
+        """Prove that request with PK (combined field) is allowed.
+        It still needs ?geldigOp=* or it will not find the "deleted" record.
+        """
         url = reverse("dynamic_api:gebieden-stadsdelen-detail", args=(stadsdelen[0].id,))
-        response = api_client.get(url)
+        response = api_client.get(url, {"geldigOp": "*"})
         data = read_response_json(response)
 
         assert response.status_code == 200, data
@@ -195,12 +211,12 @@ class TestViews:
 
         # Check if there is only one '?' in the temporal urls
         stadsdelen = data["_embedded"]["stadsdelen"]
-        assert len(stadsdelen) == 2, stadsdelen
-        assert _parse_query_string(stadsdelen[1]["_links"]["self"]["href"]) == {
+        assert len(stadsdelen) == 1, stadsdelen
+        assert _parse_query_string(stadsdelen[0]["_links"]["self"]["href"]) == {
             "_format": ["json"],
             "volgnummer": ["2"],
         }
-        assert _parse_query_string(stadsdelen[1]["_links"]["wijken"][0]["href"]) == {
+        assert _parse_query_string(stadsdelen[0]["_links"]["wijken"][0]["href"]) == {
             "_format": ["json"],
             "volgnummer": ["1"],
         }
