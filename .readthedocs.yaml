@@ -5,8 +5,9 @@ sphinx:
    configuration: dev-docs/source/conf.py
 formats: []
 
+build:
+  image: testing  # For Python 3.9
 # Not needed yet because of conf.py hack:
-#build:
 #  apt_packages:
 #    - libgdal20
 #    - libproj13
