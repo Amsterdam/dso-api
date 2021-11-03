@@ -18,6 +18,7 @@ from django.utils.translation import gettext as _
 from more_itertools import first
 from rest_framework import viewsets
 from schematools.contrib.django.models import DynamicModel
+from schematools.utils import to_snake_case
 
 from dso_api.dynamic_api import filterset, locking, permissions, serializers
 from rest_framework_dso import fields
@@ -51,7 +52,9 @@ class TemporalRetrieveModelMixin:
         if self.request.versioned and self.model.is_temporal():
             if self.request.table_temporal_slice is not None:
                 temporal_value = self.request.table_temporal_slice["value"]
-                start_field, end_field = self.request.table_temporal_slice["fields"]
+                start_field, end_field = map(
+                    to_snake_case, self.request.table_temporal_slice["fields"]
+                )
                 queryset = queryset.filter(**{f"{start_field}__lte": temporal_value}).filter(
                     models.Q(**{f"{end_field}__gte": temporal_value})
                     | models.Q(**{f"{end_field}__isnull": True})
