@@ -12,15 +12,16 @@ and model layer of this application.
 """
 from __future__ import annotations
 
+from functools import cached_property
+
 from django.db import models
 from django.http import Http404, JsonResponse
 from django.utils.translation import gettext as _
-from more_itertools import first
 from rest_framework import viewsets
 from schematools.contrib.django.models import DynamicModel
-from schematools.utils import to_snake_case
 
 from dso_api.dynamic_api import filterset, locking, permissions, serializers
+from dso_api.dynamic_api.temporal import TemporalTableQuery
 from rest_framework_dso import fields
 from rest_framework_dso.views import DSOViewMixin
 
@@ -45,69 +46,7 @@ def reload_patterns(request):
     )
 
 
-class TemporalRetrieveModelMixin:
-    def get_queryset(self):
-        queryset = super().get_queryset()
-
-        if self.request.versioned and self.model.is_temporal():
-            if self.request.table_temporal_slice is not None:
-                temporal_value = self.request.table_temporal_slice["value"]
-                start_field, end_field = map(
-                    to_snake_case, self.request.table_temporal_slice["fields"]
-                )
-                queryset = queryset.filter(**{f"{start_field}__lte": temporal_value}).filter(
-                    models.Q(**{f"{end_field}__gte": temporal_value})
-                    | models.Q(**{f"{end_field}__isnull": True})
-                )
-
-        return queryset
-
-    def get_object(self, queryset=None):
-        """
-        Do some black magic, find things in DB's garbage bags.
-        """
-        if queryset is None:
-            queryset = self.get_queryset()
-
-        if not self.request.versioned or not self.model.is_temporal():
-            return super().get_object()
-
-        table_schema = self.model.table_schema()
-        pk = self.kwargs.get("pk")
-        pk_field = first(table_schema.identifier)
-        if pk_field != "pk":
-            queryset = queryset.filter(
-                models.Q(**{pk_field: pk}) | models.Q(pk=pk)
-            )  # fallback to full id search.
-        else:
-            queryset = queryset.filter(pk=pk)
-        identifier = table_schema.temporal.identifier
-
-        # Filter queryset using GET parameters, if any.
-        for field in queryset.model.table_schema().fields:
-            if field.name != pk_field and field.name in self.request.GET:
-                queryset = queryset.filter(**{field.name: self.request.GET[field.name]})
-
-        if identifier is None:
-            queryset = queryset.order_by(pk_field)
-        else:
-            queryset = queryset.order_by(identifier)
-
-        obj = queryset.last()
-        if obj is None:
-            raise Http404(
-                _("No %(verbose_name)s found matching the query")
-                % {"verbose_name": queryset.model._meta.verbose_name}
-            )
-        return obj
-
-
-class DynamicApiViewSet(
-    TemporalRetrieveModelMixin,
-    locking.ReadLockMixin,
-    DSOViewMixin,
-    viewsets.ReadOnlyModelViewSet,
-):
+class DynamicApiViewSet(locking.ReadLockMixin, DSOViewMixin, viewsets.ReadOnlyModelViewSet):
     """Viewset for an API, that is DSO-compatible and dynamically generated.
     Each dynamically generated model in this server will receive a viewset.
 
@@ -125,12 +64,62 @@ class DynamicApiViewSet(
     # Make sure composed keys like (112740.024|487843.078) are allowed.
     # The DefaultRouter won't allow '.' in URLs because it's used as format-type.
     lookup_value_regex = r"[^/]+"
+    lookup_url_kwarg = "pk"
 
     # Custom permission that checks amsterdam schema auth settings
     permission_classes = [permissions.HasOAuth2Scopes]
 
     # The 'bronhouder' of the associated dataset
     authorization_grantor: str = None
+
+    def initial(self, request, *args, **kwargs):
+        super().initial(request, *args, **kwargs)
+        self.temporal = TemporalTableQuery(request, self.model.table_schema())
+
+    @cached_property
+    def lookup_field(self):
+        """Overwritten from GenericAPIView to filter on temporal identifier instead."""
+        if self.temporal.is_versioned:
+            # Take the first field as grouper from ["identificatie", "volgnummer"]
+            return self.model.table_schema().identifier[0]
+        else:
+            return "pk"
+
+    def get_queryset(self) -> models.QuerySet:
+        queryset = super().get_queryset()
+        # Apply the ?geldigOp=... filters, unless ?volgnummer=.. is requested.
+        # The version_value is checked for here, as the TemporalTableQuery can be
+        # checked for a sub object too.
+        if self.temporal and not self.temporal.version_value:
+            queryset = self.temporal.filter_queryset(queryset)
+        return queryset
+
+    def get_object(self) -> DynamicModel:
+        """An improved version of GenericAPIView.get_object() that supports temporal objects."""
+        if not self.temporal:
+            return super().get_object()
+
+        # Despite being a detail view, still allow filters (e.g. ?volgnummer=...)
+        queryset = self.filter_queryset(self.get_queryset())
+
+        pk = self.kwargs[self.lookup_url_kwarg]
+        if self.lookup_field != "pk":
+            # Allow fallback to old full id search (note this may need ?geldigOp=* to work)
+            queryset = queryset.filter(models.Q(**{self.lookup_field: pk}) | models.Q(pk=pk))
+        else:
+            queryset = queryset.filter(pk=pk)
+
+        # Only retrieve the correct temporal object, unless filters change this
+        obj = queryset.order_by().first()  # reverse ordering already applied
+        if obj is None:
+            raise Http404(
+                _("No %(verbose_name)s found matching the query")
+                % {"verbose_name": queryset.model._meta.verbose_name}
+            )
+
+        # Same logic as the super method; GenericAPIView.get_object():
+        self.check_object_permissions(self.request, obj)
+        return obj
 
     @property
     def paginator(self):
