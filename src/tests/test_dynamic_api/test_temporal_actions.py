@@ -1,5 +1,5 @@
 from datetime import date, datetime
-from urllib import parse
+from urllib.parse import parse_qs, urlparse
 
 import pytest
 from django.urls import reverse
@@ -62,6 +62,7 @@ def buurt(gebieden_models, stadsdelen, wijk):
         id="03630000000078.1",
         identificatie="03630000000078",
         volgnummer=1,
+        begin_geldigheid=date(2014, 2, 20),
         code="A00a",
         naam="Kop Zeedijk",
         ligt_in_wijk=wijk,
@@ -119,8 +120,9 @@ class TestViews:
         wijken = data["_embedded"]["wijken"]
         assert wijken[0]["_links"]["self"]["volgnummer"] == 1, wijken[0]
         assert wijken[0]["_links"]["buurt"]["count"] == 1
-        query_params = parse.parse_qs(parse.urlparse(wijken[0]["_links"]["buurt"]["href"]).query)
-        assert query_params["geldigOp"] == ["2015-01-02"]
+
+        query_params = _parse_query_string(wijken[0]["_links"]["buurt"]["href"])
+        assert query_params == {"geldigOp": ["2015-01-02"], "ligtInWijkId": ["03630012052022.1"]}
 
     def test_details_record_can_be_requested_by_pk(self, api_client, stadsdelen):
         """ Prove that request with PK (combined field) is allowed."""
@@ -190,11 +192,18 @@ class TestViews:
         data = read_response_json(response)
 
         # Check if there is only one '?' in the temporal urls
-        fetch_query_keys = lambda url: set(parse.parse_qs(parse.urlparse(url).query).keys())
-        assert fetch_query_keys(data["_embedded"]["stadsdelen"][1]["_links"]["self"]["href"]) == {
-            "_format",
-            "volgnummer",
+        stadsdelen = data["_embedded"]["stadsdelen"]
+        assert len(stadsdelen) == 2, stadsdelen
+        assert _parse_query_string(stadsdelen[1]["_links"]["self"]["href"]) == {
+            "_format": ["json"],
+            "volgnummer": ["2"],
         }
-        assert fetch_query_keys(
-            data["_embedded"]["stadsdelen"][1]["_links"]["wijken"][0]["href"]
-        ) == {"_format", "volgnummer"}
+        assert _parse_query_string(stadsdelen[1]["_links"]["wijken"][0]["href"]) == {
+            "_format": ["json"],
+            "volgnummer": ["1"],
+        }
+
+
+def _parse_query_string(url) -> dict[str, list[str]]:
+    """Convert the query-string of an URL to a dict."""
+    return parse_qs(urlparse(url).query)

@@ -789,7 +789,7 @@ class TestEmbedTemporalTables:
     ):
         """Prove that ligtInWijk shows up when expanded"""
 
-        url = reverse("dynamic_api:gebieden-buurten-detail", args=["03630000000078.1"])
+        url = reverse("dynamic_api:gebieden-buurten-detail", args=["03630000000078.2"])
         response = api_client.get(url, data={"_expand": "true"})
         data = read_response_json(response)
         assert response.status_code == 200, data
@@ -809,17 +809,17 @@ class TestEmbedTemporalTables:
                 },
                 "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/dataset#buurten",
                 "self": {
-                    "href": "http://testserver/v1/gebieden/buurten/03630000000078/?volgnummer=1",
+                    "href": "http://testserver/v1/gebieden/buurten/03630000000078/?volgnummer=2",
                     "identificatie": "03630000000078",
-                    "title": "03630000000078.1",
-                    "volgnummer": 1,
+                    "title": "03630000000078.2",
+                    "volgnummer": 2,
                 },
             },
-            "beginGeldigheid": "2021-02-28",
+            "beginGeldigheid": "2021-06-11",
             "code": None,
-            "eindGeldigheid": "2021-06-11",
+            "eindGeldigheid": None,
             "geometrie": None,
-            "id": "03630000000078.1",
+            "id": "03630000000078.2",
             "ligtInWijkId": "03630012052035",
             "naam": None,
             "_embedded": {
@@ -1172,7 +1172,7 @@ class TestEmbedTemporalTables:
         """Prove that temporal identifier fields have been removed from the body
         and only appear in the respective HAL envelopes"""
 
-        url = reverse("dynamic_api:gebieden-buurten-detail", args=["03630000000078.1"])
+        url = reverse("dynamic_api:gebieden-buurten-detail", args=["03630000000078.2"])
         response = api_client.get(url)
         data = read_response_json(response)
         assert response.status_code == 200, data
@@ -1186,17 +1186,17 @@ class TestEmbedTemporalTables:
                 },
                 "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/dataset#buurten",
                 "self": {
-                    "href": "http://testserver/v1/gebieden/buurten/03630000000078/?volgnummer=1",
+                    "href": "http://testserver/v1/gebieden/buurten/03630000000078/?volgnummer=2",
                     "identificatie": "03630000000078",
-                    "title": "03630000000078.1",
-                    "volgnummer": 1,
+                    "title": "03630000000078.2",
+                    "volgnummer": 2,
                 },
             },
-            "beginGeldigheid": "2021-02-28",
+            "beginGeldigheid": "2021-06-11",
             "code": None,
-            "eindGeldigheid": "2021-06-11",
+            "eindGeldigheid": None,
             "geometrie": None,
-            "id": "03630000000078.1",
+            "id": "03630000000078.2",
             "ligtInWijkId": "03630012052035",
             "naam": None,
         }
