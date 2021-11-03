@@ -136,28 +136,30 @@ class TestViews:
     def test_details_default_returns_latest_record(self, api_client, stadsdelen):
         """Prove that object can be requested by identification
         and response will contain only latest object."""
-        url = reverse("dynamic_api:gebieden-stadsdelen-list")
-        response = api_client.get(f"{url}{stadsdelen[0].identificatie}/")
+        identificatie = stadsdelen[0].identificatie
+        url = reverse("dynamic_api:gebieden-stadsdelen-detail", args=(identificatie,))
+        response = api_client.get(url)
         data = read_response_json(response)
 
         assert response.status_code == 200, data
         assert data["_links"]["self"]["volgnummer"] == 2, data
+        assert data["id"] == stadsdelen[1].id, data
 
     def test_details_can_be_requested_with_valid_date(self, api_client, stadsdelen):
-        """Prove that object can be requested by identification and date,
-        resulting in correct for that date object."""
-        url = reverse("dynamic_api:gebieden-stadsdelen-list")
-        response = api_client.get(f"{url}{stadsdelen[0].identificatie}/?geldigOp=2014-12-12")
+        """Prove that object can be requested by identification and date."""
+        identificatie = stadsdelen[0].identificatie
+        url = reverse("dynamic_api:gebieden-stadsdelen-detail", args=(identificatie,))
+        response = api_client.get(url, {"geldigOp": "2014-12-12"})
         data = read_response_json(response)
 
         assert response.status_code == 200, data
         assert data["_links"]["self"]["volgnummer"] == 1, data
 
     def test_details_can_be_requested_with_version(self, api_client, stadsdelen):
-        """Prove that object can be requested by identification and version,
-        resulting in correct for that version object."""
-        url = reverse("dynamic_api:gebieden-stadsdelen-list")
-        response = api_client.get(f"{url}{stadsdelen[0].identificatie}/?volgnummer=1")
+        """Prove that object can be requested by identification and version."""
+        identificatie = stadsdelen[0].identificatie
+        url = reverse("dynamic_api:gebieden-stadsdelen-detail", args=(identificatie,))
+        response = api_client.get(url, {"volgnummer": "1"})
         data = read_response_json(response)
 
         assert response.status_code == 200, data
@@ -168,8 +170,8 @@ class TestViews:
     ):
         """Prove that in case of temporal request links to objects will have request date.
         Allowing follow up date filtering further."""
-        url = reverse("dynamic_api:gebieden-ggwgebieden-list")
-        response = api_client.get(f"{url}{gebied.id}/?geldigOp=2014-05-01")
+        url = reverse("dynamic_api:gebieden-ggwgebieden-detail", args=(gebied.id,))
+        response = api_client.get(url, {"geldigOp": "2014-05-01"})
         data = read_response_json(response)
         assert data["_links"]["bestaatUitBuurten"] == [
             {
