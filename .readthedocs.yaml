@@ -5,7 +5,13 @@ sphinx:
    configuration: dev-docs/source/conf.py
 formats: []
 
+# Not needed yet because of conf.py hack:
+#build:
+#  apt_packages:
+#    - libgdal20
+#    - libproj13
+
 python:
-   version: 3.8
+   version: 3.9
    install:
    - requirements: dev-docs/requirements.txt
