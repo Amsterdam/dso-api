@@ -815,9 +815,9 @@ class TestEmbedTemporalTables:
                     "volgnummer": 1,
                 },
             },
-            "beginGeldigheid": None,
+            "beginGeldigheid": "2021-02-28",
             "code": None,
-            "eindGeldigheid": None,
+            "eindGeldigheid": "2021-06-11",
             "geometrie": None,
             "id": "03630000000078.1",
             "ligtInWijkId": "03630012052035",
@@ -857,7 +857,7 @@ class TestEmbedTemporalTables:
                     "id": "03630012052035.1",
                     "code": "A01",
                     "naam": "Burgwallen-Nieuwe Zijde",
-                    "beginGeldigheid": None,
+                    "beginGeldigheid": "2021-02-28",
                     "eindGeldigheid": None,
                     "ligtInStadsdeelId": "03630000000018",
                     "_embedded": {
@@ -879,7 +879,7 @@ class TestEmbedTemporalTables:
                                 },
                                 # wijken is excluded (repeated relation)
                             },
-                            "beginGeldigheid": None,
+                            "beginGeldigheid": "2021-02-28",
                             "code": "A",
                             "documentdatum": None,
                             "documentnummer": None,
@@ -927,7 +927,7 @@ class TestEmbedTemporalTables:
             "documentdatum": None,
             "documentnummer": None,
             "registratiedatum": None,
-            "beginGeldigheid": None,
+            "beginGeldigheid": "2021-02-28",
             "eindGeldigheid": None,
             "_embedded": {
                 "wijken": [
@@ -950,7 +950,7 @@ class TestEmbedTemporalTables:
                         "id": "03630012052035.1",
                         "code": "A01",
                         "naam": "Burgwallen-Nieuwe Zijde",
-                        "beginGeldigheid": None,
+                        "beginGeldigheid": "2021-02-28",
                         "eindGeldigheid": None,
                         "ligtInStadsdeelId": "03630000000018",
                     }
@@ -1006,7 +1006,7 @@ class TestEmbedTemporalTables:
                         "id": "0363100012061164.3",
                         "ligtInBouwblokId": "03630012096483",
                         "naam": "Voorbeeldpand",
-                        "beginGeldigheid": None,
+                        "beginGeldigheid": "2021-02-28T10:00:00",
                         "eindGeldigheid": None,
                         "heeftDossierId": "GV00000406",
                     }
@@ -1037,7 +1037,7 @@ class TestEmbedTemporalTables:
                                 "volgnummer": 2,
                             },
                         },
-                        "beginGeldigheid": None,
+                        "beginGeldigheid": "2021-02-28",
                         "code": None,
                         "eindGeldigheid": None,
                         "geometrie": None,
@@ -1074,7 +1074,7 @@ class TestEmbedTemporalTables:
                                 "naam": None,
                                 "code": None,
                                 "geometrie": None,
-                                "beginGeldigheid": None,
+                                "beginGeldigheid": "2021-06-11",
                                 "eindGeldigheid": None,
                                 "ligtInWijkId": "03630012052035",
                                 "_embedded": {
@@ -1098,7 +1098,7 @@ class TestEmbedTemporalTables:
                                                     },
                                                     # wijken is excluded (repeated relation)
                                                 },
-                                                "beginGeldigheid": None,
+                                                "beginGeldigheid": "2021-02-28",
                                                 "code": "A",
                                                 "documentdatum": None,
                                                 "documentnummer": None,
@@ -1142,7 +1142,7 @@ class TestEmbedTemporalTables:
                                                 "volgnummer": 1,
                                             },
                                         },
-                                        "beginGeldigheid": None,
+                                        "beginGeldigheid": "2021-02-28",
                                         "code": "A01",
                                         "eindGeldigheid": None,
                                         "id": "03630012052035.1",
@@ -1192,9 +1192,9 @@ class TestEmbedTemporalTables:
                     "volgnummer": 1,
                 },
             },
-            "beginGeldigheid": None,
+            "beginGeldigheid": "2021-02-28",
             "code": None,
-            "eindGeldigheid": None,
+            "eindGeldigheid": "2021-06-11",
             "geometrie": None,
             "id": "03630000000078.1",
             "ligtInWijkId": "03630012052035",
@@ -1244,8 +1244,8 @@ class TestEmbedTemporalTables:
                         "id": "03630000000078.1",
                         "naam": None,
                         "code": None,
-                        "beginGeldigheid": None,
-                        "eindGeldigheid": None,
+                        "beginGeldigheid": "2021-02-28",
+                        "eindGeldigheid": "2021-06-11",
                         "geometrie": None,
                         "ligtInWijkId": "03630012052035",
                     },
@@ -1268,7 +1268,7 @@ class TestEmbedTemporalTables:
                         "id": "03630000000078.2",
                         "code": None,
                         "naam": None,
-                        "beginGeldigheid": None,
+                        "beginGeldigheid": "2021-06-11",
                         "eindGeldigheid": None,
                         "geometrie": None,
                         "ligtInWijkId": "03630012052035",
@@ -1296,7 +1296,7 @@ class TestEmbedTemporalTables:
                                 "volgnummer": 1,
                             },
                         },
-                        "beginGeldigheid": None,
+                        "beginGeldigheid": "2021-02-28",
                         "code": "A01",
                         "eindGeldigheid": None,
                         "id": "03630012052035.1",
@@ -1315,7 +1315,7 @@ class TestEmbedTemporalTables:
                                     },
                                     # wijken is excluded here (forward/reverse relation loop)
                                 },
-                                "beginGeldigheid": None,
+                                "beginGeldigheid": "2021-02-28",
                                 "code": "A",
                                 "documentdatum": None,
                                 "documentnummer": None,
@@ -1381,9 +1381,9 @@ class TestEmbedTemporalTables:
                         "volgnummer": 1,
                     },
                 },
-                "beginGeldigheid": None,
+                "beginGeldigheid": "2021-02-28",
                 "code": None,
-                "eindGeldigheid": None,
+                "eindGeldigheid": "2021-06-11",
                 "geometrie": None,
                 "id": "03630000000078.1",
                 "ligtInWijkId": "03630012052035",
@@ -1418,8 +1418,8 @@ class TestEmbedTemporalTables:
             "geometrie": None,
             "naam": None,
             "code": None,
-            "eindGeldigheid": None,
-            "beginGeldigheid": None,
+            "eindGeldigheid": "2021-06-11",
+            "beginGeldigheid": "2021-02-28",
             "id": "03630000000078.1",
             "ligtInWijkId": "03630012052035",
             "_embedded": {
@@ -1447,7 +1447,7 @@ class TestEmbedTemporalTables:
             "geometrie": None,
             "id": "03630950000000.1",
             "eindGeldigheid": None,
-            "beginGeldigheid": None,
+            "beginGeldigheid": "2021-02-28",
             "naam": None,
             "registratiedatum": None,
         }
@@ -1478,15 +1478,15 @@ class TestEmbedTemporalTables:
                         "title": "03630000000078.1",
                         "volgnummer": 1,
                         "identificatie": "03630000000078",
-                        "beginGeldigheid": "2020-01-04",
-                        "eindGeldigheid": None,
+                        "beginGeldigheid": "2021-03-04",  # from relation!
+                        "eindGeldigheid": None,  # from relation!
                     },
                 ],
             },
             "geometrie": None,
             "id": "03630950000000.1",
             "eindGeldigheid": None,
-            "beginGeldigheid": None,
+            "beginGeldigheid": "2021-02-28",
             "naam": None,
             "registratiedatum": None,
         }
@@ -1564,7 +1564,7 @@ class TestEmbedTemporalTables:
                     "naam": None,
                     "geometrie": None,
                     "eindGeldigheid": None,
-                    "beginGeldigheid": None,
+                    "beginGeldigheid": "2021-06-11",
                     "id": "03630000000078.2",
                     "ligtInWijkId": "03630012052035.1",
                     "_embedded": {
@@ -2000,7 +2000,7 @@ class TestExportFormats:
         # fields don't include bestaatUitBuurten
         assert data == (
             "Registratiedatum,Naam,Begingeldigheid,Eindgeldigheid,Geometrie,Id\r\n"
-            ",,,,,03630950000000.1\r\n"
+            ",,2021-02-28,,,03630950000000.1\r\n"
         )
 
     DETAIL_FORMATS = {

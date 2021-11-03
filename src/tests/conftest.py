@@ -12,7 +12,7 @@ from django.contrib.gis.geos import GEOSGeometry, Point
 from django.core.handlers.wsgi import WSGIRequest
 from django.db import connection
 from django.utils.functional import SimpleLazyObject
-from django.utils.timezone import get_current_timezone
+from django.utils.timezone import get_current_timezone, make_aware
 from jwcrypto.jwt import JWT
 from rest_framework.request import Request
 from rest_framework.test import APIClient, APIRequestFactory
@@ -24,6 +24,8 @@ from tests.test_rest_framework_dso.models import Actor, Category, Location, Movi
 from tests.utils import api_request_with_scopes, to_drf_request
 
 HERE = Path(__file__).parent
+DATE_2021_FEB = make_aware(datetime(2021, 2, 28, 10, 0))
+DATE_2021_JUNE = make_aware(datetime(2021, 6, 11, 10, 0))
 
 
 @pytest.fixture()
@@ -971,12 +973,15 @@ def buurten_data(buurten_model) -> DynamicModel:
         id="03630000000078.1",
         identificatie="03630000000078",
         volgnummer=1,
+        begin_geldigheid=DATE_2021_FEB,
+        eind_geldigheid=DATE_2021_JUNE,  # Historical record!
         ligt_in_wijk_id="03630012052035.1",
     )
     return buurten_model.objects.create(
         id="03630000000078.2",
         identificatie="03630000000078",
         volgnummer=2,
+        begin_geldigheid=DATE_2021_JUNE,
         ligt_in_wijk_id="03630012052035.1",
     )
 
@@ -987,6 +992,7 @@ def bouwblokken_data(bouwblokken_model, buurten_data) -> DynamicModel:
         id="03630012096483.1",
         identificatie="03630012096483",
         volgnummer=1,
+        begin_geldigheid=DATE_2021_FEB,
         ligt_in_buurt_id="03630000000078.2",  # example (not actual)
     )
 
@@ -995,8 +1001,9 @@ def bouwblokken_data(bouwblokken_model, buurten_data) -> DynamicModel:
 def panden_data(panden_model, dossiers_model, bouwblokken_data):
     panden_model.objects.create(
         id="0363100012061164.3",
-        volgnummer=3,
         identificatie="0363100012061164",
+        volgnummer=3,
+        begin_geldigheid=DATE_2021_FEB,
         naam="Voorbeeldpand",
         ligt_in_bouwblok_id="03630012096483.1",
         heeft_dossier_id="GV00000406",
@@ -1009,9 +1016,10 @@ def wijken_data(wijken_model, stadsdelen_data) -> DynamicModel:
     return wijken_model.objects.create(
         id="03630012052035.1",
         identificatie="03630012052035",
+        volgnummer=1,
+        begin_geldigheid=DATE_2021_FEB,
         naam="Burgwallen-Nieuwe Zijde",
         code="A01",
-        volgnummer=1,
         ligt_in_stadsdeel=stadsdelen_data,
     )
 
@@ -1022,6 +1030,7 @@ def stadsdelen_data(stadsdelen_model) -> DynamicModel:
         id="03630000000018.1",
         identificatie="03630000000018",
         volgnummer=1,
+        begin_geldigheid=DATE_2021_FEB,
         naam="Centrum",
         code="A",
     )
@@ -1030,7 +1039,10 @@ def stadsdelen_data(stadsdelen_model) -> DynamicModel:
 @pytest.fixture()
 def ggwgebieden_data(ggwgebieden_model, buurten_data):
     ggwgebieden_model.objects.create(
-        id="03630950000000.1", identificatie="03630950000000", volgnummer=1
+        id="03630950000000.1",
+        identificatie="03630950000000",
+        volgnummer=1,
+        begin_geldigheid=DATE_2021_FEB,
     )
     ggwgebieden_model.bestaat_uit_buurten.through.objects.create(
         id="22",
@@ -1044,7 +1056,10 @@ def ggwgebieden_data(ggwgebieden_model, buurten_data):
 @pytest.fixture()
 def ggpgebieden_data(ggpgebieden_model, buurten_data):
     ggpgebieden_model.objects.create(
-        id="03630950000000.1", identificatie="03630950000000", volgnummer=1
+        id="03630950000000.1",
+        identificatie="03630950000000",
+        volgnummer=1,
+        begin_geldigheid=DATE_2021_FEB,
     )
     ggpgebieden_model.bestaat_uit_buurten.through.objects.create(
         id="33",
@@ -1052,7 +1067,7 @@ def ggpgebieden_data(ggpgebieden_model, buurten_data):
         bestaat_uit_buurten_id="03630000000078.1",
         bestaat_uit_buurten_identificatie="03630000000078",
         bestaat_uit_buurten_volgnummer=1,
-        begin_geldigheid="2020-01-04",
+        begin_geldigheid="2021-03-04",
         eind_geldigheid=None,
     )
 
