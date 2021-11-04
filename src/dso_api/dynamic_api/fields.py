@@ -6,9 +6,10 @@ from more_ds.network.url import URL
 from more_itertools import first
 from rest_framework import serializers
 from rest_framework.reverse import reverse
-from schematools.types import Temporal
+from schematools.types import DatasetTableSchema
 from schematools.utils import to_snake_case
 
+from .temporal import TemporalTableQuery
 from .utils import split_on_separator
 
 
@@ -17,11 +18,11 @@ class TemporalHyperlinkedRelatedField(serializers.HyperlinkedRelatedField):
 
     Used for forward relations in serializers."""
 
-    def __init__(self, temporal: Temporal, *args, **kwargs):
+    def __init__(self, table_schema: DatasetTableSchema, *args, **kwargs):
         # Init adds temporal definitions at construction, removing runtime model lookups.
         # It also allows the PK optimization to be used.
         super().__init__(*args, **kwargs)
-        self.temporal = temporal
+        self.table_schema = table_schema
 
     def use_pk_only_optimization(self):
         return True  # only need to have an "id" here.
@@ -40,14 +41,13 @@ class TemporalHyperlinkedRelatedField(serializers.HyperlinkedRelatedField):
             view_name, kwargs={self.lookup_url_kwarg: id_value}, request=request, format=format
         )
 
-        if request.table_temporal_slice is None:
-            key = self.temporal.identifier
-            value = id_version
-        else:
-            key = request.table_temporal_slice["key"]
-            value = request.table_temporal_slice["value"]
-
-        return URL(base_url) // {key: value}
+        temporal = TemporalTableQuery(request, self.table_schema)
+        url_args = (
+            temporal.url_parameters  # e.g. {"geldigOp": ...}
+            if temporal.slice_dimension
+            else {self.table_schema.temporal.identifier: id_version}
+        )
+        return URL(base_url) // url_args
 
 
 class TemporalReadOnlyField(serializers.ReadOnlyField):
@@ -60,10 +60,9 @@ class TemporalReadOnlyField(serializers.ReadOnlyField):
         """Remove the version number from the relation value,
         typically done for RELATION_identificatie, RELATION_volgnummer fields.
         """
-        request = self.context["request"]
-        if request.versioned:
-            value = split_on_separator(value)[0]
-        return value
+        # Split unconditionally. This field type should only be used
+        # when the target model is a temporal relationship.
+        return split_on_separator(value)[0]
 
 
 class AzureBlobFileField(serializers.ReadOnlyField):
