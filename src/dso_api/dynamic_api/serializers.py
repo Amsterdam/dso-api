@@ -318,8 +318,12 @@ class DynamicSerializer(DSOModelSerializer):
         As the field name doesn't reference the model field directly,
         DRF assumes it's an "@property" on the model.
         """
-        forward_map = model_class._meta._forward_fields_map.get(field_name)
-        if forward_map and isinstance(forward_map, models.ForeignKey):
+        model_field = model_class._meta._forward_fields_map.get(field_name)
+        if (
+            model_field is not None
+            and isinstance(model_field, models.ForeignKey)
+            and model_field.related_model.is_temporal()
+        ):
             return TemporalReadOnlyField, {}
         else:
             return super().build_property_field(field_name, model_class)
@@ -964,8 +968,7 @@ def _build_href_field(
     """Generate a Hyperlink related field, or one with temporal handling.
     Use the 'lookup_field' argument to change the source of the hyperlink ID.
     """
-    temporal: Optional[Temporal] = target_model.table_schema().temporal
-
+    table_schema = target_model.table_schema()
     href_kwargs = dict(
         view_name=get_view_name(target_model, "detail"),
         read_only=True,  # avoids having to add a queryset
@@ -973,9 +976,9 @@ def _build_href_field(
         lookup_field=lookup_field,
         **kwargs,
     )
-    if temporal is not None:
+    if table_schema.temporal is not None:
         # Temporal version that splits the ID
-        return TemporalHyperlinkedRelatedField(temporal=temporal, **href_kwargs)
+        return TemporalHyperlinkedRelatedField(table_schema=table_schema, **href_kwargs)
     else:
         return HyperlinkedRelatedField(**href_kwargs)
 

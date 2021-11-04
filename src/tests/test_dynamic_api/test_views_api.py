@@ -1543,7 +1543,7 @@ class TestEmbedTemporalTables:
                     "eindGeldigheid": None,
                     "beginGeldigheid": "2021-06-11",
                     "id": "03630000000078.2",
-                    "ligtInWijkId": "03630012052035.1",
+                    "ligtInWijkId": "03630012052035",
                     "_embedded": {
                         "ligtInWijk": None,
                     },

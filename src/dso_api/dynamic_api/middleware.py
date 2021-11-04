@@ -29,34 +29,3 @@ class DatasetMiddleware(MiddlewareMixin):
         # get_token_scopes is a data attribute, not a method.
         scopes = request.get_token_scopes
         request.user_scopes = UserScopes(request.GET, scopes, self.all_profiles)
-
-
-class TemporalTableMiddleware(MiddlewareMixin):
-    """
-    Assign `versioned`, `table_version` and `temporal_slice` to request.
-    """
-
-    def process_request(self, request):
-        request.versioned = False
-        request.table_version = None
-        request.table_temporal_slice = None
-
-    def process_view(self, request, view_func, view_args, view_kwargs):
-        try:
-            if not view_func.cls.model.is_temporal():
-                return None
-        except AttributeError:
-            return None
-
-        request.versioned = True
-        table = view_func.cls.model.table_schema()
-        if version := request.GET.get(table.temporal.identifier):
-            request.table_version = version
-
-        for key, fields in table.temporal.dimensions.items():
-            if request.GET.get(key):
-                request.table_temporal_slice = dict(
-                    key=key, value=request.GET.get(key), fields=fields
-                )
-
-        return None
