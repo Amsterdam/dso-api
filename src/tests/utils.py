@@ -6,7 +6,6 @@ from xml.etree import ElementTree as ET
 
 import orjson
 from django.apps import apps
-from django.contrib.auth.models import AnonymousUser
 from django.http.response import HttpResponseBase
 from django.utils.functional import SimpleLazyObject
 from rest_framework.request import Request
@@ -125,7 +124,6 @@ def api_request_with_scopes(scopes) -> Request:
     request.accept_crs = None  # for DSOSerializer, expects to be used with DSOViewMixin
     request.response_content_crs = None
 
-    request.user = AnonymousUser()
     request.user_scopes = UserScopes(
         query_params=request.GET,
         request_scopes=scopes,
