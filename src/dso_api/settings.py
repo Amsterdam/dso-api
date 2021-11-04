@@ -58,8 +58,6 @@ TIME_ZONE = "Europe/Amsterdam"
 # -- Application definition
 
 INSTALLED_APPS = [
-    "django.contrib.auth",
-    "django.contrib.contenttypes",
     "django.contrib.staticfiles",
     "django.contrib.gis",
     "django.contrib.postgres",
@@ -87,7 +85,6 @@ MIDDLEWARE = [
 
 AUTHENTICATION_BACKENDS = [
     "schematools.contrib.django.auth_backend.ProfileAuthorizationBackend",
-    "django.contrib.auth.backends.ModelBackend",
 ]
 
 if DEBUG:
@@ -111,7 +108,6 @@ TEMPLATES = [
             "context_processors": [
                 "django.template.context_processors.debug",
                 "django.template.context_processors.request",
-                "django.contrib.messages.context_processors.messages",
             ],
         },
     },
