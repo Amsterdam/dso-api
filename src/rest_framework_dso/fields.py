@@ -267,6 +267,7 @@ class EmbeddedManyToManyRelField(EmbeddedManyToManyField):
     except that the relation to the through table is followed backwards.
     """
 
+    @cached_property
     def related_id_field(self) -> Optional[str]:
         # This causes the queryset to be constructed as:
         # self.related_model.objects.filter({forward_through_field}__{identifierfield}__in=[PKs])
