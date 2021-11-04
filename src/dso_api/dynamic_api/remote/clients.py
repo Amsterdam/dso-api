@@ -278,6 +278,39 @@ class HCBRKClient(RemoteClient):
                 )
             return self.__http_pool
 
+    _ALLOWED_PARAMS = frozenset(
+        (
+            # Allowed search fields. These are handled by the remote.
+            "postcode",
+            "kadastraleAanduiding",
+            "nummeraanduidingIdentificatie",
+            # Generic parameters. Note: doesn't include filters.
+            # TODO add _sort, which isn't implemented yet.
+            "_fields",
+            "_format",
+        )
+    )
+
+    def _make_url(self, path: str, query_params: dict) -> str:
+        # Kadaster handles the search parameters in a different way than we do.
+        # Add support for [eq] by stripping it off field parameters,
+        # bail for anything we don't allow, else pass the parameters on.
+
+        EQ_OP = "[eq]"
+
+        def strip_eq(param):
+            if not param.startswith("_") and param.endswith(EQ_OP):
+                return param[: -len(EQ_OP)]
+            return param
+
+        query_params = {strip_eq(p): value for p, value in query_params.items()}
+
+        not_allowed = [p for p in query_params if p not in self._ALLOWED_PARAMS]
+        if not_allowed:
+            not_allowed = ",".join(repr(p) for p in not_allowed)
+            raise PermissionDenied(f"Query parameters {not_allowed} not allowed")
+        return super()._make_url(path, query_params)
+
 
 def make_client(endpoint_url: str, table_schema: DatasetTableSchema) -> RemoteClient:
     """Construct client for a remote API."""

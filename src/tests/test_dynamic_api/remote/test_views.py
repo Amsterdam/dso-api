@@ -712,6 +712,32 @@ def test_haalcentraalbrk_geojson(
     assert rounder(plaatscoordinaten["coordinates"]) == [5.966022, 52.164126]
 
 
+@pytest.mark.django_db
+def test_hcbrk_listing_by_bsn(api_client, fetch_auth_token, router, hcbrk_dataset, urllib3_mocker):
+    """Searching by BSN should not be allowed."""
+
+    def respond(request):
+        raise Exception("don't call me")
+
+    router.reload()
+    urllib3_mocker.add_callback(
+        "GET",
+        "/esd/bevragen/v1/kadastraalonroerendezaken",
+        callback=respond,
+        content_type="application/json",
+    )
+
+    url = reverse(
+        "dynamic_api:haalcentraalbrk-kadastraalonroerendezaken-list",
+    )
+    token = fetch_auth_token(["BRK/RSN"])
+    response = api_client.get(
+        url, {"burgerservicenummer": "1234567890"}, HTTP_AUTHORIZATION=f"Bearer {token}"
+    )
+    data = read_response_json(response)
+    assert response.status_code == 403, data
+
+
 REMOTE_SCHEMA = DatasetTableSchema.from_dict(
     {
         "id": "mytable",
