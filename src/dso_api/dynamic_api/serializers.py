@@ -789,7 +789,9 @@ def _build_serializer_embedded_field(
     serializer_part.add_embedded_field(camel_name, embedded_field)
 
 
-def _through_serializer_factory(m2m_field: models.ManyToManyField) -> type[ThroughSerializer]:
+def _through_serializer_factory(  # noqa: C901
+    m2m_field: models.ManyToManyField,
+) -> type[ThroughSerializer]:
     """Generate the DRF serializer class for a M2M model.
 
     This works directly on the database fields of the through model,
