@@ -20,5 +20,5 @@ const ui = SwaggerUIBundle({
 /// Initiate Swagger UI with extra options.
 ui.initOAuth({
     clientId: swagger_settings["clientId"],
-    scopes: swagger_settings["clientId"] + "/.default"
+    scopes: swagger_settings["scopes"]
 })

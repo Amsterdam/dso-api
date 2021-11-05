@@ -21,7 +21,7 @@ env = environ.Env()
 BASE_DIR = Path(__file__).parents[1]
 DEBUG = env.bool("DJANGO_DEBUG", True)
 
-CLOUD_ENV = env.str("CLOUD_ENV", "unspecified")
+CLOUD_ENV = env.str("CLOUD_ENV", "default")
 DJANGO_LOG_LEVEL = env.str("DJANGO_LOG_LEVEL", "INFO")
 DSO_API_LOG_LEVEL = env.str("DSO_API_LOG_LEVEL", "INFO")
 DSO_API_AUDIT_LOG_LEVEL = env.str("DSO_API_AUDIT_LOG_LEVEL", "INFO")
@@ -34,6 +34,13 @@ DATAPUNT_API_URL = env.str("DATAPUNT_API_URL", "https://api.data.amsterdam.nl/")
 SCHEMA_URL = env.str("SCHEMA_URL", "https://schemas.data.amsterdam.nl/datasets/")
 PROFILES_URL = env.str("PROFILES_URL", "https://schemas.data.amsterdam.nl/profiles/")
 SCHEMA_DEFS_URL = env.str("SCHEMA_DEFS_URL", "https://schemas.data.amsterdam.nl/schema")
+
+# Authorization settings
+OAUTH_URL = env.str(
+    "OAUTH_URL", "https://iam.amsterdam.nl/auth/realms/datapunt-ad/protocol/openid-connect/"
+)
+OAUTH_DEFAULT_SCOPE = env.str("OAUTH_DEFAULT_SCOPE", None)
+OAUTH_CLIENT_ID = os.getenv("OAUTH_CLIENT_ID", "dso-api-open-api")
 
 # -- Azure specific settings
 
@@ -265,10 +272,6 @@ if CLOUD_ENV.lower().startswith("azure"):
 
 # -- Third party app settings
 
-# Azure settings
-AZURE_AD_TENANT_ID = os.getenv("AZURE_AD_TENANT_ID", None)
-AZURE_AD_CLIENT_ID = os.getenv("AZURE_AD_CLIENT_ID", None)
-
 # Dynamicaly import Azure Blob connections from environment
 for key, value in env.ENVIRON.items():
     if key.startswith("AZURE_BLOB_"):
@@ -348,7 +351,8 @@ These are located at:
     "SCHEMA_PATH_PREFIX": r"^/v?\d+(\.\d+)?/",  # strip /v1/ from tags.
     "SWAGGER_UI_SETTINGS": {
         "oauth2RedirectUrl": f"{DATAPUNT_API_URL}v1/oauth2-redirect.html",
-        "clientId": AZURE_AD_CLIENT_ID,
+        "clientId": OAUTH_CLIENT_ID,
+        "scopes": OAUTH_DEFAULT_SCOPE,
     },
 }
 
@@ -377,7 +381,7 @@ JWKS_TEST_KEY = """
 
 DATAPUNT_AUTHZ = {
     "JWKS": os.getenv("PUB_JWKS", JWKS_TEST_KEY),
-    "JWKS_URL": os.getenv("KEYCLOAK_JWKS_URL"),
+    "JWKS_URL": os.getenv("OAUTH_JWKS_URL"),
     # "ALWAYS_OK": True if DEBUG else False,
     "ALWAYS_OK": False,
     "MIN_INTERVAL_KEYSET_UPDATE": 30 * 60,  # 30 minutes
