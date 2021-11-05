@@ -44,55 +44,27 @@ class DynamicApiSchemaGenerator(DSOSchemaGenerator):
     """
 
     # Provide the missing data that DRF get_schema_view() doesn't yet offer
-    if settings.AZURE_AD_CLIENT_ID and settings.AZURE_AD_TENANT_ID:
-        # Configure Azure Specific OAuth2 settings.
-        authorization_url = "https://login.microsoftonline.com/{}/oauth2/v2.0/authorize".format(
-            settings.AZURE_AD_TENANT_ID
-        )
-        schema_overrides = {
-            "security": [{"oauth2": []}],
-            "components": {
-                "securitySchemes": {
-                    "oauth2": {
-                        "type": "oauth2",
-                        "flows": {
-                            "implicit": {
-                                "authorizationUrl": authorization_url,
-                                "scopes": {
-                                    f"{settings.AZURE_AD_CLIENT_ID}/.default": "Toegang applicatie"
-                                },
-                            }
-                        },
-                    }
+    defaultScope = {}
+    if settings.OAUTH_DEFAULT_SCOPE:
+        defaultScope = {settings.OAUTH_DEFAULT_SCOPE: "Toegang Applicatie"}
+    schema_overrides = {
+        # While drf_spectacular parses authentication_classes, it won't
+        # recognize oauth2 nor detect a remote authenticator. Adding manually:
+        "security": [{"oauth2": []}],
+        "components": {
+            "securitySchemes": {
+                "oauth2": {
+                    "type": "oauth2",
+                    "flows": {
+                        "implicit": {
+                            "authorizationUrl": settings.OAUTH_URL,
+                            "scopes": defaultScope,
+                        }
+                    },
                 }
-            },
-        }
-    else:
-        schema_overrides = {
-            # While drf_spectacular parses authentication_classes, it won't
-            # recognize oauth2 nor detect a remote authenticator. Adding manually:
-            "security": [{"oauth2": []}],
-            "components": {
-                "securitySchemes": {
-                    "oauth2": {
-                        "type": "oauth2",
-                        "flows": {
-                            "implicit": {
-                                "authorizationUrl": f"{settings.DATAPUNT_API_URL}oauth2/authorize",
-                                "scopes": {
-                                    "HR/R": "Toegang HR",
-                                    "BRK/RSN": "Bevragen Natuurlijke Kadastrale Subjecten.",
-                                    "BRK/RS": "Bevragen Kadastrale Subjecten.",
-                                    "BRK/RO": "Read kadastraal object",
-                                    "BRP/R": "Basisregister personen",
-                                    "FP/MDW": "Functieprofiel medewerker",
-                                },
-                            }
-                        },
-                    }
-                }
-            },
-        }
+            }
+        },
+    }
 
     if not settings.DEBUG:
         schema_overrides["servers"] = [{"url": settings.DATAPUNT_API_URL}]
