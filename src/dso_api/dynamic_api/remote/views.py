@@ -2,8 +2,10 @@
 Currently it mainly performs authorization, data retrieval, and schema validation.
 """
 import logging
+from typing import Optional
 
 from django.core.exceptions import ImproperlyConfigured
+from more_ds.network.url import URL
 from rest_framework import status
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
@@ -42,7 +44,7 @@ class RemoteViewSet(DSOViewMixin, ViewSet):
     client: clients.RemoteClient = None
     serializer_class = None
     pagination_class = None
-    table_schema = None
+    table_schema: Optional[DatasetTableSchema] = None
 
     # The 'bronhouder' of the associated dataset
     authorization_grantor: str = None
@@ -90,7 +92,41 @@ class RemoteViewSet(DSOViewMixin, ViewSet):
         # TODO: add pagination:
         # paginator = self.pagination_class()
         # paginator.get_paginated_response(serializer.data)
-        return Response(serializer.data)
+
+        # Work around the serializer producing the wrong format.
+        # TODO: fix the serializer instead? What we get from the Kadaster remote
+        #  looks more what we want than what comes out of the serializer.
+        #  Is something wrong with BRP remote output?
+        data = serializer.data
+
+        id_field = self.table_schema.identifier[0]
+        schema = data[0]["schema"] if data else None
+        url = self.request.build_absolute_uri(self.request.path)
+
+        for row in data:
+            del row["schema"]
+            ident = row[id_field]
+
+            row["_links"] = {
+                "schema": schema,
+                "self": {
+                    "href": URL(url) / ident,
+                    "title": ident,
+                },
+            }
+
+        data = {
+            "_embedded": {
+                self.table_schema.name: data,
+            },
+            "_links": {
+                "self": {
+                    "href": url,
+                },
+            },
+        }
+
+        return Response(data)
 
     def retrieve(self, request, *args, **kwargs):
         """The GET request for detail"""
