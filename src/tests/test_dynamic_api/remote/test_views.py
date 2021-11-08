@@ -713,6 +713,33 @@ def test_haalcentraalbrk_geojson(
 
 
 @pytest.mark.django_db
+def test_hcbrk_listing(api_client, fetch_auth_token, router, hcbrk_dataset, urllib3_mocker):
+    """HCBRK listings should have the right format."""
+
+    def respond(request):
+        return 200, {}, (HCBRK_FILES / "hcbrk_onroerendezaak_list.json").read_text()
+
+    router.reload()
+    urllib3_mocker.add_callback(
+        "GET",
+        "/esd/bevragen/v1/kadastraalonroerendezaken",
+        callback=respond,
+        content_type="application/json",
+    )
+
+    url = reverse(
+        "dynamic_api:haalcentraalbrk-kadastraalonroerendezaken-list",
+    )
+    token = fetch_auth_token(["BRK/RSN"])
+    response = api_client.get(url, {}, HTTP_AUTHORIZATION=f"Bearer {token}")
+    data = read_response_json(response)
+    assert response.status_code == 200, data
+
+    expect = json.loads((HCBRK_FILES / "dso_onroerendezaak_list.json").read_text())
+    assert data == expect
+
+
+@pytest.mark.django_db
 def test_hcbrk_listing_by_bsn(api_client, fetch_auth_token, router, hcbrk_dataset, urllib3_mocker):
     """Searching by BSN should not be allowed."""
 
