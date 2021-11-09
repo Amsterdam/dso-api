@@ -44,7 +44,7 @@ class APIIndexView(APIView):
         ]
 
     def get_related_apis(self, ds: Dataset, base: str) -> list[dict]:
-        """ Get list of other APIs exposing the same dataset """
+        """Get list of other APIs exposing the same dataset"""
         return []
 
     def get(self, request, *args, **kwargs):

@@ -531,7 +531,7 @@ class DSOSerializer(ExpandableSerializer, serializers.Serializer):
 
     @cached_property
     def _url_content_fields(self) -> list[URLField]:
-        """ indicates if model contains a URLField type so the content can be URL encoded """
+        """indicates if model contains a URLField type so the content can be URL encoded"""
         return [
             field_name
             for field_name, field_class in self.fields.items()

@@ -287,7 +287,7 @@ def afval_adresloopafstand(afval_adresloopafstand_model):
 
 @pytest.fixture()
 def bommen_schema_json() -> dict:
-    """Fixture to return the schema json for """
+    """Fixture to return the schema json for"""
     path = HERE / "files/bommen.json"
     return json.loads(path.read_text())
 
@@ -304,7 +304,7 @@ def bommen_dataset(bommen_schema) -> Dataset:
 
 @pytest.fixture()
 def bommen_v2_schema_json() -> dict:
-    """Fixture to return the schema json for """
+    """Fixture to return the schema json for"""
     path = HERE / "files/bommen@2.0.0.json"
     return json.loads(path.read_text())
 
@@ -578,7 +578,7 @@ def vestiging_models(vestiging_dataset, dynamic_models):
 
 @pytest.fixture
 def fetch_tokendata():
-    """ Fixture to create valid token data, scopes is flexible """
+    """Fixture to create valid token data, scopes is flexible"""
 
     def _fetcher(scopes):
         now = int(time.time())
@@ -594,7 +594,7 @@ def fetch_tokendata():
 
 @pytest.fixture
 def fetch_auth_token(fetch_tokendata):
-    """ Fixture to create an auth token, scopes is flexible """
+    """Fixture to create an auth token, scopes is flexible"""
 
     def _fetcher(scopes):
         kid = "2aedafba-8170-4064-b704-ce92b7c89cc6"
@@ -621,7 +621,7 @@ def fietspaaltjes_model(fietspaaltjes_dataset, dynamic_models):
 
 @pytest.fixture()
 def fietspaaltjes_schema_json() -> dict:
-    """Fixture to return the schema json for """
+    """Fixture to return the schema json for"""
     path = HERE / "files/fietspaaltjes.json"
     return json.loads(path.read_text())
 
@@ -683,7 +683,7 @@ def fietspaaltjes_model_no_display(fietspaaltjes_dataset_no_display, dynamic_mod
 
 @pytest.fixture()
 def fietspaaltjes_schema_json_no_display() -> dict:
-    """Fixture to return the schema json for """
+    """Fixture to return the schema json for"""
     path = HERE / "files/fietspaaltjes_no_display.json"
     return json.loads(path.read_text())
 
@@ -729,7 +729,7 @@ def fietspaaltjes_data_no_display(fietspaaltjes_model_no_display):
 
 @pytest.fixture()
 def explosieven_schema_json() -> dict:
-    """ Fixture to return the schema json for """
+    """Fixture to return the schema json for"""
     path = HERE / "files/explosieven.json"
     return json.loads(path.read_text())
 
@@ -810,7 +810,7 @@ def download_url_dataset(download_url_schema_json) -> Dataset:
 
 @pytest.fixture()
 def meldingen_schema_json() -> dict:
-    """ Fixture to return the schema json """
+    """Fixture to return the schema json"""
     path = HERE / "files/meldingen.json"
     return json.loads(path.read_text())
 
@@ -840,7 +840,7 @@ def gebieden_models(
 
 @pytest.fixture()
 def gebieden_schema_json() -> dict:
-    """ Fixture to return the schema json """
+    """Fixture to return the schema json"""
     path = HERE / "files/gebieden.json"
     return json.loads(path.read_text())
 
@@ -869,7 +869,7 @@ def gebieden_dataset(_gebieden_dataset, woningbouwplannen_dataset) -> Dataset:
 
 @pytest.fixture()
 def bag_schema_json() -> dict:
-    """ Fixture to return the schema json """
+    """Fixture to return the schema json"""
     path = HERE / "files/bag.json"
     return json.loads(path.read_text())
 
@@ -886,7 +886,7 @@ def bag_dataset(gebieden_dataset, bag_schema_json) -> Dataset:
 
 @pytest.fixture()
 def woningbouwplannen_schema_json() -> dict:
-    """ Fixture to return the schema json """
+    """Fixture to return the schema json"""
     path = HERE / "files/woningbouwplannen.json"
     return json.loads(path.read_text())
 
