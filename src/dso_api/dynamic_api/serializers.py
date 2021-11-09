@@ -35,7 +35,6 @@ from schematools.contrib.django.models import (
     DynamicModel,
     LooseRelationField,
     LooseRelationManyToManyField,
-    get_field_schema,
 )
 from schematools.contrib.django.signals import dynamic_models_removed
 from schematools.types import DatasetTableSchema, Json, Temporal
@@ -238,7 +237,7 @@ class DynamicSerializer(DSOModelSerializer):
         # (typically one field, except when field.source has a dotted notation)
         model_fields = get_source_model_fields(self, field_name, field)
         for model_field in model_fields:
-            field_schema = get_field_schema(model_field)
+            field_schema = DynamicModel.get_field_schema(model_field)
 
             # Check access
             permission = user_scopes.has_field_access(field_schema)
@@ -716,7 +715,7 @@ def serializer_factory(
             continue
 
         field_camel_case = toCamelCase(model_field.name)
-        field_schema = get_field_schema(model_field)
+        field_schema = DynamicModel.get_field_schema(model_field)
 
         # Exclusions:
         if (
@@ -938,7 +937,7 @@ def _build_serializer_field(  # noqa: C901
         return
     elif isinstance(model_field, ForeignObjectRel):
         # Reverse relations, are only added as embedded field when there is an explicit declaration
-        field_schema = get_field_schema(model_field)
+        field_schema = DynamicModel.get_field_schema(model_field)
         additional_relation = field_schema.reverse_relation
         if additional_relation is not None and additional_relation.format != "summary":
             _build_serializer_embedded_field(serializer_part, model_field, nesting_level)
@@ -946,7 +945,7 @@ def _build_serializer_field(  # noqa: C901
     elif not isinstance(model_field, models.AutoField):
         # Regular fields
         # Re-map file to correct serializer
-        field_schema = get_field_schema(model_field)
+        field_schema = DynamicModel.get_field_schema(model_field)
         if field_schema.type == "string" and field_schema.format == "blob-azure":
             _build_serializer_blob_field(serializer_part, model_field, field_schema)
             return
@@ -983,7 +982,7 @@ def _build_serializer_embedded_field(
         source=model_field.name,
     )
     # Attach the field schema so access rules can be applied here.
-    embedded_field.field_schema = get_field_schema(model_field)
+    embedded_field.field_schema = DynamicModel.get_field_schema(model_field)
 
     camel_name = toCamelCase(model_field.name)
     serializer_part.add_embedded_field(camel_name, embedded_field)
@@ -1200,7 +1199,7 @@ def _build_serializer_reverse_fk_field(
     model_field: models.ManyToOneRel,
 ):
     """Build the ManyToOneRel field"""
-    field_schema = get_field_schema(model_field)
+    field_schema = DynamicModel.get_field_schema(model_field)
     additional_relation = field_schema.reverse_relation
     if additional_relation is None:
         return

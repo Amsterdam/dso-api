@@ -38,7 +38,7 @@ from django.utils.functional import cached_property
 from gisserver.exceptions import InvalidParameterValue, PermissionDenied
 from gisserver.features import ComplexFeatureField, FeatureField, FeatureType, ServiceDescription
 from gisserver.views import WFSView
-from schematools.contrib.django.models import Dataset, DynamicModel, get_field_schema
+from schematools.contrib.django.models import Dataset, DynamicModel
 from schematools.types import DatasetTableSchema
 
 from dso_api.dynamic_api.datasets import get_active_datasets
@@ -281,7 +281,7 @@ class DatasetWFSView(CheckPermissionsMixin, WFSView):
         fields = []
         other_geo_fields = []
         for model_field in model._meta.get_fields():
-            if not self.request.user_scopes.has_field_access(get_field_schema(model_field)):
+            if not self.request.user_scopes.has_field_access(model.get_field_schema(model_field)):
                 continue
 
             if isinstance(model_field, models.ForeignKey):
@@ -347,7 +347,7 @@ class DatasetWFSView(CheckPermissionsMixin, WFSView):
             for model_field in model._meta.get_fields()  # type: models.Field
             if not model_field.is_relation
             and not isinstance(model_field, GeometryField)
-            and user_scopes.has_field_access(get_field_schema(model_field))
+            and user_scopes.has_field_access(model.get_field_schema(model_field))
         ]
 
     def get_embedded_fields(self, relation_name, model, pk_attr=None) -> list[FieldDef]:
@@ -366,7 +366,7 @@ class DatasetWFSView(CheckPermissionsMixin, WFSView):
             for model_field in model._meta.get_fields()  # type: models.Field
             if not model_field.is_relation
             and not isinstance(model_field, GeometryField)
-            and user_scopes.has_field_access(get_field_schema(model_field))
+            and user_scopes.has_field_access(model.get_field_schema(model_field))
         ]
 
     def _get_geometry_fields(self, model) -> list[GeometryField]:

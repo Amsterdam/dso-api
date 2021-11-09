@@ -9,7 +9,7 @@ from django.shortcuts import get_object_or_404
 from django.urls.base import reverse
 from django.views.generic import TemplateView
 from rest_framework.status import HTTP_204_NO_CONTENT
-from schematools.contrib.django.models import Dataset, get_field_schema
+from schematools.contrib.django.models import Dataset
 from schematools.exceptions import SchemaObjectNotFound
 from schematools.types import DatasetTableSchema
 from schematools.utils import to_snake_case
@@ -157,7 +157,7 @@ class DatasetMVTView(CheckPermissionsMixin, MVTView):
         return tuple(
             f.name
             for f in self.model._meta.get_fields()
-            if f.name != geom_name and user_scopes.has_field_access(get_field_schema(f))
+            if f.name != geom_name and user_scopes.has_field_access(self.model.get_field_schema(f))
         )
 
     @property
@@ -175,7 +175,7 @@ class DatasetMVTView(CheckPermissionsMixin, MVTView):
 
         # Check whether the geometry field can be accessed, otherwise reading MVT is pointless.
         model_field = self.model._meta.get_field(self.vector_tile_geom_name)
-        field_schema = get_field_schema(model_field)
+        field_schema = self.model.get_field_schema(model_field)
         if not self.request.user_scopes.has_field_access(field_schema):
             raise PermissionDenied()
 

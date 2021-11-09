@@ -14,7 +14,7 @@ from django.core.exceptions import FieldDoesNotExist
 from django.db import models
 from django.db.models.fields.related import ForeignKey
 from django_postgres_unlimited_varchar import UnlimitedCharField
-from schematools.contrib.django.models import DynamicModel, get_field_schema
+from schematools.contrib.django.models import DynamicModel
 from schematools.utils import to_snake_case, toCamelCase
 
 from rest_framework_dso import filters as dso_filters
@@ -91,7 +91,7 @@ def filterset_factory(model: type[DynamicModel]) -> type[DynamicFilterSet]:  # n
 
             # In case of a composite FK, get the loose relations
             # associated with this ForeignKey object and add dotted syntax.
-            schema_field = get_field_schema(f)
+            schema_field = DynamicModel.get_field_schema(f)
             prefix = f.attname.removesuffix("_id")
 
             for s in schema_field.subfields:
