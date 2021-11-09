@@ -110,19 +110,19 @@ class TestDSOViewMixin:
     """Prove that the DSO view mixin logic is used within the dynamic API."""
 
     def test_not_supported_crs(self, api_client, afval_dataset, filled_router):
-        """Prove that invalid CRS leads to a 406 status """
+        """Prove that invalid CRS leads to a 406 status"""
         url = reverse("dynamic_api:afvalwegingen-containers-list")
         response = api_client.get(url, HTTP_ACCEPT_CRS="EPSG:2000")
         assert response.status_code == 406, response.data
 
     def test_bogus_crs(self, api_client, afval_dataset, filled_router):
-        """Prove that invalid CRS leads to a 406 status """
+        """Prove that invalid CRS leads to a 406 status"""
         url = reverse("dynamic_api:afvalwegingen-containers-list")
         response = api_client.get(url, HTTP_ACCEPT_CRS="nonsense")
         assert response.status_code == 406, response.data
 
     def test_response_has_crs_from_accept_crs(self, api_client, afval_dataset, filled_router):
-        """Prove that response has a CRS header taken from the Accept-Crs header """
+        """Prove that response has a CRS header taken from the Accept-Crs header"""
         url = reverse("dynamic_api:afvalwegingen-containers-list")
         response = api_client.get(url, HTTP_ACCEPT_CRS="EPSG:4258")
         assert response.status_code == 200, response.data
@@ -132,7 +132,7 @@ class TestDSOViewMixin:
     def test_response_has_crs_from_accept_crs_empty_data(
         self, api_client, afval_dataset, filled_router
     ):
-        """Prove that response has a CRS header taken from the Accept-Crs header """
+        """Prove that response has a CRS header taken from the Accept-Crs header"""
         url = reverse("dynamic_api:afvalwegingen-containers-list")
         response = api_client.get(url, HTTP_ACCEPT_CRS="EPSG:4258")
         assert response.status_code == 200, response.data
@@ -140,7 +140,7 @@ class TestDSOViewMixin:
         assert CRS.from_string("EPSG:4258") == CRS.from_string(response["Content-Crs"])
 
     def test_response_has_crs_from_content(self, api_client, afval_container, filled_router):
-        """Prove that response has a CRS header taken from the Accept-Crs header """
+        """Prove that response has a CRS header taken from the Accept-Crs header"""
         url = reverse("dynamic_api:afvalwegingen-containers-list")
         response = api_client.get(url)
         assert response.status_code == 200, response.data
@@ -151,7 +151,7 @@ class TestDSOViewMixin:
 # TODO: Make parametrized, too much repetion. JJM
 @pytest.mark.django_db
 class TestAuth:
-    """ Test authorization """
+    """Test authorization"""
 
     def test_mandatory_filters(
         self,
@@ -604,7 +604,7 @@ class TestAuth:
     def test_auth_on_dataset_protects_detail_view(
         self, api_client, fetch_auth_token, afval_schema, afval_container, filled_router
     ):
-        """ Prove that protection at datasets level protects detail views """
+        """Prove that protection at datasets level protects detail views"""
         patch_dataset_auth(afval_schema, auth=["BAG/R"])
         url = reverse("dynamic_api:afvalwegingen-containers-detail", args=[1])
         response = api_client.get(url)
@@ -613,7 +613,7 @@ class TestAuth:
     def test_auth_on_datasettable_protects_detail_view(
         self, api_client, afval_schema, fetch_auth_token, afval_container, filled_router
     ):
-        """ Prove that protection at datasets level protects detail views """
+        """Prove that protection at datasets level protects detail views"""
         patch_table_auth(afval_schema, "containers", auth=["BAG/R"])
         url = reverse("dynamic_api:afvalwegingen-containers-detail", args=[1])
 
@@ -623,7 +623,7 @@ class TestAuth:
     def test_auth_on_dataset_detail_with_token_for_valid_scope(
         self, api_client, fetch_auth_token, afval_schema, afval_container, filled_router
     ):
-        """ Prove that protection at datasets level protects detail views """
+        """Prove that protection at datasets level protects detail views"""
         patch_dataset_auth(afval_schema, auth=["BAG/R"])
         url = reverse("dynamic_api:afvalwegingen-containers-detail", args=[1])
         token = fetch_auth_token(["BAG/R"])
@@ -782,7 +782,7 @@ class TestAuth:
 # @pytest.mark.usefixtures("reloadrouter")
 @pytest.mark.django_db
 class TestEmbedTemporalTables:
-    """NOTE: the 'data' fixtures are """
+    """NOTE: the 'data' fixtures are"""
 
     def test_detail_expand_true_for_fk_relation(
         self, api_client, buurten_data, wijken_data, filled_router

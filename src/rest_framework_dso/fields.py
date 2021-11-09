@@ -159,7 +159,7 @@ class AbstractEmbeddedField:
 
     @cached_property
     def is_loose(self) -> bool:
-        """ Signals that the related field is not a real FK or M2M """
+        """Signals that the related field is not a real FK or M2M"""
         return not isinstance(self.source_field, (RelatedField, ForeignObjectRel))
 
     @cached_property

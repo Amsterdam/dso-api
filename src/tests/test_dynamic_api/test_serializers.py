@@ -530,7 +530,7 @@ class TestDynamicSerializer:
 
     @staticmethod
     def test_display_title_present(drf_request, fietspaaltjes_model, fietspaaltjes_data):
-        """ Prove that title element shows display value if display field is specified """
+        """Prove that title element shows display value if display field is specified"""
 
         FietsplaatjesSerializer = serializer_factory(fietspaaltjes_model)
 
@@ -544,7 +544,7 @@ class TestDynamicSerializer:
     def test_no_display_title_present(
         drf_request, fietspaaltjes_model_no_display, fietspaaltjes_data_no_display
     ):
-        """ Prove that title element is omitted if display field is not specified """
+        """Prove that title element is omitted if display field is not specified"""
 
         FietsplaatjesSerializer = serializer_factory(fietspaaltjes_model_no_display)
         fietsplaatjes_serializer = FietsplaatjesSerializer(
@@ -555,13 +555,13 @@ class TestDynamicSerializer:
 
     @staticmethod
     def test_uri_field_present(explosieven_model):
-        """ Prove that a URLfield is stored as a charfield and default 200 in length """
+        """Prove that a URLfield is stored as a charfield and default 200 in length"""
         assert explosieven_model._meta.get_field("pdf").get_internal_type() == "CharField"
         assert explosieven_model._meta.get_field("pdf").max_length == 200
 
     @staticmethod
     def test_uri_field_can_validate(drf_request, explosieven_model, explosieven_data):
-        """ Prove that a URLfield can be validated by the URIValidator """
+        """Prove that a URLfield can be validated by the URIValidator"""
 
         ExplosievenSerializer = serializer_factory(explosieven_model)
         explosieven_serializer = ExplosievenSerializer(
@@ -573,7 +573,7 @@ class TestDynamicSerializer:
 
     @staticmethod
     def test_uri_field_is_URL_encoded(drf_request, explosieven_model, explosieven_data):
-        """ Prove that a URLfield content is URL encoded i.e. space to %20 """
+        """Prove that a URLfield content is URL encoded i.e. space to %20"""
 
         ExplosievenSerializer = serializer_factory(explosieven_model)
         explosieven_serializer = ExplosievenSerializer(
@@ -589,7 +589,7 @@ class TestDynamicSerializer:
     def test_email_field_can_validate_with_validator(
         drf_request, explosieven_model, explosieven_data
     ):
-        """ Prove that a EmailField can be validated by the EmailValidator """
+        """Prove that a EmailField can be validated by the EmailValidator"""
 
         ExplosievenSerializer = serializer_factory(explosieven_model)
         explosieven_serializer = ExplosievenSerializer(
@@ -611,7 +611,7 @@ class TestDynamicSerializer:
     def test_field_permissions_display_first_letter(
         drf_request, fietspaaltjes_schema, fietspaaltjes_model, fietspaaltjes_data
     ):
-        """ Prove that only first letter is seen in Profile allows only it."""
+        """Prove that only first letter is seen in Profile allows only it."""
         # does not have scope for Dataset or Table
         drf_request.user_scopes = UserScopes(
             {},
@@ -649,7 +649,7 @@ class TestDynamicSerializer:
     def test_field_permissions_display_first_letter_many(
         drf_request, fietspaaltjes_schema, fietspaaltjes_model, fietspaaltjes_data
     ):
-        """ Prove that only first letter is seen in Profile allows only it in listing. """
+        """Prove that only first letter is seen in Profile allows only it in listing."""
         drf_request.user_scopes = UserScopes(
             {},
             request_scopes=[],
@@ -686,7 +686,7 @@ class TestDynamicSerializer:
 
     @staticmethod
     def test_download_url_field(drf_request, download_url_dataset, filled_router):
-        """ Prove that download url will contain correct identifier. """
+        """Prove that download url will contain correct identifier."""
 
         dossier_model = filled_router.all_models["download"]["dossiers"]
         dossier_model.objects.create(
@@ -714,7 +714,7 @@ class TestDynamicSerializer:
 
     @staticmethod
     def test_download_url_field_empty_field(drf_request, download_url_dataset, filled_router):
-        """ Prove that empty download url not crashing api. """
+        """Prove that empty download url not crashing api."""
 
         dossier_model = filled_router.all_models["download"]["dossiers"]
         dossier_model.objects.create(
