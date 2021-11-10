@@ -923,6 +923,16 @@ def dossiers_model(bag_dataset, dynamic_models):
 
 
 @pytest.fixture()
+def verblijfsobjecten_model(bag_dataset, dynamic_models):
+    return dynamic_models["bag"]["verblijfsobjecten"]
+
+
+@pytest.fixture()
+def nummeraanduidingen_model(bag_dataset, dynamic_models):
+    return dynamic_models["bag"]["nummeraanduidingen"]
+
+
+@pytest.fixture()
 def bouwblokken_model(gebieden_dataset, dynamic_models):
     return dynamic_models["gebieden"]["bouwblokken"]
 
@@ -1092,3 +1102,59 @@ def parkeerwacht_profile() -> ProfileSchema:
     path = HERE / "files/profiles/parkeerwacht.json"
     schema = ProfileSchema.from_dict(json.loads(path.read_text()))
     return Profile.create_for_schema(schema)
+
+
+@pytest.fixture()
+def nummeraanduidingen_data(nummeraanduidingen_model):
+    nummeraanduidingen_model.objects.create(identificatie="nm1", volgnummer=1, id="a")
+    nummeraanduidingen_model.objects.create(identificatie="nm1", volgnummer=2, id="b")
+    nummeraanduidingen_model.objects.create(identificatie="nm2", volgnummer=1, id="c")
+
+
+@pytest.fixture()
+def verblijfsobjecten_data(verblijfsobjecten_model, buurten_data, nummeraanduidingen_data):
+    """Verblijfsobjecten with hoofdadres and ligtInBuurt FKs populated"""
+    verblijfsobjecten_model.objects.create(
+        id="a",
+        identificatie="vo1",
+        volgnummer=1,
+        ligt_in_buurt_id="03630000000078.1",
+        ligt_in_buurt_identificatie="03630000000078",
+        ligt_in_buurt_volgnummer=1,
+        heeft_hoofdadres_id="nm1.1",
+        heeft_hoofdadres_identificatie="nm1",
+        heeft_hoofdadres_volgnummer=1,
+    )
+    verblijfsobjecten_model.objects.create(
+        id="b",
+        identificatie="vo2",
+        volgnummer=1,
+        ligt_in_buurt_id="03630000000078.2",
+        ligt_in_buurt_identificatie="03630000000078",
+        ligt_in_buurt_volgnummer=2,
+        heeft_hoofdadres_id="nm1.2",
+        heeft_hoofdadres_identificatie="nm1",
+        heeft_hoofdadres_volgnummer=2,
+    )
+    verblijfsobjecten_model.objects.create(
+        id="c",
+        identificatie="vo3",
+        volgnummer=1,
+        ligt_in_buurt_id="03630000000078.2",
+        ligt_in_buurt_identificatie="03630000000078",
+        ligt_in_buurt_volgnummer=2,
+        heeft_hoofdadres_id="nm2.1",
+        heeft_hoofdadres_identificatie="nm2",
+        heeft_hoofdadres_volgnummer=1,
+    )
+    verblijfsobjecten_model.objects.create(
+        id="d",
+        identificatie="vo4",
+        volgnummer=1,
+        ligt_in_buurt_id="03630000000078.2",
+        ligt_in_buurt_identificatie="XXX",
+        ligt_in_buurt_volgnummer=6,
+        heeft_hoofdadres_id="nm2.1",
+        heeft_hoofdadres_identificatie="nm3",
+        heeft_hoofdadres_volgnummer=5,
+    )

@@ -436,3 +436,74 @@ class TestDynamicFilterSet:
         data = read_response_json(response)
         assert len(data["_embedded"]["parkeervakken"]) == 1
         assert data["_embedded"]["parkeervakken"][0]["id"] == "121138489006"
+
+    @staticmethod
+    def test_subobject_filters(verblijfsobjecten_model, verblijfsobjecten_data):
+        VerblijfsObjecten = verblijfsobjecten_model
+        filterset_class = filterset_factory(VerblijfsObjecten)
+
+        # dotted filters are generated on the FK subobjects only
+        expected_fields = {
+            ("heeftHoofdadres.volgnummer", "heeft_hoofdadres_volgnummer"),
+            ("heeftHoofdadres.volgnummer[gt]", "heeft_hoofdadres_volgnummer"),
+            ("heeftHoofdadres.volgnummer[gte]", "heeft_hoofdadres_volgnummer"),
+            ("heeftHoofdadres.volgnummer[in]", "heeft_hoofdadres_volgnummer"),
+            ("heeftHoofdadres.volgnummer[isnull]", "heeft_hoofdadres_volgnummer"),
+            ("heeftHoofdadres.volgnummer[lt]", "heeft_hoofdadres_volgnummer"),
+            ("heeftHoofdadres.volgnummer[lte]", "heeft_hoofdadres_volgnummer"),
+            ("heeftHoofdadres.volgnummer[not]", "heeft_hoofdadres_volgnummer"),
+            ("heeftHoofdadres.identificatie", "heeft_hoofdadres_identificatie"),
+            ("heeftHoofdadres.identificatie[isempty]", "heeft_hoofdadres_identificatie"),
+            ("heeftHoofdadres.identificatie[isnull]", "heeft_hoofdadres_identificatie"),
+            ("heeftHoofdadres.identificatie[like]", "heeft_hoofdadres_identificatie"),
+            ("heeftHoofdadres.identificatie[not]", "heeft_hoofdadres_identificatie"),
+            ("ligtInBuurt.identificatie", "ligt_in_buurt_identificatie"),
+            ("ligtInBuurt.identificatie[isempty]", "ligt_in_buurt_identificatie"),
+            ("ligtInBuurt.identificatie[isnull]", "ligt_in_buurt_identificatie"),
+            ("ligtInBuurt.identificatie[like]", "ligt_in_buurt_identificatie"),
+            ("ligtInBuurt.identificatie[not]", "ligt_in_buurt_identificatie"),
+            ("ligtInBuurt.volgnummer", "ligt_in_buurt_volgnummer"),
+            ("ligtInBuurt.volgnummer[gt]", "ligt_in_buurt_volgnummer"),
+            ("ligtInBuurt.volgnummer[gte]", "ligt_in_buurt_volgnummer"),
+            ("ligtInBuurt.volgnummer[in]", "ligt_in_buurt_volgnummer"),
+            ("ligtInBuurt.volgnummer[isnull]", "ligt_in_buurt_volgnummer"),
+            ("ligtInBuurt.volgnummer[lt]", "ligt_in_buurt_volgnummer"),
+            ("ligtInBuurt.volgnummer[lte]", "ligt_in_buurt_volgnummer"),
+            ("ligtInBuurt.volgnummer[not]", "ligt_in_buurt_volgnummer"),
+        }
+
+        assert expected_fields.issubset(
+            [(k, v.field_name) for k, v in filterset_class.get_filters().items()]
+        )
+
+        assert VerblijfsObjecten.objects.count() == 4
+
+        filterset = filterset_class({"heeftHoofdadres.volgnummer": 1})
+        assert filterset.is_valid(), filterset.errors
+
+        result = filterset.filter_queryset(VerblijfsObjecten.objects.all())
+        assert result.count() == 2, result
+
+        filterset = filterset_class({"heeftHoofdadres.identificatie": "nm2"})
+        assert filterset.is_valid(), filterset.errors
+
+        result = filterset.filter_queryset(VerblijfsObjecten.objects.all())
+        assert result.count() == 1, result
+
+        filterset = filterset_class({"ligtInBuurt.identificatie[isnull]": True})
+        assert filterset.is_valid(), filterset.errors
+
+        result = filterset.filter_queryset(VerblijfsObjecten.objects.all())
+        assert result.count() == 0, result
+
+        filterset = filterset_class({"ligtInBuurt.volgnummer[gte]": 2})
+        assert filterset.is_valid(), filterset.errors
+
+        result = filterset.filter_queryset(VerblijfsObjecten.objects.all())
+        assert result.count() == 3, result
+
+        filterset = filterset_class({"ligtInBuurt.identificatie[like]": "X*X"})
+        assert filterset.is_valid(), filterset.errors
+
+        result = filterset.filter_queryset(VerblijfsObjecten.objects.all())
+        assert result.count() == 1, result

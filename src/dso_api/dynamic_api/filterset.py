@@ -7,12 +7,15 @@ This file provides the translation and required bits for dynamic models.
 """
 import logging
 import re
+from contextlib import suppress
 
 from django.contrib.gis.db.models.fields import MultiPolygonField, PolygonField
 from django.contrib.postgres.fields import ArrayField
+from django.core.exceptions import FieldDoesNotExist
 from django.db import models
+from django.db.models.fields.related import ForeignKey
 from django_postgres_unlimited_varchar import UnlimitedCharField
-from schematools.contrib.django.models import DynamicModel
+from schematools.contrib.django.models import DynamicModel, get_field_schema
 from schematools.utils import to_snake_case, toCamelCase
 
 from rest_framework_dso import filters as dso_filters
@@ -32,6 +35,7 @@ DEFAULT_LOOKUPS_BY_TYPE = {
     models.CharField: _string_lookups,
     UnlimitedCharField: _string_lookups,
     models.IntegerField: _comparison_lookups + ["in"],
+    models.BigIntegerField: _comparison_lookups + ["in"],
     models.FloatField: _comparison_lookups + ["in"],
     models.DecimalField: _comparison_lookups + ["in"],
     models.DateField: _comparison_lookups,
@@ -72,19 +76,57 @@ class DynamicFilterSet(dso_filters.DSOFilterSet):
         return {filter_to_camel_case(attr_name): filter for attr_name, filter in filters.items()}
 
 
-def filterset_factory(model: type[DynamicModel]) -> type[DynamicFilterSet]:
+def filterset_factory(model: type[DynamicModel]) -> type[DynamicFilterSet]:  # noqa: C901
     """Generate the filterset based on the dynamic model."""
     # See https://django-filter.readthedocs.io/en/master/guide/usage.html on how filters are used.
     # Determine which fields are included:
     # Excluding geometry fields for now, as the default filter only performs exact matches.
     # This isn't useful for polygon fields, and excluding it avoids support issues later.
-    fields = {
-        f.attname: _get_field_lookups(f)
-        for f in model._meta.get_fields()
-        if isinstance(f, (models.fields.Field, models.ForeignKey))
-    }
 
-    filters = _generate_relation_filters(model)
+    filters = {}  # declared filters
+    fields = {}  # generated filters
+
+    # Generate the generated filters (and declared filters for FK sunfields)
+    for f in model._meta.get_fields():
+        if isinstance(f, models.fields.Field):
+            fields[f.attname] = _get_field_lookups(f)
+        if isinstance(f, ForeignKey):
+            fields[f.attname] = _get_field_lookups(f)  # backwards compat
+
+            # In case of a composite FK, get the loose relations
+            # associated with this ForeignKey object and add dotted syntax.
+            schema_field = get_field_schema(f)
+            prefix = f.attname.removesuffix("_id")
+            with suppress(ValueError):  # The schema field has no sub fields
+                for s in schema_field.sub_fields:
+                    related_field_name = to_snake_case(s.id)
+                    model_field_name = f"{prefix}_{related_field_name}"
+                    try:
+                        model_field = model._meta.get_field(model_field_name)
+                    except FieldDoesNotExist:
+                        # the field is not part of the compound identifier
+                        # we only support filtering on identifiers for now
+                        continue
+
+                    filter_class = dso_filters.DSOFilterSet.FILTER_DEFAULTS[model_field.__class__][
+                        "filter_class"
+                    ]
+
+                    for lookup in _get_field_lookups(model_field):
+                        sub_filter_name = f"{prefix}.{related_field_name}"
+                        if lookup not in ("contains", "exact"):
+                            sub_filter_name = f"{sub_filter_name}[{lookup}]"
+
+                        filters[sub_filter_name] = filter_class(
+                            field_name=model_field_name,
+                            lookup_expr=lookup,
+                            label=dso_filters.DSOFilterSet.FILTER_HELP_TEXT.get(
+                                filter_class, lookup
+                            ),
+                        )
+
+    # Generate the declared filters
+    filters.update(_generate_relation_filters(model))
     filters.update(_generate_additional_filters(model))
 
     # Generate the class
@@ -103,8 +145,8 @@ def _generate_relation_filters(model: type[DynamicModel]):  # noqa: C901
     fields = dict()
     filters = dict()
 
+    schema_fields = {f.name: f for f in model._table_schema.fields}
     for relation in model._meta.related_objects:
-        schema_fields = {f.name: f for f in model._table_schema.fields}
         if relation.name not in schema_fields:
             fields[relation.name] = ["exact"]
             continue
@@ -137,7 +179,7 @@ def _generate_relation_filters(model: type[DynamicModel]):  # noqa: C901
             for lookup_expr in filter_lookups:
                 # Generate set of filters per lookup (e.g. __lte, __gte etc)
                 subfilter_name = filter_name
-                if lookup_expr not in ["exact", "contains"]:
+                if lookup_expr not in ("exact", "contains"):
                     subfilter_name = f"{filter_name}[{lookup_expr}]"
 
                 filter_instance = filter_class(

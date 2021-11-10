@@ -1,6 +1,8 @@
 from django.contrib.gis.db import models as gis_models
 from django.contrib.postgres.fields.array import ArrayField
 from django.db import models
+from django.db.models.fields import BigIntegerField
+from django_filters.filters import NumberFilter
 from django_filters.rest_framework import FilterSet, filters
 from django_postgres_unlimited_varchar import UnlimitedCharField
 from rest_framework_gis.filters import GeometryFilter
@@ -64,6 +66,7 @@ class DSOFilterSet(FilterSet):
         },
         UnlimitedCharField: {"filter_class": ExactCharFilter},
         ArrayField: {"filter_class": CharArrayFilter},
+        BigIntegerField: {"filter_class": NumberFilter},
     }
 
     LOOKUP_HELP_TEXT = {
