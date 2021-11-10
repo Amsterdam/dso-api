@@ -13,7 +13,7 @@ jobs:
         runs-on: ubuntu-latest
         steps:
         - name: Call Azure
-          uses: tlrh314/pipelines@v2
+          uses: tlrh314/pipelines@v2.0
           with:
             azure-devops-project-url: ${{ secrets.AZURE_DEVOPS_URL }}
             azure-pipeline-name: ${{ secrets.AZURE_DEVOPS_PIPELINE }}
