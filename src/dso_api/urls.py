@@ -16,7 +16,10 @@ urlpatterns = [
         views.multiple_slashes,
         name="error-trailing-slashes",
     ),
-] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
 
 handler400 = views.bad_request
