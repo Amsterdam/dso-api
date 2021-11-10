@@ -17,6 +17,7 @@ from cachetools import LRUCache, cached
 from cachetools.keys import hashkey
 from django.core.exceptions import ImproperlyConfigured
 from django.db import models
+from django.db.models.fields import AutoFieldMixin
 from django.db.models.fields.related import RelatedField
 from django.db.models.fields.reverse_related import ForeignObjectRel
 from django.utils.functional import SimpleLazyObject, cached_property
@@ -585,6 +586,10 @@ def serializer_factory(
 
     # Parse fields for serializer
     for model_field in model._meta.get_fields():
+        if model_field.auto_created and isinstance(model_field, AutoFieldMixin):
+            # Don't want to render fields in the API which aren't part of the schema.
+            continue
+
         field_camel_case = toCamelCase(model_field.name)
         field_schema = get_field_schema(model_field)
 
@@ -797,9 +802,13 @@ def _through_serializer_factory(  # noqa: C901
         # second foreign key of the through model
         target_fk_name = m2m_field.m2m_reverse_field_name()
     except AttributeError as e:
-        # Adorn this exception with a clue about what we're trying to do,
-        # as a debugging aid for the occasional "'ManyToManyField' object has no attribute
-        # '_m2m_reverse_name_cache'".
+        # Adorn this exception with a clue about what we're trying to do.
+        # This exception happened when the URLConf import causes an exception during
+        # router initialization, which is silenced by runserver's autoreload code.
+        # It ends up as an error here because at the next (re)import,
+        # the M2M field is no longer able to match the models to it's foreign key instances,
+        # showing the error:
+        # "'ManyToManyField' object has no attribute '_m2m_reverse_name_cache'".
 
         # In Python 3.10, AttributeError has a name attribute, but we support 3.9.
         if "_m2m_reverse_name_cache" in str(e):
