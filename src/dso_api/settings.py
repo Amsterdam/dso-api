@@ -405,3 +405,9 @@ DATASETS_EXCLUDE = env.list("DATASETS_EXCLUDE", default=None)
 HAAL_CENTRAAL_API_KEY = os.getenv("HAAL_CENTRAAL_API_KEY", "UNKNOWN")
 HAAL_CENTRAAL_KEYFILE = os.getenv("HC_KEYFILE")
 HAAL_CENTRAAL_CERTFILE = os.getenv("HC_CERTFILE")
+
+SHELL_PLUS_POST_IMPORTS = (
+    "from django.apps.registry import apps",
+    "from dso_api.dynamic_api.filterset import filterset_factory",
+    "from pprint import pprint",
+)
