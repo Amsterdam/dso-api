@@ -13,7 +13,7 @@ jobs:
         runs-on: ubuntu-latest
         steps:
         - name: Call Azure
-          uses: Azure/pipelines@v1
+          uses: Azure/pipelines@c287b7e09c02338b6c5419f449481101eebe81f8
           with:
             azure-devops-project-url: ${{ secrets.AZURE_DEVOPS_URL }}
             azure-pipeline-name: ${{ secrets.AZURE_DEVOPS_PIPELINE }}
