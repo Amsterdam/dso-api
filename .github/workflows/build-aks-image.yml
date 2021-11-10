@@ -18,4 +18,4 @@ jobs:
             azure-devops-project-url: ${{ secrets.AZURE_DEVOPS_URL }}
             azure-pipeline-name: ${{ secrets.AZURE_DEVOPS_PIPELINE }}
             azure-devops-token: ${{ secrets.AZURE_DEVOPS_TOKEN }}
-            azure-pipeline-variables: '{ "environment": "test", "solution": "central" }'
+            azure-pipeline-variables: '{ "environment" : "test", "solution" : "central", "runBuildPush": "True", "runContainerScan" : "True" }'
