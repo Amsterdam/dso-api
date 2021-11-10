@@ -141,7 +141,15 @@ class DynamicRouter(routers.DefaultRouter):
             # This avoids a startup error for manage.py migrate
             return []
 
-        self._initialize_viewsets()
+        try:
+            self._initialize_viewsets()
+        except Exception:  # noqa: B902
+            # Cleanup a half-initialized state that would mess up the application.
+            # This happens in runserver's autoreload mode. The BaseReloader.run() code
+            # silences all URLConf exceptions in a `try: import urlconf; catch Exception: pass`.
+            # This could leave the Django models in an half-initialized state.
+            remove_dynamic_models()
+            raise
 
     def get_urls(self):
         """Add extra URLs beside the registered viewsets."""
