@@ -491,7 +491,7 @@ class TestAuth:
     ):
         """Prove that protected fields are shown
         with an auth scope and there is a valid token"""
-        patch_field_auth(afval_schema, "containers", "eigenaar naam", auth=["BAG/R"])
+        patch_field_auth(afval_schema, "containers", "eigenaar_naam", auth=["BAG/R"])
         url = reverse("dynamic_api:afvalwegingen-containers-list")
         token = fetch_auth_token(["BAG/R"])
         response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
@@ -506,7 +506,7 @@ class TestAuth:
     ):
         """Prove that protected fields are shown
         with an auth scope connected to Profile that gives access to specific field."""
-        patch_field_auth(afval_schema, "containers", "eigenaar naam", auth=["BAG/R"])
+        patch_field_auth(afval_schema, "containers", "eigenaar_naam", auth=["BAG/R"])
         models.Profile.create_for_schema(
             ProfileSchema.from_dict(
                 {
@@ -517,7 +517,7 @@ class TestAuth:
                             "tables": {
                                 "containers": {
                                     "fields": {
-                                        "eigenaar naam": "read",
+                                        "eigenaar_naam": "read",
                                     }
                                 }
                             }
@@ -540,7 +540,7 @@ class TestAuth:
     ):
         """Prove that protected fields are *not* shown
         with an auth scope and there is not a valid token"""
-        patch_field_auth(afval_schema, "containers", "eigenaar naam", auth=["BAG/R"])
+        patch_field_auth(afval_schema, "containers", "eigenaar_naam", auth=["BAG/R"])
         url = reverse("dynamic_api:afvalwegingen-containers-list")
         response = api_client.get(url)
         data = read_response_json(response)
@@ -581,10 +581,10 @@ class TestAuth:
             e_type="",
             kenteken="",
             opmerking="",
-            begin_tijd="00:00:00",
-            eind_tijd="23:59:00",
-            eind_datum=None,
-            begin_datum=None,
+            begintijd="00:00:00",
+            eindtijd="23:59:00",
+            einddatum=None,
+            begindatum=None,
         )
 
         # First fetch with BAG/R token

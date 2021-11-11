@@ -33,10 +33,10 @@
             "area": {
               "type": "string"
             },
-            "score 2013": {
+            "score_2013": {
               "type": "string"
             },
-            "score current": {
+            "score_current": {
               "type": "string"
             },
             "count": {

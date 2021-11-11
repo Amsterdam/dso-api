@@ -16,8 +16,8 @@
         "additionalFilters": {
           "regimes.inWerkingOp": {
             "type": "range",
-            "start": "regimes.begin tijd",
-            "end": "regimes.eind tijd"
+            "start": "regimes.begintijd",
+            "end": "regimes.eindtijd"
           }
         },
         "properties": {
@@ -44,7 +44,7 @@
             "type": "string",
             "description": ""
           },
-          "e type": {
+          "e_type": {
             "type": "string",
             "description": ""
           },
@@ -64,7 +64,7 @@
                   "type": "string",
                   "description": ""
                 },
-                "e type": {
+                "e_type": {
                   "type": "string",
                   "description": ""
                 },
@@ -80,19 +80,19 @@
                   "type": "string",
                   "description": ""
                 },
-                "begin tijd": {
+                "begintijd": {
                   "type": "time",
                   "description": ""
                 },
-                "eind tijd": {
+                "eindtijd": {
                   "type": "time",
                   "description": ""
                 },
-                "begin datum": {
+                "begindatum": {
                   "type": "date",
                   "description": ""
                 },
-                "eind datum": {
+                "einddatum": {
                   "type": "date",
                   "description": ""
                 },

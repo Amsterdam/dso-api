@@ -480,10 +480,10 @@ class TestDynamicSerializer:
             e_type="E6b",
             kenteken="69-SF-NT",
             opmerking="",
-            eind_tijd="23:59:00",
-            begin_tijd="00:00:00",
-            eind_datum=None,
-            begin_datum=None,
+            eindtijd="23:59:00",
+            begintijd="00:00:00",
+            einddatum=None,
+            begindatum=None,
         )
 
         ParkeervakSerializer = serializer_factory(parkeervakken_parkeervak_model)
@@ -519,11 +519,11 @@ class TestDynamicSerializer:
                     "aantal": None,
                     "eType": "E6b",
                     "kenteken": "69-SF-NT",
-                    "eindTijd": "23:59:00",
+                    "eindtijd": "23:59:00",
                     "opmerking": "",
-                    "beginTijd": "00:00:00",
-                    "eindDatum": None,
-                    "beginDatum": None,
+                    "begintijd": "00:00:00",
+                    "einddatum": None,
+                    "begindatum": None,
                 }
             ],
         }
