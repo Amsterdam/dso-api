@@ -37,10 +37,10 @@ class TestDynamicFilterSet:
             e_type="E9",
             kenteken="69-SF-NT",
             opmerking="",
-            eind_tijd="23:59:00",
-            begin_tijd="00:00:00",
-            eind_datum=None,
-            begin_datum=None,
+            eindtijd="23:59:00",
+            begintijd="00:00:00",
+            einddatum=None,
+            begindatum=None,
         )
         other_parkeervak = parkeervakken_parkeervak_model.objects.create(
             id="121138489006",
@@ -61,10 +61,10 @@ class TestDynamicFilterSet:
             e_type="E6b",
             kenteken="69-SF-NT",
             opmerking="",
-            eind_tijd="23:59:00",
-            begin_tijd="00:00:00",
-            eind_datum=None,
-            begin_datum=None,
+            eindtijd="23:59:00",
+            begintijd="00:00:00",
+            einddatum=None,
+            begindatum=None,
         )
 
         filterset_class = filterset_factory(Parkeervakken)
@@ -109,10 +109,10 @@ class TestDynamicFilterSet:
             e_type="",
             kenteken="",
             opmerking="",
-            begin_tijd="00:00:00",
-            eind_tijd="07:59:00",
-            eind_datum=None,
-            begin_datum=None,
+            begintijd="00:00:00",
+            eindtijd="07:59:00",
+            einddatum=None,
+            begindatum=None,
         )
         parkeervakken_regime_model.objects.create(
             id=3,
@@ -124,10 +124,10 @@ class TestDynamicFilterSet:
             e_type="E6b",
             kenteken="",
             opmerking="",
-            begin_tijd="08:00:00",
-            eind_tijd="09:59:00",
-            eind_datum=None,
-            begin_datum=None,
+            begintijd="08:00:00",
+            eindtijd="09:59:00",
+            einddatum=None,
+            begindatum=None,
         )
 
         parkeervakken_regime_model.objects.create(
@@ -140,10 +140,10 @@ class TestDynamicFilterSet:
             e_type="",
             kenteken="",
             opmerking="",
-            begin_tijd="10:00:00",
-            eind_tijd="23:59:00",
-            eind_datum=None,
-            begin_datum=None,
+            begintijd="10:00:00",
+            eindtijd="23:59:00",
+            einddatum=None,
+            begindatum=None,
         )
 
         extra_parkeervak = parkeervakken_parkeervak_model.objects.create(
@@ -165,10 +165,10 @@ class TestDynamicFilterSet:
             e_type="",
             kenteken="",
             opmerking="",
-            begin_tijd="00:00:00",
-            eind_tijd="23:59:00",
-            eind_datum=None,
-            begin_datum=None,
+            begintijd="00:00:00",
+            eindtijd="23:59:00",
+            einddatum=None,
+            begindatum=None,
         )
 
         exclude_parkeervak = parkeervakken_parkeervak_model.objects.create(
@@ -190,10 +190,10 @@ class TestDynamicFilterSet:
             e_type="",
             kenteken="",
             opmerking="",
-            begin_tijd="00:00:00",
-            eind_tijd="07:59:00",
-            eind_datum=None,
-            begin_datum=None,
+            begintijd="00:00:00",
+            eindtijd="07:59:00",
+            einddatum=None,
+            begindatum=None,
         )
         parkeervakken_regime_model.objects.create(
             id=6,
@@ -205,10 +205,10 @@ class TestDynamicFilterSet:
             e_type="E7",
             kenteken="",
             opmerking="",
-            begin_tijd="08:00:00",
-            eind_tijd="09:59:00",
-            eind_datum=None,
-            begin_datum=None,
+            begintijd="08:00:00",
+            eindtijd="09:59:00",
+            einddatum=None,
+            begindatum=None,
         )
 
         parkeervakken_regime_model.objects.create(
@@ -221,10 +221,10 @@ class TestDynamicFilterSet:
             e_type="",
             kenteken="",
             opmerking="",
-            begin_tijd="10:00:00",
-            eind_tijd="23:59:00",
-            eind_datum=None,
-            begin_datum=None,
+            begintijd="10:00:00",
+            eindtijd="23:59:00",
+            einddatum=None,
+            begindatum=None,
         )
 
         response = APIClient().get(
@@ -271,10 +271,10 @@ class TestDynamicFilterSet:
             e_type="E6b",
             kenteken="",
             opmerking="",
-            begin_tijd=None,
-            eind_tijd="10:00:00",
-            eind_datum=None,
-            begin_datum=None,
+            begintijd=None,
+            eindtijd="10:00:00",
+            einddatum=None,
+            begindatum=None,
         )
 
         response = APIClient().get(
@@ -321,10 +321,10 @@ class TestDynamicFilterSet:
             e_type="E6b",
             kenteken="",
             opmerking="",
-            begin_tijd="08:00:00",
-            eind_tijd=None,
-            eind_datum=None,
-            begin_datum=None,
+            begintijd="08:00:00",
+            eindtijd=None,
+            einddatum=None,
+            begindatum=None,
         )
 
         response = APIClient().get(
