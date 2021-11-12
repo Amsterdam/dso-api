@@ -15,7 +15,7 @@
         "additionalProperties": false,
         "required": [
           "schema",
-          "date modified",
+          "date_modified",
           "id",
           "code"
         ],
@@ -24,18 +24,18 @@
           "schema": {
             "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.0#/definitions/schema"
           },
-          "begin geldigheid": {
+          "begin_geldigheid": {
             "type": "string",
             "format": "date"
           },
-          "einde geldigheid": {
+          "einde_geldigheid": {
             "type": "string",
             "format": "date"
           },
           "geometrie": {
             "$ref": "https://geojson.org/schema/Geometry.json"
           },
-          "date modified": {
+          "date_modified": {
             "type": "string",
             "format": "date-time"
           },
@@ -45,7 +45,7 @@
           "code": {
             "type": "string"
           },
-          "ingang cyclus": {
+          "ingang_cyclus": {
             "type": "string",
             "format": "date"
           },
@@ -66,7 +66,7 @@
         "required": [
           "schema",
           "code",
-          "date modified"
+          "date_modified"
         ],
         "display": "code",
         "properties": {
@@ -79,7 +79,7 @@
           "omschrijving": {
             "type": "string"
           },
-          "date modified": {
+          "date_modified": {
             "type": "string",
             "format": "date-time"
           }
@@ -95,7 +95,7 @@
         "additionalProperties": false,
         "required": [
           "schema",
-          "date modified",
+          "date_modified",
           "id",
           "code",
           "vollcode",
@@ -107,18 +107,18 @@
           "schema": {
             "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.0#/definitions/schema"
           },
-          "begin geldigheid": {
+          "begin_geldigheid": {
             "type": "string",
             "format": "date"
           },
-          "einde geldigheid": {
+          "einde_geldigheid": {
             "type": "string",
             "format": "date"
           },
           "geometrie": {
             "$ref": "https://geojson.org/schema/Geometry.json"
           },
-          "date modified": {
+          "date_modified": {
             "type": "string",
             "format": "date-time"
           },
@@ -137,14 +137,14 @@
           "vervallen": {
             "type": "integer"
           },
-          "ingang cyclus": {
+          "ingang_cyclus": {
             "type": "string",
             "format": "date"
           },
-          "brondocument naam": {
+          "brondocument_naam": {
             "type": "string"
           },
-          "brondocument datum": {
+          "brondocument_datum": {
             "type": "string",
             "format": "date"
           },
@@ -176,18 +176,18 @@
           "naam",
           "code",
           "vollcode",
-          "date modified"
+          "date_modified"
         ],
         "display": "code",
         "properties": {
           "schema": {
             "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.0#/definitions/schema"
           },
-          "begin geldigheid": {
+          "begin_geldigheid": {
             "type": "string",
             "format": "date"
           },
-          "einde geldigheid": {
+          "einde_geldigheid": {
             "type": "string",
             "format": "date"
           },
@@ -203,18 +203,18 @@
           "vollcode": {
             "type": "string"
           },
-          "brondocument naam": {
+          "brondocument_naam": {
             "type": "string"
           },
-          "brondocument datum": {
+          "brondocument_datum": {
             "type": "string",
             "format": "date"
           },
-          "ingang cyclus": {
+          "ingang_cyclus": {
             "type": "string",
             "format": "date"
           },
-          "date modified": {
+          "date_modified": {
             "type": "string",
             "format": "date-time"
           },
@@ -240,7 +240,7 @@
           "id",
           "code",
           "naam",
-          "date modified",
+          "date_modified",
           "stadsdeel"
         ],
         "display": "code",
@@ -257,7 +257,7 @@
           "naam": {
             "type": "string"
           },
-          "date modified": {
+          "date_modified": {
             "type": "string",
             "format": "date-time"
           },
@@ -282,7 +282,7 @@
           "schema",
           "id",
           "naam",
-          "date modified"
+          "date_modified"
         ],
         "display": "naam",
         "properties": {
@@ -295,7 +295,7 @@
           "naam": {
             "type": "string"
           },
-          "date modified": {
+          "date_modified": {
             "type": "string",
             "format": "date-time"
           },
@@ -316,7 +316,7 @@
           "schema",
           "id",
           "code",
-          "date modified",
+          "date_modified",
           "naam"
         ],
         "display": "naam",
@@ -324,11 +324,11 @@
           "schema": {
             "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.0#/definitions/schema"
           },
-          "begin geldigheid": {
+          "begin_geldigheid": {
             "type": "string",
             "format": "date"
           },
-          "einde geldigheid": {
+          "einde_geldigheid": {
             "type": "string",
             "format": "date"
           },
@@ -338,7 +338,7 @@
           "code": {
             "type": "string"
           },
-          "date modified": {
+          "date_modified": {
             "type": "string",
             "format": "date-time"
           },
@@ -365,7 +365,7 @@
           "schema",
           "id",
           "naam",
-          "date modified"
+          "date_modified"
         ],
         "display": "naam",
         "properties": {
@@ -378,13 +378,13 @@
           "naam": {
             "type": "string"
           },
-          "gsg type": {
+          "gsg_type": {
             "type": "string"
           },
           "geometrie": {
             "$ref": "https://geojson.org/schema/Geometry.json"
           },
-          "date modified": {
+          "date_modified": {
             "type": "string",
             "format": "date-time"
           }
@@ -400,22 +400,22 @@
         "additionalProperties": false,
         "required": [
           "schema",
-          "landelijk id",
-          "indicatie geconstateerd",
-          "indicatie in onderzoek"
+          "landelijk_id",
+          "indicatie_geconstateerd",
+          "indicatie_in_onderzoek"
         ],
-        "display": "landelijk id",
+        "display": "landelijk_id",
         "properties": {
           "schema": {
             "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.0#/definitions/schema"
           },
-          "landelijk id": {
+          "landelijk_id": {
             "type": "string"
           },
-          "indicatie geconstateerd": {
+          "indicatie_geconstateerd": {
             "type": "integer"
           },
-          "indicatie in onderzoek": {
+          "indicatie_in_onderzoek": {
             "type": "integer"
           }
         }
@@ -431,46 +431,46 @@
         "required": [
           "schema",
           "id",
-          "date modified",
+          "date_modified",
           "status"
         ],
-        "display": "landelijk id",
+        "display": "landelijk_id",
         "properties": {
           "schema": {
             "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.0#/definitions/schema"
           },
-          "document mutatie": {
+          "document_mutatie": {
             "type": "string",
             "format": "date"
           },
-          "document nummer": {
+          "document_nummer": {
             "type": "string"
           },
-          "begin geldigheid": {
+          "begin_geldigheid": {
             "type": "string",
             "format": "date"
           },
-          "einde geldigheid": {
+          "einde_geldigheid": {
             "type": "string",
             "format": "date"
           },
           "id": {
             "type": "string"
           },
-          "date modified": {
+          "date_modified": {
             "type": "string",
             "format": "date-time"
           },
-          "landelijk id": {
+          "landelijk_id": {
             "type": "string"
           },
           "vervallen": {
             "type": "integer"
           },
-          "indicatie geconstateerd": {
+          "indicatie_geconstateerd": {
             "type": "integer"
           },
-          "indicatie in onderzoek": {
+          "indicatie_in_onderzoek": {
             "type": "integer"
           },
           "geometrie": {
@@ -500,35 +500,35 @@
         "required": [
           "schema",
           "id",
-          "landelijk id",
+          "landelijk_id",
           "huisnummer",
-          "date modified",
-          "openbare ruimte"
+          "date_modified",
+          "openbare_ruimte"
         ],
-        "display": "landelijk id",
+        "display": "landelijk_id",
         "properties": {
           "schema": {
             "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.0#/definitions/schema"
           },
-          "document mutatie": {
+          "document_mutatie": {
             "type": "string",
             "format": "date"
           },
-          "document nummer": {
+          "document_nummer": {
             "type": "string"
           },
-          "begin geldigheid": {
+          "begin_geldigheid": {
             "type": "string",
             "format": "date"
           },
-          "einde geldigheid": {
+          "einde_geldigheid": {
             "type": "string",
             "format": "date"
           },
           "id": {
             "type": "string"
           },
-          "landelijk id": {
+          "landelijk_id": {
             "type": "string"
           },
           "huisnummer": {
@@ -549,7 +549,7 @@
           "vervallen": {
             "type": "integer"
           },
-          "date modified": {
+          "date_modified": {
             "type": "string",
             "format": "date-time"
           },
@@ -561,7 +561,7 @@
             "type": "string",
             "relation": "bag:ligplaats"
           },
-          "openbare ruimte": {
+          "openbare_ruimte": {
             "type": "string",
             "relation": "bag:openbareruimte"
           },
@@ -573,7 +573,7 @@
             "type": "string",
             "relation": "bag:verblijfsobject"
           },
-          "type adres": {
+          "type_adres": {
             "type": "string"
           },
           "status": {
@@ -592,9 +592,9 @@
         "required": [
           "schema",
           "id",
-          "date modified",
+          "date_modified",
           "naam",
-          "naam nen",
+          "naam_nen",
           "woonplaats",
           "status"
         ],
@@ -603,28 +603,28 @@
           "schema": {
             "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.0#/definitions/schema"
           },
-          "document mutatie": {
+          "document_mutatie": {
             "type": "string",
             "format": "date"
           },
-          "document nummer": {
+          "document_nummer": {
             "type": "string"
           },
-          "begin geldigheid": {
+          "begin_geldigheid": {
             "type": "string",
             "format": "date"
           },
-          "einde geldigheid": {
+          "einde_geldigheid": {
             "type": "string",
             "format": "date"
           },
           "id": {
             "type": "string"
           },
-          "landelijk id": {
+          "landelijk_id": {
             "type": "string"
           },
-          "date modified": {
+          "date_modified": {
             "type": "string",
             "format": "date-time"
           },
@@ -634,7 +634,7 @@
           "naam": {
             "type": "string"
           },
-          "naam nen": {
+          "naam_nen": {
             "type": "string"
           },
           "vervallen": {
@@ -670,42 +670,42 @@
         "required": [
           "schema",
           "id",
-          "landelijk id",
-          "date modified"
+          "landelijk_id",
+          "date_modified"
         ],
-        "display": "landelijk id",
+        "display": "landelijk_id",
         "properties": {
           "schema": {
             "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.0#/definitions/schema"
           },
-          "document mutatie": {
+          "document_mutatie": {
             "type": "string",
             "format": "date"
           },
-          "document nummer": {
+          "document_nummer": {
             "type": "string"
           },
-          "begin geldigheid": {
+          "begin_geldigheid": {
             "type": "string",
             "format": "date"
           },
-          "einde geldigheid": {
+          "einde_geldigheid": {
             "type": "string",
             "format": "date"
           },
           "id": {
             "type": "string"
           },
-          "landelijk id": {
+          "landelijk_id": {
             "type": "string"
           },
           "bouwjaar": {
             "type": "integer"
           },
-          "laagste bouwlaag": {
+          "laagste_bouwlaag": {
             "type": "integer"
           },
-          "hoogste bouwlaag": {
+          "hoogste_bouwlaag": {
             "type": "integer"
           },
           "vervallen": {
@@ -714,7 +714,7 @@
           "geometrie": {
             "$ref": "https://geojson.org/schema/Geometry.json"
           },
-          "date modified": {
+          "date_modified": {
             "type": "string",
             "format": "date-time"
           },
@@ -731,7 +731,7 @@
           "ligging": {
             "type": "string"
           },
-          "type woonobject": {
+          "type_woonobject": {
             "type": "string"
           },
           "status": {
@@ -749,7 +749,7 @@
         "additionalProperties": false,
         "required": [
           "schema",
-          "date modified",
+          "date_modified",
           "id",
           "code",
           "naam",
@@ -760,18 +760,18 @@
           "schema": {
             "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.0#/definitions/schema"
           },
-          "begin geldigheid": {
+          "begin_geldigheid": {
             "type": "string",
             "format": "date"
           },
-          "einde geldigheid": {
+          "einde_geldigheid": {
             "type": "string",
             "format": "date"
           },
           "geometrie": {
             "$ref": "https://geojson.org/schema/Geometry.json"
           },
-          "date modified": {
+          "date_modified": {
             "type": "string",
             "format": "date-time"
           },
@@ -787,14 +787,14 @@
           "vervallen": {
             "type": "integer"
           },
-          "ingang cyclus": {
+          "ingang_cyclus": {
             "type": "string",
             "format": "date"
           },
-          "brondocument naam": {
+          "brondocument_naam": {
             "type": "string"
           },
-          "brondocument datum": {
+          "brondocument_datum": {
             "type": "string",
             "format": "date"
           },
@@ -815,46 +815,46 @@
         "required": [
           "schema",
           "id",
-          "date modified",
+          "date_modified",
           "status"
         ],
-        "display": "landelijk id",
+        "display": "landelijk_id",
         "properties": {
           "schema": {
             "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.0#/definitions/schema"
           },
-          "document mutatie": {
+          "document_mutatie": {
             "type": "string",
             "format": "date"
           },
-          "document nummer": {
+          "document_nummer": {
             "type": "string"
           },
-          "begin geldigheid": {
+          "begin_geldigheid": {
             "type": "string",
             "format": "date"
           },
-          "einde geldigheid": {
+          "einde_geldigheid": {
             "type": "string",
             "format": "date"
           },
           "id": {
             "type": "string"
           },
-          "landelijk id": {
+          "landelijk_id": {
             "type": "string"
           },
           "vervallen": {
             "type": "integer"
           },
-          "date modified": {
+          "date_modified": {
             "type": "string",
             "format": "date-time"
           },
-          "indicatie geconstateerd": {
+          "indicatie_geconstateerd": {
             "type": "integer"
           },
-          "indicatie in onderzoek": {
+          "indicatie_in_onderzoek": {
             "type": "integer"
           },
           "geometrie": {
@@ -885,7 +885,7 @@
           "schema",
           "id",
           "naam",
-          "date modified"
+          "date_modified"
         ],
         "display": "naam",
         "properties": {
@@ -901,7 +901,7 @@
           "geometrie": {
             "$ref": "https://geojson.org/schema/Geometry.json"
           },
-          "date modified": {
+          "date_modified": {
             "type": "string",
             "format": "date-time"
           }
@@ -918,9 +918,9 @@
         "required": [
           "schema",
           "id",
-          "landelijk id",
+          "landelijk_id",
           "vervallen",
-          "date modified",
+          "date_modified",
           "status",
           "gebruiksdoel",
           "toegang"
@@ -929,53 +929,53 @@
           "schema": {
             "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.0#/definitions/schema"
           },
-          "document mutatie": {
+          "document_mutatie": {
             "type": "string",
             "format": "date"
           },
-          "document nummer": {
+          "document_nummer": {
             "type": "string"
           },
-          "begin geldigheid": {
+          "begin_geldigheid": {
             "type": "string",
             "format": "date"
           },
-          "einde geldigheid": {
+          "einde_geldigheid": {
             "type": "string",
             "format": "date"
           },
           "id": {
             "type": "string"
           },
-          "landelijk id": {
+          "landelijk_id": {
             "type": "string"
           },
           "oppervlakte": {
             "type": "integer"
           },
-          "verdieping toegang": {
+          "verdieping_toegang": {
             "type": "integer"
           },
-          "aantal eenheden complex": {
+          "aantal_eenheden_complex": {
             "type": "integer"
           },
           "bouwlagen": {
             "type": "integer"
           },
-          "aantal kamers": {
+          "aantal_kamers": {
             "type": "integer"
           },
           "vervallen": {
             "type": "integer"
           },
-          "date modified": {
+          "date_modified": {
             "type": "string",
             "format": "date-time"
           },
-          "indicatie geconstateerd": {
+          "indicatie_geconstateerd": {
             "type": "integer"
           },
-          "indicatie in onderzoek": {
+          "indicatie_in_onderzoek": {
             "type": "integer"
           },
           "geometrie": {
@@ -989,25 +989,25 @@
             "type": "string",
             "relation": "bag:buurt"
           },
-          "gebruiksdoel gezondheidszorgfunctie": {
+          "gebruiksdoel_gezondheidszorgfunctie": {
             "type": "string"
           },
-          "gebruiksdoel woonfunctie": {
+          "gebruiksdoel_woonfunctie": {
             "type": "string"
           },
-          "hoogste bouwlaag": {
+          "hoogste_bouwlaag": {
             "type": "integer"
           },
-          "laagste bouwlaag": {
+          "laagste_bouwlaag": {
             "type": "integer"
           },
           "status": {
             "type": "string"
           },
-          "reden afvoer": {
+          "reden_afvoer": {
             "type": "string"
           },
-          "reden opvoer": {
+          "reden_opvoer": {
             "type": "string"
           },
           "eigendomsverhouding": {
@@ -1035,7 +1035,7 @@
         "required": [
           "schema",
           "id",
-          "date modified",
+          "date_modified",
           "pand",
           "verblijfsobject"
         ],
@@ -1047,7 +1047,7 @@
           "id": {
             "type": "string"
           },
-          "date modified": {
+          "date_modified": {
             "type": "string",
             "format": "date-time"
           },
@@ -1072,8 +1072,8 @@
         "required": [
           "schema",
           "id",
-          "date modified",
-          "landelijk id",
+          "date_modified",
+          "landelijk_id",
           "naam",
           "gemeente"
         ],
@@ -1082,29 +1082,29 @@
           "schema": {
             "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.0#/definitions/schema"
           },
-          "document mutatie": {
+          "document_mutatie": {
             "type": "string",
             "format": "date"
           },
-          "document nummer": {
+          "document_nummer": {
             "type": "string"
           },
-          "begin geldigheid": {
+          "begin_geldigheid": {
             "type": "string",
             "format": "date"
           },
-          "einde geldigheid": {
+          "einde_geldigheid": {
             "type": "string",
             "format": "date"
           },
           "id": {
             "type": "string"
           },
-          "date modified": {
+          "date_modified": {
             "type": "string",
             "format": "date-time"
           },
-          "landelijk id": {
+          "landelijk_id": {
             "type": "string"
           },
           "naam": {
