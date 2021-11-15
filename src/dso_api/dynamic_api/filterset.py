@@ -7,7 +7,6 @@ This file provides the translation and required bits for dynamic models.
 """
 import logging
 import re
-from contextlib import suppress
 
 from django.contrib.gis.db.models.fields import MultiPolygonField, PolygonField
 from django.contrib.postgres.fields import ArrayField
