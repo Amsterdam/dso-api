@@ -75,6 +75,28 @@ class TestDynamicFilterSet:
         assert result.count() == 1, result
 
     @staticmethod
+    def test_numerical_filters(parkeervakken_parkeervak_model, filled_router):
+        """Test comparisons on numerical fields."""
+
+        p1 = parkeervakken_parkeervak_model.objects.create(id="p1", aantal=1)
+        p2 = parkeervakken_parkeervak_model.objects.create(id="p2", aantal=2)
+        p5 = parkeervakken_parkeervak_model.objects.create(id="p5", aantal=5)
+
+        for op, filter_aantal, expect in [
+            ("lte", 1, [p1]),
+            ("gt", 3, [p5]),
+            ("lt", 3, [p1, p2]),
+            ("gte", 6, []),
+        ]:
+            response = APIClient().get(
+                "/v1/parkeervakken/parkeervakken/",
+                data={f"aantal[{op}]": str(filter_aantal)},
+            )
+            data = read_response_json(response)["_embedded"]["parkeervakken"]
+            assert len(data) == len(expect)
+            assert {x["id"] for x in data} == {x.id for x in expect}
+
+    @staticmethod
     def test_additional_filters(
         parkeervakken_parkeervak_model, parkeervakken_regime_model, filled_router
     ):
