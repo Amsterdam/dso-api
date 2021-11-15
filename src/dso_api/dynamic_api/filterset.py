@@ -97,33 +97,39 @@ def filterset_factory(model: type[DynamicModel]) -> type[DynamicFilterSet]:  # n
             # associated with this ForeignKey object and add dotted syntax.
             schema_field = get_field_schema(f)
             prefix = f.attname.removesuffix("_id")
-            with suppress(ValueError):  # The schema field has no sub fields
-                for s in schema_field.sub_fields:
-                    related_field_name = to_snake_case(s.id)
-                    model_field_name = f"{prefix}_{related_field_name}"
-                    try:
-                        model_field = model._meta.get_field(model_field_name)
-                    except FieldDoesNotExist:
-                        # the field is not part of the compound identifier
-                        # we only support filtering on identifiers for now
-                        continue
 
-                    filter_class = dso_filters.DSOFilterSet.FILTER_DEFAULTS[model_field.__class__][
-                        "filter_class"
-                    ]
+            try:
+                subfields = schema_field.sub_fields
+            except ValueError as e:
+                # Check for the specific ValueError that signals no subfields.
+                if "subfields are only possible" in str(e).lower():
+                    continue
+                raise
 
-                    for lookup in _get_field_lookups(model_field):
-                        sub_filter_name = f"{prefix}.{related_field_name}"
-                        if lookup not in ("contains", "exact"):
-                            sub_filter_name = f"{sub_filter_name}[{lookup}]"
+            for s in subfields:
+                related_field_name = to_snake_case(s.id)
+                model_field_name = f"{prefix}_{related_field_name}"
+                try:
+                    model_field = model._meta.get_field(model_field_name)
+                except FieldDoesNotExist:
+                    # the field is not part of the compound identifier
+                    # we only support filtering on identifiers for now
+                    continue
 
-                        filters[sub_filter_name] = filter_class(
-                            field_name=model_field_name,
-                            lookup_expr=lookup,
-                            label=dso_filters.DSOFilterSet.FILTER_HELP_TEXT.get(
-                                filter_class, lookup
-                            ),
-                        )
+                filter_class = dso_filters.DSOFilterSet.FILTER_DEFAULTS[model_field.__class__][
+                    "filter_class"
+                ]
+
+                for lookup in _get_field_lookups(model_field):
+                    sub_filter_name = f"{prefix}.{related_field_name}"
+                    if lookup not in ("contains", "exact"):
+                        sub_filter_name = f"{sub_filter_name}[{lookup}]"
+
+                    filters[sub_filter_name] = filter_class(
+                        field_name=model_field_name,
+                        lookup_expr=lookup,
+                        label=dso_filters.DSOFilterSet.FILTER_HELP_TEXT.get(filter_class, lookup),
+                    )
 
     # Generate the declared filters
     filters.update(_generate_relation_filters(model))
