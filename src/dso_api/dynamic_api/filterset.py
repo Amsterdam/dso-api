@@ -147,13 +147,11 @@ def _generate_relation_filters(model: type[DynamicModel]):  # noqa: C901
     """
     Generates additional filters for relations, including sub items.
     """
-    fields = dict()
     filters = dict()
 
     schema_fields = {f.name: f for f in model._table_schema.fields}
     for relation in model._meta.related_objects:
         if relation.name not in schema_fields:
-            fields[relation.name] = ["exact"]
             continue
         if not schema_fields[relation.name].is_nested_table:
             continue
@@ -198,7 +196,6 @@ def _generate_relation_filters(model: type[DynamicModel]):  # noqa: C901
                     filter_instance = dso_filters.MultipleValueFilter(filter_instance)
 
                 filters[subfilter_name] = filter_instance
-                fields[subfilter_name] = filter_lookups
 
     return filters
 
