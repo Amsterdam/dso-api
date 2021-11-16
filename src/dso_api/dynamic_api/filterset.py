@@ -49,10 +49,6 @@ DEFAULT_LOOKUPS_BY_TYPE = {
     MultiPolygonField: _polygon_lookups,
 }
 
-ADDITIONAL_FILTERS = {
-    "range": dso_filters.RangeFilter,
-}
-
 
 class DynamicFilterSet(dso_filters.DSOFilterSet):
     """Base class for dynamic filter sets."""
@@ -124,7 +120,6 @@ def filterset_factory(model: type[DynamicModel]) -> type[DynamicFilterSet]:  # n
 
     # Generate the declared filters
     filters.update(_generate_relation_filters(model))
-    filters.update(_generate_additional_filters(model))
 
     # Generate the class
     meta_attrs = {
@@ -188,24 +183,6 @@ def _generate_relation_filters(model: type[DynamicModel]):  # noqa: C901
                     filter_instance = dso_filters.MultipleValueFilter(filter_instance)
 
                 filters[subfilter_name] = filter_instance
-
-    return filters
-
-
-def _generate_additional_filters(model: type[DynamicModel]):
-    filters = {}
-    for filter_name, options in model._table_schema.additional_filters.items():
-        try:
-            filter_class = ADDITIONAL_FILTERS[options.get("type", "range")]
-        except KeyError:
-            logger.warning(f"Incorrect filter type: {options}")
-            continue
-
-        filters[filter_name] = filter_class(
-            start_field=options.get("start"),
-            end_field=options.get("end"),
-            label=filter_class.label,
-        )
 
     return filters
 

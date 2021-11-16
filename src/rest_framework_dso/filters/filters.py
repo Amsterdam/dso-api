@@ -6,7 +6,6 @@ from functools import reduce
 from django.db.models import Q
 from django_filters.constants import EMPTY_VALUES
 from django_filters.rest_framework import filters
-from schematools.utils import to_snake_case
 
 from .fields import FlexDateTimeField, ModelIdChoiceField
 from .forms import CharArrayField, MultipleValueField
@@ -97,31 +96,6 @@ class MultipleValueFilter(filters.Filter):
         op = self.OPERATORS[self.operator]
         q = reduce(op, (Q(**{lookup: subvalue}) for subvalue in value))
         return self.get_method(qs)(q)
-
-
-class RangeFilter(filters.CharFilter):
-    """Filter by effective date."""
-
-    filter_name = "inWerkingOp"
-    label = "Filter values effective on provided date/time."
-
-    def __init__(self, start_field, end_field, lookup_expr="exact", **kwargs):
-        self.start_field = self.convert_field_name(start_field)
-        self.end_field = self.convert_field_name(end_field)
-        super().__init__(field_name=self.start_field, lookup_expr=lookup_expr, **kwargs)
-
-    def filter(self, qs, value):
-        if value.strip() == "":
-            return qs
-        return qs.filter(
-            (Q(**{f"{self.start_field}__lte": value}) | Q(**{f"{self.start_field}__isnull": True}))
-            & (Q(**{f"{self.end_field}__gt": value}) | Q(**{f"{self.end_field}__isnull": True}))
-        )
-
-    def convert_field_name(self, field_name):
-        if "." in field_name:
-            return "__".join([self.convert_field_name(part) for part in field_name.split(".")])
-        return to_snake_case(field_name)
 
 
 class ModelIdChoiceFilter(filters.ModelChoiceFilter):
