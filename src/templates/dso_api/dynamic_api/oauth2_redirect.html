@@ -63,6 +63,7 @@
             }
         } else {
             oauth2.callback({auth: oauth2.auth, token: qp, isValid: isValid, redirectUrl: redirectUrl});
+            window.opener.dsoShowToken(qp)
         }
         window.close();
     }
