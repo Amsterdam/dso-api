@@ -58,13 +58,13 @@ De volgende query-parameters zijn te gebruiken:
    * - Parameter
      - Mogelijke waarde
      - Werking
-{%- for field in table.fields %}
-   * - ``{{ field.camel_name }}=``
-     - {{ field.value_example|default('') }}
+{%- for filter in table.filters %}
+   * - ``{{ filter.name }}=``
+     - {{ filter.value_example|default('') }}
      - Test op exacte waarde (``==``).
-  {%- for lookup in field.lookups %}
-   * - ``{{ field.camel_name }}[{{ lookup.operator }}]=``
-     - {{ lookup.value_example or field.value_example|default('') }}
+  {%- for lookup in filter.lookups %}
+   * - ``{{ filter.name }}[{{ lookup.operator }}]=``
+     - {{ lookup.value_example or filter.value_example|default('') }}
      - {{ lookup.description }}
   {%- endfor %}
 {%- endfor %}

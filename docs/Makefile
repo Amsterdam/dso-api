@@ -19,7 +19,7 @@ datasets:
 	mkdir -p source/datasets source/wfs-datasets
 	python3 source/datasets.py
 
-# Ensure the folder exists
+# Ensure the folder exists and is populated
 source/datasets:
 	mkdir -p source/datasets source/wfs-datasets
 	python3 source/datasets.py
@@ -27,6 +27,10 @@ source/datasets:
 clean:
 	rm -rf build/
 	rm -rf source/datasets source/wfs-datasets
+
+# configured for local usage in docker container
+livehtml: source/datasets
+	sphinx-autobuild source build/html -b html --host 0.0.0.0 --port 80
 
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).

@@ -102,12 +102,103 @@ De velden uit het ``page`` object worden ook als HTTP headers in de response ter
 Filtering
 ---------
 
+Filterbare velden
+*****************
+
+Normale velden
+~~~~~~~~~~~~~~
+
 Ieder veld kan gebruikt worden om op te filteren.
 Bijvoorbeeld:
 
 .. code-block:: bash
 
     curl 'https://api.data.amsterdam.nl/v1/gebieden/stadsdelen/?naam=Westpoort'
+
+Als het veld een array van objecten is, kunnen de subvelden van de objecten
+filterd worden met de naam van de array en de naam van het subveld gescheiden
+door een punt.
+Bijvoorbeeld:
+
+het veld
+
+.. code-block:: json
+
+        "gebruiksdoel": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "code": {
+              "type": "string"
+            },
+          }
+        },
+      },
+
+kan gefilterd worden met:
+
+.. code-block:: bash
+
+    curl 'https://api.data.amsterdam.nl/v1/bag/verblijfsobjecten/?gebruiksdoel.code=1'
+
+
+Relaties
+~~~~~~~~
+
+Voor one-to-many relaties geldt het volgende:
+
+Relaties met een enkelvoudige verwijzende sleutel kunnen gefilterd worden op
+de concatenatie van de veldnaam en de sleutel van de tabel waarnaar
+verwezen wordt.
+Bijvoorbeeld:
+
+de relatie
+
+.. code-block:: json
+
+    "heeftDossier": {
+    "type": "string",
+    "relation": "bag:dossiers",
+  },
+
+kan gefilterd worden met:
+
+.. code-block:: bash
+
+    curl 'https://api.data.amsterdam.nl/v1/bag/verblijfsobjecten/?heeftDossierId=GV00000406'
+
+Relaties met een meervoudige sleutel (als de sleutel ``"type": "object"`` heeft in het schema)
+kunnen worden gefilterd met de naam van de relatie en de naam van de gerelateerde sleutels
+gescheiden door een punt.
+Bijvoorbeeld:
+
+de relatie
+
+.. code-block:: json
+
+  "heeftHoofdadres": {
+    "type": "object",
+    "properties": {
+      "identificatie": {
+        "type": "string"
+      },
+      "volgnummer": {
+        "type": "integer"
+      },
+    },
+    "relation": "bag:nummeraanduidingen",
+  },
+
+
+kan gefilterd worden met:
+
+.. code-block:: bash
+
+    curl 'https://api.data.amsterdam.nl/v1/bag/verblijfsobjecten/?heeftHoofdadres.identificatie=0363200000006110&heeftHoofdadres.volgnummer=1'
+
+Operatoren
+**********
 
 Afhankelijk van het veldtype zijn er extra operatoren mogelijk.
 
