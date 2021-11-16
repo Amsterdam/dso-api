@@ -219,7 +219,7 @@ Bij waarden met een geometrie
      - Idem, nu in de WKT (well-known text) notatie.
      - :samp:`ST_Intersects({geoveld}, POINT({x} {y}))`
 
-Het gebruikte coordinatenstelsel en  Bij het doorzoeken van geometrie velden wordt gebruik gemaakt van de proje opgegeven ``Accept-CRS`` header.
+Bij het doorzoeken van geometrievelden wordt gebruik gemaakt van de projectie opgegeven in de header ``Accept-CRS``.
 Afhankelijk van de projectie wordt x,y geïnterpreteerd als longitude, latitude of x,y in RD of anderszins.
 Indien ``Accept-CRS`` niet wordt meegegeven worden x en y, afhankelijk van de waardes,
 geinterpreteerd als longitude en latitude in ``EPSG:4326`` of ``EPSG:28992``.
