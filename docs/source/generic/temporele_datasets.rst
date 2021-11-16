@@ -61,9 +61,7 @@ Filtering op basis van geldigheidsdatum
 ---------------------------------------
 
 Objecten binnen een temporele dataset mogen gefilterd worden op basis van geldigheidsdatum.
-Dit kan gedaan worden met :code:`additionalFilters`, gedefinieerd in de `Amsterdam Schema <https://github.com/Amsterdam/amsterdam-schema#readme>`-definitie van datasets.
-
-Gebieden heeft een temporeel filter :code:`geldigOp`. Dit is een filter dat ervoor zorgt dat:
+De dataset ``gebieden`` heeft bijvoorbeeld een temporeel filter :code:`geldigOp`. Dit filter zorgt ervoor dat:
  - alle objecten waar `geldigOp` valt tussen de datums `beginGeldigheid` en `eindGeldigheid` worden getoond,
  - alle links tussen objecten referenties `geldigOp` krijgen.
 

@@ -84,13 +84,12 @@ additional lookup classes are implemented that provide this functionality within
 """
 from . import lookups  # noqa (import is needed for registration)
 from .backends import DSOFilterBackend, DSOOrderingFilter
-from .filters import MultipleValueFilter, RangeFilter
+from .filters import MultipleValueFilter
 from .filtersets import DSOFilterSet
 
 __all__ = [
     "DSOFilterSet",
     "DSOFilterBackend",
     "DSOOrderingFilter",
-    "RangeFilter",
     "MultipleValueFilter",
 ]

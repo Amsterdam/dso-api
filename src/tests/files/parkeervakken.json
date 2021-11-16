@@ -13,13 +13,6 @@
         "type": "object",
         "additionalProperties": false,
         "required": ["id", "schema"],
-        "additionalFilters": {
-          "regimes.inWerkingOp": {
-            "type": "range",
-            "start": "regimes.begintijd",
-            "end": "regimes.eindtijd"
-          }
-        },
         "properties": {
           "id": {
             "type": "string",
