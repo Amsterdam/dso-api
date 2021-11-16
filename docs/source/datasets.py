@@ -147,7 +147,8 @@ def render_wfs_dataset_docs(dataset: DatasetSchema, paths: dict[str, str]):
 def _get_table_context(table: DatasetTableSchema, paths: dict[str, str]):
     """Collect all table data for the REST API spec."""
     uri = _get_table_uri(table, paths)
-    fields = _get_fields(table.fields, table_identifier=table.identifier)
+    fields = _get_fields(table.fields)
+    filters = _get_filters(table.fields)
 
     return {
         "title": to_snake_case(table.id).replace("_", " ").capitalize(),
@@ -157,6 +158,7 @@ def _get_table_context(table: DatasetTableSchema, paths: dict[str, str]):
         "rest_geojson": f"{uri}?_format=geojson",
         "description": table.get("description"),
         "fields": [_get_field_context(field, table.identifier) for field in fields],
+        "filters": filters,
         "auth": table.auth | table.dataset.auth,
         "expands": _get_table_expands(table),
         "additional_filters": table.additional_filters,
@@ -219,7 +221,7 @@ def _get_feature_type_context(table: DatasetTableSchema, paths: dict[str, str]):
     parent_path = paths[table.dataset.id]
     uri = f"{BASE_URL}/v1/wfs/{parent_path}/{snake_id}/"
 
-    fields = _get_fields(table.fields, table_identifier=table.identifier)
+    fields = _get_fields(table.fields)
     has_geometry = _has_geometry(table)
 
     return {
@@ -249,9 +251,7 @@ def _get_feature_type_context(table: DatasetTableSchema, paths: dict[str, str]):
     }
 
 
-def _get_fields(
-    table_fields, table_identifier=None, parent_field=None
-) -> List[DatasetFieldSchema]:
+def _get_fields(table_fields) -> List[DatasetFieldSchema]:
     """Flatten a nested listing of fields."""
     result_fields = []
     for field in table_fields:
@@ -264,8 +264,7 @@ def _get_fields(
     return result_fields
 
 
-def _get_field_context(field: DatasetFieldSchema, identifier: List[str]) -> dict[str, Any]:
-    """Get context data for a field."""
+def _field_data(field: DatasetFieldSchema):
     type = field.type
     format = field.format
     try:
@@ -273,6 +272,21 @@ def _get_field_context(field: DatasetFieldSchema, identifier: List[str]) -> dict
     except KeyError:
         value_example = ""
         lookups = []
+
+    # This closely mimics what the Django filter+serializer logic does
+    if type.startswith("https://geojson.org/schema/"):
+        # Catch-all for other geometry types
+        type = type[27:-5]
+        value_example = f"GeoJSON of ``{type.upper()}(x y ...)``"
+        lookups = []
+    elif field.relation or "://" in type:
+        lookups = _identifier_lookups
+
+    return type, value_example, lookups
+
+
+def _get_field_context(field: DatasetFieldSchema, identifier: List[str]) -> dict[str, Any]:
+    """Get context data for a field."""
 
     snake_name = to_snake_case(field.name)
     camel_name = toCamelCase(field.name)
@@ -290,14 +304,7 @@ def _get_field_context(field: DatasetFieldSchema, identifier: List[str]) -> dict
         camel_name = f"{parent_camel_name}.{camel_name}"
         parent_field = parent_field.parent_field
 
-    # This closely mimics what the Django filter+serializer logic does
-    if type.startswith("https://geojson.org/schema/"):
-        # Catch-all for other geometry types
-        type = type[27:-5]
-        value_example = f"GeoJSON of ``{type.upper()}(x y ...)``"
-        lookups = []
-    elif field.relation or "://" in type:
-        lookups = _identifier_lookups
+    type, value_example, _ = _field_data(field)
 
     return {
         "name": field.name,
@@ -305,12 +312,71 @@ def _get_field_context(field: DatasetFieldSchema, identifier: List[str]) -> dict
         "camel_name": camel_name,
         "is_identifier": field.name in identifier,
         "type": (type or "").capitalize(),
-        "value_example": value_example or "",
         "description": field.description or "",
-        "lookups": [LOOKUP_CONTEXT[op] for op in lookups],
         "source": field,
         "auth": field.auth | field.table.auth | field.table.dataset.auth,
     }
+
+
+def _get_filters(table_fields: List[DatasetFieldSchema]) -> List[dict[str, Any]]:
+    filters = []
+    id_seen = False
+    for field in table_fields:
+        if field.id == "schema":
+            continue
+        # temporary patch until schematools is bumped to a version that
+        # does not duplicate the id field
+        if field.id == "id" and id_seen:
+            continue
+        if field.id == "id":
+            id_seen = True
+        filters.extend(_get_filter_context(field))
+    return filters
+
+
+def _filter_payload(name: str, field: DatasetFieldSchema):
+    type, value_example, lookups = _field_data(field)
+
+    return {
+        "name": name,
+        "type": type.capitalize(),
+        "value_example": value_example or "",
+        "lookups": [LOOKUP_CONTEXT[op] for op in lookups],
+    }
+
+
+def _get_filter_context(field: DatasetFieldSchema) -> List[dict[str, Any]]:
+    """Return zero or more filter context(s) from the a field schema.
+
+    This function essentially reconstructs the output of the FilterSet
+    generation in the dynamic api directly from the underlying schema.
+    """
+    if field.relation:
+        if field.is_scalar:
+            # normal FKs
+            return [_filter_payload(toCamelCase(field.id + "Id"), field)]
+        elif field.is_object:
+            # The generated FK that Django requires because it does
+            # not support composite pks
+            result = [_filter_payload(toCamelCase(field.id + "Id"), field)]
+            # composite FKs
+            related_identifiers = field.related_table.identifier
+            return result + [
+                _filter_payload(toCamelCase(f"{field.id}.{sub_field.id}"), sub_field)
+                for sub_field in field.sub_fields
+                if sub_field.id in related_identifiers
+            ]
+    elif field.is_nested_table:
+        return [_filter_payload(toCamelCase(f"{field.id}.{f.id}"), f) for f in field.sub_fields]
+    elif field.is_scalar or field.is_array_of_scalars:
+        # Regular filters
+        return [_filter_payload(toCamelCase(field.id), field)]
+    elif field.nm_relation:
+        return [_filter_payload(toCamelCase(field.id), field)]
+
+    # TODO: Field is an object but not a relation?
+
+    return []
 
 
 def _dataset_name(name):

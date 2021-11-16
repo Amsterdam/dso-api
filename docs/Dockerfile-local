@@ -1,0 +1,17 @@
+FROM amsterdam/python:3.9-buster
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
+      graphviz \
+      fonts-liberation \
+ && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /docs
+COPY . /docs/
+RUN pip install -r requirements_dev.txt
+
+# Added arg here, so build step is invalidated each time
+ARG BUILD_NUMBER=unknown
+RUN mkdir -p /docs/_static
+
+CMD ["make", "livehtml"]
