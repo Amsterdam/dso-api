@@ -10,6 +10,8 @@ const ui = SwaggerUIBundle({
     SwaggerUIBundle.plugins.DownloadUrl
   ],
   layout: "BaseLayout",
+  persistAuthorization: true,
+  tryItOutEnabled: true,
   requestInterceptor: (request) => {
     request.headers["X-CSRFToken"] = "{{csrf_token}}"
     return request;
