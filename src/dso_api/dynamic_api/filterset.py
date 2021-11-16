@@ -97,15 +97,7 @@ def filterset_factory(model: type[DynamicModel]) -> type[DynamicFilterSet]:  # n
             schema_field = get_field_schema(f)
             prefix = f.attname.removesuffix("_id")
 
-            try:
-                subfields = schema_field.sub_fields
-            except ValueError as e:
-                # Check for the specific ValueError that signals no subfields.
-                if "subfields are only possible" in str(e).lower():
-                    continue
-                raise
-
-            for s in subfields:
+            for s in schema_field.subfields:
                 related_field_name = to_snake_case(s.id)
                 model_field_name = f"{prefix}_{related_field_name}"
                 try:
