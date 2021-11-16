@@ -110,7 +110,7 @@ class RemoteFieldSerializer(DSOSerializer, _AuthMixin):
         return self._filter_authorized_fields(super().get_fields())
 
     def _get_field_by_id(self, id):
-        for field in self.field_schema.sub_fields:
+        for field in self.field_schema.subfields:
             if field.id == id:
                 return field
 
@@ -202,7 +202,7 @@ def _remote_object_field_factory(field: DatasetFieldSchema, **kwargs) -> RemoteF
         "__module__": f"dso_api.dynamic_api.remote.serializers.{safe_dataset_id}",
     }
 
-    declared_fields = _build_declared_fields(field.sub_fields)
+    declared_fields = _build_declared_fields(field.subfields)
 
     # Generate Meta section and serializer class
     new_attrs.update(declared_fields)

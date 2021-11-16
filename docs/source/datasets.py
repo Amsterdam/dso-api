@@ -183,7 +183,7 @@ def _get_table_expands(table: DatasetTableSchema, rel_id_separator=":"):
             "target_doc_id": field["relation"].replace(":", rel_id_separator),
             "related_table": field.related_table,
         }
-        for field in table.get_fields(include_sub_fields=False)
+        for field in table.get_fields(include_subfields=False)
         if field.get("relation") is not None
     ]
 
@@ -259,9 +259,7 @@ def _get_fields(
             continue
 
         result_fields.append(field)
-
-        if field.is_array_of_objects or field.is_object:
-            result_fields.extend(_get_fields(field.sub_fields, parent_field=field))
+        result_fields.extend(_get_fields(field.subfields, parent_field=field))
 
     return result_fields
 

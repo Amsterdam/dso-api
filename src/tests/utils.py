@@ -39,7 +39,7 @@ def patch_table_auth(schema: DatasetSchema, table_id, *, auth: list[str]):
     model.table_schema()["auth"] = auth
 
 
-def patch_field_auth(schema: DatasetSchema, table_id, field_id, *sub_fields, auth: list[str]):
+def patch_field_auth(schema: DatasetSchema, table_id, field_id, *subfields, auth: list[str]):
     """Monkeypatch an Amsterdam Schema to set "auth" on a table."""
     # This updates the low-level dict data so all high-level objects get it.
     schema.get_table_by_id(table_id).get_field_by_id(field_id)  # check existence
@@ -50,22 +50,22 @@ def patch_field_auth(schema: DatasetSchema, table_id, field_id, *sub_fields, aut
     )
 
     # Allow to resolve sub fields too
-    for sub_field in sub_fields:
+    for subfield in subfields:
         # Auto jump over array, object or "array of objects"
         if raw_field["type"] == "array":
             raw_field = raw_field["items"]
         if raw_field["type"] == "object":
             raw_field = raw_field["properties"]
 
-        raw_field = raw_field[sub_field]
+        raw_field = raw_field[subfield]
 
     raw_field["auth"] = auth
 
     # Also patch the active model
     model = apps.get_model(schema.id, table_id)
     model_field = model._meta.get_field(to_snake_case(field_id))
-    for sub_field in sub_fields:
-        model_field = model_field.related_model._meta.get_field(sub_field)
+    for subfield in subfields:
+        model_field = model_field.related_model._meta.get_field(subfield)
 
     model_field.field_schema["auth"] = auth
 
