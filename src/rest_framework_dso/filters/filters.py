@@ -60,7 +60,10 @@ class FlexDateTimeFilter(filters.IsoDateTimeFilter):
 
 
 class MultipleValueFilter(filters.Filter):
-    """Allow a value to be included multiple times"""
+    """Filter that is the AND or OR of several filters on the same field.
+
+    This is used to construct filters such as ?field[not]=x&field[not]=y.
+    """
 
     field_class = MultipleValueField
     OPERATORS = {
