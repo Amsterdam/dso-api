@@ -23,6 +23,21 @@ Gebruik zo'n URL in QGIS:
    In de bovenstaande afbeelding wordt QGIS gekoppeld met de BAG dataset:
    https://api.data.amsterdam.nl/v1/wfs/bag/
 
+Voor gesloten datasets moet ook een authorisatie configuratie worden toegevoegd. Dit kan door
+op het groene kruisje in het bovenstaande menu te klikken. Selecteer OAuth2 authenticatie, met 'implicit' grant flow.
+Vul bij 'request url' :samp:`https://iam.amsterdam.nl/auth/realms/datapunt-ad/protocol/openid-connect/auth` en bij 'token url'
+:samp:`https://iam.amsterdam.nl/auth/realms/datapunt-ad/protocol/openid-connect/token` in.
+De client id is :samp:`qgis` en access method is :samp:`header`. QGIS zal bij het gebruiken van de WFS een browserscherm openen,
+waar een geauthoriseerde gebruiker kan inloggen.
+
+.. figure:: images/qgis-add-authentication.png
+   :width: 1340
+   :height: 1582
+   :scale: 25%
+   :alt: (voorbeeldafbeelding van QGIS authenticatie)
+
+   In de bovenstaande afbeelding wordt QGIS authenticatie configuratie ingevoerd.
+
 Hierna zijn de gegevens te raadplegen, te filteren en te combineren:
 
 .. figure:: images/qgis-bag.png
