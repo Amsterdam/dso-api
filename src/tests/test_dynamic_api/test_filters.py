@@ -1,9 +1,13 @@
+import math
+
 import pytest
 from django.apps import apps
 from django.contrib.gis.geos import GEOSGeometry
+from rest_framework.exceptions import ValidationError
 from rest_framework.test import APIClient
 
 from dso_api.dynamic_api.filterset import filterset_factory
+from rest_framework_dso.filters.backends import _parse_point, _validate_convert_x_y
 from tests.utils import read_response_json
 
 
@@ -266,3 +270,60 @@ class TestDynamicFilterSet:
 
         result = filterset.filter_queryset(VerblijfsObjecten.objects.all())
         assert result.count() == 1, result
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        "0,0",
+        "-1,-0.69315",
+        "5,52",
+        "52.1,1",
+        "POINT(0.0 0.0)",
+        "POINT(-1.1 -3.3)",
+        "POINT(100.0 42.0)",
+    ],
+)
+def test_parse_point(value):
+    x, y = _parse_point(value)
+    assert isinstance(x, float)
+    assert isinstance(y, float)
+    assert math.isfinite(x)
+    assert math.isfinite(y)
+
+
+@pytest.mark.parametrize(
+    "value",
+    ["", "a", "foo", "0, 0", "inf,nan", "0," + 314 * "1"]
+    + ["POINT", "POINT ", "POINT(x y)", "POINT(1.0 2.0", "POINT(1.0,2.0)", "POINT 1.0 2.0"]
+    + ["POINT(0 0)", "POINT(1. .1)", "POINT(-1 2)"],  # XXX allow these?
+)
+def test_parse_input_invalid(value):
+    try:
+        _parse_point(value)
+    except ValidationError as e:  # Triggers error 400 Bad Request.
+        assert repr(value) in str(e)
+    else:
+        raise Exception(f"no exception for {value!r}")
+
+
+@pytest.mark.parametrize(
+    "x,y,srid,out",
+    [
+        (1, 400000, 28992, (1, 400000, 28992)),  # explicit RD coordinates
+        (1, 400000, None, (1, 400000, 28992)),  # implicit RD coordinates
+        (5, 52, None, (5, 52, 4326)),  # implicit SRID 4326
+        (52, 5, None, (5, 52, 4326)),  # lat/lon may be swapped
+        (1, 1, None, (None, None, None)),  # SRID cannot be determined
+        # known SRID but invalid coordinates becomes (None, None, srid)
+        (1, 400000, 4326, (None, None, 4326)),
+        (0, 52, 4326, (None, None, 4326)),
+        (1, 4, 28992, (None, None, 28992)),
+        # unknown SRID always passed through
+        (0, 1, 1234, (0, 1, 1234)),
+        (-1, -2, -3, (-1, -2, -3)),
+        (1, 400000, 999, (1, 400000, 999)),
+    ],
+)
+def test_validate_convert_x_y(x, y, srid, out):
+    assert _validate_convert_x_y(x, y, srid) == out

@@ -1,4 +1,6 @@
+import math
 import re
+from typing import Optional
 
 from django.contrib.gis.geos import GEOSGeometry
 from django.contrib.gis.geos.error import GEOSException
@@ -58,30 +60,19 @@ class DSOFilterBackend(DjangoFilterBackend):
                 and name in filterset.base_filters
                 and filterset.base_filters[name].__class__.__name__.endswith("GeometryFilter")
             ):
-                if value:
-                    if m1 := re.match(r"([-+]?\d*(?:\.\d+)?),([-+]?\d+(?:\.\d+)?)", value):
-                        x = m1.group(1)
-                        y = m1.group(2)
-                    elif m1 := re.match(
-                        r"POINT\(([-+]?\d+(?:\.\d+))? ([-+]?\d+(?:\.\d+))\)", value
-                    ):
-                        x = m1.group(1)
-                        y = m1.group(2)
-                    else:
-                        continue
-                    if x and y:
-                        srid = request.accept_crs.srid if request.accept_crs else None
-                        x_lon, y_lat, srid = _validate_convert_x_y(x, y, srid)
-                        if srid in (4326, 28992) and (x_lon is None or y_lat is None):
-                            raise ValueError(f"Invalid x,y values : {x},{y}")
-                        # longitude, latitude for 4326 x,y otherwise
-                        try:
-                            value = GEOSGeometry(f"POINT({x_lon} {y_lat})", srid)
-                        except GEOSException as e:
-                            raise ValidationError(f"Invalid x,y values : {x},{y}") from e
-                        new_data = filterset.data.copy()
-                        new_data[name] = value
-                        filterset.data = new_data
+                x, y = _parse_point(value)
+
+                srid: int = request.accept_crs.srid if request.accept_crs else None
+                x_lon, y_lat, srid = _validate_convert_x_y(x, y, srid)
+                if srid in (4326, 28992) and (x_lon is None or y_lat is None):
+                    raise ValidationError(f"Invalid x,y values : {x},{y}")
+                try:
+                    value = GEOSGeometry(f"POINT({x_lon} {y_lat})", srid)
+                except GEOSException as e:
+                    raise ValidationError(f"Invalid x,y values {x},{y} with SRID {srid}") from e
+                new_data = filterset.data.copy()
+                new_data[name] = value
+                filterset.data = new_data
 
         return filterset
 
@@ -127,7 +118,29 @@ class DSOOrderingFilter(OrderingFilter):
         return cleaned
 
 
-def _valid_rd(x, y):
+def _parse_point(value: str) -> tuple[float, float]:
+    if m1 := re.match(r"([-+]?\d*(?:\.\d+)?),([-+]?\d+(?:\.\d+)?)", value):
+        x = m1.group(1)
+        y = m1.group(2)
+    elif m1 := re.match(r"POINT\(([-+]?\d+(?:\.\d+))? ([-+]?\d+(?:\.\d+))\)", value):
+        x = m1.group(1)
+        y = m1.group(2)
+    else:
+        raise ValidationError(f"not a valid point: {value!r}")
+
+    try:
+        x, y = float(x), float(y)
+    except ValueError as e:
+        raise ValidationError(f"not a valid point: {value!r}") from e
+
+    # We can get infinities despite the regexp, e.g., float("1" * 310) == float("inf").
+    if not (math.isfinite(x) and math.isfinite(y)):
+        raise ValidationError(f"not a valid point: {value!r}")
+
+    return x, y
+
+
+def _valid_rd(x: float, y: float) -> bool:
     """
     Check valid RD x, y coordinates
     """
@@ -137,16 +150,10 @@ def _valid_rd(x, y):
     rd_x_max = 280000
     rd_y_max = 625000
 
-    if not rd_x_min <= x <= rd_x_max:
-        return False
-
-    if not rd_y_min <= y <= rd_y_max:
-        return False
-
-    return True
+    return rd_x_min <= x <= rd_x_max and rd_y_min <= y <= rd_y_max
 
 
-def _valid_lat_lon(lat, lon):
+def _valid_lat_lon(lat: float, lon: float) -> bool:
     """
     Check if lat/lon is in the Netherlands bounding box
     """
@@ -155,34 +162,20 @@ def _valid_lat_lon(lat, lon):
     lon_min = 3.31497114423
     lon_max = 7.09205325687
 
-    if not lat_min <= lat <= lat_max:
-        return False
-
-    if not lon_min <= lon <= lon_max:
-        return False
-
-    return True
+    return lat_min <= lat <= lat_max and lon_min <= lon <= lon_max
 
 
-def _validate_convert_x_y(x, y, srid):
-    fx = float(x)
-    fy = float(y)
-    x_lon = y_lat = None
-    if not srid or srid == 4326:
-        if _valid_lat_lon(fx, fy):
-            x_lon = y
-            y_lat = x
-            srid = 4326
-        elif _valid_lat_lon(fy, fx):
-            x_lon = x
-            y_lat = y
-            srid = 4326
-    if not srid or srid == 28992:
-        if _valid_rd(fx, fy):
-            x_lon = x
-            y_lat = y
-            srid = 28992
+def _validate_convert_x_y(
+    x: float, y: float, srid: Optional[int]
+) -> tuple[float, float, Optional[int]]:
+    if srid is None or srid == 4326:
+        if _valid_lat_lon(x, y):
+            return y, x, 4326  # x and y swapped.
+        elif _valid_lat_lon(y, x):
+            return x, y, 4326
+    if srid is None or srid == 28992:
+        if _valid_rd(x, y):
+            return x, y, 28992
     elif srid not in (28992, 4326):
-        x_lon = x
-        y_lat = y
-    return x_lon, y_lat, srid
+        return x, y, srid
+    return None, None, srid
