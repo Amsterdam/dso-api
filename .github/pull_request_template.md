@@ -1,16 +1,7 @@
-# This Pull request contains changes to:
-
-<Please fill information>
-
-# In case changes new features added
-
-- [ ] Customer friendly documentation added into `docs/`.
-- [ ] Developer friendly documentation added into `DEVELOPMENT|README.md`
-
-# In case breaking changes introduced into API
-
-- [ ] There is customer notification plan: ....
-
-# In case this PR reverts changes in repo
-
-- [ ] Extra details describing reasoning: ...
+> Don't forget about...
+> * Tests
+> * Documentation in `docs/`, `dev-docs/`
+> * Readable commit messages explaining the reason for changes
+>
+> Replace this text with a summary of the PR.
+> Use `AB#xyz` to reference issue *xyz* on Azure DevOps.
