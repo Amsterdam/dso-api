@@ -185,10 +185,10 @@ de relatie
       },
       "volgnummer": {
         "type": "integer"
-      },
-    },
-    "relation": "bag:nummeraanduidingen",
-  },
+      }
+    }
+    "relation": "bag:nummeraanduidingen"
+  }
 
 
 kan gefilterd worden met:
