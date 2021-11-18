@@ -59,16 +59,12 @@ class FlexDateTimeFilter(filters.IsoDateTimeFilter):
 
 
 class MultipleValueFilter(filters.Filter):
-    """Filter that is the AND or OR of several filters on the same field.
+    """Filter that is the AND of several filters on the same field.
 
-    This is used to construct filters such as ?field[not]=x&field[not]=y.
+    This is used to implement ?field[not]=x&field[not]=y.
     """
 
     field_class = MultipleValueField
-    OPERATORS = {
-        "AND": operator.and_,
-        "OR": operator.or_,
-    }
 
     def __init__(self, value_filter: filters.Filter, operator="AND"):
         super().__init__(
@@ -93,8 +89,7 @@ class MultipleValueFilter(filters.Filter):
             qs = qs.distinct()
 
         lookup = f"{self.field_name}__{self.lookup_expr}"
-        op = self.OPERATORS[self.operator]
-        q = reduce(op, (Q(**{lookup: subvalue}) for subvalue in value))
+        q = reduce(operator.and_, (Q(**{lookup: subvalue}) for subvalue in value))
         return self.get_method(qs)(q)
 
 
