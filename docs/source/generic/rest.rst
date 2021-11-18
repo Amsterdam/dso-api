@@ -118,9 +118,7 @@ Bijvoorbeeld:
 Als het veld een array van objecten is, kunnen de subvelden van de objecten
 filterd worden met de naam van de array en de naam van het subveld gescheiden
 door een punt.
-Bijvoorbeeld:
-
-het veld
+Voorbeeld: het veld
 
 .. code-block:: json
 
