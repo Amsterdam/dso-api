@@ -413,5 +413,6 @@ HAAL_CENTRAAL_CERTFILE = os.getenv("HC_CERTFILE")
 SHELL_PLUS_POST_IMPORTS = (
     "from django.apps.registry import apps",
     "from dso_api.dynamic_api.filterset import filterset_factory",
+    "from dso_api.dynamic_api.serializers import serializer_factory",
     "from pprint import pprint",
 )

@@ -23,7 +23,7 @@ services:
       args:
         PIP_REQUIREMENTS: requirements_dev.txt
     ports:
-      - "8000:8000"
+      - "8090:8000"
     links:
       - database
     environment:
@@ -40,9 +40,10 @@ services:
       AZURE_APPI_CONNECTION_STRING: "${AZURE_APPI_CONNECTION_STRING}"
       AZURE_APPI_AUDIT_CONNECTION_STRING: "${AZURE_APPI_AUDIT_CONNECTION_STRING}"
       OAUTH_CLIENT_ID: "${OAUTH_CLIENT_ID}"
-      OAUTH_JWKS_URL: ${OAUTH_JWKS_URL}""
-      OAUTH_URL:  ${OAUTH_URL}""
+      OAUTH_JWKS_URL: "${OAUTH_JWKS_URL}"
+      OAUTH_URL:  "${OAUTH_URL}"
       CLOUD_ENV: "${CLOUD_ENV}"
+      DATAPUNT_API_URL: "${DATAPUNT_API_URL}"
       DJANGO_DEBUG: 1
     volumes:
       - ./src:/app
