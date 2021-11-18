@@ -157,10 +157,10 @@ de relatie
 
 .. code-block:: json
 
-    "heeftDossier": {
+  "heeftDossier": {
     "type": "string",
-    "relation": "bag:dossiers",
-  },
+    "relation": "bag:dossiers"
+  }
 
 kan gefilterd worden met:
 
