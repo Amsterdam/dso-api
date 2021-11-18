@@ -859,6 +859,21 @@ def _gebieden_dataset(gebieden_schema_json) -> Dataset:
 
 
 @pytest.fixture()
+def unconventional_temporal_dataset() -> dict:
+    path = HERE / "files/unconventional_temporal.json"
+    return Dataset.objects.create(
+        name="unconventionaltemporal",
+        path="unconventionaltemporal",
+        schema_data=json.dumps(json.loads(path.read_text())),  # validate
+    )
+
+
+@pytest.fixture()
+def unconventional_temporal_model(unconventional_temporal_dataset, dynamic_models) -> dict:
+    return dynamic_models["unconventionaltemporal"]["unconventionaltemporaltable"]
+
+
+@pytest.fixture()
 def gebieden_dataset(_gebieden_dataset, woningbouwplannen_dataset) -> Dataset:
     """Make sure gebieden + woningbouwplannen is always combined,
     because woningbouwplannen has a reverse dependency on 'gebieden'.

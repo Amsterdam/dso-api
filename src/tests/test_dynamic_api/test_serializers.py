@@ -759,3 +759,22 @@ class TestDynamicSerializer:
             statistieken_serializer.data["_links"]["buurt"]["href"]
             == "http://testserver/v1/gebieden/buurten/03630000000078/"
         ), statistieken_serializer.data
+
+    @staticmethod
+    def test_unconventional_temporal_identifier(drf_request, unconventional_temporal_model):
+        """Prove that temporal ids with casing and shortnames are properly serialized"""
+        obj = unconventional_temporal_model.objects.create(
+            uncid=1, unc_tid="v1", start="2020-01-01", eind="2021-01-01"
+        )
+        serializer = serializer_factory(unconventional_temporal_model)(
+            obj, context={"request": drf_request}
+        )
+
+        fields = serializer.fields
+
+        assert fields["uncid"].source == "uncid"
+        assert fields["uncTid"].source == "unc_tid"
+        assert fields["eind"].source == "eind"
+        assert fields["start"].source == "start"
+        assert fields["_links"]["self"]["uncid"].source == "uncid"
+        assert fields["_links"]["self"]["uncTid"].source == "unc_tid"

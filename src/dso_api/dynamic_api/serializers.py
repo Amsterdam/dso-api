@@ -579,6 +579,9 @@ def serializer_factory(
         nesting_level,
     )
 
+    # TODO: Resolve the actual names of the fields in the database
+    # by doing `table_schema.get_field_id(x).name for x in identifier`
+    # then do the same when matching them below with the model_field name
     if table_schema.temporal:
         unwanted_identifiers = list(map(toCamelCase, table_schema.identifier))
     else:
@@ -597,10 +600,10 @@ def serializer_factory(
         if (
             # Do not render PK and FK to parent on nested tables
             (model.has_parent_table() and model_field.name in ["id", "parent"])
-            # Do not render temporal "identificatie" or "volgnummer" fields.
+            # Do not render temporal fields (e.g.: "volgnummer" and "identificatie").
             # Yet "id" / "pk" is still part of the main body.
             or (table_schema.temporal and field_camel_case in unwanted_identifiers)
-            # Do not render intermediate keys "relation_identificatie" / "relation_volgnummer"
+            # Dont render intermediate keys (e.g. "relation_identificatie" / "relation_volgnummer")
             or (
                 field_schema.parent_field is not None
                 and field_schema.parent_field.is_through_table
@@ -699,8 +702,12 @@ def _temporal_link_serializer_factory(
         )
 
     # Add the temporal fields, whose names depend on the schema
-    serializer_part.add_field_name(temporal.identifier)
-    serializer_part.add_field_name(first(table_schema.identifier))
+    temporal_id, primary_id = (
+        table_schema.get_field_by_id(temporal.identifier).name,
+        table_schema.get_field_by_id(first(table_schema.identifier)).name,
+    )
+    serializer_part.add_field_name(toCamelCase(temporal_id), source=to_snake_case(temporal_id))
+    serializer_part.add_field_name(toCamelCase(primary_id), source=to_snake_case(primary_id))
 
     # Construct the class
     safe_dataset_id = to_snake_case(related_model.get_dataset_id())
