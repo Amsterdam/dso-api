@@ -25,6 +25,7 @@ logger = logging.getLogger(__name__)
 # These extra lookups are available for specific data types.
 # The identifier lookups needs ForeignObject.register_lookup()
 _comparison_lookups = ["exact", "gte", "gt", "lt", "lte", "not", "isnull"]
+_numerical_lookups = _comparison_lookups + ["in"]
 _identifier_lookups = ["exact", "in", "not", "isnull"]
 _polygon_lookups = ["exact", "contains", "isnull", "not"]
 _string_lookups = ["exact", "isnull", "not", "isempty", "like"]
@@ -33,10 +34,10 @@ DEFAULT_LOOKUPS_BY_TYPE = {
     models.TextField: _string_lookups,
     models.CharField: _string_lookups,
     UnlimitedCharField: _string_lookups,
-    models.IntegerField: _comparison_lookups + ["in"],
-    models.BigIntegerField: _comparison_lookups + ["in"],
-    models.FloatField: _comparison_lookups + ["in"],
-    models.DecimalField: _comparison_lookups + ["in"],
+    models.IntegerField: _numerical_lookups,
+    models.BigIntegerField: _numerical_lookups,
+    models.FloatField: _numerical_lookups,
+    models.DecimalField: _numerical_lookups,
     models.DateField: _comparison_lookups,
     models.DateTimeField: _comparison_lookups,
     models.TimeField: _comparison_lookups,
