@@ -171,9 +171,7 @@ kan gefilterd worden met:
 Relaties met een meervoudige sleutel (als de sleutel ``"type": "object"`` heeft in het schema)
 kunnen worden gefilterd met de naam van de relatie en de naam van de gerelateerde sleutels
 gescheiden door een punt.
-Bijvoorbeeld:
-
-de relatie
+Voorbeeld: de relatie
 
 .. code-block:: json
 
