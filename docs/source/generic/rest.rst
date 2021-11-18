@@ -124,17 +124,17 @@ het veld
 
 .. code-block:: json
 
-        "gebruiksdoel": {
-        "type": "array",
+    "gebruiksdoel": {
+      "type": "array",
         "items": {
           "type": "object",
           "properties": {
             "code": {
               "type": "string"
-            },
+            }
           }
-        },
-      },
+        }
+      }
 
 kan gefilterd worden met:
 
