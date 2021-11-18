@@ -3,9 +3,9 @@ from schematools.contrib.django.models import Profile
 from schematools.permissions import UserScopes
 
 
-class DatasetMiddleware(MiddlewareMixin):
+class AuthMiddleware(MiddlewareMixin):
     """
-    Assign `dataset` to request, for easy access.
+    Assigns `user_scopes` to request, for easy access.
     """
 
     def __init__(self, get_response):
