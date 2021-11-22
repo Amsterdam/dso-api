@@ -19,14 +19,13 @@ The model-serializers depend on the ORM logic, and support features like object 
 and constructing serializer fields based on the model field metadata.
 """
 import inspect
-from collections import OrderedDict
 from typing import Iterable, Optional, Union, cast
 
 from django.contrib.gis.db import models as gis_models
 from django.db import models
 from django.utils.functional import cached_property
 from rest_framework import serializers
-from rest_framework.exceptions import ParseError, ValidationError
+from rest_framework.exceptions import ParseError
 from rest_framework.fields import URLField, empty
 from rest_framework.serializers import BaseSerializer
 from rest_framework.utils.serializer_helpers import ReturnDict, ReturnList
@@ -306,9 +305,11 @@ class DSOModelListSerializer(DSOListSerializer):
             if self.expanded_fields:
                 # All embedded result sets are updated during the iteration over
                 # the main data with the relevant ID's to fetch on-demand.
+                fields_to_display = self.child.fields_to_display
                 embedded_fields = {
                     expand_match.name: EmbeddedResultSet.from_match(expand_match)
                     for expand_match in self.expanded_fields
+                    if fields_to_display.allow_nested(expand_match.name)
                 }
 
                 # Wrap the main object inside an observer, which notifies all
@@ -349,7 +350,9 @@ class DSOSerializer(ExpandableSerializer, serializers.Serializer):
     fields_param = "_fields"  # so ?_fields=.. gives a result
     _default_list_serializer_class = DSOListSerializer
 
-    def __init__(self, *args, fields_to_display=empty, **kwargs):
+    fields_always_included = {"_links"}
+
+    def __init__(self, *args, fields_to_display=None, **kwargs):
         super().__init__(*args, **kwargs)
         self._fields_to_display = fields_to_display
 
@@ -390,12 +393,19 @@ class DSOSerializer(ExpandableSerializer, serializers.Serializer):
         return list_serializer_class(*args, **list_kwargs)
 
     @property
-    def fields_to_display(self) -> Optional[list[str]]:
+    def fields_to_display(self) -> fields.FieldsToDisplay:
         """Define which fields should be included only."""
-        if self._fields_to_display is not empty:
-            # Instead of retrieving this from request,
-            # the expand can be defined using the serializer __init__.
-            return cast(list[str], self._fields_to_display)
+        if isinstance(self._fields_to_display, fields.FieldsToDisplay):
+            # Typically when nested embedding happens, results are provided beforehand.
+            # This also returns cached data if the previous flow was called before.
+            return self._fields_to_display
+
+        # Lazy evaluation of the current state to create the object:
+        if self._fields_to_display is not None:
+            # A different value was passed via __init__() e.g. via unit tests or a sub-serializer
+            self._fields_to_display = fields.FieldsToDisplay(
+                cast(list[str], self._fields_to_display)
+            )
         elif self.is_toplevel:
             # This is the top-level serializer. Parse from request
             request = self.context["request"]
@@ -403,15 +413,23 @@ class DSOSerializer(ExpandableSerializer, serializers.Serializer):
             if not request_fields and "fields" in request.GET:
                 request_fields = request.GET["fields"]  # DSO 1.0
 
-            return fields.parse_request_fields(request_fields)
+            self._fields_to_display = fields.FieldsToDisplay(
+                request_fields.split(",") if request_fields else None
+            )
         else:
-            # Sub field should have received it's fields_to_display override via __init__().
-            return None
+            # Nested serializer. Take from parent
+            parent = self.parent
+            if isinstance(parent, (serializers.ListSerializer, serializers.ListField)):
+                parent = parent.parent
+
+            self._fields_to_display = parent.fields_to_display.as_nested(self.field_name)
+
+        return self._fields_to_display
 
     @fields_to_display.setter
-    def fields_to_display(self, fields: list[str]):
+    def fields_to_display(self, fields_to_display: fields.FieldsToDisplay):
         """Allow serializers to assign 'fields_to_expand' later (e.g. in bind())."""
-        self._fields_to_display = fields
+        self._fields_to_display = fields_to_display
 
     def get_fields(self) -> dict[str, serializers.Field]:
         """Override DRF logic so fields can be removed from the response.
@@ -439,60 +457,48 @@ class DSOSerializer(ExpandableSerializer, serializers.Serializer):
 
         # Adjust the serializer based on the request,
         # remove fields if a subset is requested.
-        if request_fields := self.fields_to_display:
-            display_fields = self.get_fields_to_display(fields, request_fields)
-            fields = OrderedDict(
-                [
-                    (field_name, field)
-                    for field_name, field in fields.items()
-                    if field_name in display_fields
-                ]
-            )
+        fields = self.limit_return_fields(fields)
 
         # Allow embedded objects to be included inline, if this is needed for the output renderer
         # (e.g. CSV). To achieve this effect, the serializers are included as regular fields.
         # The getattr() is needed for the OpenAPIRenderer which lacks the supports_* attrs.
         if getattr(request.accepted_renderer, "supports_inline_embeds", False):
             for embed_match in self.expanded_fields:
-                # Not using field.get_serialize() as the .bind() will be called by DRF here.
+                if not self.fields_to_display.allow_nested(embed_match.name):
+                    continue
+
+                # Not using field.get_serializer() as the .bind() will be called by DRF here.
                 name = embed_match.name
                 source = embed_match.field.source if embed_match.field.source != name else None
                 fields[name] = embed_match.field.serializer_class(
-                    source=source, fields_to_expand=None
+                    source=source,
+                    fields_to_expand=None,
+                    fields_to_display=self.fields_to_display.as_nested(name),
                 )
 
         return fields
 
-    def get_fields_to_display(self, fields, request_fields) -> set:
-        """Tell which fields should be displayed"""
-
-        # Split into fields to include and fields to omit (-fieldname).
-        display_fields, omit_fields = set(), set()
-        for field in request_fields:
-            if field.startswith("-"):
-                omit_fields.add(field[1:])
-            else:
-                display_fields.add(field)
-
-        if display_fields and omit_fields:
-            raise ValidationError(
-                "It's not possible to combine inclusions and exclusions in the _fields parameter"
+    def limit_return_fields(
+        self, fields: dict[str, serializers.Field]
+    ) -> dict[str, serializers.Field]:
+        """Tell which fields should be included in the response.
+        Any field that is omitted will not be outputted, nor queried.
+        """
+        if fields_to_display := self.fields_to_display:  # also checks is_empty
+            fields = fields_to_display.apply(
+                fields,
+                valid_names=self.get_valid_field_names(fields),
+                always_keep=self.fields_always_included,
             )
 
-        fields = set(fields.keys())
-        if omit_fields:
-            display_fields = fields - omit_fields
-            invalid_fields = omit_fields - fields
-        else:
-            invalid_fields = display_fields - fields
+        return fields
 
-        if invalid_fields:
-            # Some of `display_fields` are not in result.
-            raise ValidationError(
-                "'{}' not among the available options".format("', '".join(sorted(invalid_fields))),
-                code="fields",
-            )
-        return display_fields
+    def get_valid_field_names(self, fields: dict[str, serializers.Field]) -> set[str]:
+        """Tell which fields are valid to use in the ``?_fields=..`` query.
+        This returns additional entries for relationships and expandable (virtual)fields,
+        as these should not trigger error messages when those names are mentioned.
+        """
+        return {f.name for f in self.expanded_fields} | set(fields.keys())
 
     @cached_property
     def expanded_fields(self) -> list[EmbeddedFieldMatch]:

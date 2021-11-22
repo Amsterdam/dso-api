@@ -231,7 +231,7 @@ def test_fields_limit_by_incorrect_field_gives_error(api_rf, movie, fields):
         #  as fields limit is performed on Single serializer level.
         repr(serializer)
 
-    assert "'batman' not among the available options" in str(exec_info.value)
+    assert "The following field name is invalid: 'batman'." in str(exec_info.value)
 
 
 @pytest.mark.django_db

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Optional, Union
+from typing import Iterable, Optional, Union
 from urllib.parse import quote, urlsplit, urlunsplit
 
 from django.contrib.gis.geos import GEOSGeometry
@@ -9,21 +9,234 @@ from django.db import models
 from django.db.models.fields.related import RelatedField
 from django.db.models.fields.reverse_related import ForeignObjectRel
 from django.utils.functional import cached_property
+from django.utils.translation import ngettext
 from drf_spectacular.utils import extend_schema_field, inline_serializer
 from more_itertools import first
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 from rest_framework_gis.fields import GeometryField
 from schematools.contrib.django.models import LooseRelationField
 
-from rest_framework_dso.utils import unlazy_object
+from rest_framework_dso.utils import group_dotted_names, unlazy_object
+
+DictOfDicts = dict[str, dict[str, dict]]
 
 
-def parse_request_fields(fields: Optional[str]):
-    if not fields:
-        return None
+class FieldsToDisplay:
+    """Tell which fields should be displayed in the response.
 
-    # TODO: support nesting, perform validation
-    return fields.split(",")
+    This object type helps to track nesting levels of fields to render,
+    e.g. ``?_fields=id,code,customer.id,customer.name``. It also handles
+    exclusions across nesting levels, e.g. ``?_fields=-customer.name``.
+    """
+
+    def __init__(self, fields: Optional[list[str]] = None, prefix: str = ""):
+        # The 'fields' is pre-processed into 3 structures that allow to deal with
+        # all possible scenario's that the methods of this class need to cover.
+        # For example, this also allows queries like ?_fields=-person.name to properly
+        # include the person object, but on the next level exclude the 'name' field,
+        # AND also still include all other fields at the top-level (not only include person)
+        self._includes: set[str] = set()
+        self._excludes: set[str] = set()
+        self._children: dict[str, FieldsToDisplay] = dict()
+        self._allow_all = True
+        self.prefix = prefix
+
+        if fields:
+            # Parse request string into nested format
+            fields = group_dotted_names(fields)
+
+            self._allow_all = False
+            self._init_nesting(fields)
+
+    def __repr__(self):
+        """Make debugging easier"""
+        prefix = f"prefix={self.prefix}, " if self.prefix else ""
+        children = sorted(self._children.keys())
+        if self._allow_all:
+            # no {prefix} here, as it's unreliable due to reused singleton instances.
+            return "<FieldsToDisplay: allow all>"
+        elif self._excludes:
+            return (
+                f"<FieldsToDisplay: {prefix}exclude={sorted(self._excludes)!r}"
+                f", children={children}>"
+            )
+        elif not self._includes and self._children:
+            # no limitations on the current level, but some excludes on a deeper level
+            return f"<FieldsToDisplay: allow all, children={children}>"
+        elif self._includes:
+            return (
+                f"<FieldsToDisplay: {prefix}include={sorted(self._includes)!r}"
+                f", children={children}>"
+            )
+        else:
+            return "<FieldsToDisplay: deny all>"
+
+    def __bool__(self):
+        """Whether the returned fields need to be reduced.
+        Note that this returns false when there are child nodes that need to be reduced.
+        These are found with :meth:`allow_nested`, :meth:`as_nested` and :attr:`children`.
+        """
+        return not self._allow_all
+
+    def _init_nesting(self, fields: DictOfDicts, exclude_leaf=False):
+        """Split the field parameters to a tree of includes and excludes."""
+        self._allow_all = False  # reset for child nodes
+        for field, sub_fields in fields.items():
+            is_exclude = field.startswith("-")
+            name = field[1:] if is_exclude else field
+
+            if sub_fields:
+                if any(sub_field.startswith("-") for sub_field in sub_fields.keys()):
+                    # Avoid ?_fields=person.-name
+                    raise ValidationError(
+                        "The minus-sign can only be used in front of a field name.", code="fields"
+                    )
+
+                # When there are sub fields, always allow the main object.
+                # This includes options like ?_fields=-person.name.
+                child = self._children.get(name)
+                if child is None:
+                    # Typically this path is taken, but the same name can occur twice
+                    # when an exclude happens on a deeper level.
+                    # e.g. ?_fields=person.name=..,-person.dossier.data
+                    # The top level has both an "person" and "-person" group.
+                    child = FieldsToDisplay(prefix=f"{name}.")
+                    self._children[name] = child
+
+                child._init_nesting(sub_fields, exclude_leaf=exclude_leaf or is_exclude)
+            else:
+                if is_exclude or exclude_leaf:
+                    self._excludes.add(name)
+                else:
+                    self._includes.add(name)
+
+        if self._includes and self._excludes:
+            # Already validated before
+            raise ValidationError(
+                "It's not possible to combine inclusions and exclusions"
+                " in the _fields parameter",
+                code="fields",
+            )
+
+    @property
+    def includes(self) -> Iterable[str]:
+        """Tell which fields must be included.
+        Note that any item in :attr:`children` should also be considerd for inclusion.
+        """
+        return self._includes
+
+    @property
+    def excludes(self) -> Iterable[str]:
+        """Tell which fields must not be displayed."""
+        return self._excludes
+
+    @property
+    def children(self) -> Iterable[str]:
+        """Tell which sub-objects will have exclusions"""
+        return self._children.keys()
+
+    def allow_nested(self, field_name) -> bool:
+        """Whether a field can be used for nesting"""
+        return (
+            self._allow_all
+            or field_name in self._children
+            or field_name in self._includes
+            or (self._excludes and field_name not in self._excludes)
+        )
+
+    def as_nested(self, field_name) -> FieldsToDisplay:
+        """Return a new instance that starts at a nesting level.
+        An empty result is returned when the field does not allow nesting, or isn't mentioned.
+        """
+        if self._allow_all:
+            return ALLOW_ALL_FIELDS_TO_DISPLAY
+
+        try:
+            return self._children[field_name]
+        except KeyError:
+            if self._excludes:
+                # When this level perform excludes, deny access if it's excluded
+                return (
+                    DENY_SUB_FIELDS_TO_DISPLAY
+                    if field_name in self._excludes
+                    else ALLOW_ALL_FIELDS_TO_DISPLAY
+                )
+            elif self._includes:
+                # When there are explicit includes, deny access if it's missing:
+                return (
+                    ALLOW_ALL_FIELDS_TO_DISPLAY
+                    if field_name in self._includes
+                    else DENY_SUB_FIELDS_TO_DISPLAY
+                )
+            else:
+                # No includes/excludes -> this level only has children.
+                return ALLOW_ALL_FIELDS_TO_DISPLAY
+
+    def get_allow_list(self, valid_names: set[str]) -> tuple[set[str], set[str]]:
+        """Find out which fields should be included.
+        This transforms the include/exclude behavior
+        into a positive list of fields that should be kept.
+        """
+        # Detect any invalid names
+        if self._allow_all:
+            return valid_names, set()
+        elif self._excludes:
+            fields_to_keep = valid_names - self._excludes
+            invalid_fields = self._excludes - valid_names
+        elif not self._includes and self._children:
+            # Only sub-objects are limited, so the 'include' should not be used
+            # for limiting the fields at all.
+            return valid_names, set()
+        else:
+            # The includes list is leading, even when its empty.
+            fields_to_keep = set(self._includes)  # copy to avoid tampering
+            invalid_fields = fields_to_keep - valid_names
+
+        # To exclude a sublevel attribute, the parent must always be included:
+        fields_to_keep.update(self._children.keys())
+        return fields_to_keep, invalid_fields
+
+    def apply(
+        self,
+        fields: dict[str, serializers.Field],
+        valid_names: Iterable[str],
+        always_keep: Iterable[str],
+    ) -> dict[str, serializers.Field]:
+        """Reduce the fields from a serializer based on the current context.
+        This returns a new dictionary that can be assigned to `serializer.fields`.
+        """
+        if self._allow_all:
+            return fields
+
+        # Split into fields to include and fields to omit (-fieldname).
+        valid_names = set(fields.keys()) | set(valid_names)
+        fields_to_keep, invalid_fields = self.get_allow_list(valid_names)
+        fields_to_keep.update(always_keep)
+
+        if invalid_fields:
+            # Some of `display_fields` are not in result.
+            names_str = f"', {self.prefix}'".join(sorted(invalid_fields))
+            raise ValidationError(
+                ngettext(
+                    "The following field name is invalid: {names}.",
+                    "The following field names are invalid: {names}.",
+                    len(invalid_fields),
+                ).format(names=f"'{self.prefix}{names_str}'"),
+                code="fields",
+            )
+
+        # Python 3.6+ dicts are already ordered, so there is no need to use DRF's OrderedDict
+        return {
+            field_name: field
+            for field_name, field in fields.items()
+            if field_name in fields_to_keep
+        }
+
+
+ALLOW_ALL_FIELDS_TO_DISPLAY = FieldsToDisplay()
+DENY_SUB_FIELDS_TO_DISPLAY = FieldsToDisplay()
+DENY_SUB_FIELDS_TO_DISPLAY._allow_all = False
 
 
 def get_embedded_field_class(

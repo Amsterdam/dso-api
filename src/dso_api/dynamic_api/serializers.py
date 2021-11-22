@@ -55,6 +55,7 @@ from rest_framework_dso.embedding import EmbeddedFieldMatch
 from rest_framework_dso.fields import (
     AbstractEmbeddedField,
     DSORelatedLinkField,
+    FieldsToDisplay,
     get_embedded_field_class,
 )
 from rest_framework_dso.serializers import DSOModelListSerializer, DSOModelSerializer
@@ -341,18 +342,66 @@ class DynamicBodySerializer(DynamicSerializer):
         """Remove fields that shouldn't be in the body."""
         fields = super().get_fields()
 
-        # Pass the current state to the DynamicLinksSerializer instance
+        # Remove fields from the _links field too. This is not done in the serializer
+        # itself as that creates a cross-dependency between the parent/child.fields property.
         links_field = fields.get("_links")
         if links_field is not None and isinstance(links_field, DynamicLinksSerializer):
-            links_field.expand_scope = self.expand_scope
+            if fields_to_display := self.fields_to_display:  # checks __bool__ for allow_all
+                # The 'invalid_fields' is not checked against here, as that already happened
+                # for the top-level fields reduction.
+                main_and_links_fields = self.get_valid_field_names(fields)
+                fields_to_keep, _ = fields_to_display.get_allow_list(main_and_links_fields)
+                fields_to_keep.update(links_field.fields_always_included)
+                links_field.fields = {
+                    name: field
+                    for name, field in links_field.fields.items()
+                    if name in fields_to_keep
+                }
 
         return fields
+
+    def get_valid_field_names(self, fields: dict[str, serializers.Field]) -> set[str]:
+        """Override to allow limiting the ``_links`` field layout too.
+        By allowing the names from the ``_links`` field as if these exist at this level,
+        those fields can be restricted quite naturally. This is needed to unclutter
+        the ``_links`` output when nested relations are queried.
+        """
+        valid_names = super().get_valid_field_names(fields)
+
+        # When the _links object is a serializer, also allow these fields
+        # names as if these are present here.
+        links_field = fields.get("_links")
+        if links_field is not None and isinstance(links_field, DynamicLinksSerializer):
+            links_field.parent = self  # perform early Field.bind()
+            links_fields = set(links_field.fields.keys()) - links_field.fields_always_included
+            valid_names.update(links_fields)
+
+        return valid_names
 
 
 class DynamicLinksSerializer(DynamicSerializer):
     """The serializer for the ``_links`` field.
     Following DSO/HAL guidelines, it contains "self", "schema", and all relational fields.
     """
+
+    fields_always_included = {"self", "schema"}
+
+    @property
+    def fields_to_display(self):
+        # Make sure child serializers (e.g. temporal relations / through serializers)
+        # don't reduce their fields by taking this object from their "parent" serializer.
+        return FieldsToDisplay()
+
+    @property
+    def expanded_fields(self) -> list[EmbeddedFieldMatch]:
+        # No need for our super class try look for expanded fields.
+        return super().expanded_fields
+
+    def limit_return_fields(self, fields):
+        # Don't apply the ?_fields=... request here, let the parent to this instead.
+        # Otherwise there is an initialization loop in get_fields() to find
+        # the fields of the parent and child at the same time.
+        return fields
 
     def get_fields(self) -> dict[str, serializers.Field]:
         """Override to avoid adding fields that loop back to a parent."""
@@ -451,6 +500,11 @@ class ThroughSerializer(DynamicSerializer):
     """The serializer for the through table of M2M relations.
     It's fields are defined by the factory function, so little code is found here.
     """
+
+    def limit_return_fields(self, fields):
+        # Don't limit a through serializer via ?_fields=...,
+        # as this exists in the _links section.
+        return fields
 
 
 _serializer_factory_cache = LRUCache(maxsize=100000)
