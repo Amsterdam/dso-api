@@ -482,7 +482,12 @@ class TestLimitFields:
         response = api_client.get("/v1/movies", data={"_fields": "name"})
         data = read_response_json(response)
         assert response.status_code == 200, data
-        assert data["_embedded"]["movie"] == [{"name": "foo123"}, {"name": "test"}]
+        assert data["_embedded"] == {
+            "movie": [
+                {"name": "foo123"},
+                {"name": "test"},
+            ]
+        }
 
     def test_limit_multiple_fields(self, api_client):
         """Prove that ?_fields=name,date results in result with only names and dates"""
@@ -492,16 +497,66 @@ class TestLimitFields:
         response = api_client.get("/v1/movies", data={"_fields": "name,date_added"})
         data = read_response_json(response)
         assert response.status_code == 200, data
-        assert data["_embedded"]["movie"] == [
-            {"name": "foo123", "date_added": None},
-            {"name": "test", "date_added": None},
-        ]
+        assert data["_embedded"] == {
+            "movie": [
+                {"name": "foo123", "date_added": None},
+                {"name": "test", "date_added": None},
+            ]
+        }
+
+    def test_limit_expanded_field(self, api_client, movie):
+        """Prove that ?_fields=name results in result with only names"""
+        response = api_client.get(
+            "/v1/movies",
+            data={
+                "_fields": "name,category.name,category.last_updated_by.name",
+                "_expandScope": "category.last_updated_by",
+            },
+        )
+        data = read_response_json(response)
+        assert response.status_code == 200, data
+        assert data["_embedded"] == {
+            "movie": [
+                {"name": "foo123"},
+            ],
+            "category": [
+                {
+                    "name": "bar",
+                    "_embedded": {
+                        "last_updated_by": {"name": "bar_man"},
+                    },
+                },
+            ],
+        }
+
+    def test_limit_expanded_field_exclude(self, api_client, movie):
+        """Prove that excluding a subfield still gives the whole main object."""
+        response = api_client.get(
+            "/v1/movies",
+            data={
+                "_fields": "-category.last_updated_by.name",
+                "_expandScope": "category.last_updated_by",
+            },
+        )
+        data = read_response_json(response)
+        assert response.status_code == 200, data
+        assert data["_embedded"] == {
+            "movie": [
+                # Still complete movie:
+                {"category_id": 1, "date_added": None, "name": "foo123"},
+            ],
+            "category": [
+                {
+                    "name": "bar",
+                    "_embedded": {
+                        "last_updated_by": {},  # removed name (the only field)
+                    },
+                }
+            ],
+        }
 
     def test_incorrect_field_in_fields_results_in_error(self, api_client):
         """Prove that adding invalid name to ?_fields will result in error"""
-        Movie.objects.create(name="test")
-        Movie.objects.create(name="foo123")
-
         api_client.raise_request_exception = False
         response = api_client.get("/v1/movies", data={"_fields": "name,date"})
         data = read_response_json(response)
@@ -516,10 +571,10 @@ class TestLimitFields:
                 {
                     "type": "urn:apiexception:invalid:fields",
                     "name": "fields",
-                    "reason": "'date' not among the available options",
+                    "reason": "The following field name is invalid: 'date'.",
                 }
             ],
-            "x-validation-errors": ["'date' not among the available options"],
+            "x-validation-errors": ["The following field name is invalid: 'date'."],
         }
 
 

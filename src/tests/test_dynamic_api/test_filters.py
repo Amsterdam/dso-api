@@ -235,9 +235,10 @@ class TestDynamicFilterSet:
             ("ligtInBuurt.volgnummer[not]", "ligt_in_buurt_volgnummer"),
         }
 
-        assert expected_fields.issubset(
-            [(k, v.field_name) for k, v in filterset_class.get_filters().items()]
+        actual_fields = set(
+            (k, v.field_name) for k, v in filterset_class.get_filters().items() if "." in k
         )
+        assert expected_fields.issubset(actual_fields)
 
         assert VerblijfsObjecten.objects.count() == 4
 

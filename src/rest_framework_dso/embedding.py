@@ -22,10 +22,10 @@ from rest_framework.exceptions import ParseError
 
 from rest_framework_dso.fields import AbstractEmbeddedField
 from rest_framework_dso.serializer_helpers import ReturnGenerator, peek_iterable
+from rest_framework_dso.utils import DictOfDicts, group_dotted_names
 
 logger = logging.getLogger(__name__)
 
-DictOfDicts = dict[str, dict[str, dict]]
 T = TypeVar("T")
 M = TypeVar("M", bound=models.Model)
 
@@ -76,6 +76,9 @@ class ExpandScope:
     def __bool__(self):
         """Whether fields need to be expanded."""
         return bool(self.auto_expand_all or self._expand_scope)
+
+    def __repr__(self):
+        return f"<ExpandScope: all={self.auto_expand_all}, scope={self._expand_scope!r}>"
 
     def _as_nested(self, nested_fields_to_expand):
         """Create a scope that starts from a sub-level"""
@@ -192,7 +195,7 @@ class EmbeddedFieldMatch:
         """Provide the serializer for the embedded relation."""
         # The nested 'fields_to_expand' data is provided to the child serializer,
         # so it can expand the next nesting if needed.
-        from .serializers import ExpandableSerializer
+        from .serializers import DSOSerializer, ExpandableSerializer
 
         kwargs = {}
         if issubclass(self.field.serializer_class, ExpandableSerializer):
@@ -200,7 +203,24 @@ class EmbeddedFieldMatch:
         elif self.nested_expand_scope:
             raise RuntimeError("EmbeddedField serializer does not support nesting embeds")
 
+        if isinstance(self.serializer, DSOSerializer):
+            # Also the 'fields_to_display' to the nested serializer
+            nested_fields_to_display = self.serializer.fields_to_display.as_nested(self.name)
+            if issubclass(self.field.serializer_class, DSOSerializer):
+                kwargs["fields_to_display"] = nested_fields_to_display
+            elif nested_fields_to_display:
+                raise RuntimeError(
+                    "EmbeddedField serializer does not support reducing return fields"
+                )
+
         serializer = self.field.get_serializer(parent=self.serializer, **kwargs)
+
+        # By reading serializer.fields early,
+        # a check on fields_to_display also runs before rendering.
+        child = (
+            serializer.child if isinstance(serializer, serializers.ListSerializer) else serializer
+        )
+        child.fields  # noqa: perform early checks
 
         # Allow the output format to customize the serializer for the embedded relation.
         renderer = self.serializer.context["request"].accepted_renderer
@@ -279,16 +299,6 @@ def get_all_embedded_fields_by_name(
             )
         )
 
-    return result
-
-
-def group_dotted_names(dotted_field_names: list[str]) -> DictOfDicts:
-    """Convert a list of dotted names to tree."""
-    result = {}
-    for dotted_name in dotted_field_names:
-        tree_level = result
-        for path_item in dotted_name.split("."):
-            tree_level = tree_level.setdefault(path_item, {})
     return result
 
 

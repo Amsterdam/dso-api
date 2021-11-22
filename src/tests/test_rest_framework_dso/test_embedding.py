@@ -10,8 +10,8 @@ from rest_framework_dso.embedding import (
     ChunkedQuerySetIterator,
     ObservableIterator,
     get_all_embedded_field_names,
-    group_dotted_names,
 )
+from rest_framework_dso.utils import group_dotted_names
 
 from .models import Category, Movie
 from .serializers import MovieSerializer
