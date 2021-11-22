@@ -1,0 +1,56 @@
+{
+  "id": "unconventionaltemporal",
+  "type": "dataset",
+  "title": "",
+  "version": "0.0.1",
+  "default_version": "0.0.1",
+  "crs": "EPSG:28992",
+  "tables": [
+    {
+      "id": "unconventionaltemporaltable",
+      "type": "table",
+      "temporal": {
+        "identifier": "UnconventionalTemporalId",
+        "dimensions": {
+          "geldigOp": [
+            "beginGeldigheid",
+            "eindGeldigheid"
+          ]
+        }
+      },
+      "schema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "identifier": "unconventionalIdentifier",
+        "required": [
+          "unconventionalIdentifier",
+          "UnconventionalTemporalId"
+        ],
+        "properties": {
+          "unconventionalIdentifier": {
+            "type": "integer",
+            "description": "uniek",
+            "shortname": "uncid"
+          },
+          "UnconventionalTemporalId": {
+            "type": "string",
+            "shortname": "uncTid"
+          },
+          "beginGeldigheid": {
+            "type": "string",
+            "format": "date-time",
+            "shortname": "start"
+          },
+          "eindGeldigheid": {
+            "type": "string",
+            "format": "date-time",
+            "shortname": "eind"
+          },
+          "schema": {
+            "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.1#/definitions/schema"
+          }
+        }
+      }
+    }
+  ]
+}
