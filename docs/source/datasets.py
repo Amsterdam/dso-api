@@ -251,7 +251,7 @@ def _get_feature_type_context(table: DatasetTableSchema, paths: dict[str, str]):
     }
 
 
-def _get_fields(table_fields) -> List[DatasetFieldSchema]:
+def _get_fields(table_fields, parent_field=None) -> List[DatasetFieldSchema]:
     """Flatten a nested listing of fields."""
     result_fields = []
     for field in table_fields:
@@ -363,11 +363,11 @@ def _get_filter_context(field: DatasetFieldSchema) -> List[dict[str, Any]]:
             related_identifiers = field.related_table.identifier
             return result + [
                 _filter_payload(toCamelCase(f"{field.id}.{sub_field.id}"), sub_field)
-                for sub_field in field.sub_fields
+                for sub_field in field.subfields
                 if sub_field.id in related_identifiers
             ]
     elif field.is_nested_table:
-        return [_filter_payload(toCamelCase(f"{field.id}.{f.id}"), f) for f in field.sub_fields]
+        return [_filter_payload(toCamelCase(f"{field.id}.{f.id}"), f) for f in field.subfields]
     elif field.is_scalar or field.is_array_of_scalars:
         # Regular filters
         return [_filter_payload(toCamelCase(field.id), field)]
