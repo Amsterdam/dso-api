@@ -984,7 +984,7 @@ def woningbouwplan_model(woningbouwplannen_dataset, dynamic_models):
 
 @pytest.fixture()
 def statistieken_data(statistieken_model, buurten_data):
-    statistieken_model.objects.create(
+    return statistieken_model.objects.create(
         id=1,
         buurt="03630000000078",
     )

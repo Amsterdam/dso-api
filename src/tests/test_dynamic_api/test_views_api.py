@@ -317,7 +317,7 @@ class TestAuth:
                     "https://schemas.data.amsterdam.nl"
                     "/datasets/parkeervakken/dataset#parkeervakken"
                 ),
-                "self": {"href": "http://testserver/v1/parkeervakken/parkeervakken/1/"},
+                "self": {"href": "http://testserver/v1/parkeervakken/parkeervakken/1/", "id": "1"},
             },
             # no ID field.
             "soort": "N",  # letters:1
@@ -336,7 +336,7 @@ class TestAuth:
                     "https://schemas.data.amsterdam.nl"
                     "/datasets/parkeervakken/dataset#parkeervakken"
                 ),
-                "self": {"href": "http://testserver/v1/parkeervakken/parkeervakken/1/"},
+                "self": {"href": "http://testserver/v1/parkeervakken/parkeervakken/1/", "id": "1"},
             },
             # Full data!
             "id": "1",
@@ -363,7 +363,7 @@ class TestAuth:
                     "https://schemas.data.amsterdam.nl"
                     "/datasets/parkeervakken/dataset#parkeervakken"
                 ),
-                "self": {"href": "http://testserver/v1/parkeervakken/parkeervakken/1/"},
+                "self": {"href": "http://testserver/v1/parkeervakken/parkeervakken/1/", "id": "1"},
             },
             "soort": "N",  # letters:1
             "type": "Langs",  # read permission
@@ -382,7 +382,7 @@ class TestAuth:
                     "https://schemas.data.amsterdam.nl"
                     "/datasets/parkeervakken/dataset#parkeervakken"
                 ),
-                "self": {"href": "http://testserver/v1/parkeervakken/parkeervakken/1/"},
+                "self": {"href": "http://testserver/v1/parkeervakken/parkeervakken/1/", "id": "1"},
             },
             "type": "Langs",  # read permission
             "soort": "NIET FISCA",  # read permission
@@ -994,6 +994,7 @@ class TestEmbedTemporalTables:
                             "heeftDossier": {
                                 "href": "http://testserver/v1/bag/dossiers/GV00000406/",
                                 "title": "GV00000406",
+                                "dossier": "GV00000406",
                             },
                             "ligtInBouwblok": {
                                 "href": (
@@ -1496,6 +1497,7 @@ class TestEmbedTemporalTables:
                 "self": {
                     "href": "http://testserver/v1/meldingen/statistieken/1/",
                     "title": "1",
+                    "id": 1,
                 },
             },
             "id": 1,
@@ -1519,6 +1521,7 @@ class TestEmbedTemporalTables:
                 "self": {
                     "href": "http://testserver/v1/meldingen/statistieken/1/",
                     "title": "1",
+                    "id": 1,
                 },
                 "buurt": {
                     "href": "http://testserver/v1/gebieden/buurten/03630000000078/",
@@ -1559,7 +1562,6 @@ class TestEmbedTemporalTables:
         """Prove that buurt shows up when listview is expanded and uses the
         latest volgnummer
         """
-
         url = reverse("dynamic_api:meldingen-statistieken-list")
         response = api_client.get(url, data={"_expand": "true"})
         data = read_response_json(response)
