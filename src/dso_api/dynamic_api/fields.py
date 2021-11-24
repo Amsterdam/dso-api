@@ -3,11 +3,9 @@ from datetime import datetime, timedelta
 import azure.storage.blob
 from django.conf import settings
 from more_ds.network.url import URL
-from more_itertools import first
 from rest_framework import serializers
-from rest_framework.reverse import reverse
+from rest_framework.relations import HyperlinkedRelatedField
 from schematools.types import DatasetTableSchema
-from schematools.utils import to_snake_case
 
 from .temporal import TemporalTableQuery
 from .utils import split_on_separator
@@ -34,7 +32,7 @@ class TemporalHyperlinkedRelatedField(serializers.HyperlinkedRelatedField):
             return None
 
         # NOTE: this one splits on the Django "id" field instead of
-        # reading the "identificatie" / "volgnummer" fields directly.
+        # reading the temporal fields directly (e.g.: "identificatie"/"volgnummer").
         # It does allow use_pk_only_optimization() when lookup_field == "pk".
         id_value, id_version = split_on_separator(getattr(obj, self.lookup_field))
         base_url = self.reverse(
@@ -91,48 +89,14 @@ class AzureBlobFileField(serializers.ReadOnlyField):
         return f"{value}?{sas_token}"
 
 
-class LooseRelationUrlField(serializers.CharField):
-    """A url field for very loose relations to temporal datasets
-    The relation has to be defined as: "<dataset>:<table>:<column>" in the schema
-    The specific definition of the column signals that the relation is
-    very loose and a url is constructed without any checking.
-    """
-
-    def to_representation(self, value):
-        from .urls import app_name
-
-        request = self.context["request"]
-        view = self.context["view"]
-        relation = view.model._meta.get_field(to_snake_case(self.field_name)).relation
-        dataset_name, table_name = (to_snake_case(part) for part in relation.split(":"))
-        # We force that the incoming value is interpreted as the
-        # pk, although this is not always the 'real' pk, e.g. for temporal relations
-        kwargs = {"pk": value}
-        return reverse(
-            f"{app_name}:{dataset_name}-{table_name}-detail",
-            kwargs=kwargs,
-            request=request,
-        )
-
-
-class HALLooseRelationUrlField(LooseRelationUrlField):
+class HALLooseRelationUrlField(HyperlinkedRelatedField):
     """Wrap the URL from LooseRelationUrlField according to HAL specs."""
 
-    def to_representation(self, value):
-        href = super().to_representation(value)
-        view = self.context["view"]
-        field = view.model._meta.get_field(to_snake_case(self.field_name))
-        relation = field.relation
-        dataset_name, table_name = (to_snake_case(part) for part in relation.split(":"))
-        result = {"href": href}
+    def use_pk_only_optimization(self):
+        return True
 
-        if view.model.has_display_field():
-            result["title"] = str(value)
-
-        related_identifier = first(field.related_model.table_schema().identifier)
-        result[related_identifier] = value
-        return result
-
-
-class LooseRelationUrlListField(serializers.ListField):
-    child = LooseRelationUrlField
+    def get_url(self, obj, view_name, request, format=None):
+        """Generate /path/{<primary_id>}/"""
+        return self.reverse(
+            view_name, kwargs={self.lookup_url_kwarg: obj}, request=request, format=format
+        )

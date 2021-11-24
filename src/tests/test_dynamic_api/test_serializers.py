@@ -6,7 +6,7 @@ from django.core.validators import EmailValidator, URLValidator
 from schematools.permissions import UserScopes
 from schematools.types import ProfileSchema
 
-from dso_api.dynamic_api.fields import LooseRelationUrlField
+from dso_api.dynamic_api.fields import HALLooseRelationUrlField
 from dso_api.dynamic_api.serializers import clear_serializer_factory_cache, serializer_factory
 from rest_framework_dso.fields import EmbeddedField
 from rest_framework_dso.views import DSOViewMixin
@@ -99,11 +99,13 @@ class TestDynamicSerializer:
                 "cluster": {
                     "href": "http://testserver/v1/afvalwegingen/clusters/123.456/",
                     "title": "123.456",
+                    "id": "123.456",
                 },
                 "schema": "https://schemas.data.amsterdam.nl/datasets/afvalwegingen/dataset#containers",  # noqa: E501
                 "self": {
                     "href": "http://testserver/v1/afvalwegingen/containers/2/",
                     "title": "2",
+                    "id": 2,
                 },
             },
             "clusterId": "123.456",
@@ -138,10 +140,12 @@ class TestDynamicSerializer:
                 "self": {
                     "href": "http://testserver/v1/afvalwegingen/containers/2/",
                     "title": "2",
+                    "id": 2,
                 },
                 "cluster": {
                     "href": "http://testserver/v1/afvalwegingen/clusters/123.456/",
                     "title": "123.456",
+                    "id": "123.456",
                 },
             },
             "id": 2,
@@ -157,6 +161,7 @@ class TestDynamicSerializer:
                         "self": {
                             "href": "http://testserver/v1/afvalwegingen/clusters/123.456/",
                             "title": "123.456",
+                            "id": "123.456",
                         },
                         "schema": "https://schemas.data.amsterdam.nl/datasets/afvalwegingen/dataset#clusters",  # noqa: E501
                     },
@@ -190,6 +195,7 @@ class TestDynamicSerializer:
                 "self": {
                     "href": "http://testserver/v1/afvalwegingen/containers/3/",
                     "title": "3",
+                    "id": 3,
                 },
             },
             "id": 3,
@@ -204,9 +210,9 @@ class TestDynamicSerializer:
 
     @staticmethod
     def test_expand_broken_relation(afval_container_model):
-        """Prove that expanding non-existing FK values values doesn't crash.
-           Cluster will not be expanded to a url, because the pk_only_optimization
-           has been switched off for hyperlinked related fields.
+        """Prove that expanded non-existent FK values are not rendered
+        but also don't cause the serializer to crash.
+
         The _embedded part has a None value instead.
         """
         drf_request = to_drf_request(api_request_with_scopes(["BAG/R"]))
@@ -226,14 +232,9 @@ class TestDynamicSerializer:
                 "self": {
                     "href": "http://testserver/v1/afvalwegingen/containers/4/",
                     "title": "4",
+                    "id": 4,
                 },
                 "schema": "https://schemas.data.amsterdam.nl/datasets/afvalwegingen/dataset#containers",  # noqa: E501
-                "cluster": {
-                    # as the DSORelatedLinkField uses the cluster_id,
-                    # it can still generate this link. It doesn't read the DB object.
-                    "href": "http://testserver/v1/afvalwegingen/clusters/99/",
-                    "title": "99",
-                },
             },
             "id": 4,
             "clusterId": 99,
@@ -279,10 +280,12 @@ class TestDynamicSerializer:
                 "self": {
                     "href": "http://testserver/v1/afvalwegingen/containers/2/",
                     "title": "2",
+                    "id": 2,
                 },
                 "cluster": {
                     "href": "http://testserver/v1/afvalwegingen/clusters/123.456/",
                     "title": "123.456",
+                    "id": "123.456",
                 },
             },
             "id": 2,
@@ -298,6 +301,7 @@ class TestDynamicSerializer:
                         "self": {
                             "href": "http://testserver/v1/afvalwegingen/clusters/123.456/",
                             "title": "123.456",
+                            "id": "123.456",
                         },
                         "schema": "https://schemas.data.amsterdam.nl/datasets/test/afvalwegingen/dataset#clusters",  # noqa: E501
                     },
@@ -379,15 +383,18 @@ class TestDynamicSerializer:
                 "self": {
                     "href": "http://testserver/v1/vestiging/vestiging/1/",
                     "title": "1",
+                    "id": 1,
                 },
                 "schema": "https://schemas.data.amsterdam.nl/datasets/vestiging/dataset#vestiging",  # noqa: E501
                 "postAdres": {
                     "href": "http://testserver/v1/vestiging/adres/3/",
                     "title": "3",
+                    "id": 3,
                 },
                 "bezoekAdres": {
                     "href": "http://testserver/v1/vestiging/adres/1/",
                     "title": "1",
+                    "id": 1,
                 },
             },
             "id": 1,
@@ -406,15 +413,18 @@ class TestDynamicSerializer:
                 "self": {
                     "href": "http://testserver/v1/vestiging/vestiging/2/",
                     "title": "2",
+                    "id": 2,
                 },
                 "schema": "https://schemas.data.amsterdam.nl/datasets/vestiging/dataset#vestiging",  # noqa: E501
                 "postAdres": {
                     "href": "http://testserver/v1/vestiging/adres/3/",
                     "title": "3",
+                    "id": 3,
                 },
                 "bezoekAdres": {
                     "href": "http://testserver/v1/vestiging/adres/2/",
                     "title": "2",
+                    "id": 2,
                 },
             },
             "id": 2,
@@ -435,15 +445,18 @@ class TestDynamicSerializer:
                 "self": {
                     "href": "http://testserver/v1/vestiging/adres/3/",
                     "title": "3",
+                    "id": 3,
                 },
                 "vestigingenPost": [
                     {
                         "href": "http://testserver/v1/vestiging/vestiging/1/",
                         "title": "1",
+                        "id": 1,
                     },
                     {
                         "href": "http://testserver/v1/vestiging/vestiging/2/",
                         "title": "2",
+                        "id": 2,
                     },
                 ],
             },
@@ -492,7 +505,6 @@ class TestDynamicSerializer:
         assert "regimes" in ParkeervakSerializer._declared_fields
 
         # Prove that data is serialized with relations.
-        # Both the cluster_id field and 'cluster' field are generated.
 
         parkeervak_serializer = ParkeervakSerializer(parkeervak, context={"request": drf_request})
         data = normalize_data(parkeervak_serializer.data)
@@ -500,6 +512,7 @@ class TestDynamicSerializer:
             "_links": {
                 "self": {
                     "href": "http://testserver/v1/parkeervakken/parkeervakken/121138489047/",
+                    "id": "121138489047",
                 },
                 "schema": "https://schemas.data.amsterdam.nl/datasets/parkeervakken/dataset#parkeervakken",  # noqa: E501
             },
@@ -539,7 +552,7 @@ class TestDynamicSerializer:
             fietspaaltjes_data, context={"request": drf_request}
         )
 
-        assert "'title': 'reference for DISPLAY FIELD'" in str(fietsplaatjes_serializer.data)
+        assert "'title', 'reference for DISPLAY FIELD'" in str(fietsplaatjes_serializer.data)
 
     @staticmethod
     def test_no_display_title_present(
@@ -552,7 +565,7 @@ class TestDynamicSerializer:
             fietspaaltjes_data_no_display, context={"request": drf_request}
         )
 
-        assert "'title': 'reference for DISPLAY FIELD'" not in str(fietsplaatjes_serializer.data)
+        assert "'title', 'reference for DISPLAY FIELD'" not in str(fietsplaatjes_serializer.data)
 
     @staticmethod
     def test_uri_field_present(explosieven_model):
@@ -752,8 +765,13 @@ class TestDynamicSerializer:
             statistiek,
             context={"request": drf_request, "view": DummyView(statistieken_model)},
         )
+        assert (
+            statistieken_serializer.fields["_links"].fields["buurt"].__class__.__name__
+            == "GebiedenbuurtenLinkSerializer"
+        )
         assert isinstance(
-            statistieken_serializer.fields["_links"].fields["buurt"], LooseRelationUrlField
+            statistieken_serializer.fields["_links"].fields["buurt"].fields["href"],
+            HALLooseRelationUrlField,
         )
 
         assert (

@@ -10,7 +10,6 @@ from django.db.models.fields.related import RelatedField
 from django.db.models.fields.reverse_related import ForeignObjectRel
 from django.utils.functional import cached_property
 from django.utils.translation import ngettext
-from drf_spectacular.utils import extend_schema_field, inline_serializer
 from more_itertools import first
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
@@ -489,32 +488,10 @@ class EmbeddedManyToManyRelField(EmbeddedManyToManyField):
         )
 
 
-@extend_schema_field(
-    # Tell what this field will generate as object structure
-    inline_serializer(
-        "HALLink",
-        fields={
-            "href": serializers.URLField(),
-            "title": serializers.CharField(allow_null=True),
-        },
-    )
-)
 class DSORelatedLinkField(serializers.HyperlinkedRelatedField):
     """A field that generates the proper structure of an object in the ``_links`` section.
     This generates a "title" and "href"..
     """
-
-    def to_representation(self, value: models.Model):
-        request = self.context["request"]
-        output = {
-            "href": self.get_url(value, self.view_name, request, None),
-        }
-
-        # Little typesafe hack to allow models that disable the title field (e.g. DynamicModel)
-        if getattr(value, "_display_field", True):
-            output["title"] = str(value)
-
-        return output
 
 
 class DSOSelfLinkField(DSORelatedLinkField, serializers.HyperlinkedIdentityField):
