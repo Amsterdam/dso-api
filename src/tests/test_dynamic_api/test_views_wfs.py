@@ -126,6 +126,7 @@ class TestDatasetWFSView:
             "buurtcode": None,
             "geometry": None,
             "straatnaam": None,
+            "volgnummer": None,
         }
 
     def test_wfs_feature_name(self, api_client, afval_dataset, afval_adresloopafstand):

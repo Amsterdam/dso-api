@@ -21,6 +21,10 @@
           "schema": {
             "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.0#/definitions/schema"
           },
+          "volgnummer": {
+            "type": "integer",
+            "description": ""
+          },
           "buurtcode": {
             "type": "string",
             "description": ""

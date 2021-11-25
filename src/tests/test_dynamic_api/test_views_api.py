@@ -232,7 +232,8 @@ class TestAuth:
 
         # See that both profiles can be active
         token4 = fetch_auth_token(["PROFIEL/SCOPE", "PROFIEL2/SCOPE"])
-        assert _get(token4, "?regimes.inWerkingOp=20:05").status_code == 200
+        # TODO should be 400.
+        assert _get(token4, "?regimes.noSuchField=whatever").status_code == 403
         assert _get(token4, "?regimes.aantal[gte]=2").status_code == 200
 
     def test_profile_field_permissions(
@@ -347,6 +348,7 @@ class TestAuth:
             "buurtcode": None,
             "straatnaam": None,
             "regimes": [],
+            "volgnummer": None,
         }
 
         # 3) two profile scopes, only one matches (mandatory filtersets)
@@ -722,7 +724,7 @@ class TestAuth:
         assert response.status_code == 200, response.data
 
         response = api_client.get(detail_met_volgnummer, HTTP_AUTHORIZATION=f"Bearer {may_enter}")
-        assert response.status_code == 200, response.data
+        assert response.status_code == 404, response.data
 
         response = api_client.get(detail_url, HTTP_AUTHORIZATION=f"Bearer {dataset_scope}")
         assert response.status_code == 200, response.data
@@ -735,7 +737,7 @@ class TestAuth:
         response = api_client.get(
             detail_met_volgnummer, HTTP_AUTHORIZATION=f"Bearer {profiel_met_volgnummer}"
         )
-        assert response.status_code == 200, response.data
+        assert response.status_code == 404, response.data
 
     def test_auth_options_requests_are_not_protected(
         self, api_client, afval_schema, afval_dataset, filled_router

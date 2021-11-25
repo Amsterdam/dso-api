@@ -511,6 +511,7 @@ class TestDynamicSerializer:
             "eType": "E9",
             "buurtcode": "A05d",
             "straatnaam": "Zoutkeetsgracht",
+            "volgnummer": None,
             "regimes": [
                 {
                     "bord": "",
