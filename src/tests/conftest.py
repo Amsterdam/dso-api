@@ -983,6 +983,27 @@ def woningbouwplan_model(woningbouwplannen_dataset, dynamic_models):
 
 
 @pytest.fixture()
+def temporal_auth_schema_json() -> dict:
+    path = HERE / "files/temporal_auth.json"
+    return json.loads(path.read_text())
+
+
+@pytest.fixture()
+def temporal_auth_dataset(temporal_auth_schema_json):
+    schema_path = HERE / "files/temporal_auth.json"
+    return Dataset.objects.create(
+        name="temporalauth",
+        path="temporalauth",
+        schema_data=schema_path.read_text(),
+    )
+
+
+@pytest.fixture()
+def temporal_auth_model(temporal_auth_dataset, dynamic_models):
+    return dynamic_models["temporalauth"]["things"]
+
+
+@pytest.fixture()
 def statistieken_data(statistieken_model, buurten_data):
     return statistieken_model.objects.create(
         id=1,

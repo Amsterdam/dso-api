@@ -3,6 +3,7 @@ from urllib.parse import parse_qs, urlparse
 
 import pytest
 from django.urls import reverse
+from rest_framework.status import HTTP_200_OK, HTTP_403_FORBIDDEN
 
 from tests.utils import read_response_json
 
@@ -220,6 +221,26 @@ class TestTemporalViews:
             "_format": ["json"],
             "volgnummer": ["1"],
         }
+
+
+@pytest.mark.django_db
+def test_temporal_auth(api_client, fetch_auth_token, temporal_auth_model, filled_router):
+    """Test the interaction between temporal views and authentication.
+
+    In temporalauth/things, "valid" refers to "start" and "stop".
+    The latter has an "auth" that requires a scope.
+    """
+
+    url = reverse("dynamic_api:temporalauth-things-list")
+
+    response = api_client.get(url, {"valid": "2014-05-01"})
+    assert response.status_code == HTTP_403_FORBIDDEN
+
+    token = fetch_auth_token(["SCOPE/HAMMERTIME"])
+    response = api_client.get(
+        url, data={"valid": "2014-05-01"}, HTTP_AUTHORIZATION=f"Bearer {token}"
+    )
+    assert response.status_code == HTTP_200_OK
 
 
 def _parse_query_string(url) -> dict[str, list[str]]:

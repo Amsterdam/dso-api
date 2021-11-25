@@ -1,0 +1,47 @@
+{
+  "type": "dataset",
+  "id": "temporalauth",
+  "title": "Dataset with authorization on temporal dimensions",
+  "status": "beschikbaar",
+  "version": "0.0.0",
+  "identifier": "id",
+  "tables": [
+    {
+      "id": "things",
+      "type": "table",
+      "temporal": {
+        "identifier": "seqno",
+        "dimensions": {
+          "valid": ["start", "stop"]
+        }
+      },
+      "schema": {
+        "$id": "https://example.com/schema/temporal_auth.json",
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "additionalProperties": false,
+        "identifier": ["id", "seqno"],
+        "required": ["schema", "id", "seqno"],
+        "display": "id",
+        "properties": {
+          "schema": {
+            "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.1#/definitions/schema"
+          },
+          "id": {"type": "string", "description": ""},
+          "seqno": {"type": "integer", "description": ""},
+          "start": {
+            "type": "string",
+            "format": "date",
+            "description": ""
+          },
+          "stop": {
+            "type": "string",
+            "format": "date",
+            "auth": "SCOPE/HAMMERTIME",
+            "description": "U can't touch this."
+          }
+        }
+      }
+    }
+  ]
+}
