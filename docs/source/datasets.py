@@ -147,8 +147,9 @@ def render_wfs_dataset_docs(dataset: DatasetSchema, paths: dict[str, str]):
 def _get_table_context(table: DatasetTableSchema, paths: dict[str, str]):
     """Collect all table data for the REST API spec."""
     uri = _get_table_uri(table, paths)
-    fields = _get_fields(table.fields)
-    filters = _get_filters(table.fields)
+    table_fields = list(table.get_fields(include_subfields=False))
+    fields = _get_fields(table_fields)
+    filters = _get_filters(table_fields)
 
     return {
         "title": to_snake_case(table.id).replace("_", " ").capitalize(),
@@ -251,7 +252,7 @@ def _get_feature_type_context(table: DatasetTableSchema, paths: dict[str, str]):
     }
 
 
-def _get_fields(table_fields, parent_field=None) -> List[DatasetFieldSchema]:
+def _get_fields(table_fields) -> List[DatasetFieldSchema]:
     """Flatten a nested listing of fields."""
     result_fields = []
     for field in table_fields:
@@ -259,7 +260,7 @@ def _get_fields(table_fields, parent_field=None) -> List[DatasetFieldSchema]:
             continue
 
         result_fields.append(field)
-        result_fields.extend(_get_fields(field.subfields, parent_field=field))
+        result_fields.extend(_get_fields(field.subfields))
 
     return result_fields
 
@@ -288,21 +289,13 @@ def _field_data(field: DatasetFieldSchema):
 def _get_field_context(field: DatasetFieldSchema, identifier: List[str]) -> dict[str, Any]:
     """Get context data for a field."""
 
-    snake_name = to_snake_case(field.name)
-    camel_name = toCamelCase(field.name)
+    snake_name = _get_field_snake_name(field)
+    camel_name = _get_field_camel_name(field)
 
     if field.relation:
         # Mimic Django ForeignKey _id suffix.
         snake_name += "_id"
         camel_name += "Id"
-
-    parent_field = field.parent_field
-    while parent_field is not None:
-        parent_snake_name = to_snake_case(parent_field.name)
-        parent_camel_name = toCamelCase(parent_field.name)
-        snake_name = f"{parent_snake_name}.{snake_name}"
-        camel_name = f"{parent_camel_name}.{camel_name}"
-        parent_field = parent_field.parent_field
 
     type, value_example, _ = _field_data(field)
 
@@ -316,6 +309,31 @@ def _get_field_context(field: DatasetFieldSchema, identifier: List[str]) -> dict
         "source": field,
         "auth": field.auth | field.table.auth | field.table.dataset.auth,
     }
+
+
+def _get_field_snake_name(field: DatasetFieldSchema) -> str:
+    """Find the snake and camel names of a field"""
+    snake_name = to_snake_case(field.name)
+
+    parent_field = field.parent_field
+    while parent_field is not None:
+        parent_snake_name = to_snake_case(parent_field.name)
+        snake_name = f"{parent_snake_name}.{snake_name}"
+        parent_field = parent_field.parent_field
+
+    return snake_name
+
+
+def _get_field_camel_name(field: DatasetFieldSchema) -> str:
+    """Find the snake and camel names of a field"""
+    camel_name = toCamelCase(field.name)
+    parent_field = field.parent_field
+    while parent_field is not None:
+        parent_camel_name = toCamelCase(parent_field.name)
+        camel_name = f"{parent_camel_name}.{camel_name}"
+        parent_field = parent_field.parent_field
+
+    return camel_name
 
 
 def _get_filters(table_fields: List[DatasetFieldSchema]) -> List[dict[str, Any]]:
@@ -334,7 +352,8 @@ def _get_filters(table_fields: List[DatasetFieldSchema]) -> List[dict[str, Any]]
     return filters
 
 
-def _filter_payload(name: str, field: DatasetFieldSchema):
+def _filter_payload(field: DatasetFieldSchema, *, name_suffix: str = ""):
+    name = _get_field_camel_name(field) + name_suffix
     type, value_example, lookups = _field_data(field)
 
     return {
@@ -354,25 +373,25 @@ def _get_filter_context(field: DatasetFieldSchema) -> List[dict[str, Any]]:
     if field.relation:
         if field.is_scalar:
             # normal FKs
-            return [_filter_payload(toCamelCase(field.id + "Id"), field)]
+            return [_filter_payload(field, name_suffix="Id")]
         elif field.is_object:
             # The generated FK that Django requires because it does
             # not support composite pks
-            result = [_filter_payload(toCamelCase(field.id + "Id"), field)]
+            result = [_filter_payload(field, name_suffix="Id")]
             # composite FKs
             related_identifiers = field.related_table.identifier
             return result + [
-                _filter_payload(toCamelCase(f"{field.id}.{sub_field.id}"), sub_field)
+                _filter_payload(sub_field)
                 for sub_field in field.subfields
                 if sub_field.id in related_identifiers
             ]
     elif field.is_nested_table:
-        return [_filter_payload(toCamelCase(f"{field.id}.{f.id}"), f) for f in field.subfields]
+        return [_filter_payload(f) for f in field.subfields]
     elif field.is_scalar or field.is_array_of_scalars:
         # Regular filters
-        return [_filter_payload(toCamelCase(field.id), field)]
+        return [_filter_payload(field)]
     elif field.nm_relation:
-        return [_filter_payload(toCamelCase(field.id), field)]
+        return [_filter_payload(field)]
 
     # TODO: Field is an object but not a relation?
 
