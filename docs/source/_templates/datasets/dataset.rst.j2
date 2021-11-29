@@ -30,7 +30,7 @@
 .. raw:: html
 
    <ul>
-     <li><b>Autorisatie:</b>{% if table.auth %} (autorisatie: {{ table.auth|sort|join(', ') }}){% else %}Geen, dit is openbare data.{% endif %}</a></li>
+     <li><b>Autorisatie:</b> {% if table.auth %}(autorisatie: {{ table.auth|sort|join(', ') }}){% else %}Geen, dit is openbare data.{% endif %}</a></li>
      <li><b>REST URI:</b> <a href="{{ table.uri }}">{{ table.uri|strip_base_url }}</a></li>
      <li><b>CSV Export:</b> {% if table.rest_csv %}<a type="text/csv" download href="{{ table.rest_csv }}">{{ table.rest_csv|strip_base_url }}</a>{% else %}N.B.{% endif %}</li>
      <li><b>GeoJSON Export:</b> {% if table.rest_geojson %}<a type="application/json" download href="{{ table.rest_geojson }}">{{ table.rest_geojson|strip_base_url }}</a>{% else %}N.B.{% endif %}</li>
