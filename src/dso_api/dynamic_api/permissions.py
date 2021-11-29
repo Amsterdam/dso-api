@@ -154,8 +154,10 @@ class HasOAuth2Scopes(permissions.BasePermission):
                         for field in (fields.start, fields.end)
                     ):
                         return False
+                    else:
+                        continue
 
-            elif not self._filter_ok(field_name, scopes, schema):
+            if not self._filter_ok(field_name, scopes, schema):
                 return False
 
         return True

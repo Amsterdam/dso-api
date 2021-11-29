@@ -242,6 +242,10 @@ def test_temporal_auth(api_client, fetch_auth_token, temporal_auth_model, filled
     )
     assert response.status_code == HTTP_200_OK
 
+    # Access to the temporal field does not imply access to all fields.
+    response = api_client.get(url, data={"secret": ""}, HTTP_AUTHORIZATION=f"Bearer {token}")
+    assert response.status_code == HTTP_403_FORBIDDEN
+
 
 def _parse_query_string(url) -> dict[str, list[str]]:
     """Convert the query-string of an URL to a dict."""

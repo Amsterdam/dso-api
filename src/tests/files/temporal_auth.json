@@ -39,6 +39,11 @@
             "format": "date",
             "auth": "SCOPE/HAMMERTIME",
             "description": "U can't touch this."
+          },
+          "secret": {
+            "type": "string",
+            "auth": "SCOPE/COOKIE",
+            "description": "Hidden field with a different scope than stop"
           }
         }
       }
