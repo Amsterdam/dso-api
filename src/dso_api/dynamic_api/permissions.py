@@ -136,7 +136,7 @@ class HasOAuth2Scopes(permissions.BasePermission):
                 mandatory.update(f)
 
         for key, values in request.GET.lists():
-            if key in ("fields", "sorteer") or key.startswith("_"):
+            if key in ("fields", "format", "sorteer") or key.startswith("_"):
                 continue
 
             # Everything else is a filter.
