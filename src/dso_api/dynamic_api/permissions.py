@@ -147,11 +147,13 @@ class HasOAuth2Scopes(permissions.BasePermission):
             if key in mandatory or field_name in mandatory:
                 continue
 
-            if schema.temporal is not None and fields := schema.temporal.dimensions.get(field_name):
-                if not self._filter_ok(fields.start, scopes, schema):
-                    return False
-                if not self._filter_ok(fields.end, scopes, schema):
-                    return False
+            if schema.temporal is not None:
+                if fields := schema.temporal.dimensions.get(field_name):
+                    if any(
+                        not self._filter_ok(field, scopes, schema)
+                        for field in (fields.start, fields.end)
+                    ):
+                        return False
 
             elif not self._filter_ok(field_name, scopes, schema):
                 return False
