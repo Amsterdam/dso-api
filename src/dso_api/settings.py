@@ -142,17 +142,20 @@ DATABASES = {
 }
 
 if CLOUD_ENV.lower().startswith("azure"):
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.contrib.gis.db.backends.postgis",
-            "NAME": env.str("PGDATABASE"),
-            "USER": env.str("PGUSER"),
-            "PASSWORD": env.str("PGPASSWORD"),
-            "HOST": env.str("PGHOST"),
-            "PORT": env.str("PGPORT"),
-            "OPTIONS": {"sslmode": "require"},
+    with open("/mnt/secrets-store/mdbdataservices-read") as secrets_file:
+        pgpassword = secrets_file.read()
+
+        DATABASES = {
+            "default": {
+                "ENGINE": "django.contrib.gis.db.backends.postgis",
+                "NAME": env.str("PGDATABASE"),
+                "USER": env.str("PGUSER"),
+                "PASSWORD": pgpassword,
+                "HOST": env.str("PGHOST"),
+                "PORT": env.str("PGPORT"),
+                "OPTIONS": {"sslmode": "require"},
+            }
         }
-    }
 # Important to have keys define in DATABASE_SCHEMAS available as in DATABASES.
 DATABASE_SCHEMAS = {}
 DATABASE_DISABLE_MIGRATIONS = []
