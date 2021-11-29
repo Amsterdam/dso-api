@@ -4,7 +4,7 @@
 #
 #    pip-compile --output-file=requirements.txt requirements.in
 #
-amsterdam-schema-tools[django]==3.0.0
+amsterdam-schema-tools[django]==3.1.2
     # via -r requirements.in
 asgiref==3.3.4
     # via django
@@ -137,7 +137,7 @@ jsonpath-rw==1.4.0
     # via amsterdam-schema-tools
 jsonref==0.2
     # via mappyfile
-jsonschema==3.2.0
+jsonschema==4.2.1
     # via
     #   -r requirements.in
     #   amsterdam-schema-tools
@@ -301,7 +301,6 @@ six==1.15.0
     #   isodate
     #   json-encoder
     #   jsonpath-rw
-    #   jsonschema
     #   protobuf
     #   python-dateutil
     #   python-owasp-zap-v2.4
