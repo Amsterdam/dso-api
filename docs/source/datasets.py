@@ -38,6 +38,10 @@ _polygon_lookups = ["contains", "isnull", "not"]
 _string_lookups = ["like", "not", "isnull", "isempty"]
 _number_lookups = _comparison_lookups + ["in"]
 
+FORMAT_ALIASES = {
+    "date-time": "Datetime",
+}
+
 VALUE_EXAMPLES = {
     "string": ("Tekst", _string_lookups),
     "boolean": ("``true`` | ``false``", []),
@@ -269,6 +273,10 @@ def _field_data(field: DatasetFieldSchema):
     except KeyError:
         value_example = ""
         lookups = []
+
+    if format:
+        # A string field with a format (e.g. date-time).
+        return FORMAT_ALIASES.get(format, format), value_example, lookups
 
     # This closely mimics what the Django filter+serializer logic does
     if type.startswith("https://geojson.org/schema/"):
