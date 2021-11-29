@@ -40,8 +40,9 @@ De API's ondersteunen daarnaast mogelijkheden tot:
 
 * `Paginering`_
 * `Filtering`_
+* `Minder velden ontvangen`_
 * `Sorteren van resultaten`_
-* `Embedding van relaties`_
+* `Relaties direct insluiten`_
 * `Exportformaat opgeven`_
 * `Geometrie projecties`_
 
@@ -324,17 +325,35 @@ Indien ``Accept-CRS`` niet wordt meegegeven worden x en y, afhankelijk van de wa
 geinterpreteerd als longitude en latitude in ``EPSG:4326`` of ``EPSG:28992``.
 
 
-Specifieke velden opvragen
---------------------------
+Minder velden ontvangen
+-----------------------
 
-Gebruik de :samp:`?_fields={veld1},{veld2},{...}` parameter om alleen specifieke velden te ontvangen:
+Met de ``?_fields=`` parameter wordt de grootte van de resultaten ingeperkt
+tot enkel de relevante velden die de client nodig heeft. Dit geeft betere performance,
+voor zowel de client als server. Er zijn een aantal notatievormen mogelijk:
+
+.. list-table::
+   :header-rows: 1
+
+   * - Parameter
+     - Werking
+   * - :samp:`?_fields={veld1},{veld2}`
+     - Alleen opgegeven velden worden teruggegeven.
+   * - :samp:`?_fields=-{veld1},-{veld2}`
+     - De uitgesloten velden worden NIET teruggegeven.
+   * - :samp:`?_fields={veld1},{veld2.subveld}`
+     - Alleen opgegeven velden van relaties worden terugegeven.
+   * - :samp:`?_fields={veld1},-{veld2.subveld}`
+     - Alleen ``veld1``, maar alles van ``veld2`` behalve het ``subveld``.
+
+Wanneer je alleen specifieke velden opgeeft, wordt de rest weggelaten:
 
 .. code-block:: bash
 
     curl 'https://api.data.amsterdam.nl/v1/fietspaaltjes/fietspaaltjes/?_fields=geometry,soortPaaltje'
 
-Als de veldnamen voorafgegaan worden door een minteken, dan worden alle velden behalve de genoemde
-opgestuurd:
+Met het min-teken wordt aangegeven dat alle velden worden teruggegeven,
+met uitzondering van het opgegeven veld:
 
 .. code-block:: bash
 
@@ -343,6 +362,20 @@ opgestuurd:
 .. note::
     In plaats van ``_fields`` wordt ook ``fields`` ondersteund,
     maar ``_fields`` heeft de voorkeur.
+
+.. note::
+    Het is niet mogelijk om velden tegelijk in te sluiten en uit te sluiten.
+    Het uitsluiten van velden is immers overbodig als je al de een lijst van specifieke velden opgeef.
+
+Wanneer er relaties worden teruggegeven (zowel geneste structuren, als ingesloten relaties met ``?_expandScope``),
+werkt de ``?_fields=`` logica hiervoor ook:
+
+.. code-block:: bash
+
+    curl 'https://api.data.amsterdam.nl/v1/bag/woonplaatsen/?_expandScope=heeftDossier.heeftBrondocumenten&_fields=naam,heeftDossier,heeftDossier.heeftBrondocumenten.documentnummer'
+
+Per niveau kunnen velden worden ingesloten en uitgesloten.
+Het opgeven van een geneste uitsluiting betekend dat het hoofdobject zelf wel ingesloten wordt.
 
 
 Sorteren van resultaten
@@ -372,12 +405,12 @@ Gebruik het ``-``-teken om omgekeerd te sorteren :samp:`?_sort=-{veld1},-{veld2}
     maar ``_sort`` heeft de voorkeur.
 
 
-Embedding van relaties
-----------------------
+Relaties direct insluiten
+-------------------------
 
 Bij iedere relatie wordt er een hyperlink meegegeven om het object op te vragen.
 Echter kunnen alle objecten ook in een enkele request opgehaald worden.
-Dit is zowel voor de client als server efficienter.
+Dit is zowel voor de client als server efficiënter.
 
 Gebruik hiervoor één van volgende opties:
 
