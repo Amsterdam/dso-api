@@ -158,7 +158,7 @@ def _get_table_context(table: DatasetTableSchema, paths: dict[str, str]):
         "rest_csv": f"{uri}?_format=csv",
         "rest_geojson": f"{uri}?_format=geojson",
         "description": table.get("description"),
-        "fields": [_get_field_context(field, table.identifier) for field in fields],
+        "fields": [_get_field_context(field) for field in fields],
         "filters": filters,
         "auth": table.auth | table.dataset.auth,
         "expands": _get_table_expands(table),
@@ -231,7 +231,7 @@ def _get_feature_type_context(table: DatasetTableSchema, paths: dict[str, str]):
         "doc_id": f"{table.dataset.id}/{table.id}",
         "uri": uri,
         "description": table.get("description"),
-        "fields": [_get_field_context(field, table.identifier) for field in fields],
+        "fields": [_get_field_context(field) for field in fields],
         "auth": table.auth,
         "expands": _get_table_expands(table, rel_id_separator="/"),
         "source": table,
@@ -290,8 +290,10 @@ def _field_data(field: DatasetFieldSchema):
     return type, value_example, lookups
 
 
-def _get_field_context(field: DatasetFieldSchema, identifier: List[str]) -> dict[str, Any]:
+def _get_field_context(field: DatasetFieldSchema) -> dict[str, Any]:
     """Get context data for a field."""
+    identifiers = field.table.identifier
+    is_deprecated = False
 
     snake_name = _get_field_snake_name(field)
     camel_name = _get_field_camel_name(field)
@@ -300,16 +302,25 @@ def _get_field_context(field: DatasetFieldSchema, identifier: List[str]) -> dict
         # Mimic Django ForeignKey _id suffix.
         snake_name += "_id"
         camel_name += "Id"
+        is_deprecated = True
 
     type, value_example, _ = _field_data(field)
+    description = field.description
+    is_foreign_id = field.parent_field is not None and field.name in identifiers
+    if not description and is_foreign_id and field.name == identifiers[0]:
+        # First identifier gets parent field description.
+        description = field.parent_field.description
 
     return {
         "name": field.name,
         "snake_name": snake_name,
         "camel_name": camel_name,
-        "is_identifier": field.name in identifier,
+        "is_identifier": field.name in identifiers,
+        "is_deprecated": is_deprecated,
+        "is_relation": bool(field.relation),
+        "is_foreign_id": is_foreign_id,
         "type": (type or "").capitalize(),
-        "description": field.description or "",
+        "description": description or "",
         "source": field,
         "auth": field.auth | field.table.auth | field.table.dataset.auth,
     }
@@ -356,13 +367,14 @@ def _get_filters(table_fields: List[DatasetFieldSchema]) -> List[dict[str, Any]]
     return filters
 
 
-def _filter_payload(field: DatasetFieldSchema, *, name_suffix: str = ""):
+def _filter_payload(field: DatasetFieldSchema, *, name_suffix: str = "", is_deprecated=False):
     name = _get_field_camel_name(field) + name_suffix
     type, value_example, lookups = _field_data(field)
 
     return {
         "name": name,
         "type": type.capitalize(),
+        "is_deprecated": is_deprecated,
         "value_example": value_example or "",
         "lookups": [LOOKUP_CONTEXT[op] for op in lookups],
     }
@@ -377,11 +389,11 @@ def _get_filter_context(field: DatasetFieldSchema) -> List[dict[str, Any]]:
     if field.relation:
         if field.is_scalar:
             # normal FKs
-            return [_filter_payload(field, name_suffix="Id")]
+            return [_filter_payload(field, name_suffix="Id", is_deprecated=True)]
         elif field.is_object:
             # The generated FK that Django requires because it does
             # not support composite pks
-            result = [_filter_payload(field, name_suffix="Id")]
+            result = [_filter_payload(field, name_suffix="Id", is_deprecated=True)]
             # composite FKs
             related_identifiers = field.related_table.identifier
             return result + [
