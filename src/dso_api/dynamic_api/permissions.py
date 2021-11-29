@@ -86,9 +86,9 @@ class HasOAuth2Scopes(permissions.BasePermission):
 
         schema = model.table_schema()
         access = request.user_scopes.has_table_access(schema)
-        if access:
-            if not self._filters_ok(request, schema):
-                access = Permission.none
+        if access and not self._filters_ok(request, schema):
+            # Don't give access when the user is filtering on fields they may not see.
+            access = Permission.none
 
         log_access(request, access)
         return access
@@ -136,7 +136,7 @@ class HasOAuth2Scopes(permissions.BasePermission):
                 mandatory.update(f)
 
         for key, values in request.GET.lists():
-            if key in ["fields", "sorteer"] or key.startswith("_"):
+            if key in ("fields", "sorteer") or key.startswith("_"):
                 continue
 
             # Everything else is a filter.
@@ -147,9 +147,7 @@ class HasOAuth2Scopes(permissions.BasePermission):
             if key in mandatory or field_name in mandatory:
                 continue
 
-            temporal = schema.temporal.dimensions if schema.temporal is not None else {}
-
-            if fields := temporal.get(field_name):
+            if schema.temporal is not None and fields := schema.temporal.dimensions.get(field_name):
                 if not self._filter_ok(fields.start, scopes, schema):
                     return False
                 if not self._filter_ok(fields.end, scopes, schema):
