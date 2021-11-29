@@ -10,6 +10,7 @@
     {
       "id": "kadastraalonroerendezaken",
       "type": "table",
+     "version": "1.0.0",
       "version": "0.0.1",
       "schema": {
         "$schema": "http://json-schema.org/draft-07/schema#",
@@ -181,6 +182,7 @@
     {
       "id": "kadasternatuurlijkpersonen",
       "type": "table",
+     "version": "1.0.0",
       "version": "0.0.1",
       "auth": [
         "BRK/RS",

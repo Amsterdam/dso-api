@@ -8,6 +8,7 @@
     {
       "id": "things",
       "type": "table",
+      "version": "1.0.0",
       "zoom": {
         "min": 3,
         "max": "max_zoom"

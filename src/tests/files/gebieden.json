@@ -10,6 +10,7 @@
     {
       "id": "bouwblokken",
       "type": "table",
+      "version": "1.0.0",
       "temporal": {
         "identifier": "volgnummer",
         "dimensions": {
@@ -79,6 +80,7 @@
     {
       "id": "buurten",
       "type": "table",
+      "version": "1.0.0",
       "temporal": {
         "identifier": "volgnummer",
         "dimensions": {
@@ -147,6 +149,7 @@
     {
       "id": "wijken",
       "type": "table",
+      "version": "1.0.0",
       "temporal": {
         "identifier": "volgnummer",
         "dimensions": {
@@ -218,6 +221,7 @@
     {
       "id": "ggwgebieden",
       "type": "table",
+      "version": "1.0.0",
       "temporal": {
         "identifier": "volgnummer",
         "dimensions": {
@@ -290,6 +294,7 @@
     {
       "id": "ggpgebieden",
       "type": "table",
+      "version": "1.0.0",
       "temporal": {
         "identifier": "volgnummer",
         "dimensions": {
@@ -373,6 +378,7 @@
     {
       "id": "stadsdelen",
       "type": "table",
+      "version": "1.0.0",
       "temporal": {
         "identifier": "volgnummer",
         "dimensions": {
