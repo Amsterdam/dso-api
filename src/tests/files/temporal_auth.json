@@ -9,6 +9,7 @@
     {
       "id": "things",
       "type": "table",
+      "version": "1.0.0",
       "temporal": {
         "identifier": "seqno",
         "dimensions": {

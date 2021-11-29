@@ -9,6 +9,7 @@
     {
       "id": "woningbouwplan",
       "type": "table",
+      "version": "1.0.0",
       "schema": {
         "$id": "https://github.com/Amsterdam/schemas/woningbouwplannen/woningbouwplan.json",
         "$schema": "http://json-schema.org/draft-07/schema#",

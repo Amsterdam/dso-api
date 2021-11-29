@@ -9,11 +9,12 @@
       {
         "id": "fietspaaltjesnodisplay",
         "type": "table",
+        "version": "1.0.0",
         "schema": {
           "$schema": "http://json-schema.org/draft-07/schema#",
-          "type": "object",          
+          "type": "object",
           "additionalProperties": false,
-          "required": ["schema", "id"],          
+          "required": ["schema", "id"],
           "properties": {
             "schema": {
               "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.1#/definitions/schema"
@@ -113,4 +114,3 @@
       }
     ]
   }
-  

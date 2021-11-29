@@ -9,6 +9,7 @@
     {
       "id": "unconventionaltemporaltable",
       "type": "table",
+      "version": "1.0.0",
       "temporal": {
         "identifier": "UnconventionalTemporalId",
         "dimensions": {
