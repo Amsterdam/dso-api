@@ -1,3 +1,10 @@
+.. role:: deprecated(literal)
+    :class: strike
+
+.. raw:: html
+
+    <style>.strike { text-decoration: line-through; }</style>
+
 .. seealso::
     Bekijk ook de :ref:`algemene uitleg <rest_api_generic>` voor REST API's voor het gebruik van de parameters.
 
@@ -45,8 +52,8 @@ De volgende velden zijn beschikbaar:
      - Type
      - Omschrijving
 {%- for field in table.fields %}
-   * - ``{{ field.camel_name }}``{% if field.auth %} (autorisatie: {{ field.auth|sort|join(', ') }}){% endif %}
-     - {{ field.type|default('') }}{% if field.is_identifier %} *identificatie*{% endif %}
+   * - {% if field.is_deprecated %}:deprecated:`{{ field.camel_name }}` *gaat vervallen*{% else %}``{{ field.camel_name }}``{% endif %}{% if field.auth %} (autorisatie: {{ field.auth|sort|join(', ') }}){% endif %}
+     - {{ field.type|default('') }}{% if field.is_relation or field.is_foreign_id %} *relatie*{% elif field.is_identifier %} *identificatie*{% endif %}
      - {{ field.description|default('') }}
 {%- endfor %}
 
@@ -59,11 +66,11 @@ De volgende query-parameters zijn te gebruiken:
      - Mogelijke waarde
      - Werking
 {%- for filter in table.filters %}
-   * - ``{{ filter.name }}=``
+   * - {% if filter.is_deprecated %}:deprecated:`{{ filter.name }}=` *gaat vervallen*{% else %}``{{ filter.name }}=``{% endif %}
      - {{ filter.value_example|default('') }}
      - Test op exacte waarde (``==``).
   {%- for lookup in filter.lookups %}
-   * - ``{{ filter.name }}[{{ lookup.operator }}]=``
+   * - {% if filter.is_deprecated %}:deprecated:`{{ filter.name }}[{{ lookup.operator }}]=` *gaat vervallen*{% else %}``{{ filter.name }}[{{ lookup.operator }}]=``{% endif %}
      - {{ lookup.value_example or filter.value_example|default('') }}
      - {{ lookup.description }}
   {%- endfor %}
