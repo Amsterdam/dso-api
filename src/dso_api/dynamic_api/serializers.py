@@ -978,15 +978,13 @@ def _through_serializer_factory(  # noqa: C901
             "title", serializers.CharField(source=title_field, read_only=True)
         )
 
-    # Always include the primary identifier of the targeted relationship,
-    id_seq = first(target_table_schema.identifier)  # e.g.: "identificatie"
-    serializer_part.add_field_name(id_seq, source=f"{target_fk_name}_{id_seq}")
-
     # See if the table has historical data
     temporal: Optional[Temporal] = target_table_schema.temporal
     if temporal is not None:
         # Include the temporal identifier of the targeted relationship,
         # as this is part of the existing fields of the M2M table.
+        id_seq = first(target_table_schema.identifier)  # e.g.: "identificatie"
+        serializer_part.add_field_name(id_seq, source=f"{target_fk_name}_{id_seq}")
         id_field = temporal.identifier  # e.g.: "volgnummer"
         serializer_part.add_field_name(id_field, source=f"{target_fk_name}_{id_field}")
 
