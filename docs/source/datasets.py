@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 import os
-import re
 import sys
 from pathlib import Path
 from typing import Any, List, NamedTuple, Optional
@@ -32,9 +31,6 @@ class LookupContext(NamedTuple):
     description: str
 
 
-re_camel_case = re.compile(
-    r"(((?<=[^A-Z])[A-Z])|([A-Z](?![A-Z]))|((?<=[a-z])[0-9])|(?<=[0-9])[a-z])"
-)
 # This should match DEFAULT_LOOKUPS_BY_TYPE in DSO-API (except for the "exact" lookup)
 _comparison_lookups = ["gt", "gte", "lt", "lte", "not", "isnull"]
 _identifier_lookups = ["in", "not", "isnull"]
