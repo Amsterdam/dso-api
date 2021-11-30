@@ -81,6 +81,10 @@ In de response zijn de volgende elementen te vinden:
         }
     }
 
+.. note::
+    In plaats van ``_pageSize`` wordt ook ``page_size`` ondersteund,
+    maar ``_pageSize`` heeft de voorkeur.
+
 Met het ``_links.next`` en ``_links.previous`` veld zijn respectievelijk de volgende en vorige pagina op te vragen.
 In het ``page`` object zijn de volgende velden opgenomen:
 
@@ -317,14 +321,18 @@ Gebruik de :samp:`?_fields={veld1},{veld2},{...}` parameter om alleen specifieke
 
 .. code-block:: bash
 
-    curl 'https://api.data.amsterdam.nl/v1/fietspaaltjes/fietspaaltjes/?fields=geometry,soortPaaltje'
+    curl 'https://api.data.amsterdam.nl/v1/fietspaaltjes/fietspaaltjes/?_fields=geometry,soortPaaltje'
 
 Als de veldnamen voorafgegaan worden door een minteken, dan worden alle velden behalve de genoemde
 opgestuurd:
 
 .. code-block:: bash
 
-    curl 'https://api.data.amsterdam.nl/v1/fietspaaltjes/fietspaaltjes/?fields=-area,-noodzaak'
+    curl 'https://api.data.amsterdam.nl/v1/fietspaaltjes/fietspaaltjes/?_fields=-area,-noodzaak'
+
+.. note::
+    In plaats van ``_fields`` wordt ook ``fields`` ondersteund,
+    maar ``_fields`` heeft de voorkeur.
 
 
 Sorteren van resultaten
@@ -348,6 +356,10 @@ Gebruik het ``-``-teken om omgekeerd te sorteren :samp:`?_sort=-{veld1},-{veld2}
 .. code-block:: bash
 
     curl 'https://api.data.amsterdam.nl/v1/gebieden/stadsdelen/?_sort=-ingangCyclus,naam'
+
+.. note::
+    In plaats van ``_sort`` wordt ook ``sorteer`` ondersteund,
+    maar ``_sort`` heeft de voorkeur.
 
 
 Embedding van relaties
@@ -499,7 +511,7 @@ Standaard wordt de HAL-JSON notatie gebruikt uit de DSO standaard.
 
 Met het CSV formaat kunnen de gegevens direct in Excel worden ingelezen.
 
-Met de ``?_format=`` parameter kan dit gewijzigd worden.
+Met de parameter ``?_format=`` kan dit gewijzigd worden.
 De volgende formaten worden ondersteund:
 
 .. list-table::
@@ -518,6 +530,10 @@ De volgende formaten worden ondersteund:
     * - ``?_format=csv``
       - Kommagescheiden bestand
       - ``text/csv``
+
+.. note::
+    In plaats van ``_format`` wordt ook ``format`` ondersteund,
+    maar ``_format`` heeft de voorkeur.
 
 .. warning::
     Niet ieder exportformaat ondersteund alle veldtypen die een dataset kan bevatten.
