@@ -121,6 +121,12 @@ class HasOAuth2Scopes(permissions.BasePermission):
 
     def _filters_ok(self, request, schema: DatasetTableSchema) -> bool:  # noqa: C901
         """Check field authorization for requested filters."""
+
+        # Workaround for BBGA, which has a broken schema and is queried in a funny way
+        # by another application.
+        if schema.dataset.id == "bbga":
+            return True
+
         # Type hack: DRF requests have a __getattr__ that delegates to an HttpRequest.
         request = cast(HttpRequest, request)
 
