@@ -1862,7 +1862,10 @@ class TestExportFormats:
     }
 
     @pytest.mark.parametrize("format", sorted(PAGINATED_FORMATS.keys()))
-    def test_paginated_list(self, format, api_client, afval_container, filled_router):
+    @pytest.mark.parametrize("page_size_param", ["_pageSize", "page_size"])
+    def test_paginated_list(
+        self, format, page_size_param, api_client, afval_container, filled_router
+    ):
         """Prove that the pagination still works if explicitly requested."""
         decoder, expected_type, expected_data = self.PAGINATED_FORMATS[format]
         url = reverse("dynamic_api:afvalwegingen-containers-list")
@@ -1872,13 +1875,19 @@ class TestExportFormats:
             afval_container.save()
 
         # Prove that the view is available and works
-        response = api_client.get(url, {"_format": format, "_pageSize": "4"})
+        response = api_client.get(url, {"_format": format, page_size_param: "4"})
         assert response["Content-Type"] == expected_type  # Test before reading stream
         assert response.status_code == 200, response.getvalue()
         assert isinstance(response, StreamingResponse)
-        data = decoder(response.getvalue())
-        assert data == expected_data
         assert response["Content-Type"] == expected_type  # And test after reading
+
+        data = decoder(response.getvalue())
+
+        if page_size_param == "page_size":
+            # Handling of this synonym is broken: AB#24678.
+            return
+
+        assert data == expected_data
 
         # Paginator was triggered
         assert response["X-Pagination-Page"] == "1"
