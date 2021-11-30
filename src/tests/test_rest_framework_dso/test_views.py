@@ -688,7 +688,8 @@ class TestExceptionHandler:
 
 @pytest.mark.django_db
 class TestListCount:
-    def test_list_count_included(self, api_client):
+    @pytest.mark.parametrize("page_size_param", ["_pageSize", "page_size"])
+    def test_list_count_included(self, page_size_param, api_client):
         Movie.objects.create(name="foo123")
         Movie.objects.create(name="test")
 
@@ -702,9 +703,9 @@ class TestListCount:
 
         Movie.objects.create(name="bla")
 
-        response = api_client.get("/v1/movies", data={"_count": "true", "_pageSize": 2})
-        data = read_response_json(response)
+        response = api_client.get("/v1/movies", data={"_count": "true", page_size_param: 2})
         assert response.status_code == 200
+        data = read_response_json(response)
         assert response["X-Total-Count"] == "3"
         assert data["page"]["totalElements"] == 3
         assert response["X-Pagination-Count"] == "2"
