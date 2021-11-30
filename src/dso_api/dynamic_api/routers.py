@@ -243,7 +243,7 @@ class DynamicRouter(routers.DefaultRouter):
                     # Do not create separate viewsets for nested tables.
                     continue
 
-                dataset_id = model.get_dataset_id()
+                dataset_id = to_snake_case(model.get_dataset_id())
 
                 # Determine the URL prefix for the model
                 url_prefix = self.make_url(model.get_dataset_path(), model.get_table_id())
