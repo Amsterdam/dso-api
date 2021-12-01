@@ -86,7 +86,7 @@ class HasOAuth2Scopes(permissions.BasePermission):
 
         schema = model.table_schema()
         access = request.user_scopes.has_table_access(schema)
-        if access and not self._filters_ok(request, schema):
+        if access and not _filters_ok(request, schema):
             # Don't give access when the user is filtering on fields they may not see.
             access = Permission.none
 
@@ -119,70 +119,86 @@ class HasOAuth2Scopes(permissions.BasePermission):
         log_access(request, access)
         return access
 
-    def _filters_ok(self, request, schema: DatasetTableSchema) -> bool:  # noqa: C901
-        """Check field authorization for requested filters."""
 
-        # Workaround for BBGA, which has a broken schema and is queried in a funny way
-        # by another application.
-        if schema.dataset.id == "bbga":
-            return True
+def _filters_ok(request, schema: DatasetTableSchema) -> bool:  # noqa: C901
+    """Check field authorization for requested filters."""
 
-        # Type hack: DRF requests have a __getattr__ that delegates to an HttpRequest.
-        request = cast(HttpRequest, request)
-
-        # And then we and authorization_django monkey-patch the scopes onto the request.
-        scopes = cast(UserScopes, request.user_scopes)
-
-        # Collect mandatory filters. We need to make an exception for these to handle cases
-        # where the field they reference isn't otherwise accessible.
-        # The actual check for whether the filter sets are provided lives elsewhere.
-        mandatory = set()
-        for profile in scopes.get_active_profile_tables(schema.dataset.id, schema.id):
-            for f in profile.mandatory_filtersets:
-                mandatory.update(f)
-
-        for key, values in request.GET.lists():
-            if key in ("fields", "format", "page", "page_size", "sorteer") or key.startswith("_"):
-                continue
-
-            # Everything else is a filter.
-            field_name, op = _parse_filter(key)
-
-            # mandatoryFilters may contain either the complete filter (with lookup operation)
-            # or just the field name.
-            if key in mandatory or field_name in mandatory:
-                continue
-
-            if schema.temporal is not None:
-                if fields := schema.temporal.dimensions.get(field_name):
-                    if any(
-                        not self._filter_ok(field, scopes, schema)
-                        for field in (fields.start, fields.end)
-                    ):
-                        return False
-                    else:
-                        continue
-
-            if not self._filter_ok(field_name, scopes, schema):
-                return False
-
+    # Workaround for BBGA, which has a broken schema and is queried in a funny way
+    # by another application.
+    if schema.dataset.id == "bbga":
         return True
 
-    def _filter_ok(self, field_name: str, scopes: UserScopes, schema: DatasetTableSchema) -> bool:
-        schema_part = schema
-        parts = field_name.split(".")  # Handle subfields.
-        for i, part in enumerate(parts):
-            try:
-                schema_part = schema_part.get_field_by_id(part)
-            except SchemaObjectNotFound as e:
-                # TODO: this should be a ValidationError,
-                # but that exception isn't handled properly from here.
-                # Raise PermissionDenied to at least get the exception message to the client.
-                raise PermissionDenied(f"{field_name} not found in schema") from e
-            if not scopes.has_field_access(schema_part):
-                return False
+    # Type hack: DRF requests have a __getattr__ that delegates to an HttpRequest.
+    request = cast(HttpRequest, request)
 
-        return True
+    # And then we and authorization_django monkey-patch the scopes onto the request.
+    scopes = cast(UserScopes, request.user_scopes)
+
+    # Collect mandatory filters. We need to make an exception for these to handle cases
+    # where the field they reference isn't otherwise accessible.
+    # The actual check for whether the filter sets are provided lives elsewhere.
+    mandatory = set()
+    for profile in scopes.get_active_profile_tables(schema.dataset.id, schema.id):
+        mandatory.update(*profile.mandatory_filtersets)
+
+    for key, values in request.GET.lists():
+        if key in ("fields", "format", "page", "page_size", "sorteer") or key.startswith("_"):
+            continue
+
+        # Everything else is a filter.
+        field_name, op = _parse_filter(key)
+
+        # mandatoryFilters may contain either the complete filter (with lookup operation)
+        # or just the field name.
+        if key in mandatory or field_name in mandatory:
+            continue
+
+        if schema.temporal is not None:
+            if fields := schema.temporal.dimensions.get(field_name):
+                if any(
+                    not _filter_ok(field, scopes, schema) for field in (fields.start, fields.end)
+                ):
+                    return False
+                else:
+                    continue
+
+        if not _filter_ok(field_name, scopes, schema):
+            return False
+
+    return True
+
+
+def _filter_ok(  # noqa: C901
+    field_name: str, scopes: UserScopes, schema: DatasetTableSchema
+) -> bool:
+    if field_name == "":
+        raise ValueError("empty field name")
+
+    while field_name != "":
+        part, field_name, *_ = *field_name.split(".", 1), ""
+
+        try:
+            schema = schema.get_field_by_id(part)
+        except SchemaObjectNotFound as e:
+            # TODO: this should be a ValidationError,
+            # but that exception isn't handled properly from here.
+            # Raise PermissionDenied to at least get the exception message to the client.
+            raise PermissionDenied(f"{field_name} not found in schema") from e
+
+        # First check the field, then check whether it's a relation,
+        # so we can "auth" to relations.
+        if not scopes.has_field_access(schema):
+            return False
+
+        if rel := schema.related_table:
+            # scopes.has_field_access also checks table and dataset field.
+            if not all(
+                scopes.has_field_access(rel.get_field_by_id(ident)) for ident in rel.identifier
+            ):
+                return False
+            schema = rel
+
+    return True
 
 
 def _parse_filter(v: str) -> tuple[str, str]:
