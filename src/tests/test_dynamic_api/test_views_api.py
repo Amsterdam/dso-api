@@ -1948,7 +1948,7 @@ class TestFormats:
         self, format, page_num, page_size_param, api_client, afval_container, filled_router
     ):
         """Prove that the pagination still works if explicitly requested."""
-        decoder, expected_type, expected_data = self.PAGINATED_FORMATS[format]
+        decoder, expected_type, make_expected = self.PAGINATED_FORMATS[format]
         url = reverse("dynamic_api:afvalwegingen-containers-list")
 
         for i in range(2, 10):
@@ -1970,7 +1970,7 @@ class TestFormats:
             # Handling of this synonym is broken: AB#24678.
             return
 
-        assert data == expected_data(self, page_num, page_size_param)
+        assert data == make_expected(self, page_num, page_size_param)
 
         # Paginator was triggered
         assert response["X-Pagination-Page"] == str(page_num)
