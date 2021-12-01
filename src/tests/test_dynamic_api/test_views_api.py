@@ -1,6 +1,7 @@
 import inspect
 import json
 import math
+from typing import Any
 
 import orjson
 import pytest
@@ -1717,8 +1718,8 @@ class TestEmbedTemporalTables:
 
 
 @pytest.mark.django_db
-class TestExportFormats:
-    """Prove that other rendering formats also work as expected"""
+class TestFormats:
+    """Prove that common rendering formats work as expected"""
 
     as_is = lambda data: data
 
@@ -1804,70 +1805,150 @@ class TestExportFormats:
         assert response.streaming
         assert inspect.isgeneratorfunction(response.accepted_renderer.render)
 
-    PAGINATED_FORMATS = {
-        "csv": (
-            as_is,
-            "text/csv; charset=utf-8",
+    PAGE_SIZE = 4
+
+    def _make_csv_page(self, page_num: int, page_size_param: str) -> Any:
+        start = 1 + (page_num - 1) * self.PAGE_SIZE
+        end = start + self.PAGE_SIZE
+
+        lines = (
+            f"{i},c1,foobar-123,Dataservices,2021-01-03,2021-01-03T12:13:14,"
+            "SRID=28992;POINT (10 10)\r\n"
+            for i in range(start, end)
+        )
+        return (
             b"Id,Clusterid,Serienummer,Eigenaarnaam,Datumcreatie,Datumleegmaken,Geometry\r\n"
-            b"1,c1,foobar-123,Dataservices,2021-01-03,2021-01-03T12:13:14,SRID=28992"
-            b";POINT (10 10)\r\n"
-            b"2,c1,foobar-123,Dataservices,2021-01-03,2021-01-03T12:13:14,SRID=28992"
-            b";POINT (10 10)\r\n"
-            b"3,c1,foobar-123,Dataservices,2021-01-03,2021-01-03T12:13:14,SRID=28992"
-            b";POINT (10 10)\r\n"
-            b"4,c1,foobar-123,Dataservices,2021-01-03,2021-01-03T12:13:14,SRID=28992"
-            b";POINT (10 10)\r\n",
-        ),
-        "geojson": (
-            orjson.loads,
-            "application/geo+json; charset=utf-8",
-            {
-                "type": "FeatureCollection",
-                "crs": {
-                    "properties": {"name": "urn:ogc:def:crs:EPSG::4326"},
-                    "type": "name",
-                },
-                "features": [
+            + b"".join(line.encode("ascii") for line in lines)
+        )
+
+    def _make_json_page(self, page_num: int, page_size_param: str) -> Any:
+        start = 1 + (page_num - 1) * self.PAGE_SIZE
+        end = start + self.PAGE_SIZE
+
+        cluster = {
+            "href": ("http://testserver/v1/afvalwegingen/clusters/c1/?_format=json"),
+            "id": "c1",
+            "title": "c1",
+        }
+        schema = "https://schemas.data.amsterdam.nl/datasets/afvalwegingen/dataset#containers"
+
+        page = {
+            "_embedded": {
+                "containers": [
                     {
-                        "type": "Feature",
-                        "id": f"containers.{i}",
-                        "geometry": {
-                            "type": "Point",
-                            "coordinates": GEOJSON_POINT,
+                        "_links": {
+                            "cluster": cluster,
+                            "schema": schema,
+                            "self": {
+                                "href": "http://testserver/v1/afvalwegingen/containers"
+                                f"/{i}/?_format=json",
+                                "id": i,
+                                "title": str(i),
+                            },
                         },
-                        "properties": {
-                            "id": i,
-                            "clusterId": "c1",
-                            "serienummer": "foobar-123",
-                            "datumCreatie": "2021-01-03",
-                            "eigenaarNaam": "Dataservices",
-                            "datumLeegmaken": "2021-01-03T12:13:14",
-                        },
+                        "clusterId": "c1",
+                        "datumCreatie": "2021-01-03",
+                        "datumLeegmaken": "2021-01-03T12:13:14",
+                        "eigenaarNaam": "Dataservices",
+                        "geometry": {"coordinates": [10.0, 10.0], "type": "Point"},
+                        "id": i,
+                        "serienummer": "foobar-123",
                     }
-                    for i in range(1, 5)
-                ],
-                "_links": [
-                    {
-                        "href": (
-                            "http://testserver"
-                            "/v1/afvalwegingen/containers/?_format=geojson&_pageSize=4&page=2"
-                        ),
-                        "rel": "next",
-                        "type": "application/geo+json",
-                        "title": "next page",
-                    }
-                ],
+                    for i in range(start, end)
+                ]
             },
-        ),
+            "_links": {
+                "next": {
+                    # TODO we may want to always output _pageSize.
+                    "href": "http://testserver/v1/afvalwegingen/containers/?_format=json"
+                    + "".join(
+                        sorted([f"&{page_size_param}={self.PAGE_SIZE}", f"&page={page_num+1}"])
+                    )
+                },
+                "self": {
+                    "href": "http://testserver/v1/afvalwegingen/containers"
+                    f"/?_format=json&{page_size_param}={self.PAGE_SIZE}&page={page_num}"
+                },
+            },
+            "page": {"number": page_num, "size": self.PAGE_SIZE},
+        }
+
+        if page_num > 1:
+            page["_links"]["previous"] = {
+                "href": f"http://testserver/v1/afvalwegingen/containers"
+                f"/?_format=json&{page_size_param}={self.PAGE_SIZE}"
+            }
+
+        return page
+
+    def _make_geojson_page(self, page_num: int, page_size_param: str):
+        start = 1 + (page_num - 1) * self.PAGE_SIZE
+        end = start + self.PAGE_SIZE
+
+        page = {
+            "type": "FeatureCollection",
+            "crs": {
+                "properties": {"name": "urn:ogc:def:crs:EPSG::4326"},
+                "type": "name",
+            },
+            "features": [
+                {
+                    "type": "Feature",
+                    "id": f"containers.{i}",
+                    "geometry": {
+                        "type": "Point",
+                        "coordinates": GEOJSON_POINT,
+                    },
+                    "properties": {
+                        "id": i,
+                        "clusterId": "c1",
+                        "serienummer": "foobar-123",
+                        "datumCreatie": "2021-01-03",
+                        "eigenaarNaam": "Dataservices",
+                        "datumLeegmaken": "2021-01-03T12:13:14",
+                    },
+                }
+                for i in range(start, end)
+            ],
+            "_links": [
+                {
+                    "rel": "next",
+                    "type": "application/geo+json",
+                    "title": "next page",
+                    "href": "http://testserver/v1/afvalwegingen/containers"
+                    f"/?_format=geojson&_pageSize=4&page={page_num+1}",
+                },
+            ],
+        }
+
+        if page_num > 1:
+            page["_links"].append(
+                {
+                    "rel": "previous",
+                    "type": "application/geo+json",
+                    "title": "previous page",
+                    "href": "http://testserver/v1/afvalwegingen/containers"
+                    "/?_format=geojson&_pageSize=4",
+                },
+            )
+
+        return page
+
+    PAGINATED_FORMATS = {
+        # "csv": (b''.join, "text/csv; charset=utf-8", _make_csv_page),
+        "csv": (as_is, "text/csv; charset=utf-8", _make_csv_page),
+        "json": (orjson.loads, "application/hal+json", _make_json_page),
+        "geojson": (orjson.loads, "application/geo+json; charset=utf-8", _make_geojson_page),
     }
 
     @pytest.mark.parametrize("format", sorted(PAGINATED_FORMATS.keys()))
+    @pytest.mark.parametrize("page_num", (1, 2))
     @pytest.mark.parametrize("page_size_param", ["_pageSize", "page_size"])
     def test_paginated_list(
-        self, format, page_size_param, api_client, afval_container, filled_router
+        self, format, page_num, page_size_param, api_client, afval_container, filled_router
     ):
         """Prove that the pagination still works if explicitly requested."""
-        decoder, expected_type, expected_data = self.PAGINATED_FORMATS[format]
+        decoder, expected_type, make_expected = self.PAGINATED_FORMATS[format]
         url = reverse("dynamic_api:afvalwegingen-containers-list")
 
         for i in range(2, 10):
@@ -1875,7 +1956,9 @@ class TestExportFormats:
             afval_container.save()
 
         # Prove that the view is available and works
-        response = api_client.get(url, {"_format": format, page_size_param: "4"})
+        response = api_client.get(
+            url, {"_format": format, page_size_param: self.PAGE_SIZE, "page": page_num}
+        )
         assert response["Content-Type"] == expected_type  # Test before reading stream
         assert response.status_code == 200, response.getvalue()
         assert isinstance(response, StreamingResponse)
@@ -1883,14 +1966,14 @@ class TestExportFormats:
 
         data = decoder(response.getvalue())
 
-        if page_size_param == "page_size":
+        if format != "json" and page_size_param == "page_size":
             # Handling of this synonym is broken: AB#24678.
             return
 
-        assert data == expected_data
+        assert data == make_expected(self, page_num, page_size_param)
 
         # Paginator was triggered
-        assert response["X-Pagination-Page"] == "1"
+        assert response["X-Pagination-Page"] == str(page_num)
         assert response["X-Pagination-Limit"] == "4"
 
         # proves middleware detected streaming response, and didn't break it:
