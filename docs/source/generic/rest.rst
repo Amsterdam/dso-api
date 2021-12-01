@@ -85,8 +85,11 @@ In de response zijn de volgende elementen te vinden:
     In plaats van ``_pageSize`` wordt ook ``page_size`` ondersteund,
     maar ``_pageSize`` heeft de voorkeur.
 
-Met het ``_links.next`` en ``_links.previous`` veld zijn respectievelijk de volgende en vorige pagina op te vragen.
-In het ``page`` object zijn de volgende velden opgenomen:
+Met de velden ``_links.next`` en ``_links.previous`` zijn respectievelijk de volgende en vorige pagina op te vragen.
+Meer algemeen kan pagina `n` worden opgevraagd met :samp:`?page={n}`.
+Paginanummers beginnen bij één, niet nul.
+
+In het object ``page`` zijn de volgende velden opgenomen:
 
 * ``page.number``: Het huidige paginanummer.
 * ``page.size``: De grootte van een pagina.
