@@ -180,6 +180,19 @@ def _filter_ok(  # noqa: C901
         try:
             schema = schema.get_field_by_id(part)
         except SchemaObjectNotFound as e:
+            # Relations with non-composite keys become a pseudo-property with the target table's
+            # identifier appended to the table name: other_table_id. After camel-casing, that
+            # becomes OtherTableId. The identifier can be anything, but here we don't have enough
+            # information to cheaply determine what it was, so we assume it's "id", strip that off
+            # and retry. Note that docs/source/datasets.py also assumes "Id", so any other
+            # identifier already breaks the docs.
+            #
+            # TODO The dotted syntax for composite-key relations needs to be extended to this case.
+            if part.endswith("Id"):
+                part = part[: -len("Id")]
+                field_name = part + ("." + field_name if field_name else "")
+                continue
+
             # TODO: this should be a ValidationError,
             # but that exception isn't handled properly from here.
             # Raise PermissionDenied to at least get the exception message to the client.

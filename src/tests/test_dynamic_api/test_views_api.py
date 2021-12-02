@@ -10,6 +10,7 @@ from django.contrib.gis.geos import Point
 from django.db import connection
 from django.urls import NoReverseMatch, reverse
 from rest_framework.response import Response
+from rest_framework.status import HTTP_200_OK
 from schematools.contrib.django import models
 from schematools.contrib.django.db import create_tables
 from schematools.types import ProfileSchema
@@ -780,6 +781,21 @@ class TestAuth:
 
         response = api_client.get(url)
         assert response.status_code == 403, response.data
+
+
+@pytest.mark.django_db
+def test_relation_filter(api_client, vestiging_dataset, vestiging1, vestiging2, filled_router):
+    url = reverse("dynamic_api:vestiging-vestiging-list")
+    response = api_client.get(url)
+    assert response.status_code == HTTP_200_OK
+    data = read_response_json(response)
+    assert len(data["_embedded"]["vestiging"]) == 2
+
+    response = api_client.get(url, data={"bezoekAdresId": "1"})
+    assert response.status_code == HTTP_200_OK, response.data
+    data = read_response_json(response)
+    assert len(data["_embedded"]["vestiging"]) == 1
+    assert data["_embedded"]["vestiging"][0]["bezoekAdresId"] == 1
 
 
 # @pytest.mark.usefixtures("reloadrouter")
