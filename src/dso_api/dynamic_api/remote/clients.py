@@ -49,6 +49,9 @@ class RemoteClient:
     that perform API-specific logic.
     """
 
+    _endpoint_url: URL
+    _table_schema: DatasetTableSchema
+
     def __init__(self, endpoint_url: str, table_schema: DatasetTableSchema):
         self._endpoint_url = endpoint_url
         self._table_schema = table_schema
@@ -56,6 +59,7 @@ class RemoteClient:
     def call(self, request, path="", query_params=None) -> RemoteResponse:
         """Make a request to the remote server based on the client's request."""
         url = self._make_url(path, query_params or {})
+        host = urlparse(url).netloc
 
         headers = self._get_headers(request)
         http_pool = self._get_http_pool()
@@ -72,11 +76,11 @@ class RemoteClient:
             )
         except (TimeoutError, urllib3.exceptions.TimeoutError) as e:
             # Socket timeout
-            logger.error("Proxy call to %s failed, timeout from remote server: %s", url, e)
+            logger.error("Proxy call to %s failed, timeout from remote server: %s", host, e)
             raise GatewayTimeout() from e
         except (OSError, urllib3.exceptions.HTTPError) as e:
             # Socket connect / SSL error (HTTPError is the base class for errors)
-            logger.error("Proxy call to %s failed, error when connecting to server: %s", url, e)
+            logger.error("Proxy call to %s failed, error when connecting to server: %s", host, e)
             raise ServiceUnavailable(str(e)) from e
 
         # Log response and timing results
@@ -84,7 +88,7 @@ class RemoteClient:
         logger.log(
             level,
             "Proxy call to %s, status %s: %s, took: %.3fs",
-            url,
+            host,
             response.status,
             response.reason,
             (time.perf_counter_ns() - t0) * 1e-9,
@@ -150,7 +154,7 @@ class RemoteClient:
         """Returns a PoolManager for making HTTP requests."""
         return _http_pool_generic
 
-    def _make_url(self, path: str, query_params: dict) -> str:
+    def _make_url(self, path: str, query_params: dict) -> URL:
         if not self._endpoint_url:
             raise ImproperlyConfigured(f"{self.__class__.__name__}._endpoint_url is not set")
 
@@ -291,7 +295,7 @@ class HCBRKClient(RemoteClient):
         )
     )
 
-    def _make_url(self, path: str, query_params: dict) -> str:
+    def _make_url(self, path: str, query_params: dict) -> URL:
         # Kadaster handles the search parameters in a different way than we do.
         # Add support for [eq] by stripping it off field parameters,
         # bail for anything we don't allow, else pass the parameters on.
