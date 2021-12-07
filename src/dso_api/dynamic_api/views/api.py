@@ -18,7 +18,9 @@ from django.db import models
 from django.http import Http404, JsonResponse
 from django.utils.translation import gettext as _
 from rest_framework import viewsets
+from rest_framework.exceptions import ValidationError
 from schematools.contrib.django.models import DynamicModel
+from schematools.exceptions import SchemaObjectNotFound
 
 from dso_api.dynamic_api import filterset, locking, permissions, serializers
 from dso_api.dynamic_api.temporal import TemporalTableQuery
@@ -72,9 +74,32 @@ class DynamicApiViewSet(locking.ReadLockMixin, DSOViewMixin, viewsets.ReadOnlyMo
     # The 'bronhouder' of the associated dataset
     authorization_grantor: str = None
 
+    _NON_FILTER_PARAMS = {
+        # Allowed request parameters.
+        # Except for "page", all the non-underscore-prefixed parameters
+        # are for backward compatibility.
+        "_count",
+        "_expand",
+        "_expandScope",
+        "_fields",
+        "fields",
+        "_format",
+        "format",
+        "_pageSize",
+        "page_size",
+        "page",
+        "_sort",
+        "sorteer",
+    }
+
     def initial(self, request, *args, **kwargs):
         super().initial(request, *args, **kwargs)
-        self.temporal = TemporalTableQuery(request, self.model.table_schema())
+        table_schema = self.model.table_schema()
+        try:
+            permissions.validate_request(request, table_schema, self._NON_FILTER_PARAMS)
+        except SchemaObjectNotFound as e:
+            raise ValidationError(str(e)) from e
+        self.temporal = TemporalTableQuery(request, table_schema)
 
     @cached_property
     def lookup_field(self):
