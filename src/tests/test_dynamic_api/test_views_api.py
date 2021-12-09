@@ -10,7 +10,7 @@ from django.contrib.gis.geos import Point
 from django.db import connection
 from django.urls import NoReverseMatch, reverse
 from rest_framework.response import Response
-from rest_framework.status import HTTP_200_OK
+from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
 from schematools.contrib.django import models
 from schematools.contrib.django.db import create_tables
 from schematools.types import ProfileSchema
@@ -105,6 +105,15 @@ def test_list_dynamic_view_unregister(api_client, api_rf, bommen_dataset, filled
     view = viewset.as_view({"get": "list"})
     response = view(request)
     assert response.status_code == 404, response.data
+
+
+@pytest.mark.django_db
+def test_invalid_filter(api_client, afval_dataset, filled_router):
+    url = reverse("dynamic_api:afvalwegingen-containers-list")
+    response = api_client.get(url, data={"nietbestaand": ""})
+    assert response.status_code == HTTP_400_BAD_REQUEST, response.data
+    reason = response.data["invalid-params"][0]["reason"]
+    assert "Field 'nietbestaand' does not exist in table 'containers'" in reason
 
 
 @pytest.mark.django_db

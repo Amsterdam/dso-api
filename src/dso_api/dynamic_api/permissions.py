@@ -86,10 +86,6 @@ class HasOAuth2Scopes(permissions.BasePermission):
 
         schema = model.table_schema()
         access = request.user_scopes.has_table_access(schema)
-        if access and not _filters_ok(request, schema):
-            # Don't give access when the user is filtering on fields they may not see.
-            access = Permission.none
-
         log_access(request, access)
         return access
 
@@ -120,8 +116,19 @@ class HasOAuth2Scopes(permissions.BasePermission):
         return access
 
 
-def _filters_ok(request, schema: DatasetTableSchema) -> bool:  # noqa: C901
-    """Check field authorization for requested filters."""
+def validate_request(request, schema: DatasetTableSchema, allowed: set[str]) -> None:  # noqa: C901
+    """Validate request method and parameters and check authorization for filters.
+
+    The argument allowed is a set of parameters that are explicitly allowed.
+    All other parameters are parsed as filters and rejected if not present in the schema.
+
+    Raises SchemaObjectNotFound or PermissionDenied in case of a problem.
+    """
+
+    if request.method == "OPTIONS":
+        return
+    elif request.method != "GET":
+        raise PermissionDenied(f"{request.method} request not allowed")
 
     # Workaround for BBGA, which has a broken schema and is queried in a funny way
     # by another application.
@@ -142,7 +149,7 @@ def _filters_ok(request, schema: DatasetTableSchema) -> bool:  # noqa: C901
         mandatory.update(*profile.mandatory_filtersets)
 
     for key, values in request.GET.lists():
-        if key in ("fields", "format", "page", "page_size", "sorteer") or key.startswith("_"):
+        if key in allowed:
             continue
 
         # Everything else is a filter.
@@ -155,22 +162,16 @@ def _filters_ok(request, schema: DatasetTableSchema) -> bool:  # noqa: C901
 
         if schema.temporal is not None:
             if fields := schema.temporal.dimensions.get(field_name):
-                if any(
-                    not _filter_ok(field, scopes, schema) for field in (fields.start, fields.end)
-                ):
-                    return False
-                else:
-                    continue
+                for field in (fields.start, fields.end):
+                    _check_filter(field, scopes, schema)
+                continue
 
-        if not _filter_ok(field_name, scopes, schema):
-            return False
-
-    return True
+        _check_filter(field_name, scopes, schema)
 
 
-def _filter_ok(  # noqa: C901
+def _check_filter(  # noqa: C901
     field_name: str, scopes: UserScopes, schema: DatasetTableSchema
-) -> bool:
+) -> None:
     if field_name == "":
         raise ValueError("empty field name")
 
@@ -193,25 +194,20 @@ def _filter_ok(  # noqa: C901
                 field_name = part + ("." + field_name if field_name else "")
                 continue
 
-            # TODO: this should be a ValidationError,
-            # but that exception isn't handled properly from here.
-            # Raise PermissionDenied to at least get the exception message to the client.
-            raise PermissionDenied(f"{field_name} not found in schema") from e
+            raise
 
         # First check the field, then check whether it's a relation,
         # so we can "auth" to relations.
         if not scopes.has_field_access(schema):
-            return False
+            raise PermissionDenied(f"access denied to field {schema.id} with scopes {scopes}")
 
         if rel := schema.related_table:
             # scopes.has_field_access also checks table and dataset field.
             if not all(
                 scopes.has_field_access(rel.get_field_by_id(ident)) for ident in rel.identifier
             ):
-                return False
+                raise PermissionDenied(f"access denied to field {schema.id} with scopes {scopes}")
             schema = rel
-
-    return True
 
 
 def _parse_filter(v: str) -> tuple[str, str]:
@@ -228,7 +224,7 @@ def _parse_filter(v: str) -> tuple[str, str]:
         field_name = v
         op = "exact"
     elif not v.endswith("]"):
-        raise ValueError(f"missing closing bracket (]) in {v!r}")
+        raise ValidationError(f"missing closing bracket (]) in {v!r}")
     else:
         field_name = v[:bracket]
         op = v[bracket + 1 : -1]
