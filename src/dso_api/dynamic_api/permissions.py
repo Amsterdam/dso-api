@@ -7,7 +7,7 @@ from rest_framework import permissions
 from rest_framework.viewsets import ViewSetMixin
 from schematools.exceptions import SchemaObjectNotFound
 from schematools.permissions import UserScopes
-from schematools.types import DatasetTableSchema, Permission
+from schematools.types import DatasetTableSchema
 
 from rest_framework_dso.embedding import EmbeddedFieldMatch
 from rest_framework_dso.serializers import ExpandableSerializer
@@ -180,7 +180,7 @@ def _check_filter(  # noqa: C901
 
         try:
             schema = schema.get_field_by_id(part)
-        except SchemaObjectNotFound as e:
+        except SchemaObjectNotFound:
             # Relations with non-composite keys become a pseudo-property with the target table's
             # identifier appended to the table name: other_table_id. After camel-casing, that
             # becomes OtherTableId. The identifier can be anything, but here we don't have enough
