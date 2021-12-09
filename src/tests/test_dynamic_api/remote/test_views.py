@@ -8,7 +8,13 @@ import urllib3
 from django.urls import reverse
 from rest_framework.status import HTTP_200_OK, HTTP_403_FORBIDDEN
 from schematools.contrib.django import models
-from schematools.types import DatasetTableSchema, ProfileSchema
+from schematools.types import (
+    DatasetSchema,
+    DatasetTableSchema,
+    ProfileSchema,
+    SemVer,
+    TableVersions,
+)
 from urllib3_mock import Responses
 
 from dso_api.dynamic_api.remote.clients import RemoteClient
@@ -787,14 +793,29 @@ def test_hcbrk_listing_by_bsn(api_client, fetch_auth_token, router, hcbrk_datase
     assert response.status_code == 400, data  # XXX 403 may be nicer.
 
 
-REMOTE_SCHEMA = DatasetTableSchema.from_dict(
-    {
-        "id": "mytable",
-        "type": "table",
-        "schema": {
-            "$schema": "http://json-schema.org/draft-07/schema#",
-        },
-    }
+V1 = SemVer("1.0.0")
+TABLE_SCHEMA = {
+    "id": "mytable",
+    "type": "table",
+    "version": str(V1),
+    "schema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+    },
+}
+REMOTE_SCHEMA = DatasetTableSchema(
+    TABLE_SCHEMA,
+    parent_schema=DatasetSchema(
+        {
+            "id": "adhoc",
+            "tables": [
+                TableVersions(
+                    id=TABLE_SCHEMA["id"],
+                    default_version_number=V1,
+                    active=dict(V1=TABLE_SCHEMA),
+                )
+            ],
+        }
+    ),
 )
 
 
