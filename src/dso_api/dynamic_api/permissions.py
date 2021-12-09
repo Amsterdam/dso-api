@@ -122,7 +122,7 @@ def validate_request(request, schema: DatasetTableSchema, allowed: set[str]) -> 
     The argument allowed is a set of parameters that are explicitly allowed.
     All other parameters are parsed as filters and rejected if not present in the schema.
 
-    Raises SchemaObjectNotFound or PermissionDenied in case of a problem.
+    Raises FilterSyntaxError, SchemaObjectNotFound or PermissionDenied in case of a problem.
     """
 
     if request.method == "OPTIONS":
@@ -210,6 +210,12 @@ def _check_filter(  # noqa: C901
             schema = rel
 
 
+class FilterSyntaxError(Exception):
+    """Signals a syntax error in a filter parameter."""
+
+    pass
+
+
 def _parse_filter(v: str) -> tuple[str, str]:
     """Given a filter query parameter, returns the field name and operator.
 
@@ -221,10 +227,13 @@ def _parse_filter(v: str) -> tuple[str, str]:
     """
     bracket = v.find("[")
     if bracket == -1:
+        if "]" in v:
+            # Close bracket but no open bracket. Brackets don't occur in field names.
+            raise FilterSyntaxError(f"missing open bracket ([) in {v!r}")
         field_name = v
         op = "exact"
     elif not v.endswith("]"):
-        raise ValidationError(f"missing closing bracket (]) in {v!r}")
+        raise FilterSyntaxError(f"missing closing bracket (]) in {v!r}")
     else:
         field_name = v[:bracket]
         op = v[bracket + 1 : -1]

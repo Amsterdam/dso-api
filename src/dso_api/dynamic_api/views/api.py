@@ -23,6 +23,7 @@ from schematools.contrib.django.models import DynamicModel
 from schematools.exceptions import SchemaObjectNotFound
 
 from dso_api.dynamic_api import filterset, locking, permissions, serializers
+from dso_api.dynamic_api.permissions import FilterSyntaxError
 from dso_api.dynamic_api.temporal import TemporalTableQuery
 from rest_framework_dso import fields
 from rest_framework_dso.views import DSOViewMixin
@@ -97,6 +98,8 @@ class DynamicApiViewSet(locking.ReadLockMixin, DSOViewMixin, viewsets.ReadOnlyMo
         table_schema = self.model.table_schema()
         try:
             permissions.validate_request(request, table_schema, self._NON_FILTER_PARAMS)
+        except FilterSyntaxError as e:
+            raise ValidationError(str(e)) from e
         except SchemaObjectNotFound as e:
             raise ValidationError(str(e)) from e
         self.temporal = TemporalTableQuery(request, table_schema)

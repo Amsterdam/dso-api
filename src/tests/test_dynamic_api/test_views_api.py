@@ -1,6 +1,7 @@
 import inspect
 import json
 import math
+import re
 from typing import Any
 
 import orjson
@@ -108,12 +109,26 @@ def test_list_dynamic_view_unregister(api_client, api_rf, bommen_dataset, filled
 
 
 @pytest.mark.django_db
-def test_invalid_filter(api_client, afval_dataset, filled_router):
+def test_filter_no_such_field(api_client, afval_dataset, filled_router):
     url = reverse("dynamic_api:afvalwegingen-containers-list")
+
+    # Non-existing field.
     response = api_client.get(url, data={"nietbestaand": ""})
     assert response.status_code == HTTP_400_BAD_REQUEST, response.data
     reason = response.data["invalid-params"][0]["reason"]
     assert "Field 'nietbestaand' does not exist in table 'containers'" in reason
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("param", ["buurtcode[", "buurtcode[exact", "buurtcodeexact]"])
+def test_filter_syntax_error(param, api_client, afval_dataset, filled_router):
+    """Existing field, but syntax error in the filter parameter."""
+    url = reverse("dynamic_api:afvalwegingen-containers-list")
+
+    response = api_client.get(url, data={param: ""})
+    assert response.status_code == HTTP_400_BAD_REQUEST, response.data
+    reason = response.data["invalid-params"][0]["reason"]
+    assert re.search(r"missing (open|closing) bracket", reason), reason
 
 
 @pytest.mark.django_db
