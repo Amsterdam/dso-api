@@ -21,11 +21,14 @@ node {
     }
 
     stage('Test') {
+        // Get a fresh project name to prevent conflicts between concurrent builds.
+        gitHash = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
+        project = 'dso_api_' + gitHash
         tryStep "test", {
-            sh "docker-compose -f src/.jenkins/test/docker-compose.yml build --pull && " +
-               "docker-compose -f src/.jenkins/test/docker-compose.yml run -u root --rm test"
+            sh "docker-compose -p ${project} -f src/.jenkins/test/docker-compose.yml build --pull && " +
+               "docker-compose -p ${project} -f src/.jenkins/test/docker-compose.yml run -u root --rm test"
         }, {
-            sh "docker-compose -f src/.jenkins/test/docker-compose.yml down"
+            sh "docker-compose -p ${project} -f src/.jenkins/test/docker-compose.yml down"
         }
     }   
     
