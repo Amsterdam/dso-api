@@ -533,6 +533,7 @@ class SerializerAssemblyLine:
         fields=None,
         depth: int = 0,
         openapi_docs: str = "",
+        factory_name: Optional[str] = None,
         **meta_kwargs,
     ):
         """
@@ -545,6 +546,7 @@ class SerializerAssemblyLine:
             "__module__": f"dso_api.dynamic_api.serializers.{safe_dataset_id}",
             "__doc__": openapi_docs,  # avoid exposing our docstrings.
             "table_schema": model.table_schema(),
+            "_factory_function": factory_name,
             "Meta": type(
                 "Meta",
                 (),
@@ -624,7 +626,10 @@ def serializer_factory(
 
     # Start the assemblage of the serializer
     serializer_part = SerializerAssemblyLine(
-        model, depth=depth, openapi_docs=table_schema.get("description", table_schema.name)
+        model,
+        depth=depth,
+        openapi_docs=table_schema.get("description", table_schema.name),
+        factory_name="serializer_factory",
     )
 
     if not model.has_parent_table():
@@ -707,6 +712,7 @@ def _links_serializer_factory(
             " It contains all relationships with objects."
         ),
         depth=depth,
+        factory_name="_links_serializer_factory",
     )
 
     # Configure the serializer class to use for the link to 'self'
@@ -744,6 +750,7 @@ def _nontemporal_link_serializer_factory(
     serializer_part = SerializerAssemblyLine(
         model=related_model,
         openapi_docs=f"The identifier of the relationship to {table_schema.name}.",
+        factory_name="_nontemporal_link_serializer_factory",
     )
 
     serializer_part.add_field("href", _build_href_field(related_model))
@@ -786,6 +793,7 @@ def _temporal_link_serializer_factory(
     serializer_part = SerializerAssemblyLine(
         model=related_model,
         openapi_docs=f"The identifier of the relationship to {table_schema.name}.",
+        factory_name="_temporal_link_serializer_factory",
     )
 
     # Add the regular fields (same as non-temporal relations)
@@ -816,7 +824,7 @@ def _temporal_link_serializer_factory(
 
 def _loose_link_serializer_factory(
     related_model: type[DynamicModel],
-) -> type[serializers.Serializer]:
+) -> type[HALLooseLinkSerializer]:
     """Construct a serializer that represents a loose relationship.
 
     At runtime, a loose relationship does not receive an object but a
@@ -828,6 +836,7 @@ def _loose_link_serializer_factory(
     serializer_part = SerializerAssemblyLine(
         model=related_model,
         openapi_docs=f"The identifier of the loose relationship to {table_schema.name}.",
+        factory_name="_loose_link_serializer_factory",
     )
     serializer_part.add_field(
         "href",
@@ -967,6 +976,7 @@ def _through_serializer_factory(  # noqa: C901
             f" for `{m2m_field.model.table_schema().name}.{toCamelCase(m2m_field.name)}`"
             f" that links to `{target_table_schema.name}`"
         ),
+        factory_name="_through_serializer_factory",
     )
 
     temporal: Optional[Temporal] = target_table_schema.temporal
