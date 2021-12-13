@@ -563,6 +563,11 @@ class SerializerAssemblyLine:
         self.class_attrs[name] = field
         self.class_attrs["Meta"].fields.append(name)
 
+        if field.source == name:
+            # Avoid errors only seen later when the actual view is called,
+            # and it's impossible to find out where the field was created.
+            raise RuntimeError("DRF will assert it's redundant to have source == field_name.")
+
     def add_field_name(self, name, *, source=None):
         """Add a field, but only by name.
         The regular DRF ModelSerializer will generate the field (at every request!).
@@ -743,8 +748,9 @@ def _nontemporal_link_serializer_factory(
 
     serializer_part.add_field("href", _build_href_field(related_model))
     if related_model.has_display_field():
+        source = related_model.get_display_field()
         serializer_part.add_field(
-            "title", serializers.CharField(source=related_model.get_display_field())
+            "title", serializers.CharField(source=source if source != "title" else None)
         )
     primary_id = first(table_schema.identifier)
     serializer_part.add_field_name(toCamelCase(primary_id), source=to_snake_case(primary_id))
