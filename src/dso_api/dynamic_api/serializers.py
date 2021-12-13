@@ -43,6 +43,7 @@ from schematools.utils import to_snake_case, toCamelCase
 
 from dso_api.dynamic_api.fields import (
     AzureBlobFileField,
+    HALLooseM2MUrlField,
     HALLooseRelationUrlField,
     TemporalHyperlinkedRelatedField,
     TemporalReadOnlyField,
@@ -716,10 +717,7 @@ def _links_serializer_factory(
         # Only create fields for relations, avoid adding non-relation fields in _links.
         if isinstance(model_field, models.ManyToOneRel):
             _build_serializer_reverse_fk_field(serializer_part, model_field)
-        # We need to handle LooseRelationManyToManyField first, because
-        # it is also a subclass of the regular ManyToManyField
-        elif isinstance(model_field, LooseRelationManyToManyField):
-            _build_plain_serializer_field(serializer_part, model_field)
+        # This includes LooseRelationManyToManyField
         elif isinstance(model_field, models.ManyToManyField):
             _build_m2m_serializer_field(serializer_part, model, model_field)
         elif isinstance(model_field, (RelatedField, ForeignObjectRel, LooseRelationField)):
@@ -785,7 +783,12 @@ def _temporal_link_serializer_factory(
     )
 
     # Add the regular fields (same as non-temporal relations)
-    serializer_part.add_field("href", _build_href_field(related_model))
+    serializer_part.add_field(
+        "href",
+        _build_href_field(
+            related_model, field_cls=TemporalHyperlinkedRelatedField, table_schema=table_schema
+        ),
+    )
     if related_model.has_display_field():
         serializer_part.add_field(
             "title", serializers.CharField(source=related_model.get_display_field())
@@ -822,7 +825,7 @@ def _loose_link_serializer_factory(
     )
     serializer_part.add_field(
         "href",
-        _build_href_field(related_model, loose=True),
+        _build_href_field(related_model, field_cls=HALLooseRelationUrlField),
     )
     if related_model.has_display_field():
         serializer_part.add_field("title", serializers.CharField(source="*"))
@@ -928,7 +931,9 @@ def _through_serializer_factory(  # noqa: C901
     """
     through_model = m2m_field.remote_field.through
     target_model = m2m_field.related_model
-    target_table_schema = m2m_field.related_model.table_schema()
+    target_table_schema: DatasetTableSchema = m2m_field.related_model.table_schema()
+    loose = isinstance(m2m_field, LooseRelationManyToManyField)
+
     try:
         # second foreign key of the through model
         target_fk_name = m2m_field.m2m_reverse_field_name()
@@ -958,14 +963,38 @@ def _through_serializer_factory(  # noqa: C901
         ),
     )
 
+    temporal: Optional[Temporal] = target_table_schema.temporal
     # Add the "href" link which directly reads the M2M foreign key ID.
     # This avoids having to retrieve any foreign object.
+    href_field_cls = HyperlinkedRelatedField
+    field_kwargs = {}
+    if loose:
+        href_field_cls = HALLooseM2MUrlField
+    elif temporal is not None:
+        href_field_cls = TemporalHyperlinkedRelatedField
+        field_kwargs["table_schema"] = target_table_schema
     serializer_part.add_field(
         "href",
         _build_href_field(
-            target_model, lookup_field=f"{target_fk_name}_id", lookup_url_kwarg="pk"
+            target_model,
+            lookup_field=f"{target_fk_name}_id",
+            lookup_url_kwarg="pk",
+            field_cls=href_field_cls,
+            **field_kwargs,
         ),
     )
+
+    if temporal is None or loose:
+        # Add the related identifier with its own name for regular M2M and LooseM2M
+        # The implicit assumption here is that non-temporal tables never have compound keys
+        # so that we always have the format <target_fk_name>_id in the through table
+        # pointing to the remote side of the relation from the perspective of the ManyToManyField
+        serializer_part.add_field(
+            toCamelCase(
+                target_table_schema.get_field_by_id(first(target_table_schema.identifier)).name
+            ),
+            serializers.CharField(source=f"{target_fk_name}_id", read_only=True),
+        )
 
     if target_model.has_display_field():
         # Take the title directly from the linked model
@@ -979,8 +1008,7 @@ def _through_serializer_factory(  # noqa: C901
         )
 
     # See if the table has historical data
-    temporal: Optional[Temporal] = target_table_schema.temporal
-    if temporal is not None:
+    if temporal is not None and not loose:
         # Include the temporal identifier of the targeted relationship,
         # as this is part of the existing fields of the M2M table.
         id_seq = first(target_table_schema.identifier)  # e.g.: "identificatie"
@@ -1016,9 +1044,10 @@ def _build_m2m_serializer_field(
     Instead of jumping over the M2M field through the ManyToMany field relation,
     the reverse name of it's first ForeignKey is used to step into the M2M table itself.
     (Django defines the first ForeignKey to always be the one that points to the model
-    declaring the ManyToManyField)
+    declaring the ManyToManyField).
+
     This allows exposing the intermediate table and it's (temporal) data. It also avoids
-    unnecessary queries joining both the though and target table.
+    unnecessary queries joining both the through and target table.
     """
     camel_name = toCamelCase(m2m_field.name)
     through_model = m2m_field.remote_field.through
@@ -1033,7 +1062,9 @@ def _build_m2m_serializer_field(
 def _build_plain_serializer_field(
     serializer_part: SerializerAssemblyLine, model_field: models.Field
 ):
-    """Add the field to the output parameters"""
+    """Add the field to the output parameters by name
+    and let Serializer.serializer_mapping determine
+    which fieldclass will be used for the representation."""
     serializer_part.add_field_name(toCamelCase(model_field.name), source=model_field.name)
 
 
@@ -1126,13 +1157,12 @@ def _build_serializer_reverse_fk_field(
 def _build_href_field(
     target_model: type[DynamicModel],
     lookup_field: str = "pk",
-    loose=False,
+    field_cls=HyperlinkedRelatedField,
     **kwargs,
 ) -> HyperlinkedRelatedField:
-    """Generate a Hyperlink related field, or one with temporal handling.
+    """Generate a link field for a regular, temporal or loose relation.
     Use the 'lookup_field' argument to change the source of the hyperlink ID.
     """
-    table_schema = target_model.table_schema()
     href_kwargs = dict(
         view_name=get_view_name(target_model, "detail"),
         read_only=True,  # avoids having to add a queryset
@@ -1140,13 +1170,7 @@ def _build_href_field(
         lookup_field=lookup_field,
         **kwargs,
     )
-    if loose:
-        return HALLooseRelationUrlField(**href_kwargs)
-    elif table_schema.temporal is not None:
-        # Temporal version that splits the ID
-        return TemporalHyperlinkedRelatedField(table_schema=table_schema, **href_kwargs)
-    else:
-        return HyperlinkedRelatedField(**href_kwargs)
+    return field_cls(**href_kwargs)
 
 
 def _generate_nested_relations(

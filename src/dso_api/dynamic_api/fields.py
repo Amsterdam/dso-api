@@ -100,3 +100,12 @@ class HALLooseRelationUrlField(HyperlinkedRelatedField):
         return self.reverse(
             view_name, kwargs={self.lookup_url_kwarg: obj}, request=request, format=format
         )
+
+
+class HALLooseM2MUrlField(HALLooseRelationUrlField):
+    def get_url(self, obj, *args, **kwargs):
+        """Generate /path/{<primary_id>}/
+
+        In case of a loose M2M, the runtime value is an entry from the intermediate table.
+        """
+        return super().get_url(getattr(obj, self.lookup_field), *args, **kwargs)

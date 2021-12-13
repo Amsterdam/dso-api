@@ -1004,6 +1004,11 @@ def temporal_auth_model(temporal_auth_dataset, dynamic_models):
 
 
 @pytest.fixture()
+def nontemporeel_model(woningbouwplannen_dataset, dynamic_models):
+    return dynamic_models["woningbouwplannen"]["nontemporeel"]
+
+
+@pytest.fixture()
 def statistieken_data(statistieken_model, buurten_data):
     return statistieken_model.objects.create(
         id=1,
@@ -1119,13 +1124,25 @@ def ggpgebieden_data(ggpgebieden_model, buurten_data):
 
 
 @pytest.fixture()
-def woningbouwplannen_data(woningbouwplan_model, buurten_data):
+def woningbouwplannen_data(woningbouwplan_model, buurten_data, nontemporeel_model):
+    nontemporeel_model.objects.create(sleutel="1234", label="4displayonly")
     woningbouwplan_model.objects.create(id="1")
     woningbouwplan_model.buurten.through.objects.create(
         id=1000,
         woningbouwplan_id="1",
-        buurten_id=buurten_data.id,
-        buurten_identificatie=buurten_data.identificatie,
+        buurten_id=buurten_data.identificatie,
+    )
+    woningbouwplan_model.buurtenregular.through.objects.create(
+        id=1000,
+        woningbouwplan_id="1",
+        buurtenregular_id=buurten_data.id,
+        buurtenregular_identificatie=buurten_data.identificatie,
+        buurtenregular_volgnummer=buurten_data.volgnummer,
+    )
+    woningbouwplan_model.nontemporele_nm.through.objects.create(
+        id=1000,
+        woningbouwplan_id="1",
+        nontemporele_nm_id="1234",
     )
     # woningbouwplan_model.objects.create(id="2", testbuurt="03630000000078")
     # woningbouwplan_model.bestaat_uit_buurten.through.objects.create(

@@ -16,7 +16,10 @@
         "type": "object",
         "additionalProperties": false,
         "mainGeometry": "geometrie",
-        "required": ["schema", "id"],
+        "required": [
+          "schema",
+          "id"
+        ],
         "display": "id",
         "properties": {
           "schema": {
@@ -38,11 +41,62 @@
               }
             },
             "relation": "gebieden:buurten",
-            "description": "De buurten waaruit het object bestaat."
+            "description": "De buurten waaruit het object bestaat. (loose relatie naar temporal)"
+          },
+          "buurtenregular": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "identificatie": {
+                  "type": "string"
+                },
+                "volgnummer": {
+                  "type": "integer"
+                }
+              }
+            },
+            "relation": "gebieden:buurten",
+            "description": "De buurten waaruit het object bestaat. (normale relatie naar temporal)"
+          },
+          "nontemporeleNm": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "relation": "woningbouwplannen:nontemporeel",
+            "description": "normale many to many naar non-temporal"
           },
           "geometrie": {
             "$ref": "https://geojson.org/schema/Geometry.json",
             "description": "Geometrische beschrijving van een object."
+          }
+        }
+      }
+    },
+    {
+      "id": "nontemporeel",
+      "type": "table",
+      "version": "0.0.1",
+      "description": "Een non temporele tabel voor test doeleinden",
+      "schema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "identifier": "sleutel",
+        "required": [
+          "schema",
+          "sleutel"
+        ],
+        "display": "label",
+        "properties": {
+          "schema": {
+            "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.1#/definitions/schema"
+          },
+          "sleutel": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
           }
         }
       }

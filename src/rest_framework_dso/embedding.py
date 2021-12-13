@@ -335,6 +335,7 @@ def get_serializer_lookups(serializer: serializers.BaseSerializer, prefix="") ->
     for field in serializer.fields.values():
         if isinstance(field, HALLooseLinkSerializer):
             # shortcircuit loose relations, which can not be passed to prefetch_related
+            # because they are regular CharFields
             continue
         elif field.source == "*":
             if isinstance(field, serializers.BaseSerializer):
@@ -354,7 +355,6 @@ def get_serializer_lookups(serializer: serializers.BaseSerializer, prefix="") ->
 
             if isinstance(field, serializers.BaseSerializer):
                 lookups.extend(get_serializer_lookups(field, prefix=f"{lookup}__"))
-
     # Deduplicate the final result, as embedded fields could overlap with _links.
     return sorted(set(lookups)) if not prefix else lookups
 
