@@ -720,7 +720,7 @@ class TestExceptionHandler:
             ),
             "instance": "http://testserver/v1/locations",
             "status": 500,
-            "title": "Coordinate Conversion Failed",
+            "title": "Coordinate conversion failed",
             "type": "urn:apiexception:error",
         }
 
