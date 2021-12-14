@@ -22,6 +22,7 @@ import inspect
 from typing import Iterable, Optional, Union, cast
 
 from django.contrib.gis.db import models as gis_models
+from django.contrib.gis.gdal import GDALException
 from django.db import models
 from django.utils.functional import cached_property
 from rest_framework import serializers
@@ -41,6 +42,7 @@ from rest_framework_dso.embedding import (
     ObservableIterator,
     get_serializer_lookups,
 )
+from rest_framework_dso.exceptions import HumanReadableGDALException
 from rest_framework_dso.serializer_helpers import ReturnGenerator, peek_iterable
 
 
@@ -569,7 +571,19 @@ class DSOSerializer(ExpandableSerializer, serializers.Serializer):
         for field in self._geometry_fields:
             geo_value = instance[field.source] if is_dict else getattr(instance, field.source)
             if geo_value is not None:
-                accept_crs.apply_to(geo_value)
+                try:
+                    accept_crs.apply_to(geo_value)
+                except GDALException as e:
+                    # While there could be various reasons for this, the most common one
+                    # is that the data has coordinates outside the projected bounds of the CRS.
+                    # Instead rendering /* Aborted by GDALException during rendering! */ this
+                    # exception message points the user directly to the data supplier.
+                    raise HumanReadableGDALException(
+                        "Fout tijdens coördinaatconversie voor"
+                        f" {instance._meta.model_name} #{instance.pk}."
+                        " Neem a.u.b. contact op met de bronhouder van deze data"
+                        " om dit probleem op te lossen."
+                    ) from e
 
     def _get_crs(self, instance) -> Optional[CRS]:
         """Find the used CRS in the geometry field(s)."""

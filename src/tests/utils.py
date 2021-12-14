@@ -1,7 +1,9 @@
 """Functions needed by various tests"""
 import itertools
 import json
+from io import BytesIO
 from types import GeneratorType
+from typing import Optional
 from xml.etree import ElementTree as ET
 
 import orjson
@@ -96,6 +98,21 @@ def read_response_xml(response: HttpResponseBase, ignore_content_type=False) -> 
         raise ValueError(f"Unexpected content type: {response['content-type']} for {response!r}'")
 
     return ET.fromstring(read_response(response))
+
+
+def read_response_partial(response: HttpResponseBase) -> tuple[str, Optional[Exception]]:
+    """Read the response content, return partial data when
+    streaming was aborted with an exception.
+    This works for both HttpResponse, TemplateResponse and StreamingHttpResponse.
+    """
+    buffer = BytesIO()
+    try:
+        for chunk in iter(response):
+            buffer.write(chunk)
+    except Exception as e:
+        return buffer.getvalue().decode(), e
+    else:
+        return buffer.getvalue().decode(), None
 
 
 def xml_element_to_dict(element: ET.Element) -> dict:
