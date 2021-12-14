@@ -42,3 +42,17 @@ class RemoteAPIException(APIException):
         self.code = code or self.default_code
         self.default_detail = title
         self.status_code = status_code
+
+
+class HumanReadableException(APIException):
+    """Base class for tagging exceptions that can be shown in complete detail to the client.
+    This can be shown in the standard exception handler, or during streaming rendering.
+    """
+
+    default_detail = "Error during rendering"
+
+
+class HumanReadableGDALException(HumanReadableException):
+    """Tell that rendering failed due to conversion errors"""
+
+    default_detail = "Coordinate conversion failed"

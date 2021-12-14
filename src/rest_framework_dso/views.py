@@ -14,7 +14,11 @@ from rest_framework.views import exception_handler as drf_exception_handler
 from schematools.types import DatasetTableSchema
 
 from rest_framework_dso import crs, filters, parsers
-from rest_framework_dso.exceptions import PreconditionFailed, RemoteAPIException
+from rest_framework_dso.exceptions import (
+    HumanReadableException,
+    PreconditionFailed,
+    RemoteAPIException,
+)
 from rest_framework_dso.pagination import DSOPageNumberPagination
 from rest_framework_dso.response import StreamingResponse
 
@@ -176,6 +180,15 @@ def exception_handler(exc, context):
             "invalid-params": get_invalid_params(exc, exc.detail),
             # Also include the whole tree of recursive errors that DRF generates
             "x-validation-errors": response.data,
+        }
+    elif isinstance(exc, HumanReadableException):
+        # response.data are the fields
+        response.data = {
+            "type": f"urn:apiexception:{exc.default_code}",
+            "title": str(exc.default_detail),
+            "detail": str(exc),
+            "status": response.status_code,
+            "instance": request.build_absolute_uri() if request else None,
         }
     elif isinstance(exc, RemoteAPIException):
         # Raw problem json response forwarded (for RemoteViewSet)

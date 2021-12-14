@@ -21,6 +21,7 @@ from rest_framework_gis.fields import GeoJsonDict
 
 from rest_framework_dso import pagination
 from rest_framework_dso.crs import WGS84
+from rest_framework_dso.exceptions import HumanReadableException
 from rest_framework_dso.fields import GeoJSONIdentifierField
 from rest_framework_dso.serializer_helpers import ReturnGenerator
 
@@ -76,6 +77,10 @@ class RendererMixin:
         """
         if settings.DEBUG:
             return f"/* Aborted by {exception.__class__.__name__}: {exception} */\n"
+        elif isinstance(exception, HumanReadableException):
+            # These errors may give a detailed message because it has no sensitive data.
+            cause = exception.__cause__ if exception.__cause__ is not None else exception
+            return f"/* Aborted by {cause.__class__.__name__}: {exception} */\n"
         else:
             return f"/* Aborted by {exception.__class__.__name__} during rendering! */\n"
 
@@ -174,7 +179,6 @@ class BrowsableAPIRenderer(RendererMixin, renderers.BrowsableAPIRenderer):
 
 class HALJSONRenderer(RendererMixin, renderers.JSONRenderer):
     media_type = "application/hal+json"
-    chunk_size = 4096
 
     # Define the paginator per media type.
     compatible_paginator_classes = [pagination.DSOPageNumberPagination]
@@ -303,6 +307,10 @@ class CSVRenderer(RendererMixin, CSVStreamingRenderer):
         """
         if settings.DEBUG:
             return f"\n\nAborted by {exception.__class__.__name__}: {exception}\n"
+        elif isinstance(exception, HumanReadableException):
+            # These errors may give a detailed message because it has no sensitive data.
+            cause = exception.__cause__ if exception.__cause__ is not None else exception
+            return f"\n\nAborted by {cause.__class__.__name__}: {exception}\n"
         else:
             return f"\n\nAborted by {exception.__class__.__name__} during rendering!\n"
 

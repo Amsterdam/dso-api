@@ -1,6 +1,8 @@
 from datetime import datetime
 
 import pytest
+from django.contrib.gis.geos import Point
+from django.db import connection
 from django.urls import path
 from rest_framework import generics, viewsets
 from rest_framework.exceptions import ErrorDetail, ValidationError
@@ -8,10 +10,11 @@ from rest_framework.routers import SimpleRouter
 
 from rest_framework_dso import views
 from rest_framework_dso.filters import DSOFilterSet
-from tests.utils import read_response, read_response_json
+from rest_framework_dso.renderers import HALJSONRenderer
+from tests.utils import read_response, read_response_json, read_response_partial
 
-from .models import Movie
-from .serializers import MovieSerializer
+from .models import Location, Movie
+from .serializers import LocationSerializer, MovieSerializer
 
 
 class MovieFilterSet(DSOFilterSet):
@@ -37,10 +40,16 @@ class MovieViewSet(views.DSOViewMixin, viewsets.ReadOnlyModelViewSet):
     filterset_class = MovieFilterSet
 
 
+class LocationListAPIView(views.DSOViewMixin, generics.ListAPIView):
+    serializer_class = LocationSerializer
+    queryset = Location.objects.all()
+
+
 router = SimpleRouter(trailing_slash=False)
 router.register("v1/viewset/movies", MovieViewSet, basename="viewset-movies")
 
 urlpatterns = [
+    path("v1/locations", LocationListAPIView.as_view(), name="locations-list"),
     path("v1/movies", MovieListAPIView.as_view(), name="movies-list"),
     path("v1/movies/<pk>", MovieDetailAPIView.as_view(), name="movies-detail"),
 ] + router.get_urls()
@@ -684,6 +693,74 @@ class TestExceptionHandler:
             ),
             "status": 400,
         }
+
+    @staticmethod
+    @pytest.mark.django_db
+    def test_coordinate_conversion_fail(api_client, api_rf):
+        """Prove that some errors will be properly displayed as human readable.
+
+        The test run causes an error in the first record, which is examined before
+        the streaming starts. This triggers the standard exception handler.
+        """
+        with connection.cursor() as c:
+            # Create an "POINT(Infinity Infinity)" coordinate without triggering
+            # any validations at Python-level.
+            c.execute(
+                f"INSERT INTO {Location._meta.db_table} (id, geometry) VALUES (1, %s)",
+                ("010100002040710000000000000000F07F000000000000F07F",),
+            )
+
+        response = api_client.get("/v1/locations", HTTP_ACCEPT_CRS="EPSG:4258")
+        data = read_response_json(response)
+        assert response["content-type"] == "application/problem+json", data  # check before reading
+        assert data == {
+            "detail": (
+                "Fout tijdens coördinaatconversie voor location #1. Neem a.u.b. "
+                "contact op met de bronhouder van deze data om dit probleem op te lossen."
+            ),
+            "instance": "http://testserver/v1/locations",
+            "status": 500,
+            "title": "Coordinate Conversion Failed",
+            "type": "urn:apiexception:error",
+        }
+
+    @staticmethod
+    @pytest.mark.django_db
+    def test_coordinate_conversion_fail_streaming(api_client, api_rf, monkeypatch):
+        """Prove that some errors will be properly displayed as human readable.
+
+        This test variation triggers an error while the streaming output is already
+        being sent. This triggers a different exception handling during the rendering.
+        """
+        Location.objects.create(id=1, geometry=Point(155000, 463000))
+        with connection.cursor() as c:
+            # Create an "POINT(Infinity Infinity)" coordinate without triggering
+            # any validations at Python-level.
+            c.execute(
+                f"INSERT INTO {Location._meta.db_table} (id, geometry) VALUES (2, %s)",
+                ("010100002040710000000000000000F07F000000000000F07F",),
+            )
+
+        # Force quick streaming, and error handling.
+        monkeypatch.setattr(HALJSONRenderer, "chunk_size", 1)
+        api_client.raise_request_exception = False
+
+        response = api_client.get("/v1/locations", HTTP_ACCEPT_CRS="EPSG:4258")
+        data, exception = read_response_partial(response)
+        assert exception is not None
+        assert response["content-type"] == "application/hal+json", data  # standard response
+        assert data.startswith(
+            "{\n"
+            '  "_embedded":{\n'
+            '  "location":[\n'
+            '  {"geometry":{"type":"Point","coordinates":[5'  # don't care for exact coordinate
+        ), data
+        assert data.endswith(
+            "]}}"
+            "/* Aborted by GDALException: Fout tijdens coördinaatconversie voor location #2."
+            " Neem a.u.b. contact op met de bronhouder van deze data om dit probleem op te lossen."
+            " */\n"
+        ), data
 
 
 @pytest.mark.django_db
