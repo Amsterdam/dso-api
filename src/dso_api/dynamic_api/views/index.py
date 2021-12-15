@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from typing import Iterable
 
-from django.urls import reverse
+from django.urls import NoReverseMatch, reverse
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from schematools.contrib.django.models import Dataset
@@ -64,8 +64,8 @@ class APIIndexView(APIView):
             try:
                 env = self.get_environments(ds, base)
                 rel = self.get_related_apis(ds, base)
-            except reverse.NoReverseMatch as e:
-                logging.error(e)
+            except NoReverseMatch as e:
+                logging.error(f"error in {ds.schema.id}: {e}")
                 continue
 
             result["datasets"][ds.schema.id] = {
