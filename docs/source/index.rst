@@ -21,7 +21,7 @@ Tot slot worden er ook volledige CSV en GeoJSON exports ondersteund.
    generic/rest.rst
    generic/mvt.rst
    generic/wfs.rst
-   generic/temporele_datasets.rst
+   generic/temporaliteit.rst
 
 .. toctree::
    :caption: Datasets:

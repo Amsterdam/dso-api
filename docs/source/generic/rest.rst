@@ -602,5 +602,6 @@ Hierdoor kom je als technisch gebruiker o.a. de volgende elementen tegen:
 * Met ``?_fields=...`` kunnen een beperkte set van velden opgevraagd worden.
 * Sortering met :samp:`?_sort={veldnaam},-{desc veldnaam}`
 * Filtering op velden via de query-string.
+* Tijdreizen met de ``?geldigOp=...`` parameter.
 * Responses geven het object terug, zonder envelope.
 * Responses met paginering en ``X-Pagination-*`` headers.
