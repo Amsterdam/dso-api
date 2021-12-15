@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from typing import Iterable
 
 from django.urls import reverse
@@ -9,6 +10,8 @@ from schematools.contrib.django.models import Dataset
 
 from dso_api.dynamic_api.datasets import get_active_datasets
 from rest_framework_dso.renderers import BrowsableAPIRenderer, HALJSONRenderer
+
+logger = logging.getLogger(__name__)
 
 
 class APIIndexView(APIView):
@@ -57,6 +60,14 @@ class APIIndexView(APIView):
 
         result = {"datasets": {}}
         for ds in datasets:
+            # Don't let datasets break each other and the entire page.
+            try:
+                env = self.get_environments(ds, base)
+                rel = self.get_related_apis(ds, base)
+            except reverse.NoReverseMatch as e:
+                logging.error(e)
+                continue
+
             result["datasets"][ds.schema.id] = {
                 "id": ds.schema.id,
                 "short_name": ds.name,
@@ -69,8 +80,8 @@ class APIIndexView(APIView):
                     "pay_per_use": False,
                     "license": ds.schema.license,
                 },
-                "environments": self.get_environments(ds, base),
-                "related_apis": self.get_related_apis(ds, base),
+                "environments": env,
+                "related_apis": rel,
                 "api_authentication": list(ds.schema.auth) or None,
                 "api_type": self.api_type,
                 "organization_name": "Gemeente Amsterdam",
