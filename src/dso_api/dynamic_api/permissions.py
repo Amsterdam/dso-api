@@ -153,7 +153,7 @@ def validate_request(request, schema: DatasetTableSchema, allowed: set[str]) -> 
             continue
 
         # Everything else is a filter.
-        field_name, op = _parse_filter(key)
+        field_name, op = parse_filter(key)
 
         # mandatoryFilters may contain either the complete filter (with lookup operation)
         # or just the field name.
@@ -216,7 +216,7 @@ class FilterSyntaxError(Exception):
     pass
 
 
-def _parse_filter(v: str) -> tuple[str, str]:
+def parse_filter(v: str) -> tuple[str, str]:
     """Given a filter query parameter, returns the field name and operator.
 
     Does not validate the operator.
