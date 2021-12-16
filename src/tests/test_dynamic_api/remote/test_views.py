@@ -582,6 +582,28 @@ def test_remote_timeout(api_client, fetch_auth_token, router, brp_dataset, urlli
     }
 
 
+@pytest.mark.django_db
+def test_hcbag(api_client, hcbag_dataset, hcbag_example, urllib3_mocker, filled_router):
+    def respond(request):
+        assert "Authorization" not in request.headers
+        assert "X-Api-Key" in request.headers
+        assert request.body is None
+        return (200, {"Content-Crs": "epsg:28992"}, hcbag_example)
+
+    urllib3_mocker.add_callback(
+        "GET",
+        "/esd/huidigebevragingen/v1/adressen",
+        callback=respond,
+        content_type="application/json",
+    )
+
+    url = reverse("dynamic_api:haalcentraalbag-adressen-list")
+    response = api_client.get(url, {"postcode": "1011PN", "huisnummer": "1"})
+    data = read_response_json(response)
+
+    assert response.status_code == 200, data
+
+
 # Load Haal Centraal BRK example data (from
 # https://vng-realisatie.github.io/Haal-Centraal-BRK-bevragen/getting-started)
 # and desired outputs.
@@ -762,7 +784,7 @@ def test_hcbrk_listing_by_bsn(api_client, fetch_auth_token, router, hcbrk_datase
         url, {"burgerservicenummer": "1234567890"}, HTTP_AUTHORIZATION=f"Bearer {token}"
     )
     data = read_response_json(response)
-    assert response.status_code == 403, data
+    assert response.status_code == 400, data  # XXX 403 may be nicer.
 
 
 REMOTE_SCHEMA = DatasetTableSchema.from_dict(

@@ -349,6 +349,22 @@ def brp_dataset(brp_schema_json, brp_endpoint_url) -> Dataset:
 
 
 @pytest.fixture()
+def hcbag_dataset() -> Dataset:
+    return Dataset.objects.create(
+        name="haalcentraalbag",
+        schema_data=(HERE / "files" / "haalcentraalbag" / "schema.json").read_text(),
+        enable_db=False,
+        endpoint_url="http://remote-server/esd/huidigebevragingen/v1/{table_id}",
+        path="remote/haalcentraal/bag",
+    )
+
+
+@pytest.fixture()
+def hcbag_example():
+    return (HERE / "files" / "haalcentraalbag" / "amstel1.json").read_bytes()
+
+
+@pytest.fixture()
 def hcbrk_dataset() -> Dataset:
     return Dataset.objects.create(
         name="haalcentraalbrk",

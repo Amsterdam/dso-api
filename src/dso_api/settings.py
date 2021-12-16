@@ -406,11 +406,17 @@ INITIALIZE_DYNAMIC_VIEWSETS = env.bool(
 DATASETS_LIST = env.list("DATASETS_LIST", default=None)
 DATASETS_EXCLUDE = env.list("DATASETS_EXCLUDE", default=None)
 
+# TODO the variables without _BAG_ are for BRK. Rename them.
+# XXX why HAAL_CENTRAAL_API_KEY and HAAL_CENTRAAL_KEYFILE?
 if CLOUD_ENV.lower().startswith("azure"):
     with open("/mnt/secrets-store/haalcentraal-api-key") as secrets_file:
         HAAL_CENTRAAL_API_KEY = secrets_file.read()
+    with open("/mnt/secrets-store/haalcentraal-bag-api-key") as secrets_file:
+        HAAL_CENTRAAL_BAG_API_KEY = secrets_file.read()
 else:
     HAAL_CENTRAAL_API_KEY = os.getenv("HAAL_CENTRAAL_API_KEY", "UNKNOWN")
+    HAAL_CENTRAAL_BAG_API_KEY = os.getenv("HAAL_CENTRAAL_BAG_API_KEY", "UNKNOWN")
+
 HAAL_CENTRAAL_KEYFILE = os.getenv("HC_KEYFILE")
 HAAL_CENTRAAL_CERTFILE = os.getenv("HC_CERTFILE")
 

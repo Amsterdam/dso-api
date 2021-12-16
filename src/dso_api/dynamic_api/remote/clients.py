@@ -7,7 +7,7 @@ import logging
 import threading
 import time
 from dataclasses import dataclass
-from typing import Optional, Union
+from typing import Any, Final, Optional, Union
 from urllib.parse import urlparse
 
 import certifi
@@ -16,11 +16,12 @@ import urllib3
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from more_ds.network.url import URL
-from rest_framework.exceptions import NotFound, ParseError, PermissionDenied
+from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, ValidationError
 from rest_framework.status import HTTP_401_UNAUTHORIZED, HTTP_403_FORBIDDEN
 from schematools.types import DatasetTableSchema
 from urllib3 import HTTPResponse
 
+from dso_api.dynamic_api.permissions import FilterSyntaxError, parse_filter
 from rest_framework_dso.crs import CRS
 from rest_framework_dso.exceptions import (
     BadGateway,
@@ -251,12 +252,110 @@ class AuthForwardingClient(RemoteClient):
             raise PermissionDenied("Invalid token")
 
 
-class HCBRKClient(RemoteClient):
-    """Client for HaalCentraal Basisregistratie Kadaster (HCBRK)."""
+class HaalCentraalClient(RemoteClient):
+    """Base class for Haal Centraal clients."""
+
+    def _allowed_filters(self) -> set[str]:
+        """Must return the query parameters ("filters") allowed for a table.
+
+        _fields and _format are implied.
+        """
+        raise NotImplementedError()
+
+    def _key_and_cert_files(self) -> tuple[str, str]:
+        """Must return the filenames of client key and certificate."""
+        raise NotImplementedError()
+
+    __NON_FILTERS: Final[dict[str, str]] = {
+        "_expand": "expand",
+        "_fields": "fields",
+        "_pageSize": "pageSize",
+        "fields": "fields",
+        "page_size": "pageSize",
+    }
+
+    def _make_url(self, path: str, query_params: dict[str, Any]) -> URL:
+        # The Haal Centraal remotes handle the search parameters
+        # in a different way than we do.
+        # Add support for [exact] by stripping it off field parameters,
+        # translate the non-filter parameters, bail for anything we don't allow,
+        # pass the rest on.
+
+        allowed = self._allowed_filters()
+        remote_params = {}
+
+        for p, v in query_params.items():
+            if p in ("_format", "format"):
+                continue  # Should be handled by the serializer.
+
+            # Translate non-filter parameters to their Haal Centraal equivalents.
+            if p_hc := self.__NON_FILTERS.get(p):
+                remote_params[p_hc] = v
+                continue
+
+            if p not in allowed:
+                raise ValidationError(f"unknown filter {p!r}")
+
+            try:
+                p, op = parse_filter(p)
+            except FilterSyntaxError as e:
+                raise ValidationError(str(e)) from e
+            if op != "exact":
+                raise ValidationError(f"filter operator {op!r} not supported")
+
+            remote_params[p] = v
+
+        return super()._make_url(path, remote_params)
+
+
+class HCBAGClient(HaalCentraalClient):
+    """Client for Haal Centraal Basisregistratie Addressen en Gebouwen (HCBAG)."""
+
+    __ALLOWED_FILTERS: Final[dict[str, set[str]]] = {
+        # TODO we should put these in the schema instead of hard-coding them?
+        # TODO "adressen" can also be searched through "/adressen/zoek".
+        "adressen": {
+            "adresseerbaarObjectIdentificatie",
+            "exacteMatch",
+            "huisnummer",
+            "huisnummertoevoeging",
+            "pandIdentificatie",
+            "postcode",
+            "zoekResultaatIdentificatie",
+        },
+    }
+
+    def _allowed_filters(self) -> set[str]:
+        return self.__ALLOWED_FILTERS[self._table_schema.id]
+
+    def _get_headers(self, request):
+        headers = super()._get_headers(request)
+
+        headers["X-Api-Key"] = settings.HAAL_CENTRAAL_BAG_API_KEY
+        headers["accept"] = "application/hal+json"
+        # headers["Accept-Crs"] = "epsg:28992"
+
+        return headers
+
+    def _make_url(self, path: str, query_params: dict) -> URL:
+        url = super()._make_url(path, query_params)
+        logger.info(f"calling {url!r}")
+        return url
+
+
+class HCBRKClient(HaalCentraalClient):
+    """Client for Haal Centraal Basisregistratie Kadaster (HCBRK)."""
 
     # Lazily initialized shared HTTP pool.
     __http_pool = None
     __http_pool_lock = threading.Lock()
+
+    __ALLOWED_PARAMS = frozenset(
+        ("kadastraleAanduiding", "nummeraanduidingIdentificatie", "postcode")
+    )
+
+    def _allowed_filters(self) -> set[str]:
+        return self.__ALLOWED_PARAMS
 
     def _get_headers(self, request):
         headers = super()._get_headers(request)
@@ -282,45 +381,14 @@ class HCBRKClient(RemoteClient):
                 )
             return self.__http_pool
 
-    _ALLOWED_PARAMS = frozenset(
-        (
-            # Allowed search fields. These are handled by the remote.
-            "postcode",
-            "kadastraleAanduiding",
-            "nummeraanduidingIdentificatie",
-            # Generic parameters. Note: doesn't include filters.
-            # TODO add _sort, which isn't implemented yet.
-            "_fields",
-            "_format",
-        )
-    )
-
-    def _make_url(self, path: str, query_params: dict) -> URL:
-        # Kadaster handles the search parameters in a different way than we do.
-        # Add support for [eq] by stripping it off field parameters,
-        # bail for anything we don't allow, else pass the parameters on.
-
-        EQ_OP = "[eq]"
-
-        def strip_eq(param):
-            if not param.startswith("_") and param.endswith(EQ_OP):
-                return param[: -len(EQ_OP)]
-            return param
-
-        query_params = {strip_eq(p): value for p, value in query_params.items()}
-
-        not_allowed = [p for p in query_params if p not in self._ALLOWED_PARAMS]
-        if not_allowed:
-            not_allowed = ",".join(repr(p) for p in not_allowed)
-            raise PermissionDenied(f"Query parameters {not_allowed} not allowed")
-        return super()._make_url(path, query_params)
-
 
 def make_client(endpoint_url: str, table_schema: DatasetTableSchema) -> RemoteClient:
     """Construct client for a remote API."""
 
     client_class: type[RemoteClient] = AuthForwardingClient
-    if table_schema.dataset.id == "haalcentraalbrk":
+    if table_schema.dataset.id == "haalcentraalbag":
+        client_class = HCBAGClient
+    elif table_schema.dataset.id == "haalcentraalbrk":
         client_class = HCBRKClient
 
     return client_class(endpoint_url, table_schema)
