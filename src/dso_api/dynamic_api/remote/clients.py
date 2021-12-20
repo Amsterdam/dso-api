@@ -323,6 +323,15 @@ class HCBAGClient(HaalCentraalClient):
             "postcode",
             "zoekResultaatIdentificatie",
         },
+        "nummeraanduidingen": {
+            "nummeraanduidingidentificatie",
+        },
+        "openbareruimten": {
+            "openbareruimteidentificatie",
+        },
+        "woonplaatsen": {
+            "woonplaatsidentificatie",
+        },
     }
 
     def _allowed_filters(self) -> set[str]:
