@@ -74,7 +74,9 @@ class DatasetMVTSingleView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        ds = get_object_or_404(Dataset.objects.db_enabled(), name=kwargs["dataset_name"])
+        ds = get_object_or_404(
+            Dataset.objects.api_enabled().db_enabled(), name=kwargs["dataset_name"]
+        )
         geo_tables = sorted(
             to_snake_case(table.name)
             for table in ds.schema.tables

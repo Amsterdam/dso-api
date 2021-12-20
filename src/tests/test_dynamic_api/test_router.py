@@ -32,6 +32,23 @@ def test_reload_delete(router, bommen_dataset):
 
 
 @pytest.mark.django_db
+def test_router_excludes_disabled_api(settings, router, bommen_dataset, gebieden_dataset):
+    router.reload()
+
+    assert reverse("dynamic_api:bommen-bommen-list")
+    assert reverse("dynamic_api:gebieden-buurten-list")
+
+    bommen_dataset.enable_api = False
+    bommen_dataset.save()
+
+    router.reload()
+
+    with pytest.raises(NoReverseMatch):
+        reverse("dynamic_api:bommen-bommen-list")
+    assert reverse("dynamic_api:gebieden-buurten-list")
+
+
+@pytest.mark.django_db
 def test_only_selected_datasets_loaded(
     settings, router, bommen_dataset, gebieden_dataset, meldingen_dataset
 ):

@@ -119,7 +119,8 @@ class DynamicRouter(routers.DefaultRouter):
 
     def is_initialized(self) -> bool:
         """Tell whether the router initialization was used to create viewsets."""
-        return len(self.registry) > len(self.static_routes)
+        # Models could be created (with enable_api=false), or remote viewsets could be created.
+        return bool(self.all_models) or len(self.registry) > len(self.static_routes)
 
     def initialize(self):
         """Initialize all dynamic routes on startup.
@@ -172,8 +173,13 @@ class DynamicRouter(routers.DefaultRouter):
         """Build all viewsets, serializers, models and URL routes."""
         # Generate new viewsets for dynamic models
         clear_serializer_factory_cache()
-        db_datasets = list(get_active_datasets().db_enabled())
+
+        # Create all models, including those with no API enabled.
+        db_datasets = list(get_active_datasets(api_enabled=None).db_enabled())
         generated_models = self._build_db_models(db_datasets)
+
+        # Create viewsets only for datasets that have an API enabled
+        db_datasets = [ds for ds in db_datasets if ds.enable_api]
         dataset_routes = self._build_db_viewsets(db_datasets)
 
         # Same for remote API's
@@ -220,8 +226,7 @@ class DynamicRouter(routers.DefaultRouter):
 
             for model in dataset.create_models(base_app_name="dso_api.dynamic_api"):
                 logger.debug("Created model %s.%s", dataset_id, model.__name__)
-                if dataset.enable_api:
-                    new_models[model._meta.model_name] = model
+                new_models[model._meta.model_name] = model
 
             self.all_models[dataset_id] = new_models
 
@@ -237,6 +242,10 @@ class DynamicRouter(routers.DefaultRouter):
         # Generate views now that all models have been created.
         # This makes sure the 'to' field is resolved to an actual model class.
         for app_label, models_by_name in self.all_models.items():
+            if app_label not in db_datasets:
+                logger.debug("Skipping API creation for dataset: %s", app_label)
+                continue
+
             for model in models_by_name.values():
                 _validate_model(model)
                 if model.has_parent_table():
@@ -395,13 +404,12 @@ class DynamicRouter(routers.DefaultRouter):
             if model.has_parent_table():
                 # Do not create separate viewsets for nested tables.
                 continue
+
             viewname = get_view_name(model, "list")
             try:
                 url = reverse(viewname)
-            except NoReverseMatch as e:
-                raise RuntimeError(
-                    "URLConf reloading failed, unable to resolve %s", viewname
-                ) from e
+            except NoReverseMatch:
+                url = None  # API Disabled
 
             result[model] = url
 
