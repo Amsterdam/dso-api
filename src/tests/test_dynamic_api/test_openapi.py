@@ -36,6 +36,18 @@ def test_openapi_swagger(api_client, afval_dataset, filled_router):
 
 
 @pytest.mark.django_db
+def test_openapi_swagger_disable(
+    api_client, disabled_afval_dataset, fietspaaltjes_dataset, filled_router
+):
+    """Prove that the OpenAPI page can be rendered."""
+    with pytest.raises(NoReverseMatch):
+        reverse("dynamic_api:openapi-afvalwegingen")
+
+    response = api_client.get("/v1/afvalwegingen/", HTTP_ACCEPT="text/html")
+    assert response.status_code == 404
+
+
+@pytest.mark.django_db
 def test_openapi_json(api_client, afval_dataset, fietspaaltjes_dataset, filled_router, caplog):
     """Prove that the OpenAPI page can be rendered."""
     caplog.set_level(logging.WARNING)

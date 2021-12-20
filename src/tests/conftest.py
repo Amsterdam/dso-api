@@ -235,6 +235,13 @@ def afval_dataset(afval_schema_json) -> Dataset:
 
 
 @pytest.fixture()
+def disabled_afval_dataset(afval_dataset) -> Dataset:
+    afval_dataset.enable_api = False
+    afval_dataset.save(update_fields=["enable_api"])
+    return afval_dataset
+
+
+@pytest.fixture()
 def afval_dataset_subpath(afval_schema_json) -> Dataset:
     return Dataset.objects.create(
         name="afvalwegingen",

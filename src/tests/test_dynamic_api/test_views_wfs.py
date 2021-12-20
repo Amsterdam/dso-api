@@ -5,81 +5,96 @@ from tests.utils import read_response_xml, xml_element_to_dict
 
 
 @pytest.mark.django_db
-def test_wfs_index(api_client, afval_dataset, fietspaaltjes_dataset, filled_router, drf_request):
-    """Prove that the WFS index view works."""
-    response = api_client.get("/v1/wfs/")
-    assert response.status_code == 200
+class TestDatasetWFSIndexView:
+    def test_wfs_index(
+        self, api_client, afval_dataset, fietspaaltjes_dataset, filled_router, drf_request
+    ):
+        """Prove that the WFS index view works."""
+        response = api_client.get("/v1/wfs/")
+        assert response.status_code == 200
 
-    # Prove that response contains the correct data
-    base = drf_request.build_absolute_uri("/").rstrip("/")
-    assert response.data == {
-        "datasets": {
-            "afvalwegingen": {
-                "id": "afvalwegingen",
-                "short_name": "afvalwegingen",
-                "service_name": "Afvalwegingen",
-                "status": "Beschikbaar",
-                "description": "unit testing version of afvalwegingen",
-                "tags": [],
-                "terms_of_use": {
-                    "government_only": False,
-                    "pay_per_use": False,
-                    "license": "CC0 1.0",
+        # Prove that response contains the correct data
+        base = drf_request.build_absolute_uri("/").rstrip("/")
+        assert response.data == {
+            "datasets": {
+                "afvalwegingen": {
+                    "id": "afvalwegingen",
+                    "short_name": "afvalwegingen",
+                    "service_name": "Afvalwegingen",
+                    "status": "Beschikbaar",
+                    "description": "unit testing version of afvalwegingen",
+                    "tags": [],
+                    "terms_of_use": {
+                        "government_only": False,
+                        "pay_per_use": False,
+                        "license": "CC0 1.0",
+                    },
+                    "environments": [
+                        {
+                            "name": "production",
+                            "api_url": f"{base}/v1/wfs/afvalwegingen/",
+                            "specification_url": f"{base}/v1/wfs/afvalwegingen/"
+                            + "?SERVICE=WFS&REQUEST=GetCapabilities",
+                            "documentation_url": f"{base}/v1/docs/wfs-datasets/afvalwegingen.html",
+                        }
+                    ],
+                    "related_apis": [
+                        {"type": "rest_json", "url": f"{base}/v1/afvalwegingen/"},
+                        {"type": "MVT", "url": f"{base}/v1/mvt/afvalwegingen/"},
+                    ],
+                    "api_authentication": None,
+                    "api_type": "WFS",
+                    "organization_name": "Gemeente Amsterdam",
+                    "organization_oin": "00000001002564440000",
+                    "contact": {
+                        "email": "datapunt@amsterdam.nl",
+                        "url": "https://github.com/Amsterdam/dso-api/issues",
+                    },
                 },
-                "environments": [
-                    {
-                        "name": "production",
-                        "api_url": f"{base}/v1/wfs/afvalwegingen/",
-                        "specification_url": f"{base}/v1/wfs/afvalwegingen/"
-                        + "?SERVICE=WFS&REQUEST=GetCapabilities",
-                        "documentation_url": f"{base}/v1/docs/wfs-datasets/afvalwegingen.html",
-                    }
-                ],
-                "related_apis": [
-                    {"type": "rest_json", "url": f"{base}/v1/afvalwegingen/"},
-                    {"type": "MVT", "url": f"{base}/v1/mvt/afvalwegingen/"},
-                ],
-                "api_authentication": None,
-                "api_type": "WFS",
-                "organization_name": "Gemeente Amsterdam",
-                "organization_oin": "00000001002564440000",
-                "contact": {
-                    "email": "datapunt@amsterdam.nl",
-                    "url": "https://github.com/Amsterdam/dso-api/issues",
+                "fietspaaltjes": {
+                    "id": "fietspaaltjes",
+                    "short_name": "fietspaaltjes",
+                    "service_name": "fietspaaltjes",
+                    "status": "beschikbaar",
+                    "description": "",
+                    "tags": [],
+                    "terms_of_use": {
+                        "government_only": False,
+                        "pay_per_use": False,
+                        "license": None,
+                    },
+                    "environments": [
+                        {
+                            "name": "production",
+                            "api_url": f"{base}/v1/wfs/fietspaaltjes/",
+                            "specification_url": f"{base}/v1/wfs/fietspaaltjes/"
+                            + "?SERVICE=WFS&REQUEST=GetCapabilities",
+                            "documentation_url": f"{base}/v1/docs/wfs-datasets/fietspaaltjes.html",
+                        }
+                    ],
+                    "related_apis": [
+                        {"type": "rest_json", "url": f"{base}/v1/fietspaaltjes/"},
+                        {"type": "MVT", "url": f"{base}/v1/mvt/fietspaaltjes/"},
+                    ],
+                    "api_authentication": None,
+                    "api_type": "WFS",
+                    "organization_name": "Gemeente Amsterdam",
+                    "organization_oin": "00000001002564440000",
+                    "contact": {
+                        "email": "datapunt@amsterdam.nl",
+                        "url": "https://github.com/Amsterdam/dso-api/issues",
+                    },
                 },
-            },
-            "fietspaaltjes": {
-                "id": "fietspaaltjes",
-                "short_name": "fietspaaltjes",
-                "service_name": "fietspaaltjes",
-                "status": "beschikbaar",
-                "description": "",
-                "tags": [],
-                "terms_of_use": {"government_only": False, "pay_per_use": False, "license": None},
-                "environments": [
-                    {
-                        "name": "production",
-                        "api_url": f"{base}/v1/wfs/fietspaaltjes/",
-                        "specification_url": f"{base}/v1/wfs/fietspaaltjes/"
-                        + "?SERVICE=WFS&REQUEST=GetCapabilities",
-                        "documentation_url": f"{base}/v1/docs/wfs-datasets/fietspaaltjes.html",
-                    }
-                ],
-                "related_apis": [
-                    {"type": "rest_json", "url": f"{base}/v1/fietspaaltjes/"},
-                    {"type": "MVT", "url": f"{base}/v1/mvt/fietspaaltjes/"},
-                ],
-                "api_authentication": None,
-                "api_type": "WFS",
-                "organization_name": "Gemeente Amsterdam",
-                "organization_oin": "00000001002564440000",
-                "contact": {
-                    "email": "datapunt@amsterdam.nl",
-                    "url": "https://github.com/Amsterdam/dso-api/issues",
-                },
-            },
+            }
         }
-    }
+
+    def test_wfs_index_disabled(
+        self, api_client, disabled_afval_dataset, fietspaaltjes_dataset, filled_router
+    ):
+        """Prove that disabled API's are not listed."""
+        response = api_client.get("/v1/wfs/")
+        assert response.status_code == 200
+        assert set(response.data["datasets"].keys()) == {"fietspaaltjes"}
 
 
 @pytest.mark.django_db
@@ -94,6 +109,15 @@ class TestDatasetWFSView:
         )
         response = api_client.get(wfs_url)
         assert response.status_code == 200
+
+    def test_wfs_view_disabled(self, api_client, disabled_afval_dataset, afval_container):
+        wfs_url = (
+            "/v1/wfs/afvalwegingen/"
+            "?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=app:containers"
+            "&OUTPUTFORMAT=application/gml+xml"
+        )
+        response = api_client.get(wfs_url)
+        assert response.status_code == 404
 
     def test_wfs_field_public(
         self, api_client, parkeervakken_schema, parkeervakken_parkeervak_model

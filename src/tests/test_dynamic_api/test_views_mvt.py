@@ -5,79 +5,94 @@ CONTENT_TYPE = "application/vnd.mapbox-vector-tile"
 
 
 @pytest.mark.django_db
-def test_mvt_index(api_client, afval_dataset, fietspaaltjes_dataset, filled_router, drf_request):
-    """Prove that the MVT index view works."""
-    response = api_client.get("/v1/mvt/")
-    assert response.status_code == 200
+class TestDatasetMVTIndexView:
+    def test_mvt_index(
+        self, api_client, afval_dataset, fietspaaltjes_dataset, filled_router, drf_request
+    ):
+        """Prove that the MVT index view works."""
+        response = api_client.get("/v1/mvt/")
+        assert response.status_code == 200
 
-    # Prove that response contains the correct data
-    base = drf_request.build_absolute_uri("/").rstrip("/")
-    assert response.data == {
-        "datasets": {
-            "afvalwegingen": {
-                "id": "afvalwegingen",
-                "short_name": "afvalwegingen",
-                "service_name": "Afvalwegingen",
-                "status": "Beschikbaar",
-                "description": "unit testing version of afvalwegingen",
-                "tags": [],
-                "terms_of_use": {
-                    "government_only": False,
-                    "pay_per_use": False,
-                    "license": "CC0 1.0",
+        # Prove that response contains the correct data
+        base = drf_request.build_absolute_uri("/").rstrip("/")
+        assert response.data == {
+            "datasets": {
+                "afvalwegingen": {
+                    "id": "afvalwegingen",
+                    "short_name": "afvalwegingen",
+                    "service_name": "Afvalwegingen",
+                    "status": "Beschikbaar",
+                    "description": "unit testing version of afvalwegingen",
+                    "tags": [],
+                    "terms_of_use": {
+                        "government_only": False,
+                        "pay_per_use": False,
+                        "license": "CC0 1.0",
+                    },
+                    "environments": [
+                        {
+                            "name": "production",
+                            "api_url": f"{base}/v1/mvt/afvalwegingen/",
+                            "specification_url": f"{base}/v1/mvt/afvalwegingen/",
+                            "documentation_url": f"{base}/v1/docs/generic/mvt.html",
+                        }
+                    ],
+                    "related_apis": [
+                        {"type": "rest_json", "url": f"{base}/v1/afvalwegingen/"},
+                        {"type": "WFS", "url": f"{base}/v1/wfs/afvalwegingen/"},
+                    ],
+                    "api_authentication": None,
+                    "api_type": "MVT",
+                    "organization_name": "Gemeente Amsterdam",
+                    "organization_oin": "00000001002564440000",
+                    "contact": {
+                        "email": "datapunt@amsterdam.nl",
+                        "url": "https://github.com/Amsterdam/dso-api/issues",
+                    },
                 },
-                "environments": [
-                    {
-                        "name": "production",
-                        "api_url": f"{base}/v1/mvt/afvalwegingen/",
-                        "specification_url": f"{base}/v1/mvt/afvalwegingen/",
-                        "documentation_url": f"{base}/v1/docs/generic/mvt.html",
-                    }
-                ],
-                "related_apis": [
-                    {"type": "rest_json", "url": f"{base}/v1/afvalwegingen/"},
-                    {"type": "WFS", "url": f"{base}/v1/wfs/afvalwegingen/"},
-                ],
-                "api_authentication": None,
-                "api_type": "MVT",
-                "organization_name": "Gemeente Amsterdam",
-                "organization_oin": "00000001002564440000",
-                "contact": {
-                    "email": "datapunt@amsterdam.nl",
-                    "url": "https://github.com/Amsterdam/dso-api/issues",
+                "fietspaaltjes": {
+                    "id": "fietspaaltjes",
+                    "short_name": "fietspaaltjes",
+                    "service_name": "fietspaaltjes",
+                    "status": "beschikbaar",
+                    "description": "",
+                    "tags": [],
+                    "terms_of_use": {
+                        "government_only": False,
+                        "pay_per_use": False,
+                        "license": None,
+                    },
+                    "environments": [
+                        {
+                            "name": "production",
+                            "api_url": f"{base}/v1/mvt/fietspaaltjes/",
+                            "specification_url": f"{base}/v1/mvt/fietspaaltjes/",
+                            "documentation_url": f"{base}/v1/docs/generic/mvt.html",
+                        }
+                    ],
+                    "related_apis": [
+                        {"type": "rest_json", "url": f"{base}/v1/fietspaaltjes/"},
+                        {"type": "WFS", "url": f"{base}/v1/wfs/fietspaaltjes/"},
+                    ],
+                    "api_authentication": None,
+                    "api_type": "MVT",
+                    "organization_name": "Gemeente Amsterdam",
+                    "organization_oin": "00000001002564440000",
+                    "contact": {
+                        "email": "datapunt@amsterdam.nl",
+                        "url": "https://github.com/Amsterdam/dso-api/issues",
+                    },
                 },
-            },
-            "fietspaaltjes": {
-                "id": "fietspaaltjes",
-                "short_name": "fietspaaltjes",
-                "service_name": "fietspaaltjes",
-                "status": "beschikbaar",
-                "description": "",
-                "tags": [],
-                "terms_of_use": {"government_only": False, "pay_per_use": False, "license": None},
-                "environments": [
-                    {
-                        "name": "production",
-                        "api_url": f"{base}/v1/mvt/fietspaaltjes/",
-                        "specification_url": f"{base}/v1/mvt/fietspaaltjes/",
-                        "documentation_url": f"{base}/v1/docs/generic/mvt.html",
-                    }
-                ],
-                "related_apis": [
-                    {"type": "rest_json", "url": f"{base}/v1/fietspaaltjes/"},
-                    {"type": "WFS", "url": f"{base}/v1/wfs/fietspaaltjes/"},
-                ],
-                "api_authentication": None,
-                "api_type": "MVT",
-                "organization_name": "Gemeente Amsterdam",
-                "organization_oin": "00000001002564440000",
-                "contact": {
-                    "email": "datapunt@amsterdam.nl",
-                    "url": "https://github.com/Amsterdam/dso-api/issues",
-                },
-            },
+            }
         }
-    }
+
+    def test_mvt_index_disabled(
+        self, api_client, disabled_afval_dataset, fietspaaltjes_dataset, filled_router
+    ):
+        """Prove that disabled API's are not listed."""
+        response = api_client.get("/v1/mvt/")
+        assert response.status_code == 200
+        assert set(response.data["datasets"].keys()) == {"fietspaaltjes"}
 
 
 @pytest.mark.django_db

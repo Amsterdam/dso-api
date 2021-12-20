@@ -58,7 +58,11 @@ def test_api_index_view(
                 "status": "beschikbaar",
                 "description": "",
                 "tags": [],
-                "terms_of_use": {"government_only": False, "pay_per_use": False, "license": None},
+                "terms_of_use": {
+                    "government_only": False,
+                    "pay_per_use": False,
+                    "license": None,
+                },
                 "environments": [
                     {
                         "name": "production",
@@ -82,6 +86,16 @@ def test_api_index_view(
             },
         }
     }
+
+
+@pytest.mark.django_db
+def test_api_index_view_disabled(
+    api_client, disabled_afval_dataset, fietspaaltjes_dataset, filled_router
+):
+    """Prove that disabled API's are not listed."""
+    response = api_client.get("/v1/")
+    assert response.status_code == 200, response.data
+    assert set(response.data["datasets"].keys()) == {"fietspaaltjes"}
 
 
 @pytest.mark.django_db
