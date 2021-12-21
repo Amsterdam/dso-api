@@ -1087,22 +1087,27 @@ def _build_plain_serializer_field(
 def _build_serializer_links_field(
     serializer_part: SerializerAssemblyLine, model_field: models.Field
 ):
-    factory = _nontemporal_link_serializer_factory
+    related_model = model_field.related_model
 
     if isinstance(model_field, LooseRelationField):
-        factory = _loose_link_serializer_factory
+        field_class = _loose_link_serializer_factory(related_model)
     elif model_field.related_model.table_schema().is_temporal:
-        factory = _temporal_link_serializer_factory
+        field_class = _temporal_link_serializer_factory(related_model)
+    else:
+        field_class = _nontemporal_link_serializer_factory(related_model)
 
-    # DRF errors out if source is equal to field name
-    source = model_field.name
+    field_kwargs = {}
     field_name = toCamelCase(model_field.name)
-    if field_name == source:
-        source = None
+    if field_name != model_field.name:
+        # DRF errors out if source is equal to field name
+        field_kwargs["source"] = model_field.name
+
+    if model_field.many_to_many:
+        field_kwargs["many"] = True
 
     serializer_part.add_field(
         toCamelCase(model_field.name),
-        factory(model_field.related_model)(source=source),
+        field_class(**field_kwargs),
     )
 
 
