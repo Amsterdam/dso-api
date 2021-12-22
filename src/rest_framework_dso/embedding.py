@@ -181,7 +181,8 @@ class EmbeddedFieldMatch:
         # Avoid long serializer repr which makes output unreadable.
         return (
             f"<{self.__class__.__name__}:"
-            f" {self.field!r}"
+            f" {self.serializer.__class__.__name__}"
+            f" field={self.field!r}"
             f" nested={self.nested_expand_scope!r}>"
         )
 
