@@ -294,7 +294,11 @@ class AbstractEmbeddedField:
         self.parent_serializer_class = None
 
     def __repr__(self):
-        return f"<{self.__class__.__name__}: {self.field_name}, {self.serializer_class.__name__}>"
+        parent_serializer = self.parent_serializer_class.__name__
+        return (
+            f"<{self.__class__.__name__}: {parent_serializer}.{self.field_name},"
+            f" {self.serializer_class.__name__}>"
+        )
 
     def __set_name__(self, owner, name):
         self.bind(owner, name)
