@@ -1066,12 +1066,11 @@ def _build_m2m_serializer_field(
     unnecessary queries joining both the through and target table.
     """
     camel_name = toCamelCase(m2m_field.name)
-    through_model = m2m_field.remote_field.through
     serializer_class = _through_serializer_factory(m2m_field)
 
     # Add the field to the serializer, but let it navigate to the through model
     # by using the reverse_name of it's first foreign key:
-    source = to_snake_case(f"{through_model._meta.object_name}_through_{model.get_table_id()}")
+    source = m2m_field.get_path_info()[0].join_field.name
     serializer_part.add_field(camel_name, serializer_class(source=source, many=True))
 
 
