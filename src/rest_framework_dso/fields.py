@@ -71,12 +71,9 @@ class FieldsToDisplay:
         else:
             return "<FieldsToDisplay: deny all>"
 
-    def __bool__(self):
-        """Whether the returned fields need to be reduced.
-        Note that this returns false when there are child nodes that need to be reduced.
-        These are found with :meth:`allow_nested`, :meth:`as_nested` and :attr:`children`.
-        """
-        return not self._allow_all
+    def allow_all(self):
+        """Returns false when there are child nodes that need to be reduced, else true."""
+        return self._allow_all
 
     def _init_nesting(self, fields: DictOfDicts, exclude_leaf=False):
         """Split the field parameters to a tree of includes and excludes."""
