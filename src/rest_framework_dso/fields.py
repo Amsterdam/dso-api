@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Iterable, Optional, Union
+from typing import Iterable, Optional, Union, cast
 from urllib.parse import quote, urlsplit, urlunsplit
 
 from django.contrib.gis.geos import GEOSGeometry
@@ -469,10 +469,22 @@ class EmbeddedManyToManyField(AbstractEmbeddedField):
 
     @cached_property
     def related_id_field(self) -> Optional[str]:
-        # This causes the queryset to be constructed as:
-        # self.related_model.objects.filter({reverse_through_field}__{idfield}__in=[PKs])
+        # Given a relation (A -> M2M -> B), this field acts on data of the first model (A).
+        # So it collects A.pk, and then needs to resolve instances of B.
+        #
+        # Instead of using the reverse name of the models.ManyToManyField,
+        # it uses the foreign keys inside the through table. This avoids another JOIN to A,
+        # only to have it's primary key checked. The basic query looks like:
+        #
+        #   B.objects.filter({rev_m2m_into_through_table}__{fk_to_a}__in=[idlist])
+        #
+        # Aka:
+        #
+        #   self.related_model.objects.filter({reverse_through_field}__{idfield}__in=[PKs])
+        #
+        m2m_field = cast(models.ManyToManyField, self.source_field)
         return "__".join(
-            path_info.join_field.name for path_info in self.source_field.get_reverse_path_info()
+            path_info.join_field.name for path_info in m2m_field.get_reverse_path_info()
         )
 
 
@@ -485,11 +497,21 @@ class EmbeddedManyToManyRelField(EmbeddedManyToManyField):
 
     @cached_property
     def related_id_field(self) -> Optional[str]:
-        # This causes the queryset to be constructed as:
-        # self.related_model.objects.filter({forward_through_field}__{identifierfield}__in=[PKs])
-        return "__".join(
-            path_info.join_field.name for path_info in self.source_field.get_path_info()
-        )
+        # Given a relation (A -> M2M -> B), this rel-field acts on data from the second model (B).
+        # Hence, it collects identifiers from the second relation (B.pk).
+        # To retrieve the intended objects (A), the query starts at the first model (A).
+        # It then filters using the reverse relation that leads into the M2M table,
+        # and then joins with the FK field that corresponds with the second model (M2M.fk_to_B).
+        # So you get:
+        #
+        #   A.objects.filter({rev_m2m_into_through_table}__{fk_of_b}__in=[id list of B])
+        #
+        # Aka:
+        #
+        #   self.related_model.objects.filter({rev_m2m_through_field}__{fkfield}__in=[PKs])
+        #
+        m2m_field = cast(models.ManyToManyField, self.source_field.field)
+        return "__".join(path_info.join_field.name for path_info in m2m_field.get_path_info())
 
 
 class DSORelatedLinkField(serializers.HyperlinkedRelatedField):
