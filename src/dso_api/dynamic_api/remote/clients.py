@@ -262,10 +262,6 @@ class HaalCentraalClient(RemoteClient):
         """
         raise NotImplementedError()
 
-    def _key_and_cert_files(self) -> tuple[str, str]:
-        """Must return the filenames of client key and certificate."""
-        raise NotImplementedError()
-
     __NON_FILTERS: Final[dict[str, str]] = {
         "_expand": "expand",
         "_fields": "fields",
@@ -342,7 +338,6 @@ class HCBAGClient(HaalCentraalClient):
 
         headers["X-Api-Key"] = settings.HAAL_CENTRAAL_BAG_API_KEY
         headers["accept"] = "application/hal+json"
-        # headers["Accept-Crs"] = "epsg:28992"
 
         return headers
 
