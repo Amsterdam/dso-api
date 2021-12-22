@@ -1378,7 +1378,7 @@ class TestEmbedTemporalTables:
             "type": "urn:apiexception:parse_error",
         }
 
-    def test_detail_expand_true_for_nm_relation(
+    def test_detail_expand_true_for_m2m_relation(
         self, api_client, buurten_data, ggwgebieden_data, filled_router
     ):
         """Prove that bestaatUitBuurten shows up when expanded"""
@@ -1415,7 +1415,7 @@ class TestEmbedTemporalTables:
             }
         ]
 
-    def test_list_expand_true_for_nm_relation(
+    def test_list_expand_true_for_m2m_relation(
         self, api_client, buurten_data, ggwgebieden_data, woningbouwplannen_data, filled_router
     ):
         """Prove that buurt shows up when listview is expanded and uses the
@@ -1473,7 +1473,7 @@ class TestEmbedTemporalTables:
             "registratiedatum": None,
         }
 
-    def test_through_extra_fields_for_nm_relation(
+    def test_through_extra_fields_for_m2m_relation(
         self, api_client, buurten_data, ggpgebieden_data, filled_router
     ):
         """Prove that extra through fields are showing up
