@@ -216,7 +216,7 @@ def _get_feature_type_context(table: DatasetTableSchema, paths: dict[str, str]):
     snake_name = to_snake_case(table.dataset.id)
     snake_id = to_snake_case(table["id"])
     parent_path = paths[table.dataset.id]
-    uri = f"{BASE_URL}/v1/wfs/{parent_path}/{snake_id}/"
+    uri = f"{BASE_URL}/v1/wfs/{parent_path}/"
 
     fields = _get_fields(table.fields)
     has_geometry = _has_geometry(table)
