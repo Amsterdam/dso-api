@@ -4,6 +4,7 @@ MAINTAINER datapunt@amsterdam.nl
 COPY requirements* ./
 ARG PIP_REQUIREMENTS=requirements.txt
 RUN pip install --no-cache-dir -r $PIP_REQUIREMENTS
+RUN apt update && apt install --no-install-recommends -y curl
 
 # Start runtime image,
 FROM amsterdam/python:3.9-slim-buster
