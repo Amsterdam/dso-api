@@ -269,17 +269,24 @@ Bij waarden met tekst
      - Waarde mag niet niet leeg zijn
      - :samp:`{veld} IS NOT NULL AND {veld} != ''`
 
-De ``like`` operator ondersteund jokertekens (wildcards).
+De ``like``-operator maakt *fuzzy search* met jokertekens (*wildcards*) mogelijk.
 Het teken ``*`` staat voor nul of meer willekeurige tekens, ``?`` staat voor precies één willekeurig teken.
+Alle andere tekens staan voor zichzelf.
 Bijvoorbeeld:
 
 .. code-block:: bash
 
     curl 'https://api.data.amsterdam.nl/v1/gebieden/stadsdelen/?naam[like]=West*'
 
-    curl 'https://api.data.amsterdam.nl/v1/gebieden/stadsdelen/?naam[like]=Westp??rt'
+    curl 'https://api.data.amsterdam.nl/v1/gebieden/stadsdelen/?naam[like]=??st'
 
-Er is geen *escaping* van deze symbolen mogelijk.
+``naam[like]=West*`` selecteert alle rijen in een dataset waarvan de naam begint met "West",
+inclusief stadsdeel West.
+Rijen waarvan de naam "West" *bevat* kunnen gevonden worden met ``*West*``.
+De zoekterm ``??st`` selecteert "Oost" en "West": twee willekeurige tekens, gevolgd door "st".
+
+Als de filtertekst geen jokertekens bevat gedraagt ``like`` zich hetzelfde als ``exact``.
+Er is geen *escaping* van de jokertekens mogelijk.
 
 Bij waarden met lijsten
 ~~~~~~~~~~~~~~~~~~~~~~~
