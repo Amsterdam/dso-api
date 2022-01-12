@@ -1157,7 +1157,6 @@ def _build_serializer_reverse_fk_field(
     if format1 == "embedded":
         # Shows the identifiers of each item inline.
         target_model: type[DynamicModel] = model_field.related_model
-        field_kwargs = {"read_only": True, "many": True}
         if target_model.is_temporal():
             # Since the "identificatie" / "volgnummer" fields are dynamic, there is no good
             # way to generate an OpenAPI definition from this unless the whole result
@@ -1166,7 +1165,7 @@ def _build_serializer_reverse_fk_field(
         else:
             field_class = _nontemporal_link_serializer_factory(target_model)
 
-        serializer_part.add_field(name, field_class(**field_kwargs))
+        serializer_part.add_field(name, field_class(read_only=True, many=True))
     elif format1 == "summary":
         # Only shows a count and href to the (potentially large) list of items.
         serializer_part.add_field(name, RelatedSummaryField())
