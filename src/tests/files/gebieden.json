@@ -96,6 +96,14 @@
         "identifier": ["identificatie", "volgnummer"],
         "required": ["schema", "identificatie", "volgnummer"],
         "display": "id",
+        "additionalRelations": {
+          "onderdeelVanGGWGebieden": {
+            "table": "ggwgebieden",
+            "field": "bestaatUitBuurten",
+            "format": "embedded",
+            "$comment": "This is a fictional relation, added for testing purposes"
+          }
+        },
         "properties": {
           "schema": {
             "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.1#/definitions/schema"
