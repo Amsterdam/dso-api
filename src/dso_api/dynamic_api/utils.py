@@ -64,7 +64,7 @@ def get_source_model_fields(
     # unnecessary. However, most use-cases of this function involve inspecting model data earlier
     # in an override of serializer.get_fields(), which is before field.bind() is called.
     model = serializer.Meta.model
-    source_attrs = (field.source or field_name).split(".")
+    source_attrs = getattr(field, "source_attrs", None) or (field.source or field_name).split(".")
 
     for attr in source_attrs:
         model_field = model._meta.get_field(attr)
