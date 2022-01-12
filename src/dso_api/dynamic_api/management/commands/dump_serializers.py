@@ -50,7 +50,7 @@ class Command(BaseCommand):
         current_app = None
 
         request = self._create_dummy_request()
-        seen_serializers = set()
+        self.seen_serializers = set()  # state to avoid duplicate writes for embedded types
 
         for prefix, viewset, basename in sorted(router.registry):
             app_label = viewset.model._meta.app_label
@@ -64,17 +64,20 @@ class Command(BaseCommand):
                 current_app = app_label
 
             serializer = viewset.serializer_class(context={"request": request})
+            self.dump_serializer(serializer, options["format"])
 
-            self.write_serializer_header(serializer)
+    def dump_serializer(self, serializer: DynamicSerializer, format: str):
+        """Output the contents of a single serializer and it's child objects."""
+        self.write_serializer_header(serializer)
 
-            if options["format"] == "nested":
-                # DRF has a nice __repr__ format for serializers and fields
-                # that shows an inline nesting too.
-                self.stdout.write(f"{serializer!r}\n\n\n")
-            else:
-                # Write the serializer as Python code that can be formatted.
-                self.write_sub_serializers(serializer, seen_serializers)
-                self.write_serializer(serializer)
+        if format == "nested":
+            # DRF has a nice __repr__ format for serializers and fields
+            # that shows an inline nesting too.
+            self.stdout.write(f"{serializer!r}\n\n\n")
+        else:
+            # Write the serializer as Python code that can be formatted.
+            self.write_sub_serializers(serializer)
+            self.write_serializer(serializer)
 
     def _create_dummy_request(self, path="/") -> Request:
         wsgi_request = APIRequestFactory().get(path)
@@ -105,18 +108,18 @@ class Command(BaseCommand):
             f"# {app.verbose_name or app.app_label}.{model._meta.verbose_name}\n\n\n"
         )
 
-    def write_sub_serializers(self, serializer: DSOSerializer, seen_serializers: set):
+    def write_sub_serializers(self, serializer: DSOSerializer):
         """Write the dependant serializers"""
         for name, field in serializer.fields.items():
             if isinstance(field, serializers.Serializer):
                 # Make sure generic serializers are not reprinted each time
-                if field.__class__ in seen_serializers:
+                if field.__class__ in self.seen_serializers:
                     continue
 
-                seen_serializers.add(field.__class__)
+                self.seen_serializers.add(field.__class__)
 
                 # First write any sub-dependant fields (e.g. _links section items)
-                self.write_sub_serializers(field, seen_serializers)
+                self.write_sub_serializers(field)
 
                 # Then write the serializer as any other regular serializer
                 self.write_serializer(field)
