@@ -866,6 +866,7 @@ class TestEmbedTemporalTables:
             "ligtInWijkId": "03630012052035",
             "naam": None,
             "_embedded": {
+                "onderdeelVanGGWGebieden": [],  # reverse M2M relation, but no data in fixtures
                 "ligtInWijk": {
                     "_links": {
                         "schema": (
@@ -933,7 +934,7 @@ class TestEmbedTemporalTables:
                             "registratiedatum": None,
                         }
                     },
-                }
+                },
             },
         }
 
@@ -1349,6 +1350,7 @@ class TestEmbedTemporalTables:
                         },
                     }
                 ],
+                "onderdeelVanGGWGebieden": [],
             },
             "_links": {
                 "self": {
@@ -1592,6 +1594,7 @@ class TestEmbedTemporalTables:
                     "ligtInWijkId": "03630012052035",
                     "_embedded": {
                         "ligtInWijk": None,
+                        "onderdeelVanGGWGebieden": [],  # reverse m2m, but no fixture data given
                     },
                 }
             },
