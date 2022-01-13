@@ -1389,36 +1389,56 @@ class TestEmbedTemporalTables:
         response = api_client.get(url, data={"_expand": "true"})
         data = read_response_json(response)
         assert response.status_code == 200, data
-        assert data["_embedded"]["bestaatUitBuurten"] == [
-            {
-                "_links": {
-                    "schema": (
-                        "https://schemas.data.amsterdam.nl/datasets/gebieden/dataset#buurten"
-                    ),
-                    "self": {
-                        "href": (
-                            "http://testserver/v1/gebieden/buurten/03630000000078/?volgnummer=1"
-                        ),
-                        "identificatie": "03630000000078",
-                        "title": "03630000000078.1",
-                        "volgnummer": 1,
+
+        assert data["_links"] == {
+            "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/dataset#ggwgebieden",
+            "self": {
+                "href": "http://testserver/v1/gebieden/ggwgebieden/03630950000000/?volgnummer=1",
+                "identificatie": "03630950000000",
+                "title": "03630950000000.1",
+                "volgnummer": 1,
+            },
+            "bestaatUitBuurten": [
+                # Only the current active object, not the historical one!
+                # This happens in the DynamicListSerializer.get_attribute() logic.
+                {
+                    "href": "http://testserver/v1/gebieden/buurten/03630000000078/?volgnummer=2",
+                    "identificatie": "03630000000078",
+                    "title": "03630000000078.2",
+                    "volgnummer": 2,
+                }
+            ],
+        }
+        assert data["_embedded"] == {
+            "bestaatUitBuurten": [
+                {
+                    # In a detail view, the main object is not found in _embedded.
+                    # It should also include the active object only.
+                    "_links": {
+                        "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/dataset#buurten",  # noqa: E501
+                        "self": {
+                            "href": "http://testserver/v1/gebieden/buurten/03630000000078/?volgnummer=2",  # noqa: E501
+                            "identificatie": "03630000000078",
+                            "title": "03630000000078.2",
+                            "volgnummer": 2,
+                        },
                     },
-                },
-                "beginGeldigheid": "2021-02-28",
-                "code": None,
-                "eindGeldigheid": "2021-06-11",
-                "geometrie": None,
-                "id": "03630000000078.1",
-                "ligtInWijkId": "03630012052035",
-                "naam": None,
-                "_embedded": {
-                    "ligtInWijk": None,
-                },
-            }
-        ]
+                    "beginGeldigheid": "2021-06-11",
+                    "code": None,
+                    "eindGeldigheid": None,
+                    "geometrie": None,
+                    "id": "03630000000078.2",
+                    "ligtInWijkId": "03630012052035",
+                    "naam": None,
+                    "_embedded": {
+                        "ligtInWijk": None,
+                    },
+                }
+            ]
+        }
 
     def test_list_expand_true_for_m2m_relation(
-        self, api_client, buurten_data, ggwgebieden_data, woningbouwplannen_data, filled_router
+        self, api_client, buurten_data, ggwgebieden_data, filled_router
     ):
         """Prove that buurt shows up when listview is expanded and uses the
         latest volgnummer
@@ -1428,51 +1448,134 @@ class TestEmbedTemporalTables:
         response = api_client.get(url, data={"_expand": "true"})
         data = read_response_json(response)
         assert response.status_code == 200, data
-        assert dict(data["_embedded"]["bestaatUitBuurten"][0]) == {
-            "_links": {
-                "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/dataset#buurten",
-                "self": {
-                    "href": "http://testserver/v1/gebieden/buurten/03630000000078/?volgnummer=1",
-                    "title": "03630000000078.1",
-                    "volgnummer": 1,
-                    "identificatie": "03630000000078",
-                },
-            },
-            "geometrie": None,
-            "naam": None,
-            "code": None,
-            "eindGeldigheid": "2021-06-11",
-            "beginGeldigheid": "2021-02-28",
-            "id": "03630000000078.1",
-            "ligtInWijkId": "03630012052035",
-            "_embedded": {
-                "ligtInWijk": None,
-            },
-        }
-        assert dict(data["_embedded"]["ggwgebieden"][0]) == {
-            "_links": {
-                "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/dataset#ggwgebieden",  # noqa: E501
-                "self": {
-                    "href": "http://testserver/v1/gebieden/ggwgebieden/03630950000000/?volgnummer=1",  # noqa: E501
-                    "title": "03630950000000.1",
-                    "volgnummer": 1,
-                    "identificatie": "03630950000000",
-                },
-                "bestaatUitBuurten": [
-                    {
-                        "href": "http://testserver/v1/gebieden/buurten/03630000000078/?volgnummer=1",  # noqa: E501
-                        "title": "03630000000078.1",
-                        "volgnummer": 1,
-                        "identificatie": "03630000000078",
+        assert data["_embedded"] == {
+            "ggwgebieden": [
+                {
+                    "_links": {
+                        "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/dataset#ggwgebieden",  # noqa: E501
+                        "self": {
+                            "href": "http://testserver/v1/gebieden/ggwgebieden/03630950000000/?volgnummer=1",  # noqa: E501
+                            "title": "03630950000000.1",
+                            "volgnummer": 1,
+                            "identificatie": "03630950000000",
+                        },
+                        "bestaatUitBuurten": [
+                            # M2M relation, a list of objects.
+                            {
+                                "href": "http://testserver/v1/gebieden/buurten/03630000000078/?volgnummer=2",  # noqa: E501
+                                "title": "03630000000078.2",
+                                "identificatie": "03630000000078",
+                                "volgnummer": 2,
+                            }
+                        ],
                     },
-                ],
+                    "id": "03630950000000.1",
+                    "registratiedatum": None,
+                    "naam": None,
+                    "beginGeldigheid": "2021-02-28",
+                    "eindGeldigheid": None,
+                    "geometrie": None,
+                }
+            ],
+            "bestaatUitBuurten": [
+                # The embedded object, via an M2M relation
+                {
+                    "_links": {
+                        "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/dataset#buurten",  # noqa: E501
+                        "self": {
+                            "href": "http://testserver/v1/gebieden/buurten/03630000000078/?volgnummer=2",  # noqa: E501
+                            "title": "03630000000078.2",
+                            "volgnummer": 2,
+                            "identificatie": "03630000000078",
+                        },
+                    },
+                    "id": "03630000000078.2",
+                    "naam": None,
+                    "code": None,
+                    "beginGeldigheid": "2021-06-11",
+                    "eindGeldigheid": None,
+                    "ligtInWijkId": "03630012052035",
+                    "geometrie": None,
+                    "_embedded": {
+                        "ligtInWijk": None,
+                    },
+                }
+            ],
+        }
+
+    def test_list_expand_true_for_reverse_m2m_relation(
+        self,
+        api_client,
+        ggwgebieden_data,
+        filled_router,
+    ):
+        """Prove that nesting of nesting also works."""
+        url = reverse("dynamic_api:gebieden-buurten-list")
+        response = api_client.get(
+            url,
+            data={
+                "_expand": "true",
+                "_expandScope": "onderdeelVanGGWGebieden",
             },
-            "geometrie": None,
-            "id": "03630950000000.1",
-            "eindGeldigheid": None,
-            "beginGeldigheid": "2021-02-28",
-            "naam": None,
-            "registratiedatum": None,
+        )
+        data = read_response_json(response)
+        assert response.status_code == 200, data
+        assert data["_embedded"] == {
+            "buurten": [
+                {
+                    "_links": {
+                        "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/dataset#buurten",  # noqa: E501
+                        "self": {
+                            "href": "http://testserver/v1/gebieden/buurten/03630000000078/?volgnummer=2",  # noqa: E501
+                            "identificatie": "03630000000078",
+                            "title": "03630000000078.2",
+                            "volgnummer": 2,
+                        },
+                        "onderdeelVanGGWGebieden": [
+                            {
+                                "href": "http://testserver/v1/gebieden/ggwgebieden/03630950000000/?volgnummer=1",  # noqa: E501
+                                "identificatie": "03630950000000",
+                                "title": "03630950000000.1",
+                                "volgnummer": 1,
+                            }
+                        ],
+                    },
+                    "beginGeldigheid": "2021-06-11",
+                    "code": None,
+                    "eindGeldigheid": None,
+                    "geometrie": None,
+                    "id": "03630000000078.2",
+                    "ligtInWijkId": "03630012052035",
+                    "naam": None,
+                }
+            ],
+            "onderdeelVanGGWGebieden": [
+                {
+                    "_links": {
+                        "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/dataset#ggwgebieden",  # noqa: E501
+                        "self": {
+                            "href": "http://testserver/v1/gebieden/ggwgebieden/03630950000000/?volgnummer=1",  # noqa: E501
+                            "identificatie": "03630950000000",
+                            "title": "03630950000000.1",
+                            "volgnummer": 1,
+                        },
+                        "bestaatUitBuurten": [
+                            {
+                                "href": "http://testserver/v1/gebieden/buurten/03630000000078/?volgnummer=2",  # noqa: E501
+                                "identificatie": "03630000000078",
+                                "title": "03630000000078.2",
+                                "volgnummer": 2,
+                            },
+                        ],
+                    },
+                    "beginGeldigheid": "2021-02-28",
+                    "eindGeldigheid": None,
+                    "geometrie": None,
+                    "id": "03630950000000.1",
+                    "naam": None,
+                    "registratiedatum": None,
+                }
+            ],
         }
 
     def test_through_extra_fields_for_m2m_relation(
@@ -1497,9 +1600,9 @@ class TestEmbedTemporalTables:
                 },
                 "bestaatUitBuurten": [
                     {
-                        "href": "http://testserver/v1/gebieden/buurten/03630000000078/?volgnummer=1",  # noqa: E501
-                        "title": "03630000000078.1",
-                        "volgnummer": 1,
+                        "href": "http://testserver/v1/gebieden/buurten/03630000000078/?volgnummer=2",  # noqa: E501
+                        "title": "03630000000078.2",
+                        "volgnummer": 2,
                         "identificatie": "03630000000078",
                         "beginGeldigheid": "2021-03-04",  # from relation!
                         "eindGeldigheid": None,  # from relation!
@@ -1626,7 +1729,6 @@ class TestEmbedTemporalTables:
         }
         assert "_embedded" not in data["_embedded"]["statistieken"][0]
 
-    @pytest.mark.xfail(reason="Embedded loose temporal relations are known to not be resolved")
     def test_list_expand_true_non_tempooral_loose_many_to_many_to_temporal(
         self, api_client, buurten_data, woningbouwplannen_data, filled_router
     ):
@@ -1733,7 +1835,6 @@ class TestEmbedTemporalTables:
             }
         ]
 
-    @pytest.mark.xfail(reason="Embedded loose temporal relations are known to not be resolved")
     def test_detail_expand_true_non_temporal_many_to_many_to_temporal(
         self,
         api_client,

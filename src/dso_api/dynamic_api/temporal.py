@@ -84,9 +84,26 @@ class TemporalTableQuery:
             return queryset.filter(**{self.version_field: self.version_value})
 
     def filter_queryset(self, queryset: models.QuerySet) -> models.QuerySet:
+        """Apply temporal filtering to the queryset, based on the request parameters."""
         if queryset.model.table_schema() != self.table_schema:
             raise ValueError("QuerySet model type does not match")
 
+        return self._filter_queryset(queryset, prefix="")
+
+    def filter_m2m_queryset(self, queryset: models.QuerySet, relation: models.ForeignKey):
+        """Apply temporal filtering to a queryset,
+        using the model that the relation points to.
+
+        This is useful for filtering though-tables,
+        where only the target relation has temporal data.
+        """
+        if relation.related_model.table_schema() != self.table_schema:
+            raise ValueError("QuerySet model type does not match")
+
+        return self._filter_queryset(queryset, prefix=f"{relation.name}__")
+
+    def _filter_queryset(self, queryset: models.QuerySet, prefix: str):
+        """Internal logic to filter a queryset on request-parameters for a temporal slice."""
         if not self.is_versioned or self.slice_value == "*":
             # allow this method to be called unconditionally on objects,
             # and allow ?geldigOp=* to return all data
@@ -100,16 +117,21 @@ class TemporalTableQuery:
             # start <= value AND (end IS NULL OR value < end)
             start, end = map(to_snake_case, range_fields)
             return queryset.filter(
-                Q(**{f"{start}__lte": slice_value})
-                & (Q(**{f"{end}__isnull": True}) | Q(**{f"{end}__gt": slice_value}))
-            ).order_by(f"-{start}")
+                Q(**{f"{prefix}{start}__lte": slice_value})
+                & (
+                    Q(**{f"{prefix}{end}__isnull": True})
+                    | Q(**{f"{prefix}{end}__gt": slice_value})
+                )
+            ).order_by(f"-{prefix}{start}")
         else:
             # Last attempt to get only the current temporal record; order by sequence.
             # does SELECT DISTINCT ON(identifier) ... ORDER BY identifier, sequence DESC
             # Alternative would be something like `HAVING sequence = MAX(SELECT sequence FROM ..)`
             identifier = self.table_schema.identifier[0]  # from ["identificatie", "volgnummer"]
             sequence_name = self.table_schema.temporal.identifier
-            return queryset.distinct(identifier).order_by(identifier, f"-{sequence_name}")
+            return queryset.distinct(
+                *queryset.query.distinct_fields, f"{prefix}{identifier}"
+            ).order_by(f"{prefix}{identifier}", f"-{prefix}{sequence_name}")
 
     @property
     def default_range_fields(self) -> Optional[TemporalDimensionFields]:
@@ -134,3 +156,18 @@ def filter_temporal_slice(request, queryset: models.QuerySet) -> models.QuerySet
         return queryset
     else:
         return TemporalTableQuery(request, table_schema).filter_queryset(queryset)
+
+
+def filter_temporal_m2m_slice(
+    request, queryset: models.QuerySet, relation: models.ForeignKey
+) -> models.QuerySet:
+    """Fiter a queryset, but using the temporality of the table references by the foreign key.
+    This is only useful for M2M relations, where the entries of the through-table
+    should be filtered, and the target relation should be filtered too.
+    """
+    related_table_schema = relation.related_model.table_schema()
+    if not related_table_schema.temporal:
+        return queryset
+    else:
+        table_query = TemporalTableQuery(request, related_table_schema)
+        return table_query.filter_m2m_queryset(queryset, relation)

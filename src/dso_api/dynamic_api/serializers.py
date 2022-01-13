@@ -49,7 +49,11 @@ from dso_api.dynamic_api.fields import (
     TemporalReadOnlyField,
 )
 from dso_api.dynamic_api.permissions import filter_unauthorized_expands
-from dso_api.dynamic_api.temporal import TemporalTableQuery, filter_temporal_slice
+from dso_api.dynamic_api.temporal import (
+    TemporalTableQuery,
+    filter_temporal_m2m_slice,
+    filter_temporal_slice,
+)
 from dso_api.dynamic_api.utils import get_source_model_fields, resolve_model_lookup
 from rest_framework_dso.embedding import EmbeddedFieldMatch
 from rest_framework_dso.fields import (
@@ -104,6 +108,50 @@ class DynamicListSerializer(DSOModelListSerializer):
     """This serializer class is used internally when :class:`DynamicSerializer`
     is initialized with the ``many=True`` init kwarg to process a list of objects.
     """
+
+    @cached_property
+    def _m2m_through_fields(self) -> tuple[models.ForeignKey, models.ForeignKey]:
+        """Give both foreignkeys that were part of this though table.
+        The fields are ordered from the perspective of this serializer;
+        with the first one being the field that was used to enter the through table,
+        and the second to jump in the target relation.
+        """
+        target_model = self.child.Meta.model
+        if not target_model.table_schema().through_table:
+            raise RuntimeError("not an m2m table")
+
+        first_fk = get_source_model_fields(self.parent, self.field_name, self)[-1].remote_field
+        second_fk = first(
+            (f for f in target_model._meta.get_fields() if f.is_relation and f is not first_fk)
+        )
+        return first_fk, second_fk
+
+    def get_attribute(self, instance: DynamicModel):
+        """Override list attribute retrieval for temporal filtering.
+        The ``get_attribute`` call is made by DRF to retrieve the data from an instance,
+        based on our ``source_attrs``.
+        """
+        value = super().get_attribute(instance)
+
+        # When the source attribute of this object references the reverse_name field
+        # (from a ForeignKey), the value is a RelatedManager subclass.
+        if isinstance(value, models.Manager):
+            request = self.context["request"]
+            if value.model.is_temporal():
+                # Make sure the target table is filtered by the temporal query,
+                # instead of showing links to all records.
+                value = filter_temporal_slice(request, value)
+
+            if (
+                value.model.table_schema().through_table
+                and self._m2m_through_fields[1].related_model.is_temporal()
+            ):
+                # When this field lists the through table entries, also filter the target table.
+                # Otherwise, the '_links' section shows all references from the M2M table, while
+                # the embedding returns fewer entries because they are filtered temporal query.
+                value = filter_temporal_m2m_slice(request, value, self._m2m_through_fields[1])
+
+        return value
 
     def get_prefetch_lookups(self) -> list[Union[models.Prefetch, str]]:
         """Optimize M2M prefetch lookups to return correct temporal records only."""
@@ -270,7 +318,9 @@ class DynamicSerializer(DSOModelSerializer):
         This override makes sure the correct temporal slice is returned.
         """
         if embedded_field.is_loose:
-            # Special handling for embedding temporal relationships, if they are loose relations
+            # Loose relations always point to a temporal object. In this case, the link happens on
+            # the first key only, and the temporal slice makes sure that a second WHERE condition
+            # happens on a temporal field (volgnummer/beginGeldigheid/..).
             # When 'identifier' is ["identificatie", "volgnummer"], take the first as grouper.
             model = embedded_field.related_model
             id_field = embedded_field.related_id_field or model.table_schema().identifier[0]
@@ -278,7 +328,11 @@ class DynamicSerializer(DSOModelSerializer):
                 **{f"{id_field}__in": id_list}
             )
         else:
-            return super().get_embedded_objects_by_id(embedded_field, id_list=id_list)
+            queryset = super().get_embedded_objects_by_id(embedded_field, id_list=id_list)
+
+            # For all relations: if they are in fact temporal objects
+            # still only return those that fit within the current timeframe.
+            return filter_temporal_slice(self._request, queryset)
 
     @extend_schema_field(OpenApiTypes.URI)
     def get_schema(self, instance):
