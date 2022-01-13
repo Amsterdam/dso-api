@@ -4,7 +4,7 @@
 #
 #    pip-compile --output-file=requirements.txt requirements.in
 #
-amsterdam-schema-tools[django]==3.2.0
+amsterdam-schema-tools[django]==3.3.1
     # via -r requirements.in
 arrow==1.2.1
     # via isoduration

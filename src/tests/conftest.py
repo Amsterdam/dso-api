@@ -1050,6 +1050,8 @@ def buurten_data(buurten_model) -> DynamicModel:
         begin_geldigheid=DATE_2021_FEB,
         eind_geldigheid=DATE_2021_JUNE,  # Historical record!
         ligt_in_wijk_id="03630012052035.1",
+        ligt_in_wijk_identificatie="03630012052035",
+        ligt_in_wijk_volgnummer="1",
     )
     return buurten_model.objects.create(
         id="03630000000078.2",
@@ -1057,6 +1059,8 @@ def buurten_data(buurten_model) -> DynamicModel:
         volgnummer=2,
         begin_geldigheid=DATE_2021_JUNE,
         ligt_in_wijk_id="03630012052035.1",
+        ligt_in_wijk_identificatie="03630012052035",
+        ligt_in_wijk_volgnummer="1",
     )
 
 
@@ -1068,6 +1072,8 @@ def bouwblokken_data(bouwblokken_model, buurten_data) -> DynamicModel:
         volgnummer=1,
         begin_geldigheid=DATE_2021_FEB,
         ligt_in_buurt_id="03630000000078.2",  # example (not actual)
+        ligt_in_buurt_identificatie="03630000000078",
+        ligt_in_buurt_volgnummer="2",
     )
 
 
@@ -1080,6 +1086,8 @@ def panden_data(panden_model, dossiers_model, bouwblokken_data):
         begin_geldigheid=DATE_2021_FEB,
         naam="Voorbeeldpand",
         ligt_in_bouwblok_id="03630012096483.1",
+        ligt_in_bouwblok_identificatie="03630012096483",
+        ligt_in_bouwblok_volgnummer="1",
         heeft_dossier_id="GV00000406",
     )
     dossiers_model.objects.create(dossier="GV00000406")
@@ -1095,6 +1103,8 @@ def wijken_data(wijken_model, stadsdelen_data) -> DynamicModel:
         naam="Burgwallen-Nieuwe Zijde",
         code="A01",
         ligt_in_stadsdeel=stadsdelen_data,
+        ligt_in_stadsdeel_identificatie=stadsdelen_data.identificatie,
+        ligt_in_stadsdeel_volgnummer=stadsdelen_data.volgnummer,
     )
 
 
@@ -1119,11 +1129,22 @@ def ggwgebieden_data(ggwgebieden_model, buurten_data):
         begin_geldigheid=DATE_2021_FEB,
     )
     ggwgebieden_model.bestaat_uit_buurten.through.objects.create(
-        id="22",
+        id=11,
         ggwgebieden_id="03630950000000.1",
+        ggwgebieden_identificatie="03630950000000",
+        ggwgebieden_volgnummer=1,
         bestaat_uit_buurten_id="03630000000078.1",
         bestaat_uit_buurten_identificatie="03630000000078",
         bestaat_uit_buurten_volgnummer=1,
+    )
+    ggwgebieden_model.bestaat_uit_buurten.through.objects.create(
+        id=22,
+        ggwgebieden_id="03630950000000.1",
+        ggwgebieden_identificatie="03630950000000",
+        ggwgebieden_volgnummer=1,
+        bestaat_uit_buurten_id="03630000000078.2",
+        bestaat_uit_buurten_identificatie="03630000000078",
+        bestaat_uit_buurten_volgnummer=2,
     )
 
 
@@ -1138,9 +1159,11 @@ def ggpgebieden_data(ggpgebieden_model, buurten_data):
     ggpgebieden_model.bestaat_uit_buurten.through.objects.create(
         id="33",
         ggpgebieden_id="03630950000000.1",
-        bestaat_uit_buurten_id="03630000000078.1",
+        ggpgebieden_identificatie="03630950000000",
+        ggpgebieden_volgnummer=1,
+        bestaat_uit_buurten_id="03630000000078.2",
         bestaat_uit_buurten_identificatie="03630000000078",
-        bestaat_uit_buurten_volgnummer=1,
+        bestaat_uit_buurten_volgnummer=2,
         begin_geldigheid="2021-03-04",
         eind_geldigheid=None,
     )
@@ -1153,7 +1176,7 @@ def woningbouwplannen_data(woningbouwplan_model, buurten_data, nontemporeel_mode
     woningbouwplan_model.buurten.through.objects.create(
         id=1000,
         woningbouwplan_id="1",
-        buurten_id=buurten_data.identificatie,
+        buurten_id=buurten_data.identificatie,  # NOTE: not a temporal reference!!
     )
     woningbouwplan_model.buurtenregular.through.objects.create(
         id=1000,
