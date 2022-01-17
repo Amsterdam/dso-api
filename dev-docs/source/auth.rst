@@ -141,43 +141,14 @@ See the :doc:`wfs` documentation for more details.
 Testing
 -------
 
-When testing datasets with authorization from the command line,
-you can generate a JWT with the following script:
-
-.. code-block:: python
-
-    import json
-    import sys
-    import time
-    
-    from django.conf import settings
-    from jwcrypto.jwk import JWK
-    from jwcrypto.jwt import JWT
-    
-    
-    key = JWK(**json.loads(settings.JWKS_TEST_KEY)["keys"][0])
-    
-    # Validity period, in seconds.
-    valid = 1800
-    
-    scopes = sys.argv[1:]
-    now = int(time.time())
-    claims = {
-        "iat": now,
-        "exp": now + valid,
-        "scopes": scopes,
-        "sub": "test@tester.nl",
-    }
-    token = JWT(header={"alg": "ES256", "kid": key.key_id}, claims=claims)
-    
-    token.make_signed_token(key)
-    print(token.serialize())
+When testing datasets with authorization from the command line
+you can use the `maketoken` management command, that generates 
+a test token for the provided scope(s).
 
 This requires DSO-API to be installed in the current virtualenv
 (``cd src && pip install -e .``).
-If the script called is ``maketoken.py``,
-you can now issue a curl command such as
+You can now issue a curl command such as
 ::
 
     curl http://localhost:8000/v1/haalcentraal/brk/kadastraalonroerendezaken/${id}/ \
-        --header "Authorization: Bearer $(python maketoken.py BRK/RSN)"
+        --header "Authorization: Bearer $(python manage.py maketoken BRK/RSN)"
