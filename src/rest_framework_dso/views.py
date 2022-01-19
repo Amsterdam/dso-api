@@ -14,11 +14,7 @@ from rest_framework.views import exception_handler as drf_exception_handler
 from schematools.types import DatasetTableSchema
 
 from rest_framework_dso import crs, filters, parsers
-from rest_framework_dso.exceptions import (
-    HumanReadableException,
-    PreconditionFailed,
-    RemoteAPIException,
-)
+from rest_framework_dso.exceptions import HumanReadableException, RemoteAPIException
 from rest_framework_dso.pagination import DSOPageNumberPagination
 from rest_framework_dso.response import StreamingResponse
 
@@ -291,9 +287,6 @@ class DSOViewMixin:
     #: The list of allowed coordinate reference systems for the request header
     accept_crs = {crs.RD_NEW, crs.WEB_MERCATOR, crs.ETRS89, crs.WGS84}
 
-    #: If there is a geo field, DSO requires that Accept-Crs is set.
-    accept_crs_required = False
-
     # Using standard fields
     filter_backends = [filters.DSOFilterBackend, filters.DSOOrderingFilter]
 
@@ -327,21 +320,17 @@ class DSOViewMixin:
     def table_schema(self) -> DatasetTableSchema:
         return self.model._table_schema
 
-    def _parse_accept_crs(self, http_value) -> Optional[crs.CRS]:
-        """Parse the HTTP Accept-Crs header.
+    def _parse_accept_crs(self, value: Optional[str]) -> Optional[crs.CRS]:
+        """Parse the HTTP Accept-Crs header value.
 
         Clients provide this header to indicate which CRS
         they would like to have in the response.
         """
-        if not http_value:
-            if self.accept_crs_required:
-                # This makes Accept-Crs mandatory
-                raise PreconditionFailed("The HTTP Accept-Crs header is required")
-            else:
-                return None
+        if value is None:
+            return None
 
         try:
-            accept_crs = crs.CRS.from_string(http_value)
+            accept_crs = crs.CRS.from_string(value)
         except ValueError as e:
             raise NotAcceptable(f"Chosen CRS is invalid: {e}") from e
 
