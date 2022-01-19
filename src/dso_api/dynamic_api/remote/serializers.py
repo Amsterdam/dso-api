@@ -90,7 +90,7 @@ class RemoteSerializer(DSOSerializer, _AuthMixin):
     @extend_schema_field(OpenApiTypes.URI)
     def get_schema(self, instance):
         """The schema field is exposed with every record"""
-        name = self.table_schema.parent_schema.id
+        name = self.table_schema.dataset.id
         table = self.table_schema.id
         dataset_path = Dataset.objects.get(name=name).path
         return f"https://schemas.data.amsterdam.nl/datasets/{dataset_path}/dataset#{table}"
@@ -117,7 +117,7 @@ class RemoteFieldSerializer(DSOSerializer, _AuthMixin):
 
 def remote_serializer_factory(table_schema: DatasetTableSchema):
     """Generate the DRF serializer class for a specific dataset model."""
-    dataset = table_schema.parent_schema
+    dataset = table_schema.dataset
     serializer_name = (f"{dataset.id.title()}{table_schema.id.title()}Serializer").replace(
         " ", "_"
     )
