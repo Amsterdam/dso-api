@@ -10,7 +10,7 @@ import sentry_sdk
 import sentry_sdk.utils
 from corsheaders.defaults import default_headers
 from django.core.exceptions import ImproperlyConfigured
-from opencensus.trace import config_integration
+#from opencensus.trace import config_integration
 from sentry_sdk.integrations.django import DjangoIntegration
 from sentry_sdk.integrations.logging import LoggingIntegration
 
@@ -220,54 +220,54 @@ LOGGING = {
     },
 }
 
-if CLOUD_ENV.lower().startswith("azure"):
-
-    if AZURE_APPI_CONNECTION_STRING is None:
-        raise ImproperlyConfigured(
-            "Please specify the 'AZURE_APPI_CONNECTION_STRING' environment variable."
-        )
-    if AZURE_APPI_AUDIT_CONNECTION_STRING is None:
-        logging.warning(
-            "Using AZURE_APPI_CONNECTION_STRING as AZURE_APPI_AUDIT_CONNECTION_STRING."
-        )
-
-    MIDDLEWARE.append("opencensus.ext.django.middleware.OpencensusMiddleware")
-    OPENCENSUS = {
-        "TRACE": {
-            "SAMPLER": "opencensus.trace.samplers.ProbabilitySampler(rate=1)",
-            "EXPORTER": f"""opencensus.ext.azure.trace_exporter.AzureExporter(
-                connection_string='{AZURE_APPI_CONNECTION_STRING}',
-                service_name='dso-api'
-            )""",
-            "EXCLUDELIST_PATHS": [],
-        }
-    }
-    config_integration.trace_integrations(["logging"])
-    azure_json = base_log_fmt.copy()
-    azure_json.update({"message": "%(message)s"})
-    audit_azure_json = {"audit": True}
-    audit_azure_json.update(azure_json)
-    LOGGING["formatters"]["azure"] = {"format": json.dumps(azure_json)}
-    LOGGING["formatters"]["audit_azure"] = {"format": json.dumps(audit_azure_json)}
-    LOGGING["handlers"]["azure"] = {
-        "level": "DEBUG",
-        "class": "opencensus.ext.azure.log_exporter.AzureLogHandler",
-        "connection_string": AZURE_APPI_CONNECTION_STRING,
-        "formatter": "azure",
-    }
-    LOGGING["handlers"]["audit_azure"] = {
-        "level": "DEBUG",
-        "class": "opencensus.ext.azure.log_exporter.AzureLogHandler",
-        "connection_string": AZURE_APPI_AUDIT_CONNECTION_STRING,
-        "formatter": "audit_azure",
-    }
-
-    LOGGING["root"]["handlers"] = ["azure"]
-    for logger_name, logger_details in LOGGING["loggers"].items():
-        if "audit_console" in logger_details["handlers"]:
-            LOGGING["loggers"][logger_name]["handlers"] = ["audit_azure"]
-        else:
-            LOGGING["loggers"][logger_name]["handlers"] = ["azure"]
+# if CLOUD_ENV.lower().startswith("azure"):
+#
+#     if AZURE_APPI_CONNECTION_STRING is None:
+#         raise ImproperlyConfigured(
+#             "Please specify the 'AZURE_APPI_CONNECTION_STRING' environment variable."
+#         )
+#     if AZURE_APPI_AUDIT_CONNECTION_STRING is None:
+#         logging.warning(
+#             "Using AZURE_APPI_CONNECTION_STRING as AZURE_APPI_AUDIT_CONNECTION_STRING."
+#         )
+#
+#     MIDDLEWARE.append("opencensus.ext.django.middleware.OpencensusMiddleware")
+#     OPENCENSUS = {
+#         "TRACE": {
+#             "SAMPLER": "opencensus.trace.samplers.ProbabilitySampler(rate=1)",
+#             "EXPORTER": f"""opencensus.ext.azure.trace_exporter.AzureExporter(
+#                 connection_string='{AZURE_APPI_CONNECTION_STRING}',
+#                 service_name='dso-api'
+#             )""",
+#             "EXCLUDELIST_PATHS": [],
+#         }
+#     }
+#     config_integration.trace_integrations(["logging"])
+#     azure_json = base_log_fmt.copy()
+#     azure_json.update({"message": "%(message)s"})
+#     audit_azure_json = {"audit": True}
+#     audit_azure_json.update(azure_json)
+#     LOGGING["formatters"]["azure"] = {"format": json.dumps(azure_json)}
+#     LOGGING["formatters"]["audit_azure"] = {"format": json.dumps(audit_azure_json)}
+#     LOGGING["handlers"]["azure"] = {
+#         "level": "DEBUG",
+#         "class": "opencensus.ext.azure.log_exporter.AzureLogHandler",
+#         "connection_string": AZURE_APPI_CONNECTION_STRING,
+#         "formatter": "azure",
+#     }
+#     LOGGING["handlers"]["audit_azure"] = {
+#         "level": "DEBUG",
+#         "class": "opencensus.ext.azure.log_exporter.AzureLogHandler",
+#         "connection_string": AZURE_APPI_AUDIT_CONNECTION_STRING,
+#         "formatter": "audit_azure",
+#     }
+#
+#     LOGGING["root"]["handlers"] = ["azure"]
+#     for logger_name, logger_details in LOGGING["loggers"].items():
+#         if "audit_console" in logger_details["handlers"]:
+#             LOGGING["loggers"][logger_name]["handlers"] = ["audit_azure"]
+#         else:
+#             LOGGING["loggers"][logger_name]["handlers"] = ["azure"]
 
 # -- Third party app settings
 
