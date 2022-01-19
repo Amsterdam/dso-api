@@ -220,7 +220,7 @@ LOGGING = {
     },
 }
 
-if CLOUD_ENV.lower().startswith("azure"):
+if CLOUD_ENV.lower().startswith("azure") and False:
 
     if AZURE_APPI_CONNECTION_STRING is None:
         raise ImproperlyConfigured(
