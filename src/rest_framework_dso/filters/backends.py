@@ -5,6 +5,7 @@ from typing import Optional
 from django.contrib.gis.geos import GEOSGeometry
 from django.contrib.gis.geos.error import GEOSException
 from django_filters.rest_framework import DjangoFilterBackend
+from gisserver.geometries import CRS
 from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter
 from schematools.utils import to_snake_case
@@ -52,7 +53,6 @@ class DSOFilterBackend(DjangoFilterBackend):
         if self.is_unfiltered(request):
             return None
 
-        # TODO: this needs to be moved to proper FilterField classes!
         filterset = super().get_filterset(request, queryset, view)
         for name, value in filterset.data.items():
             if (
@@ -60,16 +60,7 @@ class DSOFilterBackend(DjangoFilterBackend):
                 and name in filterset.base_filters
                 and filterset.base_filters[name].__class__.__name__.endswith("GeometryFilter")
             ):
-                x, y = _parse_point(value)
-
-                srid: int = request.accept_crs.srid if request.accept_crs else None
-                x_lon, y_lat, srid = _validate_convert_x_y(x, y, srid)
-                if srid in (4326, 28992) and (x_lon is None or y_lat is None):
-                    raise ValidationError(f"Invalid x,y values : {x},{y}")
-                try:
-                    value = GEOSGeometry(f"POINT({x_lon} {y_lat})", srid)
-                except GEOSException as e:
-                    raise ValidationError(f"Invalid x,y values {x},{y} with SRID {srid}") from e
+                value = parse_point(value, request.accept_crs)
                 new_data = filterset.data.copy()
                 new_data[name] = value
                 filterset.data = new_data
@@ -116,6 +107,18 @@ class DSOOrderingFilter(OrderingFilter):
             invalid = ", ".join(sorted(set(fields).difference(cleaned)))
             raise ValidationError(f"Invalid sort fields: {invalid}", code="order-by")
         return cleaned
+
+
+def parse_point(value: str, crs: Optional[CRS]) -> GEOSGeometry:
+    x, y = _parse_point(value)
+    srid = crs.srid if crs else None
+    x_lon, y_lat, srid = _validate_convert_x_y(x, y, srid)
+    if srid in (4326, 28992) and (x_lon is None or y_lat is None):
+        raise ValidationError(f"Invalid x,y values : {x},{y} in {value!r}")
+    try:
+        return GEOSGeometry(f"POINT({x_lon} {y_lat})", srid)
+    except GEOSException as e:
+        raise ValidationError(f"Invalid x,y values {x},{y} with SRID {srid}") from e
 
 
 def _parse_point(value: str) -> tuple[float, float]:
