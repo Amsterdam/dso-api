@@ -7,7 +7,9 @@ RUN pip install --no-cache-dir -r $PIP_REQUIREMENTS
 
 # Start runtime image,
 FROM amsterdam/python:3.9-slim-buster
-RUN apt update && apt install --no-install-recommends -y curl
+RUN apt update \
+ && apt install --no-install-recommends -y curl \
+ && rm -rf /var/lib/apt/lists/* /var/cache/debconf/*-old
 
 # Copy python build artifacts from builder image
 COPY --from=builder /usr/local/bin/ /usr/local/bin/
@@ -23,4 +25,5 @@ RUN python manage.py collectstatic --noinput
 
 EXPOSE 8000
 USER datapunt
-CMD ["uwsgi"]
+# Uwsing gunicorn instead of uWSGI to avoid memory leaking issues
+CMD ["gunicorn", "--bind=0.0.0.0:8000", "--worker-tmp-dir=/dev/shm", "--workers=1", "--threads=4", "--access-logfile=-", "dso_api.wsgi:application"]

@@ -12,6 +12,7 @@ djangorestframework-gis == 0.17
 amsterdam-schema-tools[django] == 3.3.1
 datapunt-authorization-django==1.3.1
 drf-spectacular == 0.15.0
+gunicorn == 20.1.0  # debugging uWSGI memory leak
 jsonschema == 4.2.1
 lru_dict == 1.1.7
 more-ds == 0.0.4

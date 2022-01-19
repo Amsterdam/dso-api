@@ -125,6 +125,8 @@ google-auth==1.28.1
     # via google-api-core
 googleapis-common-protos==1.53.0
     # via google-api-core
+gunicorn==20.1.0
+    # via -r requirements.in
 idna==2.10
     # via
     #   jsonschema
