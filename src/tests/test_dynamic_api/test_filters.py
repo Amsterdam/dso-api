@@ -140,7 +140,6 @@ class TestDynamicFilterSet:
         response = APIClient().get(
             "/v1/parkeervakken/parkeervakken/",
             data={"geometry[contains]": "121137.7,489046.9"},
-            headers={"Accept-CRS": 28992},
             HTTP_ACCEPT_CRS=28992,
         )
         data = read_response_json(response)
