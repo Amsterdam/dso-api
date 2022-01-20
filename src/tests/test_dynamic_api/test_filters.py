@@ -124,7 +124,7 @@ class TestDynamicFilterSet:
         response = APIClient().get(
             "/v1/parkeervakken/parkeervakken/",
             data={"geometry[contains]": "52.388231,4.8897865"},
-            headers={"Accept-CRS": 4326},
+            HTTP_ACCEPT_CRS=4326,
         )
         data = read_response_json(response)
         assert len(data["_embedded"]["parkeervakken"]) == 1
@@ -132,7 +132,7 @@ class TestDynamicFilterSet:
         response = APIClient().get(
             "/v1/parkeervakken/parkeervakken/",
             data={"geometry[contains]": "52.3883019,4.8900356"},
-            headers={"Accept-CRS": 4326},
+            HTTP_ACCEPT_CRS=4326,
         )
         data = read_response_json(response)
         assert len(data["_embedded"]["parkeervakken"]) == 0
@@ -141,6 +141,7 @@ class TestDynamicFilterSet:
             "/v1/parkeervakken/parkeervakken/",
             data={"geometry[contains]": "121137.7,489046.9"},
             headers={"Accept-CRS": 28992},
+            HTTP_ACCEPT_CRS=28992,
         )
         data = read_response_json(response)
         assert len(data["_embedded"]["parkeervakken"]) == 1
@@ -148,7 +149,7 @@ class TestDynamicFilterSet:
         response = APIClient().get(
             "/v1/parkeervakken/parkeervakken/",
             data={"geometry[contains]": "52.388231,48897865"},
-            headers={"Accept-CRS": 4326},
+            HTTP_ACCEPT_CRS=4326,
         )
         assert response.status_code == 400
 
