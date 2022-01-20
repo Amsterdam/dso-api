@@ -108,11 +108,15 @@ if (BRANCH == "master") {
    
     node {
         stage('OWASP vulnerability scan') {
+            // Get a fresh project name to prevent conflicts between concurrent builds.
+            gitHash = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
+            project = 'owasp_check_' + gitHash
+
             tryStep "owasp vulnerability check", {
-                sh  "docker-compose -p owasp_check -f src/.jenkins/owasp_vulnerability_scan/docker-compose.yml build --pull && " +
-                    "docker-compose -p owasp_check -f src/.jenkins/owasp_vulnerability_scan/docker-compose.yml run -u root --rm test"
+                sh  "docker-compose -p ${project} -f src/.jenkins/owasp_vulnerability_scan/docker-compose.yml build --pull && " +
+                    "docker-compose -p ${project} -f src/.jenkins/owasp_vulnerability_scan/docker-compose.yml run -u root --rm test"
             }, {
-                sh  "docker-compose -p owasp_check -f src/.jenkins/owasp_vulnerability_scan/docker-compose.yml down"
+                sh  "docker-compose -p ${project} -f src/.jenkins/owasp_vulnerability_scan/docker-compose.yml down"
             }
         }
     }
