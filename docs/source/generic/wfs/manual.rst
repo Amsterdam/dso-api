@@ -23,8 +23,8 @@ De volledige URL wordt dan:
 
 Bijvoorbeeld:
 
-* `...&TYPENAMES=buurt&OUTPUTFORMAT=geojson <https://api.data.amsterdam.nl/v1/wfs/bag/?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=buurt&COUNT=10&OUTPUTFORMAT=geojson>`_
-* `...&TYPENAMES=buurt&OUTPUTFORMAT=csv <https://api.data.amsterdam.nl/v1/wfs/bag/?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=buurt&COUNT=10&OUTPUTFORMAT=csv>`_
+* `...&TYPENAMES=wijken&OUTPUTFORMAT=geojson <https://api.data.amsterdam.nl/v1/wfs/gebieden/?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=wijken&COUNT=10&OUTPUTFORMAT=geojson>`_
+* `...&TYPENAMES=wijken&OUTPUTFORMAT=csv <https://api.data.amsterdam.nl/v1/wfs/gebieden/?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=wijken&COUNT=10&OUTPUTFORMAT=csv>`_
 
 .. tip::
    In de bovenstaande links is een ``COUNT=`` parameter opgenomen, die paginering activeert.
@@ -39,10 +39,10 @@ Hiervoor is het voldoende om de nesting-parameters te gebruiken bij het export l
 
 Bijvoorbeeld:
 
-* `?embed=stadsdeel&...&TYPENAMES=buurt&OUTPUTFORMAT=geojson  <https://api.data.amsterdam.nl/v1/wfs/bag/?embed=stadsdeel&SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=buurt&COUNT=10&OUTPUTFORMAT=geojson>`_
-* `?expand=stadsdeel&...&TYPENAMES=buurt&OUTPUTFORMAT=geojson  <https://api.data.amsterdam.nl/v1/wfs/bag/?expand=stadsdeel&SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=buurt&COUNT=10&OUTPUTFORMAT=geojson>`_
-* `?embed=stadsdeel&...&TYPENAMES=buurt&OUTPUTFORMAT=csv <https://api.data.amsterdam.nl/v1/wfs/bag/?embed=stadsdeel&SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=buurt&COUNT=10&OUTPUTFORMAT=csv>`_
-* `?expand=stadsdeel&...&TYPENAMES=buurt&OUTPUTFORMAT=csv <https://api.data.amsterdam.nl/v1/wfs/bag/?expand=stadsdeel&SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=buurt&COUNT=10&OUTPUTFORMAT=csv>`_
+* `?embed=ligt_in_stadsdeel&...&TYPENAMES=wijken&OUTPUTFORMAT=geojson  <https://api.data.amsterdam.nl/v1/wfs/gebieden/?embed=ligt_in_stadsdeel&SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=wijken&COUNT=10&OUTPUTFORMAT=geojson>`_
+* `?expand=ligt_in_stadsdeel&...&TYPENAMES=wijken&OUTPUTFORMAT=geojson  <https://api.data.amsterdam.nl/v1/wfs/gebieden/?expand=ligt_in_stadsdeel&SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=wijken&COUNT=10&OUTPUTFORMAT=geojson>`_
+* `?embed=ligt_in_stadsdeel&...&TYPENAMES=wijken&OUTPUTFORMAT=csv <https://api.data.amsterdam.nl/v1/wfs/gebieden/?embed=ligt_in_stadsdeel&SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=wijken&COUNT=10&OUTPUTFORMAT=csv>`_
+* `?expand=ligt_in_stadsdeel&...&TYPENAMES=wijken&OUTPUTFORMAT=csv <https://api.data.amsterdam.nl/v1/wfs/gebieden/?expand=ligt_in_stadsdeel&SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=wijken&COUNT=10&OUTPUTFORMAT=csv>`_
 
 .. admonition:: Sommige formaten hebben beperkingen
 
@@ -82,14 +82,14 @@ waarbij de waarde als XML wordt uitgedrukt:
 
     <Filter>
         <PropertyIsEqualTo>
-            <ValueReference>stadsdeel/naam</ValueReference>
+            <ValueReference>ligt_in_stadsdeel/naam</ValueReference>
             <Literal>Centrum</Literal>
         </PropertyIsEqualTo>
     </Filter>
 
 Dit wordt dan in de request verwerkt, bijvoorbeeld:
 
-* `...&TYPENAMES=buurt&OUTPUTFORMAT=geojson&FILTER=%3CFilter%3E%3CPropertyIsEqualTo%3E%3CValueReference... <https://api.data.amsterdam.nl/v1/wfs/bag/?expand=stadsdeel&SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=buurt&COUNT=10&OUTPUTFORMAT=geojson&FILTER=%3CFilter%3E%3CPropertyIsEqualTo%3E%3CValueReference%3Estadsdeel/naam%3C/ValueReference%3E%3CLiteral%3ECentrum%3C/Literal%3E%3C/PropertyIsEqualTo%3E%3C/Filter%3E>`_
+* `...&TYPENAMES=wijken&OUTPUTFORMAT=geojson&FILTER=%3CFilter%3E%3CPropertyIsEqualTo%3E%3CValueReference... <https://api.data.amsterdam.nl/v1/wfs/gebieden/?expand=ligt_in_stadsdeel&SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=wijken&COUNT=10&OUTPUTFORMAT=geojson&FILTER=%3CFilter%3E%3CPropertyIsEqualTo%3E%3CValueReference%3Eligt_in_stadsdeel/naam%3C/ValueReference%3E%3CLiteral%3ECentrum%3C/Literal%3E%3C/PropertyIsEqualTo%3E%3C/Filter%3E>`_
 
 De ``FILTER`` parameter vervangt de losse parameters ``BBOX`` en ``RESOURCEID``.
 Als je deze parameters ook gebruikt, moet je deze opnemen in het filter:
