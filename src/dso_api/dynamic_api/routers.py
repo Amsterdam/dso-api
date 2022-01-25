@@ -221,7 +221,7 @@ class DynamicRouter(routers.DefaultRouter):
             dataset.schema
 
         for dataset in db_datasets:  # type: Dataset
-            dataset_id = dataset.schema.id  # not dataset.name!
+            dataset_id = dataset.schema.id  # not dataset.name which is mangled.
             new_models = {}
 
             for model in dataset.create_models(base_app_name="dso_api.dynamic_api"):
@@ -310,12 +310,13 @@ class DynamicRouter(routers.DefaultRouter):
         """Build the mvt views per dataset"""
         results = []
         for dataset in datasets:
+            dataset_id = dataset.schema.id  # not dataset.name which is mangled.
             results.append(
                 path(
                     "mvt/" + dataset.path + "/",
                     DatasetMVTSingleView.as_view(),
                     name="mvt-single-dataset",
-                    kwargs={"dataset_name": dataset.name},
+                    kwargs={"dataset_name": dataset_id},
                 )
             )
             results.append(
@@ -323,7 +324,7 @@ class DynamicRouter(routers.DefaultRouter):
                     "mvt/" + dataset.path + "/<table_name>/<int:z>/<int:x>/<int:y>.pbf",
                     DatasetMVTView.as_view(),
                     name="mvt-pbf",
-                    kwargs={"dataset_name": dataset.name},
+                    kwargs={"dataset_name": dataset_id},
                 )
             )
         return results
@@ -332,12 +333,13 @@ class DynamicRouter(routers.DefaultRouter):
         """Build the wfs views per dataset"""
         results = []
         for dataset in datasets:
+            dataset_id = dataset.schema.id  # not dataset.name which is mangled.
             results.append(
                 path(
                     "wfs/" + dataset.path + "/",
                     DatasetWFSView.as_view(),
                     name="wfs",
-                    kwargs={"dataset_name": dataset.name},
+                    kwargs={"dataset_name": dataset_id},
                 )
             )
         return results

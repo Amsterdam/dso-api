@@ -38,7 +38,7 @@ from django.utils.functional import cached_property
 from gisserver.exceptions import InvalidParameterValue
 from gisserver.features import ComplexFeatureField, FeatureField, FeatureType, ServiceDescription
 from gisserver.views import WFSView
-from schematools.contrib.django.models import Dataset, get_field_schema
+from schematools.contrib.django.models import Dataset, DynamicModel, get_field_schema
 
 from dso_api.dynamic_api.datasets import get_active_datasets
 from dso_api.dynamic_api.permissions import CheckPermissionsMixin
@@ -179,11 +179,11 @@ class DatasetWFSView(CheckPermissionsMixin, WFSView):
         return context
 
     def get_service_description(self, service: str) -> ServiceDescription:
-        dataset_name = self.kwargs["dataset_name"]
-        schema = Dataset.objects.get(name=dataset_name).schema
+        some_model: DynamicModel = next(iter(self.models.values()))
+        schema = some_model.get_dataset_schema()
 
         return ServiceDescription(
-            title=schema.title or dataset_name.title(),
+            title=schema.title or self.kwargs["dataset_name"].title(),
             abstract=schema.description,
             keywords=["wfs", "amsterdam", "datapunt"],
             provider_name="Gemeente Amsterdam",
