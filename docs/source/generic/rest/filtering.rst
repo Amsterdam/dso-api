@@ -12,7 +12,7 @@ Bijvoorbeeld:
     curl 'https://api.data.amsterdam.nl/v1/gebieden/stadsdelen/?naam=Westpoort'
 
 Als het veld een array van objecten is, kunnen de subvelden van de objecten
-filterd worden met de naam van de array en de naam van het subveld gescheiden
+gefilterd worden met de naam van de array en de naam van het subveld gescheiden
 door een punt.
 Voorbeeld: het veld
 

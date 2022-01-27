@@ -37,8 +37,7 @@ met uitzondering van het opgegeven veld:
     maar ``_fields`` heeft de voorkeur.
 
 .. note::
-    Het is niet mogelijk om velden tegelijk in te sluiten en uit te sluiten.
-    Het uitsluiten van velden is immers overbodig als je al de een lijst van specifieke velden opgeef.
+    Het is niet mogelijk om velden tegelijk in te sluiten en uit te sluiten op hetzelfde object/niveau.
 
 Wanneer er relaties worden teruggegeven (zowel geneste structuren, als ingesloten relaties met ``?_expandScope``),
 werkt de ``?_fields=`` logica hiervoor ook:
