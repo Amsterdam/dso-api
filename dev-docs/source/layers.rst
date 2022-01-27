@@ -7,7 +7,7 @@ The code of DSO-API has the following layers:
 
    digraph foo {
 
-      drf [label="Django Rest Framework"]
+      drf [label="Django REST Framework"]
       rest_framework_dso [label="rest_framework_dso"]
       dynamic [label="dso_api.dynamic_api"]
       schematools_contrib_django [label="schematools.contrib.django"]
@@ -23,9 +23,20 @@ For this, it uses the datasets definitions that :mod:`schematools.contrib.django
 REST API Logic
 --------------
 
-The REST API code is based on Django Rest Framework. The generic DSO compatibility layer is
-implemented in the :mod:`rest_framework_dso` package, so it could be moved out to a official PyPI package.
-On top of this, the specific logic to generate the API is implemented in the :mod:`dso_api.dynamic_api` package.
+The REST API code is based on Django REST Framework.
+There are 3 layers:
+
+* Generic REST Framework
+* Generic DSO compatibility
+* Application choices (like blending Amsterdam Schema into API policies).
+
+The generic DSO compatibility layer is implemented in the :mod:`rest_framework_dso` package,
+so it could be moved out to a official PyPI package.
+This implements most features like embedding or the ``?_fields=...`` parameter.
+
+The specific logic to generate the API is implemented in the :mod:`dso_api.dynamic_api` package.
+This involves transforming an Amsterdam Schema / DynamicModel into the serializer layout,
+applying policies such as authorization/time-travel filtering based on schema data.
 
 The Schematools Package
 -----------------------

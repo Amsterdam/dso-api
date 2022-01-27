@@ -31,6 +31,28 @@ It builds a Django model based on the imported schema data.
     :class:`~schematools.contrib.django.models.DatasetTable` and
     :class:`~schematools.contrib.django.models.DatasetField` models.
 
+Loading Schemas
+---------------
+
+To play with the examples, load the schemas first.
+
+The schema files are imported by ``manage.py import_schemas``.
+This command reads all available schemas from a schema repository
+(:ref:`SCHEMA_URL <SCHEMA_URL>`, default: https://schemas.data.amsterdam.nl/datasets/)
+and updates the metadata tables accordingly.
+
+All schema data is saved in the :class:`~schematools.contrib.django.models.Dataset`
+model from the :mod:`schematools.contrib.django` package.
+Upon startup, DSO-API reads all available dataset schema's from
+the :class:`~schematools.contrib.django.models.Dataset` model to construct the models.
+When the model construction can't run at startup,
+use the :ref:`INITIALIZE_DYNAMIC_VIEWSETS=0 <INITIALIZE_DYNAMIC_VIEWSETS>` variable.
+
+.. tip::
+
+    Run ``manage.py dump_models`` to see the internal model layout that was created.
+    This command is also very useful to debug the model factory logic in schematools.
+
 Model Logic
 -----------
 
@@ -52,6 +74,14 @@ The dynamic models inherit all logic from their base class: :class:`~schematools
 
 Thus, the only "dynamic" part is the translation of the schema to the model field objects.
 That's the part after all that would normally be written in Python as well.
+
+.. tip::
+    To debug datasets and use their models, you can reuse the router logic
+    which already created those models. The following can be used inside ``./manage.py shell``::
+
+        >>> from dso_api.dynamic_api.urls import router
+        >>> Model = router.all_models["dataset"]["tablename"]
+        >>> Model.objects.all()  # etc..
 
 Internals of model_factory()
 ----------------------------
@@ -95,24 +125,12 @@ definitions to come up with the proper model fields as a dictionary.
     Hence, it's also possible to call :class:`django.db.models.bases.ModelBase`
     directly instead of :class:`type`, as that's the metaclass of :class:`django.db.models.Model`.
 
-
-Loading Schemas
+Creating Tables
 ---------------
-
-The schema files are imported by ``manage.py import_schemas``.
-This command reads all available schemas from a schema repository
-(:ref:`SCHEMA_URL <SCHEMA_URL>`, default: https://schemas.data.amsterdam.nl/datasets/)
-and updates the metadata tables accordingly.
-
-All schema data is saved in the :class:`~schematools.contrib.django.models.Dataset`
-model from the :mod:`schematools.contrib.django` package.
 
 When ``manage.py create_tables`` is executed (or ``manage.py import_schemas --create-tables``),
 the underlying database tables are created based on the model data.
-These tables are typically populated by a job from a separate Airflow instance.
 
-Upon startup, DSO-API reads all available dataset schema's from
-the :class:`~schematools.contrib.django.models.Dataset` model to constructs the models.
+.. note::
 
-In some cases, the model construction can't run at startup,
-use the :ref:`INITIALIZE_DYNAMIC_VIEWSETS <INITIALIZE_DYNAMIC_VIEWSETS>` variable.
+    On production, the tables are typically populated by a job from a separate Airflow instance.
