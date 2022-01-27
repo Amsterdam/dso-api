@@ -61,17 +61,16 @@ A simplified diagram of the main project dependencies:
    :maxdepth: 1
    :caption: Topics:
 
-   intro
+   layers
    features
    dynamic_models
    dynamic_api
-   layers
-   wfs
    remote
    auth
    openapi
    schemas
    dataset_versioning
+   wfs
    environment
    compliance
 
