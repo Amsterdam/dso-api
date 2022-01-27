@@ -3,7 +3,7 @@ import logging
 import os
 import sys
 from pathlib import Path
-from typing import Optional
+from typing import Final, Optional
 
 import environ
 import sentry_sdk
@@ -14,17 +14,20 @@ from opencensus.trace import config_integration
 from sentry_sdk.integrations.django import DjangoIntegration
 from sentry_sdk.integrations.logging import LoggingIntegration
 
+from dso_api.sentry import before_send
+
 env = environ.Env()
 
 # -- Environment
 
 BASE_DIR = Path(__file__).parents[1]
-DEBUG = env.bool("DJANGO_DEBUG", True)
+DEBUG = env.bool("DJANGO_DEBUG", False)
 
 CLOUD_ENV = env.str("CLOUD_ENV", "default")
 DJANGO_LOG_LEVEL = env.str("DJANGO_LOG_LEVEL", "INFO")
 DSO_API_LOG_LEVEL = env.str("DSO_API_LOG_LEVEL", "INFO")
 DSO_API_AUDIT_LOG_LEVEL = env.str("DSO_API_AUDIT_LOG_LEVEL", "INFO")
+SENTRY_BLOCKED_PATHS: Final[str] = env.list("SENTRY_BLOCKED_PATHS", default=[])
 
 # Paths
 STATIC_URL = "/v1/static/"
@@ -169,6 +172,7 @@ if SENTRY_DSN:
     sentry_sdk.init(
         dsn=SENTRY_DSN,
         environment="dso-api",
+        before_send=before_send,
         integrations=[
             LoggingIntegration(event_level=logging.WARNING),
             DjangoIntegration(),
