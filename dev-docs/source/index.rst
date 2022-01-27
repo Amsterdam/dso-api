@@ -66,6 +66,8 @@ A simplified diagram of the main project dependencies:
    dynamic_models
    dynamic_api
    remote
+   temporal
+   streaming
    auth
    openapi
    schemas
