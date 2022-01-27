@@ -47,6 +47,15 @@ This can be changed using::
     DSO_API_LOG_LEVEL = ...
     DSO_API_AUDIT_LOG_LEVEL = ...
 
+For some endpoints, when error messages are generated, those message
+are containing too much confidential information (like BSN numbers) to end up in the Sentry logs.
+
+So, it is possible to ignore certain endpoints based on the `path` part of the url
+using the environment variable `SENTRY_BLOCKED_PATHS`. This environment variable
+should contain a comma-separated list of strings that will flag the endpoint for
+not logging to Sentry when one of the defined strings in this environment variable
+is part of the url. 
+
 
 Dataset Schema Locations
 ------------------------
