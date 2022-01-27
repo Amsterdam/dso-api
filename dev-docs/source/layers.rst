@@ -23,7 +23,7 @@ For this, it uses the datasets definitions that :mod:`schematools.contrib.django
 REST API Logic
 --------------
 
-The REST API code is based on Django REST Framework.
+The REST API code is based on :doc:`Django REST Framework <rest_framework>`.
 There are 3 layers:
 
 * Generic REST Framework

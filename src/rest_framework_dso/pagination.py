@@ -169,6 +169,11 @@ class DSOPageNumberPagination(DelegatedPageNumberPagination):
         return super().get_paginated_response(data)
 
     def _get_paginated_data(self, data: Union[ReturnList, ReturnDict, ReturnGenerator]) -> dict:
+        """Paginate the streaming response.
+
+        This only wraps the ``ReturnGenerator`` inside the basic layout.
+        While the data is outputted by the rendering, the footer fields will be added.
+        """
         if isinstance(data, dict):
             # Used DSOListSerializer, already received multiple lists
             return {

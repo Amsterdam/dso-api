@@ -18,7 +18,8 @@ The following features are implemented in the application:
 * :doc:`WFS Endpoint for Geo applications <wfs>`.
 * :doc:`Datasets with a remote endpoint <remote>`.
 * :doc:`Authentication using scopes <auth>`.
-* Streaming output formats:
+* :doc:`Temporal browsing <temporal>`.
+* :doc:`Streaming output formats <streaming>`:
 
  * HAL-JSON (``?_format=json``, the default except for browsers)
  * CSV export (``?_format=csv``)
