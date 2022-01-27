@@ -12,7 +12,7 @@ BUILDDIR      = build
 help:
 	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
-.PHONY: help Makefile
+.PHONY: help Makefile watch
 
 datasets:
 	rm -rf source/datasets source/wfs-datasets
@@ -27,6 +27,9 @@ source/datasets:
 clean:
 	rm -rf build/
 	rm -rf source/datasets source/wfs-datasets
+
+watch:
+	sphinx-autobuild "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
 # configured for local usage in docker container
 livehtml: source/datasets
