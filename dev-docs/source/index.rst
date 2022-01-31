@@ -62,6 +62,7 @@ A simplified diagram of the main project dependencies:
    :caption: Topics:
 
    layers
+   rest_framework
    features
    dynamic_models
    dynamic_api
