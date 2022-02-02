@@ -16,7 +16,6 @@ jsonschema == 3.2.0
 lru_dict == 1.1.7
 more-ds == 0.0.4
 more-itertools == 8.8.0
-psycopg2-binary == 2.8.6
 python-string-utils == 1.0.0
 readerwriterlock == 1.0.9
 orjson == 3.5.3
