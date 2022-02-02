@@ -7,8 +7,14 @@ from django.views.generic import RedirectView
 import dso_api.dynamic_api.urls
 from rest_framework_dso import views
 
+
+def _raise_runtime_error(request):
+    raise RuntimeError("Testing 500 error.")
+
+
 urlpatterns = [
     path("status/health/", include(django_healthchecks.urls)),
+    path("500-test/", _raise_runtime_error),
     path("v1/", include(dso_api.dynamic_api.urls)),
     path("", RedirectView.as_view(url="/v1/"), name="root-redirect"),
     re_path(
