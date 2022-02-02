@@ -96,30 +96,25 @@ class DatasetWFSIndexView(APIIndexView):
         ]
 
     def get_environments(self, ds: Dataset, base: str):
+        dataset_id = ds.schema.id
+        wfs_url = reverse("dynamic_api:wfs", kwargs={"dataset_name": dataset_id})
         return [
             {
                 "name": "production",
-                "api_url": base + reverse("dynamic_api:wfs", kwargs={"dataset_name": ds.name}),
-                "specification_url": base
-                + reverse("dynamic_api:wfs", kwargs={"dataset_name": ds.name})
-                + "?SERVICE=WFS&REQUEST=GetCapabilities",
+                "api_url": base + wfs_url,
+                "specification_url": f"{base}{wfs_url}?SERVICE=WFS&REQUEST=GetCapabilities",
                 "documentation_url": f"{base}/v1/docs/wfs-datasets/{ds.path}.html",
             }
         ]
 
     def get_related_apis(self, ds: Dataset, base: str):
-        related_apis = [
-            {
-                "type": "rest_json",
-                "url": base + reverse(f"dynamic_api:openapi-{ds.schema.id}"),
-            },
-            {
-                "type": "MVT",
-                "url": base
-                + reverse("dynamic_api:mvt-single-dataset", kwargs={"dataset_name": ds.name}),
-            },
+        dataset_id = ds.schema.id
+        json_url = reverse(f"dynamic_api:openapi-{dataset_id}")
+        mvt_url = reverse("dynamic_api:mvt-single-dataset", kwargs={"dataset_name": dataset_id})
+        return [
+            {"type": "rest_json", "url": base + json_url},
+            {"type": "MVT", "url": base + mvt_url},
         ]
-        return related_apis
 
 
 class DatasetWFSView(CheckPermissionsMixin, WFSView):

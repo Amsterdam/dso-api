@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from typing import Iterable
 
-from django.urls import NoReverseMatch, reverse
+from django.urls import NoReverseMatch
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from schematools.contrib.django.models import Dataset
@@ -37,18 +37,11 @@ class APIIndexView(APIView):
         return get_active_datasets().order_by("name")
 
     def get_environments(self, ds: Dataset, base: str) -> list[dict]:
-        return [
-            {
-                "name": "production",
-                "api_url": base + reverse(f"dynamic_api:openapi-{ds.schema.id}"),
-                "specification_url": "",
-                "documentation_url": "",
-            }
-        ]
+        raise NotImplementedError()
 
     def get_related_apis(self, ds: Dataset, base: str) -> list[dict]:
         """Get list of other APIs exposing the same dataset"""
-        return []
+        raise NotImplementedError()
 
     def get(self, request, *args, **kwargs):
         # Data not needed for html view
@@ -65,8 +58,13 @@ class APIIndexView(APIView):
                 env = self.get_environments(ds, base)
                 rel = self.get_related_apis(ds, base)
             except NoReverseMatch as e:
-                logging.error(f"error in {ds.schema.id}: {e}")
-                continue
+                # Due to too many of these issues, avoid breaking the whole index listing for this.
+                # Plus, having the front page give a 500 error is not that nice.
+                logging.exception(
+                    f"Internal URL resolving is broken for schema {ds.schema.id}: {e}"
+                )
+                env = []
+                rel = []
 
             result["datasets"][ds.schema.id] = {
                 "id": ds.schema.id,

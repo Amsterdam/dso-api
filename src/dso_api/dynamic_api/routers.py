@@ -73,30 +73,42 @@ class DynamicAPIIndexView(APIIndexView):
         return datasets
 
     def get_environments(self, ds: Dataset, base: str):
-        return [
-            {
-                "name": "production",
-                "api_url": base + reverse(f"dynamic_api:openapi-{ds.schema.id}"),
-                "specification_url": base + reverse(f"dynamic_api:openapi-{ds.schema.id}"),
-                "documentation_url": f"{base}/v1/docs/datasets/{ds.path}.html",
-            }
-        ]
+        dataset_id = ds.schema.id
+        if ds.enable_db:
+            api_url = reverse(f"dynamic_api:openapi-{dataset_id}")
+            return [
+                {
+                    "name": "production",
+                    "api_url": base + api_url,
+                    "specification_url": base + api_url,
+                    "documentation_url": f"{base}/v1/docs/datasets/{ds.path}.html",
+                }
+            ]
+        else:
+            # Remote proxies have no index page yet.
+            # NOTE: no views are generated when endpoint_url is also empty.
+            return [
+                {
+                    "name": "production",
+                    "api_url": "",  # f"/v1/{ds.path}{{table_id}}"
+                    "specification_url": "",
+                    "documentation_url": f"{base}/v1/docs/datasets/{ds.path}.html",
+                }
+            ]
 
     def get_related_apis(self, ds: Dataset, base: str):
-        related_apis = []
-        if ds.has_geometry_fields:
-            related_apis = [
-                {
-                    "type": "WFS",
-                    "url": base + reverse("dynamic_api:wfs", kwargs={"dataset_name": ds.name}),
-                },
-                {
-                    "type": "MVT",
-                    "url": base
-                    + reverse("dynamic_api:mvt-single-dataset", kwargs={"dataset_name": ds.name}),
-                },
+        if ds.enable_db and ds.has_geometry_fields:
+            # WFS and MVT is only created for datasets
+            # that are directly backed by a local database.
+            ds_id = ds.schema.id
+            wfs_url = reverse("dynamic_api:wfs", kwargs={"dataset_name": ds_id})
+            mvt_url = reverse("dynamic_api:mvt-single-dataset", kwargs={"dataset_name": ds_id})
+            return [
+                {"type": "WFS", "url": base + wfs_url},
+                {"type": "MVT", "url": base + mvt_url},
             ]
-        return related_apis
+        else:
+            return []
 
 
 class DynamicRouter(routers.DefaultRouter):

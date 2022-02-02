@@ -41,29 +41,28 @@ class DatasetMVTIndexView(APIIndexView):
         ]
 
     def get_environments(self, ds: Dataset, base: str):
+        api_url = reverse("dynamic_api:mvt-single-dataset", kwargs={"dataset_name": ds.schema.id})
         return [
             {
                 "name": "production",
-                "api_url": base
-                + reverse("dynamic_api:mvt-single-dataset", kwargs={"dataset_name": ds.name}),
-                "specification_url": base
-                + reverse("dynamic_api:mvt-single-dataset", kwargs={"dataset_name": ds.name}),
+                "api_url": base + api_url,
+                "specification_url": base + api_url,
                 "documentation_url": f"{base}/v1/docs/generic/mvt.html",
             }
         ]
 
     def get_related_apis(self, ds: Dataset, base: str):
-        related_apis = [
+        dataset_id = ds.schema.id
+        return [
             {
                 "type": "rest_json",
-                "url": base + reverse(f"dynamic_api:openapi-{ds.schema.id}"),
+                "url": base + reverse(f"dynamic_api:openapi-{dataset_id}"),
             },
             {
                 "type": "WFS",
-                "url": base + reverse("dynamic_api:wfs", kwargs={"dataset_name": ds.name}),
+                "url": base + reverse("dynamic_api:wfs", kwargs={"dataset_name": dataset_id}),
             },
         ]
-        return related_apis
 
 
 class DatasetMVTSingleView(TemplateView):
