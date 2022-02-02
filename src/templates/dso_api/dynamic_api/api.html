@@ -352,13 +352,13 @@
     if(page) {
       setPageLinks(page);
     }
-    getData(PAGEURL).catch(exceptionHandler).then(parseData);
+    getData(PAGEURL).catch(parseException).then(parseData);
 
     // Override the default DRF behaviour of the OPTIONS button,
     // which does not work with our script.
     // We make the request and replace the page content with the options response.
     document.getElementById("options-button").onclick = e => {
-      getData(PAGEURL, "OPTIONS").catch(exceptionHandler).then(parseData);
+      getData(PAGEURL, "OPTIONS").catch(parseException).then(parseData);
       e.preventDefault();
     }
   }
@@ -435,15 +435,15 @@
       http.setRequestHeader("Accept", "application/hal+json");
       http.send();
       http.onreadystatechange = function () {
-        if (this.readyState == 2){
+        if (this.readyState === 2){
             parseHeaders(this);
         }
-        if (this.readyState == 4){
-          let result = JSON.parse(this.responseText);
-          try {   
+        if (this.readyState === 4){
+          try {
+            let result = JSON.parse(this.responseText);
             callback(result);
           } catch (error) {
-              err("Error: JSON corrupt");
+            err([error, this.responseText]);
           }
         }
       }; 
@@ -479,8 +479,12 @@
     }
   }
 
-  function exceptionHandler(e) {
-    console.error("Failed to retrieve API response from server.");
+  function parseException(err) {
+    let exception = err[0], responseText = err[1];  // promises only allow 1 argument.
+    console.error("Failed to retrieve API response from server:", exception);
+
+    let contentElement = document.getElementById("response-content");
+    contentElement.innerHTML = responseText;
   }
 
   function parseData(data) {
