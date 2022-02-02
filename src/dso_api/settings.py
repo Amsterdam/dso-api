@@ -210,6 +210,7 @@ LOGGING = {
     "loggers": {
         "opencensus": {"handlers": ["console"], "level": DJANGO_LOG_LEVEL, "propagate": False},
         "django": {"handlers": ["console"], "level": DJANGO_LOG_LEVEL, "propagate": False},
+        "django.utils.autoreload": {"handlers": ["console"], "level": "INFO", "propagate": False},
         "dso_api": {"handlers": ["console"], "level": DSO_API_LOG_LEVEL, "propagate": False},
         "dso_api.audit": {
             "handlers": ["audit_console"],
