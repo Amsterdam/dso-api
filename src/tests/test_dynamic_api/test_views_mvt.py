@@ -122,6 +122,9 @@ def test_mvt_content(api_client, afval_container, filled_router):
                 {
                     "geometry": {"type": "Point", "coordinates": [4171, 1247]},
                     "properties": {
+                        # TODO These are snake-cased database field names.
+                        # We should return schema field names instead.
+                        # Also, what happens in the case of relations?
                         "id": 1,
                         "cluster_id": "c1",
                         "serienummer": "foobar-123",
