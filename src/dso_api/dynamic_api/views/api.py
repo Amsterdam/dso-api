@@ -89,8 +89,6 @@ class DynamicApiViewSet(locking.ReadLockMixin, DSOViewMixin, viewsets.ReadOnlyMo
         "_pageSize",
         "page_size",
         "page",
-        "_sort",
-        "sorteer",
     }
 
     def initial(self, request, *args, **kwargs):

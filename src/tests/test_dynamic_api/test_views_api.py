@@ -6,7 +6,6 @@ from typing import Any
 
 import orjson
 import pytest
-from django.apps import apps
 from django.contrib.gis.geos import Point
 from django.db import connection
 from django.urls import NoReverseMatch, reverse
@@ -774,14 +773,13 @@ class TestAuth:
         response = api_client.options(url)
         assert response.status_code == 200, response.data
 
-    def test_sort_by_accepts_camel_case(self, api_client, afval_container, filled_router):
-        """Prove that _sort is accepting camelCase parameters."""
+    def test_sort_auth(self, api_client, afval_schema, afval_container, filled_router):
+        patch_field_auth(afval_schema, "containers", "datum_creatie", auth=["SEE/CREATION"])
         url = reverse("dynamic_api:afvalwegingen-containers-list")
-        response = api_client.get(f"{url}?_sort=datumCreatie")
+        response = api_client.get(f"{url}?_sort=datum_creatie")
         data = read_response_json(response)
-
-        assert response.status_code == 200, data
-        assert len(data["_embedded"]["containers"]) == 1, data
+        assert response.status_code == 403, data
+        assert "access denied to field datum_creatie" in data["title"]
 
     def test_sort_by_not_accepting_db_column_names(
         self, api_client, afval_container, filled_router
@@ -791,20 +789,7 @@ class TestAuth:
         response = api_client.get(f"{url}?_sort=datum_creatie")
         data = read_response_json(response)
         assert response.status_code == 400, data
-        assert data["x-validation-errors"] == ["Invalid sort fields: datum_creatie"], data
-
-    def test_auth_on_table_schema_protects_camel_case(
-        self, api_client, afval_schema, afval_dataset, filled_router
-    ):
-        """Prove that auth protection at table level (adresLoopafstand)
-        leads to a 403 on the adresLoopafstand listview even if table name
-        is in camelCase."""
-        url = reverse("dynamic_api:afvalwegingen-adres_loopafstand-list")
-        table_schema = apps.get_model("afvalwegingen", "adres_loopafstand").table_schema()
-        table_schema["auth"] = {"SOME_AUTH/SCOPE"}
-
-        response = api_client.get(url)
-        assert response.status_code == 403, response.data
+        assert "datum_creatie" in data["x-validation-errors"][0], data
 
 
 @pytest.mark.django_db

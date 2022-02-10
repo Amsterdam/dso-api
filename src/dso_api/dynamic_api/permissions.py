@@ -152,6 +152,14 @@ def validate_request(request, schema: DatasetTableSchema, allowed: set[str]) -> 
         if key in allowed:
             continue
 
+        if key == "_sort" or key == "sorteer":
+            for value in values:
+                for field in value.split(","):
+                    # Leading "-" means descending sort.
+                    field = field[1:] if field.startswith("-") else field
+                    _check_field_access(field, scopes, schema)
+            continue
+
         # Everything else is a filter.
         field_name, op = parse_filter(key)
 
@@ -163,13 +171,13 @@ def validate_request(request, schema: DatasetTableSchema, allowed: set[str]) -> 
         if schema.temporal is not None:
             if fields := schema.temporal.dimensions.get(field_name):
                 for field in (fields.start, fields.end):
-                    _check_filter(field, scopes, schema)
+                    _check_field_access(field, scopes, schema)
                 continue
 
-        _check_filter(field_name, scopes, schema)
+        _check_field_access(field_name, scopes, schema)
 
 
-def _check_filter(  # noqa: C901
+def _check_field_access(  # noqa: C901
     field_name: str, scopes: UserScopes, schema: DatasetTableSchema
 ) -> None:
     if field_name == "":
