@@ -5,7 +5,7 @@ from django.core.exceptions import PermissionDenied
 from schematools.permissions import UserScopes
 from schematools.utils import dataset_schema_from_path
 
-from dso_api.dynamic_api.permissions import _check_filter
+from dso_api.dynamic_api.permissions import _check_field_access
 
 SCHEMA = dataset_schema_from_path(Path(__file__).parent.parent / "files" / "relationauth.json")
 
@@ -28,7 +28,7 @@ def test_check_filter(field_name: str, scopes: str, ok: bool):
 
     scopes = UserScopes(query_params={}, request_scopes=scopes.split())
     if ok:
-        _check_filter(field_name, scopes, schema)
+        _check_field_access(field_name, scopes, schema)
     else:
         with pytest.raises(PermissionDenied):
-            _check_filter(field_name, scopes, schema)
+            _check_field_access(field_name, scopes, schema)
