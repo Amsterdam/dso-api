@@ -13,6 +13,7 @@
         "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "required": ["id", "schema"],
+        "mainGeometry": "geometryWithAuth",
         "properties": {
           "id": {
             "type": "integer",
@@ -26,7 +27,7 @@
             "auth": "TEST/META",
             "description": ""
           },
-          "geometry": {
+          "geometryWithAuth": {
             "$ref": "https://geojson.org/schema/Point.json",
             "auth": "TEST/GEO",
             "description": "Geometrie"

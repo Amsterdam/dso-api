@@ -3,7 +3,6 @@
 import logging
 import time
 
-from django.contrib.gis.db.models import GeometryField
 from django.core.exceptions import EmptyResultSet, FieldDoesNotExist, PermissionDenied
 from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404
@@ -11,6 +10,8 @@ from django.urls.base import reverse
 from django.views.generic import TemplateView
 from rest_framework.status import HTTP_204_NO_CONTENT
 from schematools.contrib.django.models import Dataset, get_field_schema
+from schematools.exceptions import SchemaObjectNotFound
+from schematools.types import DatasetTableSchema
 from schematools.utils import to_snake_case
 from vectortiles.postgis.views import MVTView
 
@@ -161,11 +162,12 @@ class DatasetMVTView(CheckPermissionsMixin, MVTView):
 
     @property
     def vector_tile_geom_name(self) -> str:
-        for f in self.model._meta.get_fields():
-            if isinstance(f, GeometryField):
-                return f.name
-
-        raise FieldDoesNotExist()
+        schema: DatasetTableSchema = self.model.table_schema()
+        field = schema.main_geometry
+        try:
+            return to_snake_case(schema.get_field_by_id(field).name)
+        except SchemaObjectNotFound as e:
+            raise FieldDoesNotExist(f"no field named {field!r}") from e
 
     def check_permissions(self, request, models) -> None:
         """Override CheckPermissionsMixin to add extra checks"""
