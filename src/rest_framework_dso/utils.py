@@ -1,6 +1,6 @@
 from django.utils.functional import LazyObject, empty
 
-DictOfDicts = dict[str, dict[str, dict]]
+DictOfDicts = 'dict[str,dict[str, dict]]'
 
 
 def unlazy_object(obj):
@@ -12,7 +12,7 @@ def unlazy_object(obj):
         return obj
 
 
-def group_dotted_names(dotted_field_names: list[str]) -> DictOfDicts:
+def group_dotted_names(dotted_field_names: 'list[str]') -> DictOfDicts:
     """Convert a list of dotted names to tree."""
     result = {}
     for dotted_name in dotted_field_names:

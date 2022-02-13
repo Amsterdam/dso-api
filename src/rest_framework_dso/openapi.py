@@ -246,7 +246,7 @@ class DSOAutoSchema(openapi.AutoSchema):
 
         return self.view.table_schema.description or ""
 
-    def get_tags(self) -> list[str]:
+    def get_tags(self) -> 'list[str]':
         """Auto-generate tags based on the path, take last bit of path."""
         tokenized_path = self._tokenize_path()
         return tokenized_path[-1:]

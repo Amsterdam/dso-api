@@ -151,7 +151,7 @@ class DatasetMVTView(CheckPermissionsMixin, MVTView):
         return qs.all()
 
     @property
-    def vector_tile_fields(self) -> tuple[str]:
+    def vector_tile_fields(self) -> 'tuple[str]':
         geom_name = self.vector_tile_geom_name
         user_scopes = self.request.user_scopes
         return tuple(

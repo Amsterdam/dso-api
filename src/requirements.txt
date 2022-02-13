@@ -217,7 +217,7 @@ protobuf==3.15.7
     #   mapbox-vector-tile
 psutil==5.8.0
     # via opencensus-ext-azure
-psycopg2==2.8.6
+#psycopg2==2.8.6
     # via amsterdam-schema-tools
 psycopg2-binary==2.8.6
     # via -r requirements.in

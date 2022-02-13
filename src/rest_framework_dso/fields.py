@@ -18,7 +18,7 @@ from schematools.contrib.django.models import LooseRelationField
 
 from rest_framework_dso.utils import group_dotted_names, unlazy_object
 
-DictOfDicts = dict[str, dict[str, dict]]
+DictOfDicts = 'dict[str, dict[str, dict]]'
 
 
 class FieldsToDisplay:

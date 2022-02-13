@@ -1,0 +1,153 @@
+{
+  "uid" : "98d3104e051c652961429bf95fa0b5d6",
+  "name" : "suites",
+  "children" : [ {
+    "name" : "api_test.integrationTest",
+    "children" : [ {
+      "name" : "test_datasetbussinv",
+      "children" : [ {
+        "name" : "test_bussinv_success",
+        "uid" : "19eee16dd43b15a3",
+        "parentUid" : "61aca537c6c8e863c02ac14d3a57169f",
+        "status" : "passed",
+        "time" : {
+          "start" : 1644788363150,
+          "stop" : 1644788363386,
+          "duration" : 236
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "newPassed" : false,
+        "newBroken" : false,
+        "retriesCount" : 0,
+        "retriesStatusChange" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_bussinv_queryparam",
+        "uid" : "2f28fa757a587b21",
+        "parentUid" : "61aca537c6c8e863c02ac14d3a57169f",
+        "status" : "passed",
+        "time" : {
+          "start" : 1644788363393,
+          "stop" : 1644788363594,
+          "duration" : 201
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "newPassed" : false,
+        "newBroken" : false,
+        "retriesCount" : 0,
+        "retriesStatusChange" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_bussinv_failure",
+        "uid" : "6a1593ef4879f058",
+        "parentUid" : "61aca537c6c8e863c02ac14d3a57169f",
+        "status" : "passed",
+        "time" : {
+          "start" : 1644788363601,
+          "stop" : 1644788363745,
+          "duration" : 144
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "newPassed" : false,
+        "newBroken" : false,
+        "retriesCount" : 0,
+        "retriesStatusChange" : false,
+        "parameters" : [ ]
+      } ],
+      "uid" : "61aca537c6c8e863c02ac14d3a57169f"
+    }, {
+      "name" : "test_datasetngfz",
+      "children" : [ {
+        "name" : "test_buurtid_success",
+        "uid" : "915aa9dcc49db271",
+        "parentUid" : "722e2039cf55b3bc74eb43a24f2cf4de",
+        "status" : "passed",
+        "time" : {
+          "start" : 1644788363753,
+          "stop" : 1644788363974,
+          "duration" : 221
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "newPassed" : false,
+        "newBroken" : false,
+        "retriesCount" : 0,
+        "retriesStatusChange" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_buurtid_queryparam",
+        "uid" : "58664e7af0b71ab3",
+        "parentUid" : "722e2039cf55b3bc74eb43a24f2cf4de",
+        "status" : "passed",
+        "time" : {
+          "start" : 1644788363982,
+          "stop" : 1644788364191,
+          "duration" : 209
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "newPassed" : false,
+        "newBroken" : false,
+        "retriesCount" : 0,
+        "retriesStatusChange" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_buurtinitiatiefid_success",
+        "uid" : "9ffbf688e56b75fd",
+        "parentUid" : "722e2039cf55b3bc74eb43a24f2cf4de",
+        "status" : "passed",
+        "time" : {
+          "start" : 1644788364200,
+          "stop" : 1644788364375,
+          "duration" : 175
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "newPassed" : false,
+        "newBroken" : false,
+        "retriesCount" : 0,
+        "retriesStatusChange" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_buurtinitiatiefid_queryparam",
+        "uid" : "b605c963e672d389",
+        "parentUid" : "722e2039cf55b3bc74eb43a24f2cf4de",
+        "status" : "passed",
+        "time" : {
+          "start" : 1644788364382,
+          "stop" : 1644788364558,
+          "duration" : 176
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "newPassed" : false,
+        "newBroken" : false,
+        "retriesCount" : 0,
+        "retriesStatusChange" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_buurtinitiatief_failure",
+        "uid" : "b41ccebabbe683ce",
+        "parentUid" : "722e2039cf55b3bc74eb43a24f2cf4de",
+        "status" : "passed",
+        "time" : {
+          "start" : 1644788364569,
+          "stop" : 1644788364677,
+          "duration" : 108
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "newPassed" : false,
+        "newBroken" : false,
+        "retriesCount" : 0,
+        "retriesStatusChange" : false,
+        "parameters" : [ ]
+      } ],
+      "uid" : "722e2039cf55b3bc74eb43a24f2cf4de"
+    } ],
+    "uid" : "e4f845ce731a5439059a983e02b08f5d"
+  } ]
+}

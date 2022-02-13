@@ -33,8 +33,8 @@ def log_access(request, access: bool):
 
 
 def filter_unauthorized_expands(
-    user_scopes: UserScopes, expanded_fields: list[EmbeddedFieldMatch], skip_unauth=False
-) -> list[EmbeddedFieldMatch]:
+    user_scopes: UserScopes, expanded_fields: 'list[EmbeddedFieldMatch]', skip_unauth=False
+) -> 'list[EmbeddedFieldMatch]':
     """Remove expanded fields if these are not accessible"""
 
     result = []
@@ -116,7 +116,7 @@ class HasOAuth2Scopes(permissions.BasePermission):
         return access
 
 
-def validate_request(request, schema: DatasetTableSchema, allowed: set[str]) -> None:  # noqa: C901
+def validate_request(request, schema: DatasetTableSchema, allowed: 'set[str]') -> None:  # noqa: C901
     """Validate request method and parameters and check authorization for filters.
 
     The argument allowed is a set of parameters that are explicitly allowed.
@@ -216,7 +216,7 @@ class FilterSyntaxError(Exception):
     pass
 
 
-def parse_filter(v: str) -> tuple[str, str]:
+def parse_filter(v: str) -> 'tuple[str, str]':
     """Given a filter query parameter, returns the field name and operator.
 
     Does not validate the operator.
