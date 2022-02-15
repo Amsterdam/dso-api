@@ -4,6 +4,7 @@ import pytest
 from django.apps import apps
 from django.contrib.gis.geos import GEOSGeometry
 from rest_framework.exceptions import ValidationError
+from rest_framework.status import HTTP_400_BAD_REQUEST
 from rest_framework.test import APIClient
 
 from dso_api.dynamic_api.filterset import filterset_factory
@@ -199,6 +200,14 @@ class TestDynamicFilterSet:
         data = read_response_json(response)
         assert len(data["_embedded"]["parkeervakken"]) == 1
         assert data["_embedded"]["parkeervakken"][0]["id"] == "121138489006"
+
+    @staticmethod
+    @pytest.mark.parametrize("params", [{"e_type": "whatever"}, {"_sort": "e_type"}])
+    def test_snake_case_400(params, parkeervakken_parkeervak_model):
+        """Filter names match property names in the schema.
+        We no longer accept snake-cased property names."""
+        response = APIClient().get("/v1/parkeervakken/parkeervakken/", data=params)
+        assert response.status_code == HTTP_400_BAD_REQUEST
 
     @staticmethod
     def test_subobject_filters(verblijfsobjecten_model, verblijfsobjecten_data):

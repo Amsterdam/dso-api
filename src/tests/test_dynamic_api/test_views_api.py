@@ -518,7 +518,7 @@ class TestAuth:
     ):
         """Prove that protected fields are shown
         with an auth scope and there is a valid token"""
-        patch_field_auth(afval_schema, "containers", "eigenaar_naam", auth=["BAG/R"])
+        patch_field_auth(afval_schema, "containers", "eigenaarNaam", auth=["BAG/R"])
         url = reverse("dynamic_api:afvalwegingen-containers-list")
         token = fetch_auth_token(["BAG/R"])
         response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
@@ -533,7 +533,7 @@ class TestAuth:
     ):
         """Prove that protected fields are shown
         with an auth scope connected to Profile that gives access to specific field."""
-        patch_field_auth(afval_schema, "containers", "eigenaar_naam", auth=["BAG/R"])
+        patch_field_auth(afval_schema, "containers", "eigenaarNaam", auth=["BAG/R"])
         models.Profile.create_for_schema(
             ProfileSchema.from_dict(
                 {
@@ -544,7 +544,7 @@ class TestAuth:
                             "tables": {
                                 "containers": {
                                     "fields": {
-                                        "eigenaar_naam": "read",
+                                        "eigenaarNaam": "read",
                                     }
                                 }
                             }
@@ -567,7 +567,7 @@ class TestAuth:
     ):
         """Prove that protected fields are *not* shown
         with an auth scope and there is not a valid token"""
-        patch_field_auth(afval_schema, "containers", "eigenaar_naam", auth=["BAG/R"])
+        patch_field_auth(afval_schema, "containers", "eigenaarNaam", auth=["BAG/R"])
         url = reverse("dynamic_api:afvalwegingen-containers-list")
         response = api_client.get(url)
         data = read_response_json(response)
@@ -774,12 +774,12 @@ class TestAuth:
         assert response.status_code == 200, response.data
 
     def test_sort_auth(self, api_client, afval_schema, afval_container, filled_router):
-        patch_field_auth(afval_schema, "containers", "datum_creatie", auth=["SEE/CREATION"])
+        patch_field_auth(afval_schema, "containers", "datumCreatie", auth=["SEE/CREATION"])
         url = reverse("dynamic_api:afvalwegingen-containers-list")
-        response = api_client.get(f"{url}?_sort=datum_creatie")
+        response = api_client.get(f"{url}?_sort=datumCreatie")
         data = read_response_json(response)
         assert response.status_code == 403, data
-        assert "access denied to field datum_creatie" in data["title"]
+        assert "access denied to field datumCreatie" in data["title"]
 
     def test_sort_by_not_accepting_db_column_names(
         self, api_client, afval_container, filled_router

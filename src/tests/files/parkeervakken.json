@@ -42,7 +42,7 @@
             "type": "string",
             "description": ""
           },
-          "e_type": {
+          "eType": {
             "type": "string",
             "description": ""
           },
@@ -62,7 +62,7 @@
                   "type": "string",
                   "description": ""
                 },
-                "e_type": {
+                "eType": {
                   "type": "string",
                   "description": ""
                 },
