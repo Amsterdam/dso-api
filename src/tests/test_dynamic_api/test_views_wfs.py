@@ -265,7 +265,7 @@ class TestDatasetWFSViewAuth:
         "scopes,expect",
         [
             ([], {"boundedBy": None, "id": "1"}),
-            (["TEST/GEO"], {"boundedBy": None, "id": "1", "geometry": None}),
+            (["TEST/GEO"], {"boundedBy": None, "id": "1", "geometry_with_auth": None}),
             (["TEST/META"], {"boundedBy": None, "id": "1", "metadata": "secret"}),
         ],
     )

@@ -436,7 +436,7 @@ def geometry_auth_thing(geometry_auth_model):
     return geometry_auth_model.objects.create(
         id=1,
         metadata="secret",
-        geometry=Point(10, 10),
+        geometry_with_auth=Point(10, 10),
     )
 
 
