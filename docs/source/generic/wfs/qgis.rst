@@ -19,8 +19,8 @@ Gebruik zo'n URL in QGIS:
 Voor gesloten datasets moet ook een authorisatie configuratie worden toegevoegd. Dit kan door
 op het groene kruisje in het bovenstaande menu te klikken. Selecteer OAuth2 authenticatie, met 'implicit' grant flow.
 Vul bij 'request url' :samp:`https://iam.amsterdam.nl/auth/realms/datapunt-ad/protocol/openid-connect/auth` en bij 'token url'
-:samp:`https://iam.amsterdam.nl/auth/realms/datapunt-ad/protocol/openid-connect/token` in.
-De client id is :samp:`qgis` en access method is :samp:`header`. QGIS zal bij het gebruiken van de WFS een browserscherm openen,
+:samp:`https://iam.amsterdam.nl/auth/realms/datapunt-ad/protocol/openid-connect/certs` in.
+De client id is :samp:`qgis`, Scope is :samp:`email` en access method is :samp:`header`. QGIS zal bij het gebruiken van de WFS een browserscherm openen,
 waar een geauthoriseerde gebruiker kan inloggen.
 
 .. figure:: /generic/images/qgis-add-authentication.png
