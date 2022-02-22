@@ -38,7 +38,7 @@ In de response zijn de volgende elementen te vinden:
 Met de velden ``_links.next`` en ``_links.previous`` zijn respectievelijk de volgende en vorige pagina op te vragen.
 Meer algemeen kan pagina `n` worden opgevraagd met :samp:`?page={n}`.
 Paginanummers beginnen bij één, niet nul.
-De links ``next`` en ``previous`` ontbreken op de eerste, resp. laatste, pagina.
+De links ``next`` en ``previous`` ontbreken op de laatste, resp. eerste, pagina.
 
 In het object ``page`` zijn de volgende velden opgenomen:
 
