@@ -47,7 +47,7 @@ In het object ``page`` zijn de volgende velden opgenomen:
 
 Wordt ``_count=true`` meegegeven, dat bevat de response tevens
 
-* ``page.totalElements``: het aantal objecten in de (gefilterde) resultaatset,
+* ``page.totalElements``: het aantal objecten in de (gefilterde) resultaatset;
 * ``page.totalPages``: het aantal pagina's dat de resultaatset beslaat.
 
 Bijvoorbeeld:
