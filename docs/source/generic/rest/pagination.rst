@@ -60,8 +60,9 @@ Bijvoorbeeld:
         "totalPages": 6,
     }
 
-Het tellen van resultaten moet expliciet worden aangevraagd omdat het een potentieel
-dure operatie is, vooral als er geen filters worden gebruikt.
+Het tellen van resultaten moet expliciet aangevraagd worden omdat dit bij grote
+datasets erg vertragend werkt, terwijl die gegevens zelden nodig zijn.
+Om te weten of er een volgende pagina is, kan je beter de `_links.next` uitlezen.
 
 De velden uit het ``page``-object worden ook als HTTP-headers in de response teruggegeven:
 
