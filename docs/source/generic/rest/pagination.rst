@@ -42,7 +42,7 @@ De links ``next`` en ``previous`` ontbreken op de eerste, resp. laatste, pagina.
 
 In het object ``page`` zijn de volgende velden opgenomen:
 
-* ``page.number``: het huidige paginanummer.
+* ``page.number``: het huidige paginanummer;
 * ``page.size``: de grootte van een pagina.
 
 Wordt ``_count=true`` meegegeven, dat bevat de response tevens
