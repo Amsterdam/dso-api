@@ -45,7 +45,7 @@ In het object ``page`` zijn de volgende velden opgenomen:
 * ``page.number``: het huidige paginanummer;
 * ``page.size``: de grootte van een pagina.
 
-Wordt ``?_count=true`` meegegeven, dat bevat de response tevens:
+Wordt ``?_count=true`` meegegeven, dat bevat het tevens:
 
 * ``page.totalElements``: het aantal objecten in de (gefilterde) resultaatset;
 * ``page.totalPages``: het aantal pagina's dat de resultaatset beslaat.
