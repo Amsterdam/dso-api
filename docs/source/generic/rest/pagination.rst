@@ -63,7 +63,7 @@ Bijvoorbeeld:
 Het tellen van resultaten moet expliciet worden aangevraagd omdat het een potentieel
 dure operatie is, vooral als er geen filters worden gebruikt.
 
-De velden uit het ``page`` object worden ook als HTTP-headers in de response teruggegeven:
+De velden uit het ``page``-object worden ook als HTTP-headers in de response teruggegeven:
 
 * ``X-Pagination-Page``: Het huidige paginanummer.
 * ``X-Pagination-Limit``: de grootte van een pagina.
