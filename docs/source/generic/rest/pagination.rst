@@ -14,10 +14,10 @@ In de response zijn de volgende elementen te vinden:
                 "href": "https://api.data.amsterdam.nl/v1/gebieden/buurten/"
             },
             "next": {
-                "href": "https://api.data.amsterdam.nl/v1/gebieden/buurten/?page=2"
+                "href": "https://api.data.amsterdam.nl/v1/gebieden/buurten/?page=3"
             },
             "previous": {
-                "href": null
+                "href": "https://api.data.amsterdam.nl/v1/gebieden/buurten/?page=1"
             }
         },
         "_embedded": {
@@ -26,10 +26,8 @@ In de response zijn de volgende elementen te vinden:
 
         },
         "page": {
-            "number": 1,
-            "size": 20,
-            "totalElements": 117,
-            "totalPages": 6,
+            "number": 2,
+            "size": 20
         }
     }
 
@@ -40,19 +38,36 @@ In de response zijn de volgende elementen te vinden:
 Met de velden ``_links.next`` en ``_links.previous`` zijn respectievelijk de volgende en vorige pagina op te vragen.
 Meer algemeen kan pagina `n` worden opgevraagd met :samp:`?page={n}`.
 Paginanummers beginnen bij één, niet nul.
+De links ``next`` en ``previous`` ontbreken op de laatste, resp. eerste, pagina.
 
 In het object ``page`` zijn de volgende velden opgenomen:
 
-* ``page.number``: Het huidige paginanummer.
-* ``page.size``: De grootte van een pagina.
-* ``page.totalElements``: Het aantal objecten in de (gefilterde) resultaat set.
-* ``page.totalPages``: Het aantal paginas in de (gefilterde) resultaat set.
+* ``page.number``: het huidige paginanummer;
+* ``page.size``: de grootte van een pagina.
 
-`page.totalPages` en `page.totalElements` worden alleen teruggegeven als de `_count` parameter wordt gebruikt.
+Wordt ``?_count=true`` meegegeven, dat bevat het tevens:
 
-De velden uit het ``page`` object worden ook als HTTP headers in de response teruggegeven:
+* ``page.totalElements``: het aantal objecten in de (gefilterde) resultaatset;
+* ``page.totalPages``: het aantal pagina's dat de resultaatset beslaat.
+
+Bijvoorbeeld:
+
+.. code-block:: javascript
+    "page": {
+        "number": 1,
+        "size": 20,
+        "totalElements": 117,
+        "totalPages": 6,
+    }
+
+Het tellen van resultaten moet expliciet aangevraagd worden omdat dit bij grote
+datasets vertragend werkt. Lees `_links.next` uit om te zien of er een volgende pagina is.
+
+De velden uit het ``page``-object worden ook als HTTP-headers in de response teruggegeven:
 
 * ``X-Pagination-Page``: Het huidige paginanummer.
 * ``X-Pagination-Limit``: de grootte van een pagina.
-* ``X-Total-Count``: de grootte van een pagina.
+* ``X-Total-Count``: de grootte van de resultaatset.
 * ``X-Pagination-Count``: het aantal paginas voor de gegeven ``_pageSize``.
+
+De laatste twee zijn weer alleen aanwezig in het geval ``_count=true``.
