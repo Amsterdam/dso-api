@@ -203,7 +203,7 @@ class TestAuth:
                                     "permissions": "read",
                                     "mandatoryFilterSets": [
                                         ["buurtcode", "type"],
-                                        ["regimes.inWerkingOp"],
+                                        ["regimes.eindtijd"],
                                     ],
                                 }
                             }
@@ -244,9 +244,9 @@ class TestAuth:
         # See that only the proper filters activate the profile (via mandatoryFilterSets)
         assert _get(token, "?buurtcode=A05d").status_code == 403
         assert _get(token, "?buurtcode=A05d&type=E9").status_code == 200
-        assert _get(token, "?regimes.inWerkingOp=20:05").status_code == 200
-        assert _get(token, "?regimes.inWerkingOp=").status_code == 403
-        assert _get(token, "?regimes.inWerkingOp").status_code == 403
+        assert _get(token, "?regimes.eindtijd=20:05").status_code == 200
+        assert _get(token, "?regimes.eindtijd=").status_code == 403
+        assert _get(token, "?regimes.eindtijd").status_code == 403
 
         # See that 'auth' satisfies without needing a profile
         token2 = fetch_auth_token(["DATASET/SCOPE", "PROFIEL/SCOPE"])
