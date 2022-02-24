@@ -79,19 +79,23 @@
                   "description": ""
                 },
                 "begintijd": {
-                  "type": "time",
+                  "type": "string",
+                  "format": "time",
                   "description": ""
                 },
                 "eindtijd": {
-                  "type": "time",
+                  "type": "string",
+                  "format": "time",
                   "description": ""
                 },
                 "begindatum": {
-                  "type": "date",
+                  "type": "string",
+                  "format": "date",
                   "description": ""
                 },
                 "einddatum": {
-                  "type": "date",
+                  "type": "string",
+                  "format": "date",
                   "description": ""
                 },
                 "dagen": {
