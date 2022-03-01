@@ -4,8 +4,8 @@ import requests
 
 # We get base urls from environment variables, providing defaults if those variables
 # are not defined.
-SCHEMA_URL = os.getenv("SCHEMA_URL", "https://schemas.data.amsterdam.nl/datasets/")
-DATAPUNT_API_URL = os.getenv("DATAPUNT_API_URL", "https://api.data.amsterdam.nl")
+SCHEMA_URL = os.getenv("SCHEMA_URL", "https://acc.schemas.data.amsterdam.nl/datasets/")
+DATAPUNT_API_URL = os.getenv("DATAPUNT_API_URL", "https://acc.api.data.amsterdam.nl")
 dataset_url = DATAPUNT_API_URL + "/v1/aardgasvrijezones/buurt/"
 
 
