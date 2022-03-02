@@ -17,17 +17,18 @@ from sentry_sdk.integrations.logging import LoggingIntegration
 from dso_api.sentry import before_send
 
 env = environ.Env()
+_USE_SECRET_STORE = os.path.exists("/mnt/secrets-store")
 
 # -- Environment
 
 BASE_DIR = Path(__file__).parents[1]
 DEBUG = env.bool("DJANGO_DEBUG", False)
 
-CLOUD_ENV = env.str("CLOUD_ENV", "default")
+CLOUD_ENV = env.str("CLOUD_ENV", "default").lower()
 DJANGO_LOG_LEVEL = env.str("DJANGO_LOG_LEVEL", "INFO")
 DSO_API_LOG_LEVEL = env.str("DSO_API_LOG_LEVEL", "INFO")
 DSO_API_AUDIT_LOG_LEVEL = env.str("DSO_API_AUDIT_LOG_LEVEL", "INFO")
-SENTRY_BLOCKED_PATHS: Final[str] = env.list("SENTRY_BLOCKED_PATHS", default=[])
+SENTRY_BLOCKED_PATHS: Final[list[str]] = env.list("SENTRY_BLOCKED_PATHS", default=[])
 
 # Paths
 STATIC_URL = "/v1/static/"
@@ -76,9 +77,9 @@ INSTALLED_APPS = [
     "drf_spectacular",
     "rest_framework",
     "rest_framework_gis",
+    # Own apps
     "gisserver",
     "schematools.contrib.django",
-    # Own apps
     "dso_api.dynamic_api",
 ]
 
@@ -136,29 +137,31 @@ ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["*"])
 
 CACHES = {"default": env.cache_url(default="locmemcache://")}
 
-DATABASES = {
-    "default": env.db_url(
-        "DATABASE_URL",
-        default="postgres://dataservices:insecure@localhost:5415/dataservices",
-        engine="django.contrib.gis.db.backends.postgis",
-    ),
-}
-
-if CLOUD_ENV.lower().startswith("azure"):
-    with open("/mnt/secrets-store/mdbdataservices-read") as secrets_file:
-        pgpassword = secrets_file.read()
-
-        DATABASES = {
-            "default": {
-                "ENGINE": "django.contrib.gis.db.backends.postgis",
-                "NAME": env.str("PGDATABASE"),
-                "USER": env.str("PGUSER"),
-                "PASSWORD": pgpassword,
-                "HOST": env.str("PGHOST"),
-                "PORT": env.str("PGPORT"),
-                "OPTIONS": {"sslmode": "require"},
-            }
+if _USE_SECRET_STORE or CLOUD_ENV.startswith("azure"):
+    # On Azure, passwords are NOT passed via environment variables,
+    # because the container environment can be inspected, and those vars export to subprocesses.
+    pgpassword = Path("/mnt/secrets-store/mdbdataservices-read").read_text()
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.contrib.gis.db.backends.postgis",
+            "NAME": env.str("PGDATABASE"),
+            "USER": env.str("PGUSER"),
+            "PASSWORD": pgpassword,
+            "HOST": env.str("PGHOST"),
+            "PORT": env.str("PGPORT"),
+            "OPTIONS": {"sslmode": env.str("PGSSLMODE", default="require")},
         }
+    }
+else:
+    # Regular development
+    DATABASES = {
+        "default": env.db_url(
+            "DATABASE_URL",
+            default="postgres://dataservices:insecure@localhost:5415/dataservices",
+            engine="django.contrib.gis.db.backends.postgis",
+        ),
+    }
+
 # Important to have keys define in DATABASE_SCHEMAS available as in DATABASES.
 DATABASE_SCHEMAS = {}
 DATABASE_DISABLE_MIGRATIONS = []
@@ -276,7 +279,9 @@ if CLOUD_ENV.lower().startswith("azure"):
 
 # -- Third party app settings
 
-# Dynamicaly import Azure Blob connections from environment
+# TODO: port to secret store (when this is used again)
+# Dynamically import Azure Blob connections from environment
+# Key format is AZURE_BLOB_{accountname}
 for key, value in env.ENVIRON.items():
     if key.startswith("AZURE_BLOB_"):
         locals()[key] = value
@@ -392,11 +397,9 @@ DATASETS_EXCLUDE = env.list("DATASETS_EXCLUDE", default=None)
 
 # TODO the variables without _BAG_ are for BRK. Rename them.
 # XXX why HAAL_CENTRAAL_API_KEY and HAAL_CENTRAAL_KEYFILE?
-if CLOUD_ENV.lower().startswith("azure"):
-    with open("/mnt/secrets-store/haalcentraal-api-key") as secrets_file:
-        HAAL_CENTRAAL_API_KEY = secrets_file.read()
-    with open("/mnt/secrets-store/haalcentraal-bag-api-key") as secrets_file:
-        HAAL_CENTRAAL_BAG_API_KEY = secrets_file.read()
+if _USE_SECRET_STORE or CLOUD_ENV.startswith("azure"):
+    HAAL_CENTRAAL_API_KEY = Path("/mnt/secrets-store/haalcentraal-api-key").read_text()
+    HAAL_CENTRAAL_BAG_API_KEY = Path("/mnt/secrets-store/haalcentraal-bag-api-key").read_text()
 else:
     HAAL_CENTRAAL_API_KEY = os.getenv("HAAL_CENTRAAL_API_KEY", "UNKNOWN")
     HAAL_CENTRAAL_BAG_API_KEY = os.getenv("HAAL_CENTRAAL_BAG_API_KEY", "UNKNOWN")
