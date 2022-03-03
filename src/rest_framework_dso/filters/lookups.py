@@ -76,15 +76,18 @@ class Wildcard(lookups.Lookup):
 
     def get_db_prep_lookup(self, value, connection):
         """Apply the wildcard logic to the right-hand-side value"""
-        value = (
-            value
-            # Escape % and _ first.
-            # Not using r"\" here as that is a syntax error.
-            .replace("\\", "\\\\")
-            .replace("%", r"\%")
-            .replace("_", r"\_")
-            # Replace wildcard chars with SQL LIKE logic
-            .replace("*", "%")
-            .replace("?", "_")
-        )
-        return "%s", [value]
+        return "%s", [_sql_wildcards(value)]
+
+
+def _sql_wildcards(value: str) -> str:
+    """Translate our wildcard syntax to SQL syntax."""
+    return (
+        value
+        # Escape % and _ first.
+        .replace("\\", "\\\\")
+        .replace("%", r"\%")
+        .replace("_", r"\_")
+        # Replace wildcard chars with SQL LIKE ones.
+        .replace("*", "%")
+        .replace("?", "_")
+    )
