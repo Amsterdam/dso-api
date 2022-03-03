@@ -109,13 +109,3 @@ class TestDSOFilterSet:
         assert filterset.is_valid(), filterset.errors
         qs = filterset.filter_queryset(Movie.objects.all())
         assert {obj.name for obj in qs} == expect, str(qs.query)
-
-
-class TestDSOFilterBackend:
-    def test_is_unfiltered(self, api_rf):
-        """Prove that is_unfiltered() correctly detects non-standard fields"""
-        backend = DSOFilterBackend()
-        assert backend.is_unfiltered(api_rf.get("/", data={"_format": "csv", "_fields": "foo"}))
-        assert backend.is_unfiltered(api_rf.get("/", data={"_pageSize": "100", "_format": "csv"}))
-
-        assert not backend.is_unfiltered(api_rf.get("/", data={"field[in]": "foo"}))
