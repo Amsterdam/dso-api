@@ -11,7 +11,7 @@ from jwcrypto.jwt import JWT
 
 
 class Command(BaseCommand):
-    """Generate a JWT test token."""
+    """maketoken command: generates a JWT test token."""
 
     help = """Generate a JWT test token to test endpoints that are protected by an auth scope.
         See for usage: https://dso-api.readthedocs.io/en/latest/auth.html#testing
@@ -29,7 +29,7 @@ class Command(BaseCommand):
 
         It creates a JWT test token with the provided scopes and validity.
         """
-        key = JWK(**json.loads(settings.JWKS_TEST_KEY)["keys"][0])
+        key = JWK(**json.loads(settings.DATAPUNT_AUTHZ["JWKS"])["keys"][0])
         scopes = list(set(args))
         now = int(time.time())
         claims = {

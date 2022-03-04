@@ -142,12 +142,17 @@ Testing
 -------
 
 When testing datasets with authorization from the command line
-you can use the `maketoken` management command, that generates 
+you can use the `maketoken` management command, which generates
 a test token for the provided scope(s).
 
 This requires DSO-API to be installed in the current virtualenv
-(``cd src && pip install -e .``).
-You can now issue a curl command such as
+(``cd src && pip install -e .``) and the test JWKS to be in the environment.
+After setting the latter with
+::
+
+    export PUB_JWKS="$(cat jwks_test.json)"  # in src/
+
+you can issue a curl command such as
 ::
 
     curl http://localhost:8000/v1/haalcentraal/brk/kadastraalonroerendezaken/${id}/ \
