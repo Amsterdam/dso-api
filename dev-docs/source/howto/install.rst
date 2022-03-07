@@ -103,7 +103,8 @@ To address the error we need to mark that dataset as a proxy to another URL::
 Run the server
 --------------
 
-The server needs a JSON Web Key Set (JWKS) to do authorization.
+The server needs a JSON Web Key Set (JWKS) to perform authorization,
+even when authorized endpoints aren't used; it refuses to start without one.
 For testing and development, use the one in ``jwks_test.json``:
 
 ::
