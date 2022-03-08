@@ -140,7 +140,11 @@ CACHES = {"default": env.cache_url(default="locmemcache://")}
 if _USE_SECRET_STORE or CLOUD_ENV.startswith("azure"):
     # On Azure, passwords are NOT passed via environment variables,
     # because the container environment can be inspected, and those vars export to subprocesses.
-    pgpassword = Path("/mnt/secrets-store/mdbdataservices-read").read_text()
+    try:
+        pgpassword = Path("/mnt/secrets-store/mdbdataservices-read").read_text()
+    except FileNotFoundError:
+        pgpassword = Path("/mnt/secrets-store/mdbdataservices-owner").read_text()
+
     DATABASES = {
         "default": {
             "ENGINE": "django.contrib.gis.db.backends.postgis",
