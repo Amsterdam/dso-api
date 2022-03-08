@@ -173,6 +173,69 @@ class TestDSOViewMixin:
         assert RD_NEW == CRS.from_string(response["Content-Crs"])
 
 
+@pytest.mark.django_db
+class TestSort:
+    """Prove that the ordering works as expected."""
+
+    @staticmethod
+    def test_list_ordering_name(api_client, movies_movie, filled_router):
+        """Prove that ?_sort=... works on the list view."""
+
+        response = api_client.get("/v1/movies/movie/", data={"_sort": "name"})
+        data = read_response_json(response)
+        assert response.status_code == 200, data
+        names = [movie["name"] for movie in data["_embedded"]["movie"]]
+        assert names == ["foo123", "test"], data
+
+        response = api_client.get("/v1/movies/movie/", data={"_sort": "-name"})
+        data = read_response_json(response)
+        assert response.status_code == 200, data
+        names = [movie["name"] for movie in data["_embedded"]["movie"]]
+        assert names == ["test", "foo123"], data
+
+    @staticmethod
+    def test_list_ordering_name_old_param(api_client, movies_movie, filled_router):
+        """Prove that ?_sort=... works on the list view."""
+
+        response = api_client.get("/v1/movies/movie/", data={"sorteer": "-name"})
+        data = read_response_json(response)
+
+        assert response.status_code == 200, data
+        names = [movie["name"] for movie in data["_embedded"]["movie"]]
+        assert names == ["test", "foo123"]
+
+    @staticmethod
+    def test_list_ordering_date(api_client, movies_movie, filled_router):
+        """Prove that ?_sort=... works on the list view."""
+        response = api_client.get("/v1/movies/movie/", data={"_sort": "-dateAdded"})
+        data = read_response_json(response)
+        assert response.status_code == 200, data
+        names = [movie["name"] for movie in data["_embedded"]["movie"]]
+        assert names == ["test", "foo123"]
+
+    @staticmethod
+    def test_list_ordering_invalid(api_client, movies_category, django_assert_num_queries):
+        """Prove that ?_sort=... only works on a fixed set of fields (e.g. not on FK's)."""
+        response = api_client.get("/v1/movies/movie/", data={"_sort": "category"})
+        data = read_response_json(response)
+
+        assert response.status_code == 400, data
+        assert data == {
+            "type": "urn:apiexception:invalid",
+            "title": "Invalid input.",
+            "status": 400,
+            "instance": "http://testserver/v1/movies/movie/?_sort=category",
+            "invalid-params": [
+                {
+                    "type": "urn:apiexception:invalid:order-by",
+                    "name": "order-by",
+                    "reason": "Invalid sort fields: category",
+                }
+            ],
+            "x-validation-errors": ["Invalid sort fields: category"],
+        }
+
+
 # TODO: Make parametrized, too much repetion. JJM
 @pytest.mark.django_db
 class TestAuth:
