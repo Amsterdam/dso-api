@@ -103,8 +103,17 @@ To address the error we need to mark that dataset as a proxy to another URL::
 Run the server
 --------------
 
+The server needs a JSON Web Key Set (JWKS) to perform authorization,
+even when authorized endpoints aren't used; it refuses to start without one.
+For testing and development, use the one in ``jwks_test.json``:
+
+::
+    export PUB_JWKS="$(cat jwks_test.json)"
+
+Then start DSO-API:
+
 ::
 
     ./manage.py runserver localhost:8000
 
-The API can now be accessed at: http://localhost:8000
+The API can now be accessed at: http://localhost:8000.

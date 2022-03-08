@@ -142,13 +142,22 @@ Testing
 -------
 
 When testing datasets with authorization from the command line
-you can use the `maketoken` management command, that generates 
+you can use the `maketoken` management command, which generates
 a test token for the provided scope(s).
 
 This requires DSO-API to be installed in the current virtualenv
-(``cd src && pip install -e .``).
-You can now issue a curl command such as
+(``cd src && pip install -e .``) and the test JWKS to be in the environment.
+After setting the latter and getting a token with
+::
+
+    export PUB_JWKS="$(cat jwks_test.json)"  # in src/
+    token=$(python manage.py maketoken BRK/RSN)
+
+you can issue a curl command such as
 ::
 
     curl http://localhost:8000/v1/haalcentraal/brk/kadastraalonroerendezaken/${id}/ \
-        --header "Authorization: Bearer $(python manage.py maketoken BRK/RSN)"
+        --header "Authorization: Bearer ${token}"
+
+The test token expires after half an hour by default.
+Run ``python manage.py maketoken --help`` to see how to change that.
