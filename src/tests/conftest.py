@@ -495,6 +495,33 @@ def movie(category) -> Movie:
     return result
 
 
+@pytest.fixture()
+def movies_dataset() -> Dataset:
+    j = json.loads((HERE / "files" / "movies.json").read_text())
+    s = DatasetSchema.from_dict(j)
+    return Dataset.create_for_schema(s)
+
+
+@pytest.fixture
+def movies_category(movies_dataset, dynamic_models):
+    bar_man = dynamic_models["movies"]["user"].objects.create(name="bar_man")
+    return dynamic_models["movies"]["category"].objects.create(
+        pk=1, name="bar", last_updated_by=bar_man
+    )
+
+
+@pytest.fixture
+def movies_movie(movies_dataset, movies_category, dynamic_models):
+    movies = dynamic_models["movies"]["movie"]
+    movies.objects.create(
+        name="foo123", category=movies_category, date_added=datetime(2020, 1, 1, 0, 45)
+    )
+    movies.objects.create(
+        name="test", category=movies_category, date_added=datetime(2020, 2, 2, 13, 15)
+    )
+    return movies
+
+
 @pytest.fixture
 def location() -> Location:
     """A dummy model to test our API with"""
