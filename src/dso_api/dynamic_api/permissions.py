@@ -1,5 +1,5 @@
 import logging
-from typing import cast
+from typing import Union, cast
 
 from django.core.exceptions import PermissionDenied
 from django.http import HttpRequest
@@ -7,7 +7,7 @@ from rest_framework import permissions
 from rest_framework.viewsets import ViewSetMixin
 from schematools.exceptions import SchemaObjectNotFound
 from schematools.permissions import UserScopes
-from schematools.types import DatasetTableSchema
+from schematools.types import DatasetFieldSchema, DatasetTableSchema
 
 from rest_framework_dso.embedding import EmbeddedFieldMatch
 from rest_framework_dso.serializers import ExpandableSerializer
@@ -144,9 +144,9 @@ def validate_request(request, schema: DatasetTableSchema, allowed: set[str]) -> 
     # Collect mandatory filters. We need to make an exception for these to handle cases
     # where the field they reference isn't otherwise accessible.
     # The actual check for whether the filter sets are provided lives elsewhere.
-    mandatory = set()
+    mandatory_filters = set()
     for profile in scopes.get_active_profile_tables(schema.dataset.id, schema.id):
-        mandatory.update(*profile.mandatory_filtersets)
+        mandatory_filters.update(*profile.mandatory_filtersets)
 
     for key, values in request.GET.lists():
         if key in allowed:
@@ -157,7 +157,8 @@ def validate_request(request, schema: DatasetTableSchema, allowed: set[str]) -> 
                 for field in value.split(","):
                     # Leading "-" means descending sort.
                     field = field[1:] if field.startswith("-") else field
-                    _check_field_access(field, scopes, schema)
+                    # Sorting is never mandatory.
+                    _check_field_access(field, scopes, schema, mandatory=False)
             continue
 
         # Everything else is a filter.
@@ -165,24 +166,24 @@ def validate_request(request, schema: DatasetTableSchema, allowed: set[str]) -> 
 
         # mandatoryFilters may contain either the complete filter (with lookup operation)
         # or just the field name.
-        if key in mandatory or field_name in mandatory:
-            continue
+        mandatory = key in mandatory_filters or field_name in mandatory_filters
 
         if schema.temporal is not None:
             if fields := schema.temporal.dimensions.get(field_name):
                 for field in (fields.start, fields.end):
-                    _check_field_access(field, scopes, schema)
+                    _check_field_access(field, scopes, schema, mandatory)
                 continue
 
-        _check_field_access(field_name, scopes, schema)
+        _check_field_access(field_name, scopes, schema, mandatory)
 
 
 def _check_field_access(  # noqa: C901
-    field_name: str, scopes: UserScopes, schema: DatasetTableSchema
+    full_field_name: str,
+    scopes: UserScopes,
+    schema: Union[DatasetTableSchema, DatasetFieldSchema],
+    mandatory: bool,  # Set to true if this is a mandatory filter.
 ) -> None:
-    if field_name == "":
-        raise ValueError("empty field name")
-
+    field_name = full_field_name
     while field_name != "":
         part, field_name, *_ = *field_name.split(".", 1), ""
 
@@ -192,30 +193,35 @@ def _check_field_access(  # noqa: C901
             # Relations with non-composite keys become a pseudo-property with the target table's
             # identifier appended to the table name: other_table_id. After camel-casing, that
             # becomes OtherTableId. The identifier can be anything, but here we don't have enough
-            # information to cheaply determine what it was, so we assume it's "id", strip that off
-            # and retry. Note that docs/source/datasets.py also assumes "Id", so any other
-            # identifier already breaks the docs.
-            #
-            # TODO The dotted syntax for composite-key relations needs to be extended to this case.
+            # information to cheaply determine what it was, so we assume it's "id" and retry.
+            # Note that docs/source/datasets.py also assumes "Id", so any other identifier already
+            # breaks the docs.
             if part.endswith("Id"):
                 part = part[: -len("Id")]
-                field_name = part + ("." + field_name if field_name else "")
+                field_name = part + ".id" + ("." + field_name if field_name else "")
                 continue
 
             raise
 
         # First check the field, then check whether it's a relation,
-        # so we can "auth" to relations.
-        if not scopes.has_field_access(schema):
+        # so we can auth-check the relation and the thing it points to.
+        if not scopes.has_field_access(schema) and not mandatory:
             raise PermissionDenied(f"access denied to field {schema.id} with scopes {scopes}")
 
         if rel := schema.related_table:
-            # scopes.has_field_access also checks table and dataset field.
-            if not all(
-                scopes.has_field_access(rel.get_field_by_id(ident)) for ident in rel.identifier
-            ):
+            rel = cast(DatasetTableSchema, rel)
+            (ident,) = schema.related_field_ids  # Must be a single identifier.
+            schema = rel.get_field_by_id(ident)
+
+            # scopes.has_field_access also checks table and dataset access.
+            if not mandatory and not scopes.has_field_access(schema):
                 raise PermissionDenied(f"access denied to field {schema.id} with scopes {scopes}")
             schema = rel
+
+    # If we're still, or again, at a DatasetTableSchema, then either field_name was empty
+    # or its final part referred to a related table instead of a field within such a table.
+    if isinstance(schema, DatasetTableSchema):
+        raise FilterSyntaxError(f"{full_field_name!r} does not refer to a field")
 
 
 class FilterSyntaxError(Exception):

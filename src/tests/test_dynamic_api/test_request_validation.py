@@ -1,34 +1,37 @@
 from pathlib import Path
+from typing import Optional
 
 import pytest
 from django.core.exceptions import PermissionDenied
 from schematools.permissions import UserScopes
 from schematools.utils import dataset_schema_from_path
 
-from dso_api.dynamic_api.permissions import _check_field_access
+from dso_api.dynamic_api.permissions import FilterSyntaxError, _check_field_access
 
 SCHEMA = dataset_schema_from_path(Path(__file__).parent.parent / "files" / "relationauth.json")
 
 
 @pytest.mark.parametrize(
-    ["field_name", "scopes", "ok"],
+    ["field_name", "scopes", "exc_type"],
     [
-        ("name", "REFERS REFERS/NAME", True),
-        ("base", "REFERS REFERS/NAME", False),
-        ("base", "REFERS REFERS/BASE", False),
-        ("base", "REFERS REFERS/BASE BASE", False),
-        ("base", "REFERS REFERS/BASE BASE/ID", False),
-        ("base", "REFERS BASE BASE/ID", False),
-        ("base", "REFERS/BASE BASE BASE/ID", False),
-        ("base", "REFERS REFERS/BASE BASE BASE/ID", True),
+        ("", "", FilterSyntaxError),
+        ("name", "REFERS REFERS/NAME", None),
+        ("baseId", "REFERS REFERS/NAME", PermissionDenied),
+        ("baseId", "REFERS REFERS/BASE", PermissionDenied),
+        ("baseId", "REFERS REFERS/BASE BASE", PermissionDenied),
+        ("baseId", "REFERS REFERS/BASE BASE/ID", PermissionDenied),
+        ("baseId", "REFERS BASE BASE/ID", PermissionDenied),
+        ("baseId", "REFERS/BASE BASE BASE/ID", PermissionDenied),
+        ("base", "REFERS REFERS/BASE BASE BASE/ID", FilterSyntaxError),
+        ("baseId", "REFERS REFERS/BASE BASE BASE/ID", None),
     ],
 )
-def test_check_filter(field_name: str, scopes: str, ok: bool):
+def test_check_filter(field_name: str, scopes: str, exc_type: Optional[type]):
     schema = SCHEMA.get_table_by_id("refers")
 
     scopes = UserScopes(query_params={}, request_scopes=scopes.split())
-    if ok:
-        _check_field_access(field_name, scopes, schema)
+    if exc_type is None:
+        _check_field_access(field_name, scopes, schema, mandatory=False)
     else:
-        with pytest.raises(PermissionDenied):
-            _check_field_access(field_name, scopes, schema)
+        with pytest.raises(exc_type):
+            _check_field_access(field_name, scopes, schema, mandatory=False)
