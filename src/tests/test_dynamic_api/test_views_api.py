@@ -174,6 +174,53 @@ class TestDSOViewMixin:
 
 
 @pytest.mark.django_db
+class TestListFilters:
+    """Prove that filtering works as expected."""
+
+    @staticmethod
+    def test_list_filter_wildcard_without_like(api_client, movies_movie, filled_router):
+        """Prove that ?name=foo doesn't work with wildcards (that now requires [like])."""
+        response = api_client.get("/v1/movies/movie/", data={"name": "foo1?3"})
+        assert response.status_code == 200, response
+        assert response["Content-Type"] == "application/hal+json"
+        data = read_response_json(response)
+        assert len(data["_embedded"]["movie"]) == 0
+
+    @staticmethod
+    def test_list_filter_datetime(api_client, movies_movie, filled_router):
+        """Prove that datetime fields can be queried using a single data value"""
+        response = api_client.get("/v1/movies/movie/", data={"dateAdded": "2020-01-01"})
+        data = read_response_json(response)
+        assert response.status_code == 200, response
+        names = [movie["name"] for movie in data["_embedded"]["movie"]]
+        assert names == ["foo123"]
+        assert response["Content-Type"] == "application/hal+json"
+
+    @staticmethod
+    def test_list_filter_datetime_invalid(api_client, movies_movie, filled_router):
+        """Prove that invalid input is captured, and returns a proper error response."""
+        response = api_client.get("/v1/movies/movie/", data={"dateAdded": "2020-01-fubar"})
+        assert response.status_code == 400, response
+        assert response["Content-Type"] == "application/problem+json", response  # check first
+        data = read_response_json(response)
+        assert response["Content-Type"] == "application/problem+json", response  # and after
+        assert data == {
+            "type": "urn:apiexception:invalid",
+            "title": "Invalid input.",
+            "status": 400,
+            "instance": "http://testserver/v1/movies/movie/?dateAdded=2020-01-fubar",
+            "invalid-params": [
+                {
+                    "type": "urn:apiexception:invalid:invalid",
+                    "name": "dateAdded",
+                    "reason": "Enter a valid ISO date-time, or single date.",
+                }
+            ],
+            "x-validation-errors": {"dateAdded": ["Enter a valid ISO date-time, or single date."]},
+        }
+
+
+@pytest.mark.django_db
 class TestSort:
     """Prove that the ordering works as expected."""
 
