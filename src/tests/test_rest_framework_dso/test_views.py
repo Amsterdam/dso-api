@@ -1,5 +1,3 @@
-from datetime import datetime
-
 import pytest
 from django.contrib.gis.geos import Point
 from django.db import connection
@@ -354,60 +352,6 @@ class TestBrowsableAPIRenderer:
                 "Browsable HTML API does not support this page size. "
                 "Use ?_format=json if you want larger pages."
             ],
-        }
-
-
-@pytest.mark.django_db
-class TestListFilters:
-    """Prove that filtering works as expected."""
-
-    @staticmethod
-    def test_list_filter_wildcard(api_client):
-        """Prove that ?name=foo doesn't works with wildcards"""
-        Movie.objects.create(name="foo123")
-        Movie.objects.create(name="test")
-
-        response = api_client.get("/v1/movies", data={"name": "foo1?3"})
-        read_response_json(response)
-        assert response.status_code == 200, response
-        assert response["Content-Type"] == "application/hal+json"
-
-    @staticmethod
-    def test_list_filter_datetime(api_client):
-        """Prove that datetime fields can be queried using a single data value"""
-        Movie.objects.create(name="foo123", date_added=datetime(2020, 1, 1, 0, 45))
-        Movie.objects.create(name="test", date_added=datetime(2020, 2, 2, 13, 15))
-
-        response = api_client.get("/v1/movies", data={"date_added": "2020-01-01"})
-        data = read_response_json(response)
-        assert response.status_code == 200, response
-        names = [movie["name"] for movie in data["_embedded"]["movie"]]
-        assert names == ["foo123"]
-        assert response["Content-Type"] == "application/hal+json"
-
-    @staticmethod
-    def test_list_filter_datetime_invalid(api_client):
-        """Prove that invalid input is captured, and returns a proper error response."""
-        response = api_client.get("/v1/movies", data={"date_added": "2020-01-fubar"})
-        assert response.status_code == 400, response
-        assert response["Content-Type"] == "application/problem+json", response  # check first
-        data = read_response_json(response)
-        assert response["Content-Type"] == "application/problem+json", response  # and after
-        assert data == {
-            "type": "urn:apiexception:invalid",
-            "title": "Invalid input.",
-            "status": 400,
-            "instance": "http://testserver/v1/movies?date_added=2020-01-fubar",
-            "invalid-params": [
-                {
-                    "type": "urn:apiexception:invalid:invalid",
-                    "name": "date_added",
-                    "reason": "Enter a valid ISO date-time, or single date.",
-                }
-            ],
-            "x-validation-errors": {
-                "date_added": ["Enter a valid ISO date-time, or single date."]
-            },
         }
 
 
