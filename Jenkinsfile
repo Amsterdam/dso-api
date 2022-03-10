@@ -95,7 +95,6 @@ if (BRANCH == "master") {
                     [$class: 'StringParameterValue', name: 'PLAYBOOKPARAMS', value: "-e cmdb_id=app_dso-api"]
                 ]
             }
-            /*
             tryStep "deployment", {
                 build job: 'Subtask_Openstack_Playbook',
                 parameters: [
@@ -104,7 +103,6 @@ if (BRANCH == "master") {
                     [$class: 'StringParameterValue', name: 'PLAYBOOKPARAMS', value: "-e cmdb_id=app_dso-api-docs"]
                 ]
             }
-            */
         }
     }
    
