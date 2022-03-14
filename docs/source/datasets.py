@@ -8,7 +8,7 @@ import jinja2
 from schematools.types import DatasetFieldSchema, DatasetSchema, DatasetTableSchema
 from schematools.utils import (
     dataset_paths_from_url,
-    dataset_schema_from_file,
+    dataset_schema_from_path,
     dataset_schemas_from_url,
     to_snake_case,
     toCamelCase,
@@ -162,7 +162,6 @@ def _get_table_context(table: DatasetTableSchema, paths: dict[str, str]):
         "filters": filters,
         "auth": table.auth | table.dataset.auth,
         "expands": _get_table_expands(table),
-        "additional_filters": table.additional_filters,
         "source": table,
         "has_geometry": _has_geometry(table),
     }
@@ -445,7 +444,7 @@ def render_datasets(*local_file_paths):
 
             ds_path = file_path[pos + 10 : file_path.rfind("/")]
             print(f"- reading {ds_path}")
-            schema = dataset_schema_from_file(file_path, prefetch_related=True)
+            schema = dataset_schema_from_path(file_path, prefetch_related=True)
             schemas[schema.id] = schema
             paths[schema.id] = ds_path
 
