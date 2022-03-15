@@ -31,7 +31,7 @@ def test_check_filter(field_name: str, scopes: str, exc_type: Optional[type]):
 
     scopes = UserScopes(query_params={}, request_scopes=scopes.split())
     if exc_type is None:
-        _check_field_access(field_name, scopes, schema, mandatory=False)
+        _check_field_access(field_name, scopes, schema)
     else:
         with pytest.raises(exc_type):
-            _check_field_access(field_name, scopes, schema, mandatory=False)
+            _check_field_access(field_name, scopes, schema)

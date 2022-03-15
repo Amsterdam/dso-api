@@ -141,13 +141,6 @@ def validate_request(request, schema: DatasetTableSchema, allowed: set[str]) -> 
     # And then we and authorization_django monkey-patch the scopes onto the request.
     scopes = cast(UserScopes, request.user_scopes)
 
-    # Collect mandatory filters. We need to make an exception for these to handle cases
-    # where the field they reference isn't otherwise accessible.
-    # The actual check for whether the filter sets are provided lives elsewhere.
-    mandatory_filters = set()
-    for profile in scopes.get_active_profile_tables(schema.dataset.id, schema.id):
-        mandatory_filters.update(*profile.mandatory_filtersets)
-
     for key, values in request.GET.lists():
         if key in allowed:
             continue
@@ -157,31 +150,25 @@ def validate_request(request, schema: DatasetTableSchema, allowed: set[str]) -> 
                 for field in value.split(","):
                     # Leading "-" means descending sort.
                     field = field[1:] if field.startswith("-") else field
-                    # Sorting is never mandatory.
-                    _check_field_access(field, scopes, schema, mandatory=False)
+                    _check_field_access(field, scopes, schema)
             continue
 
         # Everything else is a filter.
         field_name, op = parse_filter(key)
 
-        # mandatoryFilters may contain either the complete filter (with lookup operation)
-        # or just the field name.
-        mandatory = key in mandatory_filters or field_name in mandatory_filters
-
         if schema.temporal is not None:
             if fields := schema.temporal.dimensions.get(field_name):
                 for field in (fields.start, fields.end):
-                    _check_field_access(field, scopes, schema, mandatory)
+                    _check_field_access(field, scopes, schema)
                 continue
 
-        _check_field_access(field_name, scopes, schema, mandatory)
+        _check_field_access(field_name, scopes, schema)
 
 
 def _check_field_access(  # noqa: C901
     full_field_name: str,
     scopes: UserScopes,
     schema: Union[DatasetTableSchema, DatasetFieldSchema],
-    mandatory: bool,  # Set to true if this is a mandatory filter.
 ) -> None:
     field_name = full_field_name
     while field_name != "":
@@ -205,7 +192,7 @@ def _check_field_access(  # noqa: C901
 
         # First check the field, then check whether it's a relation,
         # so we can auth-check the relation and the thing it points to.
-        if not scopes.has_field_access(schema) and not mandatory:
+        if not scopes.has_field_access(schema):
             raise PermissionDenied(f"access denied to field {schema.id} with scopes {scopes}")
 
         if rel := schema.related_table:
@@ -214,7 +201,7 @@ def _check_field_access(  # noqa: C901
             schema = rel.get_field_by_id(ident)
 
             # scopes.has_field_access also checks table and dataset access.
-            if not mandatory and not scopes.has_field_access(schema):
+            if not scopes.has_field_access(schema):
                 raise PermissionDenied(f"access denied to field {schema.id} with scopes {scopes}")
             schema = rel
 
