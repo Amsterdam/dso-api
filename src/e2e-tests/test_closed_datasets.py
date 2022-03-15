@@ -38,3 +38,10 @@ def test_collection_accessible_with_credentials(auth_header):
     """Prove that getting the collection is accessible with credentials."""
     response = requests.get(dataset_url, headers=auth_header)
     assert response.status_code == 200
+
+
+def test_collection_with_query(auth_header):
+    payload = {"pndId": "0363100012158535"}
+    # payload = {"pandIdentificatie": "0363100012158535"}
+    response = requests.get(dataset_url, headers=auth_header, json=payload)
+    assert response.json()["_embedded"]["gebouwen"][0]["postcode"] == "1016GL"
