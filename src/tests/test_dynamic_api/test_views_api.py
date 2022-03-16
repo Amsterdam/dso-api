@@ -274,12 +274,12 @@ class TestSort:
             "instance": "http://testserver/v1/movies/movie/?_sort=category",
             "invalid-params": [
                 {
-                    "type": "urn:apiexception:invalid:order-by",
-                    "name": "order-by",
-                    "reason": "Invalid sort fields: category",
+                    "type": "urn:apiexception:invalid:invalid",
+                    "name": "invalid",
+                    "reason": "'category' does not refer to a field",
                 }
             ],
-            "x-validation-errors": ["Invalid sort fields: category"],
+            "x-validation-errors": ["'category' does not refer to a field"],
         }
 
 
