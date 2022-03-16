@@ -141,6 +141,13 @@ def validate_request(request, schema: DatasetTableSchema, allowed: set[str]) -> 
     # And then we and authorization_django monkey-patch the scopes onto the request.
     scopes = cast(UserScopes, request.user_scopes)
 
+    # Collect mandatory filters. We need to make an exception for these to handle cases
+    # where the field they reference isn't otherwise accessible.
+    # The actual check for whether the filter sets are provided lives elsewhere.
+    mandatory = set()
+    for profile in scopes.get_active_profile_tables(schema.dataset.id, schema.id):
+        mandatory.update(*profile.mandatory_filtersets)
+
     for key, values in request.GET.lists():
         if key in allowed:
             continue
@@ -155,6 +162,11 @@ def validate_request(request, schema: DatasetTableSchema, allowed: set[str]) -> 
 
         # Everything else is a filter.
         field_name, op = parse_filter(key)
+
+        # mandatoryFilters may contain either the complete filter (with lookup operation)
+        # or just the field name.
+        if key in mandatory or field_name in mandatory:
+            continue
 
         if schema.temporal is not None:
             if fields := schema.temporal.dimensions.get(field_name):
