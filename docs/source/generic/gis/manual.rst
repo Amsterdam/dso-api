@@ -1,5 +1,5 @@
-Handmatig koppelen
-==================
+WFS handmatig koppelen
+======================
 
 De WFS server kan rechtstreeks vanuit de browser of HTTP client (curl e.d.) uitgelezen worden.
 Gebruik de basis URL :samp:`https://api.data.amsterdam.nl/v1/wfs/{<dataset naam>}/` in een WFS-client.

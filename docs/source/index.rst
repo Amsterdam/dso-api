@@ -10,8 +10,8 @@ In deze pagina's geven we uitleg hoe de API diensten van Datapunt afgenomen word
    van de Gemeente Amsterdam.
 
 Om zoveel mogelijk afnemers te kunnen bedienen, ondersteunen we diverse koppelingen.
-Zo zal een mobiele-app ontwikkelaar eerder een :doc:`REST-API <generic/rest>` gebruiken,
-en een GIS-professional de :doc:`WFS-koppeling <generic/wfs>` gebruikt.
+Zo zal een mobiele-appontwikkelaar eerder een :doc:`REST-API <generic/rest>` gebruiken,
+en een GIS-professional de :doc:`WFS/MVT-koppelingen <generic/gis>`.
 Tot slot worden er ook volledige CSV en GeoJSON exports ondersteund.
 
 .. toctree::
@@ -19,8 +19,7 @@ Tot slot worden er ook volledige CSV en GeoJSON exports ondersteund.
    :maxdepth: 2
 
    generic/rest.rst
-   generic/wfs.rst
-   generic/mvt.rst
+   generic/gis.rst
 
 .. toctree::
    :caption: Datasets:
