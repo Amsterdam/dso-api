@@ -218,13 +218,6 @@ def _check_field_access(  # noqa: C901
                         f"access denied to field {schema.id} with scopes {scopes}"
                     )
 
-            if len(idents) > 1:
-                # Relations with composite keys use the table name as the last part of the filter
-                # and specify the field values as "id1.id2.id3".
-                if field_name != "":
-                    raise FilterSyntaxError("")
-                return
-
             schema = rel
 
     # If we're still, or again, at a DatasetTableSchema, then either field_name was empty
