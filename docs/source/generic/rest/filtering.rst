@@ -43,8 +43,7 @@ Filteren in relaties
 Voor one-to-many relaties geldt het volgende:
 
 Relaties met een enkelvoudige verwijzende sleutel kunnen gefilterd worden op
-de concatenatie van de veldnaam en de sleutel van de tabel waarnaar
-verwezen wordt.
+de concatenatie van de veldnaam en "Id".
 Voorbeeld: de relatie
 
 .. code-block:: json

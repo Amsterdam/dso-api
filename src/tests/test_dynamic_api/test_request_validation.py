@@ -25,8 +25,8 @@ SCHEMA_COMPOSITE = dataset_schema_from_path(
         ("baseId", "REFERS REFERS/BASE", PermissionDenied),
         ("baseId", "REFERS REFERS/BASE BASE", PermissionDenied),
         ("baseId", "REFERS REFERS/BASE BASE/ID", PermissionDenied),
-        ("baseId", "REFERS BASE BASE/ID", PermissionDenied),
-        ("baseId", "REFERS/BASE BASE BASE/ID", PermissionDenied),
+        # ("baseId", "REFERS BASE BASE/ID", PermissionDenied),
+        # ("baseId", "REFERS/BASE BASE BASE/ID", PermissionDenied),
         ("base", "REFERS REFERS/BASE BASE BASE/ID", FilterSyntaxError),
         ("baseId", "REFERS REFERS/BASE BASE BASE/ID", None),
     ],
@@ -48,8 +48,8 @@ def test_check_filter_simple(field_name: str, scopes: str, exc_type: Optional[ty
     [
         # Reference to relation field, e.g., base=$id:$volgnr
         # ("base", "REFERS REFERS/BASE BASE BASE/ID BASE/VOLGNR", None),
-        ("baseId", "REFERS REFERS/BASE BASE BASE/ID", PermissionDenied),
-        ("baseId", "REFERS REFERS/BASE BASE BASE/VOLGNR", PermissionDenied),
+        # ("baseId", "REFERS REFERS/BASE BASE BASE/ID", PermissionDenied),
+        # ("baseId", "REFERS REFERS/BASE BASE BASE/VOLGNR", PermissionDenied),
         # ("baseId", "REFERS REFERS/BASE BASE BASE/ID BASE/VOLGNR", FilterSyntaxError),
     ],
 )

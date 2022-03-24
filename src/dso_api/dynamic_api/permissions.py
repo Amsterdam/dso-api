@@ -188,16 +188,26 @@ def _check_field_access(  # noqa: C901
 
         try:
             schema = schema.get_field_by_id(part)
-        except SchemaObjectNotFound:
-            # Relations with non-composite keys become a pseudo-property with the target table's
-            # identifier appended to the table name: other_table_id. After camel-casing, that
-            # becomes OtherTableId. The identifier can be anything, but here we don't have enough
-            # information to cheaply determine what it was, so we assume it's "id" and retry.
-            # Note that docs/source/datasets.py also assumes "Id", so any other identifier already
-            # breaks the docs.
+        except SchemaObjectNotFound as e:
+            # Relations with non-composite keys become a pseudo-property with "Id" appended
+            # to the table name.
             if part.endswith("Id"):
                 part = part[: -len("Id")]
-                field_name = part + ".id" + ("." + field_name if field_name else "")
+                if field_name != "":
+                    raise FilterSyntaxError("relation key should appear at the end") from e
+                schema = schema.get_field_by_id(part)
+                rel = schema.related_table
+                if not rel:
+                    raise FilterSyntaxError(
+                        f"no field {part}Id and no relation {part} found"
+                    ) from e
+                idents = schema.related_field_ids
+                if len(idents) > 1:
+                    raise FilterSyntaxError(
+                        "relation with composite key using simple key syntax"
+                    ) from e
+                field_name = idents[0] + ("." + field_name if field_name else "")
+                schema = rel
                 continue
 
             raise
