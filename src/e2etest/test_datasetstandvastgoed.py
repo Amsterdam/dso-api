@@ -23,9 +23,6 @@ def auth_header():
     return {"Authorization": f"Bearer {access_token}"}
 
 
-@allure.step(
-    "API Call for `https://acc.api.data.amsterdam.nl/v1/standvastgoed/gebouwen/` match to `success code 200`"
-)
 def test_collection_accessible_with_credentials(auth_header):
 
     """Prove that getting the collection is accessible with credentials."""

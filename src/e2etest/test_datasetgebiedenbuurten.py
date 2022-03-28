@@ -13,24 +13,24 @@ from . import datasetconstantgebiedenbuurten
 
 
 @allure.step(
-    "API Call for `https://acc.api.data.amsterdam.nl/v1/gebieden/buurten/03630980000012` match to `success code 200`"
+    "API Call for `https://acc.api.data.amsterdam.nl/v1/gebieden/buurten/03630980000035` match to `success code 200`"
 )
 def test_gebiedenbuurten_success():
 
     """Success API request for Gebieden Buurten."""
 
-    gebibuurtenresp = requests.get(datasetconstantgebiedenbuurten.dataset_url + "03630980000012")
+    gebibuurtenresp = requests.get(datasetconstantgebiedenbuurten.dataset_url + "03630980000035")
     assert gebibuurtenresp.status_code == 200, "Status code not match"
 
 
 @allure.step(
-    "Validate begindate format as `date-time` for the API Call `https://acc.api.data.amsterdam.nl/v1/gebieden/buurten/03630980000012`"
+    "Validate begindate format as `date-time` for the API Call `https://acc.api.data.amsterdam.nl/v1/gebieden/buurten/03630980000035`"
 )
 def test_begindate_formatcheck():
 
     """Check the begin date format as date-time."""
 
-    gebibuurtenresp = requests.get(datasetconstantgebiedenbuurten.dataset_url + "03630980000012")
+    gebibuurtenresp = requests.get(datasetconstantgebiedenbuurten.dataset_url + "03630980000035")
     gebibuurtendate = gebibuurtenresp.json()
 
     begindate = gebibuurtendate["beginGeldigheid"]
@@ -50,13 +50,13 @@ def test_begindate_formatcheck():
 
 
 @allure.step(
-    "Validate documentdatum format as `date` for the API Call `https://acc.api.data.amsterdam.nl/v1/gebieden/buurten/03630980000012`"
+    "Validate documentdatum format as `date` for the API Call `https://acc.api.data.amsterdam.nl/v1/gebieden/buurten/03630980000035`"
 )
 def test_documentdate_formatcheck():
 
     """Check the documment date format as date."""
 
-    gebibuurtenresp = requests.get(datasetconstantgebiedenbuurten.dataset_url + "03630980000012")
+    gebibuurtenresp = requests.get(datasetconstantgebiedenbuurten.dataset_url + "03630980000035")
     gebibuurtendate = gebibuurtenresp.json()
 
     documentdate = gebibuurtendate["documentdatum"]
@@ -126,31 +126,6 @@ def test_query_newcodebuurten():
     str = records[0]["cbsCode"]
     sliced = str[6:]
     assert sliced == records[0]["code"]
-
-
-@allure.step(
-    "API Call `https://acc.api.data.amsterdam.nl/v1/gebieden/buurten/?geldigOp=2022-03-25&cbsCode=BU0363SD01` to check the `naam` remain same for the new `cbsCode`"
-)
-def test_query_existbuurten():
-
-    """Prove that query-ing by `cbsCode` finds existing Gebieden."""
-
-    payload_newversion = {"cbsCode": "BU0363SD01"}
-    gebibuurtenresp_newversion = requests.get(
-        datasetconstantgebiedenbuurten.payload_parameter_url, params=payload_newversion
-    )
-    content_newversion = gebibuurtenresp_newversion.json()
-    records_newversion = content_newversion["_embedded"]["buurten"]
-
-    payload_oldversion = {"cbsCode": "BU04570002"}
-    gebibuurtenresp_oldversion = requests.get(
-        datasetconstantgebiedenbuurten.dataset_url, params=payload_oldversion
-    )
-    content_oldversion = gebibuurtenresp_oldversion.json()
-    records_oldversion = content_oldversion["_embedded"]["buurten"]
-
-    # Prove the buurten name should be same as old name for the buurten `cbsCode` change
-    assert records_newversion[0]["naam"] == records_oldversion[0]["naam"]
 
 
 @allure.step(

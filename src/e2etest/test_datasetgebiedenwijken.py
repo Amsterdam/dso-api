@@ -23,7 +23,7 @@ def test_gebiedenwijken_success():
 
     """Success API request for Gebieden Wijken."""
 
-    gebiwijkenresp = requests.get(datasetconstantgebiedenwijken.dataset_url + "03630970000000.2")
+    gebiwijkenresp = requests.get(datasetconstantgebiedenwijken.dataset_url + "03630970000027.1")
     assert gebiwijkenresp.status_code == 200, "Status code not match"
 
 
@@ -36,7 +36,7 @@ def test_begindate_formatcheck():
 
     """Check the begin date format as date-time."""
 
-    gebiwijkenresp = requests.get(datasetconstantgebiedenwijken.dataset_url + "03630970000000.2")
+    gebiwijkenresp = requests.get(datasetconstantgebiedenwijken.dataset_url + "03630970000027.1")
     gebiwijkendate = gebiwijkenresp.json()
 
     begindate = gebiwijkendate["beginGeldigheid"]
@@ -62,7 +62,7 @@ def test_documentdate_formatcheck():
 
     """Check the documment date format as date."""
 
-    gebiwijkenresp = requests.get(datasetconstantgebiedenwijken.dataset_url + "03630970000000.2")
+    gebiwijkenresp = requests.get(datasetconstantgebiedenwijken.dataset_url + "03630970000027.1")
     gebiwijkendate = gebiwijkenresp.json()
 
     documentdate = gebiwijkendate["documentdatum"]
@@ -98,31 +98,6 @@ def test_query_newwijken():
     assert records[0]["naam"] == "Slotermeer-West"
     assert records[0]["code"] == "FC"
     assert records[0]["eindGeldigheid"] == None
-
-
-@allure.step(
-    "API Call `https://acc.api.data.amsterdam.nl/v1/gebieden/wijken/?geldigOp=2022-03-25&cbsCode=WK0363SB` to check the `naam` remain same for the new `cbsCode`"
-)
-def test_query_existwijken():
-
-    """Prove that query-ing by `cbsCode` finds existing Wijken."""
-
-    payload_newversion = {"cbsCode": "WK0363SB"}
-    gebiwijkenresp_newversion = requests.get(
-        datasetconstantgebiedenwijken.payload_parameter_url, params=payload_newversion
-    )
-    content_newversion = gebiwijkenresp_newversion.json()
-    records_newversion = content_newversion["_embedded"]["wijken"]
-
-    payload_oldversion = {"cbsCode": "WK045709"}
-    gebiwijkenresp_oldversion = requests.get(
-        datasetconstantgebiedenwijken.dataset_url, params=payload_oldversion
-    )
-    content_oldversion = gebiwijkenresp_oldversion.json()
-    records_oldversion = content_oldversion["_embedded"]["wijken"]
-
-    # Prove the Wijken name should be same as old name for the wijken `code` change
-    assert records_newversion[0]["naam"] == records_oldversion[0]["naam"]
 
 
 @allure.step(
