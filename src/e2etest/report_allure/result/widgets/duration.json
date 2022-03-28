@@ -1,0 +1,481 @@
+[ {
+  "uid" : "3d87c352cd532b2b",
+  "name" : "test_query_existinggebouwen",
+  "time" : {
+    "start" : 1647269990139,
+    "stop" : 1647269990322,
+    "duration" : 183
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "e2c13e509c66adfb",
+  "name" : "test_query_by_id",
+  "time" : {
+    "start" : 1647269986297,
+    "stop" : 1647269986985,
+    "duration" : 688
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "8ddefcd4be7b9084",
+  "name" : "test_coordinate_queryparam",
+  "time" : {
+    "start" : 1647269987662,
+    "stop" : 1647269987818,
+    "duration" : 156
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "73440a7c0f4a7260",
+  "name" : "test_providing_wrongly_types_query",
+  "time" : {
+    "start" : 1647269987087,
+    "stop" : 1647269987138,
+    "duration" : 51
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "7ce864d6ef64290c",
+  "name" : "test_query_newbuurten",
+  "time" : {
+    "start" : 1647269981011,
+    "stop" : 1647269981304,
+    "duration" : 293
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "cff484bbd29a896a",
+  "name" : "test_query_newcodebuurten",
+  "time" : {
+    "start" : 1647269981312,
+    "stop" : 1647269981611,
+    "duration" : 299
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "5ecddbe8cebc0f02",
+  "name" : "test_collection_forbidden_without_credentials",
+  "time" : {
+    "start" : 1647269990701,
+    "stop" : 1647269990749,
+    "duration" : 48
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "10279f5bba3a8813",
+  "name" : "test_buurten_wrong_query_failure",
+  "time" : {
+    "start" : 1647269982281,
+    "stop" : 1647269982332,
+    "duration" : 51
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "932be9ff0ff13115",
+  "name" : "test_date_validation",
+  "time" : {
+    "start" : 1647269990514,
+    "stop" : 1647269990692,
+    "duration" : 178
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "a1baaf309bed1a40",
+  "name" : "test_collection_accessible_with_credentials",
+  "time" : {
+    "start" : 1647269987984,
+    "stop" : 1647269990132,
+    "duration" : 2148
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "87966d9babc4624",
+  "name" : "test_datetime_validation",
+  "time" : {
+    "start" : 1647269990330,
+    "stop" : 1647269990506,
+    "duration" : 176
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "c01a3e33117146f7",
+  "name" : "test_documentdate_formatcheck",
+  "time" : {
+    "start" : 1647269980518,
+    "stop" : 1647269980738,
+    "duration" : 220
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "7008640fabab328e",
+  "name" : "test_query_lengthcodeexisitingwijken",
+  "time" : {
+    "start" : 1647269985042,
+    "stop" : 1647269985295,
+    "duration" : 253
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "979fa26fe11e932f",
+  "name" : "test_query_existbuurten",
+  "time" : {
+    "start" : 1647269981619,
+    "stop" : 1647269982130,
+    "duration" : 511
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "d090fbada6e6da9e",
+  "name" : "test_query_lengthcodewijken",
+  "time" : {
+    "start" : 1647269984601,
+    "stop" : 1647269985033,
+    "duration" : 432
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "4069db074913c7bd",
+  "name" : "test_namebussinv_queryparam",
+  "time" : {
+    "start" : 1647269979000,
+    "stop" : 1647269979141,
+    "duration" : 141
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "3dcda1cd83ad3c5f",
+  "name" : "test_Wijken_failure",
+  "time" : {
+    "start" : 1647269985302,
+    "stop" : 1647269985430,
+    "duration" : 128
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "635b80a4ac0df542",
+  "name" : "test_begindate_formatcheck",
+  "time" : {
+    "start" : 1647269980275,
+    "stop" : 1647269980511,
+    "duration" : 236
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "123a57214ac0ebfc",
+  "name" : "test_query_existwijken",
+  "time" : {
+    "start" : 1647269983733,
+    "stop" : 1647269984257,
+    "duration" : 524
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "10c598bf010e8276",
+  "name" : "test_buurtinitiatiefid_queryparam",
+  "time" : {
+    "start" : 1647269987246,
+    "stop" : 1647269987376,
+    "duration" : 130
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "a8fc47b3f4260546",
+  "name" : "test_query_by_bijdrageplichtingen",
+  "time" : {
+    "start" : 1647269979749,
+    "stop" : 1647269979876,
+    "duration" : 127
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "e781a8988b2477a4",
+  "name" : "test_gebiedenbuurten_success",
+  "time" : {
+    "start" : 1647269980055,
+    "stop" : 1647269980266,
+    "duration" : 211
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "af487e8bb5bba68a",
+  "name" : "test_collection_notfound_with_credendtials",
+  "time" : {
+    "start" : 1647269990757,
+    "stop" : 1647269990898,
+    "duration" : 141
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "a6442c0a37101889",
+  "name" : "test_bussinv_failure",
+  "time" : {
+    "start" : 1647269979944,
+    "stop" : 1647269980046,
+    "duration" : 102
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "a8925d7ccbbcfcf8",
+  "name" : "test_buurtnaam_queryparam",
+  "time" : {
+    "start" : 1647269985653,
+    "stop" : 1647269985806,
+    "duration" : 153
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "6d981eafb4cc240c",
+  "name" : "test_buurtinitiatiefid_success",
+  "time" : {
+    "start" : 1647269987146,
+    "stop" : 1647269987238,
+    "duration" : 92
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "9135ca18bcd8aa5a",
+  "name" : "test_buurtinitiatief_failure",
+  "time" : {
+    "start" : 1647269987826,
+    "stop" : 1647269987910,
+    "duration" : 84
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "3b731e4d364cd468",
+  "name" : "test_buurttypeinitiatiefid_queryparam",
+  "time" : {
+    "start" : 1647269987520,
+    "stop" : 1647269987654,
+    "duration" : 134
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "c55cd04aa849bf2a",
+  "name" : "test_buurtid_queryparam",
+  "time" : {
+    "start" : 1647269985813,
+    "stop" : 1647269985962,
+    "duration" : 149
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "e015b8e7dcf1efc0",
+  "name" : "test_coordinatebussinv_queryparam",
+  "time" : {
+    "start" : 1647269979294,
+    "stop" : 1647269979440,
+    "duration" : 146
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "3547d5ad72159200",
+  "name" : "test_buurten_failure",
+  "time" : {
+    "start" : 1647269982138,
+    "stop" : 1647269982274,
+    "duration" : 136
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "34f1e1974b9238a2",
+  "name" : "test_websitebussinv_queryparam",
+  "time" : {
+    "start" : 1647269979149,
+    "stop" : 1647269979286,
+    "duration" : 137
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "11b054872a65a629",
+  "name" : "test_cookinggas_queryparam",
+  "time" : {
+    "start" : 1647269986128,
+    "stop" : 1647269986287,
+    "duration" : 159
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "8c65de1e944ed79e",
+  "name" : "test_bussinv_success",
+  "time" : {
+    "start" : 1647269978823,
+    "stop" : 1647269978992,
+    "duration" : 169
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "abd70ef4ea884107",
+  "name" : "test_bussinvid_queryparam",
+  "time" : {
+    "start" : 1647269979448,
+    "stop" : 1647269979592,
+    "duration" : 144
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "ae1834435ea7b588",
+  "name" : "test_geometry_queryparam",
+  "time" : {
+    "start" : 1647269985970,
+    "stop" : 1647269986120,
+    "duration" : 150
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "288583dac3b058f1",
+  "name" : "test_buurtnameinitiatiefid_queryparam",
+  "time" : {
+    "start" : 1647269987384,
+    "stop" : 1647269987512,
+    "duration" : 128
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "1f978a122cbf6aee",
+  "name" : "test_buurtid_success",
+  "time" : {
+    "start" : 1647269985495,
+    "stop" : 1647269985645,
+    "duration" : 150
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "2ed9e850ff2f7ae0",
+  "name" : "test_query_newwijken",
+  "time" : {
+    "start" : 1647269983053,
+    "stop" : 1647269983725,
+    "duration" : 672
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "dd62989c53a38464",
+  "name" : "test_texratebussinv_queryparam",
+  "time" : {
+    "start" : 1647269979599,
+    "stop" : 1647269979741,
+    "duration" : 142
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "29c45eb9e9d271ca",
+  "name" : "test_query_newcodewijken",
+  "time" : {
+    "start" : 1647269984265,
+    "stop" : 1647269984593,
+    "duration" : 328
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "90c03d00b3f46158",
+  "name" : "test_Wijken_wrong_query_failure",
+  "time" : {
+    "start" : 1647269985437,
+    "stop" : 1647269985487,
+    "duration" : 50
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "393b11ebc7e0ee2",
+  "name" : "test_documentdate_formatcheck",
+  "time" : {
+    "start" : 1647269982831,
+    "stop" : 1647269983046,
+    "duration" : 215
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "d3cdfe1245c4b6e7",
+  "name" : "test_gebiedenwijken_success",
+  "time" : {
+    "start" : 1647269982340,
+    "stop" : 1647269982551,
+    "duration" : 211
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "5e3e47b767b6fe1b",
+  "name" : "test_query_unusedcbscode",
+  "time" : {
+    "start" : 1647269980745,
+    "stop" : 1647269981002,
+    "duration" : 257
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "4c339564a83070b3",
+  "name" : "test_providing_wrongly_types_query",
+  "time" : {
+    "start" : 1647269979883,
+    "stop" : 1647269979937,
+    "duration" : 54
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "a96304792e09f90d",
+  "name" : "test_query_using_like",
+  "time" : {
+    "start" : 1647269986993,
+    "stop" : 1647269987080,
+    "duration" : 87
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "2d10bdd9c4de960b",
+  "name" : "test_begindate_formatcheck",
+  "time" : {
+    "start" : 1647269982560,
+    "stop" : 1647269982823,
+    "duration" : 263
+  },
+  "status" : "passed",
+  "severity" : "normal"
+} ]

@@ -1,0 +1,1 @@
+{'type': 'urn:apiexception:not_found', 'title': 'No Gebouwen found matching the query', 'detail': 'Not found.', 'status': 404}

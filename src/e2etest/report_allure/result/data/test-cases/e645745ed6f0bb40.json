@@ -1,0 +1,263 @@
+{
+  "uid" : "e645745ed6f0bb40",
+  "name" : "test_websitebussinv_queryparam",
+  "fullName" : "e2etest.test_datasetbussinv#test_websitebussinv_queryparam",
+  "historyId" : "9c99bfe09e5dfdd8f7598b9b00e2daaa",
+  "time" : {
+    "start" : 1646846392861,
+    "stop" : 1646846393008,
+    "duration" : 147
+  },
+  "description" : "Website Query Parameter Validation for the Business Investment zones",
+  "descriptionHtml" : "<p>Website Query Parameter Validation for the Business Investment zones</p>\n",
+  "status" : "passed",
+  "flaky" : false,
+  "newFailed" : false,
+  "newBroken" : false,
+  "newPassed" : false,
+  "retriesCount" : 0,
+  "retriesStatusChange" : false,
+  "beforeStages" : [ {
+    "name" : "_fail_for_invalid_template_variable",
+    "time" : {
+      "start" : 1646846392501,
+      "stop" : 1646846392501,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "django_test_environment",
+    "time" : {
+      "start" : 1646846392501,
+      "stop" : 1646846392502,
+      "duration" : 1
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "django_db_blocker",
+    "time" : {
+      "start" : 1646846392502,
+      "stop" : 1646846392502,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "_django_setup_unittest",
+    "time" : {
+      "start" : 1646846392859,
+      "stop" : 1646846392860,
+      "duration" : 1
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "_dj_autoclear_mailbox",
+    "time" : {
+      "start" : 1646846392860,
+      "stop" : 1646846392860,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "_django_set_urlconf",
+    "time" : {
+      "start" : 1646846392860,
+      "stop" : 1646846392860,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "_django_clear_site_cache",
+    "time" : {
+      "start" : 1646846392860,
+      "stop" : 1646846392860,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "_template_string_if_invalid_marker",
+    "time" : {
+      "start" : 1646846392860,
+      "stop" : 1646846392860,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "_django_db_marker",
+    "time" : {
+      "start" : 1646846392860,
+      "stop" : 1646846392860,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "_live_server_helper",
+    "time" : {
+      "start" : 1646846392860,
+      "stop" : 1646846392860,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  } ],
+  "testStage" : {
+    "description" : "Website Query Parameter Validation for the Business Investment zones",
+    "status" : "passed",
+    "steps" : [ {
+      "name" : "Validate the Website should not be null for an id in API Call `https://acc.api.data.amsterdam.nl/v1/bedrijveninvesteringszones/bedrijveninvesteringszones/25`",
+      "time" : {
+        "start" : 1646846392861,
+        "stop" : 1646846393008,
+        "duration" : 147
+      },
+      "status" : "passed",
+      "steps" : [ ],
+      "attachments" : [ ],
+      "parameters" : [ ],
+      "stepsCount" : 0,
+      "attachmentsCount" : 0,
+      "shouldDisplayMessage" : false,
+      "hasContent" : false
+    } ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 1,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : true
+  },
+  "afterStages" : [ {
+    "name" : "_django_setup_unittest::0",
+    "time" : {
+      "start" : 1646846393010,
+      "stop" : 1646846393010,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "django_test_environment::teardown_test_environment",
+    "time" : {
+      "start" : 1646846405706,
+      "stop" : 1646846405706,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  } ],
+  "labels" : [ {
+    "name" : "parentSuite",
+    "value" : "e2etest"
+  }, {
+    "name" : "suite",
+    "value" : "test_datasetbussinv"
+  }, {
+    "name" : "host",
+    "value" : "Jayashrees-MacBook-Pro.local"
+  }, {
+    "name" : "thread",
+    "value" : "59658-MainThread"
+  }, {
+    "name" : "framework",
+    "value" : "pytest"
+  }, {
+    "name" : "language",
+    "value" : "cpython3"
+  }, {
+    "name" : "package",
+    "value" : "e2etest.test_datasetbussinv"
+  }, {
+    "name" : "resultFormat",
+    "value" : "allure2"
+  } ],
+  "parameters" : [ ],
+  "links" : [ ],
+  "hidden" : true,
+  "retry" : true,
+  "extra" : {
+    "categories" : [ ],
+    "tags" : [ ]
+  },
+  "source" : "e645745ed6f0bb40.json",
+  "parameterValues" : [ ]
+}

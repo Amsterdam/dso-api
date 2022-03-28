@@ -1,0 +1,281 @@
+{
+  "uid" : "9e00796c985868ba",
+  "name" : "test_collection_accessible_with_credentials",
+  "fullName" : "e2etest.test_datasetstandvastgoed#test_collection_accessible_with_credentials",
+  "historyId" : "a60cd26105f6b375bee45da440df186e",
+  "time" : {
+    "start" : 1646909926438,
+    "stop" : 1646909928582,
+    "duration" : 2144
+  },
+  "description" : "Prove that getting the collection is accessible with credentials.",
+  "descriptionHtml" : "<p>Prove that getting the collection is accessible with credentials.</p>\n",
+  "status" : "passed",
+  "flaky" : false,
+  "newFailed" : false,
+  "newBroken" : false,
+  "newPassed" : false,
+  "retriesCount" : 0,
+  "retriesStatusChange" : false,
+  "beforeStages" : [ {
+    "name" : "django_test_environment",
+    "time" : {
+      "start" : 1646909916932,
+      "stop" : 1646909916933,
+      "duration" : 1
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "_fail_for_invalid_template_variable",
+    "time" : {
+      "start" : 1646909916932,
+      "stop" : 1646909916932,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "django_db_blocker",
+    "time" : {
+      "start" : 1646909916933,
+      "stop" : 1646909916933,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "auth_header",
+    "time" : {
+      "start" : 1646909926375,
+      "stop" : 1646909926436,
+      "duration" : 61
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "_template_string_if_invalid_marker",
+    "time" : {
+      "start" : 1646909926437,
+      "stop" : 1646909926438,
+      "duration" : 1
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "_live_server_helper",
+    "time" : {
+      "start" : 1646909926437,
+      "stop" : 1646909926437,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "_django_set_urlconf",
+    "time" : {
+      "start" : 1646909926437,
+      "stop" : 1646909926437,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "_dj_autoclear_mailbox",
+    "time" : {
+      "start" : 1646909926437,
+      "stop" : 1646909926437,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "_django_clear_site_cache",
+    "time" : {
+      "start" : 1646909926437,
+      "stop" : 1646909926437,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "_django_db_marker",
+    "time" : {
+      "start" : 1646909926437,
+      "stop" : 1646909926437,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "_django_setup_unittest",
+    "time" : {
+      "start" : 1646909926437,
+      "stop" : 1646909926437,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  } ],
+  "testStage" : {
+    "description" : "Prove that getting the collection is accessible with credentials.",
+    "status" : "passed",
+    "steps" : [ {
+      "name" : "API Call for `https://acc.api.data.amsterdam.nl/v1/standvastgoed/gebouwen/` match to `success code 200`",
+      "time" : {
+        "start" : 1646909926438,
+        "stop" : 1646909928582,
+        "duration" : 2144
+      },
+      "status" : "passed",
+      "steps" : [ ],
+      "attachments" : [ ],
+      "parameters" : [ {
+        "name" : "auth_header",
+        "value" : "{'Authorization': 'Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJXNTRsQzhsei1Yek9tVDhOMDFCTXdXLXlYbTFodGpHRlBRR0FUQm1SNU9BIn0.eyJleHAiOjE2NDY5MTAyMjYsImlhdCI6MTY0NjkwOTkyNiwianRpIjoiNDQ1ZDQzNWEtZjc3Yy00ZGJhLWI1ZmMtMzUzNzQ1ZGI1NTI0IiwiaXNzIjoiaHR0cHM6Ly9pYW0uYW1zdGVyZGFtLm5sL2F1dGgvcmVhbG1zL2RhdGFwdW50LWFkLWFjYyIsInN1YiI6IjEyYjc0YzZmLTRhNmUtNGFmMi05NzUzLTk1Yjg0MjdjMDE4MCIsInR5cCI6IkJlYXJlciIsImF6cCI6ImRhdGFkaWVuc3Rlbi10ZXN0IiwiYWNyIjoiMSIsInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJmcF9zdHVyaW5nc21pZGRlbGVuIiwiZnBfbWR3Il19LCJzY29wZSI6InByb2ZpbGUgZW1haWwiLCJlbWFpbF92ZXJpZmllZCI6ZmFsc2UsImNsaWVudEhvc3QiOiIxMC4yNDMuMjQuMTIiLCJjbGllbnRJZCI6ImRhdGFkaWVuc3Rlbi10ZXN0IiwicHJlZmVycmVkX3VzZXJuYW1lIjoic2VydmljZS1hY2NvdW50LWRhdGFkaWVuc3Rlbi10ZXN0IiwiY2xpZW50QWRkcmVzcyI6IjEwLjI0My4yNC4xMiJ9.MdYN943f87Dieumww50mlMXf187hpbqAtviPlQ2p1Auqp-t85Si6mxuBuN9szICpt8Of0EIkvJq4eUcHcC6jMoxSdaP_ZPZ6IUrb9UoOM3o1odbzWIB-54M4pQoG3yTUZMSDFU9cCYCw4hRMl5hcc9LO363xMkupMdrpHsKGhi5F5umuyPBWpOHuQvtvp04hstNjsvapcVCqH_SYq4rCo03IrEktwTgR_vXTjQsPrho1Ou-WGe1eSgBWhHjto63w3xMKTPczWqn7B6lKU5OhK6sytkEbFJXOejubNL6zDRqDIIsC3ogyUQ1p2oM3_7TK1G9I8XCLouRxHpzXA864HA'}"
+      } ],
+      "stepsCount" : 0,
+      "attachmentsCount" : 0,
+      "shouldDisplayMessage" : false,
+      "hasContent" : true
+    } ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 1,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : true
+  },
+  "afterStages" : [ {
+    "name" : "_django_setup_unittest::0",
+    "time" : {
+      "start" : 1646909928585,
+      "stop" : 1646909928585,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "django_test_environment::teardown_test_environment",
+    "time" : {
+      "start" : 1646909929578,
+      "stop" : 1646909929578,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  } ],
+  "labels" : [ {
+    "name" : "parentSuite",
+    "value" : "e2etest"
+  }, {
+    "name" : "suite",
+    "value" : "test_datasetstandvastgoed"
+  }, {
+    "name" : "host",
+    "value" : "Jayashrees-MacBook-Pro.local"
+  }, {
+    "name" : "thread",
+    "value" : "64622-MainThread"
+  }, {
+    "name" : "framework",
+    "value" : "pytest"
+  }, {
+    "name" : "language",
+    "value" : "cpython3"
+  }, {
+    "name" : "package",
+    "value" : "e2etest.test_datasetstandvastgoed"
+  }, {
+    "name" : "resultFormat",
+    "value" : "allure2"
+  } ],
+  "parameters" : [ ],
+  "links" : [ ],
+  "hidden" : true,
+  "retry" : true,
+  "extra" : {
+    "categories" : [ ],
+    "tags" : [ ]
+  },
+  "source" : "9e00796c985868ba.json",
+  "parameterValues" : [ ]
+}

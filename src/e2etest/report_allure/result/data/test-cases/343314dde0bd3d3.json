@@ -1,0 +1,287 @@
+{
+  "uid" : "343314dde0bd3d3",
+  "name" : "test_query_existinggebouwen",
+  "fullName" : "e2etest.test_datasetstandvastgoed#test_query_existinggebouwen",
+  "historyId" : "ec4cd297469c8978d24614163c24333e",
+  "time" : {
+    "start" : 1646840352085,
+    "stop" : 1646840352148,
+    "duration" : 63
+  },
+  "description" : "Prove that query-ing by `pndId` finds property.",
+  "descriptionHtml" : "<p>Prove that query-ing by <code>pndId</code> finds property.</p>\n",
+  "status" : "broken",
+  "statusMessage" : "AttributeError: 'dict' object has no attribute 'json'",
+  "statusTrace" : "auth_header = {'Authorization': 'Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJXNTRsQzhsei1Yek9tVDhOMDFCTXdXLXlYbTFodGpH...y3EGfPOfas04-sq2E8YQRdOla6eP-_-b8YGU79wSGSyHV8Q1m50pMZyls-F6iJNcwdxBQIfxbFKJcM4DSSiQJHSgRFpiQeA6aN6DtHQU-4yXfi-sjIakQ'}\n\n    @allure.step(\"API Call `https://acc.api.data.amsterdam.nl/v1/standvastgoed/gebouwen/?pndId=0363100012174766` to check the existing property\")\n    def test_query_existinggebouwen(auth_header):\n    \n        \"\"\"Prove that query-ing by `pndId` finds property.\"\"\"\n    \n        payload = {\"pndId\": \"0363100012174766\"}\n        response = requests.get(dataconstantstandvastgoed.dataset_url, headers=auth_header, params=payload)\n        content = response.json()\n        #records = content[\"_embedded\"][\"gebouwen\"]\n>       print(content.json())\nE       AttributeError: 'dict' object has no attribute 'json'\n\ne2etest/test_datasetstandvastgoed.py:39: AttributeError",
+  "flaky" : false,
+  "newFailed" : false,
+  "newBroken" : false,
+  "newPassed" : false,
+  "retriesCount" : 0,
+  "retriesStatusChange" : false,
+  "beforeStages" : [ {
+    "name" : "_fail_for_invalid_template_variable",
+    "time" : {
+      "start" : 1646840340680,
+      "stop" : 1646840340680,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "django_test_environment",
+    "time" : {
+      "start" : 1646840340680,
+      "stop" : 1646840340681,
+      "duration" : 1
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "django_db_blocker",
+    "time" : {
+      "start" : 1646840340681,
+      "stop" : 1646840340681,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "auth_header",
+    "time" : {
+      "start" : 1646840349800,
+      "stop" : 1646840349857,
+      "duration" : 57
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "_django_setup_unittest",
+    "time" : {
+      "start" : 1646840352083,
+      "stop" : 1646840352084,
+      "duration" : 1
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "_django_set_urlconf",
+    "time" : {
+      "start" : 1646840352084,
+      "stop" : 1646840352084,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "_django_db_marker",
+    "time" : {
+      "start" : 1646840352084,
+      "stop" : 1646840352084,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "_template_string_if_invalid_marker",
+    "time" : {
+      "start" : 1646840352084,
+      "stop" : 1646840352084,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "_django_clear_site_cache",
+    "time" : {
+      "start" : 1646840352084,
+      "stop" : 1646840352084,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "_live_server_helper",
+    "time" : {
+      "start" : 1646840352084,
+      "stop" : 1646840352084,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "_dj_autoclear_mailbox",
+    "time" : {
+      "start" : 1646840352084,
+      "stop" : 1646840352084,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  } ],
+  "testStage" : {
+    "description" : "Prove that query-ing by `pndId` finds property.",
+    "status" : "broken",
+    "statusMessage" : "AttributeError: 'dict' object has no attribute 'json'",
+    "statusTrace" : "auth_header = {'Authorization': 'Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJXNTRsQzhsei1Yek9tVDhOMDFCTXdXLXlYbTFodGpH...y3EGfPOfas04-sq2E8YQRdOla6eP-_-b8YGU79wSGSyHV8Q1m50pMZyls-F6iJNcwdxBQIfxbFKJcM4DSSiQJHSgRFpiQeA6aN6DtHQU-4yXfi-sjIakQ'}\n\n    @allure.step(\"API Call `https://acc.api.data.amsterdam.nl/v1/standvastgoed/gebouwen/?pndId=0363100012174766` to check the existing property\")\n    def test_query_existinggebouwen(auth_header):\n    \n        \"\"\"Prove that query-ing by `pndId` finds property.\"\"\"\n    \n        payload = {\"pndId\": \"0363100012174766\"}\n        response = requests.get(dataconstantstandvastgoed.dataset_url, headers=auth_header, params=payload)\n        content = response.json()\n        #records = content[\"_embedded\"][\"gebouwen\"]\n>       print(content.json())\nE       AttributeError: 'dict' object has no attribute 'json'\n\ne2etest/test_datasetstandvastgoed.py:39: AttributeError",
+    "steps" : [ {
+      "name" : "API Call `https://acc.api.data.amsterdam.nl/v1/standvastgoed/gebouwen/?pndId=0363100012174766` to check the existing property",
+      "time" : {
+        "start" : 1646840352085,
+        "stop" : 1646840352138,
+        "duration" : 53
+      },
+      "status" : "broken",
+      "statusMessage" : "AttributeError: 'dict' object has no attribute 'json'\n",
+      "statusTrace" : "  File \"/Users/jeswaran/projects/dso-api/venv/lib/python3.8/site-packages/allure_commons/_allure.py\", line 172, in impl\n    return func(*a, **kw)\n  File \"/Users/jeswaran/projects/dso-api/src/e2etest/test_datasetstandvastgoed.py\", line 39, in test_query_existinggebouwen\n    print(content.json())\n",
+      "steps" : [ ],
+      "attachments" : [ ],
+      "parameters" : [ {
+        "name" : "auth_header",
+        "value" : "{'Authorization': 'Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJXNTRsQzhsei1Yek9tVDhOMDFCTXdXLXlYbTFodGpHRlBRR0FUQm1SNU9BIn0.eyJleHAiOjE2NDY4NDA2NDksImlhdCI6MTY0Njg0MDM0OSwianRpIjoiNzE5N2YxOTAtZTIxMS00MGQ5LWJmNWMtNWFlOGRiY2I2MjEwIiwiaXNzIjoiaHR0cHM6Ly9pYW0uYW1zdGVyZGFtLm5sL2F1dGgvcmVhbG1zL2RhdGFwdW50LWFkLWFjYyIsInN1YiI6IjEyYjc0YzZmLTRhNmUtNGFmMi05NzUzLTk1Yjg0MjdjMDE4MCIsInR5cCI6IkJlYXJlciIsImF6cCI6ImRhdGFkaWVuc3Rlbi10ZXN0IiwiYWNyIjoiMSIsInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJmcF9zdHVyaW5nc21pZGRlbGVuIiwiZnBfbWR3Il19LCJzY29wZSI6InByb2ZpbGUgZW1haWwiLCJlbWFpbF92ZXJpZmllZCI6ZmFsc2UsImNsaWVudEhvc3QiOiIxMC4yNDMuMjQuMTIiLCJjbGllbnRJZCI6ImRhdGFkaWVuc3Rlbi10ZXN0IiwicHJlZmVycmVkX3VzZXJuYW1lIjoic2VydmljZS1hY2NvdW50LWRhdGFkaWVuc3Rlbi10ZXN0IiwiY2xpZW50QWRkcmVzcyI6IjEwLjI0My4yNC4xMiJ9.GScEToh7t69vkaR5r7RLB43X4zsj3ZU_AVeFMHk-t3L0sqwPCmkZ-rTZKCIecVGrYdg_mNH39SfayCVXBJ24ouLYSFSUqgG3YcN4OcmEA4Rx8bpCQxt_gOIgBDqi85wKMZusw3vfVGVFrcxF01QqrTp5Naa0YxhQLXR0kTBmWGeuzxeeZnmwY5NN2fHknEwPoG9UtcpCkiKzp9w00hV2hkDXdbJC8qnlxy3EGfPOfas04-sq2E8YQRdOla6eP-_-b8YGU79wSGSyHV8Q1m50pMZyls-F6iJNcwdxBQIfxbFKJcM4DSSiQJHSgRFpiQeA6aN6DtHQU-4yXfi-sjIakQ'}"
+      } ],
+      "stepsCount" : 0,
+      "attachmentsCount" : 0,
+      "shouldDisplayMessage" : true,
+      "hasContent" : true
+    } ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 1,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : true,
+    "hasContent" : true
+  },
+  "afterStages" : [ {
+    "name" : "_django_setup_unittest::0",
+    "time" : {
+      "start" : 1646840352456,
+      "stop" : 1646840352456,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "django_test_environment::teardown_test_environment",
+    "time" : {
+      "start" : 1646840352642,
+      "stop" : 1646840352642,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  } ],
+  "labels" : [ {
+    "name" : "parentSuite",
+    "value" : "e2etest"
+  }, {
+    "name" : "suite",
+    "value" : "test_datasetstandvastgoed"
+  }, {
+    "name" : "host",
+    "value" : "Jayashrees-MacBook-Pro.local"
+  }, {
+    "name" : "thread",
+    "value" : "58587-MainThread"
+  }, {
+    "name" : "framework",
+    "value" : "pytest"
+  }, {
+    "name" : "language",
+    "value" : "cpython3"
+  }, {
+    "name" : "package",
+    "value" : "e2etest.test_datasetstandvastgoed"
+  }, {
+    "name" : "resultFormat",
+    "value" : "allure2"
+  } ],
+  "parameters" : [ ],
+  "links" : [ ],
+  "hidden" : true,
+  "retry" : true,
+  "extra" : {
+    "categories" : [ ],
+    "tags" : [ ]
+  },
+  "source" : "343314dde0bd3d3.json",
+  "parameterValues" : [ ]
+}

@@ -1,0 +1,16 @@
+[
+    {
+        "key": "Acceptance-API",
+        "value": "https://acc.api.amsterdam.nl" 
+    },
+
+    {
+        "key": "TestSuite",
+        "value": "E2E"
+    },
+
+    {
+        "key": "Python-Version",
+        "value": "3.8.9"
+    }
+]

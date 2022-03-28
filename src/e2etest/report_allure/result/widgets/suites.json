@@ -1,0 +1,15 @@
+{
+  "total" : 1,
+  "items" : [ {
+    "uid" : "91342e58a9518e289768f9e952b82d59",
+    "name" : "e2etest",
+    "statistic" : {
+      "failed" : 0,
+      "broken" : 0,
+      "skipped" : 0,
+      "passed" : 48,
+      "unknown" : 0,
+      "total" : 48
+    }
+  } ]
+}

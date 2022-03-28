@@ -121,7 +121,7 @@ def parse_point(value: str, crs: Optional[CRS]) -> GEOSGeometry:
         raise ValidationError(f"Invalid x,y values {x},{y} with SRID {srid}") from e
 
 
-def _parse_point(value: str) -> 'tuple[float, float]':
+def _parse_point(value: str) -> "tuple[float, float]":
     if m1 := re.match(r"([-+]?\d*(?:\.\d+)?),([-+]?\d+(?:\.\d+)?)", value):
         x = m1.group(1)
         y = m1.group(2)
@@ -170,7 +170,7 @@ def _valid_lat_lon(lat: float, lon: float) -> bool:
 
 def _validate_convert_x_y(
     x: float, y: float, srid: Optional[int]
-) -> 'tuple[float, float, Optional[int]]':
+) -> "tuple[float, float, Optional[int]]":
     if srid is None or srid == 4326:
         if _valid_lat_lon(x, y):
             return y, x, 4326  # x and y swapped.

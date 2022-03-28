@@ -1,0 +1,293 @@
+{
+  "uid" : "75bfc48d791165ad",
+  "name" : "test_date_validation",
+  "fullName" : "e2etest.test_datasetstandvastgoed#test_date_validation",
+  "historyId" : "2cdad6e2383514d55545f03d8d4df8a2",
+  "time" : {
+    "start" : 1647264795999,
+    "stop" : 1647264798335,
+    "duration" : 2336
+  },
+  "description" : "Proving the datetime for `standBegingeldigheid`",
+  "descriptionHtml" : "<p>Proving the datetime for <code>standBegingeldigheid</code></p>\n",
+  "status" : "broken",
+  "statusMessage" : "KeyError: 'standBegingeldigheid'",
+  "statusTrace" : "auth_header = {'Authorization': 'Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJXNTRsQzhsei1Yek9tVDhOMDFCTXdXLXlYbTFodGpH...Ct6Y0iApLxgNlpcRGIQDle9lisOu4n-WwIKJufhBNwB_ZBXJA-IlRFxEPqw-da3mIpKicr2awl0tsvq8drITct6Rt7UURkqe2fUhLHX_ypV6_1ggfBSCw'}\n\n    @allure.step(\"Validate `standBegingeldigheid` format as `date` for the API Call `https://acc.api.data.amsterdam.nl/v1/standvastgoed/gebouwen/id=2022-01-01.0363200000205917.3`\")\n    def test_date_validation(auth_header):\n    \n        \"\"\"Proving the datetime for `standBegingeldigheid`\"\"\"\n    \n        #payload = {\"id\": '2022-01-01.0363200000205917.3'}\n        response = requests.get(dataconstantstandvastgoed.dataset_url, headers=auth_header)\n        content =response.json()\n        print(content)\n        #records = content[\"_embedded\"][\"gebouwen\"]\n>       standBegingeldigheid = content[\"standBegingeldigheid\"]\nE       KeyError: 'standBegingeldigheid'\n\ne2etest/test_datasetstandvastgoed.py:81: KeyError",
+  "flaky" : false,
+  "newFailed" : false,
+  "newBroken" : false,
+  "newPassed" : false,
+  "retriesCount" : 0,
+  "retriesStatusChange" : false,
+  "beforeStages" : [ {
+    "name" : "_fail_for_invalid_template_variable",
+    "time" : {
+      "start" : 1647264781222,
+      "stop" : 1647264781222,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "django_test_environment",
+    "time" : {
+      "start" : 1647264781222,
+      "stop" : 1647264781223,
+      "duration" : 1
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "django_db_blocker",
+    "time" : {
+      "start" : 1647264781223,
+      "stop" : 1647264781223,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "auth_header",
+    "time" : {
+      "start" : 1647264792843,
+      "stop" : 1647264792900,
+      "duration" : 57
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "_django_setup_unittest",
+    "time" : {
+      "start" : 1647264795997,
+      "stop" : 1647264795998,
+      "duration" : 1
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "_django_clear_site_cache",
+    "time" : {
+      "start" : 1647264795998,
+      "stop" : 1647264795998,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "_live_server_helper",
+    "time" : {
+      "start" : 1647264795998,
+      "stop" : 1647264795998,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "_template_string_if_invalid_marker",
+    "time" : {
+      "start" : 1647264795998,
+      "stop" : 1647264795998,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "_dj_autoclear_mailbox",
+    "time" : {
+      "start" : 1647264795998,
+      "stop" : 1647264795998,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "_django_set_urlconf",
+    "time" : {
+      "start" : 1647264795998,
+      "stop" : 1647264795998,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "_django_db_marker",
+    "time" : {
+      "start" : 1647264795998,
+      "stop" : 1647264795998,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  } ],
+  "testStage" : {
+    "description" : "Proving the datetime for `standBegingeldigheid`",
+    "status" : "broken",
+    "statusMessage" : "KeyError: 'standBegingeldigheid'",
+    "statusTrace" : "auth_header = {'Authorization': 'Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJXNTRsQzhsei1Yek9tVDhOMDFCTXdXLXlYbTFodGpH...Ct6Y0iApLxgNlpcRGIQDle9lisOu4n-WwIKJufhBNwB_ZBXJA-IlRFxEPqw-da3mIpKicr2awl0tsvq8drITct6Rt7UURkqe2fUhLHX_ypV6_1ggfBSCw'}\n\n    @allure.step(\"Validate `standBegingeldigheid` format as `date` for the API Call `https://acc.api.data.amsterdam.nl/v1/standvastgoed/gebouwen/id=2022-01-01.0363200000205917.3`\")\n    def test_date_validation(auth_header):\n    \n        \"\"\"Proving the datetime for `standBegingeldigheid`\"\"\"\n    \n        #payload = {\"id\": '2022-01-01.0363200000205917.3'}\n        response = requests.get(dataconstantstandvastgoed.dataset_url, headers=auth_header)\n        content =response.json()\n        print(content)\n        #records = content[\"_embedded\"][\"gebouwen\"]\n>       standBegingeldigheid = content[\"standBegingeldigheid\"]\nE       KeyError: 'standBegingeldigheid'\n\ne2etest/test_datasetstandvastgoed.py:81: KeyError",
+    "steps" : [ {
+      "name" : "Validate `standBegingeldigheid` format as `date` for the API Call `https://acc.api.data.amsterdam.nl/v1/standvastgoed/gebouwen/id=2022-01-01.0363200000205917.3`",
+      "time" : {
+        "start" : 1647264795999,
+        "stop" : 1647264798327,
+        "duration" : 2328
+      },
+      "status" : "broken",
+      "statusMessage" : "KeyError: 'standBegingeldigheid'\n",
+      "statusTrace" : "  File \"/Users/jeswaran/projects/dso-api/venv/lib/python3.8/site-packages/allure_commons/_allure.py\", line 172, in impl\n    return func(*a, **kw)\n  File \"/Users/jeswaran/projects/dso-api/src/e2etest/test_datasetstandvastgoed.py\", line 81, in test_date_validation\n    standBegingeldigheid = content[\"standBegingeldigheid\"]\n",
+      "steps" : [ ],
+      "attachments" : [ ],
+      "parameters" : [ {
+        "name" : "auth_header",
+        "value" : "{'Authorization': 'Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJXNTRsQzhsei1Yek9tVDhOMDFCTXdXLXlYbTFodGpHRlBRR0FUQm1SNU9BIn0.eyJleHAiOjE2NDcyNjUwOTIsImlhdCI6MTY0NzI2NDc5MiwianRpIjoiODU0MGE0NTktMzFhMy00NGE2LWJkODctZWFkYzg1MzQ4YTAzIiwiaXNzIjoiaHR0cHM6Ly9pYW0uYW1zdGVyZGFtLm5sL2F1dGgvcmVhbG1zL2RhdGFwdW50LWFkLWFjYyIsInN1YiI6IjEyYjc0YzZmLTRhNmUtNGFmMi05NzUzLTk1Yjg0MjdjMDE4MCIsInR5cCI6IkJlYXJlciIsImF6cCI6ImRhdGFkaWVuc3Rlbi10ZXN0IiwiYWNyIjoiMSIsInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJmcF9zdHVyaW5nc21pZGRlbGVuIiwiZnBfbWR3Il19LCJzY29wZSI6InByb2ZpbGUgZW1haWwiLCJlbWFpbF92ZXJpZmllZCI6ZmFsc2UsImNsaWVudEhvc3QiOiIxMC4yNDMuMjQuMTIiLCJjbGllbnRJZCI6ImRhdGFkaWVuc3Rlbi10ZXN0IiwicHJlZmVycmVkX3VzZXJuYW1lIjoic2VydmljZS1hY2NvdW50LWRhdGFkaWVuc3Rlbi10ZXN0IiwiY2xpZW50QWRkcmVzcyI6IjEwLjI0My4yNC4xMiJ9.buuB1fxXA0yNdyP1oXlE2X3qas4gnjVvGmL8wFewB4RJxErXR7pqCSXPbP6X51TP1To4sxClPGnsJzq2YCu7YdMV1VIz74odI9b5OkFLJATVG5j6JrKbberTNpR91Injk1Rttg6VpbwMNyNBDe5DXLXLPu4-Uypxl_tXkcep9sZY9GPI7B4VelgZLT9AzsfsjP7JywNWuvXYk_ARza1jXkj1vWoZtpH68Ct6Y0iApLxgNlpcRGIQDle9lisOu4n-WwIKJufhBNwB_ZBXJA-IlRFxEPqw-da3mIpKicr2awl0tsvq8drITct6Rt7UURkqe2fUhLHX_ypV6_1ggfBSCw'}"
+      } ],
+      "stepsCount" : 0,
+      "attachmentsCount" : 0,
+      "shouldDisplayMessage" : true,
+      "hasContent" : true
+    } ],
+    "attachments" : [ {
+      "uid" : "e9e8d1e21e1bc9a0",
+      "name" : "stdout",
+      "source" : "e9e8d1e21e1bc9a0.txt",
+      "type" : "text/plain",
+      "size" : 69377
+    } ],
+    "parameters" : [ ],
+    "stepsCount" : 1,
+    "attachmentsCount" : 1,
+    "shouldDisplayMessage" : true,
+    "hasContent" : true
+  },
+  "afterStages" : [ {
+    "name" : "_django_setup_unittest::0",
+    "time" : {
+      "start" : 1647264798622,
+      "stop" : 1647264798622,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "django_test_environment::teardown_test_environment",
+    "time" : {
+      "start" : 1647264798840,
+      "stop" : 1647264798840,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  } ],
+  "labels" : [ {
+    "name" : "parentSuite",
+    "value" : "e2etest"
+  }, {
+    "name" : "suite",
+    "value" : "test_datasetstandvastgoed"
+  }, {
+    "name" : "host",
+    "value" : "Jayashrees-MacBook-Pro.local"
+  }, {
+    "name" : "thread",
+    "value" : "84775-MainThread"
+  }, {
+    "name" : "framework",
+    "value" : "pytest"
+  }, {
+    "name" : "language",
+    "value" : "cpython3"
+  }, {
+    "name" : "package",
+    "value" : "e2etest.test_datasetstandvastgoed"
+  }, {
+    "name" : "resultFormat",
+    "value" : "allure2"
+  } ],
+  "parameters" : [ ],
+  "links" : [ ],
+  "hidden" : true,
+  "retry" : true,
+  "extra" : {
+    "categories" : [ ],
+    "tags" : [ ]
+  },
+  "source" : "75bfc48d791165ad.json",
+  "parameterValues" : [ ]
+}

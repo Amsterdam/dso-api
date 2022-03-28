@@ -255,14 +255,14 @@ class AuthForwardingClient(RemoteClient):
 class HaalCentraalClient(RemoteClient):
     """Base class for Haal Centraal clients."""
 
-    def _allowed_filters(self) -> 'set[str]':
+    def _allowed_filters(self) -> "set[str]":
         """Must return the query parameters ("filters") allowed for a table.
 
         _fields and _format are implied.
         """
         raise NotImplementedError()
 
-    __NON_FILTERS: Final['dict[str, str]'] = {
+    __NON_FILTERS: Final["dict[str, str]"] = {
         "_expand": "expand",
         "_fields": "fields",
         "_pageSize": "pageSize",
@@ -270,7 +270,7 @@ class HaalCentraalClient(RemoteClient):
         "page_size": "pageSize",
     }
 
-    def _make_url(self, path: str, query_params: 'dict[str, Any]') -> URL:
+    def _make_url(self, path: str, query_params: "dict[str, Any]") -> URL:
         # The Haal Centraal remotes handle the search parameters
         # in a different way than we do.
         # Add support for [exact] by stripping it off field parameters,
@@ -307,7 +307,7 @@ class HaalCentraalClient(RemoteClient):
 class HCBAGClient(HaalCentraalClient):
     """Client for Haal Centraal Basisregistratie Addressen en Gebouwen (HCBAG)."""
 
-    __ALLOWED_FILTERS: Final['dict[str, set[str]]'] = {
+    __ALLOWED_FILTERS: Final["dict[str, set[str]]"] = {
         # TODO we should put these in the schema instead of hard-coding them?
         # TODO "adressen" can also be searched through "/adressen/zoek".
         "adressen": {
@@ -330,7 +330,7 @@ class HCBAGClient(HaalCentraalClient):
         },
     }
 
-    def _allowed_filters(self) -> 'set[str]':
+    def _allowed_filters(self) -> "set[str]":
         return self.__ALLOWED_FILTERS[self._table_schema.id]
 
     def _get_headers(self, request):
@@ -358,7 +358,7 @@ class HCBRKClient(HaalCentraalClient):
         ("kadastraleAanduiding", "nummeraanduidingIdentificatie", "postcode")
     )
 
-    def _allowed_filters(self) -> 'set[str]':
+    def _allowed_filters(self) -> "set[str]":
         return self.__ALLOWED_PARAMS
 
     def _get_headers(self, request):

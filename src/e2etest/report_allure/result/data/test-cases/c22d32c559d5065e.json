@@ -1,0 +1,275 @@
+{
+  "uid" : "c22d32c559d5065e",
+  "name" : "test_query_existbuurten",
+  "fullName" : "e2etest.test_datasetgebiedenbuurten#test_query_existbuurten",
+  "historyId" : "c3bc416f24fd87ccc648887a653e83e2",
+  "time" : {
+    "start" : 1646814246929,
+    "stop" : 1646814247787,
+    "duration" : 858
+  },
+  "description" : "Prove that query-ing by `cbsCode` finds existing Gebieden.",
+  "descriptionHtml" : "<p>Prove that query-ing by <code>cbsCode</code> finds existing Gebieden.</p>\n",
+  "status" : "broken",
+  "statusMessage" : "IndexError: list index out of range",
+  "statusTrace" : "@allure.step(\"Prove that query-ing by `code` finds New Gebieden\")\n    def test_query_existbuurten():\n    \n    \n        \"\"\"Prove that query-ing by `cbsCode` finds existing Gebieden.\"\"\"\n    \n        payload_newversion = {\"cbsCode\": 'BU0363SD01'}\n        gebibuurtenresp_newversion = requests.get(datasetconstantgebiedenbuurten.payload_parameter_url, params=payload_newversion)\n        content_newversion = gebibuurtenresp_newversion.json()\n        records_newversion = content_newversion[\"_embedded\"][\"buurten\"]\n    \n        payload_oldversion = {\"cbsCode\": 'BU04570002'}\n        gebibuurtenresp_oldversion = requests.get(datasetconstantgebiedenbuurten.dataset_url, params=payload_oldversion)\n        content_oldversion = gebibuurtenresp_oldversion.json()\n        records_oldversion = content_oldversion[\"_embedded\"][\"buurten\"]\n    \n        i=0\n        while i < 10:\n>           newvrstr = records_newversion[i][\"naam\"]\nE           IndexError: list index out of range\n\ne2etest/test_datasetgebiedenbuurten.py:137: IndexError",
+  "flaky" : false,
+  "newFailed" : false,
+  "newBroken" : false,
+  "newPassed" : false,
+  "retriesCount" : 0,
+  "retriesStatusChange" : false,
+  "beforeStages" : [ {
+    "name" : "_fail_for_invalid_template_variable",
+    "time" : {
+      "start" : 1646814243038,
+      "stop" : 1646814243038,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "django_test_environment",
+    "time" : {
+      "start" : 1646814243038,
+      "stop" : 1646814243039,
+      "duration" : 1
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "django_db_blocker",
+    "time" : {
+      "start" : 1646814243039,
+      "stop" : 1646814243039,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "_dj_autoclear_mailbox",
+    "time" : {
+      "start" : 1646814246926,
+      "stop" : 1646814246926,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "_django_setup_unittest",
+    "time" : {
+      "start" : 1646814246926,
+      "stop" : 1646814246926,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "_django_clear_site_cache",
+    "time" : {
+      "start" : 1646814246926,
+      "stop" : 1646814246926,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "_template_string_if_invalid_marker",
+    "time" : {
+      "start" : 1646814246927,
+      "stop" : 1646814246928,
+      "duration" : 1
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "_django_db_marker",
+    "time" : {
+      "start" : 1646814246927,
+      "stop" : 1646814246927,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "_live_server_helper",
+    "time" : {
+      "start" : 1646814246927,
+      "stop" : 1646814246927,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "_django_set_urlconf",
+    "time" : {
+      "start" : 1646814246927,
+      "stop" : 1646814246927,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  } ],
+  "testStage" : {
+    "description" : "Prove that query-ing by `cbsCode` finds existing Gebieden.",
+    "status" : "broken",
+    "statusMessage" : "IndexError: list index out of range",
+    "statusTrace" : "@allure.step(\"Prove that query-ing by `code` finds New Gebieden\")\n    def test_query_existbuurten():\n    \n    \n        \"\"\"Prove that query-ing by `cbsCode` finds existing Gebieden.\"\"\"\n    \n        payload_newversion = {\"cbsCode\": 'BU0363SD01'}\n        gebibuurtenresp_newversion = requests.get(datasetconstantgebiedenbuurten.payload_parameter_url, params=payload_newversion)\n        content_newversion = gebibuurtenresp_newversion.json()\n        records_newversion = content_newversion[\"_embedded\"][\"buurten\"]\n    \n        payload_oldversion = {\"cbsCode\": 'BU04570002'}\n        gebibuurtenresp_oldversion = requests.get(datasetconstantgebiedenbuurten.dataset_url, params=payload_oldversion)\n        content_oldversion = gebibuurtenresp_oldversion.json()\n        records_oldversion = content_oldversion[\"_embedded\"][\"buurten\"]\n    \n        i=0\n        while i < 10:\n>           newvrstr = records_newversion[i][\"naam\"]\nE           IndexError: list index out of range\n\ne2etest/test_datasetgebiedenbuurten.py:137: IndexError",
+    "steps" : [ {
+      "name" : "Prove that query-ing by `code` finds New Gebieden",
+      "time" : {
+        "start" : 1646814246929,
+        "stop" : 1646814247787,
+        "duration" : 858
+      },
+      "status" : "broken",
+      "statusMessage" : "IndexError: list index out of range\n",
+      "statusTrace" : "  File \"/Users/jeswaran/projects/dso-api/venv/lib/python3.8/site-packages/allure_commons/_allure.py\", line 172, in impl\n    return func(*a, **kw)\n  File \"/Users/jeswaran/projects/dso-api/src/e2etest/test_datasetgebiedenbuurten.py\", line 137, in test_query_existbuurten\n    newvrstr = records_newversion[i][\"naam\"]\n",
+      "steps" : [ ],
+      "attachments" : [ ],
+      "parameters" : [ ],
+      "stepsCount" : 0,
+      "attachmentsCount" : 0,
+      "shouldDisplayMessage" : true,
+      "hasContent" : true
+    } ],
+    "attachments" : [ {
+      "uid" : "eafe527b6d37e672",
+      "name" : "stdout",
+      "source" : "eafe527b6d37e672.txt",
+      "type" : "text/plain",
+      "size" : 40
+    } ],
+    "parameters" : [ ],
+    "stepsCount" : 1,
+    "attachmentsCount" : 1,
+    "shouldDisplayMessage" : true,
+    "hasContent" : true
+  },
+  "afterStages" : [ {
+    "name" : "_django_setup_unittest::0",
+    "time" : {
+      "start" : 1646814247798,
+      "stop" : 1646814247798,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "django_test_environment::teardown_test_environment",
+    "time" : {
+      "start" : 1646814252762,
+      "stop" : 1646814252762,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  } ],
+  "labels" : [ {
+    "name" : "parentSuite",
+    "value" : "e2etest"
+  }, {
+    "name" : "suite",
+    "value" : "test_datasetgebiedenbuurten"
+  }, {
+    "name" : "host",
+    "value" : "Jayashrees-MacBook-Pro.local"
+  }, {
+    "name" : "thread",
+    "value" : "52179-MainThread"
+  }, {
+    "name" : "framework",
+    "value" : "pytest"
+  }, {
+    "name" : "language",
+    "value" : "cpython3"
+  }, {
+    "name" : "package",
+    "value" : "e2etest.test_datasetgebiedenbuurten"
+  }, {
+    "name" : "resultFormat",
+    "value" : "allure2"
+  } ],
+  "parameters" : [ ],
+  "links" : [ ],
+  "hidden" : true,
+  "retry" : true,
+  "extra" : {
+    "categories" : [ ],
+    "tags" : [ ]
+  },
+  "source" : "c22d32c559d5065e.json",
+  "parameterValues" : [ ]
+}

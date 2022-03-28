@@ -142,7 +142,7 @@ def _swagger_on_browser(openapi_view):
     return _switching_view
 
 
-def get_dataset_patterns(dataset_id: str) -> 'list[Union[URLPattern, URLResolver]]':
+def get_dataset_patterns(dataset_id: str) -> "list[Union[URLPattern, URLResolver]]":
     """Find the URL patterns for a specific dataset.
 
     This returns a subtree of the URLConf that only contains the

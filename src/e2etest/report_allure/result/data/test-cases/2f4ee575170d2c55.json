@@ -1,0 +1,293 @@
+{
+  "uid" : "2f4ee575170d2c55",
+  "name" : "test_query_existinggebouwen",
+  "fullName" : "e2etest.test_datasetstandvastgoed#test_query_existinggebouwen",
+  "historyId" : "ec4cd297469c8978d24614163c24333e",
+  "time" : {
+    "start" : 1647263544569,
+    "stop" : 1647263544634,
+    "duration" : 65
+  },
+  "description" : "Prove that query-ing by `id` finds property.",
+  "descriptionHtml" : "<p>Prove that query-ing by <code>id</code> finds property.</p>\n",
+  "status" : "broken",
+  "statusMessage" : "KeyError: '_embedded'",
+  "statusTrace" : "auth_header = {'Authorization': 'Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJXNTRsQzhsei1Yek9tVDhOMDFCTXdXLXlYbTFodGpH...2y1cJNPIa6oFqqvBHhytG1mdo5wqTiOi3TeWvQ4_y4zB4r2QHJr1NYV5mltScXSi-hVfrDwctv8-rT9j8EFvsuKDwo8r8IEfSaNfleZ3YevDVQ9JOYAVQ'}\n\n    @allure.step(\"API Call `https://acc.api.data.amsterdam.nl/v1/standvastgoed/gebouwen/id=2022-01-01.0363200000205917.3` to check the existing property\")\n    def test_query_existinggebouwen(auth_header):\n    \n        \"\"\"Prove that query-ing by `id` finds property.\"\"\"\n    \n        payload = {\"pndId\": '0363100012174763'}\n        response = requests.get(dataconstantstandvastgoed.dataset_url, params=payload, headers=auth_header)\n        content = response.json()\n        print(content)\n>       records = content[\"_embedded\"][\"gebouwen\"]\nE       KeyError: '_embedded'\n\ne2etest/test_datasetstandvastgoed.py:41: KeyError",
+  "flaky" : false,
+  "newFailed" : false,
+  "newBroken" : false,
+  "newPassed" : false,
+  "retriesCount" : 0,
+  "retriesStatusChange" : false,
+  "beforeStages" : [ {
+    "name" : "_fail_for_invalid_template_variable",
+    "time" : {
+      "start" : 1647263524200,
+      "stop" : 1647263524200,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "django_db_blocker",
+    "time" : {
+      "start" : 1647263524201,
+      "stop" : 1647263524201,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "django_test_environment",
+    "time" : {
+      "start" : 1647263524201,
+      "stop" : 1647263524201,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "auth_header",
+    "time" : {
+      "start" : 1647263535170,
+      "stop" : 1647263535252,
+      "duration" : 82
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "_django_setup_unittest",
+    "time" : {
+      "start" : 1647263544567,
+      "stop" : 1647263544567,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "_dj_autoclear_mailbox",
+    "time" : {
+      "start" : 1647263544567,
+      "stop" : 1647263544567,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "_live_server_helper",
+    "time" : {
+      "start" : 1647263544568,
+      "stop" : 1647263544568,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "_django_set_urlconf",
+    "time" : {
+      "start" : 1647263544568,
+      "stop" : 1647263544568,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "_django_clear_site_cache",
+    "time" : {
+      "start" : 1647263544568,
+      "stop" : 1647263544568,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "_template_string_if_invalid_marker",
+    "time" : {
+      "start" : 1647263544568,
+      "stop" : 1647263544568,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "_django_db_marker",
+    "time" : {
+      "start" : 1647263544568,
+      "stop" : 1647263544568,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  } ],
+  "testStage" : {
+    "description" : "Prove that query-ing by `id` finds property.",
+    "status" : "broken",
+    "statusMessage" : "KeyError: '_embedded'",
+    "statusTrace" : "auth_header = {'Authorization': 'Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJXNTRsQzhsei1Yek9tVDhOMDFCTXdXLXlYbTFodGpH...2y1cJNPIa6oFqqvBHhytG1mdo5wqTiOi3TeWvQ4_y4zB4r2QHJr1NYV5mltScXSi-hVfrDwctv8-rT9j8EFvsuKDwo8r8IEfSaNfleZ3YevDVQ9JOYAVQ'}\n\n    @allure.step(\"API Call `https://acc.api.data.amsterdam.nl/v1/standvastgoed/gebouwen/id=2022-01-01.0363200000205917.3` to check the existing property\")\n    def test_query_existinggebouwen(auth_header):\n    \n        \"\"\"Prove that query-ing by `id` finds property.\"\"\"\n    \n        payload = {\"pndId\": '0363100012174763'}\n        response = requests.get(dataconstantstandvastgoed.dataset_url, params=payload, headers=auth_header)\n        content = response.json()\n        print(content)\n>       records = content[\"_embedded\"][\"gebouwen\"]\nE       KeyError: '_embedded'\n\ne2etest/test_datasetstandvastgoed.py:41: KeyError",
+    "steps" : [ {
+      "name" : "API Call `https://acc.api.data.amsterdam.nl/v1/standvastgoed/gebouwen/id=2022-01-01.0363200000205917.3` to check the existing property",
+      "time" : {
+        "start" : 1647263544570,
+        "stop" : 1647263544625,
+        "duration" : 55
+      },
+      "status" : "broken",
+      "statusMessage" : "KeyError: '_embedded'\n",
+      "statusTrace" : "  File \"/Users/jeswaran/projects/dso-api/venv/lib/python3.8/site-packages/allure_commons/_allure.py\", line 172, in impl\n    return func(*a, **kw)\n  File \"/Users/jeswaran/projects/dso-api/src/e2etest/test_datasetstandvastgoed.py\", line 41, in test_query_existinggebouwen\n    records = content[\"_embedded\"][\"gebouwen\"]\n",
+      "steps" : [ ],
+      "attachments" : [ ],
+      "parameters" : [ {
+        "name" : "auth_header",
+        "value" : "{'Authorization': 'Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJXNTRsQzhsei1Yek9tVDhOMDFCTXdXLXlYbTFodGpHRlBRR0FUQm1SNU9BIn0.eyJleHAiOjE2NDcyNjM4MzUsImlhdCI6MTY0NzI2MzUzNSwianRpIjoiMDYyMDdjNDAtYjZjNi00YmU1LWEyM2YtYjRmNmM0OGM3Y2E3IiwiaXNzIjoiaHR0cHM6Ly9pYW0uYW1zdGVyZGFtLm5sL2F1dGgvcmVhbG1zL2RhdGFwdW50LWFkLWFjYyIsInN1YiI6IjEyYjc0YzZmLTRhNmUtNGFmMi05NzUzLTk1Yjg0MjdjMDE4MCIsInR5cCI6IkJlYXJlciIsImF6cCI6ImRhdGFkaWVuc3Rlbi10ZXN0IiwiYWNyIjoiMSIsInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJmcF9zdHVyaW5nc21pZGRlbGVuIiwiZnBfbWR3Il19LCJzY29wZSI6InByb2ZpbGUgZW1haWwiLCJlbWFpbF92ZXJpZmllZCI6ZmFsc2UsImNsaWVudEhvc3QiOiIxMC4yNDMuMjQuMTIiLCJjbGllbnRJZCI6ImRhdGFkaWVuc3Rlbi10ZXN0IiwicHJlZmVycmVkX3VzZXJuYW1lIjoic2VydmljZS1hY2NvdW50LWRhdGFkaWVuc3Rlbi10ZXN0IiwiY2xpZW50QWRkcmVzcyI6IjEwLjI0My4yNC4xMiJ9.U5iw4qvwuNTM_W4ZfV6Ye2kexmHWUspxmDsd5l3o_L3lvm23l_rnoYj4sJRzs5iTqCtaBEHqSb_a4_tm3tsYx6WhSoKuQIF3saS9dU1VGshubklQjTPoqU1B4qgJdjhhewnWb32YxVQDEWOaM9YJ0AHLSTQDa12gw-DvErmrhBKlgetcXYf_dk9U62VV5ZeHBqqV5-4A8eczFbuRdO8-CKdDSgWIZOt-y2y1cJNPIa6oFqqvBHhytG1mdo5wqTiOi3TeWvQ4_y4zB4r2QHJr1NYV5mltScXSi-hVfrDwctv8-rT9j8EFvsuKDwo8r8IEfSaNfleZ3YevDVQ9JOYAVQ'}"
+      } ],
+      "stepsCount" : 0,
+      "attachmentsCount" : 0,
+      "shouldDisplayMessage" : true,
+      "hasContent" : true
+    } ],
+    "attachments" : [ {
+      "uid" : "81e0894eb5f87b83",
+      "name" : "stdout",
+      "source" : "81e0894eb5f87b83.txt",
+      "type" : "text/plain",
+      "size" : 400
+    } ],
+    "parameters" : [ ],
+    "stepsCount" : 1,
+    "attachmentsCount" : 1,
+    "shouldDisplayMessage" : true,
+    "hasContent" : true
+  },
+  "afterStages" : [ {
+    "name" : "_django_setup_unittest::0",
+    "time" : {
+      "start" : 1647263544960,
+      "stop" : 1647263544960,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "django_test_environment::teardown_test_environment",
+    "time" : {
+      "start" : 1647263545607,
+      "stop" : 1647263545607,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  } ],
+  "labels" : [ {
+    "name" : "parentSuite",
+    "value" : "e2etest"
+  }, {
+    "name" : "suite",
+    "value" : "test_datasetstandvastgoed"
+  }, {
+    "name" : "host",
+    "value" : "Jayashrees-MacBook-Pro.local"
+  }, {
+    "name" : "thread",
+    "value" : "84449-MainThread"
+  }, {
+    "name" : "framework",
+    "value" : "pytest"
+  }, {
+    "name" : "language",
+    "value" : "cpython3"
+  }, {
+    "name" : "package",
+    "value" : "e2etest.test_datasetstandvastgoed"
+  }, {
+    "name" : "resultFormat",
+    "value" : "allure2"
+  } ],
+  "parameters" : [ ],
+  "links" : [ ],
+  "hidden" : true,
+  "retry" : true,
+  "extra" : {
+    "categories" : [ ],
+    "tags" : [ ]
+  },
+  "source" : "2f4ee575170d2c55.json",
+  "parameterValues" : [ ]
+}

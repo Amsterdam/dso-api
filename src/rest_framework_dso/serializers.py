@@ -115,7 +115,7 @@ class ExpandableSerializer(BaseSerializer):
         self._expand_scope = scope
 
     @property
-    def expanded_fields(self) -> 'list[EmbeddedFieldMatch]':
+    def expanded_fields(self) -> "list[EmbeddedFieldMatch]":
         """Retrieve the embedded fields for this request."""
         raise NotImplementedError("child serializer should implement this")
 
@@ -145,7 +145,7 @@ class ExpandableSerializer(BaseSerializer):
             raise ParseError(msg) from None
 
     def get_embedded_objects_by_id(
-        self, embedded_field: fields.AbstractEmbeddedField, id_list: 'list[Union[str, int]]'
+        self, embedded_field: fields.AbstractEmbeddedField, id_list: "list[Union[str, int]]"
     ) -> Union[models.QuerySet, Iterable[models.Model]]:
         """Retrieve a number of embedded objects by their identifier.
 
@@ -211,7 +211,7 @@ class DSOListSerializer(ExpandableSerializer, serializers.ListSerializer):
             self.child.expand_scope = self.expand_scope
 
     @cached_property
-    def expanded_fields(self) -> 'list[EmbeddedFieldMatch]':
+    def expanded_fields(self) -> "list[EmbeddedFieldMatch]":
         """Retrieve the embedded fields for this serializer"""
         request = self.context["request"]
         expand_scope = self.expand_scope
@@ -255,7 +255,7 @@ class DSOModelListSerializer(DSOListSerializer):
     https://tools.ietf.org/html/draft-kelly-json-hal-08
     """
 
-    def get_prefetch_lookups(self) -> 'list[Union[models.Prefetch, str]]':
+    def get_prefetch_lookups(self) -> "list[Union[models.Prefetch, str]]":
         """Tell which fields should be included for a ``prefetch_related()``."""
         return get_serializer_lookups(self)
 
@@ -406,7 +406,7 @@ class DSOSerializer(ExpandableSerializer, serializers.Serializer):
         if self._fields_to_display is not None:
             # A different value was passed via __init__() e.g. via unit tests or a sub-serializer
             self._fields_to_display = fields.FieldsToDisplay(
-                cast('list[str]', self._fields_to_display)
+                cast("list[str]", self._fields_to_display)
             )
         elif self.is_toplevel:
             # This is the top-level serializer. Parse from request
@@ -433,7 +433,7 @@ class DSOSerializer(ExpandableSerializer, serializers.Serializer):
         """Allow serializers to assign 'fields_to_expand' later (e.g. in bind())."""
         self._fields_to_display = fields_to_display
 
-    def get_fields(self) -> 'dict[str, serializers.Field]':
+    def get_fields(self) -> "dict[str, serializers.Field]":
         """Override DRF logic so fields can be removed from the response.
 
         When looking deeper inside DRF logic, you'll find that ``get_fields()`` makes
@@ -481,8 +481,8 @@ class DSOSerializer(ExpandableSerializer, serializers.Serializer):
         return fields
 
     def limit_return_fields(
-        self, fields: 'dict[str, serializers.Field]'
-    ) -> 'dict[str, serializers.Field]':
+        self, fields: "dict[str, serializers.Field]"
+    ) -> "dict[str, serializers.Field]":
         """Tell which fields should be included in the response.
         Any field that is omitted will not be outputted, nor queried.
         """
@@ -495,7 +495,7 @@ class DSOSerializer(ExpandableSerializer, serializers.Serializer):
 
         return fields
 
-    def get_valid_field_names(self, fields: 'dict[str, serializers.Field]') -> 'set[str]':
+    def get_valid_field_names(self, fields: "dict[str, serializers.Field]") -> "set[str]":
         """Tell which fields are valid to use in the ``?_fields=..`` query.
         This returns additional entries for relationships and expandable (virtual)fields,
         as these should not trigger error messages when those names are mentioned.
@@ -503,7 +503,7 @@ class DSOSerializer(ExpandableSerializer, serializers.Serializer):
         return {f.name for f in self.expanded_fields} | set(fields.keys())
 
     @cached_property
-    def expanded_fields(self) -> 'list[EmbeddedFieldMatch]':
+    def expanded_fields(self) -> "list[EmbeddedFieldMatch]":
         """Retrieve the embedded fields for this serializer"""
         request = self.context["request"]
         expand_scope = self.expand_scope
@@ -523,7 +523,7 @@ class DSOSerializer(ExpandableSerializer, serializers.Serializer):
         )
 
     @cached_property
-    def _geometry_fields(self) -> 'list[GeometryField]':
+    def _geometry_fields(self) -> "list[GeometryField]":
         # Allow classes to exclude fields (e.g. a "point_wgs84" field shouldn't be used.)
         try:
             exclude_crs_fields = self.Meta.exclude_crs_fields
@@ -538,7 +538,7 @@ class DSOSerializer(ExpandableSerializer, serializers.Serializer):
         ]
 
     @cached_property
-    def _url_content_fields(self) -> 'list[URLField]':
+    def _url_content_fields(self) -> "list[URLField]":
         """indicates if model contains a URLField type so the content can be URL encoded"""
         return [
             field_name
@@ -666,7 +666,7 @@ class DSOModelSerializer(DSOSerializer, serializers.HyperlinkedModelSerializer):
 
         return ret
 
-    def _get_expand(self, instance, expanded_fields: 'list[EmbeddedFieldMatch]'):
+    def _get_expand(self, instance, expanded_fields: "list[EmbeddedFieldMatch]"):
         """Generate the expand section for a detail page.
 
         This reuses the machinery for a list processing,

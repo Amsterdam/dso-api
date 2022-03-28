@@ -1,0 +1,10 @@
+[ {
+  "values" : [ "https://acc.api.amsterdam.nl" ],
+  "name" : "API-Environment"
+}, {
+  "values" : [ "End-2-End" ],
+  "name" : "Test-Suite"
+}, {
+  "values" : [ "3.8.9" ],
+  "name" : "Python-Version"
+} ]

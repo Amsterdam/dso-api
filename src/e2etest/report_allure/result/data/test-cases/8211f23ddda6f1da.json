@@ -1,0 +1,275 @@
+{
+  "uid" : "8211f23ddda6f1da",
+  "name" : "test_query_newcodebuurten",
+  "fullName" : "e2etest.test_datasetgebiedenbuurten#test_query_newcodebuurten",
+  "historyId" : "f8c9b5a7397c82288e4ce5388588eb6d",
+  "time" : {
+    "start" : 1646814246315,
+    "stop" : 1646814246620,
+    "duration" : 305
+  },
+  "description" : "Prove that query-ing by `code` finds New Gebieden.",
+  "descriptionHtml" : "<p>Prove that query-ing by <code>code</code> finds New Gebieden.</p>\n",
+  "status" : "broken",
+  "statusMessage" : "IndexError: list index out of range",
+  "statusTrace" : "@allure.step(\"Prove that query-ing by `code` finds New Gebieden\")\n    def test_query_newcodebuurten():\n    \n        \"\"\"Prove that query-ing by `code` finds New Gebieden.\"\"\"\n    \n        payload = {\"cbsCode\": 'BU0363SB01'}\n        gebibuurtenresp = requests.get(datasetconstantgebiedenbuurten.payload_parameter_url, params=payload)\n        content = gebibuurtenresp.json()\n        records = content[\"_embedded\"][\"buurten\"]\n    \n        i=0\n        while i < 10:\n    \n>           str = records[i][\"cbsCode\"]\nE           IndexError: list index out of range\n\ne2etest/test_datasetgebiedenbuurten.py:113: IndexError",
+  "flaky" : false,
+  "newFailed" : false,
+  "newBroken" : false,
+  "newPassed" : false,
+  "retriesCount" : 0,
+  "retriesStatusChange" : false,
+  "beforeStages" : [ {
+    "name" : "_fail_for_invalid_template_variable",
+    "time" : {
+      "start" : 1646814243038,
+      "stop" : 1646814243038,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "django_test_environment",
+    "time" : {
+      "start" : 1646814243038,
+      "stop" : 1646814243039,
+      "duration" : 1
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "django_db_blocker",
+    "time" : {
+      "start" : 1646814243039,
+      "stop" : 1646814243039,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "_django_db_marker",
+    "time" : {
+      "start" : 1646814246314,
+      "stop" : 1646814246314,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "_live_server_helper",
+    "time" : {
+      "start" : 1646814246314,
+      "stop" : 1646814246314,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "_dj_autoclear_mailbox",
+    "time" : {
+      "start" : 1646814246314,
+      "stop" : 1646814246314,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "_django_clear_site_cache",
+    "time" : {
+      "start" : 1646814246314,
+      "stop" : 1646814246314,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "_django_setup_unittest",
+    "time" : {
+      "start" : 1646814246314,
+      "stop" : 1646814246314,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "_django_set_urlconf",
+    "time" : {
+      "start" : 1646814246314,
+      "stop" : 1646814246314,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "_template_string_if_invalid_marker",
+    "time" : {
+      "start" : 1646814246315,
+      "stop" : 1646814246315,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  } ],
+  "testStage" : {
+    "description" : "Prove that query-ing by `code` finds New Gebieden.",
+    "status" : "broken",
+    "statusMessage" : "IndexError: list index out of range",
+    "statusTrace" : "@allure.step(\"Prove that query-ing by `code` finds New Gebieden\")\n    def test_query_newcodebuurten():\n    \n        \"\"\"Prove that query-ing by `code` finds New Gebieden.\"\"\"\n    \n        payload = {\"cbsCode\": 'BU0363SB01'}\n        gebibuurtenresp = requests.get(datasetconstantgebiedenbuurten.payload_parameter_url, params=payload)\n        content = gebibuurtenresp.json()\n        records = content[\"_embedded\"][\"buurten\"]\n    \n        i=0\n        while i < 10:\n    \n>           str = records[i][\"cbsCode\"]\nE           IndexError: list index out of range\n\ne2etest/test_datasetgebiedenbuurten.py:113: IndexError",
+    "steps" : [ {
+      "name" : "Prove that query-ing by `code` finds New Gebieden",
+      "time" : {
+        "start" : 1646814246316,
+        "stop" : 1646814246608,
+        "duration" : 292
+      },
+      "status" : "broken",
+      "statusMessage" : "IndexError: list index out of range\n",
+      "statusTrace" : "  File \"/Users/jeswaran/projects/dso-api/venv/lib/python3.8/site-packages/allure_commons/_allure.py\", line 172, in impl\n    return func(*a, **kw)\n  File \"/Users/jeswaran/projects/dso-api/src/e2etest/test_datasetgebiedenbuurten.py\", line 113, in test_query_newcodebuurten\n    str = records[i][\"cbsCode\"]\n",
+      "steps" : [ ],
+      "attachments" : [ ],
+      "parameters" : [ ],
+      "stepsCount" : 0,
+      "attachmentsCount" : 0,
+      "shouldDisplayMessage" : true,
+      "hasContent" : true
+    } ],
+    "attachments" : [ {
+      "uid" : "dca83d97d855eb7a",
+      "name" : "stdout",
+      "source" : "dca83d97d855eb7a.txt",
+      "type" : "text/plain",
+      "size" : 5
+    } ],
+    "parameters" : [ ],
+    "stepsCount" : 1,
+    "attachmentsCount" : 1,
+    "shouldDisplayMessage" : true,
+    "hasContent" : true
+  },
+  "afterStages" : [ {
+    "name" : "_django_setup_unittest::0",
+    "time" : {
+      "start" : 1646814246922,
+      "stop" : 1646814246923,
+      "duration" : 1
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "django_test_environment::teardown_test_environment",
+    "time" : {
+      "start" : 1646814252762,
+      "stop" : 1646814252762,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  } ],
+  "labels" : [ {
+    "name" : "parentSuite",
+    "value" : "e2etest"
+  }, {
+    "name" : "suite",
+    "value" : "test_datasetgebiedenbuurten"
+  }, {
+    "name" : "host",
+    "value" : "Jayashrees-MacBook-Pro.local"
+  }, {
+    "name" : "thread",
+    "value" : "52179-MainThread"
+  }, {
+    "name" : "framework",
+    "value" : "pytest"
+  }, {
+    "name" : "language",
+    "value" : "cpython3"
+  }, {
+    "name" : "package",
+    "value" : "e2etest.test_datasetgebiedenbuurten"
+  }, {
+    "name" : "resultFormat",
+    "value" : "allure2"
+  } ],
+  "parameters" : [ ],
+  "links" : [ ],
+  "hidden" : true,
+  "retry" : true,
+  "extra" : {
+    "categories" : [ ],
+    "tags" : [ ]
+  },
+  "source" : "8211f23ddda6f1da.json",
+  "parameterValues" : [ ]
+}

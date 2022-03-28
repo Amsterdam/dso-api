@@ -1,0 +1,1 @@
+{'_embedded': {'gebouwen': []}, '_links': {'self': {'href': 'https://acc.api.data.amsterdam.nl/v1/standvastgoed/gebouwen/?id=2024-01-01'}}, 'page': {'number': 1, 'size': 20}}

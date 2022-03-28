@@ -7,8 +7,8 @@ from django.conf import settings
 # The makers of sentry only have internal types (in `_types`)
 # those are not considered stable atm, so we define
 # our own aliases for now.
-Event = 'dict[str, Any]'
-Hint = 'dict[str, Any]'
+Event = "dict[str, Any]"
+Hint = "dict[str, Any]"
 
 
 def before_send(event: Event, hint: Hint) -> Optional[Event]:

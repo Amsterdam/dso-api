@@ -1,0 +1,522 @@
+{
+  "uid" : "87966d9babc4624",
+  "name" : "test_datetime_validation",
+  "fullName" : "e2etest.test_datasetstandvastgoed#test_datetime_validation",
+  "historyId" : "9aa2535396bb8458f0c3ec4644b2391d",
+  "time" : {
+    "start" : 1647269990330,
+    "stop" : 1647269990506,
+    "duration" : 176
+  },
+  "description" : "Proving the datetime for `aotRegistratiedatum`",
+  "descriptionHtml" : "<p>Proving the datetime for <code>aotRegistratiedatum</code></p>\n",
+  "status" : "passed",
+  "flaky" : false,
+  "newFailed" : false,
+  "newBroken" : false,
+  "newPassed" : false,
+  "retriesCount" : 29,
+  "retriesStatusChange" : true,
+  "beforeStages" : [ {
+    "name" : "_fail_for_invalid_template_variable",
+    "time" : {
+      "start" : 1647269978819,
+      "stop" : 1647269978819,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "django_test_environment",
+    "time" : {
+      "start" : 1647269978820,
+      "stop" : 1647269978820,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "django_db_blocker",
+    "time" : {
+      "start" : 1647269978820,
+      "stop" : 1647269978820,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "auth_header",
+    "time" : {
+      "start" : 1647269987916,
+      "stop" : 1647269987982,
+      "duration" : 66
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "_django_setup_unittest",
+    "time" : {
+      "start" : 1647269990328,
+      "stop" : 1647269990328,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "_dj_autoclear_mailbox",
+    "time" : {
+      "start" : 1647269990328,
+      "stop" : 1647269990328,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "_django_clear_site_cache",
+    "time" : {
+      "start" : 1647269990328,
+      "stop" : 1647269990328,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "_template_string_if_invalid_marker",
+    "time" : {
+      "start" : 1647269990329,
+      "stop" : 1647269990329,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "_django_db_marker",
+    "time" : {
+      "start" : 1647269990329,
+      "stop" : 1647269990329,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "_django_set_urlconf",
+    "time" : {
+      "start" : 1647269990329,
+      "stop" : 1647269990329,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "_live_server_helper",
+    "time" : {
+      "start" : 1647269990329,
+      "stop" : 1647269990329,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  } ],
+  "testStage" : {
+    "description" : "Proving the datetime for `aotRegistratiedatum`",
+    "status" : "passed",
+    "steps" : [ {
+      "name" : "Validate `aotRegistratiedatum` format as `datetime` for the API Call `https://acc.api.data.amsterdam.nl/v1/standvastgoed/gebouwen/id=2022-01-01.0363200000205917.3`",
+      "time" : {
+        "start" : 1647269990330,
+        "stop" : 1647269990506,
+        "duration" : 176
+      },
+      "status" : "passed",
+      "steps" : [ ],
+      "attachments" : [ ],
+      "parameters" : [ {
+        "name" : "auth_header",
+        "value" : "{'Authorization': 'Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJXNTRsQzhsei1Yek9tVDhOMDFCTXdXLXlYbTFodGpHRlBRR0FUQm1SNU9BIn0.eyJleHAiOjE2NDcyNzAyODcsImlhdCI6MTY0NzI2OTk4NywianRpIjoiZDk2NTU5Y2EtYThjZC00MjNjLWFhZjgtNTg2ZjUwM2E0MTM0IiwiaXNzIjoiaHR0cHM6Ly9pYW0uYW1zdGVyZGFtLm5sL2F1dGgvcmVhbG1zL2RhdGFwdW50LWFkLWFjYyIsInN1YiI6IjEyYjc0YzZmLTRhNmUtNGFmMi05NzUzLTk1Yjg0MjdjMDE4MCIsInR5cCI6IkJlYXJlciIsImF6cCI6ImRhdGFkaWVuc3Rlbi10ZXN0IiwiYWNyIjoiMSIsInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJmcF9zdHVyaW5nc21pZGRlbGVuIiwiZnBfbWR3Il19LCJzY29wZSI6InByb2ZpbGUgZW1haWwiLCJlbWFpbF92ZXJpZmllZCI6ZmFsc2UsImNsaWVudEhvc3QiOiIxMC4yNDMuMjQuMTIiLCJjbGllbnRJZCI6ImRhdGFkaWVuc3Rlbi10ZXN0IiwicHJlZmVycmVkX3VzZXJuYW1lIjoic2VydmljZS1hY2NvdW50LWRhdGFkaWVuc3Rlbi10ZXN0IiwiY2xpZW50QWRkcmVzcyI6IjEwLjI0My4yNC4xMiJ9.djSREOobWTRg-oVeqkPieZYkLeSZNUT2T6K9IAt1l3bC2FfaT2Mzk1T7J8b1VvLZG6aDL4PU02XTMSL_vZd4Ignpg1xR3wC4xah6xLjQyXWSp2Nm4jW5xP5XzghuWfKbSvB6F8SBy1slIPNuaKL-KtLOdf9lZI1KXiHO35tWmpGW3slcUCNFHBZKcjYMQhrJb62-oRuva8n720cUXdIHviLr5oaUht6CmovoLUmBbGTdEjyXRNaO8Mz1le8-hsUREAmHkqJBYgsABDv2xk8B-4u91G96sVXNQumAXIFxNlW-0FyI0-yQB6-J0aRl_sQj5z6Kv2z5D7ilIZzxw_HXaQ'}"
+      } ],
+      "stepsCount" : 0,
+      "attachmentsCount" : 0,
+      "shouldDisplayMessage" : false,
+      "hasContent" : true
+    } ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 1,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : true
+  },
+  "afterStages" : [ {
+    "name" : "_django_setup_unittest::0",
+    "time" : {
+      "start" : 1647269990509,
+      "stop" : 1647269990510,
+      "duration" : 1
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "django_test_environment::teardown_test_environment",
+    "time" : {
+      "start" : 1647269990903,
+      "stop" : 1647269990903,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  } ],
+  "labels" : [ {
+    "name" : "parentSuite",
+    "value" : "e2etest"
+  }, {
+    "name" : "suite",
+    "value" : "test_datasetstandvastgoed"
+  }, {
+    "name" : "host",
+    "value" : "Jayashrees-MacBook-Pro.local"
+  }, {
+    "name" : "thread",
+    "value" : "85378-MainThread"
+  }, {
+    "name" : "framework",
+    "value" : "pytest"
+  }, {
+    "name" : "language",
+    "value" : "cpython3"
+  }, {
+    "name" : "package",
+    "value" : "e2etest.test_datasetstandvastgoed"
+  }, {
+    "name" : "resultFormat",
+    "value" : "allure2"
+  } ],
+  "parameters" : [ ],
+  "links" : [ ],
+  "hidden" : false,
+  "retry" : false,
+  "extra" : {
+    "severity" : "normal",
+    "retries" : [ {
+      "uid" : "4c9b53f928d45d83",
+      "status" : "passed",
+      "time" : {
+        "start" : 1647269873882,
+        "stop" : 1647269874063,
+        "duration" : 181
+      }
+    }, {
+      "uid" : "374cc32e22d2f00c",
+      "status" : "passed",
+      "time" : {
+        "start" : 1647265223122,
+        "stop" : 1647265223310,
+        "duration" : 188
+      }
+    }, {
+      "uid" : "5eac99ff987bb680",
+      "status" : "passed",
+      "time" : {
+        "start" : 1647264892103,
+        "stop" : 1647264892280,
+        "duration" : 177
+      }
+    }, {
+      "uid" : "ef319666fcf13435",
+      "status" : "passed",
+      "time" : {
+        "start" : 1647264795447,
+        "stop" : 1647264795992,
+        "duration" : 545
+      }
+    }, {
+      "uid" : "c78a1c593c09814a",
+      "status" : "passed",
+      "time" : {
+        "start" : 1647264629514,
+        "stop" : 1647264629701,
+        "duration" : 187
+      }
+    }, {
+      "uid" : "41969a8d7eca9190",
+      "status" : "passed",
+      "time" : {
+        "start" : 1647264533871,
+        "stop" : 1647264534062,
+        "duration" : 191
+      }
+    }, {
+      "uid" : "a079bf7152dfaa48",
+      "status" : "passed",
+      "time" : {
+        "start" : 1647263544964,
+        "stop" : 1647263545172,
+        "duration" : 208
+      }
+    }, {
+      "uid" : "d4b9c538a89ef46f",
+      "status" : "passed",
+      "time" : {
+        "start" : 1647247403854,
+        "stop" : 1647247404058,
+        "duration" : 204
+      }
+    }, {
+      "uid" : "4e60dd4f6802f38f",
+      "status" : "passed",
+      "time" : {
+        "start" : 1646922471569,
+        "stop" : 1646922471902,
+        "duration" : 333
+      }
+    }, {
+      "uid" : "b06e42d7d9f5add",
+      "status" : "passed",
+      "time" : {
+        "start" : 1646921966234,
+        "stop" : 1646921966420,
+        "duration" : 186
+      }
+    }, {
+      "uid" : "c97fc1b4c2cd8547",
+      "status" : "passed",
+      "time" : {
+        "start" : 1646921410595,
+        "stop" : 1646921410791,
+        "duration" : 196
+      }
+    }, {
+      "uid" : "3a5525b5bbaa645e",
+      "status" : "passed",
+      "time" : {
+        "start" : 1646920832591,
+        "stop" : 1646920833009,
+        "duration" : 418
+      }
+    }, {
+      "uid" : "5dfda7b25ca8a82f",
+      "status" : "passed",
+      "time" : {
+        "start" : 1646920272037,
+        "stop" : 1646920272512,
+        "duration" : 475
+      }
+    }, {
+      "uid" : "bef0bc5e5b9491be",
+      "status" : "passed",
+      "time" : {
+        "start" : 1646918820587,
+        "stop" : 1646918821400,
+        "duration" : 813
+      }
+    }, {
+      "uid" : "a7252689de8eabc3",
+      "status" : "passed",
+      "time" : {
+        "start" : 1646918069357,
+        "stop" : 1646918069533,
+        "duration" : 176
+      }
+    }, {
+      "uid" : "1286a4fca8d4dbbf",
+      "status" : "passed",
+      "time" : {
+        "start" : 1646917735739,
+        "stop" : 1646917736265,
+        "duration" : 526
+      }
+    }, {
+      "uid" : "7670430e2ea8b26a",
+      "status" : "passed",
+      "time" : {
+        "start" : 1646917060682,
+        "stop" : 1646917060861,
+        "duration" : 179
+      }
+    }, {
+      "uid" : "7cb5339a0fe458b",
+      "status" : "broken",
+      "statusDetails" : "IndexError: list index out of range",
+      "time" : {
+        "start" : 1646916951820,
+        "stop" : 1646916952487,
+        "duration" : 667
+      }
+    }, {
+      "uid" : "c3c2fa8af71f9a89",
+      "status" : "passed",
+      "time" : {
+        "start" : 1646915177347,
+        "stop" : 1646915177521,
+        "duration" : 174
+      }
+    }, {
+      "uid" : "ff1d88dcf7c50e59",
+      "status" : "passed",
+      "time" : {
+        "start" : 1646914426521,
+        "stop" : 1646914426748,
+        "duration" : 227
+      }
+    }, {
+      "uid" : "e7f55718752bf14a",
+      "status" : "passed",
+      "time" : {
+        "start" : 1646913894517,
+        "stop" : 1646913894750,
+        "duration" : 233
+      }
+    }, {
+      "uid" : "9f36cf26b7f71ae6",
+      "status" : "passed",
+      "time" : {
+        "start" : 1646913455190,
+        "stop" : 1646913455414,
+        "duration" : 224
+      }
+    }, {
+      "uid" : "bfab0782548fff31",
+      "status" : "passed",
+      "time" : {
+        "start" : 1646911186102,
+        "stop" : 1646911186298,
+        "duration" : 196
+      }
+    }, {
+      "uid" : "a8a6ea052f871870",
+      "status" : "passed",
+      "time" : {
+        "start" : 1646910616782,
+        "stop" : 1646910616983,
+        "duration" : 201
+      }
+    }, {
+      "uid" : "e65f118a4183240b",
+      "status" : "passed",
+      "time" : {
+        "start" : 1646910192142,
+        "stop" : 1646910192402,
+        "duration" : 260
+      }
+    }, {
+      "uid" : "a1508d8f851199ae",
+      "status" : "passed",
+      "time" : {
+        "start" : 1646909928782,
+        "stop" : 1646909928954,
+        "duration" : 172
+      }
+    }, {
+      "uid" : "784940eedbff8b97",
+      "status" : "passed",
+      "time" : {
+        "start" : 1646909799963,
+        "stop" : 1646909800198,
+        "duration" : 235
+      }
+    }, {
+      "uid" : "d66e22637c43bef4",
+      "status" : "broken",
+      "statusDetails" : "AttributeError: module 'datetime' has no attribute 'strptime'",
+      "time" : {
+        "start" : 1646909713182,
+        "stop" : 1646909713370,
+        "duration" : 188
+      }
+    }, {
+      "uid" : "91d05ee11664952f",
+      "status" : "broken",
+      "statusDetails" : "KeyError: 'aotRegistratiedatum'",
+      "time" : {
+        "start" : 1646909364963,
+        "stop" : 1646909365166,
+        "duration" : 203
+      }
+    } ],
+    "categories" : [ {
+      "name" : "Product Success",
+      "matchedStatuses" : [ "passed" ],
+      "flaky" : false
+    } ],
+    "tags" : [ ]
+  },
+  "source" : "87966d9babc4624.json",
+  "parameterValues" : [ ]
+}

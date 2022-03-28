@@ -95,7 +95,7 @@ class ObservableQuerySet(QuerySet):
         super().__init__(*args, **kwargs)
 
     @classmethod
-    def from_queryset(cls, queryset: QuerySet, observers: 'list[Callable]' = None):
+    def from_queryset(cls, queryset: QuerySet, observers: "list[Callable]" = None):
         """Turn a QuerySet instance into an ObservableQuerySet"""
         queryset.__class__ = ObservableQuerySet
         queryset._item_callbacks = list(observers) if observers else []

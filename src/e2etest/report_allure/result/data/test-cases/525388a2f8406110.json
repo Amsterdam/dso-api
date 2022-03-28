@@ -1,0 +1,287 @@
+{
+  "uid" : "525388a2f8406110",
+  "name" : "test_collection_accessible_with_credentials",
+  "fullName" : "e2etest.test_datasetstandvastgoed#test_collection_accessible_with_credentials",
+  "historyId" : "a60cd26105f6b375bee45da440df186e",
+  "time" : {
+    "start" : 1646834751889,
+    "stop" : 1646834764789,
+    "duration" : 12900
+  },
+  "description" : "Prove that getting the collection is accessible with credentials.",
+  "descriptionHtml" : "<p>Prove that getting the collection is accessible with credentials.</p>\n",
+  "status" : "broken",
+  "statusMessage" : "TypeError: the JSON object must be str, bytes or bytearray, not Response",
+  "statusTrace" : "auth_header = {'Authorization': 'Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJXNTRsQzhsei1Yek9tVDhOMDFCTXdXLXlYbTFodGpH...4R1uTh6_H2Ahy4jfTi8x2U75PpigWz5pYb1-CYJI5SXxJm0SUIBJrNrV1rlbHjuGxY8D0O5Az5ZM6l-OC056dEE-j1lnoTVj0dsNvr6Ozzehxsf7lti4A'}\n\n    @allure.step(\"API Call for `https://acc.api.data.amsterdam.nl/v1/gebieden/buurten/03630980000012` match to `success code 200`\")\n    def test_collection_accessible_with_credentials(auth_header):\n    \n        \"\"\"Prove that getting the collection is accessible with credentials.\"\"\"\n        response = requests.get(dataconstantstandvastgoed.dataset_url, headers=auth_header)\n        # print(response.json())\n>       json.loads(response)\n\ne2etest/test_datasetstandvastgoed.py:29: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\n\ns = <Response [200]>, cls = None, object_hook = None, parse_float = None, parse_int = None, parse_constant = None, object_pairs_hook = None, kw = {}\n\n    def loads(s, *, cls=None, object_hook=None, parse_float=None,\n            parse_int=None, parse_constant=None, object_pairs_hook=None, **kw):\n        \"\"\"Deserialize ``s`` (a ``str``, ``bytes`` or ``bytearray`` instance\n        containing a JSON document) to a Python object.\n    \n        ``object_hook`` is an optional function that will be called with the\n        result of any object literal decode (a ``dict``). The return value of\n        ``object_hook`` will be used instead of the ``dict``. This feature\n        can be used to implement custom decoders (e.g. JSON-RPC class hinting).\n    \n        ``object_pairs_hook`` is an optional function that will be called with the\n        result of any object literal decoded with an ordered list of pairs.  The\n        return value of ``object_pairs_hook`` will be used instead of the ``dict``.\n        This feature can be used to implement custom decoders.  If ``object_hook``\n        is also defined, the ``object_pairs_hook`` takes priority.\n    \n        ``parse_float``, if specified, will be called with the string\n        of every JSON float to be decoded. By default this is equivalent to\n        float(num_str). This can be used to use another datatype or parser\n        for JSON floats (e.g. decimal.Decimal).\n    \n        ``parse_int``, if specified, will be called with the string\n        of every JSON int to be decoded. By default this is equivalent to\n        int(num_str). This can be used to use another datatype or parser\n        for JSON integers (e.g. float).\n    \n        ``parse_constant``, if specified, will be called with one of the\n        following strings: -Infinity, Infinity, NaN.\n        This can be used to raise an exception if invalid JSON numbers\n        are encountered.\n    \n        To use a custom ``JSONDecoder`` subclass, specify it with the ``cls``\n        kwarg; otherwise ``JSONDecoder`` is used.\n    \n        The ``encoding`` argument is ignored and deprecated since Python 3.1.\n        \"\"\"\n        if isinstance(s, str):\n            if s.startswith('\\ufeff'):\n                raise JSONDecodeError(\"Unexpected UTF-8 BOM (decode using utf-8-sig)\",\n                                      s, 0)\n        else:\n            if not isinstance(s, (bytes, bytearray)):\n>               raise TypeError(f'the JSON object must be str, bytes or bytearray, '\n                                f'not {s.__class__.__name__}')\nE               TypeError: the JSON object must be str, bytes or bytearray, not Response\n\n/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.8/lib/python3.8/json/__init__.py:341: TypeError",
+  "flaky" : false,
+  "newFailed" : false,
+  "newBroken" : false,
+  "newPassed" : false,
+  "retriesCount" : 0,
+  "retriesStatusChange" : false,
+  "beforeStages" : [ {
+    "name" : "django_test_environment",
+    "time" : {
+      "start" : 1646834741824,
+      "stop" : 1646834741825,
+      "duration" : 1
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "_fail_for_invalid_template_variable",
+    "time" : {
+      "start" : 1646834741824,
+      "stop" : 1646834741824,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "django_db_blocker",
+    "time" : {
+      "start" : 1646834741825,
+      "stop" : 1646834741825,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "auth_header",
+    "time" : {
+      "start" : 1646834751818,
+      "stop" : 1646834751887,
+      "duration" : 69
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "_django_setup_unittest",
+    "time" : {
+      "start" : 1646834751887,
+      "stop" : 1646834751887,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "_dj_autoclear_mailbox",
+    "time" : {
+      "start" : 1646834751887,
+      "stop" : 1646834751887,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "_live_server_helper",
+    "time" : {
+      "start" : 1646834751888,
+      "stop" : 1646834751888,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "_django_set_urlconf",
+    "time" : {
+      "start" : 1646834751888,
+      "stop" : 1646834751888,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "_django_clear_site_cache",
+    "time" : {
+      "start" : 1646834751888,
+      "stop" : 1646834751888,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "_django_db_marker",
+    "time" : {
+      "start" : 1646834751888,
+      "stop" : 1646834751888,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "_template_string_if_invalid_marker",
+    "time" : {
+      "start" : 1646834751888,
+      "stop" : 1646834751888,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  } ],
+  "testStage" : {
+    "description" : "Prove that getting the collection is accessible with credentials.",
+    "status" : "broken",
+    "statusMessage" : "TypeError: the JSON object must be str, bytes or bytearray, not Response",
+    "statusTrace" : "auth_header = {'Authorization': 'Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJXNTRsQzhsei1Yek9tVDhOMDFCTXdXLXlYbTFodGpH...4R1uTh6_H2Ahy4jfTi8x2U75PpigWz5pYb1-CYJI5SXxJm0SUIBJrNrV1rlbHjuGxY8D0O5Az5ZM6l-OC056dEE-j1lnoTVj0dsNvr6Ozzehxsf7lti4A'}\n\n    @allure.step(\"API Call for `https://acc.api.data.amsterdam.nl/v1/gebieden/buurten/03630980000012` match to `success code 200`\")\n    def test_collection_accessible_with_credentials(auth_header):\n    \n        \"\"\"Prove that getting the collection is accessible with credentials.\"\"\"\n        response = requests.get(dataconstantstandvastgoed.dataset_url, headers=auth_header)\n        # print(response.json())\n>       json.loads(response)\n\ne2etest/test_datasetstandvastgoed.py:29: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\n\ns = <Response [200]>, cls = None, object_hook = None, parse_float = None, parse_int = None, parse_constant = None, object_pairs_hook = None, kw = {}\n\n    def loads(s, *, cls=None, object_hook=None, parse_float=None,\n            parse_int=None, parse_constant=None, object_pairs_hook=None, **kw):\n        \"\"\"Deserialize ``s`` (a ``str``, ``bytes`` or ``bytearray`` instance\n        containing a JSON document) to a Python object.\n    \n        ``object_hook`` is an optional function that will be called with the\n        result of any object literal decode (a ``dict``). The return value of\n        ``object_hook`` will be used instead of the ``dict``. This feature\n        can be used to implement custom decoders (e.g. JSON-RPC class hinting).\n    \n        ``object_pairs_hook`` is an optional function that will be called with the\n        result of any object literal decoded with an ordered list of pairs.  The\n        return value of ``object_pairs_hook`` will be used instead of the ``dict``.\n        This feature can be used to implement custom decoders.  If ``object_hook``\n        is also defined, the ``object_pairs_hook`` takes priority.\n    \n        ``parse_float``, if specified, will be called with the string\n        of every JSON float to be decoded. By default this is equivalent to\n        float(num_str). This can be used to use another datatype or parser\n        for JSON floats (e.g. decimal.Decimal).\n    \n        ``parse_int``, if specified, will be called with the string\n        of every JSON int to be decoded. By default this is equivalent to\n        int(num_str). This can be used to use another datatype or parser\n        for JSON integers (e.g. float).\n    \n        ``parse_constant``, if specified, will be called with one of the\n        following strings: -Infinity, Infinity, NaN.\n        This can be used to raise an exception if invalid JSON numbers\n        are encountered.\n    \n        To use a custom ``JSONDecoder`` subclass, specify it with the ``cls``\n        kwarg; otherwise ``JSONDecoder`` is used.\n    \n        The ``encoding`` argument is ignored and deprecated since Python 3.1.\n        \"\"\"\n        if isinstance(s, str):\n            if s.startswith('\\ufeff'):\n                raise JSONDecodeError(\"Unexpected UTF-8 BOM (decode using utf-8-sig)\",\n                                      s, 0)\n        else:\n            if not isinstance(s, (bytes, bytearray)):\n>               raise TypeError(f'the JSON object must be str, bytes or bytearray, '\n                                f'not {s.__class__.__name__}')\nE               TypeError: the JSON object must be str, bytes or bytearray, not Response\n\n/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.8/lib/python3.8/json/__init__.py:341: TypeError",
+    "steps" : [ {
+      "name" : "API Call for `https://acc.api.data.amsterdam.nl/v1/gebieden/buurten/03630980000012` match to `success code 200`",
+      "time" : {
+        "start" : 1646834751889,
+        "stop" : 1646834764777,
+        "duration" : 12888
+      },
+      "status" : "broken",
+      "statusMessage" : "TypeError: the JSON object must be str, bytes or bytearray, not Response\n",
+      "statusTrace" : "  File \"/Users/jeswaran/projects/dso-api/venv/lib/python3.8/site-packages/allure_commons/_allure.py\", line 172, in impl\n    return func(*a, **kw)\n  File \"/Users/jeswaran/projects/dso-api/src/e2etest/test_datasetstandvastgoed.py\", line 29, in test_collection_accessible_with_credentials\n    json.loads(response)\n  File \"/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.8/lib/python3.8/json/__init__.py\", line 341, in loads\n    raise TypeError(f'the JSON object must be str, bytes or bytearray, '\n",
+      "steps" : [ ],
+      "attachments" : [ ],
+      "parameters" : [ {
+        "name" : "auth_header",
+        "value" : "{'Authorization': 'Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJXNTRsQzhsei1Yek9tVDhOMDFCTXdXLXlYbTFodGpHRlBRR0FUQm1SNU9BIn0.eyJleHAiOjE2NDY4MzUwNTEsImlhdCI6MTY0NjgzNDc1MSwianRpIjoiZjg4MjYxOTEtMjA1ZC00Nzk5LTk1NjAtNmVkOGFlOWU0ZWVmIiwiaXNzIjoiaHR0cHM6Ly9pYW0uYW1zdGVyZGFtLm5sL2F1dGgvcmVhbG1zL2RhdGFwdW50LWFkLWFjYyIsInN1YiI6IjEyYjc0YzZmLTRhNmUtNGFmMi05NzUzLTk1Yjg0MjdjMDE4MCIsInR5cCI6IkJlYXJlciIsImF6cCI6ImRhdGFkaWVuc3Rlbi10ZXN0IiwiYWNyIjoiMSIsInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJmcF9zdHVyaW5nc21pZGRlbGVuIiwiZnBfbWR3Il19LCJzY29wZSI6InByb2ZpbGUgZW1haWwiLCJlbWFpbF92ZXJpZmllZCI6ZmFsc2UsImNsaWVudEhvc3QiOiIxMC4yNDMuMjQuMTIiLCJjbGllbnRJZCI6ImRhdGFkaWVuc3Rlbi10ZXN0IiwicHJlZmVycmVkX3VzZXJuYW1lIjoic2VydmljZS1hY2NvdW50LWRhdGFkaWVuc3Rlbi10ZXN0IiwiY2xpZW50QWRkcmVzcyI6IjEwLjI0My4yNC4xMiJ9.QC9PGdvmvV4OjhWyNL6i0x4L6CTe-4jrUZB4SessxRXZ2vU7UjWp02E19lXpwN9txnOjcmrmEfra__XCzJCv4XbosXuQM-D8ZXWJjIMgECuUigJtLoVcok8-KUZciPaIV0UsA-42UvV_QI5rGtqvOY8Zo8aD_7sZtpE3HaP_aOJhXYDKIhW59-QBUZVXYpiR2asyGLjVHv9iJdBrFlgi51Mfwh7DQJRwO4R1uTh6_H2Ahy4jfTi8x2U75PpigWz5pYb1-CYJI5SXxJm0SUIBJrNrV1rlbHjuGxY8D0O5Az5ZM6l-OC056dEE-j1lnoTVj0dsNvr6Ozzehxsf7lti4A'}"
+      } ],
+      "stepsCount" : 0,
+      "attachmentsCount" : 0,
+      "shouldDisplayMessage" : true,
+      "hasContent" : true
+    } ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 1,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : true,
+    "hasContent" : true
+  },
+  "afterStages" : [ {
+    "name" : "_django_setup_unittest::0",
+    "time" : {
+      "start" : 1646834765096,
+      "stop" : 1646834765096,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  }, {
+    "name" : "django_test_environment::teardown_test_environment",
+    "time" : {
+      "start" : 1646834765169,
+      "stop" : 1646834765169,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  } ],
+  "labels" : [ {
+    "name" : "parentSuite",
+    "value" : "e2etest"
+  }, {
+    "name" : "suite",
+    "value" : "test_datasetstandvastgoed"
+  }, {
+    "name" : "host",
+    "value" : "Jayashrees-MacBook-Pro.local"
+  }, {
+    "name" : "thread",
+    "value" : "57135-MainThread"
+  }, {
+    "name" : "framework",
+    "value" : "pytest"
+  }, {
+    "name" : "language",
+    "value" : "cpython3"
+  }, {
+    "name" : "package",
+    "value" : "e2etest.test_datasetstandvastgoed"
+  }, {
+    "name" : "resultFormat",
+    "value" : "allure2"
+  } ],
+  "parameters" : [ ],
+  "links" : [ ],
+  "hidden" : true,
+  "retry" : true,
+  "extra" : {
+    "categories" : [ ],
+    "tags" : [ ]
+  },
+  "source" : "525388a2f8406110.json",
+  "parameterValues" : [ ]
+}

@@ -1,0 +1,14 @@
+<environment>
+    <parameter>
+        <key>API-Environment</key>
+        <value>https://acc.api.amsterdam.nl</value>
+    </parameter>
+    <parameter>
+        <key>Test-Suite</key>
+        <value>End-2-End</value>
+    </parameter>
+    <parameter>
+        <key>Python-Version</key>
+        <value>3.8.9</value>
+    </parameter>
+</environment>

@@ -23,7 +23,7 @@ dynamic_models_removed.connect(lambda **kwargs: resolve_model_lookup.cache_clear
 
 
 @lru_cache
-def resolve_model_lookup(model: type[Model], lookup: str) -> 'tuple[type[Model], bool]':
+def resolve_model_lookup(model: type[Model], lookup: str) -> "tuple[type[Model], bool]":
     """Find which model a lookup points to.
 
     :returns: The model that the relation points to,
@@ -50,7 +50,7 @@ def resolve_model_lookup(model: type[Model], lookup: str) -> 'tuple[type[Model],
 
 def get_source_model_fields(
     serializer: serializers.ModelSerializer, field_name: str, field: serializers.Field
-) -> 'list[models.Field]':
+) -> "list[models.Field]":
     """Find the model fields that the serializer field points to.
     Typically this is only one field, but `field.source` could be set to a dotted path.
     """
