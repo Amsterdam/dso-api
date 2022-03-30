@@ -20,15 +20,18 @@ SCHEMA_COMPOSITE = dataset_schema_from_path(
     ["field_name", "scopes", "exc_type"],
     [
         ("", "", FilterSyntaxError),
+        # Filtering on a relation requires scopes for both the relation and the base table.
+        ("baseId", "REFERS REFERS/BASE BASE BASE/TABLE", None),
+        # This one doesn't look at the relation field.
         ("name", "REFERS REFERS/NAME", None),
+        # These look at the relation field without access to the base table.
+        # REFERS/BASE opens the relation, but not the base table.
         ("baseId", "REFERS REFERS/NAME", PermissionDenied),
         ("baseId", "REFERS REFERS/BASE", PermissionDenied),
-        ("baseId", "REFERS REFERS/BASE BASE", PermissionDenied),
-        ("baseId", "REFERS REFERS/BASE BASE/ID", PermissionDenied),
-        # ("baseId", "REFERS BASE BASE/ID", PermissionDenied),
-        # ("baseId", "REFERS/BASE BASE BASE/ID", PermissionDenied),
-        ("base", "REFERS REFERS/BASE BASE BASE/ID", FilterSyntaxError),
-        ("baseId", "REFERS REFERS/BASE BASE BASE/ID", None),
+        # These are missing +"Id" or +".id".
+        ("base", "REFERS REFERS/BASE BASE BASE/TABLE", FilterSyntaxError),
+        # TODO: the following should also give a FilterSyntaxError.
+        ("base", "REFERS REFERS/BASE BASE", PermissionDenied),
     ],
 )
 def test_check_filter_simple(field_name: str, scopes: str, exc_type: Optional[type]):
@@ -46,10 +49,18 @@ def test_check_filter_simple(field_name: str, scopes: str, exc_type: Optional[ty
 @pytest.mark.parametrize(
     ["field_name", "scopes", "exc_type"],
     [
-        # Reference to relation field, e.g., base=$id:$volgnr
-        # ("base", "REFERS REFERS/BASE BASE BASE/ID BASE/VOLGNR", None),
-        # ("baseId", "REFERS REFERS/BASE BASE BASE/ID", PermissionDenied),
-        # ("baseId", "REFERS REFERS/BASE BASE BASE/VOLGNR", PermissionDenied),
+        # Loose relation syntax. TODO: get rid of this.
+        ("baseId", "REFERS REFERS/BASE BASE BASE/TABLE", None),
+        # Reference to relation field, e.g., base.id=$id&base.volgnr=$volgnr
+        ("base.id", "REFERS REFERS/BASE BASE BASE/TABLE", None),
+        ("base.volgnr", "REFERS REFERS/BASE BASE BASE/TABLE", None),
+        # This needs access to both the dataset and the table.
+        ("base.id", "REFERS REFERS/BASE BASE", PermissionDenied),
+        ("base.id", "REFERS REFERS/BASE BASE/TABLE", PermissionDenied),
+        # Just mentioning the relation name as the field name isn't enough.
+        ("base", "REFERS REFERS/BASE BASE BASE/TABLE", FilterSyntaxError),
+        # XXX The baseId syntax shouldn't work with composite keys.
+        # ("baseId", "REFERS REFERS/BASE BASE BASE/ID", FilterSyntaxError),
         # ("baseId", "REFERS REFERS/BASE BASE BASE/ID BASE/VOLGNR", FilterSyntaxError),
     ],
 )

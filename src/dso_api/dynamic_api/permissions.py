@@ -198,14 +198,12 @@ def _check_field_access(  # noqa: C901
                 schema = schema.get_field_by_id(part)
                 rel = schema.related_table
                 if not rel:
-                    raise FilterSyntaxError(
+                    raise SchemaObjectNotFound(
                         f"no field {part}Id and no relation {part} found"
                     ) from e
                 idents = schema.related_field_ids
-                if len(idents) > 1:
-                    raise FilterSyntaxError(
-                        "relation with composite key using simple key syntax"
-                    ) from e
+                # Set the schema and field name to the identifier that this relation refers to
+                # and try again.
                 field_name = idents[0] + ("." + field_name if field_name else "")
                 schema = rel
                 continue
