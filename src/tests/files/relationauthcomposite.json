@@ -9,13 +9,14 @@
   "owner": "us",
   "authorizationGrantor": "us",
   "crs": "EPSG:28992",
+  "auth": "BASE",
   "tables": [
     {
       "id": "base",
       "type": "table",
       "title": "Base",
       "auth": [
-        "BASE"
+        "BASE/TABLE"
       ],
       "version": "1.2.4",
       "schema": {
@@ -36,16 +37,10 @@
             "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.1#/definitions/schema"
           },
           "id": {
-            "auth": [
-              "BASE/ID"
-            ],
             "type": "integer",
             "description": "Unieke aanduiding van het record."
           },
           "volgnr": {
-            "auth": [
-              "BASE/VOLGNR"
-            ],
             "type": "integer",
             "description": "Volgnummer"
           }
