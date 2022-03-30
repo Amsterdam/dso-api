@@ -1,3 +1,5 @@
+import urllib.parse
+
 import pytest
 from schematools.contrib.django.db import create_tables
 
@@ -276,3 +278,45 @@ class TestDatasetWFSViewAuth:
         assert response.status_code == 200
         data = self.parse_response(response)
         assert data == expect
+
+    def test_wfs_filter_auth(
+        self,
+        api_client,
+        geometry_auth_thing,
+        fetch_auth_token,
+        filled_router,
+    ):
+        """WFS should not allow filtering on fields with "auth" without the proper scopes.
+
+        Otherwise, it would allow indirect access (esp. through wildcard filters).
+        """
+        filter = urllib.parse.urlencode(
+            {
+                "FILTER": """
+                  <Filter>
+                    <PropertyIsEqualTo>
+                      <ValueReference>metadata</ValueReference>
+                      <Literal>secret</Literal>
+                    </PropertyIsEqualTo>
+                  </Filter>"""
+            }
+        )
+        url = (
+            "/v1/wfs/geometry_auth/"
+            "?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=things"
+            f"&OUTPUTFORMAT=application/gml+xml&{filter}"
+        )
+
+        response = api_client.get(url)
+        # The status code here should be 403, but it's 400 because the authorization is
+        # implemented by simply not showing django-gisserver the fields that it cannot access.
+        assert response.status_code == 400
+        root = read_response_xml(response)
+        assert "Field 'metadata' does not exist" in root[0][0].text
+
+        # With the proper scopes, we should get a result (so the 400 is not due to a mistake).
+        token = fetch_auth_token(["TEST/META"])
+        response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
+        assert response.status_code == 200
+        data = self.parse_response(response)
+        assert data == {"boundedBy": None, "id": "1", "metadata": "secret"}
