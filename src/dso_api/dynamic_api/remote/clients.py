@@ -308,8 +308,7 @@ class HCBAGClient(HaalCentraalClient):
     """Client for Haal Centraal Basisregistratie Addressen en Gebouwen (HCBAG)."""
 
     __ALLOWED_FILTERS: Final[dict[str, set[str]]] = {
-        # TODO we should put these in the schema instead of hard-coding them?
-        # TODO "adressen" can also be searched through "/adressen/zoek".
+        # TODO we should put these in the schema instead of hard-coding them.
         "adressen": {
             "adresseerbaarObjectIdentificatie",
             "exacteMatch",
