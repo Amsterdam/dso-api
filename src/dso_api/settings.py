@@ -290,11 +290,13 @@ for key, value in env.ENVIRON.items():
     if key.startswith("AZURE_BLOB_"):
         locals()[key] = value
 
-# Do not set CORS_ALLOW_ALL_ORIGINS to True
-# The Access-Control-Allow-Origin should  ot de set to *
-# That will conflict with the  Access-Control-Allow-Credentials: true
-# set by HAProxy. If Access-Control-Allow-Origin is not set here it will
-# be set correctly  to the Origin by HAProxy
+# Send Access-Control-Allow-Origin without Access-Control-Allow-Origin
+# for ArcGIS Online. HAProxy should handle the remaining cases by setting
+#   Access-Control-Allow-Origin: $origin
+#   Access-Control-Allow-Credentials: true
+CORS_ALLOWED_ORIGIN_REGEXES = [r"^https://.+\.(?:arcgis.com)(?::\d+)$"]
+
+CORS_ALLOW_CREDENTIALS = False
 
 CORS_ALLOW_HEADERS = list(default_headers) + [
     "Accept-Crs",
