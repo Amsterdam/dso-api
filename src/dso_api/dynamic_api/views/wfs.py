@@ -42,6 +42,7 @@ from schematools.contrib.django.models import Dataset, DynamicModel, get_field_s
 
 from dso_api.dynamic_api.datasets import get_active_datasets
 from dso_api.dynamic_api.permissions import CheckPermissionsMixin
+from dso_api.dynamic_api.temporal import filter_temporal_slice
 from rest_framework_dso import crs
 
 from .index import APIIndexView
@@ -78,6 +79,16 @@ class AuthenticatedFeatureType(FeatureType):
         # accessing the WFS feature is moot (and risks exposure through direct model access)
         if not self.geometry_fields:
             raise PermissionDenied("typeNames")
+
+    def get_queryset(self) -> models.QuerySet:
+        # Only return active objects for now.
+        # (no temporal filtering using WFS with <Before>, <After> filters, etc..)
+        queryset = super().get_queryset()
+        return filter_temporal_slice(self.wfs_view.request, queryset)
+
+    def filter_related_queryset(self, queryset: models.QuerySet) -> models.QuerySet:
+        # Apply temporal filtering on retrieved relations.
+        return filter_temporal_slice(self.wfs_view.request, queryset)
 
 
 class DatasetWFSIndexView(APIIndexView):
