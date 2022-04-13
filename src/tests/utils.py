@@ -117,7 +117,22 @@ def read_response_partial(response: HttpResponseBase) -> tuple[str, Optional[Exc
 
 def xml_element_to_dict(element: ET.Element) -> dict:
     """Convert an XML element to a Python dictionary."""
-    return {child.tag.split("}")[1]: child.text for child in element}
+    if not len(element):
+        # for recusion into children
+        local_name = element.tag.split("}")[1]
+        return {local_name: element.text}
+
+    result = {}
+    for child in element:
+        local_name = child.tag.split("}")[1]
+        if len(child) == 0:
+            result[local_name] = child.text
+        elif len(child) == 1:
+            result[local_name] = xml_element_to_dict(child)
+        else:
+            result[local_name] = [xml_element_to_dict(e) for e in child]
+
+    return result
 
 
 def normalize_data(data):

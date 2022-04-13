@@ -257,18 +257,34 @@ class TestDatasetWFSViewAuth:
         # if we have access to the dataset.
         data = self.parse_response(response)
         assert data == {
-            "boundedBy": None,
-            "geometry": None,
+            "boundedBy": {"Envelope": [{"lowerCorner": "10 10"}, {"upperCorner": "10 10"}]},
+            "geometry": {"Point": {"pos": "10 10"}},
             "id": "1",
             "metadata": "secret",
         }
 
+    _bounded_by = {"Envelope": [{"lowerCorner": "10 10"}, {"upperCorner": "10 10"}]}
+
     @pytest.mark.parametrize(
         "scopes,expect",
         [
-            ([], {"boundedBy": None, "id": "1"}),
-            (["TEST/GEO"], {"boundedBy": None, "id": "1", "geometry_with_auth": None}),
-            (["TEST/META"], {"boundedBy": None, "id": "1", "metadata": "secret"}),
+            ([], {"boundedBy": _bounded_by, "id": "1"}),
+            (
+                ["TEST/GEO"],
+                {
+                    "boundedBy": _bounded_by,
+                    "id": "1",
+                    "geometry_with_auth": {"Point": {"pos": "10 10"}},
+                },
+            ),
+            (
+                ["TEST/META"],
+                {
+                    "boundedBy": _bounded_by,
+                    "id": "1",
+                    "metadata": "secret",
+                },
+            ),
         ],
     )
     def test_wfs_field_auth(
@@ -314,9 +330,13 @@ class TestDatasetWFSViewAuth:
         root = read_response_xml(response)
         assert "Field 'metadata' does not exist" in root[0][0].text
 
-        # With the proper scopes, we should get a result (so the 400 is not due to a mistake).
+        # With the proper scopes, we should get a result.
         token = fetch_auth_token(["TEST/META"])
         response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
         assert response.status_code == 200
         data = self.parse_response(response)
-        assert data == {"boundedBy": None, "id": "1", "metadata": "secret"}
+        assert data == {
+            "boundedBy": {"Envelope": [{"lowerCorner": "10 10"}, {"upperCorner": "10 10"}]},
+            "id": "1",
+            "metadata": "secret",
+        }
