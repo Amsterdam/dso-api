@@ -39,6 +39,7 @@ from gisserver.exceptions import InvalidParameterValue, PermissionDenied
 from gisserver.features import ComplexFeatureField, FeatureField, FeatureType, ServiceDescription
 from gisserver.views import WFSView
 from schematools.contrib.django.models import Dataset, DynamicModel, get_field_schema
+from schematools.types import DatasetTableSchema
 
 from dso_api.dynamic_api.datasets import get_active_datasets
 from dso_api.dynamic_api.permissions import CheckPermissionsMixin
@@ -178,11 +179,20 @@ class DatasetWFSView(CheckPermissionsMixin, WFSView):
         """Context data for the HTML root page"""
         expandable_fields = set()
         for model in self.models.values():
-            expandable_fields.update(
+            table_schema: DatasetTableSchema = model.table_schema()
+            if table_schema.is_through_table:
+                continue
+
+            fields = set(
                 field.name
                 for field in model._meta.get_fields()
                 if isinstance(field, models.ForeignKey)
             )
+
+            if table_schema.is_nested_table and "parent" in fields:
+                fields.remove("parent")
+
+            expandable_fields.update(fields)
 
         context = super().get_index_context_data(**kwargs)
 
