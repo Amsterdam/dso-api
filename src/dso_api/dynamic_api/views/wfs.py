@@ -27,7 +27,7 @@ from __future__ import annotations
 
 import re
 from collections import UserList
-from typing import Union
+from typing import Iterable, Union
 
 from django.conf import settings
 from django.contrib.gis.db.models import GeometryField
@@ -186,7 +186,7 @@ class DatasetWFSView(CheckPermissionsMixin, WFSView):
             fields = set(
                 field.name
                 for field in model._meta.get_fields()
-                if isinstance(field, models.ForeignKey)
+                if field.is_relation and not field.name.startswith("rev_")
             )
 
             if table_schema.is_nested_table and "parent" in fields:
@@ -281,39 +281,16 @@ class DatasetWFSView(CheckPermissionsMixin, WFSView):
         fields = []
         other_geo_fields = []
         for model_field in model._meta.get_fields():
-            if not self.request.user_scopes.has_field_access(model.get_field_schema(model_field)):
+            field_schema = DynamicModel.get_field_schema(model_field)
+            if not self.request.user_scopes.has_field_access(field_schema):
                 continue
 
-            if isinstance(model_field, models.ForeignKey):
-                # Don't let it query on the relation value yet
-                field_name = model_field.attname
-
-                if model_field.name in self.expand_fields:
-                    # Include an expanded field definition to the list of fields
-                    fields.append(
-                        ComplexFeatureField(
-                            model_field.name,
-                            fields=self.get_expanded_fields(model_field.related_model),
-                            abstract=model_field.help_text,
-                        )
-                    )
-                if model_field.name in self.embed_fields:
-                    # The "Model.id" field is added
-                    fields.extend(
-                        self.get_embedded_fields(
-                            model_field.name,
-                            model_field.related_model,
-                            pk_attr=field_name,
-                        )
-                    )
-            elif model_field.is_relation:
-                # don't support other relations yet
-                # Note: this also needs updates in get_index_context_data()!
-                continue
-            else:
-                field_name = model_field.name
-
-            if isinstance(model_field, GeometryField) and field_name != main_geometry_field_name:
+            if model_field.is_relation:
+                fields.extend(self._get_relation_fields(model_field))
+            elif (
+                isinstance(model_field, GeometryField)
+                and model_field.name != main_geometry_field_name
+            ):
                 # The other geometry fields are moved to the end, so the main geometryfield
                 # is listed as first value in a feature. This makes sure QGis and friends
                 # render that particular field.
@@ -326,47 +303,96 @@ class DatasetWFSView(CheckPermissionsMixin, WFSView):
             else:
                 fields.append(
                     FeatureField(
-                        field_name,
+                        model_field.name,
                         abstract=model_field.help_text,
                     )
                 )
 
         return fields + other_geo_fields
 
-    def get_expanded_fields(self, model) -> list[FieldDef]:
-        """Define which fields to include in an expanded relation.
-        This is a shorter list, as including a geometry has no use here.
-        Relations are also avoided as these won't be expanded anyway.
+    def _get_relation_fields(
+        self, model_field: Union[models.Field, models.ForeignObjectRel]
+    ) -> list[str | FeatureField]:
+        if model_field.name.startswith("rev_"):
+            # hide internal "auto-created" reverse relations,
+            # except those that are explicitly defined via additionalRelations
+            return []
+
+        # Field is a relation, can embed or expand it.
+        # Note: the supported relations are also reflected in get_index_context_data()!
+        fields = []
+
+        if isinstance(model_field, models.ForeignKey):
+            # Using the "{field}_id" attribute avoids queries on the relation value.
+            fields.append(model_field.attname)
+
+        if model_field.name in self.expand_fields:
+            # Include an expanded field definition to the list of fields
+            fields.append(self._get_expanded_field(model_field))
+
+        if model_field.name in self.embed_fields:
+            # Include the nested/flattened sub fields at the same node level.
+            fields.extend(self._get_embedded_field(model_field))
+
+        return fields
+
+    def _get_expanded_field(
+        self, model_field: Union[models.Field, models.ForeignObjectRel]
+    ) -> ComplexFeatureField:
+        """Give the feature field definition for an expanded field.
+
+        This give a "complex type" that is nested as separate XML node with sub elements.
+        While QGis doesn't support nested complex types in feature definitions,
+        this style is well-suited for nesting, like the GeoJSON output format.
         """
         user_scopes = self.request.user_scopes
-        return [
-            FeatureField(
-                model_field.name,
-                abstract=model_field.help_text,
-            )
-            for model_field in model._meta.get_fields()  # type: models.Field
-            if not model_field.is_relation
-            and not isinstance(model_field, GeometryField)
-            and user_scopes.has_field_access(model.get_field_schema(model_field))
-        ]
+        sub_model_fields: Iterable[models.Field] = model_field.related_model._meta.get_fields()
 
-    def get_embedded_fields(self, relation_name, model, pk_attr=None) -> list[FieldDef]:
-        """Define which fields to embed as flattened fields."""
+        return ComplexFeatureField(
+            model_field.name,
+            fields=[
+                # Define which fields to include in an expanded relation.
+                # This is a shorter list, as including a geometry has no use here.
+                # Relations are also avoided as these won't be expanded anyway.
+                FeatureField(
+                    sub_field.name,
+                    abstract=sub_field.help_text,
+                )
+                for sub_field in sub_model_fields
+                if not sub_field.is_relation
+                and not isinstance(sub_field, GeometryField)
+                and user_scopes.has_field_access(DynamicModel.get_field_schema(sub_field))
+            ],
+        )
+
+    def _get_embedded_field(
+        self, model_field: Union[models.ForeignObject, models.ForeignObjectRel]
+    ) -> list[FeatureField]:
+        """Give the feature field definition for an embedded field.
+
+        This gives flattened field names, separated with dots.
+        These will be rendered at the same level as the root element,
+        which is ideal for QGis that doesn't handle complex types.
+        """
         user_scopes = self.request.user_scopes
+        sub_model_fields: Iterable[models.Field] = model_field.related_model._meta.get_fields()
+        relation_name = model_field.name
+        pk_attr = model_field.attname if model_field.many_to_one else None
+
         return [
             FeatureField(
-                name=f"{relation_name}.{model_field.name}",  # can differ if needed
+                name=f"{relation_name}.{sub_field.name}",  # can differ if needed
                 model_attribute=(
-                    f"{relation_name}.{model_field.name}"
-                    if not model_field.primary_key or not pk_attr
-                    else pk_attr  # optimization, redirect queries to the parent model
+                    pk_attr  # optimization, read PK field from parent model
+                    if sub_field.primary_key and pk_attr
+                    else f"{relation_name}.{sub_field.name}"  # standard: read from relation
                 ),
                 abstract=model_field.help_text,
             )
-            for model_field in model._meta.get_fields()  # type: models.Field
-            if not model_field.is_relation
-            and not isinstance(model_field, GeometryField)
-            and user_scopes.has_field_access(model.get_field_schema(model_field))
+            for sub_field in sub_model_fields
+            if not sub_field.is_relation
+            and not isinstance(sub_field, GeometryField)
+            and user_scopes.has_field_access(DynamicModel.get_field_schema(sub_field))
         ]
 
     def _get_geometry_fields(self, model) -> list[GeometryField]:
