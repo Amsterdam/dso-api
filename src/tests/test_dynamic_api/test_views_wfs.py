@@ -3,7 +3,7 @@ import urllib.parse
 import pytest
 from schematools.contrib.django.db import create_tables
 
-from tests.utils import read_response_xml, xml_element_to_dict
+from tests.utils import read_response, read_response_xml, xml_element_to_dict
 
 
 @pytest.mark.django_db
@@ -110,7 +110,7 @@ class TestDatasetWFSView:
             "&OUTPUTFORMAT=application/gml+xml"
         )
         response = api_client.get(wfs_url)
-        assert response.status_code == 200
+        assert response.status_code == 200, response.content
 
     def test_wfs_view_disabled(self, api_client, disabled_afval_dataset, afval_container):
         wfs_url = (
@@ -138,7 +138,7 @@ class TestDatasetWFSView:
             "&OUTPUTFORMAT=application/gml+xml"
         )
         response = api_client.get(wfs_url)
-        assert response.status_code == 200
+        assert response.status_code == 200, response.content
         xml_root = read_response_xml(response)
         data = xml_element_to_dict(xml_root[0][0])
 
@@ -263,37 +263,25 @@ class TestDatasetWFSViewAuth:
             "metadata": "secret",
         }
 
-    _bounded_by = {"Envelope": [{"lowerCorner": "10 10"}, {"upperCorner": "10 10"}]}
-
-    @pytest.mark.parametrize(
-        "scopes,expect",
-        [
-            ([], {"boundedBy": _bounded_by, "id": "1"}),
-            (
-                ["TEST/GEO"],
-                {
-                    "boundedBy": _bounded_by,
-                    "id": "1",
-                    "geometry_with_auth": {"Point": {"pos": "10 10"}},
-                },
-            ),
-            (
-                ["TEST/META"],
-                {
-                    "boundedBy": _bounded_by,
-                    "id": "1",
-                    "metadata": "secret",
-                },
-            ),
-        ],
-    )
     def test_wfs_field_auth(
-        self, api_client, geometry_auth_thing, fetch_auth_token, filled_router, scopes, expect
+        self, api_client, geometry_auth_thing, fetch_auth_token, filled_router
     ):
-        response = self.request(api_client, fetch_auth_token, "geometry_auth", scopes)
+        response = self.request(api_client, fetch_auth_token, "geometry_auth", ["TEST/GEO"])
         assert response.status_code == 200
         data = self.parse_response(response)
-        assert data == expect
+        assert data == {
+            "boundedBy": {"Envelope": [{"lowerCorner": "10 10"}, {"upperCorner": "10 10"}]},
+            "id": "1",
+            "geometry_with_auth": {"Point": {"pos": "10 10"}},
+        }
+
+    @pytest.mark.parametrize("scopes", [[], ["TEST/META"]])
+    def test_wfs_field_auth_invalid(
+        self, api_client, geometry_auth_thing, fetch_auth_token, filled_router, scopes
+    ):
+        """When there is no access to the geometry field, the whole feature can't be accessed."""
+        response = self.request(api_client, fetch_auth_token, "geometry_auth", scopes)
+        assert response.status_code == 403, read_response(response)
 
     def test_wfs_filter_auth(
         self,
@@ -323,20 +311,29 @@ class TestDatasetWFSViewAuth:
             f"&OUTPUTFORMAT=application/gml+xml&{filter}"
         )
 
+        # The AuthenticatedFeatureType will deny access because no geometry field is readable.
         response = api_client.get(url)
-        # The status code here should be 403, but it's 400 because the authorization is
-        # implemented by simply not showing django-gisserver the fields that it cannot access.
-        assert response.status_code == 400
+        assert response.status_code == 403, response
         root = read_response_xml(response)
-        assert "Field 'metadata' does not exist" in root[0][0].text
+        assert root[0].attrib == {"exceptionCode": "PermissionDenied", "locator": "typeNames"}
+        assert root[0][0].text == "You do not have permission to perform this action."
+
+        # With the proper scopes, we should get a result, but still can't filter on unauth fields.
+        token = fetch_auth_token(["TEST/GEO"])
+        response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
+        assert response.status_code == 400, response
+        root = read_response_xml(response)
+        assert root[0].attrib == {"exceptionCode": "InvalidParameterValue", "locator": "filter"}
+        assert root[0][0].text == "Field 'metadata' does not exist."
 
         # With the proper scopes, we should get a result.
-        token = fetch_auth_token(["TEST/META"])
+        token = fetch_auth_token(["TEST/GEO", "TEST/META"])
         response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
-        assert response.status_code == 200
+        assert response.status_code == 200, response
         data = self.parse_response(response)
         assert data == {
             "boundedBy": {"Envelope": [{"lowerCorner": "10 10"}, {"upperCorner": "10 10"}]},
+            "geometry_with_auth": {"Point": {"pos": "10 10"}},
             "id": "1",
             "metadata": "secret",
         }

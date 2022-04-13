@@ -35,7 +35,7 @@ from django.db import models
 from django.http import Http404
 from django.urls import reverse
 from django.utils.functional import cached_property
-from gisserver.exceptions import InvalidParameterValue
+from gisserver.exceptions import InvalidParameterValue, PermissionDenied
 from gisserver.features import ComplexFeatureField, FeatureField, FeatureType, ServiceDescription
 from gisserver.views import WFSView
 from schematools.contrib.django.models import Dataset, DynamicModel, get_field_schema
@@ -73,6 +73,11 @@ class AuthenticatedFeatureType(FeatureType):
                 models.append(related_model)
 
         self.wfs_view.check_permissions(request, models)
+
+        # If the main geometry is hidden behind an access scope,
+        # accessing the WFS feature is moot (and risks exposure through direct model access)
+        if not self.geometry_fields:
+            raise PermissionDenied("typeNames")
 
 
 class DatasetWFSIndexView(APIIndexView):
