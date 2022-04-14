@@ -294,6 +294,7 @@ class DatasetWFSView(CheckPermissionsMixin, WFSView):
                         ComplexFeatureField(
                             model_field.name,
                             fields=self.get_expanded_fields(model_field.related_model),
+                            abstract=model_field.help_text,
                         )
                     )
                 if model_field.name in self.embed_fields:
@@ -316,9 +317,19 @@ class DatasetWFSView(CheckPermissionsMixin, WFSView):
                 # The other geometry fields are moved to the end, so the main geometryfield
                 # is listed as first value in a feature. This makes sure QGis and friends
                 # render that particular field.
-                other_geo_fields.append(model_field.name)
+                other_geo_fields.append(
+                    FeatureField(
+                        model_field.name,
+                        abstract=model_field.help_text,
+                    )
+                )
             else:
-                fields.append(field_name)
+                fields.append(
+                    FeatureField(
+                        field_name,
+                        abstract=model_field.help_text,
+                    )
+                )
 
         return fields + other_geo_fields
 
@@ -329,7 +340,10 @@ class DatasetWFSView(CheckPermissionsMixin, WFSView):
         """
         user_scopes = self.request.user_scopes
         return [
-            model_field.name
+            FeatureField(
+                model_field.name,
+                abstract=model_field.help_text,
+            )
             for model_field in model._meta.get_fields()  # type: models.Field
             if not model_field.is_relation
             and not isinstance(model_field, GeometryField)
@@ -347,6 +361,7 @@ class DatasetWFSView(CheckPermissionsMixin, WFSView):
                     if not model_field.primary_key or not pk_attr
                     else pk_attr  # optimization, redirect queries to the parent model
                 ),
+                abstract=model_field.help_text,
             )
             for model_field in model._meta.get_fields()  # type: models.Field
             if not model_field.is_relation
