@@ -1,4 +1,4 @@
-FROM amsterdam/python:3.9-buster AS builder
+FROM amsterdam/python:3.9-bullseye AS builder
 MAINTAINER datapunt@amsterdam.nl
 
 COPY requirements* ./
@@ -6,7 +6,7 @@ ARG PIP_REQUIREMENTS=requirements.txt
 RUN pip install --no-cache-dir -r $PIP_REQUIREMENTS
 
 # Start runtime image,
-FROM amsterdam/python:3.9-slim-buster
+FROM amsterdam/python:3.9-slim-bullseye
 RUN apt update && apt install --no-install-recommends -y curl
 
 # Copy python build artifacts from builder image
