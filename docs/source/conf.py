@@ -17,9 +17,9 @@
 
 # -- Project information -----------------------------------------------------
 
-project = "Amsterdam DSO API"
-copyright = "2021, Team Data Diensten, Gemeente Amsterdam."
-author = "Team Data Diensten, Gemeente Amsterdam."
+project = "Amsterdam DSO-API"
+copyright = "2022, Team Data Diensten, Gemeente Amsterdam."
+author = "Team Data Diensten van het Dataplatform onder de Directie Digitale Voorzieningen, Gemeente Amsterdam."
 
 # The full version, including alpha/beta/rc tags
 release = "v1"
