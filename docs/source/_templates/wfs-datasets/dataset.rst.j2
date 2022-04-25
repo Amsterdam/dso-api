@@ -2,7 +2,8 @@
 
 {{ schema.description or '' }}
 
-* **ID:** {{ schema_name }}
+* **ID:** {{ schema_name }}{% if schema_auth %} (autorisatie: {{ schema_auth|sort|join(', ') }}){% endif %}
+* **Versie:** {{ schema.version }}
 * **WFS:** {{ wfs_url }}
 
 .. contents:: Features
@@ -27,6 +28,7 @@
 .. raw:: html
 
    <ul>
+     <li><b>Autorisatie:</b> {% if table.auth %}(autorisatie: {{ table.auth|sort|join(', ') }}){% else %}Geen, dit is openbare data.{% endif %}</a></li>
      <li><b>Typename:</b> {% for tn in table.typenames %}{% if not loop.first %} / {% endif %}<code>{{tn}}</code>{% endfor %}
      <li><b>WFS CSV Export:</b> {% if table.wfs_csv %}<a type="text/csv" download href="{{ table.wfs_csv }}">{{ table.wfs_csv|strip_base_url }}</a>{% else %}N.B.{% endif %}</li>
      <li><b>WFS GeoJSON Export:</b> {% if table.wfs_geojson %}<a type="application/json" download href="{{ table.wfs_geojson }}">{{ table.wfs_geojson|strip_base_url }}</a>{% else %}N.B.{% endif %}</li>
@@ -42,7 +44,7 @@ Velden
      - Type
      - Omschrijving
 {%- for field in table.fields %}
-   * - ``{{ field.snake_name }}``
+   * - ``{{ field.snake_name }}`` {% if field.auth %} (autorisatie: {{ field.auth|sort|join(', ') }}){% endif %}
      - {{ field.type|default('') }}
      - {{ field.description|default('') }}
 {%- endfor %}

@@ -135,6 +135,7 @@ def render_wfs_dataset_docs(dataset: DatasetSchema, paths: dict[str, str]):
         {
             "schema": dataset,
             "schema_name": snake_name,
+            "schema_auth": dataset.auth,
             "main_title": main_title,
             "tables": tables,
             "wfs_url": f"{BASE_URL}/v1/wfs/{dataset_path}/",
@@ -444,7 +445,7 @@ def render_datasets(*local_file_paths):
 
             ds_path = file_path[pos + 10 : file_path.rfind("/")]
             print(f"- reading {ds_path}")
-            schema = dataset_schema_from_path(file_path, prefetch_related=True)
+            schema = dataset_schema_from_path(file_path)
             schemas[schema.id] = schema
             paths[schema.id] = ds_path
 
