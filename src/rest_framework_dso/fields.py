@@ -71,7 +71,7 @@ class FieldsToDisplay:
         else:
             return "<FieldsToDisplay: deny all>"
 
-    def __bool__(self):
+    def reduced(self):
         """Whether the returned fields need to be reduced.
         Note that this returns false when there are child nodes that need to be reduced.
         These are found with :meth:`allow_nested`, :meth:`as_nested` and :attr:`children`.
