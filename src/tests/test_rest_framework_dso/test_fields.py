@@ -12,9 +12,9 @@ class TestFieldsToDisplay:
     """Prove whether the 'FieldsToDisplay' tool really works"""
 
     def test_allow_all(self):
-        """Prove that having no fields to filter evaluates to false"""
-        assert not FieldsToDisplay()
-        assert not ALLOW_ALL_FIELDS_TO_DISPLAY
+        """Prove that having no fields to filter is handled correctly."""
+        assert not FieldsToDisplay().reduced()
+        assert not ALLOW_ALL_FIELDS_TO_DISPLAY.reduced()
         assert repr(FieldsToDisplay()) == "<FieldsToDisplay: allow all>"
         assert ALLOW_ALL_FIELDS_TO_DISPLAY.get_allow_list(set("abc")) == ({"a", "b", "c"}, set())
 
