@@ -26,9 +26,6 @@ Install the tools::
     cd src
     make install  # installs src/requirements_dev.txt
 
-.. tip:
-    If you're running FreeBSD, see the :doc:`freebsd`.
-
 Database Setup
 --------------
 
@@ -56,7 +53,7 @@ Using a Virtual Machine
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 If you are not running Docker locally (as on Linux) but in a virtual
-machine (as needed on MacOS, FreeBSD, Windows) you might want to adjust the
+machine (as needed on MacOS, Windows) you might want to adjust the
 ``DATABASE_URL`` to point it to the IP address of the virtual machine
 instead of simply ``localhost``.
 

@@ -82,7 +82,6 @@ A simplified diagram of the main project dependencies:
    :caption: HOW-TO:
 
    howto/install
-   howto/freebsd
    howto/pip
    howto/testruns
    howto/schemas
