@@ -37,8 +37,8 @@ services:
       DJANGO_LOG_LEVEL: "${DJANGO_LOG_LEVEL}"
       DSO_API_LOG_LEVEL: "${DSO_API_LOG_LEVEL}"
       DSO_API_AUDIT_LOG_LEVEL: "${DSO_API_AUDIT_LOG_LEVEL}"
-      AZURE_APPI_CONNECTION_STRING: "${AZURE_APPI_CONNECTION_STRING}"
       AZURE_APPI_AUDIT_CONNECTION_STRING: "${AZURE_APPI_AUDIT_CONNECTION_STRING}"
+      AZURE_APPI_CONNECTION_STRING: "${AZURE_APPI_CONNECTION_STRING}"
       OAUTH_CLIENT_ID: "${OAUTH_CLIENT_ID}"
       OAUTH_JWKS_URL: "${OAUTH_JWKS_URL}"
       OAUTH_URL:  "${OAUTH_URL}"
@@ -48,6 +48,8 @@ services:
     volumes:
       - ./src:/app
       - ./docs/build/html:/docs-static
+      - "../amsterdam-schema/datasets:/tmp/datasets"
+      # - "../schema-tools/src/schematools:/usr/local/lib/python3.9/site-packages/schematools"
     command: uwsgi --py-auto-reload=1 --enable-threads --lazy-apps
 
   schemas:
