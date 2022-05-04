@@ -82,7 +82,6 @@ additional lookup classes are implemented that provide this functionality within
 
 .. _django-filter: https://django-filter.readthedocs.io/
 """
-from . import lookups  # noqa (import is needed for registration)
 from .backends import DSOFilterBackend, DSOOrderingFilter
 from .filters import MultipleValueFilter
 from .filtersets import DSOFilterSet

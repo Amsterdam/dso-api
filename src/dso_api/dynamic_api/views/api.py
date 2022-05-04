@@ -22,7 +22,7 @@ from rest_framework.exceptions import ValidationError
 from schematools.contrib.django.models import DynamicModel
 from schematools.exceptions import SchemaObjectNotFound
 
-from dso_api.dynamic_api import filterset, locking, permissions, serializers
+from dso_api.dynamic_api import filters, filterset, locking, permissions, serializers
 from dso_api.dynamic_api.permissions import FilterSyntaxError
 from dso_api.dynamic_api.temporal import TemporalTableQuery
 from rest_framework_dso import fields
@@ -68,6 +68,9 @@ class DynamicApiViewSet(locking.ReadLockMixin, DSOViewMixin, viewsets.ReadOnlyMo
     # The DefaultRouter won't allow '.' in URLs because it's used as format-type.
     lookup_value_regex = r"[^/]+"
     lookup_url_kwarg = "pk"
+
+    # Use our custom Amsterdam-schema backend for query filtering
+    filter_backends = [filters.DynamicFilterBackend, filters.DynamicOrderingFilter]
 
     # Custom permission that checks amsterdam schema auth settings
     permission_classes = [permissions.HasOAuth2Scopes]

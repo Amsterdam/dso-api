@@ -178,8 +178,14 @@ class TestListFilters:
     """Prove that filtering works as expected."""
 
     @staticmethod
-    @pytest.mark.parametrize("lookup,expect", [("", 0), ("[like]", 1)])
-    def test_list_filter_wildcard(api_client, movies_movie, filled_router, lookup, expect):
+    @pytest.mark.parametrize(
+        "lookup,expect",
+        [
+            ("", 0),
+            ("[like]", 1),
+        ],
+    )
+    def test_list_filter_wildcard(api_client, movies_data, filled_router, lookup, expect):
         """Prove that ?name=foo doesn't work with wildcards (that now requires [like]).
         Second parameterized call tests whether using [like] does produce the desired effect.
         """
@@ -190,7 +196,7 @@ class TestListFilters:
         assert len(data["_embedded"]["movie"]) == expect
 
     @staticmethod
-    def test_list_filter_datetime(api_client, movies_movie, filled_router):
+    def test_list_filter_datetime(api_client, movies_data, filled_router):
         """Prove that datetime fields can be queried using a single data value"""
         response = api_client.get("/v1/movies/movie/", data={"dateAdded": "2020-01-01"})
         data = read_response_json(response)
@@ -200,7 +206,7 @@ class TestListFilters:
         assert names == ["foo123"]
 
     @staticmethod
-    def test_list_filter_datetime_invalid(api_client, movies_movie, filled_router):
+    def test_list_filter_datetime_invalid(api_client, movies_data, filled_router):
         """Prove that invalid input is captured, and returns a proper error response."""
         response = api_client.get("/v1/movies/movie/", data={"dateAdded": "2020-01-fubar"})
         assert response.status_code == 400, response
@@ -228,7 +234,7 @@ class TestSort:
     """Prove that the ordering works as expected."""
 
     @staticmethod
-    def test_list_ordering_name(api_client, movies_movie, filled_router):
+    def test_list_ordering_name(api_client, movies_data, filled_router):
         """Prove that ?_sort=... works on the list view."""
 
         response = api_client.get("/v1/movies/movie/", data={"_sort": "name"})
@@ -244,7 +250,7 @@ class TestSort:
         assert names == ["test", "foo123"], data
 
     @staticmethod
-    def test_list_ordering_name_old_param(api_client, movies_movie, filled_router):
+    def test_list_ordering_name_old_param(api_client, movies_data, filled_router):
         """Prove that ?_sort=... works on the list view."""
 
         response = api_client.get("/v1/movies/movie/", data={"sorteer": "-name"})
@@ -255,7 +261,7 @@ class TestSort:
         assert names == ["test", "foo123"]
 
     @staticmethod
-    def test_list_ordering_date(api_client, movies_movie, filled_router):
+    def test_list_ordering_date(api_client, movies_data, filled_router):
         """Prove that ?_sort=... works on the list view."""
         response = api_client.get("/v1/movies/movie/", data={"_sort": "-dateAdded"})
         data = read_response_json(response)
