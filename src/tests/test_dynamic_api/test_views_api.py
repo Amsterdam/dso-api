@@ -178,13 +178,16 @@ class TestListFilters:
     """Prove that filtering works as expected."""
 
     @staticmethod
-    def test_list_filter_wildcard_without_like(api_client, movies_movie, filled_router):
-        """Prove that ?name=foo doesn't work with wildcards (that now requires [like])."""
-        response = api_client.get("/v1/movies/movie/", data={"name": "foo1?3"})
+    @pytest.mark.parametrize("lookup,expect", [("", 0), ("[like]", 1)])
+    def test_list_filter_wildcard(api_client, movies_movie, filled_router, lookup, expect):
+        """Prove that ?name=foo doesn't work with wildcards (that now requires [like]).
+        Second parameterized call tests whether using [like] does produce the desired effect.
+        """
+        response = api_client.get("/v1/movies/movie/", data={f"name{lookup}": "foo1?3"})
         assert response.status_code == 200, response
         assert response["Content-Type"] == "application/hal+json"
         data = read_response_json(response)
-        assert len(data["_embedded"]["movie"]) == 0
+        assert len(data["_embedded"]["movie"]) == expect
 
     @staticmethod
     def test_list_filter_datetime(api_client, movies_movie, filled_router):
@@ -192,9 +195,9 @@ class TestListFilters:
         response = api_client.get("/v1/movies/movie/", data={"dateAdded": "2020-01-01"})
         data = read_response_json(response)
         assert response.status_code == 200, response
+        assert response["Content-Type"] == "application/hal+json"
         names = [movie["name"] for movie in data["_embedded"]["movie"]]
         assert names == ["foo123"]
-        assert response["Content-Type"] == "application/hal+json"
 
     @staticmethod
     def test_list_filter_datetime_invalid(api_client, movies_movie, filled_router):
@@ -343,33 +346,36 @@ class TestAuth:
             )
         )
 
-        def _get(token, params=""):
-            return api_client.get(f"{base_url}{params}", HTTP_AUTHORIZATION=f"Bearer {token}")
+        def _assert_get(token, params="", expect=200):
+            response = api_client.get(f"{base_url}{params}", HTTP_AUTHORIZATION=f"Bearer {token}")
+            data = read_response_json(response)
+            assert response.status_code == expect, data
+            return data
 
         token = fetch_auth_token(["PROFIEL/SCOPE"])
         base_url = reverse("dynamic_api:parkeervakken-parkeervakken-list")
         assert api_client.get(base_url).status_code == 403
-        assert _get(token).status_code == 403
+        _assert_get(token, expect=403)
 
         # See that only the proper filters activate the profile (via mandatoryFilterSets)
-        assert _get(token, "?buurtcode=A05d").status_code == 403
-        assert _get(token, "?buurtcode=A05d&type=E9").status_code == 200
-        assert _get(token, "?regimes.eindtijd=20:05").status_code == 200
-        assert _get(token, "?regimes.eindtijd=").status_code == 403
-        assert _get(token, "?regimes.eindtijd").status_code == 403
+        _assert_get(token, "?buurtcode=A05d", expect=403)
+        _assert_get(token, "?buurtcode=A05d&type=E9", expect=200)
+        _assert_get(token, "?regimes.eindtijd=20:05", expect=200)
+        _assert_get(token, "?regimes.eindtijd=", expect=403)
+        _assert_get(token, "?regimes.eindtijd", expect=403)
 
         # See that 'auth' satisfies without needing a profile
         token2 = fetch_auth_token(["DATASET/SCOPE", "PROFIEL/SCOPE"])
-        assert _get(token2).status_code == 200
+        _assert_get(token2, expect=200)
 
         token3 = fetch_auth_token(["DATASET/SCOPE"])
-        assert _get(token3).status_code == 200
+        _assert_get(token3, expect=200)
 
         # See that both profiles can be active
         token4 = fetch_auth_token(["PROFIEL/SCOPE", "PROFIEL2/SCOPE"])
         # TODO should be 400.
-        assert _get(token4, "?regimes.noSuchField=whatever").status_code == 403
-        assert _get(token4, "?regimes.aantal[gte]=2").status_code == 200
+        _assert_get(token4, "?regimes.noSuchField=whatever", expect=403)
+        _assert_get(token4, "?regimes.aantal[gte]=2", expect=200)
 
     def test_profile_field_permissions(
         self,
@@ -440,13 +446,15 @@ class TestAuth:
         )
 
         # 1) profile scope only
+        # Using 'detail' URL because filtering on ?id=..
+        # is prohibited when the field is not accessible.
         token = fetch_auth_token(["PROFIEL/SCOPE"])
-        base_url = reverse("dynamic_api:parkeervakken-parkeervakken-list")
-        response = api_client.get(f"{base_url}?id=1", HTTP_AUTHORIZATION=f"Bearer {token}")
+        list_url = reverse("dynamic_api:parkeervakken-parkeervakken-list")
+        detail_url = reverse("dynamic_api:parkeervakken-parkeervakken-detail", args=("1",))
+        response = api_client.get(detail_url, HTTP_AUTHORIZATION=f"Bearer {token}")
         data = read_response_json(response)
         assert response.status_code == 200, data
-        parkeervak_data = data["_embedded"]["parkeervakken"][0]
-        assert parkeervak_data == {
+        assert data == {
             "_links": {
                 "schema": (
                     "https://schemas.data.amsterdam.nl"
@@ -454,14 +462,14 @@ class TestAuth:
                 ),
                 "self": {"href": "http://testserver/v1/parkeervakken/parkeervakken/1/", "id": "1"},
             },
-            # no ID field.
+            # no ID field (not authorized)
             "soort": "N",  # letters:1
             "type": "Langs",  # read permission
         }
 
         # 2) profile and dataset scope -> all allowed (auth of dataset is satisfied)
         token = fetch_auth_token(["PROFIEL/SCOPE", "DATASET/SCOPE"])
-        response = api_client.get(f"{base_url}?id=1", HTTP_AUTHORIZATION=f"Bearer {token}")
+        response = api_client.get(f"{list_url}?id=1", HTTP_AUTHORIZATION=f"Bearer {token}")
         data = read_response_json(response)
         assert response.status_code == 200, data
         parkeervak_data = data["_embedded"]["parkeervakken"][0]
@@ -489,10 +497,9 @@ class TestAuth:
         # 3) two profile scopes, only one matches (mandatory filtersets)
         token = fetch_auth_token(["PROFIEL/SCOPE", "PROFIEL2/SCOPE"])
         # trigger one profile
-        response = api_client.get(f"{base_url}?id=1", HTTP_AUTHORIZATION=f"Bearer {token}")
+        response = api_client.get(detail_url, HTTP_AUTHORIZATION=f"Bearer {token}")
         data = read_response_json(response)
-        parkeervak_data = data["_embedded"]["parkeervakken"][0]
-        assert parkeervak_data == {
+        assert data == {
             "_links": {
                 "schema": (
                     "https://schemas.data.amsterdam.nl"
@@ -505,13 +512,10 @@ class TestAuth:
         }
 
         # 4) both profiles + mandatory filtersets
-        response = api_client.get(
-            f"{base_url}?id=1&type=Langs", HTTP_AUTHORIZATION=f"Bearer {token}"
-        )
+        response = api_client.get(f"{detail_url}?type=Langs", HTTP_AUTHORIZATION=f"Bearer {token}")
         data = read_response_json(response)
         assert response.status_code == 200, data
-        parkeervak_data = data["_embedded"]["parkeervakken"][0]
-        assert parkeervak_data == {
+        assert data == {
             "_links": {
                 "schema": (
                     "https://schemas.data.amsterdam.nl"
