@@ -66,13 +66,14 @@
       "version": "0.0.0",
       "schema": {
         "$schema": "http://json-schema.org/draft-07/schema#",
-        "identifier": "name",
+        "identifier": "id",
         "required": ["name"],
         "display": "name",
         "properties": {
           "schema": {
             "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.2#/definitions/schema"
           },
+          "id": {"type": "string"},
           "name": {"type": "string", "description": ""},
           "lastUpdatedBy": {
             "type": "string",

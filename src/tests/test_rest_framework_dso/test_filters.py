@@ -1,33 +1,10 @@
 from datetime import date
 
 import pytest
-from django.db.models import Value
 from django.http import QueryDict
 
-from rest_framework_dso.filters import DSOFilterBackend, DSOFilterSet
-from rest_framework_dso.filters.lookups import Wildcard, _sql_wildcards
-
-from .models import Category, Movie
-
-
-class TestWildcard:
-    @pytest.mark.django_db
-    def test_like_filter_sql(self, django_assert_num_queries):
-        with django_assert_num_queries(1) as context:
-            # using str(qs.query) doesn't apply database-level escaping,
-            # so running the query instead to get the actual executed query.
-            list(Category.objects.filter(name__like="foo*bar?"))
-
-        sql = context.captured_queries[0]["sql"]
-        assert r"""."name" LIKE 'foo%bar_'""" in sql
-
-
-def test_sql_wildcards():
-    assert _sql_wildcards("foo*") == "foo%"
-    assert _sql_wildcards("fo?o") == r"fo_o"
-    assert _sql_wildcards("fo%o") == r"fo\%o"
-    assert _sql_wildcards("fo%o_") == r"fo\%o\_"
-    assert _sql_wildcards("f?_oob%ar*") == r"f_\_oob\%ar%"
+from rest_framework_dso.filters import DSOFilterSet
+from .models import Movie
 
 
 class TestDSOFilterSet:

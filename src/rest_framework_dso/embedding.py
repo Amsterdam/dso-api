@@ -276,7 +276,7 @@ def get_all_embedded_field_names(
 
 
 def get_all_embedded_fields_by_name(
-    serializer_class: type[serializers.Serializer], allow_m2m=True, prefix=""
+    serializer_class: type[serializers.Serializer], allow_m2m=True, prefix="", maxdepth=4
 ) -> dict[str, AbstractEmbeddedField]:
     """Find all possible embedded fields, as lookup table with their dotted names."""
     result = {}
@@ -294,11 +294,16 @@ def get_all_embedded_fields_by_name(
 
         lookup = f"{prefix}{field_name}"
         result[lookup] = field
-        result.update(
-            get_all_embedded_fields_by_name(
-                field.serializer_class, allow_m2m=allow_m2m, prefix=f"{lookup}."
+
+        if maxdepth > 1:
+            result.update(
+                get_all_embedded_fields_by_name(
+                    field.serializer_class,
+                    allow_m2m=allow_m2m,
+                    prefix=f"{lookup}.",
+                    maxdepth=maxdepth - 1,
+                )
             )
-        )
 
     return result
 

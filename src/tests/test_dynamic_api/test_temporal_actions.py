@@ -120,15 +120,6 @@ class TestTemporalViews:
         stadsdelen = data["_embedded"]["stadsdelen"]
         assert stadsdelen[0]["_links"]["self"]["volgnummer"] == 2, stadsdelen[0]
 
-    def test_component_fields(self, api_client, stadsdelen):
-        """Compound temporal field must be consistent with its component fields."""
-        url = reverse("dynamic_api:gebieden-stadsdelen-list")
-        response = api_client.get(f"{url}?eindGeldigheid[lt]=2000-01-01")
-        data = read_response_json(response)
-
-        assert response.status_code == 200, data
-        assert len(data["_embedded"]["stadsdelen"]) == 1, data["_embedded"]["stadsdelen"]
-
     def test_additionalrelations_works_and_has_temporary_param(
         self, api_client, stadsdelen, wijk, buurt, router
     ):

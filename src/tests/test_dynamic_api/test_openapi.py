@@ -109,7 +109,9 @@ def test_openapi_json(api_client, afval_dataset, fietspaaltjes_dataset, filled_r
         "_sort",
         "clusterId",
         "clusterId[in]",
+        "clusterId[isempty]",
         "clusterId[isnull]",
+        "clusterId[like]",
         "clusterId[not]",
         "datumCreatie",
         "datumCreatie[gt]",
@@ -131,6 +133,8 @@ def test_openapi_json(api_client, afval_dataset, fietspaaltjes_dataset, filled_r
         "eigenaarNaam[like]",
         "eigenaarNaam[not]",
         "geometry",
+        "geometry[isnull]",
+        "geometry[not]",
         "id",
         "id[gt]",
         "id[gte]",
@@ -152,7 +156,7 @@ def test_openapi_json(api_client, afval_dataset, fietspaaltjes_dataset, filled_r
     assert afval_parameters["datumCreatie"] == {
         "name": "datumCreatie",
         "in": "query",
-        "description": "yyyy-mm-dd",
+        "description": "Datum aangemaakt",
         "schema": {"format": "date", "type": "string"},
     }
 
@@ -215,18 +219,18 @@ def test_openapi_json(api_client, afval_dataset, fietspaaltjes_dataset, filled_r
     assert afval_parameters["clusterId[in]"] == {
         "name": "clusterId[in]",
         "in": "query",
-        "description": "Multiple values may be separated by commas.",
+        "description": "Matches any value from a comma-separated list: val1,val2,valN.",
         "explode": False,
         "schema": {
             "type": "array",
-            "items": {"nullable": True, "type": "string"},
+            "items": {"type": "string"},
         },
         "style": "form",
     }
     assert afval_parameters["clusterId[isnull]"] == {
         "name": "clusterId[isnull]",
         "in": "query",
-        "description": "true | false",
+        "description": "Whether the field has a NULL value or not.",
         "schema": {"type": "boolean"},
     }
 
