@@ -73,7 +73,6 @@ INSTALLED_APPS = [
     "django.contrib.gis",
     "django.contrib.postgres",
     "corsheaders",
-    "django_filters",
     "drf_spectacular",
     "rest_framework",
     "rest_framework_gis",
@@ -327,9 +326,6 @@ REST_FRAMEWORK = dict(
         "rest_framework_dso.renderers.CSVRenderer",
         "rest_framework_dso.renderers.GeoJSONRenderer",
         "rest_framework_dso.renderers.BrowsableAPIRenderer",
-    ],
-    DEFAULT_FILTER_BACKENDS=[
-        "django_filters.rest_framework.backends.DjangoFilterBackend",
     ],
     EXCEPTION_HANDLER="rest_framework_dso.views.exception_handler",
     COERCE_DECIMAL_TO_STRING=True,

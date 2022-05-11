@@ -7,18 +7,11 @@ from rest_framework.exceptions import ErrorDetail, ValidationError
 from rest_framework.routers import SimpleRouter
 
 from rest_framework_dso import views
-from rest_framework_dso.filters import DSOFilterSet
 from rest_framework_dso.renderers import HALJSONRenderer
 from tests.utils import read_response, read_response_json, read_response_partial
 
 from .models import Location, Movie
 from .serializers import LocationSerializer, MovieSerializer
-
-
-class MovieFilterSet(DSOFilterSet):
-    class Meta:
-        model = Movie
-        fields = ["name", "date_added"]
 
 
 class MovieDetailAPIView(generics.RetrieveAPIView):
@@ -29,13 +22,11 @@ class MovieDetailAPIView(generics.RetrieveAPIView):
 class MovieListAPIView(views.DSOViewMixin, generics.ListAPIView):
     serializer_class = MovieSerializer
     queryset = Movie.objects.all()
-    filterset_class = MovieFilterSet
 
 
 class MovieViewSet(views.DSOViewMixin, viewsets.ReadOnlyModelViewSet):
     serializer_class = MovieSerializer
     queryset = Movie.objects.all()
-    filterset_class = MovieFilterSet
 
 
 class LocationListAPIView(views.DSOViewMixin, generics.ListAPIView):

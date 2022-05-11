@@ -22,10 +22,9 @@ from rest_framework.exceptions import ValidationError
 from schematools.contrib.django.models import DynamicModel
 from schematools.exceptions import SchemaObjectNotFound
 
-from dso_api.dynamic_api import filters, filterset, locking, permissions, serializers
+from dso_api.dynamic_api import filters, locking, permissions, serializers
 from dso_api.dynamic_api.permissions import FilterSyntaxError
 from dso_api.dynamic_api.temporal import TemporalTableQuery
-from rest_framework_dso import fields
 from rest_framework_dso.views import DSOViewMixin
 
 
@@ -175,20 +174,6 @@ def _get_viewset_api_docs(model: type[DynamicModel]) -> str:
     )
 
 
-def _get_ordering_fields(
-    serializer_class: type[serializers.DynamicSerializer],
-) -> list[str]:
-    """Make sure the ordering doesn't happen on foreign relations.
-    This creates an unnecessary join, which can be avoided by sorting on the _id field.
-    """
-    return [
-        name
-        for name in serializer_class.Meta.fields
-        if name not in {"_links", "schema"}
-        and not isinstance(getattr(serializer_class, name, None), fields.EmbeddedField)
-    ]
-
-
 def viewset_factory(model: type[DynamicModel]) -> type[DynamicApiViewSet]:
     """Generate the viewset for a dynamic model.
 
@@ -208,20 +193,15 @@ def viewset_factory(model: type[DynamicModel]) -> type[DynamicApiViewSet]:
             ordering_fields = ...
 
     Internally, the :func:`~dso_api.dynamic_api.serializers.serializer_factory`,
-    and :func:`~dso_api.dynamic_api.filterset.filterset_factory` functions are called
-    to generate those classes.
+    function is called to generate those classes.
     """
     serializer_class = serializers.serializer_factory(model)
-    filterset_class = filterset.filterset_factory(model)
-    ordering_fields = _get_ordering_fields(serializer_class)
 
     attrs = {
         "__doc__": _get_viewset_api_docs(model),
         "model": model,
         "queryset": model.objects.all(),  # also for OpenAPI schema parsing.
         "serializer_class": serializer_class,
-        "filterset_class": filterset_class,
-        "ordering_fields": ordering_fields,
         "dataset_id": model._dataset_schema["id"],
         "table_id": model.table_schema()["id"],
         "authorization_grantor": model.get_dataset_schema().get("authorizationGrantor"),
