@@ -13,7 +13,7 @@ from rest_framework.utils import formatting
 from rest_framework.views import exception_handler as drf_exception_handler
 from schematools.types import DatasetTableSchema
 
-from rest_framework_dso import crs, filters, parsers
+from rest_framework_dso import crs, parsers
 from rest_framework_dso.exceptions import HumanReadableException, RemoteAPIException
 from rest_framework_dso.pagination import DSOPageNumberPagination
 from rest_framework_dso.response import StreamingResponse
@@ -286,13 +286,6 @@ class DSOViewMixin:
 
     #: The list of allowed coordinate reference systems for the request header
     accept_crs = {crs.RD_NEW, crs.WEB_MERCATOR, crs.ETRS89, crs.WGS84}
-
-    # Using standard fields
-    filter_backends = [filters.DSOFilterBackend, filters.DSOOrderingFilter]
-
-    #: Class to configure the filterset
-    #: (auto-generated when filterset_fields is defined, but this is slower).
-    filterset_class: type[filters.DSOFilterSet] = None
 
     #: Enforce parsing Content-Crs for POST requests:
     parser_classes = [parsers.DSOJsonParser]
