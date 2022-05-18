@@ -61,7 +61,7 @@ OPENAPI_TYPE_LOOKUP_EXAMPLES = {
 }
 
 
-def get_table_filter_params(table_schema: DatasetTableSchema) -> list[dict]:
+def get_table_filter_params(table_schema: DatasetTableSchema) -> list[dict]:  # noqa: C901
     """Generate most OpenAPI query-string parameters for filtering.
 
     This will not include all possible nested relations,
@@ -74,7 +74,29 @@ def get_table_filter_params(table_schema: DatasetTableSchema) -> list[dict]:
         if field.is_array_of_objects:
             # M2M relation or nested table.
             for sub_field in field.subfields:
+                if sub_field.format in ("date", "date-time"):
+                    continue  # e.g heeftOnderzoeken.beginGeldigheid/eindGeldigheid
+
                 openapi_params.extend(_get_field_openapi_params(sub_field))
+        elif field.relation:
+            # Relation: promote filtering with dot-notation instead of the old "fieldnameId"
+            # This works both for temporal relations, regular relations as loose relations.
+            rel_table = field.related_table
+            identifiers = field.related_field_ids
+            if field.is_loose_relation:
+                # Loose relations can only be filtered on primary field for now,
+                # because this can be mapped to the direct table field,
+                # instead of an ORM join (looserelation__field=.. doesn't work yet).
+                identifiers = identifiers[:1]
+
+            for identifier in identifiers:
+                sub_field = rel_table.get_field_by_id(identifier)
+                if sub_field.format in ("date", "date-time"):
+                    continue  # e.g heeftHoofdadres.beginGeldigheid/eindGeldigheid
+
+                openapi_params.extend(
+                    _get_field_openapi_params(sub_field, prefix=f"{field.name}.")
+                )
         else:
             # Flat direct field
             openapi_params.extend(_get_field_openapi_params(field))
@@ -134,8 +156,9 @@ def _get_filter_name(prefix: str, field: DatasetFieldSchema, lookup: str) -> str
     This generates the "relation.field[lookup]" notation.
     """
     name = f"{prefix}{field.name}"
-    if field.relation and not field.is_loose_relation:
-        name += "Id"  # ForeignKey field
+    if field.relation:
+        identifier = field.related_field_ids[0]
+        name = f"{name}.{identifier}"
     if lookup:
         name = f"{name}[{lookup}]"
     return name

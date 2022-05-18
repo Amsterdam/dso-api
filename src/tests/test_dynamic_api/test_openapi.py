@@ -107,12 +107,12 @@ def test_openapi_json(api_client, afval_dataset, fietspaaltjes_dataset, filled_r
         "_format",
         "_pageSize",
         "_sort",
-        "clusterId",
-        "clusterId[in]",
-        "clusterId[isempty]",
-        "clusterId[isnull]",
-        "clusterId[like]",
-        "clusterId[not]",
+        "cluster.id",
+        "cluster.id[in]",
+        "cluster.id[isempty]",
+        "cluster.id[isnull]",
+        "cluster.id[like]",
+        "cluster.id[not]",
         "datumCreatie",
         "datumCreatie[gt]",
         "datumCreatie[gte]",
@@ -215,9 +215,9 @@ def test_openapi_json(api_client, afval_dataset, fietspaaltjes_dataset, filled_r
     # Prove that the lookups of LOOKUPS_BY_TYPE are parsed
     # ([lt] for dates, [in] for keys)
     assert "datumCreatie[lt]" in afval_parameters, all_keys
-    assert "clusterId[in]" in afval_parameters, all_keys
-    assert afval_parameters["clusterId[in]"] == {
-        "name": "clusterId[in]",
+    assert "cluster.id[in]" in afval_parameters, all_keys
+    assert afval_parameters["cluster.id[in]"] == {
+        "name": "cluster.id[in]",
         "in": "query",
         "description": "Matches any value from a comma-separated list: val1,val2,valN.",
         "explode": False,
@@ -227,8 +227,8 @@ def test_openapi_json(api_client, afval_dataset, fietspaaltjes_dataset, filled_r
         },
         "style": "form",
     }
-    assert afval_parameters["clusterId[isnull]"] == {
-        "name": "clusterId[isnull]",
+    assert afval_parameters["cluster.id[isnull]"] == {
+        "name": "cluster.id[isnull]",
         "in": "query",
         "description": "Whether the field has a NULL value or not.",
         "schema": {"type": "boolean"},
