@@ -22,7 +22,7 @@ Tot slot worden er ook volledige CSV en GeoJSON exports ondersteund.
    generic/gis.rst
 
 .. toctree::
-   :caption: Datasets:
+   :caption: Naslagwerk datasets:
    :maxdepth: 3
 
    datasets/index
