@@ -298,7 +298,9 @@ def _to_orm_path(fields: list[DatasetFieldSchema]) -> str:
         related_ids = fields[-2].related_field_ids
         if related_ids is not None and fields[-1].name in related_ids:
             # Matched identifier that also exists on the previous table, use that instead.
-            names[-2] = f"{names[-2]}_{names[-1]}"
+            # loose relation directly stores the "identifier" as name, so can just strip that.
+            if not fields[-2].is_loose_relation:
+                names[-2] = f"{names[-2]}_{names[-1]}"
             names.pop()
 
     return "__".join(names)
@@ -334,10 +336,21 @@ def parse_filter_path(
             # For nesting, look into the next table
             parent = field.related_table
 
-            if field.is_loose_relation and i < last_item:
+            if (
+                field.is_loose_relation
+                and i < last_item
+                and not (
+                    i + 1 == last_item and field_path[last_item] == field.related_field_ids[0]
+                )
+            ):
                 # No support for looserelation__field=.. in the ORM yet.
                 raise ValidationError(
-                    f"Filtering on this relation type is not yet supported: {field_name}"
+                    {
+                        field_name: (
+                            f"Filtering nested fields of '{field.name}' is not yet supported,"
+                            f" except for the primary key ({field.related_field_ids[0]})."
+                        )
+                    }
                 )
         elif field.subfields:
             # For sub-fields, treat this as a nested table
