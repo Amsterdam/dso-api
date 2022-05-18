@@ -40,51 +40,32 @@ kan gefilterd worden met:
 Filteren in relaties
 --------------------
 
-Voor one-to-many relaties geldt het volgende:
+De relaties, en attributen van relaties, kunnen gebruikt worden in filters.
+Verbind de velden door middel van een punt-notatie (``relatie.veldnaam``).
 
-Relaties met een enkelvoudige verwijzende sleutel kunnen gefilterd worden op
-de concatenatie van de veldnaam en "Id".
-Voorbeeld: de relatie
-
-.. code-block:: json
-
-  "heeftDossier": {
-    "type": "string",
-    "relation": "bag:dossiers"
-  }
-
-kan gefilterd worden met:
+Bijvoorbeeld bij een enkelvoudige relatie:
 
 .. code-block:: bash
 
-    curl 'https://api.data.amsterdam.nl/v1/bag/verblijfsobjecten/?heeftDossierId=GV00000406'
+    curl 'https://api.data.amsterdam.nl/v1/huishoudelijkafval/container/?locatie.id=10009'
 
-Relaties met een meervoudige sleutel (als de sleutel ``"type": "object"`` heeft in het schema)
-kunnen worden gefilterd met de naam van de relatie en de naam van de gerelateerde sleutels
-gescheiden door een punt.
-Voorbeeld: de relatie
-
-.. code-block:: json
-
-  "heeftHoofdadres": {
-    "type": "object",
-    "properties": {
-      "identificatie": {
-        "type": "string"
-      },
-      "volgnummer": {
-        "type": "integer"
-      }
-    }
-    "relation": "bag:nummeraanduidingen"
-  }
-
-
-kan gefilterd worden met:
+...een temporele relatie:
 
 .. code-block:: bash
 
     curl 'https://api.data.amsterdam.nl/v1/bag/verblijfsobjecten/?heeftHoofdadres.identificatie=0363200000006110&heeftHoofdadres.volgnummer=1'
+
+...of een relatie zonder volgnummer, die altijd verwijst naar het laatste voorkomen:
+
+.. code-block:: bash
+
+    curl 'http://api.data.amsterdam.nl/v1/huishoudelijkafval/container/?locatie.gbdBuurt.identificatie=03630000000770'
+
+Je kan ieder ander veld uit de relatie ook gebruiken, zoals bijvoorbeeld ``?locatie.status=0``
+of een genest veld: ``?locatie.gbdBuurt.identificatie=...``. Deze opties staan niet in het naslagwerk
+vermeld, maar kunnen wel samengesteld worden door de velden van de API of documentatie te combineren.
+Het zoeken op de identificatie (primaire sleutel) is het snelste,
+en de beste keuze als je de identificatie ook weet.
 
 Operatoren
 ----------

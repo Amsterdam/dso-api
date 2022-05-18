@@ -286,6 +286,8 @@ def _field_data(field: DatasetFieldSchema):
         lookups = []
     elif field.relation or "://" in type:
         lookups = _identifier_lookups
+        if field.type == "string":
+            lookups += [lookup for lookup in _string_lookups if lookup not in lookups]
 
     return type, value_example, lookups
 
@@ -367,8 +369,10 @@ def _get_filters(table_fields: List[DatasetFieldSchema]) -> List[dict[str, Any]]
     return filters
 
 
-def _filter_payload(field: DatasetFieldSchema, *, name_suffix: str = "", is_deprecated=False):
-    name = _get_field_camel_name(field) + name_suffix
+def _filter_payload(
+    field: DatasetFieldSchema, *, prefix: str = "", name_suffix: str = "", is_deprecated=False
+):
+    name = prefix + _get_field_camel_name(field) + name_suffix
     type, value_example, lookups = _field_data(field)
 
     return {
@@ -388,19 +392,26 @@ def _get_filter_context(field: DatasetFieldSchema) -> List[dict[str, Any]]:
     """
     if field.relation:
         if field.is_scalar:
-            # normal FKs
-            return [_filter_payload(field, name_suffix="Id", is_deprecated=True)]
+            # normal FKs, can now be parsed using dot-notation
+            prefix = _get_field_camel_name(field) + "."
+            result = [
+                _filter_payload(field.related_table.get_field_by_id(id_field), prefix=prefix)
+                for id_field in field.related_table.identifier
+            ]
+            # Also include the old notation, that still works too (but deprecated)
+            return result + [_filter_payload(field, name_suffix="Id", is_deprecated=True)]
         elif field.is_object:
-            # The generated FK that Django requires because it does
-            # not support composite pks
-            result = [_filter_payload(field, name_suffix="Id", is_deprecated=True)]
-            # composite FKs
+            # composite key / temporal relation. Add those fields
             related_identifiers = field.related_table.identifier
-            return result + [
+            result = [
                 _filter_payload(sub_field)
                 for sub_field in field.subfields
                 if sub_field.id in related_identifiers
             ]
+
+            # Our implementation still inclues a regular foreign key,
+            # since Django doesn't support composite pks - used more in the past (but deprecated).
+            return result + [_filter_payload(field, name_suffix="Id", is_deprecated=True)]
     elif field.is_nested_table:
         return [_filter_payload(f) for f in field.subfields]
     elif field.is_scalar or field.is_array_of_scalars:
