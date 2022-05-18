@@ -66,11 +66,11 @@ De volgende query-parameters zijn te gebruiken:
      - Mogelijke waarde
      - Werking
 {%- for filter in table.filters %}
-   * - {% if filter.is_deprecated %}:deprecated:`{{ filter.name }}=` *gaat vervallen*{% else %}``{{ filter.name }}=``{% endif %}
+   * - {% if filter.is_deprecated %}:deprecated:`{{ filter.name }}=` *gaat vervallen*{% else %}``{{ filter.name }}=``{% endif %}{% if filter.auth %} (autorisatie: {{ filter.auth|sort|join(', ') }}){% endif %}
      - {{ filter.value_example|default('') }}
      - Test op exacte waarde (``==``).
   {%- for lookup in filter.lookups %}
-   * - {% if filter.is_deprecated %}:deprecated:`{{ filter.name }}[{{ lookup.operator }}]=` *gaat vervallen*{% else %}``{{ filter.name }}[{{ lookup.operator }}]=``{% endif %}
+   * - {% if filter.is_deprecated %}:deprecated:`{{ filter.name }}[{{ lookup.operator }}]=` *gaat vervallen*{% else %}``{{ filter.name }}[{{ lookup.operator }}]=``{% endif %}{% if filter.auth %} (autorisatie: {{ filter.auth|sort|join(', ') }}){% endif %}
      - {{ lookup.value_example or filter.value_example|default('') }}
      - {{ lookup.description }}
   {%- endfor %}

@@ -2,7 +2,7 @@
 import os
 import sys
 from pathlib import Path
-from typing import Any, List, NamedTuple, Optional
+from typing import Any, FrozenSet, List, NamedTuple, Optional
 
 import jinja2
 from schematools.types import DatasetFieldSchema, DatasetSchema, DatasetTableSchema
@@ -109,7 +109,7 @@ def render_dataset_docs(dataset: DatasetSchema, paths: dict[str, str]):
         {
             "schema": dataset,
             "schema_name": snake_name,
-            "schema_auth": dataset.auth,
+            "schema_auth": _fix_auth(dataset.auth),
             "main_title": main_title,
             "tables": tables,
             "wfs_url": wfs_url,
@@ -135,7 +135,7 @@ def render_wfs_dataset_docs(dataset: DatasetSchema, paths: dict[str, str]):
         {
             "schema": dataset,
             "schema_name": snake_name,
-            "schema_auth": dataset.auth,
+            "schema_auth": _fix_auth(dataset.auth),
             "main_title": main_title,
             "tables": tables,
             "wfs_url": f"{BASE_URL}/v1/wfs/{dataset_path}/",
@@ -161,7 +161,7 @@ def _get_table_context(table: DatasetTableSchema, paths: dict[str, str]):
         "description": table.get("description"),
         "fields": [_get_field_context(field) for field in fields],
         "filters": filters,
-        "auth": table.auth | table.dataset.auth,
+        "auth": _fix_auth(table.auth | table.dataset.auth),
         "expands": _get_table_expands(table),
         "source": table,
         "has_geometry": _has_geometry(table),
@@ -232,7 +232,7 @@ def _get_feature_type_context(table: DatasetTableSchema, paths: dict[str, str]):
         "uri": uri,
         "description": table.get("description"),
         "fields": [_get_field_context(field) for field in fields],
-        "auth": table.auth,
+        "auth": _fix_auth(table.dataset.auth | table.auth),
         "expands": _get_table_expands(table, rel_id_separator="/"),
         "source": table,
         "has_geometry": has_geometry,
@@ -324,7 +324,7 @@ def _get_field_context(field: DatasetFieldSchema) -> dict[str, Any]:
         "type": (type or "").capitalize(),
         "description": description or "",
         "source": field,
-        "auth": field.auth | field.table.auth | field.table.dataset.auth,
+        "auth": _fix_auth(field.auth | field.table.auth | field.table.dataset.auth),
     }
 
 
@@ -381,6 +381,7 @@ def _filter_payload(
         "is_deprecated": is_deprecated,
         "value_example": value_example or "",
         "lookups": [LOOKUP_CONTEXT[op] for op in lookups],
+        "auth": _fix_auth(field.auth | field.table.auth | field.table.dataset.auth),
     }
 
 
@@ -423,6 +424,14 @@ def _get_filter_context(field: DatasetFieldSchema) -> List[dict[str, Any]]:
     # TODO: Field is an object but not a relation?
 
     return []
+
+
+def _fix_auth(auth: FrozenSet[str]) -> FrozenSet[str]:
+    """Hide the OPENBAAR tag.
+    When the dataset is public, but table isn't,
+    this could even mix authorization levels.
+    """
+    return auth - {"OPENBAAR"}
 
 
 def _dataset_name(name):
