@@ -178,6 +178,27 @@ class TestFilterEngine:
         assert result.count() == 1, result
 
     @staticmethod
+    @pytest.mark.parametrize(
+        "query,expect",
+        [
+            ("", 1),
+            ("ligtInBouwblok.identificatie=03630012096483&ligtInBouwblok.volgnummer=1", 1),
+            ("ligtInBouwblok.identificatie=03630012096483&ligtInBouwblok.volgnummer=2", 0),
+            ("ligtInBouwblokId=03630012096483.1", 1),  # deprecated format, but test anyway!
+            ("ligtInBouwblokId=123", 0),
+            ("ligtInBouwblok.ligtInBuurtId=03630000000078.2", 1),
+            ("ligtInBouwblok.ligtInBuurt.identificatie=03630000000078", 1),
+        ],
+    )
+    def test_filter_temporal(bag_dataset, panden_model, panden_data, query, expect):
+        """Test that filtering on temporal relations works.
+        This checks both the dotted-notation, and the old 'compositeKeyId' FK field.
+        """
+        engine = create_filter_engine(query)
+        result = engine.filter_queryset(panden_model.objects.all())
+        assert result.count() == expect, result
+
+    @staticmethod
     def test_subobject_parsing(bag_dataset):
         verblijfsobjecten_schema = bag_dataset.schema.get_table_by_id("verblijfsobjecten")
         expected_fields = [
