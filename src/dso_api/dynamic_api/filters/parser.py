@@ -61,18 +61,15 @@ ALLOWED_SCALAR_LOOKUPS = {
     "number": _comparison_lookups | {"in"},
     "string": _string_lookups,
     "array": {"contains"},
+    "object": set(),
     "https://geojson.org/schema/Point.json": {"", "isnull", "not"},
     "https://geojson.org/schema/Polygon.json": _polygon_lookups,
     "https://geojson.org/schema/MultiPolygon.json": _polygon_lookups,
-}
-
-ALLOWED_FORMAT_LOOKUPS = {
-    "string": {
-        "date": _comparison_lookups,
-        "date-time": _comparison_lookups,
-        "time": _comparison_lookups,
-        "uri": _string_lookups,
-    },
+    # Format variants for type string:
+    "date": _comparison_lookups,
+    "date-time": _comparison_lookups,
+    "time": _comparison_lookups,
+    "uri": _string_lookups,
 }
 
 
@@ -245,8 +242,14 @@ class QueryFilterEngine:
                 # Geometry fields need a CRS to handle the input
                 return str2geo(filter_input.raw_value, self.input_crs)
 
+            target_schema = field_schema
+            if field_schema.is_object and field_schema.related_field_ids:
+                # Temporal relations, e.g. ?ligtInBouwblokId=03630012095418.1
+                # that references their identifier stored as foreign key.
+                return filter_input.raw_value
+
             # For dates, the type is string, but the format is date/date-time.
-            parser = SCALAR_PARSERS[field_schema.format or field_schema.type]
+            parser = SCALAR_PARSERS[target_schema.format or target_schema.type]
             if field_schema.is_array or filter_input.lookup in MULTI_VALUE_LOOKUPS:
                 # Value is treated as array
                 return [parser(v) for v in filter_input.raw_values]
@@ -267,11 +270,11 @@ class QueryFilterEngine:
         """Find which field[lookup] values are possible, given the field type."""
         try:
             if field_schema.relation or field_schema.nm_relation or field_schema.is_primary:
-                return ALLOWED_IDENTIFIER_LOOKUPS | ALLOWED_SCALAR_LOOKUPS[field_schema.type]
-            elif field_schema.format:
-                return ALLOWED_FORMAT_LOOKUPS[field_schema.type][field_schema.format]
+                # The 'string' type is needed for the deprecated ?temporalRelationId=.. filter.
+                field_type = "string" if field_schema.is_object else field_schema.type
+                return ALLOWED_IDENTIFIER_LOOKUPS | ALLOWED_SCALAR_LOOKUPS[field_type]
             else:
-                return ALLOWED_SCALAR_LOOKUPS[field_schema.type]
+                return ALLOWED_SCALAR_LOOKUPS[field_schema.format or field_schema.type]
         except KeyError:
             return set()
 
