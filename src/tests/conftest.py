@@ -115,8 +115,10 @@ class _LazyDynamicModels:
         try:
             return app[model_name]
         except KeyError:
+            available = ",".join(sorted(app.keys()))
             raise KeyError(
-                f"Model {model_name} does not exist in dataset '{dataset_name}'"
+                f"Model {model_name} does not exist in dataset '{dataset_name}'. "
+                f"Available are: {available}"
             ) from None
 
     def __getitem__(self, dataset_name) -> _LazyDynamicModels._LazyApp:
@@ -1154,7 +1156,8 @@ def stadsdelen_data(stadsdelen_model) -> DynamicModel:
 
 @pytest.fixture()
 def ggwgebieden_data(ggwgebieden_model, buurten_data):
-    ggwgebieden_model.objects.create(
+    """Test data for 'Gebiedsgerichtwerken - gebieden'."""
+    instance = ggwgebieden_model.objects.create(
         id="03630950000000.1",
         identificatie="03630950000000",
         volgnummer=1,
@@ -1178,6 +1181,7 @@ def ggwgebieden_data(ggwgebieden_model, buurten_data):
         bestaat_uit_buurten_identificatie="03630000000078",
         bestaat_uit_buurten_volgnummer=2,
     )
+    return instance
 
 
 @pytest.fixture()
