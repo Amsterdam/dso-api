@@ -55,13 +55,13 @@ class TestFilterEngine:
     @pytest.fixture
     def movie1(self, movies_model, movies_category):
         return movies_model.objects.create(
-            name="movie1", category=movies_category, date_added=date(2020, 2, 1)
+            id=1, name="movie1", category=movies_category, date_added=date(2020, 2, 1)
         )
 
     @pytest.fixture
     def movie2(self, movies_model, movies_category):
         return movies_model.objects.create(
-            name="movie2", date_added=date(2020, 3, 1), url="http://example.com/someurl"
+            id=2, name="movie2", date_added=date(2020, 3, 1), url="http://example.com/someurl"
         )
 
     @pytest.mark.django_db

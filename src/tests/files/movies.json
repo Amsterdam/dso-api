@@ -14,13 +14,14 @@
         "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "additionalProperties": false,
-        "identifier": "name",
+        "identifier": "id",
         "required": ["schema", "name"],
         "display": "name",
         "properties": {
           "schema": {
             "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.2#/definitions/schema"
           },
+          "id": {"type": "integer"},
           "name": {"type": "string", "description": ""},
           "dateAdded": {"type": "string", "format": "date-time", "description": ""},
           "url": {"type": "string", "format": "uri", "description": ""},
@@ -32,7 +33,14 @@
           "actors": {
             "type": "array",
             "relation": "movies:actor",
-            "items": {"type": "string"},
+            "items": {
+              "type": "object",
+              "properties": {
+                "identificatie": {
+                  "id": "integer"
+                }
+              }
+            },
             "description": ""
           }
         }
@@ -44,13 +52,14 @@
       "version": "0.0.0",
       "schema": {
         "$schema": "http://json-schema.org/draft-07/schema#",
-        "identifier": "name",
+        "identifier": "id",
         "required": ["name"],
         "display": "name",
         "properties": {
           "schema": {
             "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.2#/definitions/schema"
           },
+          "id": {"type": "integer"},
           "name": {"type": "string", "description": ""},
           "lastUpdatedBy": {
             "type": "string",
@@ -73,7 +82,7 @@
           "schema": {
             "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.2#/definitions/schema"
           },
-          "id": {"type": "string"},
+          "id": {"type": "integer"},
           "name": {"type": "string", "description": ""},
           "lastUpdatedBy": {
             "type": "string",
@@ -89,13 +98,14 @@
       "version": "0.0.0",
       "schema": {
         "$schema": "http://json-schema.org/draft-07/schema#",
-        "identifier": "name",
+        "identifier": "id",
         "required": ["name"],
         "display": "name",
         "properties": {
           "schema": {
             "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.2#/definitions/schema"
           },
+          "id": {"type": "integer"},
           "name": {"type": "string", "description": ""}
         }
       }
