@@ -78,10 +78,14 @@ class TestFilterEngine:
             ("dateAdded[gt]=2020-2-10", {"movie2"}),
             ("dateAdded[gt]=2020-3-1", set()),
             ("dateAdded[gte]=2020-3-1", {"movie2"}),
+            # Test in filter
+            ("dateAdded[in]=2020-2-1,2022-5-5", {"movie1"}),
+            ("dateAdded[in]=2020-2-1,2020-3-1,2022-5-5", {"movie1", "movie2"}),
             # Not (can be repeated for "AND NOT" testing)
             ("dateAdded[not]=2020-2-1", {"movie2"}),
             ("dateAdded[not]=2020-2-1&dateAdded[not]=2020-3-1", set()),
             # URLs have string-like comparison operators
+            ("url[in]=foobar,http://example.com/someurl", {"movie2"}),
             ("url[like]=http:*", {"movie2"}),
             ("url[isnull]=true", {"movie1"}),
         ],

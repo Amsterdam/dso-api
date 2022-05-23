@@ -32,11 +32,10 @@ class LookupContext(NamedTuple):
 
 
 # This should match DEFAULT_LOOKUPS_BY_TYPE in DSO-API (except for the "exact" lookup)
-_comparison_lookups = ["gt", "gte", "lt", "lte", "not", "isnull"]
+_comparison_lookups = ["gt", "gte", "lt", "lte", "not", "in", "isnull"]
 _identifier_lookups = ["in", "not", "isnull"]
 _polygon_lookups = ["contains", "isnull", "not"]
-_string_lookups = ["like", "not", "isnull", "isempty"]
-_number_lookups = _comparison_lookups + ["in"]
+_string_lookups = ["in", "like", "not", "isnull", "isempty"]
 
 FORMAT_ALIASES = {
     "date-time": "Datetime",
@@ -45,8 +44,8 @@ FORMAT_ALIASES = {
 VALUE_EXAMPLES = {
     "string": ("Tekst", _string_lookups),
     "boolean": ("``true`` | ``false``", []),
-    "integer": ("Geheel getal", _number_lookups),
-    "number": ("Getal", _number_lookups),
+    "integer": ("Geheel getal", _comparison_lookups),
+    "number": ("Getal", _comparison_lookups),
     "time": ("``hh:mm[:ss[.ms]]``", _comparison_lookups),
     "date": ("``yyyy-mm-dd``", _comparison_lookups),
     "date-time": ("``yyyy-mm-dd`` of ``yyyy-mm-ddThh:mm[:ss[.ms]]``", _comparison_lookups),
