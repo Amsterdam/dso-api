@@ -35,6 +35,7 @@ LOOKUP_PARSERS = {
 }
 
 MULTI_VALUE_LOOKUPS = {"not": operator.and_}
+SPLIT_VALUE_LOOKUPS = {"in"}
 
 SCALAR_PARSERS = {
     "boolean": str2bool,
@@ -251,8 +252,11 @@ class QueryFilterEngine:
             # For dates, the type is string, but the format is date/date-time.
             parser = SCALAR_PARSERS[target_schema.format or target_schema.type]
             if field_schema.is_array or filter_input.lookup in MULTI_VALUE_LOOKUPS:
-                # Value is treated as array
+                # Value is treated as array (repeated on query string)
                 return [parser(v) for v in filter_input.raw_values]
+            elif filter_input.lookup in SPLIT_VALUE_LOOKUPS:
+                # Value is comma separated (field[in]=...)
+                return [parser(v) for v in filter_input.raw_value.split(",")]
             else:
                 return parser(filter_input.raw_value)
         except KeyError as e:

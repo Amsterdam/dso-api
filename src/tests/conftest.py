@@ -478,7 +478,7 @@ def geometry_authdataset_thing(geometry_authdataset_model):
 def category() -> Category:
     """A dummy model to test our API with"""
     return Category.objects.create(
-        pk=1, name="bar", last_updated_by=MovieUser.objects.create(name="bar_man")
+        id=1, name="bar", last_updated_by=MovieUser.objects.create(name="bar_man")
     )
 
 
@@ -506,9 +506,9 @@ def movies_dataset() -> Dataset:
 
 @pytest.fixture
 def movies_category(movies_dataset, dynamic_models):
-    bar_man = dynamic_models["movies"]["user"].objects.create(name="bar_man")
+    bar_man = dynamic_models["movies"]["user"].objects.create(id=1, name="bar_man")
     return dynamic_models["movies"]["category"].objects.create(
-        pk=1, name="bar", last_updated_by=bar_man
+        id=1, name="bar", last_updated_by=bar_man
     )
 
 
@@ -521,10 +521,10 @@ def movies_model(movies_dataset, dynamic_models):
 def movies_data(movies_model, movies_category, dynamic_models):
     return [
         movies_model.objects.create(
-            name="foo123", category=movies_category, date_added=datetime(2020, 1, 1, 0, 45)
+            id=3, name="foo123", category=movies_category, date_added=datetime(2020, 1, 1, 0, 45)
         ),
         movies_model.objects.create(
-            name="test", category=movies_category, date_added=datetime(2020, 2, 2, 13, 15)
+            id=4, name="test", category=movies_category, date_added=datetime(2020, 2, 2, 13, 15)
         ),
     ]
 
