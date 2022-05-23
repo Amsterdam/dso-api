@@ -51,15 +51,15 @@ SCALAR_PARSERS = {
 
 # The empty value is there to indicate the field also supports no lookup operator.
 # This is mostly used by the OpenAPI generator.
-_comparison_lookups = {"", "gte", "gt", "lt", "lte", "not", "isnull"}
+_comparison_lookups = {"", "gte", "gt", "lt", "lte", "in", "not", "isnull"}
 _polygon_lookups = {"", "contains", "isnull", "not"}
-_string_lookups = {"", "isnull", "not", "isempty", "like"}
+_string_lookups = {"", "in", "isnull", "not", "isempty", "like"}
 
 ALLOWED_IDENTIFIER_LOOKUPS = {"", "in", "not", "isnull"}
 
 ALLOWED_SCALAR_LOOKUPS = {
-    "integer": _comparison_lookups | {"in"},
-    "number": _comparison_lookups | {"in"},
+    "integer": _comparison_lookups,
+    "number": _comparison_lookups,
     "string": _string_lookups,
     "array": {"contains"},
     "object": set(),
