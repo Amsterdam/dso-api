@@ -64,7 +64,6 @@ class TestFilterEngine:
             id=2, name="movie2", date_added=date(2020, 3, 1), url="http://example.com/someurl"
         )
 
-    @pytest.mark.django_db
     @pytest.mark.parametrize(
         "query,expect",
         [
@@ -95,21 +94,20 @@ class TestFilterEngine:
         qs = engine.filter_queryset(movies_model.objects.all())
         assert {obj.name for obj in qs} == expect, str(qs.query)
 
-    @pytest.mark.django_db
     @pytest.mark.parametrize(
         "query,expect",
         [
             # IN filter
-            ("category.id[in]={cat_id}", {"movie1"}),  # test ID
-            ("category.id[in]={cat_id},{cat_id}", {"movie1"}),  # test comma
-            ("category.id[in]=97,98,{cat_id}", {"movie1"}),  # test invalid IDs
-            ("category.id[in]=97,98,99", set()),  # test all invalid IDs
+            ("category.id[in]={cat_id}", ["movie1"]),  # test ID
+            ("category.id[in]={cat_id},{cat_id}", ["movie1"]),  # test comma
+            ("category.id[in]=97,98,{cat_id}", ["movie1"]),  # test invalid IDs
+            ("category.id[in]=97,98,99", []),  # test all invalid IDs
             # NOT filter
-            ("category.id[not]={cat_id}", {"movie2"}),
-            ("category.id[not]=99", {"movie1", "movie2"}),
+            ("category.id[not]={cat_id}", ["movie2"]),
+            ("category.id[not]=99", ["movie1", "movie2"]),
             # Old deprecated notation:
-            ("categoryId[in]={cat_id}", {"movie1"}),
-            ("categoryId[not]=99", {"movie1", "movie2"}),
+            ("categoryId[in]={cat_id}", ["movie1"]),
+            ("categoryId[not]=99", ["movie1", "movie2"]),
         ],
     )
     def test_foreignkey(self, movies_model, movie1, movie2, category, query, expect):
@@ -117,7 +115,15 @@ class TestFilterEngine:
         query = query.format(cat_id=category.pk)
         engine = create_filter_engine(query)
         qs = engine.filter_queryset(movies_model.objects.all())
-        assert {obj.name for obj in qs} == expect, str(qs.query)
+        assert sorted(obj.name for obj in qs) == expect, str(qs.query)
+
+    def test_m2m(self, movies_model, movies_data_with_actors):
+        """Prove that M2M queries work, and still return the object only once."""
+        engine = create_filter_engine("actors.name[like]=J*")
+        qs = engine.filter_queryset(movies_model.objects.all())
+        names = [obj.name for obj in qs]  # list to check for duplicates
+        assert names == ["foo123"]  # no duplicate
+        assert qs.query.distinct  # prove that SELECT DISTINCT was used.
 
     @staticmethod
     def test_filter_nested_table(
@@ -389,6 +395,58 @@ class TestDynamicFilterSet:
         data = read_response_json(response)
         assert len(data["_embedded"]["parkeervakken"]) == 1
         assert data["_embedded"]["parkeervakken"][0]["id"] == "121138489006"
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "query",
+        [
+            {"actors.name": "John Doe"},
+            {"actors.name[like]": "J*"},
+        ],
+    )
+    def test_filter_m2m_results(movies_data_with_actors, filled_router, query):
+        """Prove that filtering M2M models still return the objects just once."""
+        response = APIClient().get("/v1/movies/movie/", data=query)
+        data = read_response_json(response)
+        assert data["_embedded"] == {
+            "movie": [
+                {
+                    "_links": {
+                        "schema": (
+                            "https://schemas.data.amsterdam.nl/datasets/movies/dataset#movie"
+                        ),
+                        "self": {
+                            "href": "http://testserver/v1/movies/movie/3/",
+                            "id": 3,
+                            "title": "foo123",
+                        },
+                        "actors": [
+                            # Both shown, even if filtered on existence of one.
+                            {
+                                "href": "http://testserver/v1/movies/actor/1/",
+                                "id": "1",
+                                "title": "John Doe",
+                            },
+                            {
+                                "href": "http://testserver/v1/movies/actor/2/",
+                                "id": "2",
+                                "title": "Jane Doe",
+                            },
+                        ],
+                        "category": {
+                            "href": "http://testserver/v1/movies/category/1/",
+                            "id": 1,
+                            "title": "bar",
+                        },
+                    },
+                    "categoryId": 1,
+                    "dateAdded": "2020-01-01T00:45:00",
+                    "id": 3,
+                    "name": "foo123",
+                    "url": None,
+                }
+            ]
+        }
 
     @staticmethod
     @pytest.mark.parametrize("params", [{"e_type": "whatever"}, {"_sort": "e_type"}])
