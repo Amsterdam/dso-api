@@ -530,6 +530,24 @@ def movies_data(movies_model, movies_category, dynamic_models):
 
 
 @pytest.fixture
+def movies_data_with_actors(movies_data, dynamic_models):
+    """Extended fixture to test M2M"""
+    Actor = dynamic_models["movies"]["actor"]
+    MovieUser = dynamic_models["movies"]["user"]
+    movies_data[0].actors.set(
+        [
+            Actor.objects.create(id=1, name="John Doe"),
+            Actor.objects.create(
+                id=2,
+                name="Jane Doe",
+                last_updated_by=MovieUser.objects.create(id=2, name="jane_updater"),
+            ),
+        ]
+    )
+    return movies_data
+
+
+@pytest.fixture
 def location() -> Location:
     """A dummy model to test our API with"""
     return Location.objects.create(geometry=GEOSGeometry("Point(10 10)", srid=RD_NEW))

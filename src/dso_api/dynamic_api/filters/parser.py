@@ -8,7 +8,7 @@ import operator
 import re
 from datetime import datetime
 from functools import reduce
-from typing import Any
+from typing import Any, NamedTuple
 
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import models
@@ -16,7 +16,6 @@ from django.db.models import Q
 from django.utils.datastructures import MultiValueDict
 from gisserver.geometries import CRS
 from rest_framework.exceptions import PermissionDenied, ValidationError
-from schematools.contrib.django.models import DynamicModel
 from schematools.exceptions import SchemaObjectNotFound
 from schematools.permissions import UserScopes
 from schematools.types import DatasetFieldSchema, DatasetTableSchema
@@ -161,31 +160,39 @@ class QueryFilterEngine:
 
     def filter_queryset(self, queryset: models.QuerySet) -> models.QuerySet:
         """Apply the filtering"""
-        q = self.get_q(queryset.model)
-        if q is not None:
+        compiled_filter = self._compile_filters(queryset.model.table_schema())
+        if compiled_filter is not None:
             try:
-                queryset = queryset.filter(q)
+                queryset = queryset.filter(compiled_filter.q_object)
             except DjangoValidationError as e:
                 raise ValidationError(list(e)) from e
 
+            if compiled_filter.is_many:
+                queryset = queryset.distinct()
+
         return queryset
 
-    def get_q(self, model: type[DynamicModel]) -> models.Q | None:
-        qs = []
-        table_schema = model.table_schema()
+    def _compile_filters(self, table_schema: DatasetTableSchema) -> CompiledFilter | None:
+        """Create the filters based on the table schem and current request query string."""
+        filters = []
         for filter_input in self.filter_inputs:
             if table_schema.temporal and filter_input.key in table_schema.temporal.dimensions:
                 # Skip handling of temporal fields, is handled elsewhere.
                 continue
 
-            q_obj = self._get_field_q(table_schema, filter_input)
-            qs.append(q_obj)
+            filters.append(self._compile_filter(table_schema, filter_input))
 
-        return reduce(operator.and_, qs) if qs else None
+        if not filters:
+            return None
+        else:
+            # Merge the results
+            q = reduce(operator.and_, (filter.q_object for filter in filters))
+            is_many = any(filter.is_many for filter in filters)
+            return CompiledFilter(q, is_many)
 
-    def _get_field_q(
+    def _compile_filter(
         self, table_schema: DatasetTableSchema, filter_input: FilterInput
-    ) -> models.Q:
+    ) -> CompiledFilter:
         """Build the Q() object for a single filter"""
         fields = parse_filter_path(filter_input.path, table_schema, self.user_scopes)
         orm_path = _to_orm_path(fields)
@@ -197,9 +204,14 @@ class QueryFilterEngine:
         operator = MULTI_VALUE_LOOKUPS.get(filter_input.lookup)
         if operator is not None:
             # for [not] lookup: field != 1 AND field != 2
-            return reduce(operator, (Q(**{q_path: v}) for v in value))
+            q_object = reduce(operator, (Q(**{q_path: v}) for v in value))
         else:
-            return Q(**{q_path: value})
+            q_object = Q(**{q_path: value})
+
+        # Also tell whether the filter-path walks over many-to-many relationships.
+        # These will need extra care to avoid duplicate results in the final filter call.
+        is_many = any(field.is_array for field in fields)
+        return CompiledFilter(q_object, is_many)
 
     def _translate_lookup(
         self, filter_input: FilterInput, field_schema: DatasetFieldSchema, value: Any
@@ -291,6 +303,13 @@ class QueryFilterEngine:
         """
         fields = parse_filter_path(field_path.split("."), table_schema, user_scopes)
         return _to_orm_path(fields)
+
+
+class CompiledFilter(NamedTuple):
+    """The intermediate results of a single-filter"""
+
+    q_object: Q
+    is_many: bool
 
 
 def _to_orm_path(fields: list[DatasetFieldSchema]) -> str:
