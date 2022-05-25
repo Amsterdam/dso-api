@@ -4,4 +4,5 @@ from .backends import DynamicFilterBackend, DynamicOrderingFilter
 __all__ = (
     "DynamicFilterBackend",
     "DynamicOrderingFilter",
+    "FilterInput",
 )

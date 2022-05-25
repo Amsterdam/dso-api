@@ -21,7 +21,7 @@ from rest_framework.status import HTTP_401_UNAUTHORIZED, HTTP_403_FORBIDDEN
 from schematools.types import DatasetTableSchema
 from urllib3 import HTTPResponse
 
-from dso_api.dynamic_api.permissions import parse_filter
+from dso_api.dynamic_api.filters import FilterInput
 from rest_framework_dso.crs import CRS
 from rest_framework_dso.exceptions import (
     BadGateway,
@@ -289,13 +289,11 @@ class HaalCentraalClient(RemoteClient):
                 raise ValidationError(f"unknown filter {p!r}")
 
             try:
-                p, op = parse_filter(p)
-            except ValueError as e:
-                raise ValidationError(str(e)) from e
-            if op != "exact":
-                raise ValidationError(f"filter operator {op!r} not supported")
+                filt = FilterInput.from_parameter(p, [])
+            if filt.lookup not in [None, "exact"]:
+                raise ValidationError(f"filter operator {filt.lookup!r} not supported")
 
-            remote_params[p] = v
+            remote_params[filt.path] = v
 
         return super()._make_url(path, remote_params)
 

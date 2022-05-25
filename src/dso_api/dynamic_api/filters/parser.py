@@ -5,7 +5,6 @@ This translates a query-string into ORM lookups using the Amsterdam Schema defin
 from __future__ import annotations
 
 import operator
-import re
 from datetime import datetime
 from functools import reduce
 from typing import Any, NamedTuple
@@ -24,9 +23,6 @@ from schematools.utils import to_snake_case
 from dso_api.dynamic_api.permissions import check_filter_field_access
 
 from .values import str2bool, str2geo, str2isodate, str2number, str2time
-
-# Allow notations: field.subfield[lookup]
-RE_KEY = re.compile(r"\A(?P<path>[\w\d_-]+(?:\.[\w\d_-]+)*)(?:\[(?P<lookup>[a-z0-9A-Z_-]+)])?\Z")
 
 # Lookups that have specific value types:
 LOOKUP_PARSERS = {
@@ -97,14 +93,29 @@ class FilterInput:
     @classmethod
     def from_parameter(cls, key: str, raw_values: list[str]) -> FilterInput:
         """Construct this parsed class from a single query parameter."""
-        match = RE_KEY.match(key)
-        if match is None:
-            raise ValidationError(f"Invalid filter: {key}")
+        bracket = key.find("[")
+        if bracket == -1:
+            if "]" in key:
+                # Close bracket but no open bracket. Brackets don't occur in field paths.
+                raise ValidationError(f"missing open bracket ([) in {key!r}")
+            path = key
+            lookup = None
+        elif not key.endswith("]"):
+            raise ValidationError(f"missing closing bracket (]) in {key!r}")
+        elif bracket == 0:
+            raise ValidationError(f"empty field path in {key!r}")
+        else:
+            path = key[:bracket]
+            lookup = key[bracket + 1 : -1]
+
+        path = path.split(".")
+        if "" in path:
+            raise ValidationError(f"empty element in field path {key!r}")
 
         return cls(
             key=key,
-            path=match.group("path").split("."),
-            lookup=match.group("lookup"),
+            path=path,
+            lookup=lookup,
             raw_values=raw_values,
         )
 

@@ -125,31 +125,6 @@ class HasOAuth2Scopes(permissions.BasePermission):
         return access
 
 
-def parse_filter(v: str) -> tuple[str, str]:
-    """Given a filter query parameter, returns the field name and operator.
-
-    Does not validate the operator.
-
-    E.g.,
-        parse_filter("foo") == ("foo", "exact")
-        parse_filter("foo[contains]") == ("foo", "contains")
-    """
-    bracket = v.find("[")
-    if bracket == -1:
-        if "]" in v:
-            # Close bracket but no open bracket. Brackets don't occur in field names.
-            raise ValueError(f"missing open bracket ([) in {v!r}")
-        field_name = v
-        op = "exact"
-    elif not v.endswith("]"):
-        raise ValueError(f"missing closing bracket (]) in {v!r}")
-    else:
-        field_name = v[:bracket]
-        op = v[bracket + 1 : -1]
-
-    return field_name, op
-
-
 class CheckPermissionsMixin:
     """Mixin that adds a ``check_permissions()`` function to the view,
     which supports the DRF-plugins for permission checks on a non-DRF view (e.g. WFS/MVT).
