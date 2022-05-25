@@ -288,8 +288,7 @@ class HaalCentraalClient(RemoteClient):
             if not self._allow_filter(p):
                 raise ValidationError(f"unknown filter {p!r}")
 
-            try:
-                filt = FilterInput.from_parameter(p, [])
+            filt = FilterInput.from_parameter(p, [])
             if filt.lookup not in [None, "exact"]:
                 raise ValidationError(f"filter operator {filt.lookup!r} not supported")
 
