@@ -701,38 +701,12 @@ class TestAuth:
         api_client,
         fetch_auth_token,
         parkeervakken_schema,
-        parkeervakken_parkeervak_model,
-        parkeervakken_regime_model,
+        parkeervak,
         filled_router,
     ):
         """Prove that Auth is not cached."""
         patch_field_auth(parkeervakken_schema, "parkeervakken", "regimes", "dagen", auth=["BAG/R"])
         url = reverse("dynamic_api:parkeervakken-parkeervakken-list")
-
-        parkeervak = parkeervakken_parkeervak_model.objects.create(
-            id="121138489666",
-            type="File",
-            soort="MULDER",
-            aantal=1.0,
-            e_type="",
-            buurtcode="A05d",
-            straatnaam="Zoutkeetsgracht",
-        )
-        parkeervakken_regime_model.objects.create(
-            id=1,
-            parent=parkeervak,
-            bord="",
-            dagen=["ma", "di", "wo", "do", "vr", "za", "zo"],
-            soort="MULDER",
-            aantal=None,
-            e_type="",
-            kenteken="",
-            opmerking="",
-            begintijd="00:00:00",
-            eindtijd="23:59:00",
-            einddatum=None,
-            begindatum=None,
-        )
 
         # First fetch with BAG/R token
         token = fetch_auth_token(["BAG/R"])

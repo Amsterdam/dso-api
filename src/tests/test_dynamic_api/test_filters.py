@@ -270,6 +270,23 @@ class TestDynamicFilterSet:
     """Test how the filters work using the API client and views."""
 
     @staticmethod
+    @pytest.mark.parametrize(
+        "query,expect",
+        [
+            ("regimes.dagen=ma,di,wo,do,vr", 1),
+            ("regimes.dagen=ma,di,wo,do", 0),
+            ("regimes.dagen=ma,di,wo,do,vr,za,zo", 1),
+            ("regimes.dagen[contains]=ma,wo", 1),
+            ("regimes.dagen[contains]=ma,wo,foo", 0),
+        ],
+    )
+    def test_array_field(parkeervak, query, expect):
+        response = APIClient().get(f"/v1/parkeervakken/parkeervakken/?{query}")
+        data = read_response_json(response)
+        assert response.status_code == 200, data
+        assert len(data["_embedded"]["parkeervakken"]) == expect
+
+    @staticmethod
     def test_numerical_filters(parkeervakken_parkeervak_model, filled_router):
         """Test comparisons on numerical fields."""
 
@@ -408,6 +425,7 @@ class TestDynamicFilterSet:
         """Prove that filtering M2M models still return the objects just once."""
         response = APIClient().get("/v1/movies/movie/", data=query)
         data = read_response_json(response)
+        assert response.status_code == 200, data
         assert data["_embedded"] == {
             "movie": [
                 {
