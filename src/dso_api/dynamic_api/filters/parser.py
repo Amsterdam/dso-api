@@ -33,12 +33,15 @@ LOOKUP_PARSERS = {
     "like": str,  # e.g. uri is parsed as string for like.
 }
 
-MULTI_VALUE_LOOKUPS = {"not": operator.and_}
-SPLIT_VALUE_LOOKUPS = {"in"}
+# Array field lookups are not mentioned here, but handled with if/else cases
+# because the 'contains' lookup value differs between array fields and geometry fields.
+MULTI_VALUE_LOOKUPS = {"not", "in"}  # lookups that may hold multiple values in the query string
+SPLIT_VALUE_LOOKUPS = {"in"}  # lookups that take comma-separated values lists
+LOOKUP_MERGE_OPERATORS = {"not": operator.and_}  # which ones should be merged for the QuerySet
 
 SCALAR_PARSERS = {
     "boolean": str2bool,
-    "string": lambda f: f,
+    "string": str,
     "integer": int,
     "number": str2number,
     # Format variants for type string:
@@ -60,7 +63,7 @@ ALLOWED_SCALAR_LOOKUPS = {
     "integer": _comparison_lookups,
     "number": _comparison_lookups,
     "string": _string_lookups,
-    "array": {"contains"},
+    "array": {"", "contains"},
     "object": set(),
     "https://geojson.org/schema/Point.json": {"", "isnull", "not"},
     "https://geojson.org/schema/Polygon.json": _polygon_lookups,
@@ -83,7 +86,7 @@ class FilterInput:
         self.key = key
         self.path = path
         self.lookup = lookup or ""
-        self.raw_values = raw_values
+        self._raw_values = raw_values
 
     @classmethod
     def from_parameter(cls, key: str, raw_values: list[str]) -> FilterInput:
@@ -104,8 +107,24 @@ class FilterInput:
 
     @property
     def raw_value(self) -> str:
-        """Provide access to a single value when the filter expects this."""
-        return self.raw_values[0]
+        """Returns a single value when the filter expects this."""
+        return self._raw_values[0]
+
+    @property
+    def raw_values(self) -> list[str]:
+        """Returns a list of all provided values.
+        This is useful for filters that may occur multiple times
+        in a query string, such as: field[not]=abc&field[not]=def
+        """
+        return self._raw_values
+
+    @property
+    def split_values(self) -> list[str]:
+        """Returns the first value, split on comma.
+        This is used for values such as: array=..., array[contains]=... or field[in]=...
+        """
+        # Value is comma separated (field[in]=...).
+        return self._raw_values[0].split(",")
 
 
 class QueryFilterEngine:
@@ -201,7 +220,7 @@ class QueryFilterEngine:
         lookup = self._translate_lookup(filter_input, fields[-1], value)
         q_path = f"{orm_path}__{lookup}"
 
-        operator = MULTI_VALUE_LOOKUPS.get(filter_input.lookup)
+        operator = LOOKUP_MERGE_OPERATORS.get(filter_input.lookup)
         if operator is not None:
             # for [not] lookup: field != 1 AND field != 2
             q_object = reduce(operator, (Q(**{q_path: v}) for v in value))
@@ -255,20 +274,25 @@ class QueryFilterEngine:
                 # Geometry fields need a CRS to handle the input
                 return str2geo(filter_input.raw_value, self.input_crs)
 
-            target_schema = field_schema
             if field_schema.is_object and field_schema.related_field_ids:
                 # Temporal relations, e.g. ?ligtInBouwblokId=03630012095418.1
                 # that references their identifier stored as foreign key.
                 return filter_input.raw_value
 
+            if field_schema.is_array:
+                items = field_schema["items"]
+                parser = SCALAR_PARSERS[items.get("format") or items["type"]]
+            else:
+                parser = SCALAR_PARSERS[field_schema.format or field_schema.type]
+
             # For dates, the type is string, but the format is date/date-time.
-            parser = SCALAR_PARSERS[target_schema.format or target_schema.type]
             if field_schema.is_array or filter_input.lookup in MULTI_VALUE_LOOKUPS:
-                # Value is treated as array (repeated on query string)
-                return [parser(v) for v in filter_input.raw_values]
-            elif filter_input.lookup in SPLIT_VALUE_LOOKUPS:
-                # Value is comma separated (field[in]=...)
-                return [parser(v) for v in filter_input.raw_value.split(",")]
+                # Value is treated as array (repeated on query string, or comma separated)
+                use_split = (
+                    field_schema.is_array_of_scalars or filter_input.lookup in SPLIT_VALUE_LOOKUPS
+                )
+                values = filter_input.split_values if use_split else filter_input.raw_values
+                return [parser(v) for v in values]
             else:
                 return parser(filter_input.raw_value)
         except KeyError as e:

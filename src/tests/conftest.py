@@ -518,7 +518,7 @@ def movies_model(movies_dataset, dynamic_models):
 
 
 @pytest.fixture
-def movies_data(movies_model, movies_category, dynamic_models):
+def movies_data(movies_model, movies_category):
     return [
         movies_model.objects.create(
             id=3, name="foo123", category=movies_category, date_added=datetime(2020, 1, 1, 0, 45)
@@ -581,6 +581,50 @@ def parkeervakken_parkeervak_model(parkeervakken_dataset, dynamic_models):
 @pytest.fixture()
 def parkeervakken_regime_model(parkeervakken_dataset, dynamic_models):
     return dynamic_models["parkeervakken"]["parkeervakken_regimes"]
+
+
+@pytest.fixture()
+def parkeervak(parkeervakken_parkeervak_model, parkeervakken_regime_model) -> DynamicModel:
+    parkeervak = parkeervakken_parkeervak_model.objects.create(
+        id="121138489666",
+        type="File",
+        soort="MULDER",
+        aantal=1.0,
+        e_type="",
+        buurtcode="A05d",
+        straatnaam="Zoutkeetsgracht",
+    )
+    parkeervakken_regime_model.objects.create(
+        id=1,
+        parent=parkeervak,
+        bord="Laden en Lossen",
+        dagen=["ma", "di", "wo", "do", "vr"],
+        soort="MULDER",
+        aantal=None,
+        e_type="E7",
+        kenteken="",
+        opmerking="",
+        begintijd="06:00:00",
+        eindtijd="15:00:00",
+        einddatum=None,
+        begindatum=None,
+    )
+    parkeervakken_regime_model.objects.create(
+        id=2,
+        parent=parkeervak,
+        bord="",
+        dagen=["ma", "di", "wo", "do", "vr", "za", "zo"],
+        soort="FISCAAL",
+        aantal=None,
+        e_type="",
+        kenteken="",
+        opmerking="",
+        begintijd="00:00:00",
+        eindtijd="23:59:00",
+        einddatum=None,
+        begindatum=None,
+    )
+    return parkeervak
 
 
 @pytest.fixture()

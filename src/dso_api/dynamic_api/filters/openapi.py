@@ -28,7 +28,7 @@ OPENAPI_SCALAR_EXAMPLES = {
     "string": "text",
     "integer": "number",
     "number": "number",
-    "array": "id",
+    "array": "val1,val2",
     "object": {},
     # Format variants for type string:
     "date": "use yyyy-mm-dd",
@@ -38,11 +38,13 @@ OPENAPI_SCALAR_EXAMPLES = {
 }
 
 OPENAPI_LOOKUP_PREFIX = {
+    "": "Exact; ",
     "lt": "Less than; ",
     "lte": "Less than or equal to; ",
     "gt": "Greater than; ",
     "gte": "Greater than or equal to; ",
     "not": "Exclude matches; ",
+    "contains": "Should contain; ",
 }
 
 OPENAPI_LOOKUP_EXAMPLES = {
@@ -53,6 +55,9 @@ OPENAPI_LOOKUP_EXAMPLES = {
 }
 
 OPENAPI_TYPE_LOOKUP_EXAMPLES = {
+    "array": {
+        "contains": "Matches values from a comma-separated list: val1,val2,valN.",
+    },
     "https://geojson.org/schema/Point.json": {
         "": "Use x,y or POINT(x y)",  # only for no lookup
     },
@@ -131,20 +136,19 @@ def _get_field_openapi_params(field: DatasetFieldSchema, prefix="") -> list[dict
 
             if field.is_array:
                 param["schema"]["items"] = field["items"]  # expose all, is both JSONSchema.
+            elif lookup in parser.MULTI_VALUE_LOOKUPS:
+                # The 'field[not]=..' parameter can be repeated.
+                param["schema"] = {
+                    "type": "array",
+                    "items": param["schema"],
+                }
 
-            if lookup in OPENAPI_COMMA_LOOKUPS:
-                # OpenAPI has a specific notation to encode "val1,val2,.." formats.
+            if lookup in OPENAPI_COMMA_LOOKUPS or field.is_array_of_scalars:
+                # the 'field[in]=..' parameter repeats values with comma separators.
+                # OpenAPI has a specific notation for this.
                 # See: https://swagger.io/docs/specification/serialization/#query
                 param["explode"] = False
                 param["style"] = "form"
-                param["schema"] = {"type": "array", "items": param["schema"]}
-
-        if lookup in parser.MULTI_VALUE_LOOKUPS:
-            # The 'field[not]=..' parameter can be repeated.
-            param["schema"] = {
-                "type": "array",
-                "items": param["schema"],
-            }
 
         openapi_params.append(param)
 

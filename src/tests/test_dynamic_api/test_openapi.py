@@ -244,3 +244,40 @@ def test_openapi_json(api_client, afval_dataset, fietspaaltjes_dataset, filled_r
 
     log_messages = [m for m in caplog.messages if "DisableMigrations" not in m]
     assert not log_messages, caplog.messages
+
+
+@pytest.mark.django_db
+def test_openapi_parkeren_json(api_client, parkeervakken_dataset, filled_router, caplog):
+    """Prove that the OpenAPI page can be rendered."""
+    caplog.set_level(logging.WARNING)
+
+    # Prove the that OpenAPI view can be found at the endpoint
+    url = reverse("dynamic_api:openapi-parkeervakken")
+    assert url == "/v1/parkeervakken/"
+
+    response = api_client.get(url)
+    assert response.status_code == 200, response.data
+    assert response["content-type"] == "application/vnd.oai.openapi+json"
+    schema = response.data
+
+    # Prove that various filters are properly exposed.
+    parkeervak_parameters = {
+        param["name"]: param
+        for param in schema["paths"]["/v1/parkeervakken/parkeervakken/"]["get"]["parameters"]
+    }
+    assert parkeervak_parameters["regimes.dagen"] == {
+        "name": "regimes.dagen",
+        "description": "Exact; val1,val2",
+        "in": "query",
+        "schema": {"items": {"type": "string"}, "type": "array"},
+        "style": "form",
+        "explode": False,
+    }
+    assert parkeervak_parameters["regimes.dagen[contains]"] == {
+        "name": "regimes.dagen[contains]",
+        "description": "Matches values from a comma-separated list: val1,val2,valN.",
+        "in": "query",
+        "schema": {"items": {"type": "string"}, "type": "array"},
+        "style": "form",
+        "explode": False,
+    }
