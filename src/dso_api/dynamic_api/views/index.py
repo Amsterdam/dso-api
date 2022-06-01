@@ -74,7 +74,7 @@ class APIIndexView(APIView):
                 "description": ds.schema.description or "",
                 "tags": ds.schema.get("theme", []),
                 "terms_of_use": {
-                    "government_only": "auth" in ds.schema,
+                    "government_only": "OPENBAAR" not in ds.schema.auth,
                     "pay_per_use": False,
                     "license": ds.schema.license,
                 },
