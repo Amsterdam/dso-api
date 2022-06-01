@@ -30,6 +30,7 @@ opencensus-ext-logging == 0.1.0
 markdown == 3.3.4
 
 # Testing
+bandit == 1.7.4
 flake8 == 3.9.2
 flake8-blind-except == 0.2.0
 flake8-colors == 0.1.9
