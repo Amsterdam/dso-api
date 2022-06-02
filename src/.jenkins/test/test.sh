@@ -12,3 +12,6 @@ flake8 --config=.flake8 ./dso_api
 
 # echo "Running unit tests"
 DJANGO_DEBUG=false pytest --nomigrations -vs --ds=tests.settings --show-capture=no
+
+echo "Running bandit"
+bandit --format screen --exclude src/tests --recursive src
