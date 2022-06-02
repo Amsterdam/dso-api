@@ -15,11 +15,13 @@ from django.db import models
 from django.db.models import Q
 from django.utils.datastructures import MultiValueDict
 from gisserver.geometries import CRS
-from rest_framework.exceptions import PermissionDenied, ValidationError
+from rest_framework.exceptions import ValidationError
 from schematools.exceptions import SchemaObjectNotFound
 from schematools.permissions import UserScopes
-from schematools.types import DatasetFieldSchema, DatasetTableSchema
+from schematools.types import AdditionalRelationSchema, DatasetFieldSchema, DatasetTableSchema
 from schematools.utils import to_snake_case
+
+from dso_api.dynamic_api.permissions import check_filter_field_access
 
 from .values import str2bool, str2geo, str2isodate, str2number, str2time
 
@@ -213,11 +215,11 @@ class QueryFilterEngine:
         self, table_schema: DatasetTableSchema, filter_input: FilterInput
     ) -> CompiledFilter:
         """Build the Q() object for a single filter"""
-        fields = parse_filter_path(filter_input.path, table_schema, self.user_scopes)
-        orm_path = _to_orm_path(fields)
+        parts = _parse_filter_path(filter_input.path, table_schema, self.user_scopes)
+        orm_path = _to_orm_path(parts)
 
-        value = self._translate_raw_value(filter_input, fields[-1])
-        lookup = self._translate_lookup(filter_input, fields[-1], value)
+        value = self._translate_raw_value(filter_input, parts[-1])
+        lookup = self._translate_lookup(filter_input, parts[-1], value)
         q_path = f"{orm_path}__{lookup}"
 
         operator = LOOKUP_MERGE_OPERATORS.get(filter_input.lookup)
@@ -229,29 +231,29 @@ class QueryFilterEngine:
 
         # Also tell whether the filter-path walks over many-to-many relationships.
         # These will need extra care to avoid duplicate results in the final filter call.
-        is_many = any(field.is_array for field in fields)
+        is_many = any(part.is_many for part in parts)
         return CompiledFilter(q_object, is_many)
 
     def _translate_lookup(
-        self, filter_input: FilterInput, field_schema: DatasetFieldSchema, value: Any
+        self, filter_input: FilterInput, filter_part: FilterPathPart, value: Any
     ):
         """Convert the lookup value into the Django ORM type."""
         lookup = filter_input.lookup
 
         # Find whether the lookup is allowed at all.
         # This prevents doing a "like" lookup on an integer/date-time field for example.
-        allowed_lookups = self.get_allowed_lookups(field_schema)
+        allowed_lookups = self.get_allowed_lookups(filter_part.field)
         if lookup not in allowed_lookups:
             possible = ", ".join(sorted(x for x in allowed_lookups if x))
             raise ValidationError(
                 {
-                    field_schema.name: (
+                    filter_part.name: (
                         f"Lookup not supported: {lookup or '(none)'}, supported are: {possible}"
                     )
                 }
             ) from None
 
-        if field_schema.format == "date-time" and not isinstance(value, datetime):
+        if filter_part.field.format == "date-time" and not isinstance(value, datetime):
             # When something different then a full datetime is given, only compare dates.
             # Otherwise, the "lte" comparison happens against 00:00:00.000 of that date,
             # instead of anything that includes that day itself.
@@ -260,9 +262,11 @@ class QueryFilterEngine:
         return lookup or "exact"
 
     def _translate_raw_value(  # noqa: C901
-        self, filter_input: FilterInput, field_schema: DatasetFieldSchema
+        self, filter_input: FilterInput, filter_part: FilterPathPart
     ):
         """Convert a filter value into the proper Python type"""
+        field_schema = filter_part.field
+
         # Check lookup first, can be different from actual field type
         try:
             # Special cases:
@@ -286,7 +290,7 @@ class QueryFilterEngine:
                 parser = SCALAR_PARSERS[field_schema.format or field_schema.type]
 
             # For dates, the type is string, but the format is date/date-time.
-            if field_schema.is_array or filter_input.lookup in MULTI_VALUE_LOOKUPS:
+            if filter_part.is_many or filter_input.lookup in MULTI_VALUE_LOOKUPS:
                 # Value is treated as array (repeated on query string, or comma separated)
                 use_split = (
                     field_schema.is_array_of_scalars or filter_input.lookup in SPLIT_VALUE_LOOKUPS
@@ -325,8 +329,8 @@ class QueryFilterEngine:
         """Translate a field name into a ORM path.
         This also checks whether the field is accessible according to the request scope.
         """
-        fields = parse_filter_path(field_path.split("."), table_schema, user_scopes)
-        return _to_orm_path(fields)
+        parts = _parse_filter_path(field_path.split("."), table_schema, user_scopes)
+        return _to_orm_path(parts)
 
 
 class CompiledFilter(NamedTuple):
@@ -336,33 +340,58 @@ class CompiledFilter(NamedTuple):
     is_many: bool
 
 
-def _to_orm_path(fields: list[DatasetFieldSchema]) -> str:
+def _to_orm_path(parts: list[FilterPathPart]) -> str:
     """Generate the ORM path for a path of fields."""
-    names = [to_snake_case(field.name) for field in fields]
+    names = [to_snake_case(part.name) for part in parts]
 
-    if len(fields) > 1:
-        # When spanning relations, check whether this can be optimized.
+    if len(parts) > 1:
+        # When spanning forward relations, check whether this can be optimized.
         # Instead of making a JOIN for "foreigntable.id", the local field can be used instead
         # by using the ORM lookup into "foreigntable_id". Note that related_field_ids is None
         # for nested tables, since those tables use a reverse relation to the parent.
-        related_ids = fields[-2].related_field_ids
-        if related_ids is not None and fields[-1].name in related_ids:
+        parent_part, last_part = parts[-2], parts[-1]
+        if (
+            parent_part.field is not None
+            and last_part.field is not None
+            and (related_ids := parent_part.field.related_field_ids) is not None
+            and last_part.name in related_ids
+        ):
             # Matched identifier that also exists on the previous table, use that instead.
             # loose relation directly stores the "identifier" as name, so can just strip that.
-            if not fields[-2].is_loose_relation:
+            if not parent_part.field.is_loose_relation:
                 names[-2] = f"{names[-2]}_{names[-1]}"
             names.pop()
 
     return "__".join(names)
 
 
-def parse_filter_path(
+def _get_reverse_id_field(additional_relation: AdditionalRelationSchema) -> DatasetFieldSchema:
+    """Find the field that is targeted by direct queries against the reverse relation.
+    This is not the reverse field (a foreign key in the table), but the identifier field.
+    """
+    table = additional_relation.related_table
+    return table.get_field_by_id(table.identifier[0])
+
+
+class FilterPathPart(NamedTuple):
+    """An entry in the filter path, translated to a field.
+    The field and reverse field are so different in their API,
+    that those fields are mentioned separately. They don't have a useful base class.
+    """
+
+    name: str
+    field: DatasetFieldSchema
+    reverse_field: AdditionalRelationSchema | None = None
+    is_many: bool = False
+
+
+def _parse_filter_path(
     field_path: list[str], table_schema: DatasetTableSchema, user_scopes: UserScopes
-) -> list[DatasetFieldSchema]:
+) -> list[FilterPathPart]:
     """Translate the filter name into a path of schema fields.
     The result has multiple entries when the path follows over relations.
     """
-    fields = []
+    parts = []
     parent: (DatasetTableSchema | DatasetFieldSchema | None) = table_schema
     field_name = ".".join(field_path)
 
@@ -370,55 +399,57 @@ def parse_filter_path(
     for i, name in enumerate(field_path):
         # When the parent is no longer set, the previous field wasn't a relation.
         if parent is None:
-            raise ValidationError(f"Field does not exist: {field_name}")
+            raise ValidationError(f"Field '{field_name}' does not exist")
 
         # Find the field by name, also handle workarounds for relation ID's.
-        field = _get_field_by_id(parent, name, is_last=(i == last_item))
-        if field is None:
-            raise ValidationError(f"Field does not exist: {field_name}")
+        filter_part = _get_field_by_id(parent, name, is_last=(i == last_item))
+        if filter_part is None:
+            raise ValidationError(f"Field '{field_name}' does not exist")
 
-        if not user_scopes.has_field_access(field):
-            raise PermissionDenied(f"Access denied to filter on: {field_name}") from None
+        # forward relation
+        field = filter_part.field
+        check_filter_field_access(field_name, field, user_scopes)
 
-        fields.append(field)
-
-        if field.relation or field.nm_relation:
-            # For nesting, look into the next table
+        if filter_part.reverse_field is not None:
+            parent = filter_part.reverse_field.related_table
+        elif field.relation or field.nm_relation:
             parent = field.related_table
-
-            if (
-                field.is_loose_relation
-                and i < last_item
-                and not (
-                    i + 1 == last_item and field_path[last_item] == field.related_field_ids[0]
-                )
-            ):
-                # No support for looserelation__field=.. in the ORM yet.
-                raise ValidationError(
-                    {
-                        field_name: (
-                            f"Filtering nested fields of '{field.name}' is not yet supported,"
-                            f" except for the primary key ({field.related_field_ids[0]})."
-                        )
-                    }
-                )
         elif field.subfields:
             # For sub-fields, treat this as a nested table
             parent = field
         else:
             parent = None
 
-    return fields
+        if (
+            filter_part.reverse_field is None
+            and field.is_loose_relation
+            and i < last_item
+            and not (i + 1 == last_item and field_path[last_item] == field.related_field_ids[0])
+        ):
+            # No support for looserelation__field=.. in the ORM yet.
+            raise ValidationError(
+                {
+                    field_name: (
+                        f"Filtering nested fields of '{field.name}' is not yet supported,"
+                        f" except for the primary key ({field.related_field_ids[0]})."
+                    )
+                }
+            )
+
+        parts.append(filter_part)
+
+    return parts
 
 
-def _get_field_by_id(
+def _get_field_by_id(  # noqa: C901
     parent: (DatasetTableSchema | DatasetFieldSchema | None), name: str, is_last: bool
-) -> DatasetFieldSchema | None:
+) -> FilterPathPart | None:
     """Find the field in the Amsterdam schema.
     Handle workarounds for foreignkey ID fields that were previously exposed.
     """
+    field = None
     try:
-        return parent.get_field_by_id(name)
+        field = parent.get_field_by_id(name)
     except SchemaObjectNotFound:
         # Backwards compatibility: allow filtering on the "FOREIGNKEY_id" field,
         # that was exposed in the API. This should only happen when the "Id" suffix is
@@ -427,8 +458,26 @@ def _get_field_by_id(
             try:
                 field = parent.get_field_by_id(name[:-2])
             except SchemaObjectNotFound:
-                return None
-            if field.relation:
-                return field
+                pass
+            if not field.relation:
+                field = None  # only allow relations for "Id" suffix.
 
-    return None
+    if field is not None:
+        # Found regular field, or forward relation
+        return FilterPathPart(name=field.name, field=field, is_many=field.is_array)
+
+    try:
+        additional_relation = parent.get_additional_relation_by_id(name)
+    except SchemaObjectNotFound:
+        return None
+    else:
+        # The additional relation name is used as ORM path to navigate over the relation.
+        # Yet when directly filtering, the value/lookup should work directly
+        # against the primary key of the reverse table (hence field is also resolved here)
+        field = _get_reverse_id_field(additional_relation)
+        return FilterPathPart(
+            name=additional_relation.id,
+            field=field,
+            reverse_field=additional_relation,
+            is_many=True,
+        )

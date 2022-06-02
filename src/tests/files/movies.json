@@ -55,6 +55,14 @@
         "identifier": "id",
         "required": ["name"],
         "display": "name",
+        "additionalRelations": {
+          "movies": {
+            "table": "movie",
+            "field": "actors",
+            "format": "expanded",
+            "$comment": "Reverse M2M back to movies"
+          }
+        },
         "properties": {
           "schema": {
             "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.2#/definitions/schema"
@@ -78,6 +86,14 @@
         "identifier": "id",
         "required": ["name"],
         "display": "name",
+        "additionalRelations": {
+          "movies": {
+            "table": "movie",
+            "field": "category",
+            "format": "expanded",
+            "$comment": "Reverse FK back to movies"
+          }
+        },
         "properties": {
           "schema": {
             "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.2#/definitions/schema"

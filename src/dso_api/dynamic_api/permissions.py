@@ -1,13 +1,10 @@
 import logging
-from typing import Union, cast
 
 from django.core.exceptions import PermissionDenied
-from django.http import HttpRequest
 from rest_framework import permissions
 from rest_framework.viewsets import ViewSetMixin
-from schematools.exceptions import SchemaObjectNotFound
 from schematools.permissions import UserScopes
-from schematools.types import DatasetFieldSchema, DatasetTableSchema
+from schematools.types import DatasetFieldSchema
 
 from rest_framework_dso.embedding import EmbeddedFieldMatch
 from rest_framework_dso.serializers import ExpandableSerializer
@@ -30,6 +27,18 @@ def log_access(request, access: bool):
             request.path,
             request.user_scopes,
         )
+
+
+def check_filter_field_access(field_name: str, field: DatasetFieldSchema, user_scopes: UserScopes):
+    """Check whether the field ca be used for filtering."""
+    if not user_scopes.has_field_access(field):
+        raise PermissionDenied(f"Access denied to filter on: {field_name}")
+
+    if field.related_field_ids is not None:
+        # Check if related ID fields are accessible.
+        for id_name in field.related_field_ids:
+            if not user_scopes.has_field_access(field.related_table.get_field_by_id(id_name)):
+                raise PermissionDenied(f"Access denied to filter on: {field_name}")
 
 
 def filter_unauthorized_expands(
@@ -116,130 +125,6 @@ class HasOAuth2Scopes(permissions.BasePermission):
         return access
 
 
-def validate_request(request, schema: DatasetTableSchema, allowed: set[str]) -> None:  # noqa: C901
-    """Validate request method and parameters and check authorization for filters.
-
-    The argument allowed is a set of parameters that are explicitly allowed.
-    All other parameters are parsed as filters and rejected if not present in the schema.
-
-    Raises FilterSyntaxError, SchemaObjectNotFound or PermissionDenied in case of a problem.
-    """
-
-    if request.method == "OPTIONS":
-        return
-    elif request.method != "GET":
-        raise PermissionDenied(f"{request.method} request not allowed")
-
-    # Workaround for BBGA, which has a broken schema and is queried in a funny way
-    # by another application.
-    if schema.dataset.id == "bbga":
-        return True
-
-    # Type hack: DRF requests have a __getattr__ that delegates to an HttpRequest.
-    request = cast(HttpRequest, request)
-
-    # And then we and authorization_django monkey-patch the scopes onto the request.
-    scopes = cast(UserScopes, request.user_scopes)
-
-    # Collect mandatory filters. We need to make an exception for these to handle cases
-    # where the field they reference isn't otherwise accessible.
-    # The actual check for whether the filter sets are provided lives elsewhere.
-    mandatory = set()
-    for profile in scopes.get_active_profile_tables(schema.dataset.id, schema.id):
-        mandatory.update(*profile.mandatory_filtersets)
-
-    for key, values in request.GET.lists():
-        if key in allowed:
-            continue
-
-        if key == "_sort" or key == "sorteer":
-            for value in values:
-                for field in value.split(","):
-                    # Leading "-" means descending sort.
-                    field = field[1:] if field.startswith("-") else field
-                    _check_field_access(field, scopes, schema)
-            continue
-
-        # Everything else is a filter.
-        field_name, op = parse_filter(key)
-
-        # mandatoryFilters may contain either the complete filter (with lookup operation)
-        # or just the field name.
-        if key in mandatory or field_name in mandatory:
-            continue
-
-        if schema.temporal is not None:
-            if fields := schema.temporal.dimensions.get(field_name):
-                for field in (fields.start, fields.end):
-                    _check_field_access(field, scopes, schema)
-                continue
-
-        _check_field_access(field_name, scopes, schema)
-
-
-def _check_field_access(  # noqa: C901
-    full_field_name: str,
-    scopes: UserScopes,
-    schema: Union[DatasetTableSchema, DatasetFieldSchema],
-) -> None:
-    field_name = full_field_name
-    while field_name != "":
-        part, field_name, *_ = *field_name.split(".", 1), ""
-
-        try:
-            schema = schema.get_field_by_id(part)
-        except SchemaObjectNotFound as e:
-            # Relations with non-composite keys become a pseudo-property with "Id" appended
-            # to the table name.
-            if part.endswith("Id"):
-                part = part[: -len("Id")]
-                if field_name != "":
-                    raise FilterSyntaxError("relation key should appear at the end") from e
-                schema = schema.get_field_by_id(part)
-                rel = schema.related_table
-                if not rel:
-                    raise SchemaObjectNotFound(
-                        f"no field {part}Id and no relation {part} found"
-                    ) from e
-                idents = schema.related_field_ids
-                # Set the schema and field name to the identifier that this relation refers to
-                # and try again.
-                field_name = idents[0] + ("." + field_name if field_name else "")
-                schema = rel
-                continue
-
-            raise
-
-        # First check the field, then check whether it's a relation,
-        # so we can auth-check the relation and the thing(s) it points to.
-        if not scopes.has_field_access(schema):
-            raise PermissionDenied(f"access denied to field {schema.id} with scopes {scopes}")
-
-        if rel := schema.related_table:
-            rel = cast(DatasetTableSchema, rel)
-            idents = schema.related_field_ids
-            for ident in idents:
-                schema = rel.get_field_by_id(ident)
-                # scopes.has_field_access also checks table and dataset access.
-                if not scopes.has_field_access(schema):
-                    raise PermissionDenied(
-                        f"access denied to field {schema.id} with scopes {scopes}"
-                    )
-
-            schema = rel
-
-    # If we're still, or again, at a DatasetTableSchema, then either field_name was empty
-    # or its final part referred to a related table instead of a field within such a table.
-    if isinstance(schema, DatasetTableSchema):
-        raise FilterSyntaxError(f"{full_field_name!r} does not refer to a field")
-
-
-class FilterSyntaxError(Exception):
-    """Signals a syntax error in a filter parameter."""
-
-    pass
-
-
 def parse_filter(v: str) -> tuple[str, str]:
     """Given a filter query parameter, returns the field name and operator.
 
@@ -253,11 +138,11 @@ def parse_filter(v: str) -> tuple[str, str]:
     if bracket == -1:
         if "]" in v:
             # Close bracket but no open bracket. Brackets don't occur in field names.
-            raise FilterSyntaxError(f"missing open bracket ([) in {v!r}")
+            raise ValueError(f"missing open bracket ([) in {v!r}")
         field_name = v
         op = "exact"
     elif not v.endswith("]"):
-        raise FilterSyntaxError(f"missing closing bracket (]) in {v!r}")
+        raise ValueError(f"missing closing bracket (]) in {v!r}")
     else:
         field_name = v[:bracket]
         op = v[bracket + 1 : -1]

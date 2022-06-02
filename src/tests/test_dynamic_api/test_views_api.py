@@ -1,7 +1,6 @@
 import inspect
 import json
 import math
-import re
 from typing import Any
 
 import orjson
@@ -115,7 +114,7 @@ def test_filter_no_such_field(api_client, afval_dataset, filled_router):
     response = api_client.get(url, data={"nietbestaand": ""})
     assert response.status_code == HTTP_400_BAD_REQUEST, response.data
     reason = response.data["invalid-params"][0]["reason"]
-    assert "Field 'nietbestaand' does not exist in table 'containers'" in reason
+    assert reason == "Field 'nietbestaand' does not exist"
 
 
 @pytest.mark.django_db
@@ -127,7 +126,7 @@ def test_filter_syntax_error(param, api_client, afval_dataset, filled_router):
     response = api_client.get(url, data={param: ""})
     assert response.status_code == HTTP_400_BAD_REQUEST, response.data
     reason = response.data["invalid-params"][0]["reason"]
-    assert re.search(r"missing (open|closing) bracket", reason), reason
+    assert reason == f"Invalid filter: {param}"
 
 
 @pytest.mark.django_db
@@ -271,8 +270,8 @@ class TestSort:
 
     @staticmethod
     def test_list_ordering_invalid(api_client, movies_category, django_assert_num_queries):
-        """Prove that ?_sort=... only works on a fixed set of fields (e.g. not on FK's)."""
-        response = api_client.get("/v1/movies/movie/", data={"_sort": "category"})
+        """Prove that ?_sort=... only works on a fixed set of fields."""
+        response = api_client.get("/v1/movies/movie/", data={"_sort": "foobarvalue"})
         data = read_response_json(response)
 
         assert response.status_code == 400, data
@@ -280,15 +279,15 @@ class TestSort:
             "type": "urn:apiexception:invalid",
             "title": "Invalid input.",
             "status": 400,
-            "instance": "http://testserver/v1/movies/movie/?_sort=category",
+            "instance": "http://testserver/v1/movies/movie/?_sort=foobarvalue",
             "invalid-params": [
                 {
                     "type": "urn:apiexception:invalid:invalid",
                     "name": "invalid",
-                    "reason": "'category' does not refer to a field",
+                    "reason": "Field 'foobarvalue' does not exist",
                 }
             ],
-            "x-validation-errors": ["'category' does not refer to a field"],
+            "x-validation-errors": ["Field 'foobarvalue' does not exist"],
         }
 
 
@@ -873,7 +872,7 @@ class TestAuth:
         response = api_client.get(f"{url}?_sort=datumCreatie")
         data = read_response_json(response)
         assert response.status_code == 403, data
-        assert "access denied to field datumCreatie" in data["title"]
+        assert data["title"] == "Access denied to filter on: datumCreatie"
 
     def test_sort_by_not_accepting_db_column_names(
         self, api_client, afval_container, filled_router
@@ -883,7 +882,11 @@ class TestAuth:
         response = api_client.get(f"{url}?_sort=datum_creatie")
         data = read_response_json(response)
         assert response.status_code == 400, data
-        assert "datum_creatie" in data["x-validation-errors"][0], data
+        assert data["invalid-params"][0] == {
+            "type": "urn:apiexception:invalid:invalid",
+            "name": "invalid",
+            "reason": "Field 'datum_creatie' does not exist",
+        }
 
 
 @pytest.mark.django_db
