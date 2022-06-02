@@ -21,7 +21,7 @@ from rest_framework.status import HTTP_401_UNAUTHORIZED, HTTP_403_FORBIDDEN
 from schematools.types import DatasetTableSchema
 from urllib3 import HTTPResponse
 
-from dso_api.dynamic_api.permissions import FilterSyntaxError, parse_filter
+from dso_api.dynamic_api.permissions import parse_filter
 from rest_framework_dso.crs import CRS
 from rest_framework_dso.exceptions import (
     BadGateway,
@@ -294,7 +294,7 @@ class HaalCentraalClient(RemoteClient):
 
             try:
                 p, op = parse_filter(p)
-            except FilterSyntaxError as e:
+            except ValueError as e:
                 raise ValidationError(str(e)) from e
             if op != "exact":
                 raise ValidationError(f"filter operator {op!r} not supported")

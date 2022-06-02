@@ -243,8 +243,8 @@ class TestFilterEngine:
         scopes = UserScopes({}, [])
         for query_key, orm_path in expected_fields:
             filter_input = parser.FilterInput.from_parameter(query_key, raw_values=[])
-            fields = parser.parse_filter_path(filter_input.path, verblijfsobjecten_schema, scopes)
-            assert parser._to_orm_path(fields) == orm_path
+            parts = parser._parse_filter_path(filter_input.path, verblijfsobjecten_schema, scopes)
+            assert parser._to_orm_path(parts) == orm_path
 
     @staticmethod
     @pytest.mark.parametrize(
@@ -465,6 +465,34 @@ class TestDynamicFilterSet:
                 }
             ]
         }
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "query",
+        [
+            "movies.name=foo123",
+            "movies.id[in]=3,4",
+            "movies.name[not]=many",
+        ],
+    )
+    def test_filter_reverse_fk(movies_data_with_actors, filled_router, query):
+        """Prove that filtering reverse FK models works and returns the objects just once."""
+        response = APIClient().get(f"/v1/movies/category/?{query}")
+        data = read_response_json(response)
+        assert response.status_code == 200, data
+        assert set(data["_embedded"].keys()) == {"category"}, data
+        assert len(data["_embedded"]["category"]) == 1, data
+
+    @staticmethod
+    def test_filter_reverse_m2m(movies_data_with_actors, filled_router):
+        """Prove that filtering M2M models works and returns the objects just once."""
+        response = APIClient().get("/v1/movies/actor/?movies.name=foo123")
+        data = read_response_json(response)
+        assert response.status_code == 200, data
+        assert set(data["_embedded"].keys()) == {"actor"}, data
+        assert len(data["_embedded"]["actor"]) == 2, data
+        names = [a["name"] for a in data["_embedded"]["actor"]]
+        assert names == ["John Doe", "Jane Doe"]
 
     @staticmethod
     @pytest.mark.parametrize("params", [{"e_type": "whatever"}, {"_sort": "e_type"}])

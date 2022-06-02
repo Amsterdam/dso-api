@@ -18,6 +18,8 @@ from rest_framework.request import Request
 from schematools.types import DatasetTableSchema, TemporalDimensionFields
 from schematools.utils import to_snake_case
 
+from dso_api.dynamic_api.permissions import check_filter_field_access
+
 
 class TemporalTableQuery:
     """The temporal query from the request, mapped to the current table."""
@@ -47,12 +49,21 @@ class TemporalTableQuery:
             self.version_field = temporal.identifier  # e.g. "volgnummer"
             self.version_value = request.GET.get(self.version_field, None)
 
+            if self.version_value:
+                field = self.table_schema.get_field_by_id(self.version_field)
+                check_filter_field_access(self.version_field, field, request.user_scopes)
+
             # See if a filter is done on a particular point in time (e.g. ?geldigOp=yyyy-mm-dd)
             for dimension, fields in temporal.dimensions.items():
                 if date_value := request.GET.get(dimension):
                     self.slice_dimension = dimension  # e.g. geldigOp
                     self.slice_value = self._parse_date(dimension, date_value)
                     self.slice_range_fields = fields
+
+                    # Check whether the user may filter on the temporal dimension.
+                    for name in self.slice_range_fields:
+                        field = self.table_schema.get_field_by_id(name)
+                        check_filter_field_access(self.slice_dimension, field, request.user_scopes)
 
     def _parse_date(self, dimension: str, value: str) -> Union[Literal["*"], date, datetime]:
         """Parse and validate the received date"""

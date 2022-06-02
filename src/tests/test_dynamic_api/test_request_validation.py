@@ -1,12 +1,14 @@
+from __future__ import annotations
+
 from pathlib import Path
-from typing import Optional
 
 import pytest
 from django.core.exceptions import PermissionDenied
+from rest_framework.exceptions import ValidationError
 from schematools.permissions import UserScopes
 from schematools.utils import dataset_schema_from_path
 
-from dso_api.dynamic_api.permissions import FilterSyntaxError, _check_field_access
+from dso_api.dynamic_api.filters import parser
 
 SCHEMA_SIMPLE = dataset_schema_from_path(
     Path(__file__).parent.parent / "files" / "relationauth.json"
@@ -19,31 +21,29 @@ SCHEMA_COMPOSITE = dataset_schema_from_path(
 @pytest.mark.parametrize(
     ["field_name", "scopes", "exc_type"],
     [
-        ("", "", FilterSyntaxError),
+        ("", "", ValidationError),
         # Filtering on a relation requires scopes for both the relation and the base table.
         ("baseId", "REFERS REFERS/BASE BASE BASE/TABLE", None),
+        ("base", "REFERS REFERS/BASE BASE BASE/TABLE", None),  # uses id internally
         # This one doesn't look at the relation field.
         ("name", "REFERS REFERS/NAME", None),
         # These look at the relation field without access to the base table.
         # REFERS/BASE opens the relation, but not the base table.
         ("baseId", "REFERS REFERS/NAME", PermissionDenied),
         ("baseId", "REFERS REFERS/BASE", PermissionDenied),
-        # These are missing +"Id" or +".id".
-        ("base", "REFERS REFERS/BASE BASE BASE/TABLE", FilterSyntaxError),
-        # TODO: the following should also give a FilterSyntaxError.
         ("base", "REFERS REFERS/BASE BASE", PermissionDenied),
     ],
 )
-def test_check_filter_simple(field_name: str, scopes: str, exc_type: Optional[type]):
+def test_check_filter_simple(field_name: str, scopes: str, exc_type: type[Exception] | None):
     """Test filter auth/validation with a simple-key relation."""
-    schema = SCHEMA_SIMPLE.get_table_by_id("refers")
+    table_schema = SCHEMA_SIMPLE.get_table_by_id("refers")
 
     scopes = UserScopes(query_params={}, request_scopes=scopes.split())
     if exc_type is None:
-        _check_field_access(field_name, scopes, schema)
+        assert parser.QueryFilterEngine.to_orm_path(field_name, table_schema, scopes)
     else:
         with pytest.raises(exc_type):
-            _check_field_access(field_name, scopes, schema)
+            parser.QueryFilterEngine.to_orm_path(field_name, table_schema, scopes)
 
 
 @pytest.mark.parametrize(
@@ -54,23 +54,23 @@ def test_check_filter_simple(field_name: str, scopes: str, exc_type: Optional[ty
         # Reference to relation field, e.g., base.id=$id&base.volgnr=$volgnr
         ("base.id", "REFERS REFERS/BASE BASE BASE/TABLE", None),
         ("base.volgnr", "REFERS REFERS/BASE BASE BASE/TABLE", None),
+        ("base", "REFERS REFERS/BASE BASE BASE/TABLE", None),  # uses id internally
         # This needs access to both the dataset and the table.
         ("base.id", "REFERS REFERS/BASE BASE", PermissionDenied),
         ("base.id", "REFERS REFERS/BASE BASE/TABLE", PermissionDenied),
         # Just mentioning the relation name as the field name isn't enough.
-        ("base", "REFERS REFERS/BASE BASE BASE/TABLE", FilterSyntaxError),
-        # XXX The baseId syntax shouldn't work with composite keys.
-        # ("baseId", "REFERS REFERS/BASE BASE BASE/ID", FilterSyntaxError),
-        # ("baseId", "REFERS REFERS/BASE BASE BASE/ID BASE/VOLGNR", FilterSyntaxError),
+        # The baseId syntax works with composite keys.
+        # ("baseId", "REFERS REFERS/BASE BASE BASE/ID", PermissionDenied),
+        # ("baseId", "REFERS REFERS/BASE BASE BASE/ID BASE/VOLGNR", None),
     ],
 )
-def test_check_filter_composite(field_name: str, scopes: str, exc_type: Optional[type]):
+def test_check_filter_composite(field_name: str, scopes: str, exc_type: type[Exception] | None):
     """Test filter auth/validation with a composite key relation."""
-    schema = SCHEMA_COMPOSITE.get_table_by_id("refers")
-
+    table_schema = SCHEMA_COMPOSITE.get_table_by_id("refers")
     scopes = UserScopes(query_params={}, request_scopes=scopes.split())
+
     if exc_type is None:
-        _check_field_access(field_name, scopes, schema)
+        assert parser.QueryFilterEngine.to_orm_path(field_name, table_schema, scopes)
     else:
         with pytest.raises(exc_type):
-            _check_field_access(field_name, scopes, schema)
+            parser.QueryFilterEngine.to_orm_path(field_name, table_schema, scopes)
