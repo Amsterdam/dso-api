@@ -21,7 +21,7 @@ BASE_PATH = Path(__file__).parent.resolve()
 TEMPLATE_PATH = BASE_PATH.joinpath("_templates")
 TEMPLATE_ENV = jinja2.Environment(
     loader=jinja2.FileSystemLoader(searchpath=TEMPLATE_PATH),
-    autoescape=False,
+    autoescape=True,
 )
 
 
