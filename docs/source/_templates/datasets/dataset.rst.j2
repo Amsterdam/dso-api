@@ -14,6 +14,15 @@
 
 * **ID:** {{ schema_name }}{% if schema_auth %} (autorisatie: {{ schema_auth|sort|join(', ') }}){% endif %}
 * **Versie:** {{ schema.version }}
+* **Eigenaar:** {{ schema.owner }}
+* **Uitgever:** {{ schema.publisher }}
+* **Bronhouder:** {{ schema.creator }}
+* **Versie:** {{ schema.version }}
+{% if datset_has_auth %}
+
+Toegang kan worden aangevraagd bij de uitgever: {{ schema.publisher }}
+
+{% endif %}
 * **Endpoints:**
 
  * Swagger UI: `{{ swagger_url|strip_base_url }} <{{ swagger_url }}>`_
