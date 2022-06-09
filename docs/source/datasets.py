@@ -109,6 +109,8 @@ def render_dataset_docs(dataset: DatasetSchema, paths: dict[str, str]):
             "schema": dataset,
             "schema_name": snake_name,
             "schema_auth": _fix_auth(dataset.auth),
+            "datset_has_auth": len(_fix_auth(dataset.auth))
+            or len([table for table in tables if table.get("auth")]),
             "main_title": main_title,
             "tables": tables,
             "wfs_url": wfs_url,
