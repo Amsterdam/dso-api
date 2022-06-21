@@ -2,7 +2,7 @@ Autorisaties
 ============
 
 Veel van de REST API endpoints zijn anoniem toegankelijk. Echter, voor sommige endpoints
-is autorisatie nodig. Deze autorisatie vindt plaats obv. een Json Web Token (JWT).
+is autorisatie nodig. Deze autorisatie vindt plaats mbv. een JSON Web Token (JWT).
 
 Per dataset is aangegeven of deze openbaar is, of dat er een of meer zgn. autorisatiescopes 
 van toepassing zijn.
