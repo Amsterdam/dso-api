@@ -50,6 +50,7 @@ De API's ondersteunen mogelijkheden tot:
     rest/embeds
     rest/formats
     rest/projections
+    rest/authorization
     rest/temporal
 
 
