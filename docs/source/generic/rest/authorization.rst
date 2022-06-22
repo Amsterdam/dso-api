@@ -9,8 +9,18 @@ van toepassing zijn.
 
 Deze scope kan gelden voor de volledige dataset, voor een of meer tabellen binnen de dataset
 of voor individuele velden van een tabel.
+Als een dataset of tabel is beschermd met een scope
+die niet aanwezig is in het JWT,
+dan geven requests op die dataset/tabel een error 403 (Forbidden).
+Als alleen een veld zodanig is beschermd,
+dan wordt het request uitgevoerd als gewoonlijk
+maar verschijnt het beschermde veld niet in het resultaat.
+Er verschijnt ook geen melding over velden die om deze reden niet aanwezig zijn.
+Bij twijfel moet het resultaat van een request naar het betreffende schema
+worden gelegd om te zien welke velden ontbreken en waarom.
 
-De indeling in scopes is vastgelegd in Keycloak. De in gebruik zijnde scopes zijn:
+De indeling in scopes is vastgelegd in Keycloak.
+Op het moment van schrijven zijn de volgende scopes in gebruik:
 
 * ``FP/MDW``: Deze scope heeft elke ingelogde medewerker van de gemeente Amsterdam
 * ``FP/WAGENPARK``: Deze scope geeft toegang tot de dataset met info over het wagenpark
@@ -22,7 +32,9 @@ De indeling in scopes is vastgelegd in Keycloak. De in gebruik zijnde scopes zij
 * ``BRK/RSN``: Deze scope geeft de rechten van ``BRK/RS`` en bovendien toegang tot natuurlijke 
               subjecten
 
-
+.. note::
+    Deze lijst kan achterhaald zijn. Raadpleeg bij twijfel de schema's op
+    https://schemas.data.amsterdam.nl/datasets/.
 
 Toekenning van deze scopes kan worden aangevraagd bij de afdeling IV Beheer.
 
