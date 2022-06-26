@@ -10,6 +10,7 @@ from typing import Optional
 
 import orjson
 from django.conf import settings
+from django.urls import reverse
 from rest_framework import renderers
 from rest_framework.exceptions import ValidationError
 from rest_framework.relations import HyperlinkedRelatedField
@@ -113,6 +114,8 @@ class BrowsableAPIRenderer(RendererMixin, renderers.BrowsableAPIRenderer):
         # Maintain compatibility with other types of ViewSets
         context["authorization_grantor"] = getattr(context["view"], "authorization_grantor", None)
 
+        if dataset_id := getattr(context["view"], "dataset_id", False):
+            context["dataset_url"] = reverse(f"dynamic_api:openapi-{dataset_id}")
         # Fix response content-type when it's filled in by the exception_handler
         response = renderer_context["response"]
         if response.content_type:
