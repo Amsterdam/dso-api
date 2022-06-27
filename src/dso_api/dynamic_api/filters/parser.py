@@ -279,9 +279,11 @@ class QueryFilterEngine:
                 # Geometry fields need a CRS to handle the input
                 return str2geo(filter_input.raw_value, self.input_crs)
 
-            if field_schema.is_object and field_schema.related_field_ids:
-                # Temporal relations, e.g. ?ligtInBouwblokId=03630012095418.1
-                # that references their identifier stored as foreign key.
+            if (
+                field_schema.is_object or field_schema.is_array_of_objects
+            ) and field_schema.related_field_ids:
+                # Temporal relations (FK or M2M), e.g. ?ligtInBouwblokId=03630012095418.1
+                # or ?ligtInPanden=... references their identifier as foreign key.
                 return filter_input.raw_value
 
             if field_schema.is_array:
@@ -346,16 +348,16 @@ def _to_orm_path(parts: list[FilterPathPart]) -> str:
     names = [to_snake_case(part.name) for part in parts]
 
     if len(parts) > 1:
-        # When spanning forward relations, check whether this can be optimized.
+        # Optimize query, by avoiding a table join for foreign keys.
         # Instead of making a JOIN for "foreigntable.id", the local field can be used instead
         # by using the ORM lookup into "foreigntable_id". Note that related_field_ids is None
         # for nested tables, since those tables use a reverse relation to the parent.
         parent_part, last_part = parts[-2], parts[-1]
         if (
-            parent_part.field is not None
-            and last_part.field is not None
-            and (related_ids := parent_part.field.related_field_ids) is not None
-            and last_part.name in related_ids
+            not parent_part.field.is_array_of_objects  # not M2M, needs through table join
+            and not parent_part.reverse_field  # not reverse field, needs join
+            and (related_ids := parent_part.field.related_field_ids) is not None  # not nested
+            and last_part.name in related_ids  # target field is indeed a local identifier
         ):
             # Matched identifier that also exists on the previous table, use that instead.
             # loose relation directly stores the "identifier" as name, so can just strip that.
