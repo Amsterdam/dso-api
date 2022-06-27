@@ -24,6 +24,7 @@
           "id": {"type": "integer"},
           "name": {"type": "string", "description": ""},
           "dateAdded": {"type": "string", "format": "date-time", "description": ""},
+          "enjoyable": {"type":  "boolean", "description":  "Is it any good?"},
           "url": {"type": "string", "format": "uri", "description": ""},
           "category": {
             "type": "string",

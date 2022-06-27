@@ -55,7 +55,11 @@ class TestFilterEngine:
     @pytest.fixture
     def movie1(self, movies_model, movies_category):
         return movies_model.objects.create(
-            id=1, name="movie1", category=movies_category, date_added=date(2020, 2, 1)
+            id=1,
+            name="movie1",
+            category=movies_category,
+            date_added=date(2020, 2, 1),
+            enjoyable=True,
         )
 
     @pytest.fixture
@@ -83,6 +87,11 @@ class TestFilterEngine:
             # Not (can be repeated for "AND NOT" testing)
             ("dateAdded[not]=2020-2-1", {"movie2"}),
             ("dateAdded[not]=2020-2-1&dateAdded[not]=2020-3-1", set()),
+            # Booleans
+            ("enjoyable=true", {"movie1"}),
+            ("enjoyable=false", set()),
+            ("enjoyable[isnull]=true", {"movie2"}),
+            ("enjoyable[isnull]=false", {"movie1"}),
             # URLs have string-like comparison operators
             ("url[in]=foobar,http://example.com/someurl", {"movie2"}),
             ("url[like]=http:*", {"movie2"}),
@@ -459,6 +468,7 @@ class TestDynamicFilterSet:
                     },
                     "categoryId": 1,
                     "dateAdded": "2020-01-01T00:45:00",
+                    "enjoyable": None,
                     "id": 3,
                     "name": "foo123",
                     "url": None,
