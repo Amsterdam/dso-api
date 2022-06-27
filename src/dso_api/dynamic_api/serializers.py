@@ -97,7 +97,7 @@ class RelatedSummaryField(Field):
             # The essence of filter_temporal_slice()
             query = TemporalTableQuery(request, value.model.table_schema())
             q_params.update(query.url_parameters)
-            value = query.filter_queryset(value)
+            value = query.filter_queryset(value.all())
 
         query_string = ("&" if "?" in url else "?") + urlencode(q_params)
         return {"count": value.count(), "href": f"{url}{query_string}"}
@@ -139,7 +139,7 @@ class DynamicListSerializer(DSOModelListSerializer):
             if value.model.is_temporal():
                 # Make sure the target table is filtered by the temporal query,
                 # instead of showing links to all records.
-                value = filter_temporal_slice(request, value)
+                value = filter_temporal_slice(request, value.all())
 
             if (
                 value.model.table_schema().through_table
@@ -148,7 +148,9 @@ class DynamicListSerializer(DSOModelListSerializer):
                 # When this field lists the through table entries, also filter the target table.
                 # Otherwise, the '_links' section shows all references from the M2M table, while
                 # the embedding returns fewer entries because they are filtered temporal query.
-                value = filter_temporal_m2m_slice(request, value, self._m2m_through_fields[1])
+                value = filter_temporal_m2m_slice(
+                    request, value.all(), self._m2m_through_fields[1]
+                )
 
         return value
 
