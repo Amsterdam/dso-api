@@ -16,7 +16,7 @@ Als alleen een veld zodanig is beschermd,
 dan wordt het request uitgevoerd als gewoonlijk
 maar verschijnt het beschermde veld niet in het resultaat.
 Er verschijnt ook geen melding over velden die om deze reden niet aanwezig zijn.
-Bij twijfel moet het resultaat van een request naar het betreffende schema
+Bij twijfel moet het resultaat van een request naast het betreffende schema
 worden gelegd om te zien welke velden ontbreken en waarom.
 
 De indeling in scopes is vastgelegd in Keycloak.
