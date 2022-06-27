@@ -62,6 +62,7 @@ _string_lookups = {"", "in", "isnull", "not", "isempty", "like"}
 ALLOWED_IDENTIFIER_LOOKUPS = {"", "in", "not", "isnull"}
 
 ALLOWED_SCALAR_LOOKUPS = {
+    "boolean": {"", "isnull"},
     "integer": _comparison_lookups,
     "number": _comparison_lookups,
     "string": _string_lookups,
