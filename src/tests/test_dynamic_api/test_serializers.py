@@ -197,6 +197,7 @@ class TestDynamicSerializer:
                     "title": "3",
                     "id": 3,
                 },
+                "cluster": None,
             },
             "id": 3,
             "clusterId": None,
@@ -235,6 +236,7 @@ class TestDynamicSerializer:
                     "id": 4,
                 },
                 "schema": "https://schemas.data.amsterdam.nl/datasets/afvalwegingen/dataset#containers",  # noqa: E501
+                "cluster": None,
             },
             "id": 4,
             "clusterId": 99,
@@ -447,6 +449,7 @@ class TestDynamicSerializer:
                     "title": "3",
                     "id": 3,
                 },
+                "vestigingenBezoek": [],
                 "vestigingenPost": [
                     {
                         "href": "http://testserver/v1/vestiging/vestiging/1/",
