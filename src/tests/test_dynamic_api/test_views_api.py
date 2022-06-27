@@ -932,6 +932,7 @@ class TestEmbedTemporalTables:
                     "title": "03630012052035.1",
                     "volgnummer": 1,
                 },
+                "onderdeelVanGGWGebieden": [],
                 "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/dataset#buurten",
                 "self": {
                     "href": "http://testserver/v1/gebieden/buurten/03630000000078/?volgnummer=2",
@@ -1196,6 +1197,7 @@ class TestEmbedTemporalTables:
                                         "title": "03630012052035.1",
                                         "volgnummer": 1,
                                     },
+                                    "onderdeelVanGGWGebieden": [],
                                 },
                                 "id": "03630000000078.2",
                                 "naam": None,
@@ -1311,6 +1313,7 @@ class TestEmbedTemporalTables:
                     "title": "03630012052035.1",
                     "volgnummer": 1,
                 },
+                "onderdeelVanGGWGebieden": [],
                 "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/dataset#buurten",
                 "self": {
                     "href": "http://testserver/v1/gebieden/buurten/03630000000078/?volgnummer=2",
@@ -1368,6 +1371,7 @@ class TestEmbedTemporalTables:
                                 "title": "03630012052035.1",
                                 "volgnummer": 1,
                             },
+                            "onderdeelVanGGWGebieden": [],
                         },
                         "id": "03630000000078.2",
                         "code": None,
@@ -1504,6 +1508,7 @@ class TestEmbedTemporalTables:
                             "title": "03630000000078.2",
                             "volgnummer": 2,
                         },
+                        "ligtInWijk": None,
                     },
                     "beginGeldigheid": "2021-06-11",
                     "code": None,
@@ -1570,6 +1575,7 @@ class TestEmbedTemporalTables:
                             "volgnummer": 2,
                             "identificatie": "03630000000078",
                         },
+                        "ligtInWijk": None,
                     },
                     "id": "03630000000078.2",
                     "naam": None,
@@ -1613,6 +1619,7 @@ class TestEmbedTemporalTables:
                             "title": "03630000000078.2",
                             "volgnummer": 2,
                         },
+                        "ligtInWijk": None,
                         "onderdeelVanGGWGebieden": [
                             {
                                 "href": "http://testserver/v1/gebieden/ggwgebieden/03630950000000/?volgnummer=1",  # noqa: E501
@@ -1769,6 +1776,8 @@ class TestEmbedTemporalTables:
                             "volgnummer": 2,
                             "identificatie": "03630000000078",
                         },
+                        "ligtInWijk": None,
+                        "onderdeelVanGGWGebieden": [],
                     },
                     "code": None,
                     "naam": None,
