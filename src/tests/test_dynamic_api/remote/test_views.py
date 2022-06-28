@@ -589,10 +589,12 @@ def test_remote_timeout(api_client, fetch_auth_token, router, brp_dataset, urlli
 
 
 @pytest.mark.django_db
-def test_hcbag(api_client, hcbag_dataset, hcbag_example, urllib3_mocker, filled_router):
+def test_hcbag(settings, api_client, hcbag_dataset, hcbag_example, urllib3_mocker, filled_router):
+    remote_key = "I_ve_got_the_key"
+
     def respond(request):
         assert "Authorization" not in request.headers
-        assert "X-Api-Key" in request.headers
+        assert request.headers.get("X-Api-Key") == remote_key
         assert request.body is None
         return (200, {"Content-Crs": "epsg:28992"}, hcbag_example)
 
@@ -604,6 +606,7 @@ def test_hcbag(api_client, hcbag_dataset, hcbag_example, urllib3_mocker, filled_
     )
 
     url = reverse("dynamic_api:haalcentraalbag-adressen-list")
+    settings.HAAL_CENTRAAL_BAG_API_KEY = remote_key
     response = api_client.get(url, {"postcode": "1011PN", "huisnummer": "1"})
     data = read_response_json(response)
 
@@ -674,13 +677,15 @@ DSO_ONROERENDE_ZAAK_UNAUTH = {
     ],
 )
 def test_haalcentraalbrk_client(
-    api_client, fetch_auth_token, router, hcbrk_dataset, urllib3_mocker, case
+    settings, api_client, fetch_auth_token, router, hcbrk_dataset, urllib3_mocker, case
 ):
     """Test Haal Centraal BRK remote client."""
 
+    remote_key = "I_ve_got_the_secret"
+
     def respond(request):
         assert "Authorization" not in request.headers
-        assert "X-Api-Key" in request.headers
+        assert request.headers.get("X-Api-Key") == remote_key
         assert request.body is None
         return (200, {"Content-Crs": "epsg:28992"}, case["from_kadaster"])
 
@@ -696,6 +701,7 @@ def test_haalcentraalbrk_client(
 
     url = reverse(f"dynamic_api:haalcentraalbrk-{table}-detail", kwargs={"pk": str(ident)})
     token = fetch_auth_token(case["scopes"])
+    settings.HAAL_CENTRAAL_API_KEY = remote_key
     response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
     data = read_response_json(response)
 
@@ -705,13 +711,15 @@ def test_haalcentraalbrk_client(
 
 @pytest.mark.django_db
 def test_haalcentraalbrk_geojson(
-    api_client, fetch_auth_token, router, hcbrk_dataset, urllib3_mocker
+    settings, api_client, fetch_auth_token, router, hcbrk_dataset, urllib3_mocker
 ):
     """Test whether remote API responses are properly converted."""
 
+    remote_key = "to_another_way"
+
     def respond(request):
         assert "Authorization" not in request.headers
-        assert "X-Api-Key" in request.headers
+        assert request.headers.get("X-Api-Key") == remote_key
         assert request.body is None
         return (200, {"Content-Crs": "epsg:28992"}, HCBRK_ONROERENDE_ZAAK)
 
@@ -728,6 +736,7 @@ def test_haalcentraalbrk_geojson(
         kwargs={"pk": "76870487970000"},
     )
     token = fetch_auth_token(["BRK/RS", "BRK/RO"])
+    settings.HAAL_CENTRAAL_API_KEY = remote_key
     response = api_client.get(url, {"_format": "geojson"}, HTTP_AUTHORIZATION=f"Bearer {token}")
     data = read_response_json(response)
 

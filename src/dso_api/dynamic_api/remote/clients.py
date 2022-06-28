@@ -335,7 +335,8 @@ class HCBAGClient(HaalCentraalClient):
     def _get_headers(self, request):
         headers = super()._get_headers(request)
 
-        headers["X-Api-Key"] = settings.HAAL_CENTRAAL_BAG_API_KEY
+        if (apikey := settings.HAAL_CENTRAAL_BAG_API_KEY) is not None:
+            headers["X-Api-Key"] = apikey
         headers["accept"] = "application/hal+json"
 
         return headers
@@ -363,7 +364,8 @@ class HCBRKClient(HaalCentraalClient):
     def _get_headers(self, request):
         headers = super()._get_headers(request)
 
-        headers["X-Api-Key"] = settings.HAAL_CENTRAAL_API_KEY
+        if (apikey := settings.HAAL_CENTRAAL_API_KEY) is not None:
+            headers["X-Api-Key"] = apikey
         headers["accept"] = "application/hal+json"
         # Currently for kadaster HaalCentraal only RD (epsg:28992) is supported
         headers["Accept-Crs"] = "epsg:28992"
