@@ -105,109 +105,191 @@
         nav {
           float: right;
           visibility: hidden;
-          height: 56px;
+          height: 0;
         }
         nav.active {
           visibility: initial;
+          height:63px
+        }
+        nav ul {
+          margin: 0;
         }
         #page-links .hidden {
           display: none;
+        }
+        input:invalid {
+          color: darkred;
+          font-style: italic;
+        }
+        .remove-param-btn {
+          padding: 3px 6px;
+        }
+        .param:last-child .remove-param-btn, .param:last-child .param-check {
+          visibility:hidden;
+          pointer-events: none;
+        }
+        .param.loading, .param.disabled .param-key, .param.disabled .param-op,  .param.disabled .param-val {
+          pointer-events: none;
+          opacity: .6;
+        }
+        .param input, .param select {
+          margin-right: 5px;
+        }
+        .param {
+          margin-bottom: 5px;
+        }
+        .param-op {
+          height: 1.85em;
+          width: 6em;
+        }
+        .param-key, .param-val {
+          width: calc(50% - 0.925em - 54px);
+        }
+        .request-form-tabs {
+          width: 100%;
+          display: inline-block;
+        }
+        .request-settings {
+          border-top-right-radius: 0;
+          border-top-left-radius: 0;
+          border-top: none;
+        }
+        .request-form-tab {
+          padding: 6px 12px;
+          line-height: 1.42857143;
+          text-decoration: none;
+          background-color: #f5f5f5;
+          width: 50%;
+          display: inline-block;
+          border: 1px solid #ccc;
+          border-bottom: 1px dotted #ddd;
+        }
+        .show-params .request-form-tab.headers-tab,.show-headers .request-form-tab.params-tab {
+          padding: 6px 12px;
+          color: #337ab7;
+          background-color: #fff;
+          border: 1px solid #ddd;
+          cursor: pointer;
+        }
+        .request-form-tab:last-child {
+          border-top-right-radius: 4px;
+        }
+        .request-form-tab:first-child {
+          border-right: 0;
+          border-top-left-radius: 4px;
+        }
+        .show-params #request-headers, .show-headers #request-params {
+          display:none;
+        }
+        #page-container {
+          width: 100%;
+          text-align: right;
+          /* margin-top: 20px;
+          margin-bottom: 5px; */
+        }
+        .button-form {
+          margin-bottom: 10px;
         }
     </style>
 {% endblock %}
 
 {% block content %}
 
-<div class="region"  aria-label="{% trans "request form" %}">
-  {% comment %} 
-    Add an id to the options button so we can override its behaviour.
-    Delete form is removed, as we do not expose this method.
-  {% endcomment %}
-  {% block request_forms %}
+<div class="content-main" role="main"  aria-label="{% trans "main content" %}">
+  <div class="page-header">
+    <h1>{{ name }}</h1>
+    <h5>Bronhouder: {{ authorization_grantor|default_if_none:"Onbekend"}}</h5>
+  </div>
+  <div style="float:left">
+    {% block description %}{{ block.super }}{% endblock %}
+  </div>
 
-  {% if 'GET' in allowed_methods %}
-    <form id="get-form" class="pull-right">
-      <fieldset>
-        {% if api_settings.URL_FORMAT_OVERRIDE %}
-          <div class="btn-group format-selection">
-            <a class="btn btn-primary js-tooltip" href="{{ request.get_full_path }}" rel="nofollow" title="Make a GET request on the {{ name }} resource">GET</a>
-
-            <button class="btn btn-primary dropdown-toggle js-tooltip" data-toggle="dropdown" title="Specify a format for the GET request">
-              <span class="caret"></span>
-            </button>
-            <ul class="dropdown-menu">
-              {% for format in available_formats %}
-                <li>
-                  <a class="js-tooltip format-option" href="{% add_query_param request api_settings.URL_FORMAT_OVERRIDE format %}" rel="nofollow" title="Make a GET request on the {{ name }} resource with the format set to `{{ format }}`">{{ format }}</a>
-                </li>
-              {% endfor %}
-            </ul>
-          </div>
-        {% else %}
-          <a class="btn btn-primary js-tooltip" href="{{ request.get_full_path }}" rel="nofollow" title="Make a GET request on the {{ name }} resource">GET</a>
-        {% endif %}
-      </fieldset>
-    </form>
-  {% endif %}
-
-  {% if options_form %}
-    <form class="button-form">
-      <button id="options-button" class="btn btn-primary js-tooltip" title="Make an OPTIONS request on the {{ name }} resource">OPTIONS</button>
-    </form>
-  {% endif %}
-
-  {% if extra_actions %}
-    <div class="dropdown" style="float: right; margin-right: 10px">
-      <button class="btn btn-default" id="extra-actions-menu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
-        {% trans "Extra Actions" %}
-        <span class="caret"></span>
-      </button>
-      <ul class="dropdown-menu" aria-labelledby="extra-actions-menu">
-        {% for action_name, url in extra_actions|items %}
-        <li><a href="{{ url }}">{{ action_name }}</a></li>
-        {% endfor %}
-      </ul>
+    
+    <div class="region"  aria-label="{% trans "request form" %}">
+    {% comment %} 
+      Add an id to the options button so we can override its behaviour.
+      Delete form is removed, as we do not expose this method.
+    {% endcomment %}
+    <div id="request-settings-container" class="show-params">
+    <div class="request-form-tabs">
+      <div class="request-form-tab params-tab" onclick="event.target.parentElement.parentElement.className='show-params'">Parameters</div><div class="request-form-tab headers-tab" onclick="event.target.parentElement.parentElement.className='show-headers'">Headers</div>
     </div>
-  {% endif %}
+    <pre style="box-sizing: border-box;clear:both;" id="request-params" class="request-settings"></pre>
+    <pre style="box-sizing: border-box;clear:both;" id="request-headers" class="request-settings"></pre>
+    <div>
+    {% block request_forms %}
+  
+    {% if 'GET' in allowed_methods %}
+      <form id="get-form" class="pull-right">
+        <fieldset>
+          {% if api_settings.URL_FORMAT_OVERRIDE %}
+            <div class="btn-group format-selection">
+              <a id="get-button" class="btn btn-primary js-tooltip" href="{{ request.get_full_path }}" rel="nofollow" title="Make a GET request on the {{ name }} resource">GET</a>
 
-  {% if filter_form %}
-    <button style="float: right; margin-right: 10px" data-toggle="modal" data-target="#filtersModal" class="btn btn-default">
-      <span class="glyphicon glyphicon-wrench" aria-hidden="true"></span>
-      {% trans "Filters" %}
-    </button>
-  {% endif %}
+              <button class="btn btn-primary dropdown-toggle js-tooltip" data-toggle="dropdown" title="Specify a format for the GET request">
+                <span class="caret"></span>
+              </button>
+              <ul class="dropdown-menu">
+                {% for format in available_formats %}
+                  <li>
+                    <a class="js-tooltip format-option" href="{% add_query_param request api_settings.URL_FORMAT_OVERRIDE format %}" rel="nofollow" title="Make a GET request on the {{ name }} resource with the format set to `{{ format }}`">{{ format }}</a>
+                  </li>
+                {% endfor %}
+              </ul>
+            </div>
+          {% else %}
+            <a id="get-button" class="btn btn-primary js-tooltip" href="{{ request.get_full_path }}" rel="nofollow" title="Make a GET request on the {{ name }} resource">GET</a>
+          {% endif %}
+        </fieldset>
+      </form>
+    {% endif %}
 
-  {% endblock request_forms %}
-</div>
+    {% if options_form %}
+      <form class="button-form">
+        <button id="options-button" class="btn btn-primary js-tooltip" title="Make an OPTIONS request on the {{ name }} resource">OPTIONS</button>
+      </form>
+    {% endif %}
 
-  <div class="content-main" role="main"  aria-label="{% trans "main content" %}">
-    <div class="page-header">
-      <h1>{{ name }}</h1>
-      <h5>Bronhouder: {{ authorization_grantor|default_if_none:"Onbekend"}}</h5>
-      {{ breadcrumblist }}
-      <div id="queryparams"></div>
-    </div>
-    <div style="float:left">
-      {% block description %}{{ block.super }}{% endblock %}
-    </div>
-
-      <nav id="page-container">
-        <ul id="page-links" class="pagination" style="margin: 5px 0 10px 0">
-          <li class="disabled"><a href="" aria-label="Previous"><span aria-hidden="true">«</span></a></li>
-          <li class="hidden"><a href="">1</a></li>
-          <li class="hidden"><a href="#"><span aria-hidden="true">…</span></a></li>
-          <li class="hidden"><a href="#"></a></li>
-          <li class="hidden"><a href="#"></a></li>
-          <li class="active this-page"><a href="#"></a></li>
-          <li class="hidden"><a href="#"></a></li>
-          <li class="hidden"><a href=""></a></li>
-          <li class="hidden"><a href="#"><span aria-hidden="true">…</span></a></li>
-          <li class="hidden"><a href=""></a></li>
-          <li class="disabled"><a href="#" aria-label="Next"><span aria-hidden="true">»</span></a></li>
+    {% if extra_actions %}
+      <div class="dropdown" style="float: right; margin-right: 10px">
+        <button class="btn btn-default" id="extra-actions-menu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+          {% trans "Extra Actions" %}
+          <span class="caret"></span>
+        </button>
+        <ul class="dropdown-menu" aria-labelledby="extra-actions-menu">
+          {% for action_name, url in extra_actions|items %}
+          <li><a href="{{ url }}">{{ action_name }}</a></li>
+          {% endfor %}
         </ul>
-      </nav>
+      </div>
+    {% endif %}
 
-    <div class="request-info" style="clear: both" aria-label="{% trans "request info" %}">
+    {% if filter_form %}
+      <button style="float: right; margin-right: 10px" data-toggle="modal" data-target="#filtersModal" class="btn btn-default">
+        <span class="glyphicon glyphicon-wrench" aria-hidden="true"></span>
+        {% trans "Filters" %}
+      </button>
+    {% endif %}
+
+    <nav id="page-container">
+      <ul id="page-links" class="pagination">
+        <li class="disabled"><a href="" aria-label="Previous"><span aria-hidden="true">«</span></a></li>
+        <li class="hidden"><a href="">1</a></li>
+        <li class="hidden"><a href="#"><span aria-hidden="true">…</span></a></li>
+        <li class="hidden"><a href="#"></a></li>
+        <li class="hidden"><a href="#"></a></li>
+        <li class="active this-page"><a href="#"></a></li>
+        <li class="hidden"><a href="#"></a></li>
+        <li class="hidden"><a href=""></a></li>
+        <li class="hidden"><a href="#"><span aria-hidden="true">…</span></a></li>
+        <li class="hidden"><a href=""></a></li>
+        <li class="disabled"><a href="#" aria-label="Next"><span aria-hidden="true">»</span></a></li>
+      </ul>
+    </nav>
+    {% endblock request_forms %}
+    </div>
+
+    <div id="request-info" class="request-info" style="clear: both" aria-label="{% trans "request info" %}">
       <pre ><b>{{ request.method }}</b> {{ request.get_full_path }}</pre>
     </div>
 
@@ -316,7 +398,11 @@
 
 {% block script %}
 <div id="datalists">
-  <datalist id="query-parameters"></datalist>
+  <datalist id="query-parameter-options"></datalist>
+  <datalist id="header-parameter-options">
+    <option value="Accept">Accept</option>
+
+  </datalist>
   <datalist id="boolean">
     <option value="true">true</option>
     <option value="false">false</option>
@@ -330,7 +416,8 @@
 </script>
 <script>
   const HEADERS = [ "Allow", "Content-Type","Content-Crs", "Vary", "X-Pagination-Limit", "X-Pagination-Page" , "X-Total-Count", "X-Pagination-Count"]
-  const PAGEURL = new URL(window.location.href);
+  const DEFAULT_HEADERS = {Accept:"application/hal+json"}
+  var PAGEURL = new URL(window.location.href);
   const OPERATORS = {
     eq:"=",
     gt:">",
@@ -365,39 +452,156 @@
       document.addEventListener("DOMContentLoaded", onPageLoad);
   }
 
+  window.onpopstate = function(e){
+    if(e.state){
+      setParams(e.state.params)
+      updatePageRequest(e.state.url, e.state.method, false )
+    }
+  };
+
   function onPageLoad() {
     let page = PAGEURL.searchParams.get("page");
     setParams()
+    setHeaders()
 
-    if(page) {
-      setPageLinks(page);
-    }
-    getData(PAGEURL).catch(parseException).then(parseData);
+    setPageLinks(page);
+    getData(PAGEURL).catch(parseException).then(data => {
+      if(data) {
+        parseData(data);
+      }
+      window.history.replaceState(JSON.parse(JSON.stringify({"url":PAGEURL, "method":"get", "params": getRequestSettings()})), "", PAGEURL)
+    });
 
-    getOpenApi()
-    // Override the default DRF behaviour of the OPTIONS button,
-    // which does not work with our script.
-    // We make the request and replace the page content with the options response.
+    getOpenApi((params) => {
+      oaParams = params;
+      setParams();
+      setHeaders()
+    })
+    // Override the default DRF behaviour of the OPTIONS, and GET buttons,
+    // which do not work with our script.
+    // We make the request and replace the page content with the response.
     document.getElementById("options-button").onclick = e => {
-      getData(PAGEURL, "OPTIONS").catch(parseException).then(parseData);
+      updatePageRequest(PAGEURL, "OPTIONS")
       e.preventDefault();
+    }
+    document.getElementById("get-button").onclick = e => {
+      updatePageRequest(getUpdatedUrl())
+      e.preventDefault();
+    }
+
+    for (let optEl of document.getElementsByClassName("format-option")) {
+      optEl.onclick = e => {
+        let formatValue = e.target.innerHTML
+        url = getUpdatedUrl()
+        url.searchParams.set("_format", formatValue)
+        updatePageRequest(url,"GET", true, {Accept:"*/*"})
+        e.preventDefault();
+      }
     }
   }
 
+  function updatePageRequest(url, method="GET", pushHistory=true, headers={}) {
+    // Make a request to the api and update the page with the response
+    PAGEURL = new URL(decodeURI(url));
+    headerSettings = getRequestSettings("headers");
+    for (k in headerSettings) {
+      if(!headers.hasOwnProperty(k)){
+        headers[k] = headerSettings[k].value
+      }
+    }
+    let reqInfoEl = document.getElementById("request-info")
+    reqInfoEl.innerHTML = `<pre ><b>${method}</b> ${PAGEURL}</pre>`
+    document.getElementById("response-content").innerHTML = "Retrieving data..."
+    let page = PAGEURL.searchParams.get("page");
+    setPageLinks(page);
+    getData(url, method, headers).catch(parseException).then(data => {
+      if (pushHistory) {
+        window.history.pushState(JSON.parse(JSON.stringify({"url":url, "method":method, "params": getRequestSettings()})),"", url);
+      }
+      if(data) {
+          parseData(data)
+      }
+      setParams();
+      setHeaders(headers)
+    });
+  }
+
+
+
+  function getRequestSettings(type="params") {
+    // Get query parameter or header request settings from the form. 
+    let paramsEl = document.getElementById("request-" + type);
+    let result = {};
+    [...Array(paramsEl.childElementCount).keys()].forEach(
+        i => {
+          paramEl = paramsEl.children.item(i);
+          let key = paramEl.getElementsByClassName("param-key")[0].value;
+          if (key == "") {
+            return
+          }
+          let operator = paramEl.getElementsByClassName("param-op")[0].value;
+          let combinedKey = key;
+          if (operator != "eq") {
+            combinedKey += `[${operator}]`;
+          }
+    
+          result[combinedKey] = {
+            active: paramEl.getElementsByClassName("param-check")[0].checked,
+            key: key,
+            operator: operator,
+            value: paramEl.getElementsByClassName("param-val")[0].value
+          }
+      })
+    return result
+  }
+
+
+  function getUpdatedUrl() {
+    // Get the URL of this endpoint with new request parameter settings
+    let url = new URL(PAGEURL);
+    url.search = "";
+    let currentParams = getRequestSettings();
+    for (combinedKey in getRequestSettings()){
+      let param = currentParams[combinedKey];
+      if (param.active && param.key != "") {
+        url.searchParams.set(combinedKey, param.value);
+      }
+    }
+    return url;
+  };
+
   function getPageUrl(page) {
-    // Get the URL of another page of the same endpoint
+    // Get the URL of another page of this endpoint
     let url = new URL(PAGEURL);
     url.searchParams.set("page", page);
     return url;
   };
 
   function setPageLinks(page) {
+    // Set the pagination links with the correct values for this page
     page = Number(page);
+
+    let pageLinksEl = document.getElementById("page-links");
+    pageLinksEl.innerHTML = `
+          <li class="disabled"><a href="" aria-label="Previous"><span aria-hidden="true">«</span></a></li>
+          <li class="hidden"><a href="">1</a></li>
+          <li class="hidden"><a href="#"><span aria-hidden="true">…</span></a></li>
+          <li class="hidden"><a href="#"></a></li>
+          <li class="hidden"><a href="#"></a></li>
+          <li class="active this-page"><a href="#"></a></li>
+          <li class="hidden"><a href="#"></a></li>
+          <li class="hidden"><a href=""></a></li>
+          <li class="hidden"><a href="#"><span aria-hidden="true">…</span></a></li>
+          <li class="hidden"><a href=""></a></li>
+          <li class="disabled"><a href="#" aria-label="Next"><span aria-hidden="true">»</span></a></li>
+    `
+
     if(isNaN(page) || page<1){
+      isPaginated = false;
       return
     }
     isPaginated = true;
-    let pageLinksEl = document.getElementById("page-links");
+
     let links = pageLinksEl.getElementsByTagName("li");
     links = [...Array(links.length).keys()].map(
       i => {
@@ -417,6 +621,13 @@
     links[PAGELINKS.FORWARD3]["a"].innerHTML = page + 3
     links[PAGELINKS.LAST]["a"].setAttribute("href", getPageUrl(page+4));
     links[PAGELINKS.LAST]["a"].innerHTML = page + 4
+
+    links.forEach(link => {
+      link["a"].onclick = e => {
+        updatePageRequest(e.target.href)
+        e.preventDefault();
+      }
+    })
 
     // Set self and previous links
     for (let i = 0; page-i && i<NUM_EXTRA_PAGES; i++) {
@@ -442,20 +653,22 @@
         links[PAGELINKS.BACK3]["li"].classList.add("disabled");
       }
     }
-
     // Show the links
     let containerEl = document.getElementById("page-container");
     containerEl.classList.add("active");
   }
 
-  function getData(url, method="GET", accept="application/hal+json") {
+  function getData(url, method="GET", headers=DEFAULT_HEADERS, doParseHeaders=true) {
     return new Promise(function(callback, err) {
       let http = new XMLHttpRequest();
       http.open(method, url, true);
-      http.setRequestHeader("Accept", accept);
+      for (let k in headers) {
+        http.setRequestHeader(k, headers[k]);
+      }
+      
       http.send();
       http.onreadystatechange = function () {
-        if (this.readyState === 2){
+        if (this.readyState === 2 && doParseHeaders){
             parseHeaders(this);
         }
         if (this.readyState === 4){
@@ -501,10 +714,14 @@
 
   function parseException(err) {
     let exception = err[0], responseText = err[1];  // promises only allow 1 argument.
-    console.error("Failed to retrieve API response from server:", exception);
+    console.error("Failed to retrieve JSON API response from server:", exception);
 
     let contentElement = document.getElementById("response-content");
-    contentElement.innerHTML = responseText;
+    contentElement.innerHTML = responseText.replace(/&/g, "&amp;")
+         .replace(/</g, "&lt;")
+         .replace(/>/g, "&gt;")
+         .replace(/"/g, "&quot;")
+         .replace(/'/g, "&#039;");
   }
 
   function parseData(data) {
@@ -519,6 +736,7 @@
     }
     
     // Activate next links
+    let containerEl = document.getElementById("page-container");
     if(data["_links"] && data["_links"]['next']) {
       let links = document.getElementById("page-links").getElementsByTagName("li")
       links = [...Array(links.length).keys()].map(
@@ -547,7 +765,10 @@
           links[PAGELINKS.FORWARD1 + i]["li"].classList.remove("hidden")
         }
       }
-    }
+      containerEl.classList.add("active");
+    } else if(data["_links"] && data["_links"]['previous']) {
+      containerEl.classList.add("active");
+    } else {containerEl.classList.remove("active");}
 
     // Create highlighted html string and set content
     let jsonString = JSON.stringify(data, markCoordinates, 4);
@@ -607,48 +828,122 @@
     return [key, op]
   }
 
-  function getOpenApi() {
+  function addParamEnumDatalist(param, name=null) {
+    if (param.schema.enum) {
+      let datalistsEl = document.getElementById("datalists");
+      let datalistEl = document.createElement("datalist");
+      datalistEl.id = `datalist-${name || param.name}-enum`
+      for (item of param.schema.enum) {
+          let option = document.createElement("option");
+          option.value = item;
+          option.text = item;
+          datalistEl.appendChild(option);
+      }
+      datalistsEl.appendChild(datalistEl);
+    }
+  }
+
+  function addParamExampleDatalist(param, name=null) {
+    if (param.examples) {
+      let datalistsEl = document.getElementById("datalists");
+      let datalistEl = document.createElement("datalist");
+      datalistEl.id = `datalist-${name || param.name}-examples`
+      for (k in param.examples) {
+          let option = document.createElement("option");
+          option.value = param.examples[k].value;
+          option.text = param.examples[k].value;
+          option.title = param.examples[k].description;
+          datalistEl.appendChild(option);
+      }
+      datalistsEl.appendChild(datalistEl);
+    }
+  }
+
+  function getOpenApi(callback) {
     let oaURL = new URL(PAGEURL)
+    if (!"{{ dataset_url }}") {
+      return callback({})
+    }
     oaURL.pathname = "{{ dataset_url }}"
     oaURL.search = "?format=json";
-    console.log("{{ name }}");
-    console.log(oaURL.href)
-    return getData(oaURL.href, "GET", "*/*").then(oaJSON => 
+    return getData(oaURL.href, "GET", {Accept:"*/*"}, false).then(oaJSON => 
     {
       console.log(oaJSON)
-      console.log(oaJSON.paths[PAGEURL.pathname].get.parameters.map(x => x.schema.type))
+      console.log(new Set(oaJSON.paths[PAGEURL.pathname].get.parameters.map(x => x.schema.type)))
+      console.log(new Set(oaJSON.paths[PAGEURL.pathname].get.parameters.map(x => x.schema.enum || "")))
       params = {}
       oaJSON.paths[PAGEURL.pathname].get.parameters.filter(a => !a.name.includes("[")).forEach(x => {
+        addParamEnumDatalist(x, x.name+"[eq]")
+        addParamExampleDatalist(x, x.name+"[eq]")
         name = x.name
         param = JSON.parse(JSON.stringify(x))
-        param.operators = [{name:"eq", description:"Equal to;"}];
+        equalOp = JSON.parse(JSON.stringify(x))
+        equalOp.name = "eq"
+        param.operators = [equalOp];
         params[name] = param;
       })
       oaJSON.paths[PAGEURL.pathname].get.parameters.filter(a => a.name.includes("[")).forEach(x => {
+        addParamEnumDatalist(x)
+        addParamExampleDatalist(x)
         let param = JSON.parse(JSON.stringify(x))
         let [key, op] = splitKeyandOperator(x.name)
         param.name= op; 
         params[key].operators.push(param)
       })
-      oaParams = params
-      console.log(params)
-      setParams()
+
+      // Add Accept header.
+      params["Accept"] = {
+        name: "Accept", 
+        in: "header", 
+        description: "",
+        operators:[
+          {name:"eq", in: "header", 
+          examples: {
+            any: {value:"*/*", description:"accept any", summary: "Any"},
+            hal_json: {value:"application/hal+json", description:"accept HAL JSON", summary: "HAL JSON"},
+        },
+          schema:{type:"string"}}
+        ], 
+        schema:{type:"string"}
+      }
+
+      // Add each parameter to the datalist
+      for (inside of ["query", "header"]) {
+        let paramDatalistEl = document.getElementById(inside +"-parameter-options");
+        paramDatalistEl.innerHTML = ""
+        for (const param in params) {
+          if(params[param].in === inside){
+            let option = document.createElement("option");
+            option.value = param;
+            option.text = param;
+            option.title = params[param].description
+            paramDatalistEl.appendChild(option);
+          }
+        } 
+      }
+      return callback(params)
     })
   }
 
   function onParamKeySet(event) {
-    let [key, selectedOp] = splitKeyandOperator(event.target.value)
+    if (oaParams == null) {
+      return
+    }
 
-    console.log(`You like ${event.target.value}`);
-    console.log(event)
+    let [key, selectedOp] = splitKeyandOperator(event.target.value)
     if (oaParams.hasOwnProperty(key)) {
       param = oaParams[key]
-      console.log(param.schema)
+      event.target.title = param.description
+      event.target.setCustomValidity("");
+
       opEl = event.target.nextElementSibling;
+
+      // Use operator from key field before value in operator field
       if(selectedOp == "eq") {
         selectedOp = opEl.value
       } 
       opEl.innerHTML = "";
+      opEl.dataset.key = key
       param.operators.forEach(operator => {
         let option = document.createElement("option");
         option.value = operator.name;
@@ -656,17 +951,41 @@
         option.title = operator.description
         if (operator.name === selectedOp) {
             option.setAttribute("selected", "selected");
+            event.target.value = key
           }
           opEl.appendChild(option);
       })
+      opEl.dispatchEvent(new Event('change'));
+      
 
-      oldValueEl = opEl.nextElementSibling;
+    } else {
+      event.target.title = "onbekende parameter"
+      event.target.setCustomValidity("onbekende parameter");
+    }
+
+    if(!event.target.parentElement.nextElementSibling && event.target.parentElement.parentElement ) {
+        event.target.parentElement.parentElement.appendChild(createParamEl(null, null,"eq", true, param.in));
+    }
+  }
+
+  function onParamOpSet(event) {
+    key = event.target.dataset.key;
+    op = event.target.value;
+    if (oaParams.hasOwnProperty(key)) {
+      param = oaParams[key]
+      opParam = param.operators.find(x => x.name == event.target.value)
+      event.target.title = opParam.description
+      oldValueEl = event.target.nextElementSibling;
       valueEl = document.createElement("input")
       valueEl.value = oldValueEl.value
-      let type = param.schema.format || param.schema.type;
-      console.log(type)
-      if (param.schema.enum) {
-        document.createElement("datalist")
+      valueEl.placeholder = oldValueEl.placeholder
+      valueEl.className = oldValueEl.className
+      let type = opParam.schema.format || opParam.schema.type ||param.schema.format || param.schema.type;
+      if (opParam.schema.enum) {
+        valueEl.setAttribute("list", `datalist-${key}[${op}]-enum`);
+      }
+      if (opParam.examples) {
+        valueEl.setAttribute("list", `datalist-${key}[${op}]-examples`);
       }
       if (type == "date-time") {
         valueEl.type = "datetime-local"
@@ -677,29 +996,41 @@
       else if (type == "integer") {
         valueEl.type = "number";
         valueEl.step = 1;
-      }            
-      oldValueEl.parentNode.replaceChild(valueEl, oldValueEl);
-      if(!event.target.parentElement.nextElementSibling && event.target.parentElement.parentElement) {
-        event.target.parentElement.parentElement.appendChild(createParamEl());
       }
-    } else {
-      console.log("no,no,no you didn't say the magic word!")
+      else if (type == "boolean") {
+        valueEl.setAttribute("list", "boolean");
+      }
+      oldValueEl.parentNode.replaceChild(valueEl, oldValueEl);
     }
   }
 
-  function createParamEl(key=null, value=null, op="eq", inin="query") {
+  function createParamEl(key=null, value=null, op="eq", active=true, insideOf="query") {
     let paramEl = document.createElement('div');
     paramEl.className = "param";
+    let activeEl = document.createElement('input');
+    activeEl.type = "checkbox"
+    activeEl.className = "param-check"
+    activeEl.checked = active
+    activeEl.onchange = (e) => {e.target.checked? e.target.parentElement.classList.remove("disabled"): e.target.parentElement.classList.add("disabled")}
+    paramEl.appendChild(activeEl);
+    activeEl.dispatchEvent(new Event('change'))
 
-    let keyEl = document.createElement('select');
+    let keyEl = document.createElement('input');
     keyEl.className = "param-key";
+    keyEl.setAttribute("list", insideOf +"-parameter-options");
+    keyEl.placeholder = "select a parameter";
+    keyEl.autocomplete = "off"
     keyEl.addEventListener('change', onParamKeySet)
-    keyEl.onchange = onParamKeySet;
+    keyEl.onmouseover = (e) => {e.target.dispatchEvent(new Event('focus'));e.target.dataset.old=e.target.value;}
+    keyEl.onmousedown = (e) => {if(oaParams!=null&& !(e.target.value in oaParams)){e.target.value ="";}}
+    keyEl.onmouseup = (e) => {e.target.value =e.target.dataset.old;}
+    keyEl.onblur = (e) => {if(e.target.value==""){e.target.value =e.target.dataset.old;}}
     paramEl.appendChild(keyEl);
     
     let opEl = document.createElement('select');
     opEl.className = "param-op";
     opEl.innerHTML = `<option value="${op}" selected>${OPERATORS[op] || op}</option>`
+    opEl.addEventListener('change', onParamOpSet)
     paramEl.appendChild(opEl);
     
     let valueEl = document.createElement('input');
@@ -708,61 +1039,61 @@
     valueEl.value = value
     paramEl.appendChild(valueEl);
     
-    let keyDummyEl =  document.createElement("option");
-    keyDummyEl.setAttribute("disabled", "disabled")
-    keyDummyEl.innerHTML = "select a parameter"
-    if (key == null) {
-      keyDummyEl.setAttribute("selected", "selected");
-    }
-    keyEl.appendChild(keyDummyEl);
+    let deleteEl = document.createElement('button');
+    deleteEl.className = "remove-param-btn btn glyphicon glyphicon-trash"
+    deleteEl.onclick = (e) => {e.target.parentElement.remove()}
+    paramEl.appendChild(deleteEl);
+
     if (oaParams == null) {
-      keyEl.setAttribute("disabled", "disabled")
-      opEl.setAttribute("disabled", "disabled")
-      valueEl.setAttribute("disabled", "disabled")
-      keyEl.innerHTML += `<option value="${key}" selected>${key}</option>`
-    } else {
-      for (const param in params) {
-        if(params[param].in === inin){
-          let option = document.createElement("option");
-          option.value = param;
-          option.text = param;
-          option.title = params[param].description
-          keyEl.appendChild(option);
-          if (param === key) {
-            option.setAttribute("selected", "selected");
-            let event = new Event('change');
-            keyEl.dispatchEvent(event);
-          }
-        }
-      }     
+      paramEl.classList.add("loading")
+    }
+    if (key != null) {
+      keyEl.value = key;
+      let event = new Event('change');
+      keyEl.dispatchEvent(event);
     }
     return paramEl
   }
 
-  function setParams() {
-    let paramsEl = document.getElementById("queryparams");
-    paramsEl.innerHTML = "";
-    for (let paramkey of PAGEURL.searchParams.keys()) {
-      let value = PAGEURL.searchParams.get(paramkey);
-      let [key, operator] = splitKeyandOperator(paramkey);
-      paramsEl.appendChild(createParamEl(key, value, operator));
-      // let operatorSelect = ""
-      // if (key.split("[").length >1) {
-      //   key = key.split("[")[0]
-      //   operator = key.split("[")[1].split("]")[0];
-      //   operatorSelect = `<select disabled><option value="${operator}" selected>${operator}</option></select>`;
-      // }
-      // console.log(key + " = " + value)
-      // let paramEl = document.createElement('div');
-      // paramEl.innerHTML = `<select disabled><option value="${key}" selected>${key}</option></select>:
-      //                     ${operatorSelect}
-      //                     <select disabled><option value="${value}" selected>${value}</option></select>`;
-      // paramsEl.appendChild(paramEl)
+  function setHeaders(headers=DEFAULT_HEADERS) {
+    let headersEl = document.getElementById("request-headers");
+    headersEl.innerHTML = ""
+    for (let k in headers) {
+      headersEl.appendChild(createParamEl(k, headers[k], "eq", "header"));
     }
     if (oaParams != null){
-      paramsEl.appendChild(createParamEl())
+      headersEl.appendChild(createParamEl(null,null,"eq", true, "header"))
     }
   }
+
+  function setParams(params=null) {
+    if(params == null) {
+      params = getRequestSettings();
+    }
+
+    // Update parameters with current url
+    for (let paramkey of PAGEURL.searchParams.keys()) {
+      let value = PAGEURL.searchParams.get(paramkey);
+      let [key, operator] = splitKeyandOperator(paramkey)
+      params[paramkey] = {
+        active: true,
+        key:key,
+        operator: operator,
+        value: value
+      }
+    }
+    
+    let paramsEl = document.getElementById("request-params");
+    paramsEl.innerHTML = ""
+    for(k in params){
+      let param = params[k];
+      let active = PAGEURL.searchParams.has(k) || param.key=="";
+      paramsEl.appendChild(createParamEl(param.key, param.value, param.operator, active));
+    }
+
+      paramsEl.appendChild(createParamEl())
+  }
+
 </script>
 <script src="{% static "rest_framework/js/jquery-3.5.1.min.js" %}"></script>
 <script src="{% static "rest_framework/js/ajax-form.js" %}"></script>
