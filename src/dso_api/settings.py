@@ -403,8 +403,8 @@ if _USE_SECRET_STORE or CLOUD_ENV.startswith("azure"):
     HAAL_CENTRAAL_API_KEY = Path("/mnt/secrets-store/haalcentraal-api-key").read_text()
     HAAL_CENTRAAL_BAG_API_KEY = Path("/mnt/secrets-store/haalcentraal-bag-api-key").read_text()
 else:
-    HAAL_CENTRAAL_API_KEY = os.getenv("HAAL_CENTRAAL_API_KEY", "UNKNOWN")
-    HAAL_CENTRAAL_BAG_API_KEY = os.getenv("HAAL_CENTRAAL_BAG_API_KEY", "UNKNOWN")
+    HAAL_CENTRAAL_API_KEY = os.getenv("HAAL_CENTRAAL_API_KEY")
+    HAAL_CENTRAAL_BAG_API_KEY = os.getenv("HAAL_CENTRAAL_BAG_API_KEY")
 
 HAAL_CENTRAAL_KEYFILE = os.getenv("HC_KEYFILE")
 HAAL_CENTRAAL_CERTFILE = os.getenv("HC_CERTFILE")
