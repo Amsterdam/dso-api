@@ -220,7 +220,7 @@ LOGGING = {
         "dso_api": {"handlers": ["console"], "level": DSO_API_LOG_LEVEL, "propagate": False},
         "dso_api.audit": {
             "handlers": ["audit_console"],
-            "level": DSO_API_LOG_LEVEL,
+            "level": DSO_API_AUDIT_LOG_LEVEL,
             "propagate": False,
         },
         "authorization_django": {
