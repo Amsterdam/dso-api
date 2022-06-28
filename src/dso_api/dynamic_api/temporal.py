@@ -44,6 +44,12 @@ class TemporalTableQuery:
         self.table_schema = table_schema
         self.is_versioned = temporal is not None
 
+        # Make sure all queries use the exact same now, not seconds/milliseconds apart.
+        try:
+            self._now = request._now
+        except AttributeError:
+            self._now = request._now = now()
+
         if temporal is not None:
             # See if a filter is made on a specific version
             self.version_field = temporal.identifier  # e.g. "volgnummer"
@@ -121,7 +127,7 @@ class TemporalTableQuery:
             return queryset
 
         # Either take a given ?geldigOp=yyyy-mm-dd OR ?geldigOp=NOW()
-        slice_value = self.slice_value or now()
+        slice_value = self.slice_value or self._now
         range_fields = self.slice_range_fields or self.default_range_fields
 
         if range_fields is not None:
