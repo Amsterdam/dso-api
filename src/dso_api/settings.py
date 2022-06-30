@@ -224,6 +224,11 @@ LOGGING = {
             "level": DSO_API_AUDIT_LOG_LEVEL,
             "propagate": False,
         },
+        "rest_framework_dso": {
+            "handlers": ["console"],
+            "level": DSO_API_LOG_LEVEL,
+            "propagate": False,
+        },
         "authorization_django": {
             "handlers": ["audit_console"],
             "level": DSO_API_AUDIT_LOG_LEVEL,
