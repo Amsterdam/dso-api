@@ -398,27 +398,34 @@ class ChunkedQuerySetIterator(Iterable[M]):
     def __iter__(self):
         # Using iter() ensures the ModelIterable is resumed with the next chunk.
         qs_iter = iter(self.queryset.iterator(chunk_size=self.sql_chunk_size))
+        chunk_id = 0
 
         # Keep fetching chunks
         while instances := list(islice(qs_iter, self.chunk_size)):
             # Perform prefetches on this chunk:
             if self.queryset._prefetch_related_lookups:
-                self._add_prefetches(instances)
+                self._add_prefetches(instances, chunk_id)
+                chunk_id += 1
+
             yield from instances
 
-    def _add_prefetches(self, instances: list[M]):
+    def _add_prefetches(self, instances: list[M], chunk_id):
         """Merge the prefetched objects for this batch with the model instances."""
         if self._fk_caches:
             # Make sure prefetch_related_objects() doesn't have to fetch items again
             # that infrequently changes (e.g. a "wijk" or "stadsdeel").
             all_restored = self._restore_caches(instances)
             if all_restored:
+                logger.debug("[chunk %d] No additional prefetched needed.", chunk_id)
                 return
+
+        logger.debug("[chunk %d] Prefetching related objects...", chunk_id)
 
         # Reuse the Django machinery for retrieving missing sub objects.
         # and analyse the ForeignKey caches to allow faster prefetches next time
         models.prefetch_related_objects(instances, *self.queryset._prefetch_related_lookups)
         self._persist_prefetch_cache(instances)
+        logger.debug("[chunk %d] ...done prefetching related objects.", chunk_id)
 
     def _persist_prefetch_cache(self, instances):
         """Store the prefetched data so it can be applied to the next batch"""
@@ -450,6 +457,9 @@ class ChunkedQuerySetIterator(Iterable[M]):
                     instance._state.fields_cache[lookup] = obj
                 else:
                     all_restored = False
+
+        if all_restored:
+            logger.debug("All prefetches restored from cache")
 
         return all_restored
 
@@ -530,13 +540,14 @@ class EmbeddedResultSet(ReturnGenerator):
         The result set also implements the generator-like behavior
         that the rendering needs to preserve streaming.
         """
-        return cls(match.field, serializer=match.embedded_serializer)
+        return cls(match.field, serializer=match.embedded_serializer, full_name=match.full_name)
 
     def __init__(
         self,
         embedded_field: AbstractEmbeddedField,
         serializer: serializers.Serializer,
         main_instances: Optional[list] = None,
+        full_name: Optional[str] = None,
     ):
         # Embedded result sets always work on child elements,
         # as the source queryset is iterated over within this class.
@@ -546,6 +557,7 @@ class EmbeddedResultSet(ReturnGenerator):
         super().__init__(generator=None, serializer=serializer)
         self.embedded_field = embedded_field
         self.id_list = []
+        self.full_name = full_name
 
         # Allow to pre-feed with instances (e.g for detail view)
         if main_instances is not None:
@@ -587,6 +599,9 @@ class EmbeddedResultSet(ReturnGenerator):
         if self.generator is None:
             self.generator = self._build_generator()
 
+        logger.debug(
+            "Fetching embedded field: %s", self.full_name or self.embedded_field.field_name
+        )
         return super().__iter__()  # returns iter(self.generator)
 
     def __bool__(self):

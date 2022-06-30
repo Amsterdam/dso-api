@@ -19,6 +19,7 @@ The model-serializers depend on the ORM logic, and support features like object 
 and constructing serializer fields based on the model field metadata.
 """
 import inspect
+import logging
 from typing import Iterable, Optional, Union, cast
 
 from django.contrib.gis.db import models as gis_models
@@ -44,6 +45,8 @@ from rest_framework_dso.embedding import (
 )
 from rest_framework_dso.exceptions import HumanReadableGDALException
 from rest_framework_dso.serializer_helpers import ReturnGenerator, peek_iterable
+
+logger = logging.getLogger(__name__)
 
 
 class ExpandableSerializer(BaseSerializer):
@@ -277,9 +280,8 @@ class DSOModelListSerializer(DSOListSerializer):
             # When generating as part of an sub-object, just output the list.
             return super().to_representation(data)
 
-        # Find the the best approach to iterate over the results.
+        # Find the best approach to iterate over the results.
         if prefetch_lookups := self.get_prefetch_lookups():
-
             # When there are related fields, avoid an N-query issue by prefetching.
             # ChunkedQuerySetIterator makes sure the queryset is still read in partial chunks.
             queryset_iterator = ChunkedQuerySetIterator(data.prefetch_related(*prefetch_lookups))
@@ -693,6 +695,7 @@ class DSOModelSerializer(DSOSerializer, serializers.HyperlinkedModelSerializer):
             result_set = EmbeddedResultSet.from_match(embed_match)
             result_set.inspect_instance(instance)
 
+            logger.debug("Fetching embedded field: %s", embed_match.full_name)
             if not embed_match.field.is_array:
                 # Single object, embed as dict directly
                 expanded[embed_match.name] = next(iter(result_set), None)
