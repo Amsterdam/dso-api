@@ -175,7 +175,7 @@
           border-top-right-radius: 4px;
         }
         .request-form-tab:first-child {
-          border-right: 0;
+          border-right: 0 !important;
           border-top-left-radius: 4px;
         }
         .show-params #request-headers, .show-headers #request-params {
@@ -190,21 +190,24 @@
         .button-form {
           margin-bottom: 10px;
         }
+        #authorize-btn {
+          float: right;
+          background-color: green;
+        }
     </style>
 {% endblock %}
 
 {% block content %}
 
 <div class="content-main" role="main"  aria-label="{% trans "main content" %}">
+  <btn id="authorize-btn" class="btn btn-primary disabled" onclick="authorize()">Authorize</btn>
   <div class="page-header">
     <h1>{{ name }}</h1>
     <h5>Bronhouder: {{ authorization_grantor|default_if_none:"Onbekend"}}</h5>
   </div>
   <div style="float:left">
     {% block description %}{{ block.super }}{% endblock %}
-  </div>
-
-    
+  </div> 
     <div class="region"  aria-label="{% trans "request form" %}">
     {% comment %} 
       Add an id to the options button so we can override its behaviour.
@@ -212,7 +215,7 @@
     {% endcomment %}
     <div id="request-settings-container" class="show-params">
     <div class="request-form-tabs">
-      <div class="request-form-tab params-tab" onclick="event.target.parentElement.parentElement.className='show-params'">Parameters</div><div class="request-form-tab headers-tab" onclick="event.target.parentElement.parentElement.className='show-headers'">Headers</div>
+      <div id="params-tab" class="request-form-tab params-tab" onclick="event.target.parentElement.parentElement.className='show-params'">Parameters</div><div class="request-form-tab headers-tab" onclick="event.target.parentElement.parentElement.className='show-headers'" id="headers-tab">Headers</div>
     </div>
     <pre style="box-sizing: border-box;clear:both;" id="request-params" class="request-settings"></pre>
     <pre style="box-sizing: border-box;clear:both;" id="request-headers" class="request-settings"></pre>
@@ -415,9 +418,12 @@
   };
 </script>
 <script>
-  const HEADERS = [ "Allow", "Content-Type","Content-Crs", "Vary", "X-Pagination-Limit", "X-Pagination-Page" , "X-Total-Count", "X-Pagination-Count"]
-  const DEFAULT_HEADERS = {Accept:"application/hal+json"}
   var PAGEURL = new URL(window.location.href);
+  var isPaginated = false;
+
+  const HEADERS = [ "Allow", "Content-Type","Content-Crs", "Vary", "X-Pagination-Limit", "X-Pagination-Page" , "X-Total-Count", "X-Pagination-Count"]
+  // Headers that should be set on page load. (without this the api would return html)
+  const DEFAULT_HEADERS = {Accept:"*/*"}
   const OPERATORS = {
     eq:"=",
     gt:">",
@@ -442,8 +448,65 @@
   }
   // max number of extra pagination links shown
   const NUM_EXTRA_PAGES = 4
-  var oaParams = null
-  var isPaginated = false
+  // Default parameters that are not listed in open api spec
+  const DEFAULT_PARAMS = {
+    "Accept": {
+      name: "Accept", 
+      in: "header", 
+      description: "",
+      examples: {
+          any: {value:"*/*", description:"accept any", summary: "Any"},
+          hal_json: {value:"application/hal+json", description:"accept HAL JSON", summary: "HAL JSON"},
+      },
+      operators:[
+        {name:"eq", in: "header", 
+        examples: {
+          any: {value:"*/*", description:"accept any", summary: "Any"},
+          hal_json: {value:"application/hal+json", description:"accept HAL JSON", summary: "HAL JSON"},
+      },
+        schema:{type:"string"}}
+      ], 
+      schema:{type:"string"}
+    },
+    "Authorization": {
+      name: "Authorization", 
+      in: "header", 
+      description: "",
+      examples: {
+          any: {value:"Bearer ey...", description:"bearer token", summary: "bearer token"},
+      },
+      operators:[
+        {name:"eq", in: "header", 
+        examples: {
+          any: {value:"Bearer ey...", description:"bearer token", summary: "bearer token"},
+      },
+        schema:{type:"string"}}
+      ], 
+      schema:{type:"string"}
+    }
+  }
+  const CLIENTID = "dso-api-open-api"
+  const REDIRECTURI = PAGEURL.origin + "/v1/oauth2-redirect.html"
+
+  // Hack into swagger auth state
+  var swaggerUIRedirectOauth2 = {
+    state: null,
+    redirectUrl: REDIRECTURI,
+    auth: {schema: {get:(t) => {return "implicit"}}, code:null},
+    errCb: err => console.log("err callback", err),
+    callback: authorizationResult => {
+      let headersEl = document.getElementById("request-headers");
+      let token = authorizationResult.token;
+      window.localStorage.setItem("authToken", JSON.stringify(token)) 
+      addHeader("Authorization","Bearer " + token.access_token, true)
+      showHeaders()
+    }
+  }
+  var dsoShowToken = token => {}
+
+  // Open API variables
+  var oaParams = null;
+  var oaSpec = null;
 
   if (document.readyState != 'loading') {
     onPageLoad();
@@ -463,8 +526,8 @@
     let page = PAGEURL.searchParams.get("page");
     setParams()
     setHeaders()
-
     setPageLinks(page);
+
     getData(PAGEURL).catch(parseException).then(data => {
       if(data) {
         parseData(data);
@@ -476,6 +539,7 @@
       oaParams = params;
       setParams();
       setHeaders()
+      document.getElementById("authorize-btn").classList.remove("disabled");
     })
     // Override the default DRF behaviour of the OPTIONS, and GET buttons,
     // which do not work with our script.
@@ -505,7 +569,7 @@
     PAGEURL = new URL(decodeURI(url));
     headerSettings = getRequestSettings("headers");
     for (k in headerSettings) {
-      if(!headers.hasOwnProperty(k)){
+      if(!headers.hasOwnProperty(k) && headerSettings[k].active){
         headers[k] = headerSettings[k].value
       }
     }
@@ -526,7 +590,17 @@
     });
   }
 
+  function authorize() {
+    if(!oaSpec) {
+      return
+    }
+    authUrl = new URL(oaSpec.components.securitySchemes.oauth2.flows.implicit.authorizationUrl)
 
+    authUrl.searchParams.set("client_id", CLIENTID);
+    authUrl.searchParams.set("redirect_uri", REDIRECTURI);
+    authUrl.searchParams.set("response_type", "token");
+    window.open(authUrl, '_blank')
+  } 
 
   function getRequestSettings(type="params") {
     // Get query parameter or header request settings from the form. 
@@ -555,13 +629,12 @@
     return result
   }
 
-
   function getUpdatedUrl() {
     // Get the URL of this endpoint with new request parameter settings
     let url = new URL(PAGEURL);
     url.search = "";
     let currentParams = getRequestSettings();
-    for (combinedKey in getRequestSettings()){
+    for (combinedKey in currentParams){
       let param = currentParams[combinedKey];
       if (param.active && param.key != "") {
         url.searchParams.set(combinedKey, param.value);
@@ -681,6 +754,17 @@
         }
       }; 
     }); 
+  }
+
+  function showHeaders() {
+    document.getElementById("headers-tab").dispatchEvent(new Event('click'))
+  }
+
+  function addHeader(key, val, active) {
+    let headersEl = document.getElementById("request-headers");
+    let lastChild = headersEl.lastElementChild
+    headersEl.replaceChild(createParamEl(key, val, "eq", active, "header"), headersEl.lastElementChild)
+    headersEl.appendChild(lastChild)
   }
 
   function escapeString(string) {
@@ -861,17 +945,20 @@
 
   function getOpenApi(callback) {
     let oaURL = new URL(PAGEURL)
+    let params = JSON.parse(JSON.stringify(DEFAULT_PARAMS))
+    // Add Default headers.
+    for (k in params) {
+      addParamEnumDatalist(params[k], params[k].name+"[eq]")
+      addParamExampleDatalist(params[k], params[k].name+"[eq]")
+    }
+
     if (!"{{ dataset_url }}") {
-      return callback({})
+      return callback(params)
     }
     oaURL.pathname = "{{ dataset_url }}"
     oaURL.search = "?format=json";
     return getData(oaURL.href, "GET", {Accept:"*/*"}, false).then(oaJSON => 
     {
-      console.log(oaJSON)
-      console.log(new Set(oaJSON.paths[PAGEURL.pathname].get.parameters.map(x => x.schema.type)))
-      console.log(new Set(oaJSON.paths[PAGEURL.pathname].get.parameters.map(x => x.schema.enum || "")))
-      params = {}
       oaJSON.paths[PAGEURL.pathname].get.parameters.filter(a => !a.name.includes("[")).forEach(x => {
         addParamEnumDatalist(x, x.name+"[eq]")
         addParamExampleDatalist(x, x.name+"[eq]")
@@ -889,23 +976,7 @@
         let [key, op] = splitKeyandOperator(x.name)
         param.name= op; 
         params[key].operators.push(param)
-      })
-
-      // Add Accept header.
-      params["Accept"] = {
-        name: "Accept", 
-        in: "header", 
-        description: "",
-        operators:[
-          {name:"eq", in: "header", 
-          examples: {
-            any: {value:"*/*", description:"accept any", summary: "Any"},
-            hal_json: {value:"application/hal+json", description:"accept HAL JSON", summary: "HAL JSON"},
-        },
-          schema:{type:"string"}}
-        ], 
-        schema:{type:"string"}
-      }
+      })   
 
       // Add each parameter to the datalist
       for (inside of ["query", "header"]) {
@@ -921,7 +992,8 @@
           }
         } 
       }
-      return callback(params)
+      oaSpec = oaJSON;
+      return callback(params);
     })
   }
 
@@ -1061,9 +1133,11 @@
     for (let k in headers) {
       headersEl.appendChild(createParamEl(k, headers[k], "eq", "header"));
     }
-    if (oaParams != null){
-      headersEl.appendChild(createParamEl(null,null,"eq", true, "header"))
+    let token = JSON.parse(window.localStorage.getItem("authToken"))
+    if (token && !headers["Authorization"]) {
+      headersEl.appendChild(createParamEl("Authorization","Bearer " + token.access_token, "eq", false, "header"));
     }
+    headersEl.appendChild(createParamEl(null,null,"eq", true, "header"))
   }
 
   function setParams(params=null) {
@@ -1071,7 +1145,7 @@
       params = getRequestSettings();
     }
 
-    // Update parameters with current url
+    // Update parameters with values from current url
     for (let paramkey of PAGEURL.searchParams.keys()) {
       let value = PAGEURL.searchParams.get(paramkey);
       let [key, operator] = splitKeyandOperator(paramkey)
@@ -1091,7 +1165,7 @@
       paramsEl.appendChild(createParamEl(param.key, param.value, param.operator, active));
     }
 
-      paramsEl.appendChild(createParamEl())
+    paramsEl.appendChild(createParamEl())
   }
 
 </script>
