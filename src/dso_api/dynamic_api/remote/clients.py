@@ -255,11 +255,8 @@ class AuthForwardingClient(RemoteClient):
 class HaalCentraalClient(RemoteClient):
     """Base class for Haal Centraal clients."""
 
-    def _allowed_filters(self) -> set[str]:
-        """Must return the query parameters ("filters") allowed for a table.
-
-        _fields and _format are implied.
-        """
+    def _allow_filter(self, p) -> bool:
+        """Must return false for filters that we don't want to send to the remote."""
         raise NotImplementedError()
 
     __NON_FILTERS: Final[dict[str, str]] = {
@@ -277,7 +274,6 @@ class HaalCentraalClient(RemoteClient):
         # translate the non-filter parameters, bail for anything we don't allow,
         # pass the rest on.
 
-        allowed = self._allowed_filters()
         remote_params = {}
 
         for p, v in query_params.items():
@@ -289,7 +285,7 @@ class HaalCentraalClient(RemoteClient):
                 remote_params[p_hc] = v
                 continue
 
-            if p not in allowed:
+            if not self._allow_filter(p):
                 raise ValidationError(f"unknown filter {p!r}")
 
             try:
@@ -307,30 +303,8 @@ class HaalCentraalClient(RemoteClient):
 class HCBAGClient(HaalCentraalClient):
     """Client for Haal Centraal Basisregistratie Addressen en Gebouwen (HCBAG)."""
 
-    __ALLOWED_FILTERS: Final[dict[str, set[str]]] = {
-        # TODO we should put these in the schema instead of hard-coding them.
-        "adressen": {
-            "adresseerbaarObjectIdentificatie",
-            "exacteMatch",
-            "huisnummer",
-            "huisnummertoevoeging",
-            "pandIdentificatie",
-            "postcode",
-            "zoekResultaatIdentificatie",
-        },
-        "nummeraanduidingen": {
-            "nummeraanduidingidentificatie",
-        },
-        "openbareruimten": {
-            "openbareruimteidentificatie",
-        },
-        "woonplaatsen": {
-            "woonplaatsidentificatie",
-        },
-    }
-
-    def _allowed_filters(self) -> set[str]:
-        return self.__ALLOWED_FILTERS[self._table_schema.id]
+    def _allow_filter(self, p) -> bool:
+        return True  # Just let the remote handle the filters.
 
     def _get_headers(self, request):
         headers = super()._get_headers(request)
@@ -354,12 +328,13 @@ class HCBRKClient(HaalCentraalClient):
     __http_pool = None
     __http_pool_lock = threading.Lock()
 
+    # Restrict the filter parameters, so a search on BSN is disallowed.
     __ALLOWED_PARAMS = frozenset(
         ("kadastraleAanduiding", "nummeraanduidingIdentificatie", "postcode")
     )
 
-    def _allowed_filters(self) -> set[str]:
-        return self.__ALLOWED_PARAMS
+    def _allow_filter(self, p) -> set[str]:
+        return p in self.__ALLOWED_PARAMS
 
     def _get_headers(self, request):
         headers = super()._get_headers(request)
