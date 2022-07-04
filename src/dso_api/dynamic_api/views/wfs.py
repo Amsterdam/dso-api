@@ -101,7 +101,7 @@ class DatasetWFSIndexView(APIIndexView):
     description = (
         "To use the DSO-API, see the documentation at <https://api.data.amsterdam.nl/v1/docs/>. "
         "For information on using WFS see WFS documentation at "
-        "<https://api.data.amsterdam.nl/v1/docs/generic/wfs.html>"
+        "<https://api.data.amsterdam.nl/v1/docs/generic/gis.html>"
     )
     api_type = "WFS"
 
