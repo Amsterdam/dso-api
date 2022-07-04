@@ -22,7 +22,7 @@ The DSO-API build upon the generic functionality of django-gisserver_ by extendi
     This explains how to define features, override logic and understand its internal design.
 
     The DSO-API end user documentation also describes how to access the WFS server:
-    https://api.data.amsterdam.nl/v1/docs/generic/wfs.html
+    https://api.data.amsterdam.nl/v1/docs/generic/gis.html
 
 
 Schema Definitions
@@ -70,6 +70,6 @@ and the WFS server operates based on this definition.
 
 .. seealso::
    The effect of the expand/embed logic is well explained in the end user manual:
-   https://api.data.amsterdam.nl/v1/docs/generic/wfs.html
+   https://api.data.amsterdam.nl/v1/docs/generic/gis.html
 
 .. _django-gisserver: https://github.com/Amsterdam/django-gisserver
