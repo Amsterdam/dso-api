@@ -1,6 +1,13 @@
 Werken met QGIS
 ===============
 
+
+Eenmalige lokale setup
+----------------------
+
+Let op, een eenmalige setup van de qgis-auth.db in je locale profiel is nodig voordat je de API endpoints toevoegt. Onthoudt jouw gebruikersnaam en wachtwoord goed.
+
+
 WFS
 ---
 
