@@ -137,6 +137,7 @@
         }
         .param {
           margin-bottom: 5px;
+          position: relative;
         }
         .param-op {
           height: 1.85em;
@@ -194,6 +195,82 @@
           float: right;
           background-color: green;
         }
+        .param-info {
+          visibility: collapse;
+          position: absolute;
+          float: right;
+          top: 7px;
+          right: 55px;
+          height: 1.85em;
+          display: block;
+          max-width: 50%;
+          z-index: 100;
+          width: fit-content;
+                  }
+
+        .param-info::before {
+          content: "?";
+          position: absolute;
+          color: green;
+          right: -22px;
+          border: 1px solid black;
+          border-radius: 1em;
+          height: 1.6em;
+          width: 1.6em;
+          padding: 0.1em;
+            padding-left: 0.1em;
+          padding-left: 0.1em;
+          background: white;
+          padding-left: 0.4em;
+          font-weight: bold;
+          cursor: pointer;
+          visibility: visible;
+          bottom: 5px;
+        }
+
+        .param-info .summary {
+          width: fit-content;
+          background: white;
+          display: ruby;
+          position: absolute;
+          right: -23px;
+          padding: 2px;
+            padding-right: 2px;
+            padding-left: 2px;
+          top: -3px;
+          padding-right: 20px;
+          padding-left: 15px;
+          z-index: -1;
+          visibility: visible;
+          font-style: italic;
+          opacity:1;
+          transition:visibility 1s linear,opacity .3s linear;
+          max-width: 100%;
+          overflow: hidden;
+        }
+        .param-info:hover, .param-info.expand {
+          visibility: visible;
+        }
+        .param:hover .param-info .summary{
+          visibility: hidden;
+          opacity:0;
+          transition:visibility 1s linear,opacity .3s linear;
+        }
+        .param-info.expand .summary {
+          visibility: visible;
+        }
+        .param:hover .param-info:hover div.summary, .param-info.expand pre {
+          border-color: black;
+          visibility: visible !important;
+          opacity: 1 !important;
+        }
+        .param-info pre {
+          position: relative;
+          top: 20px;
+        }
+        .param-info.hidden {
+          visibility: hidden;
+        }
     </style>
 {% endblock %}
 
@@ -218,7 +295,7 @@
       <div id="params-tab" class="request-form-tab params-tab" onclick="event.target.parentElement.parentElement.className='show-params'">Parameters</div><div class="request-form-tab headers-tab" onclick="event.target.parentElement.parentElement.className='show-headers'" id="headers-tab">Headers</div>
     </div>
     <pre style="box-sizing: border-box;clear:both;" id="request-params" class="request-settings"></pre>
-    <pre style="box-sizing: border-box;clear:both;" id="request-headers" class="request-settings"></pre>
+    <pre style="box-sizing: border-box;clear:both;overflow:visible;" id="request-headers" class="request-settings"></pre>
     <div>
     {% block request_forms %}
   
@@ -498,7 +575,7 @@
       let headersEl = document.getElementById("request-headers");
       let token = authorizationResult.token;
       window.localStorage.setItem("authToken", JSON.stringify(token)) 
-      addHeader("Authorization","Bearer " + token.access_token, true)
+      addSetting("Authorization","Bearer " + token.access_token, true)
       showHeaders()
     }
   }
@@ -515,15 +592,28 @@
       document.addEventListener("DOMContentLoaded", onPageLoad);
   }
 
+  function setURL(url) {
+    PAGEURL = new URL(decodeURI(url));
+    for (let paramkey of PAGEURL.searchParams.keys()) {
+      let value = PAGEURL.searchParams.get(paramkey);
+      let [key, operator] = splitKeyandOperator(paramkey)
+      updateSetting(key, value, operator, type="param") 
+    }
+
+  }
+
   window.onpopstate = function(e){
     if(e.state){
+      setURL(e.state.url)
       setParams(e.state.params)
-      updatePageRequest(e.state.url, e.state.method, false )
+      console.log("state", JSON.parse(JSON.stringify(e.state)))
+      updatePageRequest(e.state.url, e.state.method, false, e.state.headers )
     }
   };
 
   function onPageLoad() {
     let page = PAGEURL.searchParams.get("page");
+    setURL(PAGEURL.href)
     setParams()
     setHeaders()
     setPageLinks(page);
@@ -532,7 +622,7 @@
       if(data) {
         parseData(data);
       }
-      window.history.replaceState(JSON.parse(JSON.stringify({"url":PAGEURL, "method":"get", "params": getRequestSettings()})), "", PAGEURL)
+      window.history.replaceState(JSON.parse(JSON.stringify({"url":PAGEURL, "method":"get", "params": getRequestSettings(), "headers": getRequestSettings("headers")})), "", PAGEURL)
     });
 
     getOpenApi((params) => {
@@ -549,30 +639,38 @@
       e.preventDefault();
     }
     document.getElementById("get-button").onclick = e => {
-      updatePageRequest(getUpdatedUrl())
+      updatePageRequest(getUrlFromSettings())
       e.preventDefault();
     }
 
     for (let optEl of document.getElementsByClassName("format-option")) {
       optEl.onclick = e => {
         let formatValue = e.target.innerHTML
-        url = getUpdatedUrl()
+        url = getUrlFromSettings()
         url.searchParams.set("_format", formatValue)
-        updatePageRequest(url,"GET", true, {Accept:"*/*"})
+        updateSetting(Accept, "*/*")
+        updatePageRequest(url,"GET", true)
         e.preventDefault();
       }
     }
   }
 
-  function updatePageRequest(url, method="GET", pushHistory=true, headers={}) {
+  function updatePageRequest(url, method="GET", pushHistory=true, headerSettings=null) {
     // Make a request to the api and update the page with the response
-    PAGEURL = new URL(decodeURI(url));
-    headerSettings = getRequestSettings("headers");
-    for (k in headerSettings) {
-      if(!headers.hasOwnProperty(k) && headerSettings[k].active){
-        headers[k] = headerSettings[k].value
-      }
+    setURL(url);
+    
+    if (headerSettings == null) {
+      headerSettings = getRequestSettings("headers");
     }
+
+    console.log("headerSettings", headerSettings)
+    headers = {}
+    headerSettings.forEach(h => {
+      if(h.active) {
+        headers[h.key] = h.value;
+      }
+    })
+
     let reqInfoEl = document.getElementById("request-info")
     reqInfoEl.innerHTML = `<pre ><b>${method}</b> ${PAGEURL}</pre>`
     document.getElementById("response-content").innerHTML = "Retrieving data..."
@@ -580,13 +678,13 @@
     setPageLinks(page);
     getData(url, method, headers).catch(parseException).then(data => {
       if (pushHistory) {
-        window.history.pushState(JSON.parse(JSON.stringify({"url":url, "method":method, "params": getRequestSettings()})),"", url);
+        window.history.pushState(JSON.parse(JSON.stringify({"url":url, "method":method, "params": getRequestSettings("params"), "headers":headerSettings})),"", url);
       }
       if(data) {
           parseData(data)
       }
       setParams();
-      setHeaders(headers)
+      setHeaders(headerSettings)
     });
   }
 
@@ -603,43 +701,41 @@
   } 
 
   function getRequestSettings(type="params") {
-    // Get query parameter or header request settings from the form. 
+    // Get query parameter or header request settings from the form.
+    if (type == null) {
+      return getRequestSettings("params").concat("headers")
+    } 
     let paramsEl = document.getElementById("request-" + type);
-    let result = {};
-    [...Array(paramsEl.childElementCount).keys()].forEach(
+    return [...Array(paramsEl.childElementCount).keys()].map(
         i => {
-          paramEl = paramsEl.children.item(i);
+          let paramEl = paramsEl.children.item(i);
           let key = paramEl.getElementsByClassName("param-key")[0].value;
-          if (key == "") {
-            return
-          }
           let operator = paramEl.getElementsByClassName("param-op")[0].value;
           let combinedKey = key;
           if (operator != "eq") {
             combinedKey += `[${operator}]`;
           }
     
-          result[combinedKey] = {
+          return {
             active: paramEl.getElementsByClassName("param-check")[0].checked,
             key: key,
+            combinedKey: combinedKey,
             operator: operator,
-            value: paramEl.getElementsByClassName("param-val")[0].value
+            value: paramEl.getElementsByClassName("param-val")[0].value,
+            element: paramEl
           }
-      })
-    return result
+      }).filter(x => x.key != "")
   }
 
-  function getUpdatedUrl() {
+  function getUrlFromSettings() {
     // Get the URL of this endpoint with new request parameter settings
     let url = new URL(PAGEURL);
     url.search = "";
-    let currentParams = getRequestSettings();
-    for (combinedKey in currentParams){
-      let param = currentParams[combinedKey];
+    getRequestSettings().forEach(param => {
       if (param.active && param.key != "") {
-        url.searchParams.set(combinedKey, param.value);
+        url.searchParams.set(param.combinedKey, param.value);
       }
-    }
+    })
     return url;
   };
 
@@ -742,7 +838,7 @@
       http.send();
       http.onreadystatechange = function () {
         if (this.readyState === 2 && doParseHeaders){
-            parseHeaders(this);
+          parseResponseHeaders(this);
         }
         if (this.readyState === 4){
           try {
@@ -760,11 +856,48 @@
     document.getElementById("headers-tab").dispatchEvent(new Event('click'))
   }
 
-  function addHeader(key, val, active) {
-    let headersEl = document.getElementById("request-headers");
-    let lastChild = headersEl.lastElementChild
-    headersEl.replaceChild(createParamEl(key, val, "eq", active, "header"), headersEl.lastElementChild)
-    headersEl.appendChild(lastChild)
+  function addSetting(key, value, active=true, op="eq", type="header") {
+    // Add new header and deactivate any existing header
+    let requestSettings = getRequestSettings(type + "s");
+    let sameSetting = requestSettings.find(x => x.key == key && x.operator == op && x.value == value);
+    if (sameSetting) {
+      sameSetting.element.getElementsByClassName("param-check")[0].checked = active;
+      sameSetting.element.getElementsByClassName("param-check")[0].dispatchEvent(new Event('change'));
+      return
+    }
+    requestSettings.filter(x => x.key == key && x.operator == op  && x.active).forEach(setting => {
+      setting.element.getElementsByClassName("param-check")[0].checked = false;
+      setting.element.getElementsByClassName("param-check")[0].dispatchEvent(new Event('change'));
+    })
+    pushSetting(key, value, active, op, type)
+  }
+
+  function updateSetting(key, value, op="eq", type="header") {
+    console.log("update",key,value,op)
+    // Update value of existing header or add new header if it does not exist
+    let requestSettings = getRequestSettings(type +"s");
+    console.log(requestSettings)
+    let setting = requestSettings.find(x =>  x.key == key && x.operator == op  && x.active)
+    if(setting) {
+      setting.element.getElementsByClassName("param-val")[0].value = value
+    } else {
+      pushSetting(key, value, true, op, type)
+    }
+  }
+
+  function pushSetting(key, val, active, op="eq", type="header") {
+    let paramsEl = document.getElementById("request-" + type + "s");
+    let lastChild = paramsEl.lastElementChild;
+    let newParam = createParamEl(key, val, op, active, type);
+    if(lastChild) {
+      paramsEl.replaceChild(newParam, paramsEl.lastElementChild)
+      paramsEl.appendChild(lastChild)
+    } else {
+      paramsEl.appendChild(newParam)
+      paramsEl.appendChild(createParamEl(null, null,"eq", true, type))
+    }
+    
+    
   }
 
   function escapeString(string) {
@@ -773,7 +906,7 @@
     return element.innerHTML;
   }
 
-  function parseHeaders(response) {
+  function parseResponseHeaders(response) {
     // Set header fields
     let headersElement = document.getElementById("response-headers");
     headersElement.innerHTML = `<b>HTTP ${response.status} ${response.statusText}</b>\n`;
@@ -1008,7 +1141,7 @@
       event.target.title = param.description
       event.target.setCustomValidity("");
 
-      opEl = event.target.nextElementSibling;
+      opEl = event.target.parentElement.getElementsByClassName("param-op")[0];
 
       // Use operator from key field before value in operator field
       if(selectedOp == "eq") {
@@ -1034,11 +1167,21 @@
       event.target.title = "onbekende parameter"
       event.target.setCustomValidity("onbekende parameter");
     }
-
+    event.target.parentElement.dispatchEvent(new Event("mouseenter"))
     if(!event.target.parentElement.nextElementSibling && event.target.parentElement.parentElement ) {
         event.target.parentElement.parentElement.appendChild(createParamEl(null, null,"eq", true, param.in));
     }
   }
+
+  function parseJwt (token) {
+    let base64Url = token.split('.')[1];
+    let base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    let jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+
+    return JSON.parse(jsonPayload);
+};
 
   function onParamOpSet(event) {
     key = event.target.dataset.key;
@@ -1047,7 +1190,7 @@
       param = oaParams[key]
       opParam = param.operators.find(x => x.name == event.target.value)
       event.target.title = opParam.description
-      oldValueEl = event.target.nextElementSibling;
+      oldValueEl = event.target.parentElement.getElementsByClassName("param-val")[0];
       valueEl = document.createElement("input")
       valueEl.value = oldValueEl.value
       valueEl.placeholder = oldValueEl.placeholder
@@ -1116,6 +1259,12 @@
     deleteEl.onclick = (e) => {e.target.parentElement.remove()}
     paramEl.appendChild(deleteEl);
 
+    let infoEl = document.createElement('div');
+    infoEl.className = "param-info hidden"
+    infoEl.onclick = e => {e.target.classList.toggle("expand")}
+    paramEl.appendChild(infoEl);
+    paramEl.onmouseenter = e => setInfoBubble(e.target)
+
     if (oaParams == null) {
       paramEl.classList.add("loading")
     }
@@ -1127,43 +1276,63 @@
     return paramEl
   }
 
-  function setHeaders(headers=DEFAULT_HEADERS) {
+  function setInfoBubble(element){
+    let valueEl = element.getElementsByClassName("param-val")[0];
+    let infoEl = element.getElementsByClassName("param-info")[0];
+    if(valueEl && valueEl.value.startsWith("Bearer ")) {
+      let token = parseJwt(valueEl.value)
+      let isExpired = token.exp*1000 < (new Date()).getTime();
+      let minutesRemaining = Math.floor((new Date(token.exp*1000) - new Date()) / 60000)
+      expiredText = `Exp:${minutesRemaining}min`
+      summary = `${token.preferred_username} ${isExpired?"Expired":expiredText} `
+      infoEl.innerHTML =  `<div class="summary">${summary}</div><pre>${syntaxHighlight(JSON.stringify(token,null,4))}</pre>`
+      infoEl.classList.remove("hidden");
+    } else {
+      infoEl.classList.add("hidden");
+    }
+  }
+
+  function setHeaders(headers=null) {
+    console.log("headers", headers)
     let headersEl = document.getElementById("request-headers");
     headersEl.innerHTML = ""
-    for (let k in headers) {
-      headersEl.appendChild(createParamEl(k, headers[k], "eq", "header"));
+    if (headers) {
+      headers.forEach(header => {
+        headersEl.appendChild(createParamEl(header.key, header.value, "eq", header.active, "header"));
+      })
     }
-    let token = JSON.parse(window.localStorage.getItem("authToken"))
-    if (token && !headers["Authorization"]) {
-      headersEl.appendChild(createParamEl("Authorization","Bearer " + token.access_token, "eq", false, "header"));
+    else {
+      for (key in DEFAULT_HEADERS) {
+        headersEl.appendChild(createParamEl(key, DEFAULT_HEADERS[key], "eq", true, "header"));
+      }
+      let token = JSON.parse(window.localStorage.getItem("authToken"))
+      if (token) {
+        addSetting("Authorization", "Bearer " + token.access_token, false, "eq", "header")
+      }
     }
+    
     headersEl.appendChild(createParamEl(null,null,"eq", true, "header"))
   }
 
   function setParams(params=null) {
+    let paramsEl = document.getElementById("request-params");
+    paramsEl.appendChild(createParamEl())
+    console.log("params", params)
     if(params == null) {
+      for (let paramkey of PAGEURL.searchParams.keys()) {
+        let value = PAGEURL.searchParams.get(paramkey);
+        let [key, operator] = splitKeyandOperator(paramkey)
+        updateSetting(key, value, operator, type="param") 
+      }
       params = getRequestSettings();
     }
 
-    // Update parameters with values from current url
-    for (let paramkey of PAGEURL.searchParams.keys()) {
-      let value = PAGEURL.searchParams.get(paramkey);
-      let [key, operator] = splitKeyandOperator(paramkey)
-      params[paramkey] = {
-        active: true,
-        key:key,
-        operator: operator,
-        value: value
-      }
-    }
-    
-    let paramsEl = document.getElementById("request-params");
     paramsEl.innerHTML = ""
-    for(k in params){
-      let param = params[k];
-      let active = PAGEURL.searchParams.has(k) || param.key=="";
+    params.forEach(param => {
+      let active = PAGEURL.searchParams.has(param.combinedKey) || param.key=="";
+      console.log("set param",param.key, param.value, param.operator, active)
       paramsEl.appendChild(createParamEl(param.key, param.value, param.operator, active));
-    }
+    })
 
     paramsEl.appendChild(createParamEl())
   }
