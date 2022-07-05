@@ -61,6 +61,8 @@ _string_lookups = {"", "in", "isnull", "not", "isempty", "like"}
 
 ALLOWED_IDENTIFIER_LOOKUPS = {"", "in", "not", "isnull"}
 
+# These definitions are also used to generate the OpenAPI spec.
+# NOTE: for the end-user docs, update docs/source/datasets.py manually.
 ALLOWED_SCALAR_LOOKUPS = {
     "boolean": {"", "isnull"},
     "integer": _comparison_lookups,
@@ -68,6 +70,7 @@ ALLOWED_SCALAR_LOOKUPS = {
     "string": _string_lookups,
     "array": {"", "contains"},
     "object": set(),
+    "https://geojson.org/schema/Geometry.json": _polygon_lookups,  # Assume it works.
     "https://geojson.org/schema/Point.json": {"", "isnull", "not"},
     "https://geojson.org/schema/Polygon.json": _polygon_lookups,
     "https://geojson.org/schema/MultiPolygon.json": _polygon_lookups,
@@ -245,14 +248,20 @@ class QueryFilterEngine:
         # This prevents doing a "like" lookup on an integer/date-time field for example.
         allowed_lookups = self.get_allowed_lookups(filter_part.field)
         if lookup not in allowed_lookups:
-            possible = ", ".join(sorted(x for x in allowed_lookups if x))
-            raise ValidationError(
-                {
-                    filter_part.name: (
-                        f"Lookup not supported: {lookup or '(none)'}, supported are: {possible}"
-                    )
-                }
-            ) from None
+            if not allowed_lookups:
+                raise ValidationError(
+                    {filter_part.name: "Field type does not support filter lookups."}
+                ) from None
+            else:
+                possible = "', '".join(sorted(x for x in allowed_lookups if x))
+                raise ValidationError(
+                    {
+                        filter_part.name: (
+                            f"Lookup not supported: '{lookup or '(none)'}', "
+                            f"supported are: '{possible}'"
+                        )
+                    }
+                ) from None
 
         if filter_part.field.format == "date-time" and not isinstance(value, datetime):
             # When something different then a full datetime is given, only compare dates.
