@@ -31,7 +31,7 @@ class LookupContext(NamedTuple):
     description: str
 
 
-# This should match DEFAULT_LOOKUPS_BY_TYPE in DSO-API (except for the "exact" lookup)
+# This should match ALLOWED_SCALAR_LOOKUPS in DSO-API (except for the "exact" lookup)
 _comparison_lookups = ["gt", "gte", "lt", "lte", "not", "in", "isnull"]
 _identifier_lookups = ["in", "not", "isnull"]
 _polygon_lookups = ["contains", "isnull", "not"]
@@ -51,6 +51,7 @@ VALUE_EXAMPLES = {
     "date-time": ("``yyyy-mm-dd`` of ``yyyy-mm-ddThh:mm[:ss[.ms]]``", _comparison_lookups),
     "uri": ("https://....", _string_lookups),
     "array": ("value,value", ["contains"]),  # comma separated list of strings
+    "https://geojson.org/schema/Geometry.json": ("geometry", _polygon_lookups),
     "https://geojson.org/schema/Polygon.json": (
         "GeoJSON of ``POLYGON(x y ...)``",
         _polygon_lookups,
