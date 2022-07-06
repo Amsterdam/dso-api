@@ -597,17 +597,16 @@ function onParamKeySet(event) {
   }
 
   let [key, selectedOp] = splitKeyandOperator(event.target.value);
+  let opEl = event.target.parentElement.getElementsByClassName("param-op")[0];
+  // Use operator from key field before value in operator field
+  if (selectedOp == "eq") {
+    selectedOp = opEl.value;
+  }
   if (oaParams.hasOwnProperty(key)) {
     param = oaParams[key];
     event.target.title = param.description;
     event.target.setCustomValidity("");
 
-    opEl = event.target.parentElement.getElementsByClassName("param-op")[0];
-
-    // Use operator from key field before value in operator field
-    if (selectedOp == "eq") {
-      selectedOp = opEl.value;
-    }
     opEl.innerHTML = "";
     opEl.dataset.key = key;
     param.operators.forEach(operator => {
@@ -623,6 +622,14 @@ function onParamKeySet(event) {
     })
     opEl.dispatchEvent(new Event('change'));
   } else {
+    opEl.innerHTML = "";
+    let option = document.createElement("option");
+    option.value = selectedOp;
+    option.text = OPERATORS[selectedOp] || selectedOp;
+    option.title = selectedOp;
+    option.setAttribute("selected", "selected");
+    opEl.appendChild(option);
+    event.target.value = key;
     event.target.title = "onbekende parameter";
     event.target.setCustomValidity("onbekende parameter");
   }
