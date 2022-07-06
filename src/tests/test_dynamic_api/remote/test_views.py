@@ -589,14 +589,16 @@ def test_remote_timeout(api_client, fetch_auth_token, router, brp_dataset, urlli
 
 
 @pytest.mark.django_db
-def test_hcbag(settings, api_client, hcbag_dataset, hcbag_example, urllib3_mocker, filled_router):
+def test_hcbag_list(
+    settings, api_client, hcbag_dataset, hcbag_example_list, urllib3_mocker, filled_router
+):
     remote_key = "I_ve_got_the_key"
 
     def respond(request):
         assert "Authorization" not in request.headers
         assert request.headers.get("X-Api-Key") == remote_key
         assert request.body is None
-        return (200, {"Content-Crs": "epsg:28992"}, hcbag_example)
+        return (200, {"Content-Crs": "epsg:28992"}, hcbag_example_list)
 
     urllib3_mocker.add_callback(
         "GET",
@@ -611,6 +613,38 @@ def test_hcbag(settings, api_client, hcbag_dataset, hcbag_example, urllib3_mocke
     data = read_response_json(response)
 
     assert response.status_code == 200, data
+
+
+@pytest.mark.django_db
+def test_hcbag_single(
+    settings, api_client, hcbag_dataset, hcbag_example_single, urllib3_mocker, filled_router
+):
+    remote_key = "I_ve_got_the_key"
+
+    def respond(request):
+        assert "Authorization" not in request.headers
+        assert request.headers.get("X-Api-Key") == remote_key
+        assert request.body is None
+        return (200, {"Content-Crs": "epsg:28992"}, hcbag_example_single)
+
+    urllib3_mocker.add_callback(
+        "GET",
+        "/esd/huidigebevragingen/v1/adresseerbareobjecten/0123456789123456",
+        callback=respond,
+        content_type="application/json",
+    )
+
+    url = reverse(
+        "dynamic_api:haalcentraalbag-adresseerbareobjecten-detail",
+        kwargs={"pk": "0123456789123456"},
+    )
+    settings.HAAL_CENTRAAL_BAG_API_KEY = remote_key
+    response = api_client.get(url)
+    data = read_response_json(response)
+
+    assert response.status_code == 200, data
+    assert "1234567898765432" in data["pandIdentificaties"]
+    assert data["oppervlakte"] == 345
 
 
 # Load Haal Centraal BRK example data (from

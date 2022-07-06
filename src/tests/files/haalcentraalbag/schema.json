@@ -148,7 +148,6 @@
         "type": "object",
         "additionalProperties": false,
         "identifier": "identificatie",
-        "mainGeometry": "geometrie",
         "display": "identificatie",
         "required": [
           "schema",
@@ -157,7 +156,6 @@
           "type",
           "documentdatum",
           "gebruiksdoelen",
-          "geconstateerd",
           "geometrie",
           "pandIdentificaties",
           "nummeraanduidingIdentificaties",
@@ -194,27 +192,38 @@
             "description": "De unieke aanduiding van het brondocument op basis waarvan een opname, mutatie of een verwijdering van gegevens ten aanzien van een woonplaats heeft plaatsgevonden, binnen een gemeente. Alle karakters uit de MES-1 karakterset zijn toegestaan."
           },
           "gebruiksdoelen": {
-            "type": "string",
-            "enum": [
-              "woonfunctie",
-              "bijeenkomstfunctie",
-              "celfunctie",
-              "gezondheidszorgfunctie",
-              "industriefunctie",
-              "kantoorfunctie",
-              "logiesfunctie",
-              "onderwijsfunctie",
-              "sportfunctie",
-              "winkelfunctie",
-              "overige gebruiksfunctie"
-            ]
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "woonfunctie",
+                "bijeenkomstfunctie",
+                "celfunctie",
+                "gezondheidszorgfunctie",
+                "industriefunctie",
+                "kantoorfunctie",
+                "logiesfunctie",
+                "onderwijsfunctie",
+                "sportfunctie",
+                "winkelfunctie",
+                "overige gebruiksfunctie"
+              ]
+            }
           },
           "geconstateerd": {
             "type": "boolean",
             "description": "Indicatie dat een standplaats, ligplaats of verblijfsobject in de registratie is opgenomen door een feitelijke constatering, zonder dat er een brondocument aan ten grondslag ligt. Het adresseerbaar object is mogelijk illegaal."
           },
           "geometrie": {
-            "$ref": "https://geojson.org/schema/Geometry.json",
+            "type": "object",
+            "properties": {
+              "punt": {
+                "$ref": "https://geojson.org/schema/Geometry.json"
+              },
+              "vlak": {
+                "$ref": "https://geojson.org/schema/Geometry.json"
+              }
+            },
             "description": "Een samengesteld geometriegegevenstype waarbij wordt afgedwongen dat voor de geometrie een keuze gemaakt moet worden tussen een punt of een vlak."
           },
           "pandIdentificaties": {

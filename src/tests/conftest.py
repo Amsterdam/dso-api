@@ -369,8 +369,13 @@ def hcbag_dataset() -> Dataset:
 
 
 @pytest.fixture()
-def hcbag_example():
+def hcbag_example_list():
     return (HERE / "files" / "haalcentraalbag" / "amstel1.json").read_bytes()
+
+
+@pytest.fixture()
+def hcbag_example_single():
+    return (HERE / "files" / "haalcentraalbag" / "0123456789123456.json").read_bytes()
 
 
 @pytest.fixture()
