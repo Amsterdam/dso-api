@@ -105,6 +105,7 @@ if DEBUG:
 
 ROOT_URLCONF = "dso_api.urls"
 
+STATICFILES_DIRS = [str(BASE_DIR / "dso_api/static")]
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
