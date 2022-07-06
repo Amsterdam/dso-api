@@ -1,0 +1,240 @@
+.navbar svg {
+    height: 70px;
+    margin-top: -15px;
+    margin-right: 40px;
+    vertical-align: middle;
+}
+body {
+    background: white;
+    overflow-y: scroll;
+}
+body a {
+    color: #A30000
+}
+body a:hover {
+    color: #c20000;
+}
+ul.breadcrumb {
+    margin: 100px 0 0 0;
+}
+.breadcrumb li.active a {
+    color: #777;
+}
+h1 {
+    font-size: 30px;
+}
+.navbar {
+    background-color: white;
+    border-top: none;
+    height: 100px;
+    padding: 15px 0px;
+    width: 100%;
+    position: fixed;
+    left: 0;
+    top: 0;
+    margin: 0px;
+}
+.navbar-brand {
+    line-height: 38px;
+    font-size: 30px;
+    font-weight: 700;
+    font-family: Avenir Next, Arial, sans-serif;
+    font-stretch: normal;
+    letter-spacing: normal;
+    line-height: 38px;
+    color: black;
+}
+.navbar-brand:hover {
+    color: black;
+}
+.string { color: black; }
+.bool { color: darkcyan; }
+.number { color: #195f91 }
+.null { color: magenta; }
+.key { 
+  color:  #EC0000; 
+  font-weight: 550;
+}
+.link { color: #A30000; }
+.lit { color: #195f91; }
+.collapsible {
+    cursor:pointer
+}
+.collapsible:not(.collapsed) .collapsible_summary {
+    display: none
+}
+.collapsible:hover .collapsible_summary {
+  background: #e4e4e4
+}
+.collapsible.collapsed .collapsible_content {
+    display: none
+}
+.collapsible:not(.collapsed) .collapsible_content {
+    display: inline-block;
+    vertical-align: top;
+}
+nav {
+  float: right;
+  visibility: hidden;
+  height: 0;
+}
+nav.active {
+  visibility: initial;
+  height:63px
+}
+nav ul {
+  margin: 0;
+}
+#page-links .hidden {
+  display: none;
+}
+input:invalid {
+  color: darkred;
+  font-style: italic;
+}
+.remove-param-btn {
+  padding: 3px 6px;
+}
+.param:last-child .remove-param-btn, .param:last-child .param-check {
+  visibility:hidden;
+  pointer-events: none;
+}
+.param.loading, .param.disabled .param-key, .param.disabled .param-op,  .param.disabled .param-val {
+  pointer-events: none;
+  opacity: .6;
+}
+.param input, .param select {
+  margin-right: 5px;
+}
+.param {
+  margin-bottom: 5px;
+  position: relative;
+}
+.param-op {
+  height: 1.85em;
+  width: 6em;
+}
+.param-key, .param-val {
+  width: calc(50% - 0.925em - 54px);
+}
+.request-form-tabs {
+  width: 100%;
+  display: inline-block;
+}
+.request-settings {
+  border-top-right-radius: 0;
+  border-top-left-radius: 0;
+  border-top: none;
+}
+.request-form-tab {
+  padding: 6px 12px;
+  line-height: 1.42857143;
+  text-decoration: none;
+  background-color: #f5f5f5;
+  width: 50%;
+  display: inline-block;
+  border: 1px solid #ccc;
+  border-bottom: 1px dotted #ddd;
+}
+.show-params .request-form-tab.headers-tab,.show-headers .request-form-tab.params-tab {
+  padding: 6px 12px;
+  color: #337ab7;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  cursor: pointer;
+}
+.request-form-tab:last-child {
+  border-top-right-radius: 4px;
+}
+.request-form-tab:first-child {
+  border-right: 0 !important;
+  border-top-left-radius: 4px;
+}
+.show-params #request-headers, .show-headers #request-params {
+  display:none;
+}
+#page-container {
+  width: 100%;
+  text-align: right;
+}
+.button-form {
+  margin-bottom: 10px;
+}
+#authorize-btn {
+  float: right;
+  background-color: green;
+}
+.param-info {
+  visibility: collapse;
+  position: absolute;
+  float: right;
+  top: 7px;
+  right: 55px;
+  height: 1.85em;
+  display: block;
+  max-width: 50%;
+  width: fit-content;
+  transition-delay: .5s;
+          }
+
+.param-info::before {
+  content: "?";
+  position: absolute;
+  color: green;
+  right: -22px;
+  border: 1px solid black;
+  border-radius: 1em;
+  height: 1.6em;
+  width: 1.6em;
+  padding: 0.1em;
+  background: white;
+  padding-left: 0.4em;
+  font-weight: bold;
+  cursor: pointer;
+  visibility: visible;
+  bottom: 5px;
+  z-index: 10;
+}
+
+.param-info .summary {
+  width: fit-content;
+  background: white;
+  display: ruby;
+  position: absolute;
+  right: -23px;
+  padding: 2px;
+  top: -3px;
+  padding-right: 20px;
+  padding-left: 15px;
+  visibility: visible;
+  font-style: italic;
+  opacity:1;
+  transition:visibility 1s linear,opacity .3s linear;
+  max-width: 100%;
+  overflow: hidden;
+}
+.param-info:hover, .param-info.expand {
+  visibility: visible;
+  transition-property: none;
+}
+.param:hover .param-info .summary{
+  visibility: hidden;
+  opacity:0;
+  transition:visibility 1s linear,opacity .3s linear;
+}
+.param-info.expand .summary {
+  visibility: visible;
+}
+.param:hover .param-info:hover div.summary, .param-info.expand pre {
+  border-color: black;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+.param-info pre {
+  position: relative;
+  top: 20px;
+  z-index: 100;
+}
+.param-info.hidden {
+  visibility: hidden;
+}
