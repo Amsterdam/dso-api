@@ -517,20 +517,23 @@ def _chunked_output(stream, chunk_size=DEFAULT_CHUNK_SIZE, write_exception=None)
     Inspired by django-gisserver logic which applies the same trick.
     """
     buffer = BytesIO()
-    buffer_size = 0
     try:
         for row in stream:
             buffer.write(row)
-            buffer_size += len(row)
 
-            if buffer_size > chunk_size:
+            # Calling buffer.tell() is faster then tracking the buffer size in a local integer,
+            # because integer addition means allocating a new object.
+            if buffer.tell() > chunk_size:
                 yield buffer.getvalue()
                 buffer.seek(0)
                 buffer.truncate(0)
-                buffer_size = 0
-        if buffer_size:
+        if buffer.tell():
             yield buffer.getvalue()
     except Exception as e:
+        # Write the last bit that gives some hint on where it stalled:
+        if buffer.tell():
+            yield buffer.getvalue()
+
         # Make sure some indication of an exception is also written to the stream.
         # Otherwise, the response is just cut off without any indication what happened.
         if write_exception is not None:
