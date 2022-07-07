@@ -179,12 +179,12 @@ class DSOPage(DjangoPage):
             # We have to cast the queryset instance into an observable queryset here. Not pretty.
             # Pagination in DRF is handled early on in the pipeline where, because we stream the
             # data we don't know the number of items on the page.
-            # We need the number of items to tell wether a next page exists.
+            # We need the number of items to tell whether a next page exists.
             #
             # So we need to keep track of the iteration process happening in the renderer.
             # We can not create the iterator at this point, because streaming will break
             # further down the line if object_list is not a queryset
-            # And we dont want to move all the pagination logic into the generic renderer.
+            # And we don't want to move all the pagination logic into the generic renderer.
             # So in order to watch the iterators created later on by the queryset we have to
             # wrap it here.
             self.object_list = ObservableQuerySet.from_queryset(
