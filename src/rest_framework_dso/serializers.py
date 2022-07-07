@@ -20,7 +20,7 @@ and constructing serializer fields based on the model field metadata.
 """
 import inspect
 import logging
-from typing import Iterable, Optional, Union, cast
+from typing import Generator, Iterable, Optional, Union, cast
 
 from django.contrib.gis.db import models as gis_models
 from django.contrib.gis.gdal import GDALException
@@ -269,69 +269,79 @@ class DSOModelListSerializer(DSOListSerializer):
         * It reads the database with a streaming iterator to reduce memory.
         * It collects any embedded sections, and queries them afterwards
         """
-
         request = self.context["request"]
 
         if getattr(request, "accepted_media_type", None) == "text/html":
             # HTML page does not need data.
             return []
-
-        if self.root is not self or not isinstance(data, models.QuerySet):
-            # When generating as part of an sub-object, just output the list.
+        elif self.root is not self or not isinstance(data, models.QuerySet):
+            # Sub-object listing or raw data, just output that.
             return super().to_representation(data)
+        elif not request.accepted_renderer.supports_list_embeds:
+            # Root level, but output format needs a list. Give a generator-based one.
+            return self._as_generator(data)
+        else:
+            # Root-level, output dict with embeds
+            return self._as_hal_with_embeds(data)
 
+    def get_queryset_iterator(self, queryset: models.QuerySet) -> Iterable[models.Model]:
+        """Get the most optimal iterator to traverse over a queryset."""
         # Find the best approach to iterate over the results.
         if prefetch_lookups := self.get_prefetch_lookups():
             # When there are related fields, avoid an N-query issue by prefetching.
             # ChunkedQuerySetIterator makes sure the queryset is still read in partial chunks.
-            queryset_iterator = ChunkedQuerySetIterator(data.prefetch_related(*prefetch_lookups))
+            # NOTE: this is no longer needed starting with Django 4.1+
+            return ChunkedQuerySetIterator(queryset.prefetch_related(*prefetch_lookups))
         else:
-            queryset_iterator = data.iterator()
+            return queryset.iterator()
 
-        # Find the desired output format
-        if not request.accepted_renderer.supports_list_embeds:
-            # When the output format needs a plain list (a non-JSON format), give it just that.
-            # The generator syntax still tricks DRF into reading the source bit by bit,
-            # without caching the whole queryset into memory.
-            items = (self.child.to_representation(item) for item in queryset_iterator)
+    def _as_generator(self, data: models.QuerySet) -> Generator[models.Model, None, None]:
+        """The list output as a plain generator."""
+        # When the output format needs a plain list (a non-JSON format), give it just that.
+        # The generator syntax still tricks DRF into reading the source bit by bit,
+        # without caching the whole queryset into memory.
+        queryset_iterator = self.get_queryset_iterator(data)
+        items = (self.child.to_representation(item) for item in queryset_iterator)
 
-            # Make sure the first to_representation() is called early on. This makes sure
-            # DSOModelSerializer.to_representation() can inspect the CRS, and define the
-            # HTTP header for the Content-Crs setting. This will be too late when the streaming
-            # rendering started. As bonus, it's a good guard against database errors, since those
-            # exceptions might not be nicely rendered either once streaming started.
-            _, items = peek_iterable(items)
-            return items
-        else:
-            # Output renderer supports embedding.
-            # Add any HAL-style sideloading if these were requested
-            embedded_fields = {}
-            if self.expanded_fields:
-                # All embedded result sets are updated during the iteration over
-                # the main data with the relevant ID's to fetch on-demand.
-                fields_to_display = self.child.fields_to_display
-                embedded_fields = {
-                    expand_match.name: EmbeddedResultSet.from_match(expand_match)
-                    for expand_match in self.expanded_fields
-                    if fields_to_display.allow_nested(expand_match.name)
-                }
+        # Make sure the first to_representation() is called early on. This makes sure
+        # DSOModelSerializer.to_representation() can inspect the CRS, and define the
+        # HTTP header for the Content-Crs setting. This will be too late when the streaming
+        # rendering started. As bonus, it's a good guard against database errors, since those
+        # exceptions might not be nicely rendered either once streaming started.
+        _, items = peek_iterable(items)
+        return items
 
-                # Wrap the main object inside an observer, which notifies all
-                # embedded sets about the retrieved objects. They prepare their
-                # data retrieval accordingly.
-                queryset_iterator = ObservableIterator(
-                    queryset_iterator,
-                    observers=[
-                        result_set.inspect_instance for result_set in embedded_fields.values()
-                    ],
-                )
+    def _as_hal_with_embeds(self, data: models.QuerySet) -> dict:
+        """The list is generated as dictionary with sections for the embeds."""
+        queryset_iterator = self.get_queryset_iterator(data)
 
-            # The generator/peek logic avoids unnecessary memory usage (see details above).
-            items = (self.child.to_representation(item) for item in queryset_iterator)
-            _, items = peek_iterable(items)
+        # Output renderer supports embedding.
+        # Add any HAL-style sideloading if these were requested
+        embedded_fields = {}
+        if self.expanded_fields:
+            # All embedded result sets are updated during the iteration over
+            # the main data with the relevant ID's to fetch on-demand.
+            fields_to_display = self.child.fields_to_display
+            embedded_fields = {
+                expand_match.name: EmbeddedResultSet.from_match(expand_match)
+                for expand_match in self.expanded_fields
+                if fields_to_display.allow_nested(expand_match.name)
+            }
 
-            # DSO always mandates a dict structure for JSON responses: {"objectname": [...]}
-            return {self.results_field: items, **embedded_fields}
+            # Wrap the main object inside an observer, which notifies all
+            # embedded sets about the retrieved objects. They prepare their
+            # data retrieval accordingly.
+            queryset_iterator = ObservableIterator(
+                queryset_iterator,
+                observers=[result_set.inspect_instance for result_set in embedded_fields.values()],
+            )
+
+        # The generator/peek logic avoids unnecessary memory usage (see details above).
+        items = (self.child.to_representation(item) for item in queryset_iterator)
+        _, items = peek_iterable(items)
+
+        # DSO always mandates a dict structure for JSON responses: {"objectname": [...]}
+        return {self.results_field: items, **embedded_fields}
 
 
 class DSOSerializer(ExpandableSerializer, serializers.Serializer):
