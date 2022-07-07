@@ -228,7 +228,7 @@ class DynamicRouter(routers.DefaultRouter):
         generated_models = []
 
         # Because dataset are related, we need to 'prewarm'
-        # the datatasets cache (in schematools)
+        # the datasets cache (in schematools)
         for dataset in db_datasets:
             dataset.schema
 

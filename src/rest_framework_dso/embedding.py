@@ -567,7 +567,7 @@ class EmbeddedResultSet(ReturnGenerator):
         return self.optimize_queryset(queryset)
 
     def optimize_queryset(self, queryset):
-        """Optimize the queryset, see if N-query calls can be avoided."""
+        """Optimize the queryset, see if N-query calls can be avoided for the embedded object."""
         lookups = get_serializer_lookups(self.serializer)
         if lookups:
             # To make prefetch_related() work, the queryset needs to be read in chunks.

@@ -29,8 +29,8 @@ class ReturnGenerator(ReturnList):
 
 
 def peek_iterable(generator):
-    """Take a quick look at the first item of an generator/iterable.
-    This returns a modified iterable that contains all elements, inluding the peeked item.
+    """Take a quick look at the first item of a generator/iterable.
+    This returns a modified iterable that contains all elements, including the peeked item.
     """
     iterable = iter(generator)  # make sure this is an iterator, so it can't restart.
     try:
