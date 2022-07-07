@@ -118,7 +118,7 @@ function updatePageRequest(url, method = "GET", pushHistory = true, headerSettin
   })
 
   let reqInfoEl = document.getElementById("request-info")
-  reqInfoEl.innerHTML = `<pre ><b>${method}</b> ${PAGEURL}</pre>`
+  reqInfoEl.innerHTML = `<pre><b>${method}</b> ${PAGEURL}</pre>`
   document.getElementById("response-content").innerHTML = "Retrieving data..."
   let page = PAGEURL.searchParams.get("page");
   setPageLinks(page);
