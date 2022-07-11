@@ -238,3 +238,6 @@ input:invalid {
 .param-info.hidden {
   visibility: hidden;
 }
+#authorize-btn.disabled {
+  visibility: hidden;
+}
