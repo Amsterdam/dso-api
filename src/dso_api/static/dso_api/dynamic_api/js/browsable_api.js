@@ -76,7 +76,9 @@ function onPageLoad() {
     oaParams = params;
     setParams();
     setHeaders();
-    document.getElementById("authorize-btn").classList.remove("disabled");
+    if (oaSpec) {
+      document.getElementById("authorize-btn").classList.remove("disabled");
+    }
   })
   // Override the default DRF behaviour of the OPTIONS, and GET buttons,
   // which do not work with our script.
@@ -534,6 +536,19 @@ function addParamExampleDatalist(param, name = null) {
   }
 }
 
+function findOAPath(searchPath, paths) {
+  // Find the Open API path template that matches the searchPath. 
+  if (paths.hasOwnProperty(searchPath)) {
+    return searchPath;
+  }
+  let parentSearchPath = searchPath.split("/").slice(0,-2).join("/");
+  return result = Object.keys(paths).find(path => {
+    let parentPath = path.slice(0,-1).split("/");
+    l = parentPath.pop(); 
+    return l.startsWith("{") && parentSearchPath == parentPath.join("/");
+  }) 
+}
+
 function getOpenApi(callback) {
   // Get OpenApi spec and extract parameters
   let oaURL = new URL(PAGEURL);
@@ -553,17 +568,25 @@ function getOpenApi(callback) {
   return getData(oaURL.href, "GET", {
     Accept: "*/*"
   }, false).then(oaJSON => {
-    oaJSON.paths[PAGEURL.pathname].get.parameters.filter(a => !a.name.includes("[")).forEach(x => {
+    oaSpec = oaJSON;
+    let oaPath = findOAPath(PAGEURL.pathname, oaJSON.paths);
+
+    // Return if current page is not an OA endpoint
+    if (!oaPath) {
+      return callback(params);
+    }
+    
+    oaJSON.paths[oaPath].get.parameters.filter(a => !a.name.includes("[")).forEach(x => {
       addParamEnumDatalist(x, x.name + "[eq]");
       addParamExampleDatalist(x, x.name + "[eq]");
-      name = x.name;
+      let name = x.name;
       param = JSON.parse(JSON.stringify(x));
       equalOp = JSON.parse(JSON.stringify(x));
       equalOp.name = "eq";
       param.operators = [equalOp];
       params[name] = param;
     })
-    oaJSON.paths[PAGEURL.pathname].get.parameters.filter(a => a.name.includes("[")).forEach(x => {
+    oaJSON.paths[oaPath].get.parameters.filter(a => a.name.includes("[")).forEach(x => {
       addParamEnumDatalist(x);
       addParamExampleDatalist(x);
       let param = JSON.parse(JSON.stringify(x));
@@ -586,7 +609,6 @@ function getOpenApi(callback) {
         }
       }
     }
-    oaSpec = oaJSON;
     return callback(params);
   })
 }
