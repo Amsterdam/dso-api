@@ -41,10 +41,10 @@ from rest_framework_dso.embedding import (
     EmbeddedResultSet,
     ExpandScope,
     ObservableIterator,
-    get_serializer_lookups,
 )
 from rest_framework_dso.exceptions import HumanReadableGDALException
 from rest_framework_dso.serializer_helpers import ReturnGenerator, peek_iterable
+from rest_framework_dso.utils import get_serializer_relation_lookups
 
 logger = logging.getLogger(__name__)
 
@@ -260,7 +260,7 @@ class DSOModelListSerializer(DSOListSerializer):
 
     def get_prefetch_lookups(self) -> list[Union[models.Prefetch, str]]:
         """Tell which fields should be included for a ``prefetch_related()``."""
-        return get_serializer_lookups(self)
+        return list(get_serializer_relation_lookups(self))
 
     def to_representation(self, data):
         """Improved list serialization.
