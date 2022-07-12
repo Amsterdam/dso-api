@@ -104,6 +104,7 @@ def test_openapi_json(api_client, afval_dataset, fietspaaltjes_dataset, filled_r
         "_count",
         "_expand",
         "_expandScope",
+        "_fields",
         "_format",
         "_pageSize",
         "_sort",

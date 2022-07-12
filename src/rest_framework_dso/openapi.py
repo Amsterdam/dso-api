@@ -362,6 +362,13 @@ class DSOAutoSchema(openapi.AutoSchema):
                     required=False,
                     examples=examples,
                 ),
+                OpenApiParameter(
+                    "_fields",
+                    type=OpenApiTypes.STR,
+                    location=OpenApiParameter.QUERY,
+                    description="Comma-separated list of fields to display",
+                    required=False,
+                ),
             ]
 
         return extra
