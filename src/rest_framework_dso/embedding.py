@@ -22,7 +22,11 @@ from rest_framework.exceptions import ParseError
 
 from rest_framework_dso.fields import AbstractEmbeddedField
 from rest_framework_dso.serializer_helpers import ReturnGenerator, peek_iterable
-from rest_framework_dso.utils import DictOfDicts, group_dotted_names
+from rest_framework_dso.utils import (
+    DictOfDicts,
+    get_serializer_relation_lookups,
+    group_dotted_names,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -326,45 +330,6 @@ def get_embedded_field(
         return _real_get_embedded_field(field_name, prefix=prefix)
 
 
-def get_serializer_lookups(serializer: serializers.BaseSerializer, prefix="") -> list[str]:
-    """Find all relations that a serializer instance would request.
-    This allows to prepare a ``prefetch_related()`` call on the queryset.
-    """
-    from rest_framework_dso.serializers import HALLooseLinkSerializer
-
-    # Unwrap the list serializer construct for the one-to-many relationships.
-    if isinstance(serializer, serializers.ListSerializer):
-        serializer = serializer.child
-
-    lookups = []
-
-    for field in serializer.fields.values():
-        if isinstance(field, HALLooseLinkSerializer):
-            # shortcircuit loose relations, which can not be passed to prefetch_related
-            # because they are regular CharFields
-            continue
-        elif field.source == "*":
-            if isinstance(field, serializers.BaseSerializer):
-                # When a serializer receives the same data as the parent instance, it can be
-                # seen as being a part of the parent. The _links field is implemented this way.
-                lookups.extend(get_serializer_lookups(field, prefix=prefix))
-        elif isinstance(
-            field,
-            (
-                serializers.BaseSerializer,  # also ListSerializer
-                serializers.RelatedField,
-                serializers.ManyRelatedField,
-            ),
-        ):
-            lookup = f"{prefix}{field.source.replace('.', '__')}"
-            lookups.append(lookup)
-
-            if isinstance(field, serializers.BaseSerializer):
-                lookups.extend(get_serializer_lookups(field, prefix=f"{lookup}__"))
-    # Deduplicate the final result, as embedded fields could overlap with _links.
-    return sorted(set(lookups)) if not prefix else lookups
-
-
 class ChunkedQuerySetIterator(Iterable[M]):
     """An optimal strategy to perform ``prefetch_related()`` on large datasets.
 
@@ -580,7 +545,7 @@ class EmbeddedResultSet(ReturnGenerator):
 
     def optimize_queryset(self, queryset):
         """Optimize the queryset, see if N-query calls can be avoided for the embedded object."""
-        lookups = get_serializer_lookups(self.serializer)
+        lookups = get_serializer_relation_lookups(self.serializer)
         if lookups:
             # To make prefetch_related() work, the queryset needs to be read in chunks.
             return ChunkedQuerySetIterator(queryset.prefetch_related(*lookups))
