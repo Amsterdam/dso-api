@@ -1,5 +1,8 @@
+from __future__ import annotations
+
 import warnings
-from typing import Callable, Iterable, Optional
+from functools import lru_cache
+from typing import Callable, Iterable, Optional, Type, TypeVar
 
 from django.core.paginator import EmptyPage
 from django.core.paginator import Page as DjangoPage
@@ -10,6 +13,8 @@ from django.http import Http404
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework_dso.embedding import ObservableIterator
+
+Q = TypeVar("Q", bound=QuerySet)
 
 
 class DSOPaginator(DjangoPaginator):
@@ -73,6 +78,25 @@ class DSOPaginator(DjangoPaginator):
         return DSOPage(*args, **kwargs)
 
 
+@lru_cache()
+def _create_observable_queryset_subclass(
+    queryset_class: Type[Q],
+) -> Type[Q] | Type[ObservableQuerySet]:
+    """Insert the ObservableQuerySet into a QuerySet subclass, as if it's a mixin.
+    This creates a custom subclass, that inherits both ObservableQuerySet and the QuerySet class.
+
+    Otherwise, custom methods on the queryset class are lost after
+    wrapping the queryset into an observable queryset,
+    """
+    if queryset_class is QuerySet:
+        # No need to create a custom class.
+        return ObservableQuerySet
+    else:
+        # Extend from both:
+        name = queryset_class.__name__.replace("QuerySet", "") + "ObservableQuerySet"
+        return type(name, (ObservableQuerySet, queryset_class), {})
+
+
 class ObservableQuerySet(QuerySet):
     """A QuerySet that has observable iterators.
 
@@ -97,7 +121,7 @@ class ObservableQuerySet(QuerySet):
     @classmethod
     def from_queryset(cls, queryset: QuerySet, observers: list[Callable] = None):
         """Turn a QuerySet instance into an ObservableQuerySet"""
-        queryset.__class__ = ObservableQuerySet
+        queryset.__class__ = _create_observable_queryset_subclass(queryset.__class__)
         queryset._item_callbacks = list(observers) if observers else []
         queryset._obs_iterator = None
         return queryset
@@ -122,16 +146,16 @@ class ObservableQuerySet(QuerySet):
         returned by the base class.
         """
         iterator = super().iterator(*args, **kwargs)
-        return self._set_observable_iterator(iterator)
+        return self._wrap_iterator(iterator)
 
     def __iter__(self):
         """Return observable iterator and add observer.
         Wraps an observable iterator around the iterator
         returned by the base class.
         """
-        return self._set_observable_iterator(super().__iter__())
+        return self._wrap_iterator(super().__iter__())
 
-    def _set_observable_iterator(self, iterator: Iterable) -> ObservableIterator:
+    def _wrap_iterator(self, iterator: Iterable) -> ObservableIterator:
         """Wrap an iterator inside an ObservableIterator"""
         iterator = ObservableIterator(iterator)
         iterator.add_observer(self._item_observer)
