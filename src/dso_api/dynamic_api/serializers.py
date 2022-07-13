@@ -53,7 +53,11 @@ from dso_api.dynamic_api.temporal import (
     filter_temporal_m2m_slice,
     filter_temporal_slice,
 )
-from dso_api.dynamic_api.utils import get_source_model_fields, resolve_model_lookup
+from dso_api.dynamic_api.utils import (
+    get_serializer_source_fields,
+    get_source_model_fields,
+    resolve_model_lookup,
+)
 from rest_framework_dso.embedding import EmbeddedFieldMatch
 from rest_framework_dso.fields import (
     AbstractEmbeddedField,
@@ -66,6 +70,7 @@ from rest_framework_dso.serializers import (
     DSOModelSerializer,
     HALLooseLinkSerializer,
 )
+from rest_framework_dso.utils import get_serializer_relation_lookups
 
 MAX_EMBED_NESTING_LEVEL = 10
 logger = logging.getLogger(__name__)
@@ -154,23 +159,81 @@ class DynamicListSerializer(DSOModelListSerializer):
 
         return value
 
+    def get_queryset_iterator(self, queryset: models.QuerySet) -> Iterable[models.Model]:
+        """Optimize querysets to access only the fields our serializer needs.
+
+        This checks which model fields "self.fields" will access, and limits the
+        queryset accordingly. In effect, this reduces field access when "?_fields=..." is used
+        on the request, and it avoids requesting database fields that the user has no access to.
+        """
+        only_fields = get_serializer_source_fields(self)
+        if only_fields:
+            # Make sure no unnecessary fields are requested from the database.
+            # This avoids accessing privileged data, and reduces bandwidth for ?_fields=.. queries.
+            queryset = queryset.only(*only_fields)
+
+        return super().get_queryset_iterator(queryset)
+
     def get_prefetch_lookups(self) -> list[Union[models.Prefetch, str]]:
-        """Optimize M2M prefetch lookups to return correct temporal records only."""
-        parent_model = self.child.Meta.model
-        lookups = super().get_prefetch_lookups()
-        request = self.context["request"]
+        """Optimize prefetch lookups
 
-        for i, lookup in enumerate(lookups):
-            related_model, is_many = resolve_model_lookup(parent_model, lookup)
-            if cast(DynamicModel, related_model).is_temporal() and is_many:
+        - Return correct temporal records only (for M2M tables).
+        - Make sure prefetches only read the subset of user-accessible fields.
+        """
+        relation_lookups = get_serializer_relation_lookups(self)
 
-                # When the model is a temporal relationship, make sure the prefetch only returns
-                # the proper temporal slice. The Prefetch objects allow adding these filters.
-                lookups[i] = models.Prefetch(
-                    lookup,
-                    queryset=filter_temporal_slice(request, related_model.objects.all()),
-                )
+        lookups = []
+        for lookup, field in relation_lookups.items():
+            if lookup.startswith("rev_m2m_"):
+                # The reverse m2m lookups don't seem to benefit from prefetch related:
+                continue
+
+            # The prefetch object get a custom queryset, so unwanted rows/fields are excluded.
+            prefetch_queryset = self._get_prefetch_queryset(lookup, field)
+            lookups.append(models.Prefetch(lookup, queryset=prefetch_queryset))
+
         return lookups
+
+    def _get_prefetch_queryset(self, lookup: str, field: serializers.Field) -> models.QuerySet:
+        """Construct a queryset for a prefetch on the ORM path lookup path.
+        The serializer field is passed as well, to detect which source fields it might need.
+        """
+        # Find which model fields the relation would traverse.
+        # This information is not available on serializer field objects (nor can't be)
+        parent_model = self.child.Meta.model
+        model_field = resolve_model_lookup(parent_model, lookup)[-1]
+
+        # Avoid prefetching unnecessary fields from the database.
+        only_fields = self._get_prefetch_fields(field, model_field)
+        prefetch_queryset = model_field.related_model.objects.only(*only_fields)
+
+        # Avoid prefetching unnecessary temporal records for M2M relations
+        # (that is, records that not part of the current temporal slice).
+        if cast(DynamicModel, model_field.related_model).is_temporal() and (
+            # Tell whether the field returns many results (e.g. M2M).
+            model_field.many_to_many
+            or model_field.one_to_many
+        ):
+            request = self.context["request"]
+            prefetch_queryset = filter_temporal_slice(request, prefetch_queryset)
+
+        return prefetch_queryset
+
+    def _get_prefetch_fields(
+        self,
+        field: serializers.Field,
+        model_field: RelatedField | ForeignObjectRel | LooseRelationField,
+    ) -> list[str]:
+        """Tell which fields the prefetch query should retrieve."""
+        if isinstance(field, serializers.BaseSerializer):
+            only_fields = get_serializer_source_fields(field)
+            if isinstance(model_field, models.ManyToOneRel):  # A reverse FK (ManyToOneRel)
+                # For reverse relations, the reverse foreign key needs to be provided too.
+                # Otherwise, our call to prefetch_related_objects() fails on deferred attributes.
+                only_fields.append(model_field.field.attname)
+            return only_fields
+        else:
+            raise NotImplementedError(f"Can't determine reduced fields subset yet for: {field}")
 
     @cached_property
     def expanded_fields(self) -> list[EmbeddedFieldMatch]:
