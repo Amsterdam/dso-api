@@ -38,6 +38,7 @@ from schematools.utils import to_snake_case
 
 from dso_api.dynamic_api.datasets import get_active_datasets
 from dso_api.dynamic_api.locking import lock_for_writing
+from dso_api.dynamic_api.models import SealedDynamicModel
 from dso_api.dynamic_api.openapi import get_openapi_json_view
 from dso_api.dynamic_api.remote import remote_serializer_factory, remote_viewset_factory
 from dso_api.dynamic_api.serializers import clear_serializer_factory_cache, get_view_name
@@ -236,7 +237,12 @@ class DynamicRouter(routers.DefaultRouter):
             dataset_id = dataset.schema.id  # not dataset.name which is mangled.
             new_models = {}
 
-            for model in dataset.create_models(base_app_name="dso_api.dynamic_api"):
+            models = dataset.create_models(
+                base_app_name="dso_api.dynamic_api",
+                base_model=SealedDynamicModel,
+            )
+
+            for model in models:
                 logger.debug("Created model %s.%s", dataset_id, model.__name__)
                 new_models[model._meta.model_name] = model
 
