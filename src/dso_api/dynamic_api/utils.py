@@ -130,9 +130,9 @@ def get_serializer_source_fields(  # noqa: C901
 
 def get_source_model_fields(
     serializer: serializers.ModelSerializer, field_name: str, field: serializers.Field
-) -> list[models.Field]:
+) -> list[models.Field | models.ForeignObjectRel]:
     """Find the model fields that the serializer field points to.
-    Typically this is only one field, but `field.source` could be set to a dotted path.
+    This is typically just one field, but `field.source` could be set to a dotted path.
     """
     if field.source == "*":
         # These fields are special: they receive the entire model instead of a attribute value.
