@@ -390,7 +390,7 @@ def _loose_link_serializer_factory(
     At runtime, a loose relationship does not receive an object but a
     str, since LooseRelationField inherits from CharField.
 
-    The primary id of the relation is used to contruct the href, title and id field.
+    The primary id of the relation is used to construct the href, title and id field.
     """
     table_schema = related_model.table_schema()
     serializer_part = SerializerAssemblyLine(
@@ -403,6 +403,7 @@ def _loose_link_serializer_factory(
         _build_href_field(related_model, field_cls=fields.HALLooseRelationUrlField),
     )
     if related_model.has_display_field():
+        # Using source="*" because the source is already a str.
         serializer_part.add_field("title", serializers.CharField(source="*"))
 
     # Add the primary identifier, whose names depend on the schema
