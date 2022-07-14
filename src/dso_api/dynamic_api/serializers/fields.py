@@ -1,14 +1,60 @@
+"""Additional field types for serializers.
+
+These fields handle custom output for some specific nodes in the "tree of fields".
+Standard field types are handled by the standard REST Framework fields.
+
+Note that the fields mainly output a plain scalar value. When a dictionary is returned
+by ``to_representation()``, the field also needs to define the OpenAPI details on
+what the field would return. Hence, other fields (e.g. in ``_links``) that return
+more variable fields are constructed as a serializer instead.
+"""
 from datetime import datetime, timedelta
+from urllib.parse import urlencode
 
 import azure.storage.blob
 from django.conf import settings
+from django.db import models
+from drf_spectacular.utils import extend_schema_field, inline_serializer
 from more_ds.network.url import URL
 from rest_framework import serializers
 from rest_framework.relations import HyperlinkedRelatedField
+from rest_framework.reverse import reverse
+from rest_framework.serializers import Field
 from schematools.types import DatasetTableSchema
+from schematools.utils import toCamelCase
 
-from .temporal import TemporalTableQuery
-from .utils import split_on_separator
+from dso_api.dynamic_api.temporal import TemporalTableQuery
+from dso_api.dynamic_api.utils import get_view_name, split_on_separator
+
+
+@extend_schema_field(
+    # Tell what this field will generate as object structure
+    inline_serializer(
+        "RelatedSummary",
+        fields={
+            "count": serializers.IntegerField(),
+            "href": serializers.URLField(),
+        },
+    )
+)
+class RelatedSummaryField(Field):
+    def to_representation(self, value: models.Manager):
+        request = self.context["request"]
+        url = reverse(get_view_name(value.model, "list"), request=request)
+
+        # the "core_filters" attribute is available on all related managers
+        filter_field = next(iter(value.core_filters.keys()))
+        q_params = {toCamelCase(filter_field + "_id"): value.instance.pk}
+
+        # If this is a temporal table, only return the appropriate records.
+        if value.model.is_temporal():
+            # The essence of filter_temporal_slice()
+            query = TemporalTableQuery(request, value.model.table_schema())
+            q_params.update(query.url_parameters)
+            value = query.filter_queryset(value.all())
+
+        query_string = ("&" if "?" in url else "?") + urlencode(q_params)
+        return {"count": value.count(), "href": f"{url}{query_string}"}
 
 
 class TemporalHyperlinkedRelatedField(serializers.HyperlinkedRelatedField):

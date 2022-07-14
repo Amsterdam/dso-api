@@ -41,7 +41,8 @@ from dso_api.dynamic_api.locking import lock_for_writing
 from dso_api.dynamic_api.models import SealedDynamicModel
 from dso_api.dynamic_api.openapi import get_openapi_json_view
 from dso_api.dynamic_api.remote import remote_serializer_factory, remote_viewset_factory
-from dso_api.dynamic_api.serializers import clear_serializer_factory_cache, get_view_name
+from dso_api.dynamic_api.serializers import clear_serializer_factory_cache
+from dso_api.dynamic_api.utils import get_view_name
 from dso_api.dynamic_api.views import (
     APIIndexView,
     DatasetMVTSingleView,

@@ -6,8 +6,8 @@ from django.core.validators import EmailValidator, URLValidator
 from schematools.permissions import UserScopes
 from schematools.types import ProfileSchema
 
-from dso_api.dynamic_api.fields import HALLooseRelationUrlField
 from dso_api.dynamic_api.serializers import clear_serializer_factory_cache, serializer_factory
+from dso_api.dynamic_api.serializers.fields import HALLooseRelationUrlField
 from rest_framework_dso.fields import EmbeddedField
 from rest_framework_dso.views import DSOViewMixin
 from tests.utils import (
