@@ -8,8 +8,9 @@ from django.db.models import Model
 from django.db.models.fields.related import RelatedField
 from django.db.models.fields.reverse_related import ForeignObjectRel
 from rest_framework import serializers
-from schematools.contrib.django.models import LooseRelationField
+from schematools.contrib.django.models import DynamicModel, LooseRelationField
 from schematools.contrib.django.signals import dynamic_models_removed
+from schematools.utils import to_snake_case
 
 from rest_framework_dso.fields import GeoJSONIdentifierField
 
@@ -20,6 +21,17 @@ def split_on_separator(value):
     """Split on the last separator, which can be a dot or underscore."""
     # reversal is king
     return [part[::-1] for part in PK_SPLIT.split(value[::-1], 1)][::-1]
+
+
+def get_view_name(model: type[DynamicModel], suffix: str):
+    """Return the URL pattern for a dynamically generated model.
+
+    :param model: The dynamic model.
+    :param suffix: This can be "detail" or "list".
+    """
+    dataset_id = to_snake_case(model.get_dataset_id())
+    table_id = to_snake_case(model.get_table_id())
+    return f"dynamic_api:{dataset_id}-{table_id}-{suffix}"
 
 
 # When models are removed, clear the cache.
