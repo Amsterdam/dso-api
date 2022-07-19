@@ -615,7 +615,37 @@ class DSOSerializer(ExpandableSerializer, serializers.Serializer):
         return None
 
 
-class DSOModelSerializer(DSOSerializer, serializers.HyperlinkedModelSerializer):
+class DSOModelSerializerBase(serializers.HyperlinkedModelSerializer):
+    """A base serializer that only handles the field layout.
+
+    This base class does not do any request parameter handling at all.
+    """
+
+    serializer_field_mapping = {
+        **serializers.HyperlinkedModelSerializer.serializer_field_mapping,
+        # Override the URL field
+        models.URLField: fields.DSOURLField,
+        # Override what django_rest_framework_gis installs in the app ready() signal:
+        gis_models.GeometryField: fields.DSOGeometryField,
+        gis_models.PointField: fields.DSOGeometryField,
+        gis_models.LineStringField: fields.DSOGeometryField,
+        gis_models.PolygonField: fields.DSOGeometryField,
+        gis_models.MultiPointField: fields.DSOGeometryField,
+        gis_models.MultiLineStringField: fields.DSOGeometryField,
+        gis_models.MultiPolygonField: fields.DSOGeometryField,
+        gis_models.GeometryCollectionField: fields.DSOGeometryField,
+    }
+
+    #: Define that having an unknown field named "self" will be rendered as a hyperlink
+    # to this object, using a field class that output a {"href": ..., "title": ...} structure.
+    url_field_name = "self"
+    serializer_url_field = fields.DSOSelfLinkField
+
+    #: Define that relations will also be generated as {"href": ..., "title": ...}.
+    serializer_related_field = fields.DSORelatedLinkField
+
+
+class DSOModelSerializer(DSOSerializer, DSOModelSerializerBase):
     """DSO-compliant serializer for Django models.
 
     This serializer can be used inside a list (by :class:`DSOModelListSerializer`
@@ -639,28 +669,6 @@ class DSOModelSerializer(DSOSerializer, serializers.HyperlinkedModelSerializer):
     """
 
     _default_list_serializer_class = DSOModelListSerializer
-    serializer_field_mapping = {
-        **serializers.HyperlinkedModelSerializer.serializer_field_mapping,
-        # Override the URL field
-        models.URLField: fields.DSOURLField,
-        # Override what django_rest_framework_gis installs in the app ready() signal:
-        gis_models.GeometryField: fields.DSOGeometryField,
-        gis_models.PointField: fields.DSOGeometryField,
-        gis_models.LineStringField: fields.DSOGeometryField,
-        gis_models.PolygonField: fields.DSOGeometryField,
-        gis_models.MultiPointField: fields.DSOGeometryField,
-        gis_models.MultiLineStringField: fields.DSOGeometryField,
-        gis_models.MultiPolygonField: fields.DSOGeometryField,
-        gis_models.GeometryCollectionField: fields.DSOGeometryField,
-    }
-
-    #: Define that having an unknown field named "self" will be rendered as a hyperlink
-    # to this object, using a field class that output a {"href": ..., "title": ...} structure.
-    url_field_name = "self"
-    serializer_url_field = fields.DSOSelfLinkField
-
-    #: Define that relations will also be generated as {"href": ..., "title": ...}.
-    serializer_related_field = fields.DSORelatedLinkField
 
     def _include_embedded(self):
         """Determines if the _embedded field must be generated."""
