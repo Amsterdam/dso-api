@@ -51,8 +51,12 @@ from dso_api.dynamic_api.utils import (
     resolve_model_lookup,
 )
 from rest_framework_dso.embedding import EmbeddedFieldMatch
-from rest_framework_dso.fields import AbstractEmbeddedField, DSORelatedLinkField, FieldsToDisplay
-from rest_framework_dso.serializers import DSOModelListSerializer, DSOModelSerializer
+from rest_framework_dso.fields import AbstractEmbeddedField, DSORelatedLinkField
+from rest_framework_dso.serializers import (
+    DSOModelListSerializer,
+    DSOModelSerializer,
+    DSOModelSerializerBase,
+)
 from rest_framework_dso.utils import get_serializer_relation_lookups
 
 from . import fields
@@ -197,34 +201,8 @@ class DynamicListSerializer(DSOModelListSerializer):
         )
 
 
-class DynamicSerializer(DSOModelSerializer):
-    """The logic for dynamically generated serializers.
-
-    Most DSO-related logic is found in the base class
-    :class:`~rest_framework_dso.serializers.DSOModelSerializer`.
-    This class adds more application-specific logic to the serializer such as:
-
-    * Logic that depends on Amsterdam Schema data.
-    * Permissions based on the schema.
-    * Temporal relations (ideally in DSO, but highly dependent on schema data).
-    * The ``_links`` section logic (depends on knowledge of temporal relations).
-
-    A part of the serializer construction happens here
-    (the Django model field -> serializer field translation).
-    The remaining part happens in :func:`serializer_factory`.
-    """
-
-    _default_list_serializer_class = DynamicListSerializer
-
-    serializer_field_mapping = {
-        **DSOModelSerializer.serializer_field_mapping,
-        LooseRelationField: fields.HALLooseRelationUrlField,
-        LooseRelationManyToManyField: fields.HALLooseRelationUrlField,
-    }
-
-    schema = serializers.SerializerMethodField()
-
-    table_schema: DatasetTableSchema = None
+class FieldAccessMixin(serializers.ModelSerializer):
+    """Mixin for serializers to remove fields the user doesn't have access to."""
 
     @cached_property
     def _request(self):
@@ -259,6 +237,12 @@ class DynamicSerializer(DSOModelSerializer):
             # Check access
             permission = user_scopes.has_field_access(field_schema)
             if not permission:
+                logging.debug(
+                    "Removing serializer field '%s.%s', access denied to read %r",
+                    self.__class__.__name__,
+                    field_name,
+                    field_schema,
+                )
                 return False
 
             # Check transform from permission
@@ -287,6 +271,34 @@ class DynamicSerializer(DSOModelSerializer):
             return transform_function(value)
 
         return _new_to_representation
+
+
+class DynamicSerializer(FieldAccessMixin, DSOModelSerializer):
+    """The logic for dynamically generated serializers.
+
+    Most DSO-related logic is found in the base class
+    :class:`~rest_framework_dso.serializers.DSOModelSerializer`.
+    This class adds more application-specific logic to the serializer such as:
+
+    * Logic that depends on Amsterdam Schema data.
+    * Permissions based on the schema.
+    * Temporal relations (ideally in DSO, but highly dependent on schema data).
+    * The ``_links`` section logic (depends on knowledge of temporal relations).
+
+    A part of the serializer construction happens here
+    (the Django model field -> serializer field translation).
+    The remaining part happens in :func:`serializer_factory`.
+    """
+
+    _default_list_serializer_class = DynamicListSerializer
+
+    serializer_field_mapping = {
+        **DSOModelSerializer.serializer_field_mapping,
+        LooseRelationField: fields.HALLooseRelationUrlField,
+        LooseRelationManyToManyField: fields.HALLooseRelationUrlField,
+    }
+
+    table_schema: DatasetTableSchema = None
 
     @cached_property
     def expanded_fields(self) -> list[EmbeddedFieldMatch]:
@@ -350,24 +362,6 @@ class DynamicSerializer(DSOModelSerializer):
             # still only return those that fit within the current timeframe.
             return filter_temporal_slice(self._request, queryset)
 
-    @extend_schema_field(OpenApiTypes.URI)
-    def get_schema(self, instance):
-        """The schema field is exposed with every record"""
-        table = instance.get_table_id()
-        dataset_path = instance.get_dataset_path()
-        return f"https://schemas.data.amsterdam.nl/datasets/{dataset_path}/dataset#{table}"
-
-    def build_url_field(self, field_name, model_class):
-        """Factory logic - Make the URL to 'self' is properly initialized."""
-        if issubclass(self.serializer_url_field, serializers.Serializer):
-            # Temporal serializer.
-            field_kwargs = {"source": "*"}
-        else:
-            # Normal DSOSelfLinkField, link to correct URL.
-            field_kwargs = {"view_name": get_view_name(model_class, "detail")}
-
-        return self.serializer_url_field, field_kwargs
-
     def build_relational_field(self, field_name: str, relation_info: RelationInfo):
         """Factory logic - This makes sure temporal links get a different field class."""
         field_class, field_kwargs = super().build_relational_field(field_name, relation_info)
@@ -410,8 +404,7 @@ class DynamicSerializer(DSOModelSerializer):
 class DynamicBodySerializer(DynamicSerializer):
     """This subclass of the dynamic serializer only exposes the non-relational fields.
 
-    Ideally, this should be obsolete as the serializer_factory() can avoid
-    generating those fields in the first place.
+    This serializer base class is used for the main object fields.
     """
 
     def get_fields(self):
@@ -455,29 +448,21 @@ class DynamicBodySerializer(DynamicSerializer):
         return valid_names
 
 
-class DynamicLinksSerializer(DynamicSerializer):
+class DynamicLinksSerializer(FieldAccessMixin, DSOModelSerializerBase):
     """The serializer for the ``_links`` field.
     Following DSO/HAL guidelines, it contains "self", "schema", and all relational fields.
     """
 
     fields_always_included = {"self", "schema"}
 
-    @property
-    def fields_to_display(self):
-        # Make sure child serializers (e.g. temporal relations / through serializers)
-        # don't reduce their fields by taking this object from their "parent" serializer.
-        return FieldsToDisplay()
+    schema = serializers.SerializerMethodField()
 
-    @property
-    def expanded_fields(self) -> list[EmbeddedFieldMatch]:
-        # No need for our super class try look for expanded fields.
-        return super().expanded_fields
-
-    def limit_return_fields(self, fields):
-        # Don't apply the ?_fields=... request here, let the parent to this instead.
-        # Otherwise there is an initialization loop in get_fields() to find
-        # the fields of the parent and child at the same time.
-        return fields
+    @extend_schema_field(OpenApiTypes.URI)
+    def get_schema(self, instance):
+        """The schema field is exposed with every record"""
+        table = instance.get_table_id()
+        dataset_path = instance.get_dataset_path()
+        return f"https://schemas.data.amsterdam.nl/datasets/{dataset_path}/dataset#{table}"
 
     def get_fields(self) -> dict[str, serializers.Field]:
         """Override to avoid adding fields that loop back to a parent."""
@@ -549,11 +534,16 @@ class DynamicLinksSerializer(DynamicSerializer):
 
         return False
 
-    def _include_embedded(self):
-        """Never include embedded relations when the
-        serializer is used for generating the _links section.
-        """
-        return False
+    def build_url_field(self, field_name, model_class):
+        """Factory logic - Make the URL to 'self' is properly initialized."""
+        if issubclass(self.serializer_url_field, serializers.Serializer):
+            # Temporal serializer.
+            field_kwargs = {"source": "*"}
+        else:
+            # Normal DSOSelfLinkField, link to correct URL.
+            field_kwargs = {"view_name": get_view_name(model_class, "detail")}
+
+        return self.serializer_url_field, field_kwargs
 
 
 class ThroughSerializer(DynamicSerializer):
