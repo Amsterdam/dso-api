@@ -101,7 +101,7 @@ class FilterInput:
             path = key
             lookup = None
         elif not key.endswith("]"):
-            raise ValidationError(f"missing closing bracket (]) in {key!r}")
+            raise ValidationError(f"last character of {key!r} must be closing bracket (])")
         elif bracket == 0:
             raise ValidationError(f"empty field path in {key!r}")
         else:
