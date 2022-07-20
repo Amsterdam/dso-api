@@ -244,6 +244,7 @@ class FieldAccessMixin(serializers.ModelSerializer):
             logging.info(
                 "Removing serializer field '%s.%s', access denied to foreign table of %s",
                 self.__class__.__name__,
+                field_name,
                 field.Meta.model.table_schema(),
             )
             return False
