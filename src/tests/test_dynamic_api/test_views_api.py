@@ -2196,7 +2196,14 @@ class TestFormats:
     @pytest.mark.parametrize("page_num", (1, 2))
     @pytest.mark.parametrize("page_size_param", ["_pageSize", "page_size"])
     def test_paginated_list(
-        self, format, page_num, page_size_param, api_client, afval_container, filled_router
+        self,
+        fetch_auth_token,
+        format,
+        page_num,
+        page_size_param,
+        api_client,
+        afval_container,
+        filled_router,
     ):
         """Prove that the pagination still works if explicitly requested."""
         decoder, expected_type, make_expected = self.PAGINATED_FORMATS[format]
@@ -2207,8 +2214,11 @@ class TestFormats:
             afval_container.save()
 
         # Prove that the view is available and works
+        token = fetch_auth_token(["BAG/R"])  # needed in afval.json to fetch cluster
         response = api_client.get(
-            url, {"_format": format, page_size_param: self.PAGE_SIZE, "page": page_num}
+            url,
+            {"_format": format, page_size_param: self.PAGE_SIZE, "page": page_num},
+            HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         assert response["Content-Type"] == expected_type  # Test before reading stream
         assert response.status_code == 200, response.getvalue()

@@ -40,7 +40,6 @@ class TestDynamicSerializer:
 
     @staticmethod
     def test_basic_factory_logic(
-        drf_request,
         afval_schema,
         afval_cluster_model,
         afval_container_model,
@@ -51,6 +50,8 @@ class TestDynamicSerializer:
 
         This checks whether the factory generates the proper FK/embedded fields.
         """
+        drf_request = to_drf_request(api_request_with_scopes(["BAG/R"]))
+
         # Access real models to perform 'is' test below.
         afval_cluster_model = unlazy(afval_cluster_model)
         afval_container_model = unlazy(afval_container_model)
@@ -625,7 +626,54 @@ class TestDynamicSerializer:
         serializer_factory(ligplaatsen_model)
 
     @staticmethod
-    def test_field_permissions_display_first_letter(
+    def test_auth_link_item(drf_request, afval_container_model, afval_container):
+        """Prove that the ``_links`` field also handles permissions."""
+        ContainerSerializer = serializer_factory(afval_container_model)
+        container_serializer = ContainerSerializer(
+            afval_container, context={"request": drf_request}
+        )
+        data = normalize_data(container_serializer.data)
+        assert data == {
+            "_links": {
+                # The cluster block is completely omitted because there is no access to the table.
+                # Just showing the href would leak the identifier. Setting "cluster": null
+                # would be ambiguous, since that already means "no cluster for this container".
+                #
+                # "cluster": {
+                #     "href": "http://testserver/v1/afvalwegingen/clusters/123.456/",
+                #     "title": "123.456",
+                #     "id": "123.456",
+                # },
+                "schema": "https://schemas.data.amsterdam.nl/datasets/afvalwegingen/dataset#containers",  # noqa: E501
+                "self": {
+                    "href": "http://testserver/v1/afvalwegingen/containers/1/",
+                    "title": "1",
+                    "id": 1,
+                },
+            },
+            "clusterId": "123.456",
+            "datumCreatie": "2021-01-03",
+            "datumLeegmaken": "2021-01-03T11:13:14",
+            "eigenaarNaam": "Dataservices",
+            "geometry": {"coordinates": [10.0, 10.0], "type": "Point"},
+            "id": 1,
+            "serienummer": "foobar-123",
+        }
+
+        # And again with scopes
+        drf_request = to_drf_request(api_request_with_scopes(["BAG/R"]))
+        container_serializer = ContainerSerializer(
+            afval_container, context={"request": drf_request}
+        )
+        data = normalize_data(container_serializer.data)
+        assert data["_links"]["cluster"] == {
+            "href": "http://testserver/v1/afvalwegingen/clusters/123.456/",
+            "title": "123.456",
+            "id": "123.456",
+        }
+
+    @staticmethod
+    def test_profile_display_first_letter(
         drf_request, fietspaaltjes_schema, fietspaaltjes_model, fietspaaltjes_data
     ):
         """Prove that only first letter is seen in Profile allows only it."""
@@ -663,7 +711,7 @@ class TestDynamicSerializer:
         assert fietspaaltjes_serializer.data["area"] == "A"
 
     @staticmethod
-    def test_field_permissions_display_first_letter_many(
+    def test_profile_display_first_letter_many(
         drf_request, fietspaaltjes_schema, fietspaaltjes_model, fietspaaltjes_data
     ):
         """Prove that only first letter is seen in Profile allows only it in listing."""
