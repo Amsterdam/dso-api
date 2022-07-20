@@ -126,7 +126,7 @@ def test_filter_syntax_error(param, api_client, afval_dataset, filled_router):
     response = api_client.get(url, data={param: ""})
     assert response.status_code == HTTP_400_BAD_REQUEST, response.data
     reason = response.data["invalid-params"][0]["reason"]
-    assert reason == f"Invalid filter: {param}"
+    assert param in reason
 
 
 @pytest.mark.django_db
