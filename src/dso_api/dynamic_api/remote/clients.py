@@ -289,10 +289,10 @@ class HaalCentraalClient(RemoteClient):
                 raise ValidationError(f"unknown filter {p!r}")
 
             filt = FilterInput.from_parameter(p, [])
-            if filt.lookup not in [None, "exact"]:
+            if filt.lookup not in ["", "exact"]:
                 raise ValidationError(f"filter operator {filt.lookup!r} not supported")
 
-            remote_params[filt.path] = v
+            remote_params[filt.key] = v
 
         return super()._make_url(path, remote_params)
 
