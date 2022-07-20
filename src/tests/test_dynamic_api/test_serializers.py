@@ -818,7 +818,7 @@ class TestDynamicSerializer:
         )
         assert (
             statistieken_serializer.fields["_links"].fields["buurt"].__class__.__name__
-            == "GebiedenbuurtenLinkSerializer"
+            == "GebiedenbuurtenLooseLinkSerializer"
         )
         assert isinstance(
             statistieken_serializer.fields["_links"].fields["buurt"].fields["href"],

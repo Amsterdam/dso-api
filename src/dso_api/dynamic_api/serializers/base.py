@@ -558,7 +558,7 @@ class DynamicLinksSerializer(FieldAccessMixin, DSOModelSerializerBase):
     def build_url_field(self, field_name, model_class):
         """Factory logic - Make the URL to 'self' is properly initialized."""
         if issubclass(self.serializer_url_field, serializers.Serializer):
-            # Temporal serializer.
+            # Temporal serializer (a LinkSerializer subclass)
             field_kwargs = {"source": "*"}
         else:
             # Normal DSOSelfLinkField, link to correct URL.
