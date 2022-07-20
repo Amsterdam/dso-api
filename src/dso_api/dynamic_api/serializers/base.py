@@ -383,29 +383,6 @@ class DynamicSerializer(FieldAccessMixin, DSOModelSerializer):
             # still only return those that fit within the current timeframe.
             return filter_temporal_slice(self._request, queryset)
 
-    def build_relational_field(self, field_name: str, relation_info: RelationInfo):
-        """Factory logic - This makes sure temporal links get a different field class."""
-        field_class, field_kwargs = super().build_relational_field(field_name, relation_info)
-        related_model = relation_info.related_model
-
-        if "view_name" in field_kwargs:
-            # Fix the view name to point to our views.
-            field_kwargs["view_name"] = get_view_name(related_model, "detail")
-
-        # Upgrade the field type when it's a link to a temporal model.
-        if field_class is DSORelatedLinkField and related_model.table_schema().is_temporal:
-            from dso_api.dynamic_api.serializers.factories import _temporal_link_serializer_factory
-
-            # Ideally this would just be an upgrade to a different field class.
-            # However, since the "identificatie" and "volgnummer" fields are dynamic,
-            # a serializer class is better suited as field type. That ensures the sub object
-            # is properly generated in the OpenAPI spec as a distinct class type.
-            field_class = _temporal_link_serializer_factory(relation_info.related_model)
-            field_kwargs.pop("queryset", None)
-            field_kwargs.pop("view_name", None)
-
-        return field_class, field_kwargs
-
     def build_property_field(self, field_name, model_class):
         """Factory logic - This is called for the foreignkey_id fields.
         As the field name doesn't reference the model field directly,
@@ -571,6 +548,29 @@ class LinkSerializer(FieldAccessMixin, DSOModelSerializerBase):
     """The serializer class for an entry in the `_links` section.
     This applies the field permissions to the display_name field (through FieldAccessMixin).
     """
+
+    def build_relational_field(self, field_name: str, relation_info: RelationInfo):
+        """Factory logic - This makes sure temporal links get a different field class."""
+        field_class, field_kwargs = super().build_relational_field(field_name, relation_info)
+        related_model = relation_info.related_model
+
+        if "view_name" in field_kwargs:
+            # Fix the view name to point to our views.
+            field_kwargs["view_name"] = get_view_name(related_model, "detail")
+
+        # Upgrade the field type when it's a link to a temporal model.
+        if field_class is DSORelatedLinkField and related_model.table_schema().is_temporal:
+            from dso_api.dynamic_api.serializers.factories import _temporal_link_serializer_factory
+
+            # Ideally this would just be an upgrade to a different field class.
+            # However, since the "identificatie" and "volgnummer" fields are dynamic,
+            # a serializer class is better suited as field type. That ensures the sub object
+            # is properly generated in the OpenAPI spec as a distinct class type.
+            field_class = _temporal_link_serializer_factory(relation_info.related_model)
+            field_kwargs.pop("queryset", None)
+            field_kwargs.pop("view_name", None)
+
+        return field_class, field_kwargs
 
 
 class ThroughSerializer(DynamicSerializer):
