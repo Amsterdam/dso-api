@@ -414,7 +414,7 @@ def _loose_link_serializer_factory(
 
     # Construct the class
     safe_dataset_id = to_snake_case(related_model.get_dataset_id())
-    serializer_name = f"{safe_dataset_id.title()}{related_model.__name__}LinkSerializer"
+    serializer_name = f"{safe_dataset_id.title()}{related_model.__name__}LooseLinkSerializer"
     serializer_part.class_attrs.pop("Meta")  # we dont need Meta on regular Serializers
 
     return serializer_part.construct_class(serializer_name, base_class=HALLooseLinkSerializer)
