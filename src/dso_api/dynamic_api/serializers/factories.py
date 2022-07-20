@@ -49,6 +49,7 @@ from rest_framework_dso.fields import AbstractEmbeddedField, get_embedded_field_
 from rest_framework_dso.serializers import HALLooseLinkSerializer
 
 from . import base, fields
+from .base import LinkSerializer
 
 MAX_EMBED_NESTING_LEVEL = 10
 S = TypeVar("S", bound=serializers.Serializer)
@@ -274,12 +275,13 @@ def _links_serializer_factory(
     )
 
     # Configure the serializer class to use for the link to 'self'
+    # The 'fields_always_included' is set, so the 'self' link never hides fields.
     if model.is_temporal():
-        field_class = _temporal_link_serializer_factory(model)
-        serializer_part.class_attrs["serializer_url_field"] = field_class
+        self_link_class = _temporal_link_serializer_factory(model)
     else:
-        field_class = _nontemporal_link_serializer_factory(model)
-        serializer_part.class_attrs["serializer_url_field"] = field_class
+        self_link_class = _nontemporal_link_serializer_factory(model)
+    self_link_class.fields_always_included = set(self_link_class.Meta.fields)
+    serializer_part.class_attrs["serializer_url_field"] = self_link_class
 
     # Parse fields for serializer
     for model_field in model._meta.get_fields():
@@ -290,7 +292,7 @@ def _links_serializer_factory(
         elif isinstance(model_field, models.ManyToManyField):
             _build_m2m_serializer_field(serializer_part, model_field)
         elif isinstance(model_field, (RelatedField, ForeignObjectRel, LooseRelationField)):
-            _build_serializer_links_field(serializer_part, model_field)
+            _build_link_serializer_field(serializer_part, model_field)
 
     # Generate serializer class
     return serializer_part.construct_class(serializer_name, base_class=base.DynamicLinksSerializer)
@@ -298,7 +300,7 @@ def _links_serializer_factory(
 
 def _nontemporal_link_serializer_factory(
     related_model: type[DynamicModel],
-) -> type[serializers.ModelSerializer]:
+) -> type[LinkSerializer]:
     """Construct a serializer that represents a relationship of which the remote
     table is not temporal."""
     if related_model.is_temporal():
@@ -323,13 +325,13 @@ def _nontemporal_link_serializer_factory(
     # Construct the class
     safe_dataset_id = to_snake_case(related_model.get_dataset_id())
     serializer_name = f"{safe_dataset_id.title()}{related_model.__name__}LinkSerializer"
-    return serializer_part.construct_class(serializer_name, base_class=serializers.ModelSerializer)
+    return serializer_part.construct_class(serializer_name, base_class=LinkSerializer)
 
 
 @cached(cache=_temporal_link_serializer_factory_cache)
 def _temporal_link_serializer_factory(
     related_model: type[DynamicModel],
-) -> type[serializers.ModelSerializer]:
+) -> type[LinkSerializer]:
     """Construct a serializer that represents a relationship in which the remote
     table is temporal.
 
@@ -379,7 +381,7 @@ def _temporal_link_serializer_factory(
     # Construct the class
     safe_dataset_id = to_snake_case(related_model.get_dataset_id())
     serializer_name = f"{safe_dataset_id.title()}{related_model.__name__}LinkSerializer"
-    return serializer_part.construct_class(serializer_name, base_class=serializers.ModelSerializer)
+    return serializer_part.construct_class(serializer_name, base_class=LinkSerializer)
 
 
 def _loose_link_serializer_factory(
@@ -642,11 +644,14 @@ def _build_plain_serializer_field(
     serializer_part.add_field_name(toCamelCase(model_field.name), source=model_field.name)
 
 
-def _build_serializer_links_field(
+def _build_link_serializer_field(
     serializer_part: SerializerAssemblyLine, model_field: models.Field
 ):
+    """Build a field that will be an item in the ``_links`` section."""
     related_model = model_field.related_model
 
+    # The link element itself is constructed using a serializer instead of some simple field,
+    # because this provides a proper field definition for the generated OpenAPI spec.
     if isinstance(model_field, LooseRelationField):
         field_class = _loose_link_serializer_factory(related_model)
     elif model_field.related_model.table_schema().is_temporal:
@@ -741,14 +746,13 @@ def _build_href_field(
     """Generate a link field for a regular, temporal or loose relation.
     Use the 'lookup_field' argument to change the source of the hyperlink ID.
     """
-    href_kwargs = dict(
+    return field_cls(
         view_name=get_view_name(target_model, "detail"),
         read_only=True,  # avoids having to add a queryset
         source="*",  # reads whole object, but only takes 'lookup_field' for the ID.
         lookup_field=lookup_field,
         **kwargs,
     )
-    return field_cls(**href_kwargs)
 
 
 def _generate_nested_relations(

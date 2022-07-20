@@ -134,21 +134,32 @@ def get_source_model_fields(
     """Find the model fields that the serializer field points to.
     This is typically just one field, but `field.source` could be set to a dotted path.
     """
+    model = serializer.Meta.model
+
     if field.source == "*":
-        # These fields are special: they receive the entire model instead of a attribute value.
-        raise ValueError("Unable to detect source for field.source == '*'")
+        # These fields are special: they receive the entire model instead of an attribute value.
+        if isinstance(field, serializers.HyperlinkedRelatedField):
+            # While this field type receives the complete value (so it can access model._meta),
+            # it only reads one attribute (the lookup_field). Need to translate "pk" through.
+            source_attrs = [
+                field.lookup_field if field.lookup_field != "pk" else model._meta.pk.name
+            ]
+        else:
+            raise NotImplementedError(
+                f"Unable to detect source for field.source == '*',"
+                f" field: {field_name} ({field.__class__.__name__})"
+            )
+    elif hasattr(field, "source_attrs"):
+        # Field.bind() was called, so `field.parent` and `field.source_attrs` are already set
+        source_attrs = field.source_attrs
+    else:
+        # Early testing for the model field (e.g. in an override of get_fields()).
+        source_attrs = (field.source or field_name).split(".")
 
     orm_path = []
-
-    # Typically, `field.parent` and `field.source_attrs` are already set, making those arguments
-    # unnecessary. However, most use-cases of this function involve inspecting model data earlier
-    # in an override of serializer.get_fields(), which is before field.bind() is called.
-    model = serializer.Meta.model
-    source_attrs = getattr(field, "source_attrs", None) or (field.source or field_name).split(".")
-
     for attr in source_attrs:
         model_field = model._meta.get_field(attr)
-        model = model_field.related_model
+        model = model_field.related_model  # for next loop.
         orm_path.append(model_field)
 
     return orm_path

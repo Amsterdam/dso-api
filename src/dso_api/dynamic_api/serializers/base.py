@@ -204,6 +204,8 @@ class DynamicListSerializer(DSOModelListSerializer):
 class FieldAccessMixin(serializers.ModelSerializer):
     """Mixin for serializers to remove fields the user doesn't have access to."""
 
+    fields_always_included = set()
+
     @cached_property
     def _request(self):
         """Get request from this or parent instance."""
@@ -212,21 +214,39 @@ class FieldAccessMixin(serializers.ModelSerializer):
 
     def get_fields(self) -> dict[str, serializers.Field]:
         """Override DRF to remove fields that shouldn't be part of the response."""
-        fields = {}
-        for field_name, field in super().get_fields().items():
-            if self._apply_permission(field_name, field):
-                fields[field_name] = field
-
-        return fields
+        base_fields = super().get_fields()
+        return {
+            field_name: field
+            for field_name, field in base_fields.items()
+            if field_name in self.fields_always_included
+            or self._apply_permission(field_name, field)
+        }
 
     def _apply_permission(self, field_name: str, field: serializers.Field) -> bool:
         """Check permissions and apply any transforms."""
         user_scopes = self._request.user_scopes
 
-        if field.source == "*":
-            # e.g. _links field, always include. These sub serializers
-            # do their own permission checks for their fields.
+        if field.source == "*" and isinstance(field, serializers.Serializer):
+            # e.g. _links field or "schema" field, always include.
+            # The sub serializers do their own permission checks for their fields.
+            # Anything else (even with source="*") passes through to enforce checks.
             return True
+        elif isinstance(field, FieldAccessMixin) and not user_scopes.has_table_access(
+            field.Meta.model.table_schema()
+        ):
+            # Extra case for the _links section: when a LinkSerializer object will not render
+            # any fields (due to not having access to the table), don't render that block at all.
+            # Otherwise, it would just render `"relation": {}`. Now the field is simply missing,
+            # in the same way other body fields are omitted when there is no access.
+            #
+            # When a user has access to a relation that is NULL, it will still be rendered
+            # as "relation": null, or "relation": [] for M2M, so there is no ambiguity here.
+            logging.info(
+                "Removing serializer field '%s.%s', access denied to foreign table of %s",
+                self.__class__.__name__,
+                field.Meta.model.table_schema(),
+            )
+            return False
 
         # Find which ORM path is traversed for a field.
         # (typically one field, except when field.source has a dotted notation)
@@ -237,7 +257,7 @@ class FieldAccessMixin(serializers.ModelSerializer):
             # Check access
             permission = user_scopes.has_field_access(field_schema)
             if not permission:
-                logging.debug(
+                logging.info(
                     "Removing serializer field '%s.%s', access denied to read %r",
                     self.__class__.__name__,
                     field_name,
@@ -544,6 +564,12 @@ class DynamicLinksSerializer(FieldAccessMixin, DSOModelSerializerBase):
             field_kwargs = {"view_name": get_view_name(model_class, "detail")}
 
         return self.serializer_url_field, field_kwargs
+
+
+class LinkSerializer(FieldAccessMixin, DSOModelSerializerBase):
+    """The serializer class for an entry in the `_links` section.
+    This applies the field permissions to the display_name field (through FieldAccessMixin).
+    """
 
 
 class ThroughSerializer(DynamicSerializer):
