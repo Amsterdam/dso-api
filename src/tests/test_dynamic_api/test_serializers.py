@@ -9,7 +9,6 @@ from schematools.types import ProfileSchema
 from dso_api.dynamic_api.serializers import clear_serializer_factory_cache, serializer_factory
 from dso_api.dynamic_api.serializers.fields import HALLooseRelationUrlField
 from rest_framework_dso.fields import EmbeddedField
-from rest_framework_dso.views import DSOViewMixin
 from tests.utils import (
     api_request_with_scopes,
     normalize_data,
@@ -801,11 +800,6 @@ class TestDynamicSerializer:
         """Prove that the serializer factory generates the right link
         for a loose relation field
         """
-
-        class DummyView(DSOViewMixin):
-            def __init__(self, model):
-                self.model = model
-
         statistiek = statistieken_model.objects.create(
             id=1,
             buurt="03630000000078",
@@ -813,17 +807,11 @@ class TestDynamicSerializer:
         StatistiekenSerializer = serializer_factory(statistieken_model)
 
         statistieken_serializer = StatistiekenSerializer(
-            statistiek,
-            context={"request": drf_request, "view": DummyView(statistieken_model)},
+            statistiek, context={"request": drf_request}
         )
-        assert (
-            statistieken_serializer.fields["_links"].fields["buurt"].__class__.__name__
-            == "GebiedenbuurtenLooseLinkSerializer"
-        )
-        assert isinstance(
-            statistieken_serializer.fields["_links"].fields["buurt"].fields["href"],
-            HALLooseRelationUrlField,
-        )
+        buurt_field = statistieken_serializer.fields["_links"].fields["buurt"]
+        assert buurt_field.__class__.__name__ == "GebiedenbuurtenLooseLinkSerializer"
+        assert isinstance(buurt_field.fields["href"], HALLooseRelationUrlField)
 
         assert (
             statistieken_serializer.data["_links"]["buurt"]["href"]
