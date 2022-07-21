@@ -176,9 +176,7 @@ class DynamicListSerializer(DSOModelListSerializer):
         return prefetch_queryset
 
     def _get_prefetch_fields(
-        self,
-        field: serializers.Field,
-        model_field: RelatedField | ForeignObjectRel | LooseRelationField,
+        self, field: serializers.Field, model_field: RelatedField | ForeignObjectRel
     ) -> list[str]:
         """Tell which fields the prefetch query should retrieve."""
         if isinstance(field, serializers.BaseSerializer):
@@ -481,9 +479,7 @@ class DynamicLinksSerializer(FieldAccessMixin, DSOModelSerializerBase):
         return fields
 
     @cached_property
-    def parent_source_fields(
-        self,
-    ) -> list[Union[RelatedField, LooseRelationField, ForeignObjectRel]]:
+    def parent_source_fields(self) -> list[Union[RelatedField, ForeignObjectRel]]:
         """Find the ORM relationship fields that lead to this serializer instance"""
         source_fields = []
         parent = self.parent
