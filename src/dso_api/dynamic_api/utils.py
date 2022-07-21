@@ -8,7 +8,7 @@ from django.db.models import Model
 from django.db.models.fields.related import RelatedField
 from django.db.models.fields.reverse_related import ForeignObjectRel
 from rest_framework import serializers
-from schematools.contrib.django.models import DynamicModel, LooseRelationField
+from schematools.contrib.django.models import DynamicModel
 from schematools.contrib.django.signals import dynamic_models_removed
 from schematools.utils import to_snake_case
 
@@ -39,9 +39,7 @@ dynamic_models_removed.connect(lambda **kwargs: resolve_model_lookup.cache_clear
 
 
 @lru_cache
-def resolve_model_lookup(
-    model: type[Model], lookup: str
-) -> list[RelatedField | ForeignObjectRel | LooseRelationField]:
+def resolve_model_lookup(model: type[Model], lookup: str) -> list[RelatedField | ForeignObjectRel]:
     """Find which fields a lookup points to.
     :returns: The model fields that the relation traverses.
     """
@@ -52,7 +50,7 @@ def resolve_model_lookup(
     for field_name in lookup.split("__"):
         field = model._meta.get_field(field_name)
 
-        if isinstance(field, (RelatedField, ForeignObjectRel, LooseRelationField)):
+        if isinstance(field, (RelatedField, ForeignObjectRel)):
             # RelatedField covers all forwards relations (ForeignKey, ManyToMany, OneToOne)
             # ForeignObjectRel covers backward relations (ManyToOneRel, ManyToManyRel, OneToOneRel)
             model = field.related_model

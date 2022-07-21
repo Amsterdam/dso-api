@@ -239,7 +239,7 @@ DENY_SUB_FIELDS_TO_DISPLAY._allow_all = False
 
 
 def get_embedded_field_class(
-    model_field: Union[RelatedField, LooseRelationField, ForeignObjectRel]
+    model_field: Union[RelatedField, ForeignObjectRel]
 ) -> type[AbstractEmbeddedField]:
     """Return the embedded field type that is suited for a particular model field."""
     if isinstance(model_field, ForeignObjectRel):
@@ -370,7 +370,7 @@ class AbstractEmbeddedField:
     @cached_property
     def source_field(
         self,
-    ) -> Union[RelatedField, LooseRelationField, models.ForeignObjectRel]:
+    ) -> Union[RelatedField, models.ForeignObjectRel]:
         return self.parent_model._meta.get_field(self.source)
 
     @cached_property

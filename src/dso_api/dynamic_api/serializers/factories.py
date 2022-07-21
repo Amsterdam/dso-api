@@ -291,7 +291,7 @@ def _links_serializer_factory(
         # This includes LooseRelationManyToManyField
         elif isinstance(model_field, models.ManyToManyField):
             _build_m2m_serializer_field(serializer_part, model_field)
-        elif isinstance(model_field, (RelatedField, ForeignObjectRel, LooseRelationField)):
+        elif isinstance(model_field, (RelatedField, ForeignObjectRel)):
             _build_link_serializer_field(serializer_part, model_field)
 
     # Generate serializer class
@@ -427,13 +427,7 @@ def _build_serializer_field(  # noqa: C901
     # Add extra embedded part for related fields
     # For NM relations, we need another type of EmbeddedField
     if isinstance(
-        model_field,
-        (
-            models.ForeignKey,
-            models.ManyToManyField,
-            LooseRelationField,
-            LooseRelationManyToManyField,
-        ),
+        model_field, (models.ForeignKey, models.ManyToManyField, LooseRelationManyToManyField)
     ):
         # Embedded relations are only added to the main serializer.
         _build_serializer_embedded_field(serializer_part, model_field, nesting_level)
@@ -466,7 +460,7 @@ def _build_serializer_field(  # noqa: C901
 
 def _build_serializer_embedded_field(
     serializer_part: SerializerAssemblyLine,
-    model_field: Union[RelatedField, LooseRelationField, ForeignObjectRel],
+    model_field: Union[RelatedField, ForeignObjectRel],
     nesting_level: int,
 ):
     """Build a embedded field for the serializer"""
