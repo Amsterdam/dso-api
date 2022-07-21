@@ -802,7 +802,7 @@ class TestDynamicSerializer:
         """
         statistiek = statistieken_model.objects.create(
             id=1,
-            buurt="03630000000078",
+            buurt_id="03630000000078",
         )
         StatistiekenSerializer = serializer_factory(statistieken_model)
 

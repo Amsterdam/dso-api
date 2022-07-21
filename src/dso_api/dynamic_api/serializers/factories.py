@@ -438,11 +438,8 @@ def _build_serializer_field(  # noqa: C901
         # Embedded relations are only added to the main serializer.
         _build_serializer_embedded_field(serializer_part, model_field, nesting_level)
 
-        if isinstance(model_field, LooseRelationField):
-            # For loose relations, add an id char field.
-            _build_serializer_loose_relation_id_field(serializer_part, model_field)
-        elif isinstance(model_field, models.ForeignKey):
-            # Forward relation, add an id field in the main body.
+        if isinstance(model_field, models.ForeignKey):
+            # Forward relation, or loose relation, add an id field in the main body.
             _build_serializer_related_id_field(serializer_part, model_field)
         return
     elif isinstance(model_field, ForeignObjectRel):
@@ -649,16 +646,6 @@ def _build_link_serializer_field(
 ):
     """Build a field that will be an item in the ``_links`` section."""
     related_model = model_field.related_model
-
-    # The link element itself is constructed using a serializer instead of some simple field,
-    # because this provides a proper field definition for the generated OpenAPI spec.
-    if isinstance(model_field, LooseRelationField):
-        field_class = _loose_link_serializer_factory(related_model)
-    elif model_field.related_model.table_schema().is_temporal:
-        field_class = _temporal_link_serializer_factory(related_model)
-    else:
-        field_class = _nontemporal_link_serializer_factory(related_model)
-
     field_kwargs = {}
     field_name = toCamelCase(model_field.name)
     if field_name != model_field.name:
@@ -667,6 +654,16 @@ def _build_link_serializer_field(
 
     if model_field.many_to_many:
         field_kwargs["many"] = True
+
+    # The link element itself is constructed using a serializer instead of some simple field,
+    # because this provides a proper field definition for the generated OpenAPI spec.
+    if isinstance(model_field, LooseRelationField):
+        field_class = _loose_link_serializer_factory(related_model)
+        field_kwargs["source"] = model_field.attname  # receives ID value, not full object.
+    elif model_field.related_model.table_schema().is_temporal:
+        field_class = _temporal_link_serializer_factory(related_model)
+    else:
+        field_class = _nontemporal_link_serializer_factory(related_model)
 
     serializer_part.add_field(
         toCamelCase(model_field.name),
@@ -680,15 +677,6 @@ def _build_serializer_related_id_field(
     """Build the ``FIELD_id`` field for an related field."""
     camel_id_name = toCamelCase(model_field.attname)
     serializer_part.add_field_name(camel_id_name, source=model_field.attname)
-
-
-def _build_serializer_loose_relation_id_field(
-    serializer_part: SerializerAssemblyLine, model_field: LooseRelationField
-):
-    """Build the ``FIELD_id`` field for a loose relation."""
-    camel_name = toCamelCase(model_field.name)
-    loose_id_field_name = f"{camel_name}Id"
-    serializer_part.add_field(loose_id_field_name, serializers.CharField(source=model_field.name))
 
 
 def _build_serializer_blob_field(

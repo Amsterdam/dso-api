@@ -1136,7 +1136,7 @@ def nontemporeel_model(woningbouwplannen_dataset, dynamic_models):
 def statistieken_data(statistieken_model, buurten_data):
     return statistieken_model.objects.create(
         id=1,
-        buurt="03630000000078",
+        buurt_id="03630000000078",
     )
 
 
