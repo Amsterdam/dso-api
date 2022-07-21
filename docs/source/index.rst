@@ -9,6 +9,14 @@ In deze pagina's geven we uitleg hoe de API diensten van Datapunt afgenomen word
    Deze documentatie richt zich tot de API's van DataPunt, onderdeel van OIS (Onderzoek, Informatie en Statistiek)
    van de Gemeente Amsterdam.
 
+Gemeente Amsterdam biedt haar datasets onder andere aan via een REST API die voldoet aan de
+`NL API REST API Design Rules <https://forumstandaardisatie.nl/open-standaarden/rest-api-design-rules>`_.
+Daarnaast is ook gekozen de strictere interpretatie van de
+`DSO API Strategie 2.0 <https://iplo.nl/digitaal-stelsel/aansluiten/standaarden/api-en-uri-strategie/>`_
+te volgen, aangezien het de intentie van de DSO API Strategie is om een interoperabel
+koppelvlak voor data-uitwisseling te ontwikkelen dat overeenkomt met de behoeftes
+van de Gemeente Amsterdam.
+
 Om zoveel mogelijk afnemers te kunnen bedienen, ondersteunen we diverse koppelingen.
 Zo zal een mobiele-appontwikkelaar eerder een :doc:`REST-API <generic/rest>` gebruiken,
 en een GIS-professional de :doc:`WFS/MVT-koppelingen <generic/gis>`.
