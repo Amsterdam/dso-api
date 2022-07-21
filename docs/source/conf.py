@@ -19,7 +19,7 @@ from datetime import date
 
 # -- Project information -----------------------------------------------------
 
-project = "Amsterdam DSO-API"
+project = "Amsterdam DataPunt API Documentatie"
 copyright = f"{date.today().year}, Gemeente Amsterdam"
 author = "Team Datadiensten van het Dataplatform onder de Directie Digitale Voorzieningen, Gemeente Amsterdam"
 
