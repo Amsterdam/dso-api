@@ -204,7 +204,7 @@ class DynamicListSerializer(DSOModelListSerializer):
 class FieldAccessMixin(serializers.ModelSerializer):
     """Mixin for serializers to remove fields the user doesn't have access to."""
 
-    fields_always_included = set()
+    fields_always_included = {"_links"}
 
     @cached_property
     def _request(self):
