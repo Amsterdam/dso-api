@@ -375,8 +375,8 @@ class AbstractEmbeddedField:
 
     @cached_property
     def is_loose(self) -> bool:
-        """Signals that the related field is not a real FK or M2M"""
-        return not isinstance(self.source_field, (RelatedField, ForeignObjectRel))
+        """Signals that the relation only links to the first part of a foreign composite key"""
+        return isinstance(self.source_field, LooseRelationField)
 
     @cached_property
     def is_array(self) -> bool:
