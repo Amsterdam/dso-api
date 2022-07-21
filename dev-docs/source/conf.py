@@ -10,6 +10,7 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
+from datetime import date
 import os
 import sys
 
@@ -39,9 +40,9 @@ django.setup()
 
 # -- Project information -----------------------------------------------------
 
-project = "DSO-API"
-copyright = "2021, Team Data Diensten, Gemeente Amsterdam."
-author = "Team Data Diensten, Gemeente Amsterdam."
+project = "Amsterdam DSO-API"
+copyright = f"{date.today().year}, Gemeente Amsterdam"
+author = "Team Datadiensten, Gemeente Amsterdam"
 
 # The full version, including alpha/beta/rc tags
 release = "v1"

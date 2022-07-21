@@ -14,12 +14,14 @@
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
 
+from datetime import date
+
 
 # -- Project information -----------------------------------------------------
 
 project = "Amsterdam DSO-API"
-copyright = "2022, Team Data Diensten, Gemeente Amsterdam."
-author = "Team Data Diensten van het Dataplatform onder de Directie Digitale Voorzieningen, Gemeente Amsterdam."
+copyright = f"{date.today().year}, Gemeente Amsterdam"
+author = "Team Datadiensten van het Dataplatform onder de Directie Digitale Voorzieningen, Gemeente Amsterdam"
 
 # The full version, including alpha/beta/rc tags
 release = "v1"
