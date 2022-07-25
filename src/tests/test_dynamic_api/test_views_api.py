@@ -227,6 +227,35 @@ class TestListFilters:
 
 
 @pytest.mark.django_db
+class TestLimitFields:
+    """Test how the ?_fields=... parameter works with all extra serializer weight."""
+
+    @staticmethod
+    def test_fields(api_client, afval_dataset, afval_container, filled_router):
+        url = reverse("dynamic_api:afvalwegingen-containers-list")
+        response = api_client.get(url, data={"_fields": "id,serienummer"})
+        assert response.status_code == HTTP_200_OK, response.data
+        data = read_response_json(response)
+        assert data["_embedded"] == {
+            "containers": [
+                {
+                    "_links": {
+                        # _links block still exists with self link:
+                        "self": {
+                            "href": "http://testserver/v1/afvalwegingen/containers/1/",
+                            "id": 1,
+                            "title": "1",
+                        },
+                        "schema": "https://schemas.data.amsterdam.nl/datasets/afvalwegingen/dataset#containers",  # noqa: E501
+                    },
+                    "id": 1,
+                    "serienummer": "foobar-123",
+                }
+            ]
+        }
+
+
+@pytest.mark.django_db
 class TestSort:
     """Prove that the ordering works as expected."""
 
