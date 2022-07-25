@@ -107,29 +107,6 @@ def test_list_dynamic_view_unregister(api_client, api_rf, bommen_dataset, filled
 
 
 @pytest.mark.django_db
-def test_filter_no_such_field(api_client, afval_dataset, filled_router):
-    url = reverse("dynamic_api:afvalwegingen-containers-list")
-
-    # Non-existing field.
-    response = api_client.get(url, data={"nietbestaand": ""})
-    assert response.status_code == HTTP_400_BAD_REQUEST, response.data
-    reason = response.data["invalid-params"][0]["reason"]
-    assert reason == "Field 'nietbestaand' does not exist"
-
-
-@pytest.mark.django_db
-@pytest.mark.parametrize("param", ["buurtcode[", "buurtcode[exact", "buurtcodeexact]"])
-def test_filter_syntax_error(param, api_client, afval_dataset, filled_router):
-    """Existing field, but syntax error in the filter parameter."""
-    url = reverse("dynamic_api:afvalwegingen-containers-list")
-
-    response = api_client.get(url, data={param: ""})
-    assert response.status_code == HTTP_400_BAD_REQUEST, response.data
-    reason = response.data["invalid-params"][0]["reason"]
-    assert param in reason
-
-
-@pytest.mark.django_db
 class TestDSOViewMixin:
     """Prove that the DSO view mixin logic is used within the dynamic API."""
 
@@ -175,6 +152,27 @@ class TestDSOViewMixin:
 @pytest.mark.django_db
 class TestListFilters:
     """Prove that filtering works as expected."""
+
+    @staticmethod
+    def test_filter_no_such_field(api_client, afval_dataset, filled_router):
+        url = reverse("dynamic_api:afvalwegingen-containers-list")
+
+        # Non-existing field.
+        response = api_client.get(url, data={"nietbestaand": ""})
+        assert response.status_code == HTTP_400_BAD_REQUEST, response.data
+        reason = response.data["invalid-params"][0]["reason"]
+        assert reason == "Field 'nietbestaand' does not exist"
+
+    @staticmethod
+    @pytest.mark.parametrize("param", ["buurtcode[", "buurtcode[exact", "buurtcodeexact]"])
+    def test_filter_syntax_error(param, api_client, afval_dataset, filled_router):
+        """Existing field, but syntax error in the filter parameter."""
+        url = reverse("dynamic_api:afvalwegingen-containers-list")
+
+        response = api_client.get(url, data={param: ""})
+        assert response.status_code == HTTP_400_BAD_REQUEST, response.data
+        reason = response.data["invalid-params"][0]["reason"]
+        assert param in reason
 
     @staticmethod
     @pytest.mark.parametrize(
