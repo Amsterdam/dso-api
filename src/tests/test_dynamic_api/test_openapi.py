@@ -66,7 +66,7 @@ def test_openapi_json(api_client, afval_dataset, fietspaaltjes_dataset, filled_r
         "title": "Afvalwegingen",
         "description": "unit testing version of afvalwegingen",
         "version": "0.0.1",
-        "license": "CC0 1.0",
+        "license": {"name": "CC0 1.0"},
         "contact": {"email": "datapunt@amsterdam.nl"},
         "termsOfService": "https://data.amsterdam.nl/",
     }
