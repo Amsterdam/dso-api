@@ -2,6 +2,7 @@ import logging
 
 import pytest
 from django.urls import NoReverseMatch, reverse
+import openapi_spec_validator
 
 from dso_api.dynamic_api import openapi
 from tests.utils import read_response
@@ -60,6 +61,8 @@ def test_openapi_json(api_client, afval_dataset, fietspaaltjes_dataset, filled_r
     assert response.status_code == 200, response.data
     assert response["content-type"] == "application/vnd.oai.openapi+json"
     schema = response.data
+
+    openapi_spec_validator.validate_spec(schema)
 
     # Prove that the main info block is correctly rendered
     assert schema["info"] == {
