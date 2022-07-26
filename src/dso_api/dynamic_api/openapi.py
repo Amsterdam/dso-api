@@ -94,7 +94,9 @@ def get_openapi_json_view(dataset: Dataset):
     # Specific data to override in the OpenAPI
     openapi_overrides = {
         "info": {
-            "license": dataset_schema.get("license", ""),
+            "license": {
+                "name": dataset_schema.get("license", ""),
+            },
         },
         "externalDocs": {
             "url": urljoin(
