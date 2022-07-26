@@ -147,8 +147,8 @@ class DSOSchemaGenerator(generators.SchemaGenerator):
             "allOf": [
                 {"$ref": "#/components/schemas/Geometry"},
                 {
-                    "type": {"type": "string", "enum": ["MultiLineString"]},
                     "properties": {
+                        "type": {"type": "string", "enum": ["MultiLineString"]},
                         "coordinates": {
                             "type": "array",
                             "items": {
