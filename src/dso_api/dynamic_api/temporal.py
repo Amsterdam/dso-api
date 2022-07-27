@@ -15,6 +15,7 @@ from django.utils.timezone import make_aware, now
 from more_itertools import first
 from rest_framework.exceptions import ValidationError
 from rest_framework.request import Request
+from schematools.permissions import UserScopes
 from schematools.types import DatasetTableSchema, TemporalDimensionFields
 from schematools.utils import to_snake_case
 
@@ -39,39 +40,86 @@ class TemporalTableQuery:
     def __bool__(self):
         return self.is_versioned
 
-    def __init__(self, request: Request, table_schema: DatasetTableSchema):
-        temporal = table_schema.temporal
-        self.table_schema = table_schema
-        self.is_versioned = temporal is not None
-
-        # Make sure all queries use the exact same now, not seconds/milliseconds apart.
+    @classmethod
+    def from_request(cls, request: Request, table_schema: DatasetTableSchema):
+        """Construct the object using all information found in the request object."""
         try:
-            self._now = request._now
+            # Make sure all queries use the exact same now, not seconds/milliseconds apart.
+            request_date = request._now
         except AttributeError:
-            self._now = request._now = now()
+            request_date = request._now = now()
 
-        if temporal is not None:
+        return cls.from_query(request_date, request.GET, request.user_scopes, table_schema)
+
+    @classmethod
+    def from_query(
+        cls,
+        request_date: datetime,
+        query: dict[str, str],
+        user_scopes: UserScopes,
+        table_schema: DatasetTableSchema,
+    ):
+        """Construct the object without having to use a request object."""
+        if table_schema.temporal is None:
+            return cls(table_schema=table_schema)
+        else:
             # See if a filter is made on a specific version
-            self.version_field = temporal.identifier  # e.g. "volgnummer"
-            self.version_value = request.GET.get(self.version_field, None)
+            version_field = table_schema.temporal.identifier  # e.g. "volgnummer"
+            version_value = query.get(version_field, None)
 
-            if self.version_value:
-                field = self.table_schema.get_field_by_id(self.version_field)
-                check_filter_field_access(self.version_field, field, request.user_scopes)
+            if version_value:
+                field = table_schema.get_field_by_id(version_field)
+                check_filter_field_access(version_field, field, user_scopes)
 
             # See if a filter is done on a particular point in time (e.g. ?geldigOp=yyyy-mm-dd)
-            for dimension, fields in temporal.dimensions.items():
-                if date_value := request.GET.get(dimension):
-                    self.slice_dimension = dimension  # e.g. geldigOp
-                    self.slice_value = self._parse_date(dimension, date_value)
-                    self.slice_range_fields = fields
+            slice_dimension = None
+            slice_value = None
+            for dimension, slice_range_fields in table_schema.temporal.dimensions.items():
+                if date_value := query.get(dimension):
+                    if slice_dimension is not None:
+                        # There is basically no point in combining temporal dimensions,
+                        # and if this is really a requested feature, it can be implemented.
+                        raise ValidationError(
+                            f"Can't filter on both '{slice_dimension}'"
+                            f" and '{dimension}' at the same time!"
+                        ) from None
+
+                    slice_dimension = dimension  # e.g. geldigOp
+                    slice_value = cls._parse_date(dimension, date_value)
 
                     # Check whether the user may filter on the temporal dimension.
-                    for name in self.slice_range_fields:
-                        field = self.table_schema.get_field_by_id(name)
-                        check_filter_field_access(self.slice_dimension, field, request.user_scopes)
+                    for name in slice_range_fields:
+                        field = table_schema.get_field_by_id(name)
+                        check_filter_field_access(slice_dimension, field, user_scopes)
 
-    def _parse_date(self, dimension: str, value: str) -> Union[Literal["*"], date, datetime]:
+            return cls(
+                table_schema=table_schema,
+                #: Which historical version is requested.
+                version_value=version_value,
+                #: Which date is requested
+                slice_dimension=slice_dimension,
+                slice_value=slice_value or request_date,
+            )
+
+    def __init__(
+        self,
+        table_schema: DatasetTableSchema,
+        current_date: datetime | None = None,
+        #: Which historical version is requested.
+        version_value: str | None = None,
+        #: Which date is requested
+        slice_dimension: str | None = None,
+        slice_value: Literal["*"] | date | datetime | None = None,
+    ):
+        """Direct initialization, allowing to perform unit testing."""
+        self.table_schema = table_schema
+        self.is_versioned = table_schema.temporal is not None
+        self.version_value = version_value
+        self.slice_dimension = slice_dimension
+        self.slice_value = slice_value or current_date
+
+    @staticmethod
+    def _parse_date(dimension: str, value: str) -> Union[Literal["*"], date, datetime]:
         """Parse and validate the received date"""
         if value == "*":
             return "*"
@@ -98,7 +146,8 @@ class TemporalTableQuery:
         elif self.version_value is None:
             return self.filter_queryset(queryset)
         else:
-            return queryset.filter(**{self.version_field: self.version_value})
+            # Query on the second field (e.g. "volgnummer").
+            return queryset.filter(**{self.table_schema.temporal.identifier: self.version_value})
 
     def filter_queryset(self, queryset: models.QuerySet) -> models.QuerySet:
         """Apply temporal filtering to the queryset, based on the request parameters."""
@@ -127,17 +176,14 @@ class TemporalTableQuery:
             return queryset
 
         # Either take a given ?geldigOp=yyyy-mm-dd OR ?geldigOp=NOW()
-        slice_value = self.slice_value or self._now
-        range_fields = self.slice_range_fields or self.default_range_fields
-
-        if range_fields is not None:
+        if (range_fields := self._get_range_fields()) is not None:
             # start <= value AND (end IS NULL OR value < end)
             start, end = map(to_snake_case, range_fields)
             return queryset.filter(
-                Q(**{f"{prefix}{start}__lte": slice_value})
+                Q(**{f"{prefix}{start}__lte": self.slice_value})
                 & (
                     Q(**{f"{prefix}{end}__isnull": True})
-                    | Q(**{f"{prefix}{end}__gt": slice_value})
+                    | Q(**{f"{prefix}{end}__gt": self.slice_value})
                 )
             ).order_by(f"-{prefix}{start}")
         else:
@@ -150,11 +196,15 @@ class TemporalTableQuery:
                 *queryset.query.distinct_fields, f"{prefix}{identifier}"
             ).order_by(f"{prefix}{identifier}", f"-{prefix}{sequence_name}")
 
-    @property
-    def default_range_fields(self) -> Optional[TemporalDimensionFields]:
+    def _get_range_fields(self) -> Optional[TemporalDimensionFields]:
         """Tell what the default fields would be to filter temporal objects."""
         dimensions = self.table_schema.temporal.dimensions
-        return dimensions.get("geldigOp") or first(dimensions.values(), None)
+        if self.slice_dimension:
+            # Query takes a specific dimension
+            return dimensions[self.slice_dimension]
+        else:
+            # Find what a good default would be (typically called geldigOp).
+            return dimensions.get("geldigOp") or first(dimensions.values(), None)
 
     @property
     def url_parameters(self) -> dict[str, str]:
@@ -172,7 +222,7 @@ def filter_temporal_slice(request, queryset: models.QuerySet) -> models.QuerySet
     if not table_schema.temporal:
         return queryset
     else:
-        return TemporalTableQuery(request, table_schema).filter_queryset(queryset)
+        return TemporalTableQuery.from_request(request, table_schema).filter_queryset(queryset)
 
 
 def filter_temporal_m2m_slice(
@@ -186,5 +236,5 @@ def filter_temporal_m2m_slice(
     if not related_table_schema.temporal:
         return queryset
     else:
-        table_query = TemporalTableQuery(request, related_table_schema)
+        table_query = TemporalTableQuery.from_request(request, related_table_schema)
         return table_query.filter_m2m_queryset(queryset, relation)

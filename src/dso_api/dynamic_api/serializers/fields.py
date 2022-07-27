@@ -49,7 +49,7 @@ class RelatedSummaryField(Field):
         # If this is a temporal table, only return the appropriate records.
         if value.model.is_temporal():
             # The essence of filter_temporal_slice()
-            query = TemporalTableQuery(request, value.model.table_schema())
+            query = TemporalTableQuery.from_request(request, value.model.table_schema())
             q_params.update(query.url_parameters)
             value = query.filter_queryset(value.all())
 
@@ -85,7 +85,7 @@ class TemporalHyperlinkedRelatedField(serializers.HyperlinkedRelatedField):
             view_name, kwargs={self.lookup_url_kwarg: id_value}, request=request, format=format
         )
 
-        temporal = TemporalTableQuery(request, self.table_schema)
+        temporal = TemporalTableQuery.from_request(request, self.table_schema)
         url_args = (
             temporal.url_parameters  # e.g. {"geldigOp": ...}
             if temporal.slice_dimension
