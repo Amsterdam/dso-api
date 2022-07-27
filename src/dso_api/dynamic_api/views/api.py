@@ -98,7 +98,7 @@ class DynamicApiViewSet(locking.ReadLockMixin, DSOViewMixin, viewsets.ReadOnlyMo
             # No permission checks for metadata inquiry
             self.temporal = None
         else:
-            self.temporal = TemporalTableQuery(request, table_schema)
+            self.temporal = TemporalTableQuery.from_request(request, table_schema)
 
     @cached_property
     def lookup_field(self):
