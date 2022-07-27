@@ -285,7 +285,7 @@ class DSOViewMixin:
     """
 
     #: The list of allowed coordinate reference systems for the request header
-    accept_crs = {crs.RD_NEW, crs.WEB_MERCATOR, crs.ETRS89, crs.WGS84}
+    accept_crs = crs.ALL_CRS
 
     #: Enforce parsing Content-Crs for POST requests:
     parser_classes = [parsers.DSOJsonParser]
