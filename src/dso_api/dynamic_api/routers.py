@@ -272,13 +272,13 @@ class DynamicRouter(routers.DefaultRouter):
                     continue
 
                 dataset_id = to_snake_case(model.get_dataset_id())
+                table_id = to_snake_case(model.get_table_id())
 
                 # Determine the URL prefix for the model
-                url_prefix = self.make_url(model.get_dataset_path(), model.get_table_id())
+                url_prefix = self._make_url(model.get_dataset_path(), table_id)
 
                 logger.debug("Created viewset %s", url_prefix)
                 viewset = viewset_factory(model)
-                table_id = to_snake_case(model.get_table_id())
                 tmp_router.register(
                     prefix=url_prefix,
                     viewset=viewset,
@@ -295,8 +295,10 @@ class DynamicRouter(routers.DefaultRouter):
             dataset_id = dataset.schema.id
 
             for table in dataset.schema.tables:
+                table_id = to_snake_case(table.id)
+
                 # Determine the URL prefix for the model
-                url_prefix = self.make_url(dataset.path, table.id)
+                url_prefix = self._make_url(dataset.path, table_id)
                 serializer_class = remote_serializer_factory(table)
                 viewset = remote_viewset_factory(
                     endpoint_url=dataset.endpoint_url,
@@ -306,7 +308,7 @@ class DynamicRouter(routers.DefaultRouter):
                 tmp_router.register(
                     prefix=url_prefix,
                     viewset=viewset,
-                    basename=f"{to_snake_case(dataset_id)}-{to_snake_case(table.id)}",
+                    basename=f"{to_snake_case(dataset_id)}-{table.id}",
                 )
 
         return tmp_router.registry
@@ -392,11 +394,8 @@ class DynamicRouter(routers.DefaultRouter):
             )
         return results
 
-    def make_url(self, prefix, *parts):
+    def _make_url(self, prefix, url_path):
         """Generate the URL for the viewset"""
-        parts = [to_snake_case(part) for part in parts]
-
-        url_path = "/".join(parts)
 
         # Allow to add a prefix
         prefix = prefix.strip("/")  # extra strip for safety
