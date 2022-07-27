@@ -11,8 +11,6 @@ __all__ = [
     "CRS",
     "WGS84",
     "RD_NEW",
-    "WEB_MERCATOR",
-    "ETRS89",
     "DEFAULT_CRS",
     "OTHER_CRS",
     "ALL_CRS",
@@ -36,4 +34,4 @@ DEFAULT_CRS = RD_NEW
 OTHER_CRS = [WGS84, WEB_MERCATOR, ETRS89]
 
 #: All coordinate reference systems exposed by this file.
-ALL_CRS = set([DEFAULT_CRS] + OTHER_CRS)
+ALL_CRS = frozenset([DEFAULT_CRS] + OTHER_CRS)
