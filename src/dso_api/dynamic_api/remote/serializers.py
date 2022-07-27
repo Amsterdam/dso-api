@@ -14,6 +14,7 @@ from schematools.contrib.django.models import Dataset
 from schematools.types import DatasetFieldSchema, DatasetTableSchema
 from schematools.utils import to_snake_case, toCamelCase
 
+from dso_api import audit_log
 from rest_framework_dso.fields import DSOGeometryField
 from rest_framework_dso.serializers import DSOListSerializer, DSOSerializer
 
@@ -34,8 +35,6 @@ JSON_TYPE_TO_DRF = {
     "https://geojson.org/schema/GeometryCollection.json": DSOGeometryField,
 }
 
-audit_log = logging.getLogger("dso_api.audit")
-
 
 class _AuthMixin:
     """Adds field filtering logic based on authorization."""
@@ -51,9 +50,8 @@ class _AuthMixin:
         ]
         if unauthorized:
             audit_log.info(
-                "removing fields %s for request with scopes %s",
-                unauthorized,
-                scopes,
+                fields_removed=unauthorized,
+                scopes=list(scopes),
             )
         for field in unauthorized:
             del fields[field]

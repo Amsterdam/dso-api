@@ -6,27 +6,19 @@ from rest_framework.viewsets import ViewSetMixin
 from schematools.permissions import UserScopes
 from schematools.types import DatasetFieldSchema
 
+from dso_api import audit_log
 from rest_framework_dso.embedding import EmbeddedFieldMatch
 from rest_framework_dso.serializers import ExpandableSerializer
 
-audit_log = logging.getLogger("dso_api.audit")
-
 
 def log_access(request, access: bool):
-    if access:
-        audit_log.info(
-            "%s %s: access granted with %s",
-            request.method,
-            request.path,
-            request.user_scopes,
-        )
-    else:
-        audit_log.info(
-            "%s %s: access denied with %s",
-            request.method,
-            request.path,
-            request.user_scopes,
-        )
+    access = "granted" if access else "denied"
+    audit_log.info(
+        access=access,
+        method=request.method,
+        path=request.path,
+        user_scopes=list(request.user_scopes),
+    )
 
 
 def check_filter_field_access(field_name: str, field: DatasetFieldSchema, user_scopes: UserScopes):

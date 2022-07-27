@@ -187,19 +187,16 @@ if SENTRY_DSN:
     )
     sentry_sdk.utils.MAX_STRING_LENGTH = 2048  # for WFS FILTER exceptions
 
-base_log_fmt = {"time": "%(asctime)s", "name": "%(name)s", "level": "%(levelname)s"}
-log_fmt = base_log_fmt.copy()
+log_fmt = {"time": "%(asctime)s", "name": "%(name)s", "level": "%(levelname)s"}
 log_fmt["message"] = "%(message)s"
-
-audit_log_fmt = {"audit": True}
-audit_log_fmt.update(log_fmt)
 
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": True,
     "formatters": {
         "json": {"format": json.dumps(log_fmt)},
-        "audit_json": {"format": json.dumps(audit_log_fmt)},
+        # The formatting for the audit log is done by the audit_log module.
+        "audit_json": {"format": "%(message)s"},
     },
     "handlers": {
         "console": {
