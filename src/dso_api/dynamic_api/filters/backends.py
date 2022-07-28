@@ -26,8 +26,7 @@ class DynamicFilterBackend(BaseFilterBackend):
         This hook function is called by Django REST Framework
         to apply this filter backend on the constructed queryset.
         """
-        input_crs = getattr(request, "accept_crs", None)
-        engine = QueryFilterEngine(request.user_scopes, request.GET, input_crs)
+        engine = QueryFilterEngine.from_request(request)
         return engine.filter_queryset(queryset)
 
     def get_schema_operation_parameters(self, view):

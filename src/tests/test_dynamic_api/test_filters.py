@@ -7,6 +7,7 @@ import pytest
 from django.apps import apps
 from django.contrib.gis.geos import GEOSGeometry
 from django.http import QueryDict
+from django.utils.timezone import now
 from rest_framework.exceptions import ValidationError
 from rest_framework.status import HTTP_400_BAD_REQUEST
 from rest_framework.test import APIClient
@@ -44,7 +45,10 @@ def create_filter_engine(query_string: str, request_scopes=()) -> parser.QueryFi
     """Simulate creation of a filter engine, based on request data."""
     get_params = QueryDict(query_string)
     return parser.QueryFilterEngine(
-        UserScopes(get_params, request_scopes), get_params, input_crs=RD_NEW
+        user_scopes=UserScopes(get_params, request_scopes),
+        query=get_params,
+        input_crs=RD_NEW,
+        request_date=now(),
     )
 
 
@@ -217,6 +221,48 @@ class TestFilterEngine:
         """
         engine = create_filter_engine(query)
         result = engine.filter_queryset(panden_model.objects.all())
+        assert result.count() == expect, result
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "query,expect",
+        [
+            ("", 1),
+            ("buurt=03630000000078", 1),  # loose relation field
+            ("buurt.identificatie=03630000000078", 1),  # same
+            ("buurt.naam=AAA v2", 1),  # join relation
+            ("buurt.volgnummer=1", 0),  # not in current temporal slice
+            ("buurt.volgnummer=2", 1),
+            ("buurt.naam[like]=AAA*", 1),  # join relation and skip old objects.
+        ],
+    )
+    def test_filter_loose_relation(
+        api_client, statistieken_model, statistieken_data, query, expect
+    ):
+        """Test that filtering on loose relations works.
+        This also checks whether the temporal records only return a single item.
+        """
+        engine = create_filter_engine(query)
+        result = engine.filter_queryset(statistieken_model.objects.all())
+        assert result.count() == expect, result
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "query,expect",
+        [
+            ("buurt.ligtInWijk.ligtInStadsdeel=03630000000018.1", 1),
+            ("buurt.ligtInWijk.ligtInStadsdeel.identificatie=03630000000018", 1),
+            ("buurt.ligtInWijk.ligtInStadsdeel.naam=Centrum", 1),
+        ],
+    )
+    def test_filter_loose_relation_nesting(
+        api_client, statistieken_model, statistieken_data, wijken_data, query, expect
+    ):
+        """Test that joining over a loose relation works.
+        the statistieken.buurt is a loose relation, the remaining relations are composite FK's.
+        """
+        engine = create_filter_engine(query)
+        result = engine.filter_queryset(statistieken_model.objects.all())
         assert result.count() == expect, result
 
     @staticmethod

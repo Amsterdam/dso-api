@@ -43,12 +43,7 @@ class TemporalTableQuery:
     @classmethod
     def from_request(cls, request: Request, table_schema: DatasetTableSchema):
         """Construct the object using all information found in the request object."""
-        try:
-            # Make sure all queries use the exact same now, not seconds/milliseconds apart.
-            request_date = request._now
-        except AttributeError:
-            request_date = request._now = now()
-
+        request_date = get_request_date(request)
         return cls.from_query(request_date, request.GET, request.user_scopes, table_schema)
 
     @classmethod
@@ -156,6 +151,13 @@ class TemporalTableQuery:
 
         return self._filter_queryset(queryset, prefix="")
 
+    def create_range_filter(self, prefix: str) -> Q | None:
+        """Create a simple Q-object for filtering on a temporal range."""
+        if not self.is_versioned or self.slice_value == "*":
+            return None
+        else:
+            return self._compile_range_query(prefix)[0]
+
     def filter_m2m_queryset(self, queryset: models.QuerySet, relation: models.ForeignKey):
         """Apply temporal filtering to a queryset,
         using the model that the relation points to.
@@ -175,18 +177,10 @@ class TemporalTableQuery:
             # and allow ?geldigOp=* to return all data
             return queryset
 
-        # Either take a given ?geldigOp=yyyy-mm-dd OR ?geldigOp=NOW()
-        if (range_fields := self._get_range_fields()) is not None:
-            # start <= value AND (end IS NULL OR value < end)
-            start, end = map(to_snake_case, range_fields)
-            return queryset.filter(
-                Q(**{f"{prefix}{start}__lte": self.slice_value})
-                & (
-                    Q(**{f"{prefix}{end}__isnull": True})
-                    | Q(**{f"{prefix}{end}__gt": self.slice_value})
-                )
-            ).order_by(f"-{prefix}{start}")
-        else:
+        try:
+            range_q, main_ordering = self._compile_range_query(prefix)
+            return queryset.filter(range_q).order_by(main_ordering)
+        except RuntimeError:
             # Last attempt to get only the current temporal record; order by sequence.
             # does SELECT DISTINCT ON(identifier) ... ORDER BY identifier, sequence DESC
             # Alternative would be something like `HAVING sequence = MAX(SELECT sequence FROM ..)`
@@ -195,6 +189,20 @@ class TemporalTableQuery:
             return queryset.distinct(
                 *queryset.query.distinct_fields, f"{prefix}{identifier}"
             ).order_by(f"{prefix}{identifier}", f"-{prefix}{sequence_name}")
+
+    def _compile_range_query(self, prefix: str) -> tuple[Q, str]:
+        # Either take a given ?geldigOp=yyyy-mm-dd OR ?geldigOp=NOW()
+        if (range_fields := self._get_range_fields()) is None:
+            raise RuntimeError("Schema does not implement usable temporal dimensions")
+
+        # start <= value AND (end IS NULL OR value < end)
+        start = f"{prefix}{to_snake_case(range_fields.start)}"
+        end = f"{prefix}{to_snake_case(range_fields.end)}"
+        return (
+            Q(**{f"{start}__lte": self.slice_value})
+            & (Q(**{f"{end}__isnull": True}) | Q(**{f"{end}__gt": self.slice_value})),
+            f"-{start}",
+        )
 
     def _get_range_fields(self) -> Optional[TemporalDimensionFields]:
         """Tell what the default fields would be to filter temporal objects."""
@@ -214,6 +222,16 @@ class TemporalTableQuery:
             return {self.slice_dimension: url_value}
         else:
             return {}
+
+
+def get_request_date(request: Request) -> datetime:
+    """Find the temporal query date, associated with the request object."""
+    try:
+        # Make sure all queries use the exact same now, not seconds/milliseconds apart.
+        return request._now
+    except AttributeError:
+        request._now = now()
+        return request._now
 
 
 def filter_temporal_slice(request, queryset: models.QuerySet) -> models.QuerySet:
