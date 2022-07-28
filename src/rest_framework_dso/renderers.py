@@ -207,7 +207,7 @@ class HALJSONRenderer(RendererMixin, renderers.JSONRenderer):
             yield b"{"
             sep = b"\n  "
             for key, value in data.items():
-                if hasattr(data, "__iter__") and not isinstance(data, str):
+                if hasattr(value, "__iter__") and not isinstance(value, str):
                     # Recurse streaming for actual complex values.
                     yield b"%b%b:" % (sep, orjson.dumps(key))
                     yield from self._render_json(value, level=level + 1)
