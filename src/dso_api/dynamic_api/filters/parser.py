@@ -21,10 +21,12 @@ from schematools.types import AdditionalRelationSchema, DatasetFieldSchema, Data
 from schematools.utils import to_snake_case
 
 from dso_api.dynamic_api.permissions import check_filter_field_access
+from dso_api.dynamic_api.temporal import TemporalTableQuery, get_request_date
 
 from .values import str2bool, str2geo, str2isodate, str2number, str2time
 
 # Lookups that have specific value types:
+
 LOOKUP_PARSERS = {
     "isnull": str2bool,
     "isempty": str2bool,
@@ -173,11 +175,24 @@ class QueryFilterEngine:
         "sorteer",
     }
 
-    def __init__(self, user_scopes: UserScopes, query: MultiValueDict, input_crs: CRS):
+    @classmethod
+    def from_request(cls, request):
+        """Construct the parser from the request data."""
+        return cls(
+            user_scopes=request.user_scopes,
+            query=request.GET,
+            input_crs=getattr(request, "accept_crs", None),
+            request_date=get_request_date(request),
+        )
+
+    def __init__(
+        self, user_scopes: UserScopes, query: MultiValueDict, input_crs: CRS, request_date=None
+    ):
         self.user_scopes = user_scopes
         self.query = query
         self.input_crs = input_crs
         self.filter_inputs = self._parse_filters(query)
+        self.request_date = request_date
 
     def __bool__(self):
         return bool(self.filter_inputs)
@@ -244,10 +259,41 @@ class QueryFilterEngine:
         else:
             q_object = Q(**{q_path: value})
 
+        # Make sure loose relations don't return all historical records,
+        # but only match the selected point in time.
+        if temporal_lookups := self._create_temporal_filters(parts):
+            q_object &= temporal_lookups
+
         # Also tell whether the filter-path walks over many-to-many relationships.
         # These will need extra care to avoid duplicate results in the final filter call.
-        is_many = any(part.is_many for part in parts)
+        is_many = any(part.is_many for part in parts) or any(
+            # When joining from a loose relation (not as last field),
+            # avoid returning multiple objects.
+            (not part.reverse_field and part.field.is_loose_relation)
+            for part in parts[:-1]
+        )
         return CompiledFilter(q_object, is_many)
+
+    def _create_temporal_filters(self, parts: list[FilterPathPart]) -> Q | None:
+        """For loose relations, find the extra needed queries to reduce temporal records.
+        Otherwise, the loose relation would match
+        """
+        filters = []
+        prefix = ""
+        for filter_part in parts:
+            prefix = f"{prefix}{filter_part.name}__"
+            if filter_part.reverse_field is None and filter_part.field.is_loose_relation:
+                # When filters join a loose relation, make sure only the active object is selected
+                temp = TemporalTableQuery.from_query(
+                    self.request_date,
+                    self.query,
+                    self.user_scopes,
+                    filter_part.field.related_table,
+                )
+                if (range_q := temp.create_range_filter(prefix)) is not None:
+                    filters.append(range_q)
+
+        return reduce(operator.and_, filters) if filters else None
 
     def _translate_lookup(
         self, filter_input: FilterInput, filter_part: FilterPathPart, value: Any
@@ -442,22 +488,6 @@ def _parse_filter_path(
             parent = field
         else:
             parent = None
-
-        if (
-            filter_part.reverse_field is None
-            and field.is_loose_relation
-            and i < last_item
-            and not (i + 1 == last_item and field_path[last_item] == field.related_field_ids[0])
-        ):
-            # No support for looserelation__field=.. in the ORM yet.
-            raise ValidationError(
-                {
-                    field_name: (
-                        f"Filtering nested fields of '{field.name}' is not yet supported,"
-                        f" except for the primary key ({field.related_field_ids[0]})."
-                    )
-                }
-            )
 
         parts.append(filter_part)
 

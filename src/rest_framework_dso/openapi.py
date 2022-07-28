@@ -155,7 +155,7 @@ class DSOSchemaGenerator(generators.SchemaGenerator):
                                 "type": "array",
                                 "items": {"$ref": "#/components/schemas/Point3D"},
                             },
-                        }
+                        },
                     },
                 },
             ],
