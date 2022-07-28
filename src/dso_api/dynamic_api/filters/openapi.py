@@ -88,17 +88,8 @@ def get_table_filter_params(table_schema: DatasetTableSchema) -> list[dict]:  # 
             # This works both for temporal relations, regular relations as loose relations.
             rel_table = field.related_table
             identifiers = field.related_field_ids
-            if field.is_loose_relation:
-                # Loose relations can only be filtered on primary field for now,
-                # because this can be mapped to the direct table field,
-                # instead of an ORM join (looserelation__field=.. doesn't work yet).
-                identifiers = identifiers[:1]
-
             for identifier in identifiers:
                 sub_field = rel_table.get_field_by_id(identifier)
-                if sub_field.format in ("date", "date-time"):
-                    continue  # e.g heeftHoofdadres.beginGeldigheid/eindGeldigheid
-
                 openapi_params.extend(
                     _get_field_openapi_params(sub_field, prefix=f"{field.name}.")
                 )
