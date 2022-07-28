@@ -1832,13 +1832,8 @@ class TestEmbedTemporalTables:
         data = read_response_json(response)
 
         assert response.status_code == 200, data
-        assert data["_embedded"]["buurt"][0]["id"] == "03630000000078.2"
-        assert data["_embedded"]["buurt"][0]["_links"]["self"] == {
-            "href": "http://testserver/v1/gebieden/buurten/03630000000078/?volgnummer=2",
-            "identificatie": "03630000000078",
-            "title": "03630000000078.2",
-            "volgnummer": 2,
-        }
+
+        # Main object:
         assert data["_embedded"]["statistieken"][0]["id"] == 1
         assert data["_embedded"]["statistieken"][0]["_links"]["buurt"] == {
             "href": "http://testserver/v1/gebieden/buurten/03630000000078/",
@@ -1846,6 +1841,15 @@ class TestEmbedTemporalTables:
             "identificatie": "03630000000078",
         }
         assert "_embedded" not in data["_embedded"]["statistieken"][0]
+
+        # Embedded object from loose relation:
+        assert data["_embedded"]["buurt"][0]["id"] == "03630000000078.2"
+        assert data["_embedded"]["buurt"][0]["_links"]["self"] == {
+            "href": "http://testserver/v1/gebieden/buurten/03630000000078/?volgnummer=2",
+            "identificatie": "03630000000078",
+            "title": "03630000000078.2",
+            "volgnummer": 2,
+        }
 
     def test_list_expand_true_non_tempooral_loose_many_to_many_to_temporal(
         self, api_client, buurten_data, woningbouwplannen_data, filled_router
