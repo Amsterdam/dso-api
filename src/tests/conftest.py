@@ -1148,6 +1148,7 @@ def buurten_data(buurten_model) -> DynamicModel:
         id="03630000000078.1",
         identificatie="03630000000078",
         volgnummer=1,
+        naam="AAA v1",
         begin_geldigheid=DATE_2021_FEB,
         eind_geldigheid=DATE_2021_JUNE,  # Historical record!
         ligt_in_wijk_id="03630012052035.1",
@@ -1158,6 +1159,7 @@ def buurten_data(buurten_model) -> DynamicModel:
         id="03630000000078.2",
         identificatie="03630000000078",
         volgnummer=2,
+        naam="AAA v2",
         begin_geldigheid=DATE_2021_JUNE,
         ligt_in_wijk_id="03630012052035.1",
         ligt_in_wijk_identificatie="03630012052035",

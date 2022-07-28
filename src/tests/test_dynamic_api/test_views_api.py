@@ -974,7 +974,7 @@ class TestEmbedTemporalTables:
             "geometrie": None,
             "id": "03630000000078.2",
             "ligtInWijkId": "03630012052035",
-            "naam": None,
+            "naam": "AAA v2",
             "_embedded": {
                 "onderdeelVanGGWGebieden": [],  # reverse M2M relation, but no data in fixtures
                 "ligtInWijk": {
@@ -1227,7 +1227,7 @@ class TestEmbedTemporalTables:
                                     "onderdeelVanGGWGebieden": [],
                                 },
                                 "id": "03630000000078.2",
-                                "naam": None,
+                                "naam": "AAA v2",
                                 "code": None,
                                 "geometrie": None,
                                 "beginGeldigheid": "2021-06-11",
@@ -1355,7 +1355,7 @@ class TestEmbedTemporalTables:
             "geometrie": None,
             "id": "03630000000078.2",
             "ligtInWijkId": "03630012052035",
-            "naam": None,
+            "naam": "AAA v2",
         }
 
     def test_list_expand_true_for_fk_relation(
@@ -1402,7 +1402,7 @@ class TestEmbedTemporalTables:
                         },
                         "id": "03630000000078.2",
                         "code": None,
-                        "naam": None,
+                        "naam": "AAA v2",
                         "beginGeldigheid": "2021-06-11",
                         "eindGeldigheid": None,
                         "geometrie": None,
@@ -1543,7 +1543,7 @@ class TestEmbedTemporalTables:
                     "geometrie": None,
                     "id": "03630000000078.2",
                     "ligtInWijkId": "03630012052035",
-                    "naam": None,
+                    "naam": "AAA v2",
                     "_embedded": {
                         "ligtInWijk": None,
                     },
@@ -1605,7 +1605,7 @@ class TestEmbedTemporalTables:
                         "ligtInWijk": None,
                     },
                     "id": "03630000000078.2",
-                    "naam": None,
+                    "naam": "AAA v2",
                     "code": None,
                     "beginGeldigheid": "2021-06-11",
                     "eindGeldigheid": None,
@@ -1662,7 +1662,7 @@ class TestEmbedTemporalTables:
                     "geometrie": None,
                     "id": "03630000000078.2",
                     "ligtInWijkId": "03630012052035",
-                    "naam": None,
+                    "naam": "AAA v2",
                 }
             ],
             "onderdeelVanGGWGebieden": [
@@ -1807,7 +1807,7 @@ class TestEmbedTemporalTables:
                         "onderdeelVanGGWGebieden": [],
                     },
                     "code": None,
-                    "naam": None,
+                    "naam": "AAA v2",
                     "geometrie": None,
                     "eindGeldigheid": None,
                     "beginGeldigheid": "2021-06-11",
