@@ -74,7 +74,7 @@ django-environ==0.4.5
     # via
     #   -r requirements.in
     #   amsterdam-schema-tools
-django-gisserver==1.2.1
+django-gisserver==1.2.2
     # via
     #   -r requirements.in
     #   amsterdam-schema-tools
