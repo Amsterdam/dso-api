@@ -281,7 +281,7 @@ class QueryFilterEngine:
         filters = []
         prefix = ""
         for filter_part in parts:
-            prefix = f"{prefix}{filter_part.name}__"
+            prefix = f"{prefix}{to_snake_case(filter_part.name)}__"
             if filter_part.reverse_field is None and filter_part.field.is_loose_relation:
                 # When filters join a loose relation, make sure only the active object is selected
                 temp = TemporalTableQuery.from_query(
