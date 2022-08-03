@@ -53,7 +53,7 @@ defusedxml==0.7.1
     # via django-gisserver
 deprecated==1.2.13
     # via amsterdam-schema-tools
-django==3.2.14
+django==3.2.15
     # via
     #   -r requirements.in
     #   amsterdam-schema-tools
