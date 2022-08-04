@@ -141,6 +141,9 @@ def _get_field_openapi_params(field: DatasetFieldSchema, prefix="") -> list[dict
                 param["explode"] = False
                 param["style"] = "form"
 
+        if enum := field.get("enum"):
+            param["schema"]["enum"] = enum
+
         openapi_params.append(param)
 
     return openapi_params
