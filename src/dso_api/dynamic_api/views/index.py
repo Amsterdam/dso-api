@@ -70,7 +70,7 @@ class APIIndexView(APIView):
                 "id": ds.schema.id,
                 "short_name": ds.name,
                 "service_name": ds.schema.title or ds.name,
-                "status": ds.schema.get("status", "Beschikbaar"),
+                "status": ds.schema["status"],
                 "description": ds.schema.description or "",
                 "tags": ds.schema.get("theme", []),
                 "terms_of_use": {

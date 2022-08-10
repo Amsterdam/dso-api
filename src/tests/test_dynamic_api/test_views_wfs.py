@@ -23,7 +23,7 @@ class TestDatasetWFSIndexView:
                     "id": "afvalwegingen",
                     "short_name": "afvalwegingen",
                     "service_name": "Afvalwegingen",
-                    "status": "Beschikbaar",
+                    "status": "beschikbaar",
                     "description": "unit testing version of afvalwegingen",
                     "tags": [],
                     "terms_of_use": {
