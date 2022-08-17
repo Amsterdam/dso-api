@@ -11,7 +11,7 @@ from tests.utils import read_response
 @pytest.mark.django_db
 def test_get_patterns(afval_dataset, fietspaaltjes_dataset, filled_router):
     """Prove that the get_dataset_patterns() generates only patterns of a particular view."""
-    patterns = openapi.get_dataset_patterns("fietspaaltjes")
+    patterns = openapi.views.get_dataset_patterns("fietspaaltjes")
 
     # First prove that both URLs can be resolved in the app
     assert reverse("dynamic_api:afvalwegingen-containers-list")

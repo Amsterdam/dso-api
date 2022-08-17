@@ -150,7 +150,7 @@ def get_dataset_patterns(dataset_id: str) -> list[Union[URLPattern, URLResolver]
     This returns a subtree of the URLConf that only contains the
     patterns as if this application only hosted those specific URLs.
     """
-    from .views import DynamicApiViewSet
+    from ..views import DynamicApiViewSet
 
     return _get_patterns(
         matcher=lambda view_cls: (
