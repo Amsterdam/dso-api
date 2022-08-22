@@ -273,7 +273,7 @@ The ``GenericAPIView`` adds the following standard functionality to the view:
 * Filtering via pluggable backends
 * Pagination
 
-Off course, one can also subclass ``APIView`` and do this manually.
+Ofcourse, one can also subclass ``APIView`` and do this manually.
 
 Serializers
 -----------
@@ -291,7 +291,7 @@ instead of a single scalar in ``to_represention()``.
 
 An array or listing happens by adding ``many=True`` to the serializer initialization.
 This little shortcut actually triggers behavior in ``Serializer.__new__()``
-to wraps the whole serializer into a ``ListSerializer`` object.
+to wrap the whole serializer into a ``ListSerializer`` object.
 The list serializer is also just a field. It just happens to generate a list in ``to_represention()``.
 
 In the end, this whole "tree of field objects" walks through the data structure.
