@@ -1,24 +1,23 @@
-import logging
-
 from django.core.exceptions import PermissionDenied
+from dso_api import audit_log
 from rest_framework import permissions
 from rest_framework.viewsets import ViewSetMixin
+from rest_framework_dso.embedding import EmbeddedFieldMatch
+from rest_framework_dso.serializers import ExpandableSerializer
 from schematools.permissions import UserScopes
 from schematools.types import DatasetFieldSchema
 
-from dso_api import audit_log
-from rest_framework_dso.embedding import EmbeddedFieldMatch
-from rest_framework_dso.serializers import ExpandableSerializer
-
 
 def log_access(request, access: bool):
-    access = "granted" if access else "denied"
-    audit_log.info(
-        access=access,
+    msg = dict(
+        access="granted" if access else "denied",
         method=request.method,
         path=request.path,
         user_scopes=list(request.user_scopes),
     )
+    if claims := request.get_token_claims is not None:
+        msg.auth_claims = claims
+    audit_log.info(**msg)
 
 
 def check_filter_field_access(field_name: str, field: DatasetFieldSchema, user_scopes: UserScopes):
