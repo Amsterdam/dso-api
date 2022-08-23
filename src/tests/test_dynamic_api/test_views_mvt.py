@@ -34,7 +34,7 @@ class TestDatasetMVTIndexView:
                             "name": "production",
                             "api_url": f"{base}/v1/mvt/afvalwegingen/",
                             "specification_url": f"{base}/v1/mvt/afvalwegingen/",
-                            "documentation_url": f"{base}/v1/docs/generic/mvt.html",
+                            "documentation_url": f"{base}/v1/docs/generic/gis.html",
                         }
                     ],
                     "related_apis": [
@@ -67,7 +67,7 @@ class TestDatasetMVTIndexView:
                             "name": "production",
                             "api_url": f"{base}/v1/mvt/fietspaaltjes/",
                             "specification_url": f"{base}/v1/mvt/fietspaaltjes/",
-                            "documentation_url": f"{base}/v1/docs/generic/mvt.html",
+                            "documentation_url": f"{base}/v1/docs/generic/gis.html",
                         }
                     ],
                     "related_apis": [

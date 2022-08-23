@@ -48,7 +48,7 @@ class DatasetMVTIndexView(APIIndexView):
                 "name": "production",
                 "api_url": base + api_url,
                 "specification_url": base + api_url,
-                "documentation_url": f"{base}/v1/docs/generic/mvt.html",
+                "documentation_url": f"{base}/v1/docs/generic/gis.html",
             }
         ]
 
