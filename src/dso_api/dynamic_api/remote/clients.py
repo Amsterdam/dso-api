@@ -330,7 +330,7 @@ class HCBRKClient(HaalCentraalClient):
         ("kadastraleAanduiding", "nummeraanduidingIdentificatie", "postcode")
     )
 
-    def _allow_filter(self, p) -> set[str]:
+    def _allow_filter(self, p) -> bool:
         return p in self.__ALLOWED_PARAMS
 
     def _get_headers(self, request):
