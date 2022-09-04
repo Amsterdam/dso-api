@@ -390,31 +390,6 @@ def hcbrk_dataset() -> Dataset:
     )
 
 
-# Dataset with custom zoom levels.
-
-
-@pytest.fixture()
-def geometry_zoom_schema():
-    return DatasetSchema.from_dict(json.loads((HERE / "files" / "geometry_zoom.json").read_text()))
-
-
-@pytest.fixture()
-def geometry_zoom_things(geometry_zoom_schema, dynamic_models):
-    Dataset.create_for_schema(schema=geometry_zoom_schema)
-    model = dynamic_models["geometry_zoom"]["things"]
-
-    model.objects.create(
-        id=1,
-        geometry=Point(10, 10),
-        max_zoom=4,
-    )
-    model.objects.create(
-        id=2,
-        geometry=Point(11, 11),
-        max_zoom=6,
-    )
-
-
 # Dataset with auth scopes on fields.
 
 
