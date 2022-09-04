@@ -3,12 +3,11 @@
 import logging
 import time
 
-from django.core.exceptions import EmptyResultSet, FieldDoesNotExist, PermissionDenied
-from django.http import Http404, HttpResponse
+from django.core.exceptions import FieldDoesNotExist, PermissionDenied
+from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.urls.base import reverse
 from django.views.generic import TemplateView
-from rest_framework.status import HTTP_204_NO_CONTENT
 from schematools.contrib.django.models import Dataset
 from schematools.exceptions import SchemaObjectNotFound
 from schematools.types import DatasetTableSchema
@@ -109,46 +108,23 @@ class DatasetMVTView(CheckPermissionsMixin, MVTView):
 
         self.model = model
         self.check_permissions(request, [self.model])
-        self._zoom = int(kwargs["z"])
 
     def get(self, request, *args, **kwargs):
         kwargs.pop("dataset_name")
         kwargs.pop("table_name")
 
         t0 = time.perf_counter_ns()
-        try:
-            result = super().get(request, *args, **kwargs)
-            logging.info(
-                "retrieved tile for %s (%d bytes) in %.3fs",
-                request.path,
-                len(result.content),
-                (time.perf_counter_ns() - t0) * 1e-9,
-            )
-            return result
-        except EmptyResultSet:
-            return HttpResponse(None, content_type=self.content_type, status=HTTP_204_NO_CONTENT)
+        result = super().get(request, *args, **kwargs)
+        logging.info(
+            "retrieved tile for %s (%d bytes) in %.3fs",
+            request.path,
+            len(result.content),
+            (time.perf_counter_ns() - t0) * 1e-9,
+        )
+        return result
 
     def get_queryset(self):
-        zoom = self.model.table_schema().get("zoom", _default_zoom)
-        minzoom = zoom.get("min", _default_zoom["min"])
-        maxzoom = zoom.get("max", _default_zoom["max"])
-
-        if not isinstance(minzoom, (int, str)) or not isinstance(maxzoom, (int, str)):
-            logger.warning("MVT: schema zoom value %r not understood", zoom)
-
-        if isinstance(minzoom, int) and self._zoom < minzoom:
-            raise EmptyResultSet()
-        if isinstance(maxzoom, int) and self._zoom > maxzoom:
-            raise EmptyResultSet()
-
-        qs = self.model.objects
-
-        if isinstance(minzoom, str):
-            qs = qs.filter(**{minzoom + "__lte": self._zoom})
-        if isinstance(maxzoom, str):
-            qs = qs.filter(**{maxzoom + "__gte": self._zoom})
-
-        return qs.all()
+        return self.model.objects.all()
 
     @property
     def vector_tile_fields(self) -> tuple[str]:
@@ -178,6 +154,3 @@ class DatasetMVTView(CheckPermissionsMixin, MVTView):
         field_schema = self.model.get_field_schema(model_field)
         if not self.request.user_scopes.has_field_access(field_schema):
             raise PermissionDenied()
-
-
-_default_zoom = {"min": 0, "max": 999}
