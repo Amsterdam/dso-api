@@ -36,14 +36,14 @@ from schematools.contrib.django.factories import remove_dynamic_models
 from schematools.contrib.django.models import Dataset
 from schematools.utils import to_snake_case
 
-from dso_api.dynamic_api.datasets import get_active_datasets
-from dso_api.dynamic_api.locking import lock_for_writing
-from dso_api.dynamic_api.models import SealedDynamicModel
-from dso_api.dynamic_api.openapi import get_openapi_json_view
-from dso_api.dynamic_api.remote import remote_serializer_factory, remote_viewset_factory
-from dso_api.dynamic_api.serializers import clear_serializer_factory_cache
-from dso_api.dynamic_api.utils import get_view_name
-from dso_api.dynamic_api.views import (
+from ..dynamic_api.datasets import get_active_datasets
+from .locking import lock_for_writing
+from .models import SealedDynamicModel
+from .openapi import get_openapi_json_view
+from .remote import remote_serializer_factory, remote_viewset_factory
+from .serializers import clear_serializer_factory_cache
+from .utils import get_view_name
+from .views import (
     APIIndexView,
     DatasetMVTSingleView,
     DatasetMVTView,
