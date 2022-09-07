@@ -106,7 +106,9 @@ class TemporalReadOnlyField(serializers.ReadOnlyField):
         """
         # Split unconditionally. This field type should only be used
         # when the target model is a temporal relationship.
-        return split_on_separator(value)[0]
+        # The str() cast makes the core more robust, in case the underlying
+        # database returns an integer instead of the expected string.
+        return split_on_separator(str(value))[0]
 
 
 class AzureBlobFileField(serializers.ReadOnlyField):
