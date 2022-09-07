@@ -3,7 +3,7 @@ django-environ == 0.4.5
 django-cors-headers == 3.7.0
 django-healthchecks == 1.4.2
 django-postgres-unlimited-varchar == 1.1.0
-django-gisserver == 1.2.2
+django-gisserver == 1.2.3
 django-vectortiles == 0.1.0
 djangorestframework == 3.12.4
 djangorestframework-csv == 2.1.1
