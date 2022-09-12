@@ -79,6 +79,7 @@ INSTALLED_APPS = [
     # Own apps
     "gisserver",
     "schematools.contrib.django",
+    "dso_api",
     "dso_api.dynamic_api",
 ]
 
@@ -89,7 +90,7 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "authorization_django.authorization_middleware",
-    "dso_api.dynamic_api.middleware.AuthMiddleware",
+    "dso_api.middleware.AuthMiddleware",
 ]
 
 AUTHENTICATION_BACKENDS = [
@@ -153,9 +154,12 @@ if _USE_SECRET_STORE or CLOUD_ENV.startswith("azure"):
             "PASSWORD": pgpassword,
             "HOST": env.str("PGHOST"),
             "PORT": env.str("PGPORT"),
-            "OPTIONS": {"sslmode": env.str("PGSSLMODE", default="require")},
+            "OPTIONS": {
+                "sslmode": env.str("PGSSLMODE", default="require"),
+            },
         }
     }
+    DATABASE_SET_ROLE = True
 else:
     # Regular development
     DATABASES = {
@@ -165,7 +169,10 @@ else:
             engine="django.contrib.gis.db.backends.postgis",
         ),
     }
+    DATABASES["default"].setdefault("OPTIONS", {})
+    DATABASE_SET_ROLE = env.bool("DATABASE_SET_ROLE", False)
 
+DATABASES["default"]["OPTIONS"]["application_name"] = "DSO-API"
 
 locals().update(env.email_url(default="smtp://"))
 
@@ -371,6 +378,7 @@ These are located at:
 # -- Amsterdam oauth settings
 
 DATAPUNT_AUTHZ = {
+    # To verify JWT tokens, either the PUB_JWKS or a OAUTH_JWKS_URL needs to be set.
     "JWKS": os.getenv("PUB_JWKS"),
     "JWKS_URL": os.getenv("OAUTH_JWKS_URL"),
     # "ALWAYS_OK": True if DEBUG else False,

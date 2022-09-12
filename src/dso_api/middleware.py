@@ -2,6 +2,8 @@ from django.http import HttpRequest
 from schematools.contrib.django.models import Profile
 from schematools.permissions import UserScopes
 
+from dso_api.dbroles import DatabaseRoles
+
 
 class AuthMiddleware:
     """
@@ -22,5 +24,8 @@ class AuthMiddleware:
             # get_token_scopes is a data attribute, not a method.
             scopes = request.get_token_scopes
             request.user_scopes = UserScopes(request.GET, scopes, self._all_profiles)
+
+        # The token subject contains the username/email address of the user (on Azure)
+        DatabaseRoles.set_end_user(request.get_token_subject)
 
         return self._get_response(request)
