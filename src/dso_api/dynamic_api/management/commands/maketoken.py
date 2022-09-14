@@ -24,7 +24,12 @@ class Command(BaseCommand):
         parser.add_argument(
             "args", metavar="scopes", nargs="*", help="Scopes that will be added to the JWT token"
         )
-        parser.add_argument("--valid", default=1800, type=int, help="Validity period, in seconds")
+        parser.add_argument(
+            "--valid",
+            default=None,
+            type=int,
+            help="Validity period, in seconds (default: forever)",
+        )
 
     def handle(self, *args: str, **options: Any) -> None:
         """Main function of this command.
@@ -36,11 +41,13 @@ class Command(BaseCommand):
         now = int(time.time())
         claims = {
             "iat": now,
-            "exp": now + options["valid"],
             "scopes": scopes,
             "sub": "test@tester.nl",
         }
+        if options["valid"] is not None:
+            claims["exp"] = now + options["valid"]
         token = JWT(header={"alg": "ES256", "kid": key.key_id}, claims=claims)
         token.make_signed_token(key)
+
         sys.stdout.write(token.serialize())
         sys.stdout.write("\n")
