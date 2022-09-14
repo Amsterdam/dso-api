@@ -158,6 +158,3 @@ you can issue a curl command such as
 
     curl http://localhost:8000/v1/haalcentraal/brk/kadastraalonroerendezaken/${id}/ \
         --header "Authorization: Bearer ${token}"
-
-The test token expires after half an hour by default.
-Run ``python manage.py maketoken --help`` to see how to change that.
