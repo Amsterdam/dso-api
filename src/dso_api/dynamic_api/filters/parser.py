@@ -427,7 +427,7 @@ def _to_orm_path(parts: list[FilterPathPart]) -> str:
         ):
             # Matched identifier that also exists on the previous table, use that instead.
             # loose relation directly stores the "identifier" as name, so can just strip that.
-            if not parent_part.field.is_loose_relation:
+            if last_part.field.table.is_temporal and not parent_part.field.is_loose_relation:
                 names[-2] = f"{names[-2]}_{names[-1]}"
             names.pop()
 
