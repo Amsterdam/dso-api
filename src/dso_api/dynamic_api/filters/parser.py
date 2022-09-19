@@ -9,7 +9,7 @@ from datetime import datetime
 from functools import reduce
 from typing import Any, NamedTuple
 
-from django.core.exceptions import ValidationError as DjangoValidationError
+from django.core.exceptions import ValidationError as DjangoValidationError, FieldError
 from django.db import models
 from django.db.models import Q
 from django.utils.datastructures import MultiValueDict
@@ -217,6 +217,12 @@ class QueryFilterEngine:
                 queryset = queryset.filter(compiled_filter.q_object)
             except DjangoValidationError as e:
                 raise ValidationError(list(e)) from e
+            except FieldError as e:
+                # XXX This can happen when a [like] query is done against a relation field, such as
+                # https://api.data.amsterdam.nl/v1/meldingen/statistieken/?buurt.identificatie[like]=X.
+                # According to the docs, we should support that, but Django doesn't grok it.
+                # For now, an informative 400 is better than a 500.
+                raise ValidationError(e) from e
 
             if compiled_filter.is_many:
                 queryset = queryset.distinct()
