@@ -83,10 +83,9 @@ def test_filled_router(api_client, bommen_dataset, filled_router):
 
 
 @pytest.mark.django_db
-def test_list_dynamic_view_unregister(api_client, api_rf, bommen_dataset, filled_router):
-    """Prove that unregistering"""
+def test_list_dynamic_view_unregister(api_client, bommen_dataset, filled_router):
+    """Prove that unregistering works."""
     url = reverse("dynamic_api:bommen-bommen-list")
-    viewset = filled_router.registry[0][1]
 
     # Normal requests give a 200
     response = api_client.get(url)
@@ -96,14 +95,6 @@ def test_list_dynamic_view_unregister(api_client, api_rf, bommen_dataset, filled
     filled_router.clear_urls()
     response = api_client.get(url)
     assert response.status_code == 404
-
-    # Prove that if any requests to the viewset were still pending,
-    # they also return a 404 now. This means they passed the URL resolving,
-    # but were paused during the read-lock.
-    request = api_rf.get(url)
-    view = viewset.as_view({"get": "list"})
-    response = view(request)
-    assert response.status_code == 404, response.data
 
 
 @pytest.mark.django_db
@@ -931,7 +922,6 @@ def test_relation_filter(api_client, vestiging_dataset, vestiging1, vestiging2, 
     assert data["_embedded"]["vestiging"][0]["bezoekAdresId"] == 1
 
 
-# @pytest.mark.usefixtures("reloadrouter")
 @pytest.mark.django_db
 class TestEmbedTemporalTables:
     """NOTE: the 'data' fixtures are"""

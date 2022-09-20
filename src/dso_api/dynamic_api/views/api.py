@@ -15,37 +15,17 @@ from __future__ import annotations
 from functools import cached_property
 
 from django.db import models
-from django.http import Http404, JsonResponse
+from django.http import Http404
 from django.utils.translation import gettext as _
 from rest_framework import viewsets
 from schematools.contrib.django.models import DynamicModel
 
-from dso_api.dynamic_api import filters, locking, permissions, serializers
+from dso_api.dynamic_api import filters, permissions, serializers
 from dso_api.dynamic_api.temporal import TemporalTableQuery
 from rest_framework_dso.views import DSOViewMixin
 
 
-def reload_patterns(request):
-    """A view that reloads the current patterns."""
-    from ..urls import router
-
-    new_models = router.reload()
-
-    return JsonResponse(
-        {
-            "models": [
-                {
-                    "schema": model._meta.app_label,
-                    "table": model._meta.model_name,
-                    "url": request.build_absolute_uri(url),
-                }
-                for model, url in new_models.items()
-            ]
-        }
-    )
-
-
-class DynamicApiViewSet(locking.ReadLockMixin, DSOViewMixin, viewsets.ReadOnlyModelViewSet):
+class DynamicApiViewSet(DSOViewMixin, viewsets.ReadOnlyModelViewSet):
     """Viewset for an API, that is DSO-compatible and dynamically generated.
     Each dynamically generated model in this server will receive a viewset.
 

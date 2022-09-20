@@ -1,5 +1,5 @@
 """All views for the dynamically generated API, split by protocol type."""
-from .api import DynamicApiViewSet, reload_patterns, viewset_factory
+from .api import DynamicApiViewSet, viewset_factory
 from .index import APIIndexView
 from .mvt import DatasetMVTIndexView, DatasetMVTSingleView, DatasetMVTView
 from .oauth import oauth2_redirect
@@ -13,7 +13,6 @@ __all__ = (
     "DatasetMVTSingleView",
     "DatasetWFSView",
     "DatasetWFSIndexView",
-    "viewset_factory",
-    "reload_patterns",
     "oauth2_redirect",
+    "viewset_factory",
 )

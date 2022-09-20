@@ -37,7 +37,6 @@ from schematools.contrib.django.models import Dataset
 from schematools.utils import to_snake_case
 
 from ..dynamic_api.datasets import get_active_datasets
-from .locking import lock_for_writing
 from .models import SealedDynamicModel
 from .openapi import get_openapi_json_view
 from .remote import remote_serializer_factory, remote_viewset_factory
@@ -404,7 +403,6 @@ class DynamicRouter(routers.DefaultRouter):
 
         return url_path
 
-    @lock_for_writing
     def reload(self) -> dict[type[DynamicModel], str]:
         """Regenerate all viewsets for this router."""
         from . import urls  # avoid cyclic imports
@@ -435,7 +433,6 @@ class DynamicRouter(routers.DefaultRouter):
 
         return result
 
-    @lock_for_writing
     def clear_urls(self):
         """Internal function for tests, restore the internal registry."""
         from . import urls  # avoid cyclic imports
