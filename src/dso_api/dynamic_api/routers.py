@@ -24,7 +24,7 @@ from __future__ import annotations
 
 import logging
 from itertools import chain
-from typing import TYPE_CHECKING, Iterable
+from typing import TYPE_CHECKING, Iterable, Iterator
 
 from django.apps import apps
 from django.conf import settings
@@ -45,6 +45,7 @@ from .serializers import clear_serializer_factory_cache
 from .utils import get_view_name
 from .views import (
     APIIndexView,
+    DatasetDocView,
     DatasetMVTSingleView,
     DatasetMVTView,
     DatasetWFSView,
@@ -122,6 +123,7 @@ class DynamicRouter(routers.DefaultRouter):
         super().__init__(trailing_slash=True)
         self.all_models: dict[str, dict[str, type[DynamicModel]]] = {}
         self.static_routes = []
+        self._doc_urls = []
         self._openapi_urls = []
         self._index_urls = []
         self._mvt_urls = []
@@ -171,6 +173,7 @@ class DynamicRouter(routers.DefaultRouter):
         return list(
             chain(
                 super().get_urls(),
+                self._doc_urls,
                 self._openapi_urls,
                 self._index_urls,
                 self._mvt_urls,
@@ -213,6 +216,8 @@ class DynamicRouter(routers.DefaultRouter):
 
         datasets = db_datasets + api_datasets
 
+        doc_urls = self._build_doc_views(datasets)
+
         # OpenAPI views
         openapi_urls = self._build_openapi_views(datasets)
 
@@ -225,6 +230,7 @@ class DynamicRouter(routers.DefaultRouter):
 
         # Atomically copy the new viewset registrations
         self.registry = self.static_routes + dataset_routes + remote_routes
+        self._doc_urls = doc_urls
         self._openapi_urls = openapi_urls
         self._index_urls = index_urls
         self._mvt_urls = mvt_urls
@@ -331,6 +337,15 @@ class DynamicRouter(routers.DefaultRouter):
                 )
 
         return tmp_router.registry
+
+    def _build_doc_views(self, datasets: Iterable[Dataset]) -> Iterator[URLPattern]:
+        for dataset in datasets:
+            yield path(
+                f"docs/datasets/{dataset.path}.html",
+                DatasetDocView.as_view(),
+                name=f"doc-{dataset.schema.id}",
+                kwargs={"dataset_name": dataset.schema.id},
+            )
 
     def _build_openapi_views(self, datasets: Iterable[Dataset]) -> list[URLPattern]:
         """Build the OpenAPI viewsets per dataset"""

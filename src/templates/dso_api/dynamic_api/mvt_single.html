@@ -11,10 +11,9 @@
     <dl>
       <p>ID: {{ schema.id }}</p>
       <p>Status: {{ schema.status }}</p>
-      <p>Openbaar: {% if schema.auth %} Nee {% else %} Ja {% endif %}</p>
+      <p>Openbaar: {{ schema.auth }}</p>
       <p>Licentie: {{ schema.license }}</p>
     </dl> 
-  </p>
       <h2>Gebruik van deze dataset</h2>
         <p>Voeg de volgende urls toe aan uw GIS applicatie:</p>
       <ul>

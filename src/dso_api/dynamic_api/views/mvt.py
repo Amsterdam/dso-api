@@ -14,8 +14,8 @@ from schematools.naming import to_snake_case
 from schematools.types import DatasetTableSchema
 from vectortiles.postgis.views import MVTView
 
-from dso_api.dynamic_api.datasets import get_active_datasets
-from dso_api.dynamic_api.permissions import CheckPermissionsMixin
+from ..datasets import get_active_datasets
+from ..permissions import CheckPermissionsMixin
 
 from .index import APIIndexView
 

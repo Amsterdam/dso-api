@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Amsterdam DataPunt API Documentatie</title>
+</head>
+<body>
+
+<h1>Amsterdam DataPunt API Documentatie</h1>
+
+<p>
+  In deze pagina's geven we uitleg hoe de API diensten van Datapunt afgenomen worden.
+</p>
+<p class="note">
+  Naast de API's van DataPunt worden door andere partijen nog diverse API's aangeboden.
+  Deze vind je in de <a href="https://data.amsterdam.nl/datasets/zoek/?filters=distributionType%3Bapi">datasetcatalogus</a>.
+  Deze documentatie richt zich tot de API's van DataPunt, onderdeel van OIS (Onderzoek, Informatie en Statistiek)
+  van de Gemeente Amsterdam.
+</p>
+<p>
+  De gemeente Amsterdam biedt haar datasets onder andere aan via een REST API die voldoet aan de
+  <a href="https://forumstandaardisatie.nl/open-standaarden/rest-api-design-rules">NL API REST API Design Rules</a>.
+  Daarnaast is ook gekozen de strictere interpretatie van de
+  <a href="https://iplo.nl/digitaal-stelsel/aansluiten/standaarden/api-en-uri-strategie">DSO API Strategie 2.0</a>
+  te volgen, aangezien het de intentie van de DSO API Strategie is om een interoperabel
+  koppelvlak voor data-uitwisseling te ontwikkelen dat overeenkomt met de behoeftes
+  van de Gemeente Amsterdam.
+</p>
+<p>
+  Om zoveel mogelijk afnemers te kunnen bedienen, ondersteunen we diverse koppelingen.
+  Zo zal een mobiele-appontwikkelaar eerder een <a href="generic/rest.html">REST-API</a> gebruiken,
+  en een GIS-professional de <a href="generic/gis.html">WFS/MVT-koppelingen</a>.
+  Tot slot worden er ook volledige CSV en GeoJSON exports ondersteund.
+</p>
+
+<h2>Algemene uitleg</h2>
+<ul>
+  <li>TODO</li>
+</ul>
+
+<h2>Naslagwerk datasets</h2>
+<ul>
+  {% for ds in datasets %}
+  <li>
+    <a href="datasets/{{ ds.id }}">{{ ds.title|title }}</a>
+    <ul>
+    {% for table in ds.tables %}
+      <li><a href="datasets/{{ ds.id }}#{{ table }}">{{ table }}</a></li>
+    {% endfor %}
+    </ul>
+  </li>
+  {% endfor %}
+</ul>
+
+</body>
+</html>
