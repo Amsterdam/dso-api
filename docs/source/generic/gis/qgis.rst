@@ -62,6 +62,8 @@ De client id is :samp:`qgis`, Scope is :samp:`email` en access method is :samp:`
 QGIS zal bij het activeren van een kaartlaag een browserscherm openen,
 waarin gebruikersnaam en wachtwoord kunnen worden ingevoerd.
 
+**Voor acceptatie vervang je in bovengenoemde URLs "datapunt-ad" met "datapunt-ad-acc"**.
+
 .. figure:: /generic/images/qgis-add-authentication.png
    :width: 1340
    :height: 1582
