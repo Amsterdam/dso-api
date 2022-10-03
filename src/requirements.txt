@@ -229,7 +229,7 @@ pluggy==0.13.1
     # via pytest
 ply==3.11
     # via jsonpath-rw
-protobuf==3.15.7
+protobuf==3.18.3
     # via
     #   google-api-core
     #   googleapis-common-protos
@@ -328,7 +328,6 @@ six==1.15.0
     #   json-encoder
     #   jsonpath-rw
     #   jsonschema
-    #   protobuf
     #   python-dateutil
     #   python-owasp-zap-v2-4
     #   singledispatch
