@@ -52,7 +52,9 @@ deepdiff==5.2.3
 defusedxml==0.7.1
     # via django-gisserver
 deprecated==1.2.13
-    # via amsterdam-schema-tools
+    # via
+    #   amsterdam-schema-tools
+    #   jwcrypto
 django==3.2.15
     # via
     #   -r requirements.in
@@ -158,7 +160,7 @@ jsonschema[format]==3.2.0
     #   mappyfile
     #   openapi-schema-validator
     #   openapi-spec-validator
-jwcrypto==0.8
+jwcrypto==1.4
     # via datapunt-authorization-django
 lark-parser==0.11.2
     # via mappyfile
