@@ -55,7 +55,7 @@ deprecated==1.2.13
     # via
     #   amsterdam-schema-tools
     #   jwcrypto
-django==3.2.15
+django==3.2.16
     # via
     #   -r requirements.in
     #   amsterdam-schema-tools
