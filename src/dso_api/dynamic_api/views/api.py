@@ -54,22 +54,6 @@ class DynamicApiViewSet(DSOViewMixin, viewsets.ReadOnlyModelViewSet):
     # The 'bronhouder' of the associated dataset
     authorization_grantor: str = None
 
-    _NON_FILTER_PARAMS = {
-        # Allowed request parameters.
-        # Except for "page", all the non-underscore-prefixed parameters
-        # are for backward compatibility.
-        "_count",
-        "_expand",
-        "_expandScope",
-        "_fields",
-        "fields",
-        "_format",
-        "format",
-        "_pageSize",
-        "page_size",
-        "page",
-    }
-
     def initial(self, request, *args, **kwargs):
         super().initial(request, *args, **kwargs)
         table_schema = self.model.table_schema()
