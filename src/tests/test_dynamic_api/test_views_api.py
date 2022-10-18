@@ -650,23 +650,41 @@ class TestAuth:
         response = api_client.get(url, data={"_expandScope": "cluster"})
         assert response.status_code == 403, response.data
 
+    @pytest.mark.parametrize("use_header", (False, True))
     def test_auth_on_individual_fields_with_token_for_valid_scope(
-        self, api_client, fetch_auth_token, afval_schema, afval_container, filled_router
+        self,
+        api_client,
+        fetch_auth_token,
+        afval_schema,
+        afval_container,
+        filled_router,
+        use_header,
     ):
         """Prove that protected fields are shown
         with an auth scope and there is a valid token"""
         patch_field_auth(afval_schema, "containers", "eigenaarNaam", auth=["BAG/R"])
         url = reverse("dynamic_api:afvalwegingen-containers-list")
         token = fetch_auth_token(["BAG/R"])
-        response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
+
+        # First fetch should NOT return the field,
+        # Second fetch should with token should return the field.
+        header = {"HTTP_AUTHORIZATION": f"Bearer {token}"} if use_header else {}
+        response = api_client.get(url, **header)
         data = read_response_json(response)
 
         assert response.status_code == 200, data
         field_names = data["_embedded"]["containers"][0].keys()
-        assert "eigenaarNaam" in field_names, field_names
+        assert ("eigenaarNaam" in field_names) == use_header, field_names
 
+    @pytest.mark.parametrize("use_header", (False, True))
     def test_auth_on_individual_fields_with_token_for_valid_scope_per_profile(
-        self, api_client, fetch_auth_token, afval_schema, afval_container, filled_router
+        self,
+        api_client,
+        fetch_auth_token,
+        afval_schema,
+        afval_container,
+        filled_router,
+        use_header,
     ):
         """Prove that protected fields are shown
         with an auth scope connected to Profile that gives access to specific field."""
@@ -692,12 +710,16 @@ class TestAuth:
         )
         url = reverse("dynamic_api:afvalwegingen-containers-list")
         token = fetch_auth_token(["BRK/RO", "BRK/RSN"])
-        response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
+
+        # First fetch should NOT return the field,
+        # Second fetch should with token should return the field.
+        header = {"HTTP_AUTHORIZATION": f"Bearer {token}"} if use_header else {}
+        response = api_client.get(url, **header)
         data = read_response_json(response)
 
         assert response.status_code == 200, data
         field_names = data["_embedded"]["containers"][0].keys()
-        assert "eigenaarNaam" in field_names, field_names  # profile read access
+        assert ("eigenaarNaam" in field_names) == use_header, field_names  # profile read access
 
     def test_auth_on_individual_fields_without_token_for_valid_scope(
         self, api_client, fetch_auth_token, afval_schema, afval_container, filled_router
@@ -713,6 +735,7 @@ class TestAuth:
         field_names = data["_embedded"]["containers"][0].keys()
         assert "eigenaarNaam" not in field_names, field_names  # profile read access
 
+    @pytest.mark.parametrize("use_header", (False, True))
     def test_auth_on_field_level_is_not_cached(
         self,
         api_client,
@@ -720,24 +743,21 @@ class TestAuth:
         parkeervakken_schema,
         parkeervak,
         filled_router,
+        use_header,
     ):
         """Prove that Auth is not cached."""
         patch_field_auth(parkeervakken_schema, "parkeervakken", "regimes", "dagen", auth=["BAG/R"])
         url = reverse("dynamic_api:parkeervakken-parkeervakken-list")
 
-        # First fetch with BAG/R token
+        # First fetch without BAG/R token, should not return field
+        # Second fetch with BAG/R token, should return field.
         token = fetch_auth_token(["BAG/R"])
-        response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
+        header = {"HTTP_AUTHORIZATION": f"Bearer {token}"} if use_header else {}
+        response = api_client.get(url, **header)
         data = read_response_json(response)
 
         field_names = data["_embedded"]["parkeervakken"][0]["regimes"][0].keys()
-        assert "dagen" in field_names, field_names
-
-        # Fetch again without BAG/R token, should not return field
-        public_response = api_client.get(url)
-        public_data = read_response_json(public_response)
-        field_names = public_data["_embedded"]["parkeervakken"][0]["regimes"][0].keys()
-        assert "dagen" not in field_names, field_names
+        assert ("dagen" in field_names) == use_header, field_names
 
     def test_auth_on_dataset_protects_detail_view(
         self, api_client, fetch_auth_token, afval_schema, afval_container, filled_router
