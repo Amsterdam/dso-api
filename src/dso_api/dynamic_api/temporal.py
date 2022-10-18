@@ -17,7 +17,6 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.request import Request
 from schematools.permissions import UserScopes
 from schematools.types import DatasetTableSchema, TemporalDimensionFields
-from schematools.utils import to_snake_case
 
 from dso_api.dynamic_api.permissions import check_filter_field_access
 
@@ -59,12 +58,10 @@ class TemporalTableQuery:
             return cls(table_schema=table_schema)
         else:
             # See if a filter is made on a specific version
-            version_field = table_schema.temporal.identifier  # e.g. "volgnummer"
-            version_value = query.get(version_field, None)
-
+            version_field = table_schema.temporal.identifier_field  # e.g. "volgnummer"
+            version_value = query.get(version_field.name, None)
             if version_value:
-                field = table_schema.get_field_by_id(version_field)
-                check_filter_field_access(version_field, field, user_scopes)
+                check_filter_field_access(version_field.id, version_field, user_scopes)
 
             # See if a filter is done on a particular point in time (e.g. ?geldigOp=yyyy-mm-dd)
             slice_dimension = None
@@ -83,9 +80,8 @@ class TemporalTableQuery:
                     slice_value = cls._parse_date(dimension, date_value)
 
                     # Check whether the user may filter on the temporal dimension.
-                    for name in slice_range_fields:
-                        field = table_schema.get_field_by_id(name)
-                        check_filter_field_access(slice_dimension, field, user_scopes)
+                    for range_field in slice_range_fields:
+                        check_filter_field_access(slice_dimension, range_field, user_scopes)
 
             return cls(
                 table_schema=table_schema,
@@ -196,8 +192,8 @@ class TemporalTableQuery:
             raise RuntimeError("Schema does not implement usable temporal dimensions")
 
         # start <= value AND (end IS NULL OR value < end)
-        start = f"{prefix}{to_snake_case(range_fields.start)}"
-        end = f"{prefix}{to_snake_case(range_fields.end)}"
+        start = f"{prefix}{range_fields.start.python_name}"
+        end = f"{prefix}{range_fields.end.python_name}"
         return (
             Q(**{f"{start}__lte": self.slice_value})
             & (Q(**{f"{end}__isnull": True}) | Q(**{f"{end}__gt": self.slice_value})),

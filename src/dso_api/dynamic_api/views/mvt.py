@@ -10,8 +10,8 @@ from django.urls.base import reverse
 from django.views.generic import TemplateView
 from schematools.contrib.django.models import Dataset
 from schematools.exceptions import SchemaObjectNotFound
+from schematools.naming import to_snake_case
 from schematools.types import DatasetTableSchema
-from schematools.utils import to_snake_case
 from vectortiles.postgis.views import MVTView
 
 from dso_api.dynamic_api.datasets import get_active_datasets
@@ -77,8 +77,8 @@ class DatasetMVTSingleView(TemplateView):
             Dataset.objects.api_enabled().db_enabled(), name=kwargs["dataset_name"]
         )
         geo_tables = sorted(
-            to_snake_case(table.name)
-            for table in ds.schema.tables
+            to_snake_case(table.id)
+            for table in ds.schema.tables  # type: DatasetTableSchema
             if any(field.is_geo for field in table.fields)
         )
         if len(geo_tables) == 0:
@@ -139,11 +139,10 @@ class DatasetMVTView(CheckPermissionsMixin, MVTView):
     @property
     def vector_tile_geom_name(self) -> str:
         schema: DatasetTableSchema = self.model.table_schema()
-        field = schema.main_geometry
         try:
-            return to_snake_case(schema.get_field_by_id(field).name)
+            return schema.main_geometry_field.python_name
         except SchemaObjectNotFound as e:
-            raise FieldDoesNotExist(f"no field named {field!r}") from e
+            raise FieldDoesNotExist(f"No field named '{schema.main_geometry}'") from e
 
     def check_permissions(self, request, models) -> None:
         """Override CheckPermissionsMixin to add extra checks"""

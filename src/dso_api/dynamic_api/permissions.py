@@ -36,8 +36,8 @@ def check_filter_field_access(field_name: str, field: DatasetFieldSchema, user_s
 
     if field.related_field_ids is not None:
         # Check if related ID fields are accessible.
-        for id_name in field.related_field_ids:
-            if not user_scopes.has_field_access(field.related_table.get_field_by_id(id_name)):
+        for related_id_field in field.related_fields:
+            if not user_scopes.has_field_access(related_id_field):
                 raise PermissionDenied(f"Access denied to filter on: {field_name}")
 
 

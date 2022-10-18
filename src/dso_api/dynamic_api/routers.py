@@ -35,9 +35,9 @@ from django.urls import NoReverseMatch, URLPattern, path, reverse
 from rest_framework import routers
 from schematools.contrib.django.factories import remove_dynamic_models
 from schematools.contrib.django.models import Dataset
-from schematools.utils import to_snake_case
+from schematools.naming import to_snake_case
 
-from ..dynamic_api.datasets import get_active_datasets
+from .datasets import get_active_datasets
 from .models import SealedDynamicModel
 from .openapi import get_openapi_json_view
 from .remote import remote_serializer_factory, remote_viewset_factory
@@ -120,7 +120,7 @@ class DynamicRouter(routers.DefaultRouter):
 
     def __init__(self):
         super().__init__(trailing_slash=True)
-        self.all_models = {}
+        self.all_models: dict[str, dict[str, type[DynamicModel]]] = {}
         self.static_routes = []
         self._openapi_urls = []
         self._index_urls = []

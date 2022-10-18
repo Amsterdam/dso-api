@@ -12,9 +12,9 @@ from django.http.response import HttpResponseBase
 from django.utils.functional import SimpleLazyObject
 from rest_framework.request import Request
 from rest_framework.test import APIRequestFactory
+from schematools.naming import to_snake_case
 from schematools.permissions import UserScopes
 from schematools.types import DatasetSchema
-from schematools.utils import to_snake_case
 
 from rest_framework_dso.renderers import HALJSONRenderer
 
@@ -41,17 +41,35 @@ def patch_table_auth(schema: DatasetSchema, table_id, *, auth: list[str]):
     model.table_schema()["auth"] = auth
 
 
-def patch_field_auth(schema: DatasetSchema, table_id, field_id, *subfields, auth: list[str]):
+def patch_field_auth(schema: DatasetSchema, table_id, field_id, *subfields: str, auth: list[str]):
     """Monkeypatch an Amsterdam Schema to set "auth" on a table."""
     # This updates the low-level dict data so all high-level objects get it.
-    schema.get_table_by_id(table_id).get_field_by_id(field_id)  # check existence
+    table = schema.get_table_by_id(table_id)
+    table.get_field_by_id(field_id)  # check existence
+    del table.__dict__["fields"]  # clear cached property
 
-    raw_table = next(t for t in schema["tables"] if t.default["id"] == table_id)
+    raw_table = next(t.default for t in schema["tables"] if t.default["id"] == table_id)
+    patch_raw_field_auth(raw_table, field_id, *subfields, auth=auth)
+
+    # Also patch the active model, if its already created
+    if schema.id in apps.app_configs:
+        model = apps.get_model(schema.id, table_id)
+        model._table_schema = table
+
+        model_field = model._meta.get_field(to_snake_case(field_id))
+        for subfield in subfields:
+            model_field = model_field.related_model._meta.get_field(subfield)
+
+        model_field.field_schema["auth"] = auth
+
+
+def patch_raw_field_auth(raw_table, field_id, *subfields: str, auth: list[str]):
+    """Monkeypatch the JSON contents of an Amsterdam Schema to add auth rules."""
     raw_field = next(
-        f for f_id, f in raw_table.default["schema"]["properties"].items() if f_id == field_id
+        f for f_id, f in raw_table["schema"]["properties"].items() if f_id == field_id
     )
 
-    # Allow to resolve sub fields too
+    # Point raw_field to a subfield if this is requested:
     for subfield in subfields:
         # Auto jump over array, object or "array of objects"
         if raw_field["type"] == "array":
@@ -61,15 +79,8 @@ def patch_field_auth(schema: DatasetSchema, table_id, field_id, *subfields, auth
 
         raw_field = raw_field[subfield]
 
+    # Patch the field
     raw_field["auth"] = auth
-
-    # Also patch the active model
-    model = apps.get_model(schema.id, table_id)
-    model_field = model._meta.get_field(to_snake_case(field_id))
-    for subfield in subfields:
-        model_field = model_field.related_model._meta.get_field(subfield)
-
-    model_field.field_schema["auth"] = auth
 
 
 def read_response(response: HttpResponseBase) -> str:

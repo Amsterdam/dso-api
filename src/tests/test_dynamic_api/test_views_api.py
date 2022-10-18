@@ -19,6 +19,7 @@ from rest_framework_dso.response import StreamingResponse
 from tests.utils import (
     patch_dataset_auth,
     patch_field_auth,
+    patch_raw_field_auth,
     patch_table_auth,
     read_response,
     read_response_json,
@@ -904,8 +905,15 @@ class TestAuth:
         response = api_client.options(url)
         assert response.status_code == 200, response.data
 
-    def test_sort_auth(self, api_client, afval_schema, afval_container, filled_router):
-        patch_field_auth(afval_schema, "containers", "datumCreatie", auth=["SEE/CREATION"])
+    @pytest.fixture
+    def patched_afval_schema(self, afval_schema_json):
+        raw_table = afval_schema_json["tables"][0]
+        assert raw_table["id"] == "containers"
+        patch_raw_field_auth(raw_table, "datumCreatie", auth=["SEE/CREATION"])
+        # patch_field_auth(afval_schema, "containers", "datumCreatie", auth=["SEE/CREATION"])
+        return afval_schema_json
+
+    def test_sort_auth(self, api_client, patched_afval_schema, afval_container, filled_router):
         url = reverse("dynamic_api:afvalwegingen-containers-list")
         response = api_client.get(f"{url}?_sort=datumCreatie")
         data = read_response_json(response)
@@ -2374,8 +2382,8 @@ class TestFormats:
 
         # fields don't include bestaatUitBuurten
         assert data == (
-            "Registratiedatum,Naam,Begingeldigheid,Eindgeldigheid,Geometrie,Id\r\n"
-            ",,2021-02-28,,,03630950000000.1\r\n"
+            "Id,Registratiedatum,Naam,Begingeldigheid,Eindgeldigheid,Geometrie\r\n"
+            "03630950000000.1,,,2021-02-28,,\r\n"
         )
 
     DETAIL_FORMATS = {

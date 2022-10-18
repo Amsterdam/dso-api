@@ -253,7 +253,7 @@ def _get_fields(table_fields) -> List[DatasetFieldSchema]:
     """Flatten a nested listing of fields."""
     result_fields = []
     for field in table_fields:
-        if field.name == "schema":
+        if field.id == "schema":
             continue
 
         result_fields.append(field)
