@@ -9,7 +9,8 @@ from datetime import datetime
 from functools import reduce
 from typing import Any, NamedTuple
 
-from django.core.exceptions import ValidationError as DjangoValidationError, FieldError
+from django.core.exceptions import FieldError
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import models
 from django.db.models import Q
 from django.utils.datastructures import MultiValueDict
@@ -18,7 +19,6 @@ from rest_framework.exceptions import ValidationError
 from schematools.exceptions import SchemaObjectNotFound
 from schematools.permissions import UserScopes
 from schematools.types import AdditionalRelationSchema, DatasetFieldSchema, DatasetTableSchema
-from schematools.utils import to_snake_case
 
 from dso_api.dynamic_api.permissions import check_filter_field_access
 from dso_api.dynamic_api.temporal import TemporalTableQuery, get_request_date
@@ -287,7 +287,7 @@ class QueryFilterEngine:
         filters = []
         prefix = ""
         for filter_part in parts:
-            prefix = f"{prefix}{to_snake_case(filter_part.name)}__"
+            prefix = f"{prefix}{filter_part.python_name}__"
             if filter_part.reverse_field is None and filter_part.field.is_loose_relation:
                 # When filters join a loose relation, make sure only the active object is selected
                 temp = TemporalTableQuery.from_query(
@@ -417,7 +417,7 @@ class CompiledFilter(NamedTuple):
 
 def _to_orm_path(parts: list[FilterPathPart]) -> str:
     """Generate the ORM path for a path of fields."""
-    names = [to_snake_case(part.name) for part in parts]
+    names = [part.python_name for part in parts]
 
     if len(parts) > 1:
         # Optimize query, by avoiding a table join for foreign keys.
@@ -429,7 +429,7 @@ def _to_orm_path(parts: list[FilterPathPart]) -> str:
             not parent_part.field.is_array_of_objects  # not M2M, needs through table join
             and not parent_part.reverse_field  # not reverse field, needs join
             and (related_ids := parent_part.field.related_field_ids) is not None  # not nested
-            and last_part.name in related_ids  # target field is indeed a local identifier
+            and last_part.id in related_ids  # target field is indeed a local identifier
         ):
             # Matched identifier that also exists on the previous table, use that instead.
             # loose relation directly stores the "identifier" as name, so can just strip that.
@@ -440,24 +440,30 @@ def _to_orm_path(parts: list[FilterPathPart]) -> str:
     return "__".join(names)
 
 
-def _get_reverse_id_field(additional_relation: AdditionalRelationSchema) -> DatasetFieldSchema:
-    """Find the field that is targeted by direct queries against the reverse relation.
-    This is not the reverse field (a foreign key in the table), but the identifier field.
-    """
-    table = additional_relation.related_table
-    return table.get_field_by_id(table.identifier[0])
-
-
 class FilterPathPart(NamedTuple):
     """An entry in the filter path, translated to a field.
     The field and reverse field are so different in their API,
     that those fields are mentioned separately. They don't have a useful base class.
     """
 
-    name: str
     field: DatasetFieldSchema
     reverse_field: AdditionalRelationSchema | None = None
     is_many: bool = False
+
+    @property
+    def id(self):
+        """Raw unmodified identifier"""
+        return getattr(self.reverse_field or self.field, "id")
+
+    @property
+    def name(self):
+        """Camel cased name (mirroring API fields)"""
+        return getattr(self.reverse_field or self.field, "name")
+
+    @property
+    def python_name(self):
+        """Snake-cased name (for ORM field names)"""
+        return getattr(self.reverse_field or self.field, "python_name")
 
 
 def _parse_filter_path(
@@ -523,7 +529,7 @@ def _get_field_by_id(  # noqa: C901
 
     if field is not None:
         # Found regular field, or forward relation
-        return FilterPathPart(name=field.name, field=field, is_many=field.is_array)
+        return FilterPathPart(field=field, is_many=field.is_array)
 
     try:
         additional_relation = parent.get_additional_relation_by_id(name)
@@ -533,10 +539,8 @@ def _get_field_by_id(  # noqa: C901
         # The additional relation name is used as ORM path to navigate over the relation.
         # Yet when directly filtering, the value/lookup should work directly
         # against the primary key of the reverse table (hence field is also resolved here)
-        field = _get_reverse_id_field(additional_relation)
         return FilterPathPart(
-            name=additional_relation.id,
-            field=field,
+            field=additional_relation.related_table.identifier_fields[0],
             reverse_field=additional_relation,
             is_many=True,
         )

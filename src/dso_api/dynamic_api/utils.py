@@ -10,7 +10,7 @@ from django.db.models.fields.reverse_related import ForeignObjectRel
 from rest_framework import serializers
 from schematools.contrib.django.models import DynamicModel
 from schematools.contrib.django.signals import dynamic_models_removed
-from schematools.utils import to_snake_case
+from schematools.naming import to_snake_case
 
 from rest_framework_dso.fields import GeoJSONIdentifierField
 
@@ -98,10 +98,12 @@ def get_serializer_source_fields(  # noqa: C901
                 # A CharField(source="*") that either receives a str from its parent
                 # (e.g. _loose_link_serializer_factory() receives a str as data),
                 # or it's reading DynamicModel.__str__().
-                if isinstance(serializer, serializers.ModelSerializer) and (
-                    display_field := serializer.Meta.model.table_schema().display_field
+                if (
+                    isinstance(serializer, serializers.ModelSerializer)
+                    and (display_field := serializer.Meta.model.table_schema().display_field)
+                    is not None
                 ):
-                    lookups.append(f"{prefix}{display_field}")
+                    lookups.append(f"{prefix}{display_field.python_name}")
                 continue
             else:
                 raise NotImplementedError(

@@ -11,8 +11,8 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 from schematools.contrib.django.models import Dataset
+from schematools.naming import to_snake_case, toCamelCase
 from schematools.types import DatasetFieldSchema, DatasetTableSchema
-from schematools.utils import to_snake_case, toCamelCase
 
 from rest_framework_dso.fields import DSOGeometryField
 from rest_framework_dso.serializers import DSOListSerializer, DSOSerializer
@@ -40,14 +40,16 @@ audit_log = logging.getLogger("dso_api.audit")
 class _AuthMixin:
     """Adds field filtering logic based on authorization."""
 
-    def _filter_authorized_fields(self, fields):
+    def _filter_authorized_fields(self, fields: dict[str, serializers.Field]):
         """Returns the fields for which the request has authorization."""
         scopes = self.context.get("request").user_scopes
 
+        # TODO: remote serializer needs to map camelName to original ID here.
         unauthorized = [
-            field
-            for field in fields
-            if field != "schema" and not scopes.has_field_access(self._get_field_by_id(field))
+            field_name
+            for field_name in fields.keys()
+            if field_name != "schema"
+            and not scopes.has_field_access(self._get_field_by_id(field_name))
         ]
         if unauthorized:
             audit_log.info(
@@ -118,9 +120,7 @@ class RemoteFieldSerializer(DSOSerializer, _AuthMixin):
 def remote_serializer_factory(table_schema: DatasetTableSchema):
     """Generate the DRF serializer class for a specific dataset model."""
     dataset = table_schema.dataset
-    serializer_name = (f"{dataset.id.title()}{table_schema.id.title()}Serializer").replace(
-        " ", "_"
-    )
+    serializer_name = f"{dataset.python_name}{table_schema.python_name}Serializer"
     new_attrs = {
         "table_schema": table_schema,
         "__module__": f"dso_api.dynamic_api.remote.serializers.{dataset.id}",
@@ -135,7 +135,7 @@ def remote_serializer_factory(table_schema: DatasetTableSchema):
         (),
         {
             "fields": list(declared_fields.keys()),
-            "many_results_field": table_schema.id.title(),
+            "many_results_field": toCamelCase(table_schema.id),
         },
     )
     return type(serializer_name, (RemoteSerializer,), new_attrs)
@@ -149,21 +149,21 @@ def _build_declared_fields(
     declared_fields = {}
     for field in fields:
         # In case metadata fields are mentioned in the schema, ignore these.
-        if field.type.endswith("definitions/schema") or field.name == "_links":
+        if field.type.endswith("definitions/schema") or field.id == "_links":
             continue
 
         # Instead of having to apply camelize() on every response,
         # create converted field names on the serializer construction.
         # The space replacement is unlikely for a remote field, but kept for consistency.
-        safe_field_name = field.name.replace(" ", "_")
-        camel_name = toCamelCase(safe_field_name)
+        model_field_name = field.python_name
+        serializer_field_name = field.name
 
         kwargs = {"required": field.required, "allow_null": not field.required}
         if field.type == "string" and not field.required:
             kwargs["allow_blank"] = True
-        if camel_name != field.name:
-            kwargs["source"] = field.name
-        declared_fields[camel_name] = _remote_field_factory(field, **kwargs)
+        if serializer_field_name != model_field_name:
+            kwargs["source"] = model_field_name
+        declared_fields[serializer_field_name] = _remote_field_factory(field, **kwargs)
 
     return declared_fields
 
@@ -180,10 +180,14 @@ def _remote_field_factory(field: DatasetFieldSchema, **kwargs) -> serializers.Fi
         return _remote_object_field_factory(field, **kwargs)
     else:
         if type_ == "array":
+            item_kwargs = kwargs.copy()
+            item_kwargs.pop("source", None)  # source only exists on the top-level
             if field["items"]["type"] == "object":
-                kwargs["child"] = _remote_object_field_factory(field, **kwargs)
+                # Array of objects (e.g. M2M relation)
+                kwargs["child"] = _remote_object_field_factory(field, **item_kwargs)
             else:
-                kwargs["child"] = JSON_TYPE_TO_DRF[field["items"]["type"]](**kwargs)
+                # Array of scalars
+                kwargs["child"] = JSON_TYPE_TO_DRF[field["items"]["type"]](**item_kwargs)
         field_cls = JSON_TYPE_TO_DRF[type_]
         return field_cls(**kwargs)
 
@@ -194,8 +198,8 @@ def _remote_object_field_factory(field: DatasetFieldSchema, **kwargs) -> RemoteF
     dataset = table_schema.dataset
     safe_dataset_id = to_snake_case(dataset.id)
     serializer_name = (
-        f"{dataset.id.title()}{table_schema.id.title()}_{field.name.title()}Serializer"
-    ).replace(" ", "_")
+        f"{dataset.python_name}{table_schema.python_name}_{field.python_name}Serializer"
+    )
     new_attrs = {
         "table_schema": table_schema,
         "field_schema": field,

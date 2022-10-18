@@ -9,9 +9,9 @@ from django.db import models
 from rest_framework import serializers
 from rest_framework.request import Request
 from rest_framework.test import APIRequestFactory
+from schematools.naming import to_snake_case
 from schematools.permissions import UserScopes
 from schematools.types import DatasetTableSchema
-from schematools.utils import to_snake_case
 
 from dso_api.dynamic_api.serializers import DynamicSerializer
 from dso_api.dynamic_api.urls import router
@@ -122,9 +122,7 @@ class Command(BaseCommand):
             )
         else:
             # Remote serializer:
-            self.stdout.write(
-                f"# {serializer.table_schema.dataset.id}.{serializer.table_schema.id}\n\n\n"
-            )
+            self.stdout.write(f"# {serializer.table_schema.qualified_id}\n\n\n")
 
     def write_sub_serializers(self, serializer: DSOSerializer):
         """Write the dependant serializers"""

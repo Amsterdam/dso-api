@@ -18,13 +18,13 @@ class Command(BaseCommand):
                     continue
 
                 schema = model.table_schema()
-                pk = schema.get_field_by_id(schema.identifier[0])
+                pk = schema.identifier_fields[0]
 
                 if len(schema.identifier) == 1 and pk.type == "string":
-                    if model.objects.filter(**{f"{pk.db_name()}__contains": "/"}).exists():
+                    if model.objects.filter(**{f"{pk.python_name}__contains": "/"}).exists():
                         self.stdout.write(
                             self.style.WARNING(
-                                f"Data in {schema.db_name()} does not satisfy constraint.\
+                                f"Data in {schema.db_name} does not satisfy constraint.\
                                     Skipping this model...\n"
                             )
                         )
@@ -34,17 +34,17 @@ class Command(BaseCommand):
                         curs.execute(
                             sql.SQL(
                                 "ALTER TABLE {table} DROP CONSTRAINT IF EXISTS id_not_contains_slash;"  # noqa E501
-                            ).format(table=sql.Identifier(schema.db_name()))
+                            ).format(table=sql.Identifier(schema.db_name))
                         )
                         curs.execute(
                             sql.SQL(
                                 "ALTER TABLE {table} ADD CONSTRAINT id_not_contains_slash CHECK (NOT {field} LIKE '%%/%%');"  # noqa E501
                             ).format(
-                                table=sql.Identifier(schema.db_name()),
-                                field=sql.Identifier(pk.db_name()),
+                                table=sql.Identifier(schema.db_name),
+                                field=sql.Identifier(pk.db_name),
                             )
                         )
 
                     self.stdout.write(
-                        self.style.SUCCESS(f"Applied constraint on {schema.db_name()}")
+                        self.style.SUCCESS(f"Applied constraint on {schema.db_name}")
                     )

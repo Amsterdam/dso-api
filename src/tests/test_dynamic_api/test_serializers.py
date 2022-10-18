@@ -782,7 +782,7 @@ class TestDynamicSerializer:
             statistiek, context={"request": drf_request}
         )
         buurt_field = statistieken_serializer.fields["_links"].fields["buurt"]
-        assert buurt_field.__class__.__name__ == "GebiedenbuurtenLooseLinkSerializer"
+        assert buurt_field.__class__.__name__ == "GebiedenBuurtenLooseLinkSerializer"
         assert isinstance(buurt_field.fields["href"], HALLooseRelationUrlField)
 
         assert (
@@ -794,17 +794,32 @@ class TestDynamicSerializer:
     def test_unconventional_temporal_identifier(drf_request, unconventional_temporal_model):
         """Prove that temporal ids with casing and shortnames are properly serialized"""
         obj = unconventional_temporal_model.objects.create(
-            uncid=1, unc_tid="v1", start="2020-01-01", eind="2021-01-01"
+            unconventional_identifier=1,  # also the primary key!
+            unconventional_temporal_id="v1",
+            begin_geldigheid="2020-01-01",
+            eind_geldigheid="2021-01-01",
         )
-        serializer = serializer_factory(unconventional_temporal_model)(
-            obj, context={"request": drf_request}
-        )
+        serializer_class = serializer_factory(unconventional_temporal_model)
+        serializer = serializer_class(obj, context={"request": drf_request})
 
         fields = serializer.fields
+        assert set(fields.keys()) == {
+            "_links",
+            # "unconventionalIdentifier",
+            "unconventionalTemporalId",
+            "beginGeldigheid",
+            "eindGeldigheid",
+        }
 
-        assert fields["uncid"].source == "uncid"
-        assert fields["uncTid"].source == "unc_tid"
-        assert fields["eind"].source == "eind"
-        assert fields["start"].source == "start"
-        assert fields["_links"]["self"]["uncid"].source == "uncid"
-        assert fields["_links"]["self"]["uncTid"].source == "unc_tid"
+        # assert fields["unconventionalIdentifier"].source == "uncid"
+        assert fields["unconventionalTemporalId"].source == "unconventional_temporal_id"
+        assert fields["eindGeldigheid"].source == "eind_geldigheid"
+        assert fields["beginGeldigheid"].source == "begin_geldigheid"
+        assert (
+            fields["_links"]["self"]["unconventionalIdentifier"].source
+            == "unconventional_identifier"
+        )
+        assert (
+            fields["_links"]["self"]["unconventionalTemporalId"].source
+            == "unconventional_temporal_id"
+        )

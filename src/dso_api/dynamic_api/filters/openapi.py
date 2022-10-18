@@ -86,12 +86,9 @@ def get_table_filter_params(table_schema: DatasetTableSchema) -> list[dict]:  # 
         elif field.relation:
             # Relation: promote filtering with dot-notation instead of the old "fieldnameId"
             # This works both for temporal relations, regular relations as loose relations.
-            rel_table = field.related_table
-            identifiers = field.related_field_ids
-            for identifier in identifiers:
-                sub_field = rel_table.get_field_by_id(identifier)
+            for related_id_field in field.related_fields:
                 openapi_params.extend(
-                    _get_field_openapi_params(sub_field, prefix=f"{field.name}.")
+                    _get_field_openapi_params(related_id_field, prefix=f"{field.name}.")
                 )
         else:
             # Flat direct field

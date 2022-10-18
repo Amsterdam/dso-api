@@ -11,6 +11,7 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework.serializers import BaseSerializer
 from rest_framework.viewsets import ViewSet
+from schematools.naming import toCamelCase
 from schematools.types import DatasetTableSchema
 
 from rest_framework_dso.exceptions import RemoteAPIException
@@ -117,7 +118,7 @@ class RemoteViewSet(DSOViewMixin, ViewSet):
 
         data = {
             "_embedded": {
-                self.table_schema.name: data,
+                toCamelCase(self.table_schema.id): data,
             },
             "_links": {
                 "self": {

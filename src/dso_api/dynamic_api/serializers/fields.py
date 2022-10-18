@@ -8,6 +8,8 @@ by ``to_representation()``, the field also needs to define the OpenAPI details o
 what the field would return. Hence, other fields (e.g. in ``_links``) that return
 more variable fields are constructed as a serializer instead.
 """
+from urllib.parse import urlencode
+
 from django.db import models
 from drf_spectacular.utils import extend_schema_field, inline_serializer
 from more_ds.network.url import URL
@@ -15,9 +17,8 @@ from rest_framework import serializers
 from rest_framework.relations import HyperlinkedRelatedField
 from rest_framework.reverse import reverse
 from rest_framework.serializers import Field
+from schematools.naming import toCamelCase
 from schematools.types import DatasetTableSchema
-from schematools.utils import toCamelCase
-from urllib.parse import urlencode
 
 from dso_api.dynamic_api.temporal import TemporalTableQuery
 from dso_api.dynamic_api.utils import get_view_name, split_on_separator
