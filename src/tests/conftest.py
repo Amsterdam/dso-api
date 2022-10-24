@@ -896,11 +896,6 @@ def download_url_schema_json() -> dict:
 
 
 @pytest.fixture()
-def download_url_schema(download_url_schema_json) -> DatasetSchema:
-    return DatasetSchema.from_dict(download_url_schema_json)
-
-
-@pytest.fixture()
 def download_url_dataset(download_url_schema_json) -> Dataset:
     return Dataset.objects.create(
         name="download", path="download", schema_data=json.dumps(download_url_schema_json)

@@ -293,13 +293,6 @@ if CLOUD_ENV.lower().startswith("azure"):
 
 # -- Third party app settings
 
-# TODO: port to secret store (when this is used again)
-# Dynamically import Azure Blob connections from environment
-# Key format is AZURE_BLOB_{accountname}
-for key, value in env.ENVIRON.items():
-    if key.startswith("AZURE_BLOB_"):
-        locals()[key] = value
-
 # Send Access-Control-Allow-Origin without Access-Control-Allow-Credentials
 # for ArcGIS Online. HAProxy should handle the remaining cases by setting
 #   Access-Control-Allow-Origin: $origin
