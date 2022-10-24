@@ -326,10 +326,10 @@ class TestFilterEngine:
     @pytest.mark.parametrize(
         "query,expect",
         [
-            ("", 4),
+            ("", 5),
             ("heeftHoofdadres.volgnummer=1", 2),
             ("heeftHoofdadres.identificatie=nm2", 1),
-            ("ligtInBuurt.identificatie[isnull]=1", 0),
+            ("ligtInBuurt.identificatie[isnull]=1", 1),
             ("ligtInBuurt.volgnummer[gte]=2", 3),
             ("ligtInBuurt.identificatie[like]=X*X", 1),
         ],
