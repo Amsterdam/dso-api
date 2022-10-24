@@ -62,31 +62,32 @@ class DynamicApiSchemaGenerator(DSOSchemaGenerator):
     with the application-specific knowledge found in DSO-API.
     """
 
-    # Provide the missing data that DRF get_schema_view() doesn't yet offer
-    defaultScope = {}
-    if settings.OAUTH_DEFAULT_SCOPE:
-        defaultScope = {settings.OAUTH_DEFAULT_SCOPE: "Toegang Applicatie"}
-    schema_overrides = {
+    def get_schema(self, request=None, public=False):
+        """Improved schema generation, include more OpenAPI fields"""
+        schema = super().get_schema(request=request, public=public)
+
         # While drf_spectacular parses authentication_classes, it won't
         # recognize oauth2 nor detect a remote authenticator. Adding manually:
-        "security": [{"oauth2": []}],
-        "components": {
-            "securitySchemes": {
-                "oauth2": {
-                    "type": "oauth2",
-                    "flows": {
-                        "implicit": {
-                            "authorizationUrl": settings.OAUTH_URL,
-                            "scopes": defaultScope,
-                        }
-                    },
-                }
+        schema["security"] = [{"oauth2": []}]
+        schema["components"]["securitySchemes"] = {
+            "oauth2": {
+                "type": "oauth2",
+                "flows": {
+                    "implicit": {
+                        "authorizationUrl": settings.OAUTH_URL,
+                        "scopes": (
+                            {settings.OAUTH_DEFAULT_SCOPE: "Toegang Applicatie"}
+                            if settings.OAUTH_DEFAULT_SCOPE
+                            else {}
+                        ),
+                    }
+                },
             }
-        },
-    }
+        }
 
-    if not settings.DEBUG:
-        schema_overrides["servers"] = [{"url": settings.DATAPUNT_API_URL}]
+        if not settings.DEBUG:
+            schema["servers"] = [{"url": settings.DATAPUNT_API_URL}]
+        return schema
 
 
 def get_openapi_json_view(dataset: Dataset):

@@ -1,8 +1,8 @@
 import logging
 
+import openapi_spec_validator
 import pytest
 from django.urls import NoReverseMatch, reverse
-import openapi_spec_validator
 
 from dso_api.dynamic_api import openapi
 from tests.utils import read_response
@@ -91,10 +91,23 @@ def test_openapi_json(api_client, afval_dataset, fietspaaltjes_dataset, filled_r
     # Prove that the serializer field types are reasonably converted
     component_schemas = schema["components"]["schemas"]
     container_properties = component_schemas["Afvalwegingencontainers"]["properties"]
-    assert "MultiPolygon" in component_schemas, list(component_schemas)
-    assert container_properties["geometry"]["$ref"] == "#/components/schemas/Point"
     assert container_properties["id"]["type"] == "integer"
     assert container_properties["datumLeegmaken"]["format"] == "date-time"
+    assert container_properties["geometry"] == {
+        "description": "Geometrie",
+        "nullable": True,
+        "properties": {
+            "coordinates": {
+                "example": [12.9721, 77.5933],
+                "items": {"format": "float", "type": "number"},
+                "maxItems": 3,
+                "minItems": 2,
+                "type": "array",
+            },
+            "type": {"enum": ["Point"], "type": "string"},
+        },
+        "type": "object",
+    }
 
     # Prove that various filters are properly exposed.
     afval_parameters = {
