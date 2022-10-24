@@ -17,7 +17,7 @@ class Command(BaseCommand):
         See for usage: https://dso-api.readthedocs.io/en/latest/auth.html#testing
     """
 
-    requires_system_checks = False
+    requires_system_checks = []
 
     def add_arguments(self, parser: ArgumentParser) -> None:
         """Hook to add arguments."""
