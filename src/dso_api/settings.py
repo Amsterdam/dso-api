@@ -363,6 +363,7 @@ These are located at:
         "description": "API Usage Documentation",
         "url": "https://api.data.amsterdam.nl/v1/docs/",
     },
+    "GET_MOCK_REQUEST": "dso_api.dynamic_api.openapi.build_mock_request",
     "SCHEMA_PATH_PREFIX": r"^/v?\d+(\.\d+)?/",  # strip /v1/ from tags.
     "SWAGGER_UI_SETTINGS": {
         "oauth2RedirectUrl": f"{DATAPUNT_API_URL}v1/oauth2-redirect.html",

@@ -249,6 +249,10 @@ class DSOAutoSchema(openapi.AutoSchema):
         tokenized_path = self._tokenize_path()
         return tokenized_path[-1:]
 
+    def get_filter_backends(self):
+        # Filter backends are also available on detail view.
+        return getattr(self.view, "filter_backends", [])
+
     def _get_paginator(self):
         """Make sure our paginator uses the proper field in the ``_embedded`` schema."""
         paginator = super()._get_paginator()
@@ -261,15 +265,14 @@ class DSOAutoSchema(openapi.AutoSchema):
         schema = super()._map_model_field(model_field, direction=direction)
 
         if isinstance(model_field, gis_models.GeometryField):
-            # In some code paths, drf-spectacular or doesn't even enter _map_serializer_field(),
-            # or calls it with a dummy field that doesn't have field.parent. That makes it
-            # impossible to resolve the model type. Hence, see if a better type can be resolved
+            # While drf-spectacular can generate geometry data nowadays,
+            # we keep using our old logic that uses reusable components.
             geojson_type = GEOM_TYPES_TO_GEOJSON.get(model_field.geom_type, "Geometry")
             return {"$ref": f"#/components/schemas/{geojson_type}"}
 
         return schema
 
-    def _map_serializer_field(self, field, direction, collect_meta=True):
+    def _map_serializer_field(self, field, direction, bypass_extensions=False):
         """Transform the serializer field into a OpenAPI definition.
         This method is overwritten to fix some missing field types.
         """
@@ -286,7 +289,7 @@ class DSOAutoSchema(openapi.AutoSchema):
                     geojson_type = "Geometry"
                 return {"$ref": f"#/components/schemas/{geojson_type}"}
 
-        return super()._map_serializer_field(field, direction, collect_meta=collect_meta)
+        return super()._map_serializer_field(field, direction, bypass_extensions=bypass_extensions)
 
     def get_override_parameters(self):
         """Expose the DSO-specific HTTP headers in all API methods."""
@@ -379,10 +382,3 @@ class DSOAutoSchema(openapi.AutoSchema):
             return field.source_field.target_field.help_text
         else:
             return field.source_field.help_text
-
-    def _map_field_validators(self, field, schema):
-        super()._map_field_validators(field, schema)
-        if schema.get("format") == "uri" and "pattern" in schema:
-            # In Python, the token \Z does what \z does in other engines.
-            # https://stackoverflow.com/questions/53283160
-            schema["pattern"] = schema["pattern"].replace("\\Z", "\\z")
