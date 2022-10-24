@@ -7,6 +7,7 @@ from functools import wraps
 from typing import Callable, Optional, Union
 from urllib.parse import urljoin
 
+import drf_spectacular.plumbing
 from django.conf import settings
 from django.urls import URLPattern, URLResolver, get_resolver, get_urlconf
 from django.utils.functional import lazy
@@ -15,14 +16,32 @@ from rest_framework import permissions, renderers
 from rest_framework.schemas import get_schema_view
 from rest_framework.views import APIView
 from schematools.contrib.django.models import Dataset
+from schematools.permissions import UserScopes
 from schematools.types import DatasetSchema
 
 from rest_framework_dso.openapi import DSOSchemaGenerator
+from rest_framework_dso.renderers import HALJSONRenderer
 
 __all__ = (
     "get_openapi_json_view",
     "DynamicApiSchemaGenerator",
 )
+
+
+def build_mock_request(method, path, view, original_request, **kwargs):
+    """Fix the request object that drf-spectacular generates for OpenAPI detection"""
+    request = drf_spectacular.plumbing.build_mock_request(
+        method, path, view, original_request, **kwargs
+    )
+    request.accepted_renderer = HALJSONRenderer()
+    request.accept_crs = None  # for DSOSerializer, expects to be used with DSOViewMixin
+    request.response_content_crs = None
+
+    # Make sure all fields are displayed in the OpenAPI spec:
+    request.user_scopes = UserScopes(query_params={}, request_scopes=[])
+    request.user_scopes.has_any_scope = lambda *scopes: True
+    request.user_scopes.has_all_scopes = lambda *scopes: True
+    return request
 
 
 class DSOSwaggerView(SpectacularSwaggerView):
