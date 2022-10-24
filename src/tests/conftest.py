@@ -12,7 +12,7 @@ from django.contrib.gis.geos import GEOSGeometry, Point
 from django.core.handlers.wsgi import WSGIRequest
 from django.db import connection
 from django.utils.functional import SimpleLazyObject
-from django.utils.timezone import get_current_timezone, make_aware
+from django.utils.timezone import make_aware
 from jwcrypto.jwt import JWT
 from rest_framework.request import Request
 from rest_framework.test import APIClient, APIRequestFactory
@@ -280,7 +280,7 @@ def afval_container(afval_container_model, afval_cluster):
         eigenaar_naam="Dataservices",
         # set to fixed dates to the CSV export can also check for desired formatting
         datum_creatie=date(2021, 1, 3),
-        datum_leegmaken=get_current_timezone().localize(datetime(2021, 1, 3, 12, 13, 14)),
+        datum_leegmaken=make_aware(datetime(2021, 1, 3, 12, 13, 14)),
         cluster=afval_cluster,
         geometry=Point(10, 10),  # no SRID on purpose, should use django model field.
     )

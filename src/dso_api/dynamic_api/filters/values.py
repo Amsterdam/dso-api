@@ -36,19 +36,22 @@ def str2number(value: str) -> Decimal:
 def str2isodate(value: str) -> date | datetime | None:
     """Parse ISO date and datetime."""
 
-    # Try parsing full iso-8601 datetime.
+    # Try parsing ISO date without time.
+    # This is checked first, so the function can explicitly return a date object
+    # for something that has no time at inputs, allowing to check against a complete day
+    # instead of exactly midnight.
+    try:
+        return datetime.strptime(value, "%Y-%m-%d").date()
+    except ValueError:
+        pass
+
+    # Try parsing full iso-8601 datetime (also works for date-only values in Django >= 4.x)
     try:
         result = parse_datetime(value)
         if result is not None:
             return result
     except ValueError:
         pass  # e.g. well formatted but invalid values
-
-    # Try parsing ISO date without time.
-    try:
-        return datetime.strptime(value, "%Y-%m-%d").date()
-    except ValueError:
-        pass
 
     raise ValidationError(_("Enter a valid ISO date-time, or single date."), code="invalid")
 

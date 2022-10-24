@@ -48,13 +48,13 @@ class NotEqual(lookups.Lookup):
             # Allow field__not=value to return NULL fields too.
             return (
                 f"({lhs} IS NULL OR {lhs} != {rhs})",
-                lhs_params + lhs_params + rhs_params,
+                list(lhs_params + lhs_params) + rhs_params,
             )
         elif rhs_params and rhs_params[0] is None:
             # Allow field__not=None to work.
             return f"{lhs} IS NOT NULL", lhs_params
         else:
-            return f"{lhs} != {rhs}", lhs_params + rhs_params
+            return f"{lhs} != {rhs}", list(lhs_params) + rhs_params
 
 
 @models.CharField.register_lookup
