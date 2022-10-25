@@ -1337,3 +1337,14 @@ def verblijfsobjecten_data(verblijfsobjecten_model, buurten_data, nummeraanduidi
         heeft_hoofdadres_identificatie="nm3",
         heeft_hoofdadres_volgnummer=5,
     )
+    verblijfsobjecten_model.objects.create(
+        id="e",
+        identificatie="vo5",
+        volgnummer=1,
+        ligt_in_buurt_id=None,
+        ligt_in_buurt_identificatie=None,
+        ligt_in_buurt_volgnummer=None,
+        heeft_hoofdadres_id="nm2.1",
+        heeft_hoofdadres_identificatie="nm3",
+        heeft_hoofdadres_volgnummer=6,
+    )
