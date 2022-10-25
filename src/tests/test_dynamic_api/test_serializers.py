@@ -749,34 +749,6 @@ class TestDynamicSerializer:
         assert fietspaaltjes[0]["area"] == "A", fietspaaltjes_serializer.data
 
     @staticmethod
-    def test_download_url_field(drf_request, download_url_dataset, filled_router):
-        """Prove that download url will contain correct identifier."""
-
-        dossier_model = filled_router.all_models["download"]["dossiers"]
-        dossier_model.objects.create(
-            id=1,
-            url=(
-                "https://ngdsodev.blob.core.windows.net/"
-                "quickstartb4e564a8-5071-4e41-9fc0-21a678f3815c/myblockblob"
-            ),
-        )
-        DossiersSerializer = serializer_factory(dossier_model)
-        dossiers_serializer = DossiersSerializer(
-            dossier_model.objects.all(),
-            context={"request": drf_request},
-            many=True,
-        )
-
-        dossiers = list(dossiers_serializer.data["dossiers"])  # consume generator
-        url = dossiers[0]["url"]
-        assert "sig=" in url
-        assert "se=" in url
-        assert "sv=" in url
-        assert "sp=" in url
-        assert "sr=b" in url
-        assert "sp=r" in url
-
-    @staticmethod
     def test_download_url_field_empty_field(drf_request, download_url_dataset, filled_router):
         """Prove that empty download url not crashing api."""
 

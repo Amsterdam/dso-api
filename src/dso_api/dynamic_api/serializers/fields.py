@@ -8,11 +8,6 @@ by ``to_representation()``, the field also needs to define the OpenAPI details o
 what the field would return. Hence, other fields (e.g. in ``_links``) that return
 more variable fields are constructed as a serializer instead.
 """
-from datetime import datetime, timedelta
-from urllib.parse import urlencode
-
-import azure.storage.blob
-from django.conf import settings
 from django.db import models
 from drf_spectacular.utils import extend_schema_field, inline_serializer
 from more_ds.network.url import URL
@@ -22,6 +17,7 @@ from rest_framework.reverse import reverse
 from rest_framework.serializers import Field
 from schematools.types import DatasetTableSchema
 from schematools.utils import toCamelCase
+from urllib.parse import urlencode
 
 from dso_api.dynamic_api.temporal import TemporalTableQuery
 from dso_api.dynamic_api.utils import get_view_name, split_on_separator
@@ -109,32 +105,6 @@ class TemporalReadOnlyField(serializers.ReadOnlyField):
         # The str() cast makes the core more robust, in case the underlying
         # database returns an integer instead of the expected string.
         return split_on_separator(str(value))[0]
-
-
-class AzureBlobFileField(serializers.ReadOnlyField):
-    """Azure storage field."""
-
-    def __init__(self, account_name, *args, **kwargs):
-        self.account_name = account_name
-        super().__init__(*args, **kwargs)
-
-    def to_representation(self, value):
-        if not value:
-            return value
-        blob_client = azure.storage.blob.BlobClient.from_blob_url(value)
-        sas_token = azure.storage.blob.generate_blob_sas(
-            self.account_name,
-            blob_client.container_name,
-            blob_client.blob_name,
-            snapshot=blob_client.snapshot,
-            account_key=getattr(settings, f"AZURE_BLOB_{self.account_name.upper()}", None),
-            permission=azure.storage.blob.BlobSasPermissions(read=True),
-            expiry=datetime.utcnow() + timedelta(hours=1),
-        )
-
-        if sas_token is None:
-            return value
-        return f"{value}?{sas_token}"
 
 
 class HALLooseRelationUrlField(HyperlinkedRelatedField):

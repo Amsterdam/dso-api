@@ -443,13 +443,6 @@ def _build_serializer_field(  # noqa: C901
         if additional_relation is not None and additional_relation.format != "summary":
             _build_serializer_embedded_field(serializer_part, model_field, nesting_level)
         return
-    elif not isinstance(model_field, models.AutoField):
-        # Regular fields
-        # Re-map file to correct serializer
-        field_schema = DynamicModel.get_field_schema(model_field)
-        if field_schema.type == "string" and field_schema.format == "blob-azure":
-            _build_serializer_blob_field(serializer_part, model_field, field_schema)
-            return
 
     if model_field.is_relation:
         return
@@ -671,20 +664,6 @@ def _build_serializer_related_id_field(
     """Build the ``FIELD_id`` field for an related field."""
     camel_id_name = toCamelCase(model_field.attname)
     serializer_part.add_field_name(camel_id_name, source=model_field.attname)
-
-
-def _build_serializer_blob_field(
-    serializer_part: SerializerAssemblyLine, model_field: models.Field, field_schema: dict
-):
-    """Build the blob field"""
-    camel_name = toCamelCase(model_field.name)
-    serializer_part.add_field(
-        camel_name,
-        fields.AzureBlobFileField(
-            account_name=field_schema["account_name"],
-            source=(model_field.name if model_field.name != camel_name else None),
-        ),
-    )
 
 
 def _build_serializer_reverse_fk_field(
