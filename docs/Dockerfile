@@ -15,7 +15,7 @@ COPY . /docs/
 # Added arg here, so build step is invalidated each time
 ARG BUILD_NUMBER=unknown
 RUN mkdir -p /docs/_static \
- && make html
+ && SPHINXOPTS="-j $(nproc)" make html
 
 # Static serving runtime
 FROM nginx
