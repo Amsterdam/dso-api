@@ -7,8 +7,7 @@ from typing import Any, FrozenSet, List, NamedTuple, Optional
 import jinja2
 from schematools.types import DatasetFieldSchema, DatasetSchema, DatasetTableSchema
 from schematools.utils import (
-    dataset_paths_from_url,
-    dataset_schema_from_path,
+    dataset_schemas_from_schemas_path,
     dataset_schemas_from_url,
     to_snake_case,
     toCamelCase,
@@ -93,11 +92,10 @@ LOOKUP_CONTEXT = {
 }
 
 
-def render_dataset_docs(dataset: DatasetSchema, paths: dict[str, str]):
+def render_dataset_docs(dataset: DatasetSchema, dataset_path: str):
     snake_name = to_snake_case(dataset.id)
-    dataset_path = paths[dataset.id]
     main_title = dataset.title or snake_name.replace("_", " ").capitalize()
-    tables = [_get_table_context(t, paths) for t in dataset.tables]
+    tables = [_get_table_context(t, dataset_path) for t in dataset.tables]
     if any(t["has_geometry"] for t in tables):
         wfs_url = f"{BASE_URL}/v1/wfs/{dataset_path}/"
     else:
@@ -122,12 +120,11 @@ def render_dataset_docs(dataset: DatasetSchema, paths: dict[str, str]):
     return dataset_path
 
 
-def render_wfs_dataset_docs(dataset: DatasetSchema, paths: dict[str, str]):
+def render_wfs_dataset_docs(dataset: DatasetSchema, dataset_path: str):
     """Render the docs for the WFS dataset."""
     snake_name = to_snake_case(dataset.id)
-    dataset_path = paths[dataset.id]
     main_title = dataset.title or snake_name.replace("_", " ").capitalize()
-    tables = [_get_feature_type_context(t, paths) for t in dataset.tables]
+    tables = [_get_feature_type_context(t, dataset_path) for t in dataset.tables]
     if all(not t["has_geometry"] for t in tables):
         return None
 
@@ -170,11 +167,10 @@ def _get_table_context(table: DatasetTableSchema, paths: dict[str, str]):
     }
 
 
-def _get_table_uri(table: DatasetTableSchema, paths: dict[str, str]) -> str:
+def _get_table_uri(table: DatasetTableSchema, path: str) -> str:
     """Tell where the endpoint of a table will be"""
-    dataset_path = paths[table.dataset.id]
     snake_id = to_snake_case(table.id)
-    return f"{BASE_URL}/v1/{dataset_path}/{snake_id}/"
+    return f"{BASE_URL}/v1/{path}/{snake_id}/"
 
 
 def _get_table_expands(table: DatasetTableSchema, rel_id_separator=":"):
@@ -217,11 +213,10 @@ def _has_geometry(table: DatasetTableSchema) -> bool:
     )
 
 
-def _get_feature_type_context(table: DatasetTableSchema, paths: dict[str, str]):
+def _get_feature_type_context(table: DatasetTableSchema, parent_path: str):
     """Collect all table data for the WFS server spec."""
     snake_name = to_snake_case(table.dataset.id)
     snake_id = to_snake_case(table["id"])
-    parent_path = paths[table.dataset.id]
     uri = f"{BASE_URL}/v1/wfs/{parent_path}/"
 
     fields = _get_fields(table.fields)
@@ -449,32 +444,18 @@ def _documents(dir_names, file_names):
     )
 
 
-def render_datasets(*local_file_paths):
-    if not local_file_paths:
+def render_datasets(schema_dir):
+    if schema_dir is not None:
+        print(f"fetching datasets from local folder {schema_dir}")
+        schemas = dataset_schemas_from_schemas_path(schema_dir)
+    else:
         print(f"fetching definitions from {SCHEMA_URL}")
         schemas = dataset_schemas_from_url(SCHEMA_URL)
-        paths = dataset_paths_from_url(SCHEMA_URL)
-    else:
-        print("fetching datasets from local folders")
-        schemas = {}
-        paths = {}
-        for file_path in local_file_paths:
-            file_path = os.path.abspath(file_path)
-            if (pos := file_path.find("/datasets/")) == -1:
-                raise ValueError(
-                    f"The provided dataset ({file_path}) should exist in a `datasets` folder."
-                )
-
-            ds_path = file_path[pos + 10 : file_path.rfind("/")]
-            print(f"- reading {ds_path}")
-            schema = dataset_schema_from_path(file_path)
-            schemas[schema.id] = schema
-            paths[schema.id] = ds_path
 
     datasets_path = BASE_PATH / Path("datasets")
 
-    for dataset in schemas.values():
-        render_dataset_docs(dataset, paths)
+    for path, dataset in schemas.items():
+        render_dataset_docs(dataset, path)
 
     # Leverage the fact that the dataset rendering has written the same
     # directory structure as the remote datasets listing in order
@@ -502,8 +483,8 @@ def render_datasets(*local_file_paths):
         {"documents": _documents(root_dirs, root_files)},
     )
 
-    for dataset in schemas.values():
-        render_wfs_dataset_docs(dataset, paths)
+    for path, dataset in schemas.items():
+        render_wfs_dataset_docs(dataset, path)
 
     datasets_path = BASE_PATH / Path("wfs-datasets")
 
@@ -565,4 +546,7 @@ TEMPLATE_ENV.filters["strip_base_url"] = strip_base_url
 
 if __name__ == "__main__":
     # Allow passing local filenames for debugging
-    render_datasets(*sys.argv[1:])
+    path = None
+    if len(sys.argv) > 1:
+        path = sys.argv[1]
+    render_datasets(path)
