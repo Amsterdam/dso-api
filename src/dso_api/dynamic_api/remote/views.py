@@ -179,16 +179,20 @@ class RemoteViewSet(DSOViewMixin, ViewSet):
         )
 
 
+def _get_viewset_api_docs(table_schema: DatasetTableSchema) -> str:
+    return table_schema.description or "Forwarding proxy"
+
+
 def remote_viewset_factory(
     endpoint_url, serializer_class, table_schema: DatasetTableSchema
 ) -> type[RemoteViewSet]:
     """Construct the viewset class that handles the remote serializer."""
 
     return type(
-        f"{serializer_class.__name__}Viewset",
+        f"{table_schema.python_name}ViewSet",
         (RemoteViewSet,),
         {
-            "__doc__": "Forwarding proxy serializer",
+            "__doc__": _get_viewset_api_docs(table_schema),
             "client": clients.make_client(endpoint_url, table_schema),
             "serializer_class": serializer_class,
             "dataset_id": table_schema.dataset.id,
