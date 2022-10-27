@@ -3,13 +3,15 @@ import textwrap
 from argparse import ArgumentParser
 from typing import Any, List, Optional, Tuple, Type
 
-from django.apps import AppConfig, apps
+from django.apps import apps
 from django.core.management import BaseCommand
+from django.db import models
 from rest_framework import serializers
 from rest_framework.request import Request
 from rest_framework.test import APIRequestFactory
 from schematools.permissions import UserScopes
 from schematools.types import DatasetTableSchema
+from schematools.utils import to_snake_case
 
 from dso_api.dynamic_api.serializers import DynamicSerializer
 from dso_api.dynamic_api.urls import router
@@ -53,14 +55,18 @@ class Command(BaseCommand):
         self.seen_serializers = set()  # state to avoid duplicate writes for embedded types
 
         for prefix, viewset, basename in sorted(router.registry):
-            app_label = viewset.model._meta.app_label
+            try:
+                app_label = viewset.model._meta.app_label
+            except AttributeError:
+                # Remote serializer, no models in app registry.
+                app_label = to_snake_case(viewset.table_schema.dataset.id)
+
             if app_labels and app_label not in app_labels:
                 continue
 
             # Write a header each time a new app is dumped
-            app = apps.get_app_config(app_label)
             if app_label != current_app:
-                self.write_header(app)
+                self.write_header(app_label)
                 current_app = app_label
 
             serializer = viewset.serializer_class(context={"request": request})
@@ -96,17 +102,29 @@ class Command(BaseCommand):
         drf_request.response_content_crs = None
         return drf_request
 
-    def write_header(self, app: AppConfig) -> None:
+    def write_header(self, app_label: str) -> None:
         """Write app start header."""
-        self.stdout.write(f"# ---- App: {app.verbose_name or app.label}\n\n\n")
+        try:
+            app = apps.get_app_config(app_label)
+        except LookupError:
+            # Remote serializer, no models in app registry.
+            self.stdout.write(f"# ---- App: {app_label}\n\n\n")
+        else:
+            self.stdout.write(f"# ---- App: {app.verbose_name or app.label}\n\n\n")
 
-    def write_serializer_header(self, serializer: serializers.ModelSerializer):
+    def write_serializer_header(self, serializer: serializers.Serializer):
         """Write a header for the serializer, as it may have multiple child objects"""
-        model = serializer.Meta.model
-        app = apps.get_app_config(model._meta.app_label)
-        self.stdout.write(
-            f"# {app.verbose_name or app.app_label}.{model._meta.verbose_name}\n\n\n"
-        )
+        if isinstance(serializer, serializers.ModelSerializer):
+            model = serializer.Meta.model
+            app = apps.get_app_config(model._meta.app_label)
+            self.stdout.write(
+                f"# {app.verbose_name or app.app_label}.{model._meta.verbose_name}\n\n\n"
+            )
+        else:
+            # Remote serializer:
+            self.stdout.write(
+                f"# {serializer.table_schema.dataset.id}.{serializer.table_schema.id}\n\n\n"
+            )
 
     def write_sub_serializers(self, serializer: DSOSerializer):
         """Write the dependant serializers"""
@@ -250,7 +268,9 @@ class Command(BaseCommand):
             return repr(value).strip("<>")
         elif isinstance(value, DatasetTableSchema):
             # Generate some mock value that is valid Python
-            return f"DATASETS['{value.dataset.id}']['{value.name}']"
+            return f"DATASETS['{value.dataset.id}']['{value.id}']"
+        elif isinstance(value, models.Manager):
+            return f"{value.model.__class__.__name__}.objects"
 
         return repr(value)
 
