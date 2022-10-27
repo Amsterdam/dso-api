@@ -125,7 +125,6 @@ class DynamicApiViewSet(DSOViewMixin, viewsets.ReadOnlyModelViewSet):
 
 def _get_viewset_api_docs(model: type[DynamicModel]) -> str:
     """Generate the API documentation header for the viewset."""
-    # NOTE: currently not using model.get_dataset_path() as the docs don't do either.
     description = model.table_schema().description
     docs_path = f"datasets/{model.get_dataset_path()}.html#{model.get_table_id()}"
     return (
@@ -156,6 +155,7 @@ def viewset_factory(model: type[DynamicModel]) -> type[DynamicApiViewSet]:
     function is called to generate those classes.
     """
     serializer_class = serializers.serializer_factory(model)
+    table_schema = model.table_schema()
 
     attrs = {
         "__doc__": _get_viewset_api_docs(model),
@@ -166,4 +166,4 @@ def viewset_factory(model: type[DynamicModel]) -> type[DynamicApiViewSet]:
         "table_id": model.table_schema()["id"],
         "authorization_grantor": model.get_dataset_schema().get("authorizationGrantor"),
     }
-    return type(f"{model.__name__}ViewSet", (DynamicApiViewSet,), attrs)
+    return type(f"{table_schema.python_name}ViewSet", (DynamicApiViewSet,), attrs)
