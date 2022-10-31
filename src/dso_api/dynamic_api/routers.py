@@ -28,6 +28,7 @@ from typing import TYPE_CHECKING, Iterable
 
 from django.apps import apps
 from django.conf import settings
+from django.core import checks
 from django.core.exceptions import ImproperlyConfigured
 from django.db import connection
 from django.urls import NoReverseMatch, URLPattern, path, reverse
@@ -191,6 +192,17 @@ class DynamicRouter(routers.DefaultRouter):
         db_datasets = list(get_active_datasets(api_enabled=None).db_enabled())
         generated_models = self._build_db_models(db_datasets)
 
+        if settings.DEBUG and checks.run_checks(tags=["models"]):
+            # Don't continue initialization when the models are incorrectly constructed.
+            # There is no need to raise an error here, as the router initialization happens while
+            # the URLConf checks runs. Hence, by stopping initialization the actual system
+            # check framework can continue its checks, and can pick up the actual model issues.
+            logger.error(
+                "System check revealed errors with generated models, "
+                "will not initialize serializers and viewsets."
+            )
+            return []
+
         # Create viewsets only for datasets that have an API enabled
         db_datasets = [ds for ds in db_datasets if ds.enable_api]
         dataset_routes = self._build_db_viewsets(db_datasets)
@@ -250,6 +262,7 @@ class DynamicRouter(routers.DefaultRouter):
 
             generated_models.extend(new_models.values())
 
+        # Perform system checks on the late generated models:
         return generated_models
 
     def _build_db_viewsets(self, db_datasets: Iterable[Dataset]):
