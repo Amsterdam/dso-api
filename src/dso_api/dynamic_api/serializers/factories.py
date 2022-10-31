@@ -509,7 +509,7 @@ def _through_serializer_factory(  # noqa: C901
         # "'ManyToManyField' object has no attribute '_m2m_reverse_name_cache'".
 
         # In Python 3.10, AttributeError has a name attribute, but we support 3.9.
-        if "_m2m_reverse_name_cache" in str(e):
+        if "_m2m_reverse_name_cache" in str(e) or "_meta" in str(e):
             raise AttributeError(f"{e} ({m2m_field})") from e
         else:
             raise
