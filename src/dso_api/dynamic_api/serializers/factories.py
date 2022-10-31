@@ -58,6 +58,33 @@ _serializer_factory_cache = LRUCache(maxsize=100000)
 _temporal_link_serializer_factory_cache = LRUCache(maxsize=100000)
 
 
+EXPOSED_SHORTNAMES = {
+    # Datasets that used shortnames, which we've accidentally exposed instead of the actual names.
+    # By limiting the compatibility check to this list, new datasets won't get the compat fields.
+    # After all, they don't need to transition their API clients.
+    "brk",
+    "loopfietsnetwerk",
+    "standbedrijven",
+    "standvastgoed",
+    # No data in PRD: "handelsregister",
+    # Not used PRD: "objectenopenbareruimte",
+}
+
+
+def _needs_shortname_compatibility(
+    field_schema: DatasetFieldSchema, model_field: models.Field | ForeignObjectRel
+):
+    """Tell whether the field needs to provide backwards compatibility.
+    We've accidentally exposed shortnames in the API.
+    TODO: This feature should be removed after clients migrated.
+    """
+    return (
+        field_schema.has_shortname
+        and field_schema.table.dataset.id in EXPOSED_SHORTNAMES
+        and isinstance(model_field, models.Field)  # forward relation
+    )
+
+
 def clear_serializer_factory_cache():
     _serializer_factory_cache.clear()
     _temporal_link_serializer_factory_cache.clear()
@@ -480,6 +507,11 @@ def _build_serializer_embedded_field(
     # The field name is still generated from the model_field, in case this is a reverse field.
     serializer_part.add_embedded_field(toCamelCase(model_field.name), embedded_field)
 
+    # TODO: Temp. For backwards compatibility with accidentally exposed shortnames.
+    if _needs_shortname_compatibility(field_schema, model_field):
+        logger.debug("Adding shortname compat for embedding %s", field_schema)
+        serializer_part.add_embedded_field(toCamelCase(field_schema.shortname), embedded_field)
+
 
 def _through_serializer_factory(  # noqa: C901
     m2m_field: models.ManyToManyField,
@@ -618,6 +650,13 @@ def _build_m2m_serializer_field(
     source = m2m_field.get_path_info()[0].join_field.name
     serializer_part.add_field(field_schema.name, serializer_class(source=source, many=True))
 
+    # TODO: temp compat for brk.kadastraleobjecten.heeftEenRelatieMetVerblijfsobject
+    if _needs_shortname_compatibility(field_schema, m2m_field):
+        logger.debug("Adding shortname compat for M2M %s", field_schema)
+        serializer_part.add_field(
+            toCamelCase(field_schema.shortname), serializer_class(source=source, many=True)
+        )
+
 
 def _build_plain_serializer_field(
     serializer_part: SerializerAssemblyLine, model_field: models.Field
@@ -627,6 +666,13 @@ def _build_plain_serializer_field(
     which fieldclass will be used for the representation."""
     field_schema = DynamicModel.get_field_schema(model_field)
     serializer_part.add_field_name(field_schema.name, source=model_field.name)
+
+    # TODO: Temp. For backwards compatibility with accidentally exposing shortnames:
+    if _needs_shortname_compatibility(field_schema, model_field):
+        logger.debug("Adding shortname compat for field %s", field_schema)
+        serializer_part.add_field_name(
+            toCamelCase(field_schema.shortname), source=model_field.name
+        )
 
 
 def _build_link_serializer_field(
@@ -658,6 +704,13 @@ def _build_link_serializer_field(
         field_class(**field_kwargs),
     )
 
+    # TODO: Temp. For backwards compatibility with accidentally exposing shortnames:
+    field_schema = DynamicModel.get_field_schema(model_field)
+    if _needs_shortname_compatibility(field_schema, model_field):
+        logger.debug("Adding shortname compat for relation %s", field_schema)
+        field_kwargs.setdefault("source", model_field.name)
+        serializer_part.add_field(toCamelCase(field_schema.shortname), field_class(**field_kwargs))
+
 
 def _build_serializer_related_id_field(
     serializer_part: SerializerAssemblyLine, model_field: models.Field
@@ -665,6 +718,14 @@ def _build_serializer_related_id_field(
     """Build the ``FIELD_id`` field for a related field."""
     camel_id_name = toCamelCase(model_field.attname)
     serializer_part.add_field_name(camel_id_name, source=model_field.attname)
+
+    # TODO: Temp. For backwards compatibility with accidentally exposing shortnames:
+    field_schema = DynamicModel.get_field_schema(model_field)
+    if _needs_shortname_compatibility(field_schema, model_field):
+        logger.debug("Adding shortname compat for related ID %s", field_schema)
+        serializer_part.add_field_name(
+            toCamelCase(field_schema.shortname) + "Id", source=model_field.attname
+        )
 
 
 def _build_serializer_reverse_fk_field(
