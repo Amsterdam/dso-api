@@ -5,13 +5,9 @@ from pathlib import Path
 from typing import Any, FrozenSet, List, NamedTuple, Optional
 
 import jinja2
+from schematools.naming import to_snake_case, toCamelCase
 from schematools.types import DatasetFieldSchema, DatasetSchema, DatasetTableSchema
-from schematools.utils import (
-    dataset_schemas_from_schemas_path,
-    dataset_schemas_from_url,
-    to_snake_case,
-    toCamelCase,
-)
+from schematools.utils import dataset_schemas_from_schemas_path, dataset_schemas_from_url
 
 SCHEMA_URL = os.getenv("SCHEMA_URL", "https://schemas.data.amsterdam.nl/datasets/")
 BASE_URL = "https://api.data.amsterdam.nl"
@@ -144,16 +140,16 @@ def render_wfs_dataset_docs(dataset: DatasetSchema, dataset_path: str):
     return dataset_path
 
 
-def _get_table_context(table: DatasetTableSchema, paths: dict[str, str]):
+def _get_table_context(table: DatasetTableSchema, path: str):
     """Collect all table data for the REST API spec."""
-    uri = _get_table_uri(table, paths)
-    table_fields = list(table.get_fields(include_subfields=False))
+    uri = _get_table_uri(table, path)
+    table_fields = table.fields
     fields = _get_fields(table_fields)
     filters = _get_filters(table_fields)
 
     return {
         "title": to_snake_case(table.id).replace("_", " ").capitalize(),
-        "doc_id": f"{table.dataset.id}:{table.id}",
+        "doc_id": _get_doc_id(table),
         "uri": uri,
         "rest_csv": f"{uri}?_format=csv",
         "rest_geojson": f"{uri}?_format=geojson",
@@ -167,38 +163,42 @@ def _get_table_context(table: DatasetTableSchema, paths: dict[str, str]):
     }
 
 
+def _get_doc_id(table, id_separator=":") -> str:
+    """Provide an identifier for the sphinx doc to link to."""
+    return f"{table.dataset.id}{id_separator}{table.id}"
+
+
 def _get_table_uri(table: DatasetTableSchema, path: str) -> str:
     """Tell where the endpoint of a table will be"""
     snake_id = to_snake_case(table.id)
     return f"{BASE_URL}/v1/{path}/{snake_id}/"
 
 
-def _get_table_expands(table: DatasetTableSchema, rel_id_separator=":"):
+def _get_table_expands(table: DatasetTableSchema, id_separator=":"):
     """Return which relations can be expanded"""
     expands = [
         {
             "id": field.id,
-            "camel_name": toCamelCase(field.id),
-            "snake_name": to_snake_case(field.id),
-            "relation_id": field["relation"].replace(":", rel_id_separator),
-            "target_doc_id": field["relation"].replace(":", rel_id_separator),
+            "api_name": field.name,
+            "python_name": field.python_name,
+            "relation_id": field["relation"].replace(":", id_separator),
+            "target_doc_id": _get_doc_id(field.related_table, id_separator),
             "related_table": field.related_table,
         }
-        for field in table.get_fields(include_subfields=False)
+        for field in table.fields
         if field.get("relation") is not None
     ]
 
     # Reverse relations can also be expanded
     for additional_relation in table.additional_relations:
-        related_table = additional_relation.related_table
         expands.append(
             {
                 "id": additional_relation.id,
-                "camel_name": toCamelCase(additional_relation.id),
-                "snake_name": to_snake_case(additional_relation.id),
-                "relation_id": additional_relation.relation.replace(":", rel_id_separator),
-                "target_doc_id": f"{related_table.dataset.id}{rel_id_separator}{related_table.id}",
-                "related_table": related_table,
+                "api_name": additional_relation.name,
+                "python_name": additional_relation.python_name,
+                "relation_id": additional_relation.relation.replace(":", id_separator),
+                "target_doc_id": _get_doc_id(additional_relation.related_table, id_separator),
+                "related_table": additional_relation.related_table,
             }
         )
 
@@ -216,7 +216,7 @@ def _has_geometry(table: DatasetTableSchema) -> bool:
 def _get_feature_type_context(table: DatasetTableSchema, parent_path: str):
     """Collect all table data for the WFS server spec."""
     snake_name = to_snake_case(table.dataset.id)
-    snake_id = to_snake_case(table["id"])
+    snake_id = to_snake_case(table.id)
     uri = f"{BASE_URL}/v1/wfs/{parent_path}/"
 
     fields = _get_fields(table.fields)
@@ -225,12 +225,12 @@ def _get_feature_type_context(table: DatasetTableSchema, parent_path: str):
     return {
         "title": snake_id.replace("_", " ").capitalize(),
         "typenames": [f"app:{snake_id}", snake_id],
-        "doc_id": f"{table.dataset.id}/{table.id}",
+        "doc_id": _get_doc_id(table, id_separator="/"),
         "uri": uri,
         "description": table.get("description"),
         "fields": [_get_field_context(field) for field in fields],
         "auth": _fix_auth(table.dataset.auth | table.auth),
-        "expands": _get_table_expands(table, rel_id_separator="/"),
+        "expands": _get_table_expands(table, id_separator="/"),
         "source": table,
         "has_geometry": has_geometry,
         "wfs_typename": f"app:{snake_name}",
@@ -257,7 +257,10 @@ def _get_fields(table_fields) -> List[DatasetFieldSchema]:
             continue
 
         result_fields.append(field)
-        result_fields.extend(_get_fields(field.subfields))
+        if field.is_object or field.is_array_of_objects:
+            result_fields.extend(
+                _get_fields(f for f in field.subfields if not f.is_temporal_range)
+            )
 
     return result_fields
 
@@ -291,31 +294,24 @@ def _field_data(field: DatasetFieldSchema):
 
 def _get_field_context(field: DatasetFieldSchema) -> dict[str, Any]:
     """Get context data for a field."""
-    identifiers = field.table.identifier
-    is_deprecated = False
-
-    snake_name = _get_field_snake_name(field)
-    camel_name = _get_field_camel_name(field)
-
-    if field.relation:
-        # Mimic Django ForeignKey _id suffix.
-        snake_name += "_id"
-        camel_name += "Id"
-        is_deprecated = True
+    python_name = _get_dotted_python_name(field)
+    api_name = _get_dotted_api_name(field)
 
     type, value_example, _ = _field_data(field)
     description = field.description
-    is_foreign_id = field.parent_field is not None and field.name in identifiers
-    if not description and is_foreign_id and field.name == identifiers[0]:
+    is_foreign_id = (
+        field.is_subfield and field.parent_field.relation and not field.is_temporal_range
+    )
+    if not description and is_foreign_id and field.id in field.parent_field.related_field_ids:
         # First identifier gets parent field description.
         description = field.parent_field.description
 
     return {
-        "name": field.name,
-        "snake_name": snake_name,
-        "camel_name": camel_name,
-        "is_identifier": field.name in identifiers,
-        "is_deprecated": is_deprecated,
+        "id": field.id,
+        "python_name": python_name,
+        "api_name": api_name,
+        "is_identifier": field.is_identifier_part,
+        "is_deprecated": False,
         "is_relation": bool(field.relation),
         "is_foreign_id": is_foreign_id,
         "type": (type or "").capitalize(),
@@ -325,25 +321,25 @@ def _get_field_context(field: DatasetFieldSchema) -> dict[str, Any]:
     }
 
 
-def _get_field_snake_name(field: DatasetFieldSchema) -> str:
+def _get_dotted_python_name(field: DatasetFieldSchema) -> str:
     """Find the snake and camel names of a field"""
-    snake_name = to_snake_case(field.name)
+    snake_name = to_snake_case(field.id)
 
     parent_field = field.parent_field
     while parent_field is not None:
-        parent_snake_name = to_snake_case(parent_field.name)
+        parent_snake_name = to_snake_case(parent_field.id)
         snake_name = f"{parent_snake_name}.{snake_name}"
         parent_field = parent_field.parent_field
 
     return snake_name
 
 
-def _get_field_camel_name(field: DatasetFieldSchema) -> str:
+def _get_dotted_api_name(field: DatasetFieldSchema) -> str:
     """Find the snake and camel names of a field"""
-    camel_name = toCamelCase(field.name)
+    camel_name = field.name
     parent_field = field.parent_field
     while parent_field is not None:
-        parent_camel_name = toCamelCase(parent_field.name)
+        parent_camel_name = parent_field.name
         camel_name = f"{parent_camel_name}.{camel_name}"
         parent_field = parent_field.parent_field
 
@@ -369,7 +365,7 @@ def _get_filters(table_fields: List[DatasetFieldSchema]) -> List[dict[str, Any]]
 def _filter_payload(
     field: DatasetFieldSchema, *, prefix: str = "", name_suffix: str = "", is_deprecated=False
 ):
-    name = prefix + _get_field_camel_name(field) + name_suffix
+    name = prefix + _get_dotted_api_name(field) + name_suffix
     type, value_example, lookups = _field_data(field)
 
     return {
@@ -391,25 +387,15 @@ def _get_filter_context(field: DatasetFieldSchema) -> List[dict[str, Any]]:
     if field.relation:
         if field.is_scalar:
             # normal FKs, can now be parsed using dot-notation
-            prefix = _get_field_camel_name(field) + "."
-            result = [
-                _filter_payload(field.related_table.get_field_by_id(id_field), prefix=prefix)
-                for id_field in field.related_table.identifier
-            ]
-            # Also include the old notation, that still works too (but deprecated)
-            return result + [_filter_payload(field, name_suffix="Id", is_deprecated=True)]
-        elif field.is_object:
+            prefix = _get_dotted_api_name(field) + "."
+            return [_filter_payload(id_field, prefix=prefix) for id_field in field.related_fields]
+        elif field.is_composite_key:
             # composite key / temporal relation. Add those fields
-            related_identifiers = field.related_table.identifier
-            result = [
+            return [
                 _filter_payload(sub_field)
                 for sub_field in field.subfields
-                if sub_field.id in related_identifiers
+                if not sub_field.is_temporal_range
             ]
-
-            # Our implementation still inclues a regular foreign key,
-            # since Django doesn't support composite pks - used more in the past (but deprecated).
-            return result + [_filter_payload(field, name_suffix="Id", is_deprecated=True)]
     elif field.is_nested_table:
         return [_filter_payload(f) for f in field.subfields]
     elif field.is_scalar or field.is_array_of_scalars:
