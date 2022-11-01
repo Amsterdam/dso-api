@@ -53,6 +53,7 @@ Wordt ``?_count=true`` meegegeven, dat bevat het tevens:
 Bijvoorbeeld:
 
 .. code-block:: javascript
+
     "page": {
         "number": 1,
         "size": 20,
