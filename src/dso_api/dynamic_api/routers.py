@@ -192,7 +192,7 @@ class DynamicRouter(routers.DefaultRouter):
         db_datasets = list(get_active_datasets(api_enabled=None).db_enabled())
         generated_models = self._build_db_models(db_datasets)
 
-        if settings.DEBUG and checks.run_checks(tags=["models"]):
+        if settings.DEBUG and self._has_model_errors():
             # Don't continue initialization when the models are incorrectly constructed.
             # There is no need to raise an error here, as the router initialization happens while
             # the URLConf checks runs. Hence, by stopping initialization the actual system
@@ -235,6 +235,13 @@ class DynamicRouter(routers.DefaultRouter):
             del self._urls
 
         return generated_models
+
+    def _has_model_errors(self) -> bool:
+        """Tell whether there are model errors"""
+        return any(
+            check.is_serious() and not check.is_silenced()
+            for check in checks.run_checks(tags=["models"])
+        )
 
     def _build_db_models(self, db_datasets: Iterable[Dataset]) -> list[type[DynamicModel]]:
         """Generate the Django models based on the dataset definitions."""
