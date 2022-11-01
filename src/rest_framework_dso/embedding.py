@@ -16,6 +16,7 @@ from typing import Callable, Iterable, Iterator, Optional, TypeVar, Union
 
 from django.db import models
 from django.db.models import ForeignObjectRel
+from drf_spectacular.drainage import get_override
 from lru import LRU
 from rest_framework import serializers
 from rest_framework.exceptions import ParseError
@@ -285,11 +286,13 @@ def get_all_embedded_fields_by_name(
     """Find all possible embedded fields, as lookup table with their dotted names."""
     result = {}
 
+    deprecated = get_override(serializer_class, "deprecate_fields", default=[])
+
     for field_name in getattr(serializer_class.Meta, "embedded_fields", ()):
         field: AbstractEmbeddedField = get_embedded_field(serializer_class, field_name)
         if (
-            field.is_array
-            and not allow_m2m
+            (field.is_array and not allow_m2m)
+            or field.field_name in deprecated  # avoid deprecated embeds (e.g. hftRelMtVot)
             # Avoid recursion (e.g. heeftHoofdadres.adresseertVerblijfsobject.heeftHoofdadres.)
             or f".{field_name}." in prefix
             or prefix.startswith(f"{field_name}.")

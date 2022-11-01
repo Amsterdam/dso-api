@@ -262,6 +262,10 @@ class DSOAutoSchema(openapi.AutoSchema):
         return paginator
 
     def _map_model_field(self, model_field, direction):
+        """This method is called by DRF-spectacular when a serializer field
+        is only mentioned in "Meta.fields", but doesn't have a declared field yet
+        (e.g. added via ``SerializerAssemblyLine.add_field_name()``).
+        """
         schema = super()._map_model_field(model_field, direction=direction)
 
         if isinstance(model_field, gis_models.GeometryField):
@@ -273,8 +277,12 @@ class DSOAutoSchema(openapi.AutoSchema):
         return schema
 
     def _map_serializer_field(self, field, direction, bypass_extensions=False):
-        """Transform the serializer field into a OpenAPI definition.
-        This method is overwritten to fix some missing field types.
+        """This method is called by DRF-spectacular when a serializer field
+        is defined with a corresponding ``serializer.Field`` class
+        (e.g. added via ``SerializerAssemblyLine.add_field()``).
+
+        This method transforms the serializer field into a OpenAPI definition.
+        We've overwritten this to change the geometry field representation.
         """
         if not hasattr(field, "_spectacular_annotation"):
             # Fix support for missing field types:
