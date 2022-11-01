@@ -104,6 +104,8 @@ if DEBUG:
     ]
     MIDDLEWARE.insert(0, "debug_toolbar.middleware.DebugToolbarMiddleware")
 
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
 ROOT_URLCONF = "dso_api.urls"
 
 STATICFILES_DIRS = [str(BASE_DIR / "dso_api/static")]
