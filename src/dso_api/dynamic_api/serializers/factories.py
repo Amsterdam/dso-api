@@ -31,6 +31,7 @@ from django.db.models.fields import AutoFieldMixin
 from django.db.models.fields.related import RelatedField
 from django.db.models.fields.reverse_related import ForeignObjectRel
 from django.utils.functional import SimpleLazyObject
+from drf_spectacular.drainage import set_override
 from rest_framework import serializers
 from rest_framework.relations import HyperlinkedRelatedField
 from schematools.contrib.django.factories import is_dangling_model
@@ -131,12 +132,14 @@ class SerializerAssemblyLine:
                     "fields": fields or [],
                     "extra_kwargs": {"depth": depth},
                     "embedded_fields": {},
+                    "deprecated_fields": [],
                     **meta_kwargs,
                 },
             ),
         }
+        self.deprecate_fields = []
 
-    def add_field(self, name, field: serializers.Field):
+    def add_field(self, name, field: serializers.Field, is_deprecated=False):
         """Add a field to the serializer assembly"""
         self.class_attrs[name] = field
         self.class_attrs["Meta"].fields.append(name)
@@ -146,7 +149,10 @@ class SerializerAssemblyLine:
             # and it's impossible to find out where the field was created.
             raise RuntimeError("DRF will assert it's redundant to have source == field_name.")
 
-    def add_field_name(self, name, *, source=None):
+        if is_deprecated:
+            self.deprecate_fields.append(name)
+
+    def add_field_name(self, name, *, source=None, is_deprecated=False):
         """Add a field, but only by name.
         The regular DRF ModelSerializer will generate the field (at every request!).
         """
@@ -154,14 +160,24 @@ class SerializerAssemblyLine:
         if source is not None and source != name:
             self.class_attrs["Meta"].extra_kwargs[name] = {"source": source}
 
-    def add_embedded_field(self, name, field: AbstractEmbeddedField):
+        if is_deprecated:
+            self.deprecate_fields.append(name)
+
+    def add_embedded_field(self, name, field: AbstractEmbeddedField, is_deprecated=False):
         """Add an embedded field to the serializer-to-be."""
         # field.__set_name__() handling will be triggered on class construction.
         self.class_attrs[name] = field
 
+        if is_deprecated:
+            self.deprecate_fields.append(name)
+
     def construct_class(self, class_name, base_class: type[S]) -> type[S]:
         """Perform dynamic class construction"""
-        return type(class_name, (base_class,), self.class_attrs)
+        cls = type(class_name, (base_class,), self.class_attrs)
+        if self.deprecate_fields:
+            # Pass additional information to DRF-Spectacular
+            set_override(cls, "deprecate_fields", self.deprecate_fields)
+        return cls
 
 
 def _serializer_cache_key(model, depth=0, nesting_level=0):
@@ -510,7 +526,9 @@ def _build_serializer_embedded_field(
     # TODO: Temp. For backwards compatibility with accidentally exposed shortnames.
     if _needs_shortname_compatibility(field_schema, model_field):
         logger.debug("Adding shortname compat for embedding %s", field_schema)
-        serializer_part.add_embedded_field(toCamelCase(field_schema.shortname), embedded_field)
+        serializer_part.add_embedded_field(
+            toCamelCase(field_schema.shortname), embedded_field, is_deprecated=True
+        )
 
 
 def _through_serializer_factory(  # noqa: C901
@@ -654,7 +672,9 @@ def _build_m2m_serializer_field(
     if _needs_shortname_compatibility(field_schema, m2m_field):
         logger.debug("Adding shortname compat for M2M %s", field_schema)
         serializer_part.add_field(
-            toCamelCase(field_schema.shortname), serializer_class(source=source, many=True)
+            toCamelCase(field_schema.shortname),
+            serializer_class(source=source, many=True),
+            is_deprecated=True,
         )
 
 
@@ -671,7 +691,7 @@ def _build_plain_serializer_field(
     if _needs_shortname_compatibility(field_schema, model_field):
         logger.debug("Adding shortname compat for field %s", field_schema)
         serializer_part.add_field_name(
-            toCamelCase(field_schema.shortname), source=model_field.name
+            toCamelCase(field_schema.shortname), source=model_field.name, is_deprecated=True
         )
 
 
@@ -709,7 +729,9 @@ def _build_link_serializer_field(
     if _needs_shortname_compatibility(field_schema, model_field):
         logger.debug("Adding shortname compat for relation %s", field_schema)
         field_kwargs.setdefault("source", model_field.name)
-        serializer_part.add_field(toCamelCase(field_schema.shortname), field_class(**field_kwargs))
+        serializer_part.add_field(
+            toCamelCase(field_schema.shortname), field_class(**field_kwargs), is_deprecated=True
+        )
 
 
 def _build_serializer_related_id_field(
@@ -717,14 +739,16 @@ def _build_serializer_related_id_field(
 ):
     """Build the ``FIELD_id`` field for a related field."""
     camel_id_name = toCamelCase(model_field.attname)
-    serializer_part.add_field_name(camel_id_name, source=model_field.attname)
+    serializer_part.add_field_name(camel_id_name, source=model_field.attname, is_deprecated=True)
 
     # TODO: Temp. For backwards compatibility with accidentally exposing shortnames:
     field_schema = DynamicModel.get_field_schema(model_field)
     if _needs_shortname_compatibility(field_schema, model_field):
         logger.debug("Adding shortname compat for related ID %s", field_schema)
         serializer_part.add_field_name(
-            toCamelCase(field_schema.shortname) + "Id", source=model_field.attname
+            toCamelCase(field_schema.shortname) + "Id",
+            source=model_field.attname,
+            is_deprecated=True,
         )
 
 
