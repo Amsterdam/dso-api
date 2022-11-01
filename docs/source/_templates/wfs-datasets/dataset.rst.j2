@@ -44,7 +44,7 @@ Velden
      - Type
      - Omschrijving
 {%- for field in table.fields %}
-   * - ``{{ field.snake_name }}`` {% if field.auth %} (autorisatie: {{ field.auth|sort|join(', ') }}){% endif %}
+   * - ``{{ field.python_name }}`` {% if field.auth %} (autorisatie: {{ field.auth|sort|join(', ') }}){% endif %}
      - {{ field.type|default('') }}
      - {{ field.description|default('') }}
 {%- endfor %}
@@ -62,14 +62,14 @@ De volgende velden kunnen ingesloten worden met ``?embed=...`` en ``?expand=...`
      - Tabel
      - Omschrijving
 {%- for expand in table.expands: %}
-   * - ``{{ expand.snake_name }}``
+   * - ``{{ expand.python_name }}``
      - :ref:`{{ expand.relation_id }} <{{ expand.target_doc_id }}>`
      - {{ expand.related_table.description or '' }}
 {%- endfor %}
 
 {% if table.expands|length > 1 %}
 Je kan meerdere velden insluiten door te ze scheiden met een comma, bijvoorbeeld:
-``?embed={{ table.expands.0.snake_name }},{{ table.expands.1.snake_name }}``
+``?embed={{ table.expands.0.python_name }},{{ table.expands.1.python_name }}``
 {% endif %}
 
 {% endif %}

@@ -1,8 +1,8 @@
-Sphinx == 4.1.2
-sphinx-rtd-theme == 0.5.2
-Pillow == 9.0.1
+Sphinx == 5.3.0
+sphinx-rtd-theme == 1.0.0
+Pillow == 9.3.0
 python-string-utils == 1.0.0
-amsterdam-schema-tools == 3.0.0
+amsterdam-schema-tools == 5.0
 
 # Required by Sphinx too
-jinja2 >= 3.0.1
+jinja2 >= 3.1.2

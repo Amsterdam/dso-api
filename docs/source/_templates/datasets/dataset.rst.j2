@@ -61,7 +61,7 @@ De volgende velden zijn beschikbaar:
      - Type
      - Omschrijving
 {%- for field in table.fields %}
-   * - {% if field.is_deprecated %}:deprecated:`{{ field.camel_name }}` *gaat vervallen*{% else %}``{{ field.camel_name }}``{% endif %}{% if field.auth %} (autorisatie: {{ field.auth|sort|join(', ') }}){% endif %}
+   * - {% if field.is_deprecated %}:deprecated:`{{ field.api_name }}` *gaat vervallen*{% else %}``{{ field.api_name }}``{% endif %}{% if field.auth %} (autorisatie: {{ field.auth|sort|join(', ') }}){% endif %}
      - {{ field.type|default('') }}{% if field.is_relation or field.is_foreign_id %} *relatie*{% elif field.is_identifier %} *identificatie*{% endif %}
      - {{ field.description|default('') }}
 {%- endfor %}
@@ -98,7 +98,7 @@ De volgende velden kunnen ingesloten worden met ``?_expandScope=...``:
      - Tabel
      - Omschrijving
 {%- for expand in table.expands: %}
-   * - ``{{ expand.camel_name }}``
+   * - ``{{ expand.api_name }}``
      - :ref:`{{ expand.relation_id }} <{{ expand.target_doc_id }}>`
      - {{ expand.related_table.description or '' }}
 {%- endfor %}
