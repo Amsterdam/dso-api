@@ -4,7 +4,7 @@
 #
 #    pip-compile --output-file=requirements.txt requirements.in
 #
-amsterdam-schema-tools[django]==5.0
+amsterdam-schema-tools[django]==5.0.1
     # via -r requirements.in
 arrow==1.2.3
     # via isoduration
@@ -338,7 +338,7 @@ rsa==4.9
     # via google-auth
 sentry-sdk==1.10.1
     # via -r requirements.in
-shapely==1.8.0
+shapely==1.8.5.post1
     # via
     #   amsterdam-schema-tools
     #   mapbox-vector-tile
