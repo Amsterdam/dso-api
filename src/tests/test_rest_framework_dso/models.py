@@ -30,6 +30,7 @@ class Category(models.Model, NonTemporalMixin):
 
     class Meta:
         app_label = "test_rest_framework_dso"
+        ordering = ("name",)
 
 
 class Actor(models.Model, NonTemporalMixin):
@@ -40,6 +41,7 @@ class Actor(models.Model, NonTemporalMixin):
 
     class Meta:
         app_label = "test_rest_framework_dso"
+        ordering = ("name",)
 
 
 class Movie(models.Model, NonTemporalMixin):

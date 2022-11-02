@@ -78,12 +78,12 @@ class TestExpand:
             "_embedded": {
                 "actors": [
                     {
-                        "name": "John Doe",
-                        "_embedded": {"last_updated_by": None},
-                    },
-                    {
                         "name": "Jane Doe",
                         "_embedded": {"last_updated_by": {"name": "jane_updater"}},
+                    },
+                    {
+                        "name": "John Doe",
+                        "_embedded": {"last_updated_by": None},
                     },
                 ],
                 "category": {
@@ -113,8 +113,8 @@ class TestExpand:
             "date_added": None,
             "_embedded": {
                 "actors": [
-                    {"name": "John Doe"},
                     {"name": "Jane Doe"},
+                    {"name": "John Doe"},
                 ],
                 "category": {"name": "bar"},
             },
@@ -198,12 +198,12 @@ class TestExpand:
                 ],
                 "actors": [
                     {
-                        "name": "John Doe",
-                        "_embedded": {"last_updated_by": None},
-                    },
-                    {
                         "name": "Jane Doe",
                         "_embedded": {"last_updated_by": {"name": "jane_updater"}},
+                    },
+                    {
+                        "name": "John Doe",
+                        "_embedded": {"last_updated_by": None},
                     },
                 ],
                 "category": [
@@ -241,8 +241,8 @@ class TestExpand:
                     {"name": "foo123", "category_id": movie.category_id, "date_added": None}
                 ],
                 "actors": [
-                    {"name": "John Doe"},
                     {"name": "Jane Doe"},
+                    {"name": "John Doe"},
                 ],
                 "category": [{"name": "bar"}],
             },

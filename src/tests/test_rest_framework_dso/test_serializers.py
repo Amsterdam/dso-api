@@ -26,8 +26,8 @@ def test_serializer_single(drf_request, movie):
         "date_added": None,
         "_embedded": {
             "actors": [
-                {"name": "John Doe"},
                 {"name": "Jane Doe"},
+                {"name": "John Doe"},
             ],
             "category": {"name": "bar"},
         },
@@ -48,8 +48,8 @@ def test_serializer_many(drf_request, movie):
     assert data == {
         "movie": [{"name": "foo123", "category_id": movie.category_id, "date_added": None}],
         "actors": [
-            {"name": "John Doe"},
             {"name": "Jane Doe"},
+            {"name": "John Doe"},
         ],
         "category": [{"name": "bar"}],
     }
@@ -112,8 +112,8 @@ def test_pagination_many(drf_request, movie):
         "_embedded": {
             "movie": [{"name": "foo123", "category_id": movie.category_id, "date_added": None}],
             "actors": [
-                {"name": "John Doe"},
                 {"name": "Jane Doe"},
+                {"name": "John Doe"},
             ],
             "category": [{"name": "bar"}],
         },
