@@ -111,6 +111,10 @@ class BrowsableAPIRenderer(RendererMixin, renderers.BrowsableAPIRenderer):
     def get_context(self, data, accepted_media_type, renderer_context):
         context = super().get_context(data, accepted_media_type, renderer_context)
 
+        formats = context["available_formats"]
+        if "api" in formats:
+            formats.remove("api")
+
         # Maintain compatibility with other types of ViewSets
         context["authorization_grantor"] = getattr(context["view"], "authorization_grantor", None)
 
