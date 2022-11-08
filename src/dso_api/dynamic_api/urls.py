@@ -4,14 +4,15 @@ from importlib import import_module, reload
 from django.conf import settings
 from django.urls import clear_url_caches, get_urlconf, include, path
 
-from dso_api.dynamic_api.routers import DynamicRouter
-
 from . import views
+from .routers import DynamicRouter
+from .views.doc import DocsOverview
 
 
 def get_patterns(router_urls):
     """Generate the actual URL patterns for this file."""
     return [
+        path("docs/", DocsOverview.as_view()),
         path("mvt/", views.DatasetMVTIndexView.as_view(), name="mvt-index"),
         path("wfs/", views.DatasetWFSIndexView.as_view()),
         path("", include(router_urls)),

@@ -1,0 +1,143 @@
+<!doctype html>{% load i18n %}
+<html>
+<head>
+  <title>{% if schema.title %}{{ schema.title }}{% else %}{{ name|title }}{% endif %} &mdash; Amsterdam Datapunt API Documentatie v1</title>
+  {% block extrahead %}{% endblock %}
+</head>
+<body>
+  <h1>{% if schema.title %}{{ schema.title }}{% else %}{{ name|title }}{% endif %} MVT</h1>
+  <p>{% if schema.description %}{{ schema.description }}{% endif %}</p>
+  <ul>
+    <li><strong>ID:</strong> {{ schema.id }}</li>
+    <li><strong>Versie:</strong> {{ schema.version }}</li>
+    <li><strong>Autorisatie:</strong> {{ schema.auth }}</li>
+    <li><strong>Licentie:</strong> {{ schema.license }}</li>
+    <li><strong>Eigenaar:</strong> {{ schema.owner }}</li>
+    <li><strong>Uitgever:</strong> {{ schema.publisher }}</li>
+    <li><strong>Bronhouder:</strong> {{ schema.creator }}</li>
+  </ul>
+
+  {% if dataset_has_auth %}
+    <p><Toegang kan worden aangevraagd bij de uitgever: {{ schema.publisher }}</p>
+  {% endif %}
+
+  <h1>Endpoints</h1>
+  <ul>
+    <li>Swagger UI: <a href="{{ swagger_url }}">{{ swagger_url }}</a></li>
+  </ul>
+
+  <h1>Tabellen</h1>
+  {% for table in tables %}
+    <h2>{{ table.title }}</h2>
+    {% if table.description %}<p>{{ table.description }}</p>{% endif %}
+
+    <ul>
+      <li>
+        <strong>Autorisatie:</strong>
+        {% if table.auth %}
+          {{ table.auth|join:", " }}
+        {% else %}
+          Geen, dit is openbare data.
+        {% endif %}
+      </li>
+      <li><strong>REST URI:</strong> <a href="{{ table.uri }}">{{ table.uri }}</a></li>
+    </ul>
+
+    <p>De volgende velden zijn beschikbaar:</p>
+    <table>
+      <thead>
+        <tr>
+          <th>Veldnaam</th>
+          <th>Type</th>
+          <th>Omschrijving</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for field in table.fields %}
+        <tr>
+          <td>
+            {% if field.is_deprecated %}
+            <s>{{ field.name }}</s> <i>gaat vervallen</i>
+            {% else %}
+            {{ field.name }}
+            {% endif %}
+          </td>
+          <td>
+            {{ field.type|default:"" }}
+            {% if field.is_identifier %}<i>identificatie</i>{% endif %}
+            {% if field.is_relation or field.is_foreign_id %}<i>relatie</i>{% endif %}
+          </td>
+          <td>{{ field.description|default:"" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <p>De volgende query-parameters zijn te gebruiken:</p>
+    <table>
+      <thead>
+        <tr>
+          <th>Parameter</th>
+          <th>Autorisatie</th>
+          <th>Mogelijke waarden</th>
+          <th>Werking</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for filter in table.filters %}
+        <tr>
+          <td>
+            {% if filter.is_deprecated %}
+              <s>{{ filter.name }}</s> <i>gaat vervallen</i>
+            {% else %}
+              {{ filter.name }}
+            {% endif %}
+          </td>
+          <td>{{ filter.auth|join:", " }}</td>
+          <td>{{ filter.value_example|default:"" }}</td>
+          <td>Test op exacte waarde (<code>==</code>)</td>
+        </tr>
+        {% for lookup in filter.lookups %}
+          <tr>
+            <td>
+              {% if filter.is_deprecated %}
+                <s>{{ filter.name }}[{{ lookup.operator }}]</s> <i>gaat vervallen</i>
+              {% else %}
+                {{ filter.name }}[{{ lookup.operator }}]
+              {% endif %}
+            </td>
+            <td>{{ filter.auth|join:", " }}</td>
+            <td>{{ lookup.value_example|default:"" }}</td>
+            <td>{{ lookup.description }}</td>
+          </tr>
+        {% endfor %}
+      {% endfor %}
+      </tbody>
+    </table>
+
+    {% if table.expands %}
+      <h3>Insluitbare relaties</h3>
+      <p>De volgende velden kunnen ingesloten worden met <code>?_expandScope=...</code>:</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Relatie</th>
+            <th>Tabel</th>
+            <th>Omschrijving</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for expand in table.expands %}
+            <tr>
+              <td>{{ expand.api_name }}</td>
+              <td><a href="{{ expand.target_doc_id }}">{{ expand.relation_id }}</a></td>
+              <td>{{ expand.related_table.description|default:"" }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% endif %}
+  {% endfor %}
+
+</body>
+</html>
