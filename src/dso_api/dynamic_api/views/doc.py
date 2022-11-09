@@ -145,7 +145,7 @@ def _table_context(table: DatasetTableSchema, path: str):
     }
 
 
-def _make_link(to_table: DatasetTableSchema, id_separator=":") -> str:
+def _make_link(to_table: DatasetTableSchema) -> str:
     path = get_object_or_404(
         Dataset.objects.api_enabled().db_enabled(), name = to_table.dataset.id,
     ).path
@@ -166,7 +166,7 @@ def _make_table_expands(table: DatasetTableSchema, id_separator=":"):
             "camel_name": field.name,
             "snake_name": field.python_name,
             "relation_id": field["relation"].replace(":", id_separator),
-            "target_doc_id": _make_link(field.related_table, id_separator),
+            "target_doc_id": _make_link(field.related_table),
             "related_table": field.related_table,
         }
         for field in table.fields
@@ -181,7 +181,7 @@ def _make_table_expands(table: DatasetTableSchema, id_separator=":"):
                 "api_name": additional_relation.name,
                 "python_name": additional_relation.python_name,
                 "relation_id": additional_relation.relation.replace(":", id_separator),
-                "target_doc_id": _make_link(additional_relation.related_table, id_separator),
+                "target_doc_id": _make_link(additional_relation.related_table),
                 "related_table": additional_relation.related_table,
             }
         )
