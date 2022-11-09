@@ -2,6 +2,7 @@
 from typing import Any, List, FrozenSet, Optional, NamedTuple
 
 from django.shortcuts import get_object_or_404
+from django.urls import reverse
 from django.views.generic import TemplateView
 from schematools.contrib.django.models import Dataset
 from schematools.types import DatasetTableSchema, DatasetFieldSchema, DatasetSchema
@@ -15,7 +16,11 @@ class DocsOverview(TemplateView):
         datasets = (ds for ds in Dataset.objects.api_enabled().db_enabled().all())
         context = super().get_context_data(**kwargs)
         context["datasets"] = [
-            {"path": ds.path, "title": ds.schema.title, "tables": [table.id for table in ds.schema.tables]}
+            {
+                "uri": reverse(f"dynamic_api:doc-{ds.schema.id}"),
+                "title": ds.schema.title,
+                "tables": [table.id for table in ds.schema.tables],
+            }
             for ds in datasets
         ]
         return context
@@ -32,9 +37,8 @@ class DatasetDocView(TemplateView):
         path = d.path
 
         main_title = ds.title or ds.db_name.replace("_", " ").capitalize()
+
         tables = [_table_context(t, path) for t in ds.tables]
-        if any(t.has_geometry_fields for t in ds.tables):
-            pass
 
         context = super().get_context_data(**kwargs)
         context.update(
@@ -45,7 +49,7 @@ class DatasetDocView(TemplateView):
                 dataset_has_auth=bool(_fix_auth(ds.auth)),
                 main_title=main_title,
                 tables=tables,
-                swagger_url=f"{BASE_URL}/v1/{path}/",
+                swagger_url=reverse(f"dynamic_api:openapi-{ds.id}"),
             )
         )
 
@@ -67,8 +71,6 @@ _string_lookups = ["in", "like", "not", "isnull", "isempty"]
 FORMAT_ALIASES = {
     "date-time": "Datetime",
 }
-
-BASE_URL = "https://api.data.amsterdam.nl"
 
 VALUE_EXAMPLES = {
     "string": ("Tekst", _string_lookups),
@@ -124,14 +126,14 @@ LOOKUP_CONTEXT = {
 
 def _table_context(table: DatasetTableSchema, path: str):
     """Collect all table data for the REST API spec."""
-    uri = _get_table_uri(table, path)
+    uri = reverse(f"dynamic_api:{table.dataset.id}-{table.id}-list")
     table_fields = table.fields
     fields = _list_fields(table_fields)
     filters = _get_filters(table_fields)
 
     return {
+        "id": table.id,
         "title": to_snake_case(table.id).replace("_", " ").capitalize(),
-        "doc_id": _make_link(table),
         "uri": uri,
         "rest_csv": f"{uri}?_format=csv",
         "rest_geojson": f"{uri}?_format=geojson",
@@ -147,15 +149,10 @@ def _table_context(table: DatasetTableSchema, path: str):
 
 def _make_link(to_table: DatasetTableSchema) -> str:
     path = get_object_or_404(
-        Dataset.objects.api_enabled().db_enabled(), name = to_table.dataset.id,
+        Dataset.objects.api_enabled().db_enabled(),
+        name=to_table.dataset.id,
     ).path
-    return _get_table_uri(to_table, path)
-
-
-def _get_table_uri(table: DatasetTableSchema, dataset_path: str) -> str:
-    """Tell where the endpoint of a table will be"""
-    snake_id = to_snake_case(table.id)
-    return f"{BASE_URL}/v1/{dataset_path}/{snake_id}/"
+    return reverse(f"dynamic_api:doc-{to_table.dataset.id}") + f"#{to_table.id}"
 
 
 def _make_table_expands(table: DatasetTableSchema, id_separator=":"):
@@ -300,7 +297,7 @@ def _get_filters(table_fields: List[DatasetFieldSchema]) -> List[dict[str, Any]]
 
 
 def _filter_payload(
-        field: DatasetFieldSchema, *, prefix: str = "", name_suffix: str = "", is_deprecated=False
+    field: DatasetFieldSchema, *, prefix: str = "", name_suffix: str = "", is_deprecated=False
 ):
     name = prefix + _get_dotted_api_name(field) + name_suffix
     type, value_example, lookups = _field_data(field)
