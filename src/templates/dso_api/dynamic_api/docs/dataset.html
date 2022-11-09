@@ -28,7 +28,7 @@
 
   <h1>Tabellen</h1>
   {% for table in tables %}
-    <h2>{{ table.title }}</h2>
+    <h2><a id="{{ table.id }}">{{ table.title }}</a></h2>
     {% if table.description %}<p>{{ table.description }}</p>{% endif %}
 
     <ul>
