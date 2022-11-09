@@ -1,6 +1,3 @@
-.. vim:noswapfile:nobackup:nowritebackup:
-.. highlight:: console
-
 # DSO API
 
 A new generic API that exposes datasets.
