@@ -3,12 +3,15 @@ from typing import Any, List, FrozenSet, Optional, NamedTuple
 
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
+from django.utils.decorators import method_decorator
+from django.views.decorators.gzip import gzip_page
 from django.views.generic import TemplateView
 from schematools.contrib.django.models import Dataset
 from schematools.types import DatasetTableSchema, DatasetFieldSchema, DatasetSchema
 from schematools.naming import to_snake_case
 
 
+@method_decorator(gzip_page, name="dispatch")
 class DocsOverview(TemplateView):
     template_name = "dso_api/dynamic_api/docs/overview.html"
 
@@ -26,6 +29,7 @@ class DocsOverview(TemplateView):
         return context
 
 
+@method_decorator(gzip_page, name="dispatch")
 class DatasetDocView(TemplateView):
     template_name = "dso_api/dynamic_api/docs/dataset.html"
 
