@@ -18,7 +18,7 @@
   </ul>
 
   {% if dataset_has_auth %}
-    <p><Toegang kan worden aangevraagd bij de uitgever: {{ schema.publisher }}</p>
+    <p>Toegang kan worden aangevraagd bij de uitgever: {{ schema.publisher }}</p>
   {% endif %}
 
   <h1>Endpoints</h1>
@@ -57,9 +57,9 @@
         <tr>
           <td>
             {% if field.is_deprecated %}
-            <s>{{ field.name }}</s> <i>gaat vervallen</i>
+            <s>{{ field.api_name }}</s> <i>gaat vervallen</i>
             {% else %}
-            {{ field.name }}
+            {{ field.api_name }}
             {% endif %}
           </td>
           <td>

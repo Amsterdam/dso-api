@@ -16,7 +16,7 @@ class DocsOverview(TemplateView):
     template_name = "dso_api/dynamic_api/docs/overview.html"
 
     def get_context_data(self, **kwargs):
-        datasets = (ds for ds in Dataset.objects.api_enabled().db_enabled().all())
+        datasets = Dataset.objects.api_enabled().db_enabled()
         context = super().get_context_data(**kwargs)
         context["datasets"] = [
             {
@@ -34,15 +34,13 @@ class DatasetDocView(TemplateView):
     template_name = "dso_api/dynamic_api/docs/dataset.html"
 
     def get_context_data(self, **kwargs):
-        d: Dataset = get_object_or_404(
+        ds: DatasetSchema = get_object_or_404(
             Dataset.objects.api_enabled().db_enabled(), name=kwargs["dataset_name"]
-        )
-        ds: DatasetSchema = d.schema
-        path = d.path
+        ).schema
 
         main_title = ds.title or ds.db_name.replace("_", " ").capitalize()
 
-        tables = [_table_context(t, path) for t in ds.tables]
+        tables = [_table_context(t) for t in ds.tables]
 
         context = super().get_context_data(**kwargs)
         context.update(
@@ -128,7 +126,7 @@ LOOKUP_CONTEXT = {
 }
 
 
-def _table_context(table: DatasetTableSchema, path: str):
+def _table_context(table: DatasetTableSchema):
     """Collect all table data for the REST API spec."""
     uri = reverse(f"dynamic_api:{table.dataset.id}-{table.id}-list")
     table_fields = table.fields
@@ -159,14 +157,14 @@ def _make_link(to_table: DatasetTableSchema) -> str:
     return reverse(f"dynamic_api:doc-{to_table.dataset.id}") + f"#{to_table.id}"
 
 
-def _make_table_expands(table: DatasetTableSchema, id_separator=":"):
+def _make_table_expands(table: DatasetTableSchema):
     """Return which relations can be expanded"""
     expands = [
         {
             "id": field.id,
-            "camel_name": field.name,
-            "snake_name": field.python_name,
-            "relation_id": field["relation"].replace(":", id_separator),
+            "api_name": field.name,
+            "python_name": field.python_name,
+            "relation_id": field["relation"],
             "target_doc_id": _make_link(field.related_table),
             "related_table": field.related_table,
         }
@@ -181,7 +179,7 @@ def _make_table_expands(table: DatasetTableSchema, id_separator=":"):
                 "id": additional_relation.id,
                 "api_name": additional_relation.name,
                 "python_name": additional_relation.python_name,
-                "relation_id": additional_relation.relation.replace(":", id_separator),
+                "relation_id": additional_relation.relation,
                 "target_doc_id": _make_link(additional_relation.related_table),
                 "related_table": additional_relation.related_table,
             }
