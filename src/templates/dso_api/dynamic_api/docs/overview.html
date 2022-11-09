@@ -42,10 +42,10 @@
 <ul>
   {% for ds in datasets %}
   <li>
-    <a href="datasets/{{ ds.id }}">{{ ds.title|title }}</a>
+    <a href="datasets/{{ ds.path }}.html">{{ ds.title|title }}</a>
     <ul>
     {% for table in ds.tables %}
-      <li><a href="datasets/{{ ds.id }}#{{ table }}">{{ table }}</a></li>
+      <li><a href="datasets/{{ ds.path }}.html#{{ table }}">{{ table.title }}</a></li>
     {% endfor %}
     </ul>
   </li>

@@ -12,11 +12,10 @@ class DocsOverview(TemplateView):
     template_name = "dso_api/dynamic_api/docs/overview.html"
 
     def get_context_data(self, **kwargs):
-        datasets = (ds.schema for ds in Dataset.objects.api_enabled().db_enabled().all())
+        datasets = (ds for ds in Dataset.objects.api_enabled().db_enabled().all())
         context = super().get_context_data(**kwargs)
         context["datasets"] = [
-            # TODO path
-            {"id": ds.id, "title": ds.title, "tables": [table.id for table in ds.tables]}
+            {"path": ds.path, "title": ds.schema.title, "tables": [table.id for table in ds.schema.tables]}
             for ds in datasets
         ]
         return context
