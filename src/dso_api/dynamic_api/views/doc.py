@@ -150,10 +150,6 @@ def _table_context(table: DatasetTableSchema):
 
 
 def _make_link(to_table: DatasetTableSchema) -> str:
-    path = get_object_or_404(
-        Dataset.objects.api_enabled().db_enabled(),
-        name=to_table.dataset.id,
-    ).path
     return reverse(f"dynamic_api:doc-{to_table.dataset.id}") + f"#{to_table.id}"
 
 
