@@ -3,7 +3,7 @@ from django.urls import reverse
 
 
 @pytest.mark.django_db
-def test_overview(api_client, fietspaaltjes_dataset):
+def test_overview(api_client, filled_router, fietspaaltjes_dataset):
     """Tests the documentation overview at /v1/docs."""
     overview = reverse("dynamic_api:docs-index")
     assert overview
@@ -12,7 +12,7 @@ def test_overview(api_client, fietspaaltjes_dataset):
     assert response.status_code == 200
 
     content = response.rendered_content
-    assert """<a href="datasets/fietspaaltjes.html#fietspaaltjes">Fietspaaltjes</a>""" in content
+    assert """<a href="/v1/docs/datasets/fietspaaltjes.html#fietspaaltjes">Fietspaaltjes</a>""" in content
 
 
 @pytest.mark.django_db
