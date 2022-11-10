@@ -441,7 +441,8 @@ def render_datasets(schema_dir):
     datasets_path = BASE_PATH / Path("datasets")
 
     for path, dataset in schemas.items():
-        render_dataset_docs(dataset, path)
+        if dataset.status == DatasetSchema.Status.beschikbaar:
+            render_dataset_docs(dataset, path)
 
     # Leverage the fact that the dataset rendering has written the same
     # directory structure as the remote datasets listing in order
@@ -470,7 +471,8 @@ def render_datasets(schema_dir):
     )
 
     for path, dataset in schemas.items():
-        render_wfs_dataset_docs(dataset, path)
+        if dataset.status == DatasetSchema.Status.beschikbaar:
+            render_wfs_dataset_docs(dataset, path)
 
     datasets_path = BASE_PATH / Path("wfs-datasets")
 
