@@ -53,9 +53,11 @@ def test_wfs_dataset(api_client, filled_router, fietspaaltjes_dataset):
     content = response.rendered_content
 
     # Check for the CSV and GeoJSON download links.
-    re.search(
-        r"""CSV.export:.*href="/v1/wfs/fietspaaltjes.*OUTPUTFORMAT=CSV""", content, re.I | re.M
+    assert re.search(
+        r"""CSV.export:.*href="/v1/wfs/fietspaaltjes.*OUTPUTFORMAT=CSV""", content, re.I
     )
-    re.search(
-        r"""CSV.export:.*href="/v1/wfs/fietspaaltjes.*OUTPUTFORMAT=geojson""", content, re.I | re.M
+    assert re.search(
+        r"""GeoJSON.export:.*href="/v1/wfs/fietspaaltjes.*OUTPUTFORMAT=geojson""",
+        content,
+        re.I,
     )
