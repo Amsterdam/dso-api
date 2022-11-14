@@ -1140,6 +1140,7 @@ class TestEmbedTemporalTables:
             data={
                 "_expand": "true",
                 "_expandScope": "ligtInBouwblok.ligtInBuurt.ligtInWijk.ligtInStadsdeel",
+                "naam": "Voorbeeldpand",
             },
         )
         data = read_response_json(response)
@@ -1333,7 +1334,7 @@ class TestEmbedTemporalTables:
                 "self": {
                     "href": (
                         "http://testserver/v1/bag/panden/?_expand=true"
-                        "&_expandScope=ligtInBouwblok.ligtInBuurt.ligtInWijk.ligtInStadsdeel"
+                        "&_expandScope=ligtInBouwblok.ligtInBuurt.ligtInWijk.ligtInStadsdeel&naam=Voorbeeldpand"
                     )
                 }
             },
