@@ -48,6 +48,7 @@ from .views import (
     DatasetDocView,
     DatasetMVTSingleView,
     DatasetMVTView,
+    DatasetWFSDocView,
     DatasetWFSView,
     viewset_factory,
 )
@@ -344,6 +345,16 @@ class DynamicRouter(routers.DefaultRouter):
                 f"docs/datasets/{dataset.path}.html",
                 DatasetDocView.as_view(),
                 name=f"doc-{dataset.schema.id}",
+                kwargs={"dataset_name": dataset.schema.id},
+            )
+
+            if not dataset.has_geometry_fields:
+                continue
+
+            yield path(
+                f"docs/wfs-datasets/{dataset.path}.html",
+                DatasetWFSDocView.as_view(),
+                name=f"doc-wfs-{dataset.schema.id}",
                 kwargs={"dataset_name": dataset.schema.id},
             )
 

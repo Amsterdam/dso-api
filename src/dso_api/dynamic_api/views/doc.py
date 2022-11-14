@@ -58,6 +58,36 @@ class DatasetDocView(TemplateView):
         return context
 
 
+class DatasetWFSDocView(TemplateView):
+    """WFS-specific documentation for a single dataset."""
+
+    template_name = "dso_api/dynamic_api/docs/dataset_wfs.html"
+
+    def get_context_data(self, **kwargs):
+        ds: DatasetSchema = get_object_or_404(
+            Dataset.objects.api_enabled().db_enabled(), name=kwargs["dataset_name"]
+        ).schema
+
+        main_title = ds.title or ds.db_name.replace("_", " ").capitalize()
+
+        tables = [_table_context_wfs(t) for t in ds.tables]
+
+        context = super().get_context_data(**kwargs)
+        context.update(
+            dict(
+                schema=ds,
+                schema_name=ds.db_name,
+                schema_auth=ds.auth,
+                dataset_has_auth=bool(_fix_auth(ds.auth)),
+                main_title=main_title,
+                tables=tables,
+                swagger_url=reverse(f"dynamic_api:openapi-{ds.id}"),
+            )
+        )
+
+        return context
+
+
 class LookupContext(NamedTuple):
     operator: str
     value_example: Optional[str]
@@ -146,6 +176,38 @@ def _table_context(table: DatasetTableSchema):
         "expands": _make_table_expands(table),
         "source": table,
         "has_geometry": table.has_geometry_fields,
+    }
+
+
+def _table_context_wfs(table: DatasetTableSchema):
+    """Collect table data for the WFS server spec."""
+    uri = reverse("dynamic_api:wfs", kwargs={"dataset_name": table.dataset.id})
+    snake_name = to_snake_case(table.dataset.id)
+    snake_id = to_snake_case(table.id)
+
+    return {
+        "title": snake_id.replace("_", " ").capitalize(),
+        "typenames": [f"app:{snake_id}", snake_id],
+        "uri": uri,
+        "description": table.get("description"),
+        "fields": [_get_field_context(field) for field in (_list_fields(table.fields))],
+        "auth": _fix_auth(table.dataset.auth | table.auth),
+        "expands": _make_table_expands(table),
+        "source": table,
+        "has_geometry": table.has_geometry_fields,
+        "wfs_typename": f"app:{snake_name}",
+        "wfs_csv": (
+            f"{uri}?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature"
+            f"&TYPENAMES={snake_id}&OUTPUTFORMAT=csv"
+            if table.has_geometry_fields
+            else ""
+        ),
+        "wfs_geojson": (
+            f"{uri}?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature"
+            f"&TYPENAMES={snake_id}&OUTPUTFORMAT=geojson"
+            if table.has_geometry_fields
+            else ""
+        ),
     }
 
 
