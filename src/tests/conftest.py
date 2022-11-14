@@ -1163,6 +1163,13 @@ def panden_data(panden_model, dossiers_model, bouwblokken_data):
         ligt_in_bouwblok_volgnummer="1",
         heeft_dossier_id="GV00000406",
     )
+    panden_model.objects.create(
+        id="9999999999999999.9",
+        identificatie="9999999999999999",
+        volgnummer=3,
+        begin_geldigheid=DATE_2021_FEB,
+        naam="Pand zonder bouwblok of dossier",
+    )
     dossiers_model.objects.create(dossier="GV00000406")
 
 

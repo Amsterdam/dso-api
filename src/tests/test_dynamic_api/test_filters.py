@@ -204,7 +204,7 @@ class TestFilterEngine:
     @pytest.mark.parametrize(
         "query,expect",
         [
-            ("", 1),
+            ("", 2),
             ("ligtInBouwblok.identificatie=03630012096483&ligtInBouwblok.volgnummer=1", 1),
             ("ligtInBouwblok.identificatie=03630012096483&ligtInBouwblok.volgnummer=2", 0),
             ("ligtInBouwblokId=03630012096483.1", 1),  # deprecated format, but test anyway!
@@ -213,6 +213,10 @@ class TestFilterEngine:
             ("ligtInBouwblok=123", 0),
             ("ligtInBouwblok.ligtInBuurtId=03630000000078.2", 1),
             ("ligtInBouwblok.ligtInBuurt.identificatie=03630000000078", 1),
+            ("ligtInBouwblok.identificatie[isnull]=true", 1),
+            ("ligtInBouwblok.identificatie[isnull]=false", 1),
+            ("heeftDossier[isnull]=true", 1),
+            ("heeftDossier.dossier=GV00000406", 1),
         ],
     )
     def test_filter_temporal(bag_dataset, panden_model, panden_data, query, expect):
