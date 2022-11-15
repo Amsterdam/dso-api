@@ -17,6 +17,7 @@ from jwcrypto.jwt import JWT
 from rest_framework.request import Request
 from rest_framework.test import APIClient, APIRequestFactory
 from schematools.contrib.django.models import Dataset, DynamicModel, Profile
+from schematools.utils import dataset_schema_from_path
 from schematools.types import DatasetSchema, ProfileSchema
 
 from rest_framework_dso.crs import RD_NEW
@@ -858,6 +859,27 @@ def explosieven_data(explosieven_model):
         id=1,
         pdf="https://host.domain/file space space.extension",
         emailadres="account@host.domain",
+    )
+
+
+@pytest.fixture()
+def huishoudelijkafval_schema():
+    path = HERE / "files" / "huishoudelijkafval" / "dataset.json"
+    return dataset_schema_from_path(path)
+
+
+@pytest.fixture()
+def huishoudelijkafval_dataset(bag_dataset, huishoudelijkafval_schema, dynamic_models):
+    return Dataset.objects.create(
+        name="huishoudelijkafval", path="huishoudelijkafval", schema_data=huishoudelijkafval_schema.json(),
+    )
+
+
+@pytest.fixture()
+def huishoudelijkafval_data(dynamic_models, huishoudelijkafval_dataset):
+    model = dynamic_models["huishoudelijkafval"]["cluster"]
+    return model.objects.create(
+        id=1,
     )
 
 

@@ -267,8 +267,10 @@ class QueryFilterEngine:
 
         # Make sure loose relations don't return all historical records,
         # but only match the selected point in time.
-        if temporal_lookups := self._create_temporal_filters(parts):
-            q_object &= temporal_lookups
+        # Don't do this for isnull, which checks whether a relation exists at all.
+        if lookup != "isnull":
+            if temporal_lookups := self._create_temporal_filters(parts):
+                q_object &= temporal_lookups
 
         # Also tell whether the filter-path walks over many-to-many relationships.
         # These will need extra care to avoid duplicate results in the final filter call.
@@ -303,7 +305,7 @@ class QueryFilterEngine:
 
     def _translate_lookup(
         self, filter_input: FilterInput, filter_part: FilterPathPart, value: Any
-    ):
+    ) -> str:
         """Convert the lookup value into the Django ORM type."""
         lookup = filter_input.lookup
 
