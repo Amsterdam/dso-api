@@ -4,7 +4,7 @@
 #
 #    pip-compile --output-file=requirements.txt requirements.in
 #
-amsterdam-schema-tools[django]==5.0.1
+amsterdam-schema-tools[django]==5.0.2
     # via -r requirements.in
 arrow==1.2.3
     # via isoduration
@@ -263,7 +263,7 @@ protobuf==3.20.3
     #   mapbox-vector-tile
 psutil==5.9.3
     # via opencensus-ext-azure
-psycopg2==2.9.4
+psycopg2==2.9.5
     # via amsterdam-schema-tools
 py==1.11.0
     # via pytest
@@ -338,7 +338,7 @@ rsa==4.9
     # via google-auth
 sentry-sdk==1.10.1
     # via -r requirements.in
-shapely==1.8.5.post1
+shapely==1.8.0
     # via
     #   amsterdam-schema-tools
     #   mapbox-vector-tile
