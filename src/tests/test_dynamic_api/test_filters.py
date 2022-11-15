@@ -584,6 +584,20 @@ class TestDynamicFilterSet:
         assert response.status_code == HTTP_400_BAD_REQUEST
 
 
+@pytest.mark.django_db
+def test_temporal_relation_isnull(huishoudelijkafval_data, filled_router):
+    """isnull on a relation should check whether a relation exists at all,
+    not check that a relation exists with a null identifier.
+    """
+    response = APIClient().get(
+        "/v1/huishoudelijkafval/cluster/?bagNummeraanduiding.identificatie[isnull]=true"
+    )
+    assert response.status_code == 200
+    data = read_response_json(response)
+
+    assert len(data["_embedded"]["cluster"]) > 0
+
+
 @pytest.mark.parametrize(
     "value",
     [
