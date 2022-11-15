@@ -749,25 +749,6 @@ class TestDynamicSerializer:
         assert fietspaaltjes[0]["area"] == "A", fietspaaltjes_serializer.data
 
     @staticmethod
-    def test_download_url_field_empty_field(drf_request, download_url_dataset, filled_router):
-        """Prove that empty download url not crashing api."""
-
-        dossier_model = filled_router.all_models["download"]["dossiers"]
-        dossier_model.objects.create(
-            id=1,
-            url="",
-        )
-        DossiersSerializer = serializer_factory(dossier_model)
-        dossiers_serializer = DossiersSerializer(
-            dossier_model.objects.all(),
-            context={"request": drf_request},
-            many=True,
-        )
-
-        dossiers = list(dossiers_serializer.data["dossiers"])  # consume generator
-        assert dossiers[0]["url"] == ""
-
-    @staticmethod
     def test_loose_relation_serialization(drf_request, statistieken_model):
         """Prove that the serializer factory generates the right link
         for a loose relation field

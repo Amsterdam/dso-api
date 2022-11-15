@@ -890,19 +890,6 @@ def ligplaatsen_model(indirect_self_ref_dataset, dynamic_models):
 
 
 @pytest.fixture()
-def download_url_schema_json() -> dict:
-    path = HERE / "files/download-url.json"
-    return json.loads(path.read_text())
-
-
-@pytest.fixture()
-def download_url_dataset(download_url_schema_json) -> Dataset:
-    return Dataset.objects.create(
-        name="download", path="download", schema_data=json.dumps(download_url_schema_json)
-    )
-
-
-@pytest.fixture()
 def meldingen_schema_json() -> dict:
     """Fixture to return the schema json"""
     path = HERE / "files/meldingen.json"
