@@ -128,4 +128,4 @@ ENV/
 /docs/source/wfs-datasets/
 
 # Docker
-docker-compose.override.y*ml
+docker-compose.override.*.y*ml
