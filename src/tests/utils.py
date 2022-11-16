@@ -33,8 +33,8 @@ def patch_table_auth(schema: DatasetSchema, table_id, *, auth: list[str]):
     # This updates the low-level dict data so all high-level objects get it.
     schema.get_table_by_id(table_id)  # checks errors
 
-    raw_table = next(t for t in schema["tables"] if t.default["id"] == table_id)
-    raw_table.default["auth"] = auth
+    raw_table = next(t for t in schema["tables"] if t["id"] == table_id)
+    raw_table["auth"] = auth
 
     # Also patch the active model, as that's already loaded and has a copy of the table schema
     model = apps.get_model(schema.id, table_id)
@@ -48,7 +48,7 @@ def patch_field_auth(schema: DatasetSchema, table_id, field_id, *subfields: str,
     table.get_field_by_id(field_id)  # check existence
     del table.__dict__["fields"]  # clear cached property
 
-    raw_table = next(t.default for t in schema["tables"] if t.default["id"] == table_id)
+    raw_table = next(t for t in schema["tables"] if t["id"] == table_id)
     patch_raw_field_auth(raw_table, field_id, *subfields, auth=auth)
 
     # Also patch the active model, if its already created

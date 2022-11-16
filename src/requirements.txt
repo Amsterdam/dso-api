@@ -4,7 +4,7 @@
 #
 #    pip-compile --output-file=requirements.txt requirements.in
 #
-amsterdam-schema-tools[django]==5.0.2
+amsterdam-schema-tools[django]==5.1
     # via -r requirements.in
 arrow==1.2.3
     # via isoduration
@@ -25,9 +25,7 @@ azure-identity==1.11.0
 bandit==1.7.4
     # via -r requirements.in
 cachetools==5.2.0
-    # via
-    #   amsterdam-schema-tools
-    #   google-auth
+    # via google-auth
 certifi==2022.9.24
     # via
     #   django-healthchecks
@@ -59,9 +57,7 @@ deepdiff==6.2.1
 defusedxml==0.7.1
     # via django-gisserver
 deprecated==1.2.13
-    # via
-    #   amsterdam-schema-tools
-    #   jwcrypto
+    # via jwcrypto
 django==3.2.16
     # via
     #   -r requirements.in
@@ -342,8 +338,6 @@ shapely==1.8.0
     # via
     #   amsterdam-schema-tools
     #   mapbox-vector-tile
-simple-singleton==1.5.1
-    # via amsterdam-schema-tools
 singledispatch==3.7.0
     # via json-encoder
 six==1.16.0
