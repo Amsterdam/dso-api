@@ -57,9 +57,9 @@
         <tr>
           <td>
             {% if field.is_deprecated %}
-            <s>{{ field.api_name }}</s> <i>gaat vervallen</i>
+            <s><code>{{ field.api_name }}</code></s> <i>gaat vervallen</i>
             {% else %}
-            {{ field.api_name }}
+            <code>{{ field.api_name }}</code>
             {% endif %}
           </td>
           <td>
@@ -88,9 +88,9 @@
         <tr>
           <td>
             {% if filter.is_deprecated %}
-              <s>{{ filter.name }}</s> <i>gaat vervallen</i>
+              <s><code>{{ filter.name }}</code></s> <i>gaat vervallen</i>
             {% else %}
-              {{ filter.name }}
+              <code>{{ filter.name }}</code>
             {% endif %}
           </td>
           <td>{{ filter.auth|join:", " }}</td>
@@ -101,9 +101,9 @@
           <tr>
             <td>
               {% if filter.is_deprecated %}
-                <s>{{ filter.name }}[{{ lookup.operator }}]</s> <i>gaat vervallen</i>
+                <s><code>{{ filter.name }}[{{ lookup.operator }}]</code></s> <i>gaat vervallen</i>
               {% else %}
-                {{ filter.name }}[{{ lookup.operator }}]
+                <code>{{ filter.name }}[{{ lookup.operator }}]</code>
               {% endif %}
             </td>
             <td>{{ filter.auth|join:", " }}</td>
@@ -130,7 +130,7 @@
           {% for expand in table.expands %}
             <tr>
               <td>{{ expand.api_name }}</td>
-              <td><a href="{{ expand.target_doc_id }}">{{ expand.relation_id }}</a></td>
+              <td><a href="{{ expand.target_doc }}">{{ expand.relation_id }}</a></td>
               <td>{{ expand.related_table.description|default:"" }}</td>
             </tr>
           {% endfor %}

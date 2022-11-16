@@ -20,6 +20,7 @@ def test_overview(api_client, filled_router, fietspaaltjes_dataset):
         """<a href="/v1/docs/datasets/fietspaaltjes.html#fietspaaltjes">Fietspaaltjes</a>"""
         in content
     )
+    assert "`" not in content  # Check for leftover ` from ReST-to-HTML conversion.
 
 
 @pytest.mark.django_db

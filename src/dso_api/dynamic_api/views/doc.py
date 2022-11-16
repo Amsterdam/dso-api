@@ -1,9 +1,11 @@
 """Dataset documentation views."""
+import operator
 from typing import Any, List, FrozenSet, Optional, NamedTuple
 
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.utils.decorators import method_decorator
+from django.utils.safestring import mark_safe
 from django.views.decorators.gzip import gzip_page
 from django.views.generic import TemplateView
 from schematools.contrib.django.models import Dataset
@@ -94,6 +96,10 @@ class LookupContext(NamedTuple):
     description: str
 
 
+def lookup_context(op, example, descr):
+    return LookupContext(op, mark_safe(example), mark_safe(descr))
+
+
 # This should match ALLOWED_SCALAR_LOOKUPS in filters.parser (except for the "exact" lookup).
 _comparison_lookups = ["gt", "gte", "lt", "lte", "not", "in", "isnull"]
 _identifier_lookups = ["in", "not", "isnull"]
@@ -106,21 +112,21 @@ FORMAT_ALIASES = {
 
 VALUE_EXAMPLES = {
     "string": ("Tekst", _string_lookups),
-    "boolean": ("``true`` | ``false``", []),
+    "boolean": ("<code>true</code> | <code>false</code>", []),
     "integer": ("Geheel getal", _comparison_lookups),
     "number": ("Getal", _comparison_lookups),
-    "time": ("``hh:mm[:ss[.ms]]``", _comparison_lookups),
-    "date": ("``yyyy-mm-dd``", _comparison_lookups),
-    "date-time": ("``yyyy-mm-dd`` of ``yyyy-mm-ddThh:mm[:ss[.ms]]``", _comparison_lookups),
-    "uri": ("https://....", _string_lookups),
+    "time": ("<code>hh:mm[:ss[.ms]]</code>", _comparison_lookups),
+    "date": ("<code>yyyy-mm-dd</code>", _comparison_lookups),
+    "date-time": ("<code>yyyy-mm-dd</code> of <code>yyyy-mm-ddThh:mm[:ss[.ms]]</code>", _comparison_lookups),
+    "uri": ("<code>https://...</code>", _string_lookups),
     "array": ("value,value", ["contains"]),  # comma separated list of strings
     "https://geojson.org/schema/Geometry.json": ("geometry", _polygon_lookups),
     "https://geojson.org/schema/Polygon.json": (
-        "GeoJSON of ``POLYGON(x y ...)``",
+        "GeoJSON of <code>POLYGON(x y ...)</code>",
         _polygon_lookups,
     ),
     "https://geojson.org/schema/MultiPolygon.json": (
-        "GeoJSON of ``MULTIPOLYGON(x y ...)``",
+        "GeoJSON of <code>MULTIPOLYGON(x y ...)</code>",
         _polygon_lookups,
     ),
 }
@@ -128,29 +134,29 @@ VALUE_EXAMPLES = {
 LOOKUP_CONTEXT = {
     lookup.operator: lookup
     for lookup in [
-        LookupContext("gt", None, "Test op groter dan (``>``)."),
-        LookupContext("gte", None, "Test op groter dan of gelijk (``>=``)."),
-        LookupContext("lt", None, "Test op kleiner dan (``<``)."),
-        LookupContext("lte", None, "Test op kleiner dan of gelijk (``<=``)."),
-        LookupContext(
-            "like", "Tekst met jokertekens (``*`` en ``?``).", "Test op gedeelte van tekst."
+        lookup_context("gt", None, "Test op groter dan (<code>&gt;</code>)."),
+        lookup_context("gte", None, "Test op groter dan of gelijk (<code>&gt;=</code>)."),
+        lookup_context("lt", None, "Test op kleiner dan (<code>&lt;</code>)."),
+        lookup_context("lte", None, "Test op kleiner dan of gelijk (<code>&lt;=</code>)."),
+        lookup_context(
+            "like", "Tekst met jokertekens (<code>*</code> en <code>?</code>).", "Test op gedeelte van tekst."
         ),
-        LookupContext(
+        lookup_context(
             "in",
             "Lijst van waarden",
-            "Test of de waarde overeenkomst met 1 van de opties (``IN``).",
+            "Test of de waarde overeenkomst met 1 van de opties (<code>IN</code>).",
         ),
-        LookupContext("not", None, "Test of waarde niet overeenkomt (``!=``)."),
-        LookupContext(
+        lookup_context("not", None, "Test of waarde niet overeenkomt (<code>!=</code>)."),
+        lookup_context(
             "contains", "Comma gescheiden lijst", "Test of er een intersectie is met de waarde."
         ),
-        LookupContext(
+        lookup_context(
             "isnull",
-            "``true`` of ``false``",
-            "Test op ontbrekende waarden (``IS NULL`` / ``IS NOT NULL``).",
+            "<code>true</code> of <code>false</code>",
+            "Test op ontbrekende waarden (<code>IS NULL</code> / <code>IS NOT NULL</code>).",
         ),
-        LookupContext(
-            "isempty", "``true`` of ``false``", "Test of de waarde leeg is (``== ''`` / ``!= ''``)"
+        lookup_context(
+            "isempty", "<code>true</code> of <code>false</code>", "Test of de waarde leeg is (<code>== ''</code> / <code>!= ''</code>)"
         ),
     ]
 }
@@ -223,7 +229,7 @@ def _make_table_expands(table: DatasetTableSchema):
             "api_name": field.name,
             "python_name": field.python_name,
             "relation_id": field["relation"],
-            "target_doc_id": _make_link(field.related_table),
+            "target_doc": _make_link(field.related_table),
             "related_table": field.related_table,
         }
         for field in table.fields
@@ -231,19 +237,21 @@ def _make_table_expands(table: DatasetTableSchema):
     ]
 
     # Reverse relations can also be expanded
-    for additional_relation in table.additional_relations:
-        expands.append(
+    expands.extend(
+        (
             {
                 "id": additional_relation.id,
                 "api_name": additional_relation.name,
                 "python_name": additional_relation.python_name,
                 "relation_id": additional_relation.relation,
-                "target_doc_id": _make_link(additional_relation.related_table),
+                "target_doc": _make_link(additional_relation.related_table),
                 "related_table": additional_relation.related_table,
             }
+            for additional_relation in table.additional_relations
         )
+    )
 
-    return sorted(expands, key=lambda item: item["id"])
+    return sorted(expands, key=operator.itemgetter("id"))
 
 
 def _list_fields(table_fields) -> List[DatasetFieldSchema]:
@@ -270,20 +278,20 @@ def _field_data(field: DatasetFieldSchema):
 
     if format:
         # A string field with a format (e.g. date-time).
-        return FORMAT_ALIASES.get(format, format), value_example, lookups
+        return FORMAT_ALIASES.get(format, format), mark_safe(value_example), lookups
 
     # This closely mimics what the Django filter+serializer logic does
     if type.startswith("https://geojson.org/schema/"):
         # Catch-all for other geometry types
-        type = type[27:-5]
-        value_example = f"GeoJSON of ``{type.upper()}(x y ...)``"
+        type = type[len("https://geojson.org/schema/") : -5]
+        value_example = f"GeoJSON of <code>{type.upper()}(x y ...)<code>"
         lookups = []
     elif field.relation or "://" in type:
         lookups = _identifier_lookups
         if field.type == "string":
             lookups += [lookup for lookup in _string_lookups if lookup not in lookups]
 
-    return type, value_example, lookups
+    return type, mark_safe(value_example), lookups
 
 
 def _get_field_context(field: DatasetFieldSchema) -> dict[str, Any]:
