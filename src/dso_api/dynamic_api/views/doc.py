@@ -173,8 +173,6 @@ def _table_context(table: DatasetTableSchema):
         "id": table.id,
         "title": to_snake_case(table.id).replace("_", " ").capitalize(),
         "uri": uri,
-        "rest_csv": f"{uri}?_format=csv",
-        "rest_geojson": f"{uri}?_format=geojson",
         "description": table.get("description"),
         "fields": [_get_field_context(field) for field in fields],
         "filters": filters,

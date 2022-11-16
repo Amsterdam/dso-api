@@ -5,7 +5,7 @@
   {% block extrahead %}{% endblock %}
 </head>
 <body>
-  <h1>{% if schema.title %}{{ schema.title }}{% else %}{{ name|title }}{% endif %} MVT</h1>
+  <h1>{% if schema.title %}{{ schema.title }}{% else %}{{ name|title }}{% endif %}</h1>
   <p>{% if schema.description %}{{ schema.description }}{% endif %}</p>
   <ul>
     <li><strong>ID:</strong> {{ schema.id }}</li>
@@ -41,6 +41,8 @@
         {% endif %}
       </li>
       <li><strong>REST URI:</strong> <a href="{{ table.uri }}">{{ table.uri }}</a></li>
+      <li><strong>CSV-export:</strong> <a href="{{ table.uri }}?_format=csv">{{ table.uri }}?_format=csv</a></li>
+      <li><strong>GeoJSON-export:</strong> <a href="{{ table.uri }}?_format=geojson">{{ table.uri }}?_format=geojson</a></li>
     </ul>
 
     <p>De volgende velden zijn beschikbaar:</p>
