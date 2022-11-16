@@ -8,13 +8,7 @@ import urllib3
 from django.urls import reverse
 from rest_framework.status import HTTP_200_OK, HTTP_403_FORBIDDEN
 from schematools.contrib.django import models
-from schematools.types import (
-    DatasetSchema,
-    DatasetTableSchema,
-    ProfileSchema,
-    SemVer,
-    TableVersions,
-)
+from schematools.types import DatasetSchema, DatasetTableSchema, ProfileSchema, SemVer
 from urllib3_mock import Responses
 
 from dso_api.dynamic_api.remote.clients import RemoteClient
@@ -850,12 +844,9 @@ REMOTE_SCHEMA = DatasetTableSchema(
     parent_schema=DatasetSchema(
         {
             "id": "adhoc",
+            "type": "dataset",
             "tables": [
-                TableVersions(
-                    id=TABLE_SCHEMA["id"],
-                    default_version_number=V1,
-                    active=dict(V1=TABLE_SCHEMA),
-                )
+                TABLE_SCHEMA,
             ],
         }
     ),

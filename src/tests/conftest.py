@@ -17,6 +17,7 @@ from jwcrypto.jwt import JWT
 from rest_framework.request import Request
 from rest_framework.test import APIClient, APIRequestFactory
 from schematools.contrib.django.models import Dataset, DynamicModel, Profile
+from schematools.loaders import CachedSchemaLoader
 from schematools.types import DatasetSchema, ProfileSchema
 from schematools.utils import dataset_schema_from_path
 
@@ -194,6 +195,12 @@ def _create_tables_if_missing(dynamic_models):
 
 
 @pytest.fixture()
+def dataset_collection():
+    """A shared cache between all datasets that are constructed by the tests."""
+    return CachedSchemaLoader(loader=None)
+
+
+@pytest.fixture()
 def afval_schema_json() -> dict:
     path = HERE / "files/afval.json"
     return json.loads(path.read_text())
@@ -212,8 +219,8 @@ def afval_schema_backwards_summary_json() -> dict:
 
 
 @pytest.fixture()
-def afval_schema(afval_schema_json) -> DatasetSchema:
-    return DatasetSchema.from_dict(afval_schema_json)
+def afval_schema(afval_schema_json, dataset_collection) -> DatasetSchema:
+    return DatasetSchema.from_dict(afval_schema_json, dataset_collection=dataset_collection)
 
 
 @pytest.fixture()
@@ -951,16 +958,14 @@ def gebieden_schema_json() -> dict:
 
 
 @pytest.fixture()
-def gebieden_schema(gebieden_schema_json) -> DatasetSchema:
-    return DatasetSchema.from_dict(gebieden_schema_json)
+def gebieden_schema(gebieden_schema_json, dataset_collection) -> DatasetSchema:
+    return DatasetSchema.from_dict(gebieden_schema_json, dataset_collection=dataset_collection)
 
 
 @pytest.fixture()
-def _gebieden_dataset(gebieden_schema_json) -> Dataset:
+def _gebieden_dataset(gebieden_schema) -> Dataset:
     """Internal"""
-    return Dataset.objects.create(
-        name="gebieden", path="gebieden", schema_data=json.dumps(gebieden_schema_json)
-    )
+    return Dataset.create_for_schema(gebieden_schema)
 
 
 @pytest.fixture()
@@ -995,13 +1000,13 @@ def bag_schema_json() -> dict:
 
 
 @pytest.fixture()
-def bag_schema(bag_schema_json) -> DatasetSchema:
-    return DatasetSchema.from_dict(bag_schema_json)
+def bag_schema(bag_schema_json, dataset_collection) -> DatasetSchema:
+    return DatasetSchema.from_dict(bag_schema_json, dataset_collection=dataset_collection)
 
 
 @pytest.fixture()
-def bag_dataset(gebieden_dataset, bag_schema_json) -> Dataset:
-    return Dataset.objects.create(name="bag", path="bag", schema_data=json.dumps(bag_schema_json))
+def bag_dataset(gebieden_dataset, bag_schema, bag_schema_json) -> Dataset:
+    return Dataset.create_for_schema(bag_schema)
 
 
 @pytest.fixture()
