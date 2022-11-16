@@ -17,9 +17,8 @@ from jwcrypto.jwt import JWT
 from rest_framework.request import Request
 from rest_framework.test import APIClient, APIRequestFactory
 from schematools.contrib.django.models import Dataset, DynamicModel, Profile
-from schematools.loaders import CachedSchemaLoader
-from schematools.types import DatasetSchema, ProfileSchema
-from schematools.utils import dataset_schema_from_path
+from schematools.loaders import FileSystemProfileLoader, FileSystemSchemaLoader
+from schematools.types import DatasetSchema
 
 from rest_framework_dso.crs import RD_NEW
 from tests.test_rest_framework_dso.models import Actor, Category, Location, Movie, MovieUser
@@ -195,53 +194,19 @@ def _create_tables_if_missing(dynamic_models):
 
 
 @pytest.fixture()
-def dataset_collection():
+def schema_loader() -> FileSystemSchemaLoader:
     """A shared cache between all datasets that are constructed by the tests."""
-    return CachedSchemaLoader(loader=None)
+    return FileSystemSchemaLoader(HERE / "files/datasets")
 
 
 @pytest.fixture()
-def afval_schema_json() -> dict:
-    path = HERE / "files/afval.json"
-    return json.loads(path.read_text())
+def afval_schema(schema_loader) -> DatasetSchema:
+    return schema_loader.get_dataset_from_file("afval.json")
 
 
 @pytest.fixture()
-def afval_schema_backwards_embedded_json() -> dict:
-    path = HERE / "files/afval_backwards_embedded.json"
-    return json.loads(path.read_text())
-
-
-@pytest.fixture()
-def afval_schema_backwards_summary_json() -> dict:
-    path = HERE / "files/afval_backwards_summary.json"
-    return json.loads(path.read_text())
-
-
-@pytest.fixture()
-def afval_schema(afval_schema_json, dataset_collection) -> DatasetSchema:
-    return DatasetSchema.from_dict(afval_schema_json, dataset_collection=dataset_collection)
-
-
-@pytest.fixture()
-def afval_schema_backwards_embedded(
-    afval_schema_backwards_embedded_json,
-) -> DatasetSchema:
-    return DatasetSchema.from_dict(afval_schema_backwards_embedded_json)
-
-
-@pytest.fixture()
-def afval_schema_backwards_summary(
-    afval_schema_backwards_summary_json,
-) -> DatasetSchema:
-    return DatasetSchema.from_dict(afval_schema_backwards_summary_json)
-
-
-@pytest.fixture()
-def afval_dataset(afval_schema_json) -> Dataset:
-    return Dataset.objects.create(
-        name="afvalwegingen", path="afvalwegingen", schema_data=json.dumps(afval_schema_json)
-    )
+def afval_dataset(afval_schema) -> Dataset:
+    return Dataset.create_for_schema(afval_schema)
 
 
 @pytest.fixture()
@@ -252,12 +217,8 @@ def disabled_afval_dataset(afval_dataset) -> Dataset:
 
 
 @pytest.fixture()
-def afval_dataset_subpath(afval_schema_json) -> Dataset:
-    return Dataset.objects.create(
-        name="afvalwegingen",
-        path="sub/path/afvalwegingen",
-        schema_data=json.dumps(afval_schema_json),
-    )
+def afval_dataset_subpath(afval_schema) -> Dataset:
+    return Dataset.create_for_schema(afval_schema, path="sub/path/afvalwegingen")
 
 
 @pytest.fixture()
@@ -305,13 +266,13 @@ def afval_adresloopafstand(afval_adresloopafstand_model):
 @pytest.fixture()
 def bommen_schema_json() -> dict:
     """Fixture to return the schema json for"""
-    path = HERE / "files/bommen.json"
+    path = HERE / "files/datasets/bommen.json"
     return json.loads(path.read_text())
 
 
 @pytest.fixture()
-def bommen_schema(bommen_schema_json) -> DatasetSchema:
-    return DatasetSchema.from_dict(bommen_schema_json)
+def bommen_schema(schema_loader) -> DatasetSchema:
+    return schema_loader.get_dataset_from_file("bommen.json")
 
 
 @pytest.fixture()
@@ -322,13 +283,13 @@ def bommen_dataset(bommen_schema) -> Dataset:
 @pytest.fixture()
 def bommen_v2_schema_json() -> dict:
     """Fixture to return the schema json for"""
-    path = HERE / "files/bommen@2.0.0.json"
+    path = HERE / "files/datasets/bommen@2.0.0.json"
     return json.loads(path.read_text())
 
 
 @pytest.fixture()
-def bommen_v2_schema(bommen_v2_schema_json) -> DatasetSchema:
-    return DatasetSchema.from_dict(bommen_v2_schema_json)
+def bommen_v2_schema(schema_loader) -> DatasetSchema:
+    return schema_loader.get_dataset_from_file("bommen@2.0.0.json")
 
 
 @pytest.fixture()
@@ -339,13 +300,13 @@ def bommen_v2_dataset(bommen_v2_schema) -> Dataset:
 @pytest.fixture()
 def brp_schema_json() -> dict:
     """Fixture for the BRP dataset"""
-    path = HERE / "files/brp.json"
+    path = HERE / "files/datasets/brp.json"
     return json.loads(path.read_text())
 
 
 @pytest.fixture()
-def brp_schema(brp_schema_json) -> DatasetSchema:
-    return DatasetSchema.from_dict(brp_schema_json)
+def brp_schema(schema_loader) -> DatasetSchema:
+    return schema_loader.get_dataset_from_file("brp.json")
 
 
 @pytest.fixture()
@@ -369,7 +330,7 @@ def brp_dataset(brp_schema_json, brp_endpoint_url) -> Dataset:
 def hcbag_dataset() -> Dataset:
     return Dataset.objects.create(
         name="haalcentraalbag",
-        schema_data=(HERE / "files" / "haalcentraalbag" / "schema.json").read_text(),
+        schema_data=(HERE / "files/datasets/haalcentraalbag/dataset.json").read_text(),
         enable_db=False,
         endpoint_url="http://remote-server/esd/huidigebevragingen/v1/{table_id}",
         path="remote/haalcentraal/bag",
@@ -378,19 +339,19 @@ def hcbag_dataset() -> Dataset:
 
 @pytest.fixture()
 def hcbag_example_list():
-    return (HERE / "files" / "haalcentraalbag" / "amstel1.json").read_bytes()
+    return (HERE / "files/haalcentraalbag/amstel1.json").read_bytes()
 
 
 @pytest.fixture()
 def hcbag_example_single():
-    return (HERE / "files" / "haalcentraalbag" / "0123456789123456.json").read_bytes()
+    return (HERE / "files/haalcentraalbag/0123456789123456.json").read_bytes()
 
 
 @pytest.fixture()
 def hcbrk_dataset() -> Dataset:
     return Dataset.objects.create(
         name="haalcentraalbrk",
-        schema_data=(HERE / "files" / "haalcentraalbrk" / "schema.json").read_text(),
+        schema_data=(HERE / "files/datasets/haalcentraalbrk/dataset.json").read_text(),
         enable_db=False,
         # URL netloc needs ".acceptatie." because of HTTP pool selection.
         endpoint_url="http://fake.acceptatie.kadaster/esd/bevragen/v1/{table_id}",
@@ -402,13 +363,8 @@ def hcbrk_dataset() -> Dataset:
 
 
 @pytest.fixture()
-def geometry_auth_schema_json() -> dict:
-    return json.loads((HERE / "files" / "geometry_auth.json").read_text())
-
-
-@pytest.fixture()
-def geometry_auth_schema(geometry_auth_schema_json) -> DatasetSchema:
-    return DatasetSchema.from_dict(geometry_auth_schema_json)
+def geometry_auth_schema(schema_loader) -> DatasetSchema:
+    return schema_loader.get_dataset_from_file("geometry_auth.json")
 
 
 @pytest.fixture()
@@ -434,13 +390,8 @@ def geometry_auth_thing(geometry_auth_model):
 
 
 @pytest.fixture()
-def geometry_authdataset_schema_json() -> dict:
-    return json.loads((HERE / "files" / "geometry_authdataset.json").read_text())
-
-
-@pytest.fixture()
-def geometry_authdataset_schema(geometry_authdataset_schema_json) -> DatasetSchema:
-    return DatasetSchema.from_dict(geometry_authdataset_schema_json)
+def geometry_authdataset_schema(schema_loader) -> DatasetSchema:
+    return schema_loader.get_dataset_from_file("geometry_authdataset.json")
 
 
 @pytest.fixture()
@@ -487,7 +438,7 @@ def movie(category) -> Movie:
 
 @pytest.fixture()
 def movies_dataset() -> Dataset:
-    j = json.loads((HERE / "files" / "movies.json").read_text())
+    j = json.loads((HERE / "files/datasets/movies.json").read_text())
     s = DatasetSchema.from_dict(j)
     return Dataset.create_for_schema(s)
 
@@ -542,23 +493,13 @@ def location() -> Location:
 
 
 @pytest.fixture()
-def parkeervakken_schema_json() -> dict:
-    path = HERE / "files/parkeervakken.json"
-    return json.loads(path.read_text())
+def parkeervakken_schema(schema_loader) -> DatasetSchema:
+    return schema_loader.get_dataset_from_file("parkeervakken.json")
 
 
 @pytest.fixture()
-def parkeervakken_schema(parkeervakken_schema_json) -> DatasetSchema:
-    return DatasetSchema.from_dict(parkeervakken_schema_json)
-
-
-@pytest.fixture()
-def parkeervakken_dataset(parkeervakken_schema_json) -> Dataset:
-    return Dataset.objects.create(
-        name="parkeervakken",
-        path="parkeervakken",
-        schema_data=json.dumps(parkeervakken_schema_json),
-    )
+def parkeervakken_dataset(parkeervakken_schema) -> Dataset:
+    return Dataset.create_for_schema(parkeervakken_schema)
 
 
 @pytest.fixture()
@@ -616,14 +557,8 @@ def parkeervak(parkeervakken_parkeervak_model, parkeervakken_regime_model) -> Dy
 
 
 @pytest.fixture()
-def vestiging_schema_json() -> dict:
-    path = HERE / "files/vestiging.json"
-    return json.loads(path.read_text())
-
-
-@pytest.fixture()
-def vestiging_schema(vestiging_schema_json) -> DatasetSchema:
-    return DatasetSchema.from_dict(vestiging_schema_json)
+def vestiging_schema(schema_loader) -> DatasetSchema:
+    return schema_loader.get_dataset_from_file("vestiging.json")
 
 
 @pytest.fixture()
@@ -672,10 +607,8 @@ def vestiging2(vestiging_vestiging_model, bezoek_adres2, post_adres1):
 
 
 @pytest.fixture()
-def vestiging_dataset(vestiging_schema_json) -> Dataset:
-    return Dataset.objects.create(
-        name="vestiging", path="vestiging", schema_data=json.dumps(vestiging_schema_json)
-    )
+def vestiging_dataset(vestiging_schema) -> Dataset:
+    return Dataset.create_for_schema(vestiging_schema)
 
 
 @pytest.fixture()
@@ -717,8 +650,8 @@ def fetch_auth_token(fetch_tokendata):
 
 
 @pytest.fixture()
-def fietspaaltjes_schema(fietspaaltjes_schema_json) -> DatasetSchema:
-    return DatasetSchema.from_dict(fietspaaltjes_schema_json)
+def fietspaaltjes_schema(schema_loader) -> DatasetSchema:
+    return schema_loader.get_dataset_from_file("fietspaaltjes.json")
 
 
 @pytest.fixture()
@@ -727,28 +660,13 @@ def fietspaaltjes_model(fietspaaltjes_dataset, dynamic_models):
 
 
 @pytest.fixture()
-def fietspaaltjes_schema_json() -> dict:
-    """Fixture to return the schema json for"""
-    path = HERE / "files/fietspaaltjes.json"
-    return json.loads(path.read_text())
+def fietspaaltjes_dataset(fietspaaltjes_schema) -> Dataset:
+    return Dataset.create_for_schema(fietspaaltjes_schema)
 
 
 @pytest.fixture()
-def fietspaaltjes_dataset(fietspaaltjes_schema_json) -> Dataset:
-    return Dataset.objects.create(
-        name="fietspaaltjes",
-        path="fietspaaltjes",
-        schema_data=json.dumps(fietspaaltjes_schema_json),
-    )
-
-
-@pytest.fixture()
-def fietspaaltjes_dataset_subpath(fietspaaltjes_schema_json) -> Dataset:
-    return Dataset.objects.create(
-        name="fietspaaltjes",
-        path="sub/fietspaaltjes",
-        schema_data=json.dumps(fietspaaltjes_schema_json),
-    )
+def fietspaaltjes_dataset_subpath(fietspaaltjes_schema) -> Dataset:
+    return Dataset.create_for_schema(fietspaaltjes_schema, path="sub/fietspaaltjes")
 
 
 @pytest.fixture()
@@ -777,10 +695,8 @@ def fietspaaltjes_data(fietspaaltjes_model):
 
 
 @pytest.fixture()
-def fietspaaltjes_schema_no_display(
-    fietspaaltjes_schema_json_no_display,
-) -> DatasetSchema:
-    return DatasetSchema.from_dict(fietspaaltjes_schema_json_no_display)
+def fietspaaltjes_schema_no_display(schema_loader) -> DatasetSchema:
+    return schema_loader.get_dataset_from_file("fietspaaltjes_no_display.json")
 
 
 @pytest.fixture()
@@ -789,19 +705,8 @@ def fietspaaltjes_model_no_display(fietspaaltjes_dataset_no_display, dynamic_mod
 
 
 @pytest.fixture()
-def fietspaaltjes_schema_json_no_display() -> dict:
-    """Fixture to return the schema json for"""
-    path = HERE / "files/fietspaaltjes_no_display.json"
-    return json.loads(path.read_text())
-
-
-@pytest.fixture()
-def fietspaaltjes_dataset_no_display(fietspaaltjes_schema_json_no_display) -> Dataset:
-    return Dataset.objects.create(
-        name="fietspaaltjesnodisplay",
-        path="fietspaaltjesnodisplay",
-        schema_data=json.dumps(fietspaaltjes_schema_json_no_display),
-    )
+def fietspaaltjes_dataset_no_display(fietspaaltjes_schema_no_display) -> Dataset:
+    return Dataset.create_for_schema(fietspaaltjes_schema_no_display)
 
 
 @pytest.fixture()
@@ -835,24 +740,13 @@ def fietspaaltjes_data_no_display(fietspaaltjes_model_no_display):
 
 
 @pytest.fixture()
-def explosieven_schema_json() -> dict:
-    """Fixture to return the schema json for"""
-    path = HERE / "files/explosieven.json"
-    return json.loads(path.read_text())
+def explosieven_schema(schema_loader) -> DatasetSchema:
+    return schema_loader.get_dataset_from_file("explosieven.json")
 
 
 @pytest.fixture()
-def explosieven_schema(
-    explosieven_schema_json,
-) -> DatasetSchema:
-    return DatasetSchema.from_dict(explosieven_schema_json)
-
-
-@pytest.fixture()
-def explosieven_dataset(explosieven_schema_json) -> Dataset:
-    return Dataset.objects.create(
-        name="explosieven", path="explosieven", schema_data=json.dumps(explosieven_schema_json)
-    )
+def explosieven_dataset(explosieven_schema) -> Dataset:
+    return Dataset.create_for_schema(explosieven_schema)
 
 
 @pytest.fixture()
@@ -870,18 +764,13 @@ def explosieven_data(explosieven_model):
 
 
 @pytest.fixture()
-def huishoudelijkafval_schema():
-    path = HERE / "files" / "huishoudelijkafval" / "dataset.json"
-    return dataset_schema_from_path(path)
+def huishoudelijkafval_schema(schema_loader) -> DatasetSchema:
+    return schema_loader.get_dataset("huishoudelijkafval")
 
 
 @pytest.fixture()
 def huishoudelijkafval_dataset(bag_dataset, huishoudelijkafval_schema, dynamic_models):
-    return Dataset.objects.create(
-        name="huishoudelijkafval",
-        path="huishoudelijkafval",
-        schema_data=huishoudelijkafval_schema.json(),
-    )
+    return Dataset.create_for_schema(huishoudelijkafval_schema)
 
 
 @pytest.fixture()
@@ -894,22 +783,18 @@ def huishoudelijkafval_data(dynamic_models, huishoudelijkafval_dataset):
 
 @pytest.fixture()
 def indirect_self_ref_schema_json() -> dict:
-    path = HERE / "files/indirect-self-ref.json"
+    path = HERE / "files/datasets/indirect-self-ref.json"
     return json.loads(path.read_text())
 
 
 @pytest.fixture()
-def indirect_self_ref_schema(indirect_self_ref_schema_json) -> DatasetSchema:
-    return DatasetSchema.from_dict(indirect_self_ref_schema_json)
+def indirect_self_ref_schema(schema_loader) -> DatasetSchema:
+    return schema_loader.get_dataset_from_file("indirect-self-ref.json")
 
 
 @pytest.fixture()
-def indirect_self_ref_dataset(indirect_self_ref_schema_json) -> Dataset:
-    return Dataset.objects.create(
-        name="indirect_self_ref",
-        path="indirect_self_ref",
-        schema_data=json.dumps(indirect_self_ref_schema_json),
-    )
+def indirect_self_ref_dataset(indirect_self_ref_schema) -> Dataset:
+    return Dataset.create_for_schema(indirect_self_ref_schema)
 
 
 @pytest.fixture()
@@ -921,45 +806,23 @@ def ligplaatsen_model(indirect_self_ref_dataset, dynamic_models):
 
 
 @pytest.fixture()
-def meldingen_schema_json() -> dict:
-    """Fixture to return the schema json"""
-    path = HERE / "files/meldingen.json"
-    return json.loads(path.read_text())
+def meldingen_schema(schema_loader) -> DatasetSchema:
+    return schema_loader.get_dataset_from_file("meldingen.json")
 
 
 @pytest.fixture()
-def meldingen_schema(meldingen_schema_json) -> DatasetSchema:
-    return DatasetSchema.from_dict(meldingen_schema_json)
+def meldingen_dataset(gebieden_dataset, meldingen_schema) -> Dataset:
+    return Dataset.create_for_schema(meldingen_schema)
 
 
 @pytest.fixture()
-def meldingen_dataset(
-    gebieden_dataset,  # dependency in schema
-    meldingen_schema_json,
-) -> Dataset:
-    return Dataset.objects.create(
-        name="meldingen", path="meldingen", schema_data=json.dumps(meldingen_schema_json)
-    )
-
-
-@pytest.fixture()
-def gebieden_models(
-    gebieden_dataset,
-    dynamic_models,
-):
+def gebieden_models(gebieden_dataset, dynamic_models):
     return dynamic_models["gebieden"]
 
 
 @pytest.fixture()
-def gebieden_schema_json() -> dict:
-    """Fixture to return the schema json"""
-    path = HERE / "files/gebieden.json"
-    return json.loads(path.read_text())
-
-
-@pytest.fixture()
-def gebieden_schema(gebieden_schema_json, dataset_collection) -> DatasetSchema:
-    return DatasetSchema.from_dict(gebieden_schema_json, dataset_collection=dataset_collection)
+def gebieden_schema(schema_loader) -> DatasetSchema:
+    return schema_loader.get_dataset_from_file("gebieden.json")
 
 
 @pytest.fixture()
@@ -969,12 +832,9 @@ def _gebieden_dataset(gebieden_schema) -> Dataset:
 
 
 @pytest.fixture()
-def unconventional_temporal_dataset() -> dict:
-    path = HERE / "files/unconventional_temporal.json"
-    return Dataset.objects.create(
-        name="unconventionaltemporal",
-        path="unconventionaltemporal",
-        schema_data=json.dumps(json.loads(path.read_text())),  # validate
+def unconventional_temporal_dataset(schema_loader) -> dict:
+    return Dataset.create_for_schema(
+        schema_loader.get_dataset_from_file("unconventional_temporal.json")
     )
 
 
@@ -993,43 +853,25 @@ def gebieden_dataset(_gebieden_dataset, woningbouwplannen_dataset) -> Dataset:
 
 
 @pytest.fixture()
-def bag_schema_json() -> dict:
-    """Fixture to return the schema json"""
-    path = HERE / "files/bag.json"
-    return json.loads(path.read_text())
+def bag_schema(schema_loader) -> DatasetSchema:
+    return schema_loader.get_dataset_from_file("bag.json")
 
 
 @pytest.fixture()
-def bag_schema(bag_schema_json, dataset_collection) -> DatasetSchema:
-    return DatasetSchema.from_dict(bag_schema_json, dataset_collection=dataset_collection)
-
-
-@pytest.fixture()
-def bag_dataset(gebieden_dataset, bag_schema, bag_schema_json) -> Dataset:
+def bag_dataset(gebieden_dataset, bag_schema) -> Dataset:
     return Dataset.create_for_schema(bag_schema)
 
 
 @pytest.fixture()
-def woningbouwplannen_schema_json() -> dict:
-    """Fixture to return the schema json"""
-    path = HERE / "files/woningbouwplannen.json"
-    return json.loads(path.read_text())
+def woningbouwplannen_schema(schema_loader) -> DatasetSchema:
+    return schema_loader.get_dataset_from_file("woningbouwplannen.json")
 
 
 @pytest.fixture()
-def woningbouwplannen_schema(woningbouwplannen_schema_json) -> DatasetSchema:
-    return DatasetSchema.from_dict(woningbouwplannen_schema_json)
-
-
-@pytest.fixture()
-def woningbouwplannen_dataset(woningbouwplannen_schema_json, _gebieden_dataset) -> Dataset:
+def woningbouwplannen_dataset(woningbouwplannen_schema, _gebieden_dataset) -> Dataset:
     # Woningbouwplannen has a dependency on gebieden,
     # so this fixture makes sure it's always loaded.
-    return Dataset.objects.create(
-        name="woningbouwplannen",
-        path="woningbouwplannen",
-        schema_data=json.dumps(woningbouwplannen_schema_json),
-    )
+    return Dataset.create_for_schema(woningbouwplannen_schema)
 
 
 @pytest.fixture()
@@ -1093,19 +935,8 @@ def woningbouwplan_model(woningbouwplannen_dataset, dynamic_models):
 
 
 @pytest.fixture()
-def temporal_auth_schema_json() -> dict:
-    path = HERE / "files/temporal_auth.json"
-    return json.loads(path.read_text())
-
-
-@pytest.fixture()
-def temporal_auth_dataset(temporal_auth_schema_json):
-    schema_path = HERE / "files/temporal_auth.json"
-    return Dataset.objects.create(
-        name="temporalauth",
-        path="temporalauth",
-        schema_data=schema_path.read_text(),
-    )
+def temporal_auth_dataset(schema_loader):
+    return Dataset.create_for_schema(schema_loader.get_dataset_from_file("temporal_auth.json"))
 
 
 @pytest.fixture()
@@ -1295,10 +1126,13 @@ def woningbouwplannen_data(woningbouwplan_model, buurten_data, nontemporeel_mode
 
 
 @pytest.fixture()
-def parkeerwacht_profile() -> ProfileSchema:
-    path = HERE / "files/profiles/parkeerwacht.json"
-    schema = ProfileSchema.from_dict(json.loads(path.read_text()))
-    return Profile.create_for_schema(schema)
+def profile_loader() -> FileSystemProfileLoader:
+    return FileSystemProfileLoader(HERE / "files/profiles")
+
+
+@pytest.fixture()
+def parkeerwacht_profile(profile_loader) -> Profile:
+    return Profile.create_for_schema(profile_loader.get_profile("parkeerwacht"))
 
 
 @pytest.fixture()
