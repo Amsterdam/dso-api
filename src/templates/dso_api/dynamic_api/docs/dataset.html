@@ -51,6 +51,7 @@
         <tr>
           <th>Veldnaam</th>
           <th>Type</th>
+          <th>Identifier</th>
           <th>Omschrijving</th>
         </tr>
       </thead>
@@ -66,9 +67,9 @@
           </td>
           <td>
             {{ field.type|default:"" }}
-            {% if field.is_identifier %}<i>identificatie</i>{% endif %}
-            {% if field.is_relation or field.is_foreign_id %}<i>relatie</i>{% endif %}
+            {% if field.is_relation or field.is_foreign_id %}(<i>relatie</i>){% endif %}
           </td>
+          <td>{% if field.is_identifier %}☑{% endif %}</td>
           <td>{{ field.description|default:"" }}</td>
         </tr>
         {% endfor %}
