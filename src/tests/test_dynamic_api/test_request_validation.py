@@ -1,21 +1,11 @@
 from __future__ import annotations
 
-from pathlib import Path
-
 import pytest
 from django.core.exceptions import PermissionDenied
 from rest_framework.exceptions import ValidationError
 from schematools.permissions import UserScopes
-from schematools.utils import dataset_schema_from_path
 
 from dso_api.dynamic_api.filters import parser
-
-SCHEMA_SIMPLE = dataset_schema_from_path(
-    Path(__file__).parent.parent / "files" / "relationauth.json"
-)
-SCHEMA_COMPOSITE = dataset_schema_from_path(
-    Path(__file__).parent.parent / "files" / "relationauthcomposite.json"
-)
 
 
 @pytest.mark.parametrize(
@@ -34,9 +24,12 @@ SCHEMA_COMPOSITE = dataset_schema_from_path(
         ("base", "REFERS REFERS/BASE BASE", PermissionDenied),
     ],
 )
-def test_check_filter_simple(field_name: str, scopes: str, exc_type: type[Exception] | None):
+def test_check_filter_simple(
+    schema_loader, field_name: str, scopes: str, exc_type: type[Exception] | None
+):
     """Test filter auth/validation with a simple-key relation."""
-    table_schema = SCHEMA_SIMPLE.get_table_by_id("refers")
+    dataset = schema_loader.get_dataset_from_file("relationauth.json")
+    table_schema = dataset.get_table_by_id("refers")
 
     scopes = UserScopes(query_params={}, request_scopes=scopes.split())
     if exc_type is None:
@@ -64,9 +57,12 @@ def test_check_filter_simple(field_name: str, scopes: str, exc_type: type[Except
         # ("baseId", "REFERS REFERS/BASE BASE BASE/ID BASE/VOLGNR", None),
     ],
 )
-def test_check_filter_composite(field_name: str, scopes: str, exc_type: type[Exception] | None):
+def test_check_filter_composite(
+    schema_loader, field_name: str, scopes: str, exc_type: type[Exception] | None
+):
     """Test filter auth/validation with a composite key relation."""
-    table_schema = SCHEMA_COMPOSITE.get_table_by_id("refers")
+    dataset = schema_loader.get_dataset_from_file("relationauthcomposite.json")
+    table_schema = dataset.get_table_by_id("refers")
     scopes = UserScopes(query_params={}, request_scopes=scopes.split())
 
     if exc_type is None:
