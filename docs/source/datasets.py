@@ -5,9 +5,9 @@ from pathlib import Path
 from typing import Any, FrozenSet, List, NamedTuple, Optional
 
 import jinja2
+from schematools.loaders import FileSystemSchemaLoader, URLSchemaLoader
 from schematools.naming import to_snake_case, toCamelCase
 from schematools.types import DatasetFieldSchema, DatasetSchema, DatasetTableSchema
-from schematools.utils import dataset_schemas_from_schemas_path, dataset_schemas_from_url
 
 SCHEMA_URL = os.getenv("SCHEMA_URL", "https://schemas.data.amsterdam.nl/datasets/")
 BASE_URL = "https://api.data.amsterdam.nl"
@@ -430,15 +430,21 @@ def _documents(dir_names, file_names):
     )
 
 
+def _loaded_callback(schema: DatasetSchema):
+    print(f"* Loaded {schema.id}")
+
+
 def render_datasets(schema_dir):
     if schema_dir is not None:
         print(f"fetching datasets from local folder {schema_dir}")
-        schemas = dataset_schemas_from_schemas_path(schema_dir)
+        # This will find all "dataset.json" in the folder.
+        # So either point to the folder root, or a subfolder that has one dataset.
+        loader = FileSystemSchemaLoader(schema_dir, loaded_callback=_loaded_callback)
     else:
         print(f"fetching definitions from {SCHEMA_URL}")
-        schemas = dataset_schemas_from_url(SCHEMA_URL)
+        loader = URLSchemaLoader(SCHEMA_URL, loaded_callback=_loaded_callback)
 
-    datasets_path = BASE_PATH / Path("datasets")
+    schemas = loader.get_all_datasets()
 
     for path, dataset in schemas.items():
         if dataset.status == DatasetSchema.Status.beschikbaar:
@@ -447,7 +453,7 @@ def render_datasets(schema_dir):
     # Leverage the fact that the dataset rendering has written the same
     # directory structure as the remote datasets listing in order
     # to generate subpaths in the TOC-tree.
-    dir_tree = os.walk(datasets_path, topdown=True)
+    dir_tree = os.walk(BASE_PATH / "datasets", topdown=True)
     _, root_dirs, root_files = next(dir_tree)
 
     # Add a sub TOC-tree to all sub-directories
@@ -474,9 +480,7 @@ def render_datasets(schema_dir):
         if dataset.status == DatasetSchema.Status.beschikbaar:
             render_wfs_dataset_docs(dataset, path)
 
-    datasets_path = BASE_PATH / Path("wfs-datasets")
-
-    dir_tree = os.walk(datasets_path, topdown=True)
+    dir_tree = os.walk(BASE_PATH / "wfs-datasets", topdown=True)
     _, root_dirs, root_files = next(dir_tree)
 
     # Add a sub TOC-tree to all sub-directories
