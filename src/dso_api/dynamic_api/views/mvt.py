@@ -16,7 +16,6 @@ from vectortiles.postgis.views import MVTView
 
 from ..datasets import get_active_datasets
 from ..permissions import CheckPermissionsMixin
-
 from .index import APIIndexView
 
 logger = logging.getLogger(__name__)

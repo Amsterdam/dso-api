@@ -16,12 +16,14 @@
 
 from datetime import date
 
-
 # -- Project information -----------------------------------------------------
 
 project = "Amsterdam DataPunt API Documentatie"
 copyright = f"{date.today().year}, Gemeente Amsterdam"
-author = "Team Datadiensten van het Dataplatform onder de Directie Digitale Voorzieningen, Gemeente Amsterdam"
+author = (
+    "Team Datadiensten van het Dataplatform"
+    " onder de Directie Digitale Voorzieningen, Gemeente Amsterdam"
+)
 
 # The full version, including alpha/beta/rc tags
 release = "v1"

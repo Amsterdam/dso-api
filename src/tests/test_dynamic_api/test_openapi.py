@@ -1,8 +1,8 @@
 import logging
 
+import openapi_spec_validator
 import pytest
 from django.urls import NoReverseMatch, reverse
-import openapi_spec_validator
 
 from dso_api.dynamic_api import openapi
 from tests.utils import read_response
