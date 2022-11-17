@@ -55,7 +55,7 @@
       {% for expand in table.expands %}
         <tr>
           <td><code>{{ expand.python_name }}</code></td>
-          <td><a href="{{ expand.target_doc_id }}"><code>{{ expand.relation_id }}</code></a></td>
+          <td><a href="{{ expand.target_doc }}"><code>{{ expand.relation_id }}</code></a></td>
           <td>{{ expand.related_table.description|default:"" }}</td>
         </tr>
       {% endfor %}
