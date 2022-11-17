@@ -1,6 +1,6 @@
 """All views for the dynamically generated API, split by protocol type."""
 from .api import DynamicApiViewSet, viewset_factory
-from .doc import DatasetDocView, DocsOverview, DatasetWFSDocView
+from .doc import DatasetDocView, DatasetWFSDocView, DocsOverview
 from .index import APIIndexView
 from .mvt import DatasetMVTIndexView, DatasetMVTSingleView, DatasetMVTView
 from .oauth import oauth2_redirect

@@ -1,6 +1,6 @@
 """Dataset documentation views."""
 import operator
-from typing import Any, List, FrozenSet, Optional, NamedTuple
+from typing import Any, FrozenSet, List, NamedTuple, Optional
 
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
@@ -9,8 +9,8 @@ from django.utils.safestring import mark_safe
 from django.views.decorators.gzip import gzip_page
 from django.views.generic import TemplateView
 from schematools.contrib.django.models import Dataset
-from schematools.types import DatasetTableSchema, DatasetFieldSchema, DatasetSchema
 from schematools.naming import to_snake_case
+from schematools.types import DatasetFieldSchema, DatasetSchema, DatasetTableSchema
 
 
 @method_decorator(gzip_page, name="dispatch")
@@ -97,7 +97,8 @@ class LookupContext(NamedTuple):
 
 
 def lookup_context(op, example, descr):
-    return LookupContext(op, mark_safe(example), mark_safe(descr))
+    # disable mark_safe() warnigns because this is static HTML in this file.
+    return LookupContext(op, mark_safe(example), mark_safe(descr))  # nosec B308 B703
 
 
 # This should match ALLOWED_SCALAR_LOOKUPS in filters.parser (except for the "exact" lookup).
@@ -117,7 +118,10 @@ VALUE_EXAMPLES = {
     "number": ("Getal", _comparison_lookups),
     "time": ("<code>hh:mm[:ss[.ms]]</code>", _comparison_lookups),
     "date": ("<code>yyyy-mm-dd</code>", _comparison_lookups),
-    "date-time": ("<code>yyyy-mm-dd</code> of <code>yyyy-mm-ddThh:mm[:ss[.ms]]</code>", _comparison_lookups),
+    "date-time": (
+        "<code>yyyy-mm-dd</code> of <code>yyyy-mm-ddThh:mm[:ss[.ms]]</code>",
+        _comparison_lookups,
+    ),
     "uri": ("<code>https://...</code>", _string_lookups),
     "array": ("value,value", ["contains"]),  # comma separated list of strings
     "https://geojson.org/schema/Geometry.json": ("geometry", _polygon_lookups),
@@ -139,7 +143,9 @@ LOOKUP_CONTEXT = {
         lookup_context("lt", None, "Test op kleiner dan (<code>&lt;</code>)."),
         lookup_context("lte", None, "Test op kleiner dan of gelijk (<code>&lt;=</code>)."),
         lookup_context(
-            "like", "Tekst met jokertekens (<code>*</code> en <code>?</code>).", "Test op gedeelte van tekst."
+            "like",
+            "Tekst met jokertekens (<code>*</code> en <code>?</code>).",
+            "Test op gedeelte van tekst.",
         ),
         lookup_context(
             "in",
@@ -156,7 +162,9 @@ LOOKUP_CONTEXT = {
             "Test op ontbrekende waarden (<code>IS NULL</code> / <code>IS NOT NULL</code>).",
         ),
         lookup_context(
-            "isempty", "<code>true</code> of <code>false</code>", "Test of de waarde leeg is (<code>== ''</code> / <code>!= ''</code>)"
+            "isempty",
+            "<code>true</code> of <code>false</code>",
+            "Test of de waarde leeg is (<code>== ''</code> / <code>!= ''</code>)",
         ),
     ]
 }
@@ -276,7 +284,7 @@ def _field_data(field: DatasetFieldSchema):
 
     if format:
         # A string field with a format (e.g. date-time).
-        return FORMAT_ALIASES.get(format, format), mark_safe(value_example), lookups
+        return FORMAT_ALIASES.get(format, format), value_example, lookups
 
     # This closely mimics what the Django filter+serializer logic does
     if type.startswith("https://geojson.org/schema/"):
@@ -289,7 +297,7 @@ def _field_data(field: DatasetFieldSchema):
         if field.type == "string":
             lookups += [lookup for lookup in _string_lookups if lookup not in lookups]
 
-    return type, mark_safe(value_example), lookups
+    return type, value_example, lookups
 
 
 def _get_field_context(field: DatasetFieldSchema) -> dict[str, Any]:
@@ -297,7 +305,7 @@ def _get_field_context(field: DatasetFieldSchema) -> dict[str, Any]:
     python_name = _get_dotted_python_name(field)
     api_name = _get_dotted_api_name(field)
 
-    type, value_example, _ = _field_data(field)
+    type, _, _ = _field_data(field)
     description = field.description
     is_foreign_id = (
         field.is_subfield and field.parent_field.relation and not field.is_temporal_range
@@ -372,7 +380,7 @@ def _filter_payload(
         "name": name,
         "type": type.capitalize(),
         "is_deprecated": is_deprecated,
-        "value_example": value_example or "",
+        "value_example": mark_safe(value_example or ""),  # nosec B308 B703 (is static HTML)
         "lookups": [LOOKUP_CONTEXT[op] for op in lookups],
         "auth": _fix_auth(field.auth | field.table.auth | field.table.dataset.auth),
     }

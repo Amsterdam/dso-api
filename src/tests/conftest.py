@@ -17,8 +17,8 @@ from jwcrypto.jwt import JWT
 from rest_framework.request import Request
 from rest_framework.test import APIClient, APIRequestFactory
 from schematools.contrib.django.models import Dataset, DynamicModel, Profile
-from schematools.utils import dataset_schema_from_path
 from schematools.types import DatasetSchema, ProfileSchema
+from schematools.utils import dataset_schema_from_path
 
 from rest_framework_dso.crs import RD_NEW
 from tests.test_rest_framework_dso.models import Actor, Category, Location, Movie, MovieUser
@@ -871,7 +871,9 @@ def huishoudelijkafval_schema():
 @pytest.fixture()
 def huishoudelijkafval_dataset(bag_dataset, huishoudelijkafval_schema, dynamic_models):
     return Dataset.objects.create(
-        name="huishoudelijkafval", path="huishoudelijkafval", schema_data=huishoudelijkafval_schema.json(),
+        name="huishoudelijkafval",
+        path="huishoudelijkafval",
+        schema_data=huishoudelijkafval_schema.json(),
     )
 
 
