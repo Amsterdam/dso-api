@@ -2,15 +2,31 @@
 import operator
 from typing import Any, FrozenSet, List, NamedTuple, Optional
 
-from django.shortcuts import get_object_or_404
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404, render
+from django.template.loader import get_template, render_to_string
 from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.utils.safestring import mark_safe
+from django.views import View
 from django.views.decorators.gzip import gzip_page
 from django.views.generic import TemplateView
+from markdown import Markdown
+from markdown.extensions.tables import TableExtension
 from schematools.contrib.django.models import Dataset
 from schematools.naming import to_snake_case
 from schematools.types import DatasetFieldSchema, DatasetSchema, DatasetTableSchema
+
+
+markdown = Markdown(extensions=[TableExtension()])
+
+
+@method_decorator(gzip_page, name="get")
+class GenericDocs(View):
+    def get(self, request, topic="index", *args, **kwargs):
+        uri = request.build_absolute_uri(reverse("dynamic_api:api-root"))
+        md = render_to_string(f"dso_api/dynamic_api/docs/rest/{topic}.md", context={"uri": uri})
+        return HttpResponse(markdown.convert(md))
 
 
 @method_decorator(gzip_page, name="dispatch")
