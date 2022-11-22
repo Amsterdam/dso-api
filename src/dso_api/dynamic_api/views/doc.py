@@ -23,9 +23,9 @@ markdown = Markdown(extensions=[TableExtension()])
 
 @method_decorator(gzip_page, name="get")
 class GenericDocs(View):
-    def get(self, request, topic="index", *args, **kwargs):
+    def get(self, request, category, topic="index", *args, **kwargs):
         uri = request.build_absolute_uri(reverse("dynamic_api:api-root"))
-        md = render_to_string(f"dso_api/dynamic_api/docs/rest/{topic}.md", context={"uri": uri})
+        md = render_to_string(f"dso_api/dynamic_api/docs/{category}/{topic}.md", context={"uri": uri})
         return HttpResponse(markdown.convert(md))
 
 
