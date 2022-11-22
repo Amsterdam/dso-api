@@ -148,8 +148,8 @@ if _USE_SECRET_STORE or CLOUD_ENV.startswith("azure"):
         pgpassword = Path("/mnt/secrets-store/mdbdataservices-read").read_text()
     except FileNotFoundError:
         # When running as a task container.
-        # In this case PGPASSWORD refers to a token from Azure IMDS
-        pgpassword = env.str("PGPASSWORD")
+        # In this case we use a shortlived token from Azure IMDS
+        pgpassword = Path(env.str("AZ_TOKEN_PATH")).read_text()
 
     DATABASES = {
         "default": {
