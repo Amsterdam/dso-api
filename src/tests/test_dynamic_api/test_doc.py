@@ -7,6 +7,16 @@ from django.urls import reverse
 
 
 @pytest.mark.django_db
+def test_generic(api_client):
+    """Quick test for the generic docs (Markdown rendering)."""
+    index = reverse("dynamic_api:docs-generic", kwargs={"category": "rest", "topic": "index"})
+    assert index
+
+    response = api_client.get(index)
+    assert response.status_code == 200
+
+
+@pytest.mark.django_db
 def test_overview(api_client, filled_router, fietspaaltjes_dataset):
     """Tests the documentation overview at /v1/docs."""
     overview = reverse("dynamic_api:docs-index")
