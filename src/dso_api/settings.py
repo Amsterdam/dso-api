@@ -408,8 +408,8 @@ DATASETS_EXCLUDE = env.list("DATASETS_EXCLUDE", default=None)
 # TODO the variables without _BAG_ are for BRK. Rename them.
 # XXX why HAAL_CENTRAAL_API_KEY and HAAL_CENTRAAL_KEYFILE?
 if _USE_SECRET_STORE or CLOUD_ENV.startswith("azure"):
-    HAAL_CENTRAAL_BAG_API_KEY = Path("/mnt/secrets-store/haalcentraal-bag-api-key").read_text()
     HAAL_CENTRAAL_API_KEY = Path("/mnt/secrets-store/haalcentraal-api-key").read_text()
+    HAAL_CENTRAAL_BAG_API_KEY = Path("/mnt/secrets-store/haalcentraal-bag-api-key").read_text()
 else:
     HAAL_CENTRAAL_API_KEY = os.getenv("HAAL_CENTRAAL_API_KEY")
     HAAL_CENTRAAL_BAG_API_KEY = os.getenv("HAAL_CENTRAAL_BAG_API_KEY")
