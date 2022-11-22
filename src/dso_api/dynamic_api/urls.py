@@ -12,7 +12,7 @@ from .views.doc import DocsOverview, GenericDocs
 def get_patterns(router_urls):
     """Generate the actual URL patterns for this file."""
     return [
-        path("docs/generic/rest/<str:topic>.html", GenericDocs.as_view()),
+        path("docs/generic/<str:category>/<str:topic>.html", GenericDocs.as_view()),
         path("docs/", DocsOverview.as_view(), name="docs-index"),
         path("mvt/", views.DatasetMVTIndexView.as_view(), name="mvt-index"),
         path("wfs/", views.DatasetWFSIndexView.as_view()),
