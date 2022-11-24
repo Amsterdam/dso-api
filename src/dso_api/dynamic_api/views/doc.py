@@ -3,8 +3,8 @@ import operator
 from typing import Any, FrozenSet, List, NamedTuple, Optional
 
 from django.http import HttpResponse
-from django.shortcuts import get_object_or_404, render
-from django.template.loader import get_template, render_to_string
+from django.shortcuts import get_object_or_404
+from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.utils.safestring import mark_safe
@@ -25,7 +25,8 @@ markdown = Markdown(extensions=[TableExtension()])
 class GenericDocs(View):
     def get(self, request, category, topic="index", *args, **kwargs):
         uri = request.build_absolute_uri(reverse("dynamic_api:api-root"))
-        md = render_to_string(f"dso_api/dynamic_api/docs/{category}/{topic}.md", context={"uri": uri})
+        template = f"dso_api/dynamic_api/docs/{category}/{topic}.md"
+        md = render_to_string(template, context={"uri": uri})
         return HttpResponse(markdown.convert(md))
 
 
