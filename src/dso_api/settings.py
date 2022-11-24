@@ -143,13 +143,7 @@ CACHES = {"default": env.cache_url(default="locmemcache://")}
 if _USE_SECRET_STORE or CLOUD_ENV.startswith("azure"):
     # On Azure, passwords are NOT passed via environment variables,
     # because the container environment can be inspected, and those vars export to subprocesses.
-    try:
-        # Normal operation
-        pgpassword = Path("/mnt/secrets-store/mdbdataservices-read").read_text()
-    except FileNotFoundError:
-        # When running as a task container.
-        # In this case we use a shortlived token from Azure IMDS
-        pgpassword = Path(env.str("AZ_TOKEN_PATH")).read_text()
+    pgpassword = Path(env.str("AZ_PG_TOKEN_PATH")).read_text()
 
     DATABASES = {
         "default": {
