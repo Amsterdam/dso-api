@@ -51,6 +51,8 @@
     {
       "straat": "Atalanta",
       "huisnummer": 29,
+      "huisletter": "π",
+      "huisnummertoevoeging": "2 hoog rood achter",
       "postcode": "7361EW",
       "woonplaats": "Beekbergen",
       "nummeraanduidingIdentificatie": "0200200000003734",

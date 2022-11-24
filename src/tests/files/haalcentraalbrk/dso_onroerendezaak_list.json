@@ -85,6 +85,8 @@
           {
             "straat": "Atalanta",
             "huisnummer": 21,
+            "huisletter": null,
+            "huisnummertoevoeging": null,
             "postcode": "7361EW",
             "woonplaats": "Beekbergen",
             "nummeraanduidingIdentificatie": "0200200000003730",
@@ -130,6 +132,8 @@
           {
             "straat": "Atalanta",
             "huisnummer": 25,
+            "huisletter": null,
+            "huisnummertoevoeging": null,
             "postcode": "7361EW",
             "woonplaats": "Beekbergen",
             "nummeraanduidingIdentificatie": "0200200000003732",
@@ -232,6 +236,8 @@
           {
             "straat": "Atalanta",
             "huisnummer": 29,
+            "huisletter": null,
+            "huisnummertoevoeging": null,
             "postcode": "7361EW",
             "woonplaats": "Beekbergen",
             "nummeraanduidingIdentificatie": "0200200000003734",
@@ -315,6 +321,8 @@
           {
             "straat": "Atalanta",
             "huisnummer": 27,
+            "huisletter": null,
+            "huisnummertoevoeging": null,
             "postcode": "7361EW",
             "woonplaats": "Beekbergen",
             "nummeraanduidingIdentificatie": "0200200000003733",
