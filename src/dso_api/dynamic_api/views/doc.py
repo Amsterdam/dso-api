@@ -18,7 +18,7 @@ from schematools.naming import to_snake_case
 from schematools.types import DatasetFieldSchema, DatasetSchema, DatasetTableSchema
 
 
-markdown = Markdown(extensions=[TableExtension()])
+markdown = Markdown(extensions=[TableExtension(), "fenced_code"])
 
 
 @method_decorator(gzip_page, name="get")
