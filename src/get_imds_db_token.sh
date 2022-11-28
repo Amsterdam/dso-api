@@ -4,6 +4,6 @@
 # It can only be used from a K8S node with the proper identities assigned.
 
 
-url=http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https%3A%2F%2Fossrdbms-aad.database.windows.net
+url='http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https%3A%2F%2Fossrdbms-aad.database.windows.net'
 curl -s "$url" -H 'Metadata: true' |
     python -c 'import json, sys; print(json.loads(sys.stdin.read())["access_token"])'
