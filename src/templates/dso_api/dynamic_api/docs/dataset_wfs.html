@@ -3,8 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <title>{{ schema.title }}</title>
+  <link rel="stylesheet" type="text/css" href="/v1/static/rest_framework/css/bootstrap.min.css"/>
+  <link rel="stylesheet" type="text/css" href="/v1/static/rest_framework/css/bootstrap-tweaks.css"/>
+  <link rel="stylesheet" type="text/css" href="/v1/static/rest_framework/css/default.css"/>
 </head>
 <body>
+<div class="container">
 <h1>{{ schema.title }}</h1>
 {% if schema.description %}<p>{{ schema.description }}</p>{% endif %}
 
@@ -76,5 +80,6 @@
   <li><a href="/v1/docs/generic/gis">Algemene uitleg van het gebruik van GIS-clients</a></li>
 </ul>
 
+</div>
 </body>
 </html>

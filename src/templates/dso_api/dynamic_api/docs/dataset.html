@@ -2,9 +2,14 @@
 <html>
 <head>
   <title>{% if schema.title %}{{ schema.title }}{% else %}{{ name|title }}{% endif %} &mdash; Amsterdam Datapunt API Documentatie v1</title>
+  <link rel="stylesheet" type="text/css" href="/v1/static/rest_framework/css/bootstrap.min.css"/>
+  <link rel="stylesheet" type="text/css" href="/v1/static/rest_framework/css/bootstrap-tweaks.css"/>
+  <link rel="stylesheet" type="text/css" href="/v1/static/rest_framework/css/default.css"/>
   {% block extrahead %}{% endblock %}
 </head>
 <body>
+<div class="container">
+
   <h1>{% if schema.title %}{{ schema.title }}{% else %}{{ name|title }}{% endif %}</h1>
   <p>{% if schema.description %}{{ schema.description }}{% endif %}</p>
   <ul>
@@ -142,5 +147,6 @@
     {% endif %}
   {% endfor %}
 
+</div>
 </body>
 </html>
