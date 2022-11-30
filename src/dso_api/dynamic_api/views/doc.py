@@ -40,7 +40,7 @@ class DocsOverview(TemplateView):
         context["datasets"] = [
             {
                 "uri": reverse(f"dynamic_api:doc-{ds.schema.id}"),
-                "title": ds.schema.title,
+                "title": ds.schema.title or ds.schema.id,
                 "tables": [table.id for table in ds.schema.tables],
             }
             for ds in datasets
