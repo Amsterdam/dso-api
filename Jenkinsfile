@@ -41,17 +41,6 @@ node {
             }
         }
     }
-
-    stage("Build API-Docs image") {
-        tryStep "build docs", {
-            catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                docker.withRegistry("${DOCKER_REGISTRY_HOST}",'docker_registry_auth') {
-                    def image = docker.build("datapunt/dataservices/dso-api-docs:${env.BUILD_NUMBER}", "--build-arg BUILD_NUMBER=${env.BUILD_NUMBER} docs")
-                    image.push()
-                }
-            }
-        }
-    }
 }
 
 
@@ -64,13 +53,6 @@ if (BRANCH == "master") {
             tryStep "image tagging", {
                 docker.withRegistry("${DOCKER_REGISTRY_HOST}",'docker_registry_auth') {
                     def image = docker.image("datapunt/dataservices/dso-api:${env.BUILD_NUMBER}")
-                    image.pull()
-                    image.push("acceptance")
-                }
-            }
-            tryStep "docs image tagging", {
-                docker.withRegistry("${DOCKER_REGISTRY_HOST}",'docker_registry_auth') {
-                    def image = docker.image("datapunt/dataservices/dso-api-docs:${env.BUILD_NUMBER}")
                     image.pull()
                     image.push("acceptance")
                 }
@@ -100,7 +82,6 @@ if (BRANCH == "master") {
                 parameters: [
                     [$class: 'StringParameterValue', name: 'INVENTORY', value: 'acceptance'],
                     [$class: 'StringParameterValue', name: 'PLAYBOOK', value: 'deploy.yml'],
-                    [$class: 'StringParameterValue', name: 'PLAYBOOKPARAMS', value: "-e cmdb_id=app_dso-api-docs"]
                 ]
             }
         }
@@ -145,14 +126,6 @@ if (BRANCH == "master") {
                     image.push("latest")
                 }
             }
-            tryStep "docs image tagging", {
-                docker.withRegistry("${DOCKER_REGISTRY_HOST}",'docker_registry_auth') {
-                    def image = docker.image("datapunt/dataservices/dso-api-docs:${env.BUILD_NUMBER}")
-                    image.pull()
-                    image.push("production")
-                    image.push("latest")
-                }
-            }
         }
     }
 
@@ -178,7 +151,6 @@ if (BRANCH == "master") {
                 parameters: [
                     [$class: 'StringParameterValue', name: 'INVENTORY', value: 'production'],
                     [$class: 'StringParameterValue', name: 'PLAYBOOK', value: 'deploy.yml'],
-                    [$class: 'StringParameterValue', name: 'PLAYBOOKPARAMS', value: "-e cmdb_id=app_dso-api-docs"]
                 ]
             }
         }
