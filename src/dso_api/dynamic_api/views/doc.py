@@ -23,11 +23,31 @@ markdown = Markdown(extensions=[TableExtension(), "fenced_code"])
 
 @method_decorator(gzip_page, name="get")
 class GenericDocs(View):
+    PRE = """
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <title>Amsterdam DataPunt API Documentatie</title>
+      <link rel="stylesheet" type="text/css"
+            href="/v1/static/rest_framework/css/bootstrap.min.css"/>
+      <link rel="stylesheet" type="text/css"
+            href="/v1/static/rest_framework/css/bootstrap-tweaks.css"/>
+      <link rel="stylesheet" type="text/css"
+            href="/v1/static/rest_framework/css/default.css"/>
+    </head>
+    <body>
+      <div class="container">
+    """
+
+    POST = """</div></body></html>"""
+
     def get(self, request, category, topic="index", *args, **kwargs):
         uri = request.build_absolute_uri(reverse("dynamic_api:api-root"))
         template = f"dso_api/dynamic_api/docs/{category}/{topic}.md"
         md = render_to_string(template, context={"uri": uri})
-        return HttpResponse(markdown.convert(md))
+        html = markdown.convert(md)
+        return HttpResponse(self.PRE + html + self.POST)
 
 
 @method_decorator(gzip_page, name="dispatch")
