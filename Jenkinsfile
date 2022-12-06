@@ -47,7 +47,6 @@ node {
 String BRANCH = "${env.BRANCH_NAME}"
 
 if (BRANCH == "master") {
-
     node {
         stage('Push acceptance image') {
             tryStep "image tagging", {
@@ -75,13 +74,6 @@ if (BRANCH == "master") {
                     [$class: 'StringParameterValue', name: 'INVENTORY', value: 'acceptance'],
                     [$class: 'StringParameterValue', name: 'PLAYBOOK', value: 'deploy.yml'],
                     [$class: 'StringParameterValue', name: 'PLAYBOOKPARAMS', value: "-e cmdb_id=app_dso-api"]
-                ]
-            }
-            tryStep "deployment", {
-                build job: 'Subtask_Openstack_Playbook',
-                parameters: [
-                    [$class: 'StringParameterValue', name: 'INVENTORY', value: 'acceptance'],
-                    [$class: 'StringParameterValue', name: 'PLAYBOOK', value: 'deploy.yml'],
                 ]
             }
         }
@@ -144,13 +136,6 @@ if (BRANCH == "master") {
                     [$class: 'StringParameterValue', name: 'INVENTORY', value: 'production'],
                     [$class: 'StringParameterValue', name: 'PLAYBOOK', value: 'deploy.yml'],
                     [$class: 'StringParameterValue', name: 'PLAYBOOKPARAMS', value: "-e cmdb_id=app_dso-api"]
-                ]
-            }
-            tryStep "deployment", {
-                build job: 'Subtask_Openstack_Playbook',
-                parameters: [
-                    [$class: 'StringParameterValue', name: 'INVENTORY', value: 'production'],
-                    [$class: 'StringParameterValue', name: 'PLAYBOOK', value: 'deploy.yml'],
                 ]
             }
         }
