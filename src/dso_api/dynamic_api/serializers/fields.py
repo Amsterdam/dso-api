@@ -77,7 +77,14 @@ class TemporalHyperlinkedRelatedField(serializers.HyperlinkedRelatedField):
         # NOTE: this one splits on the Django "id" field instead of
         # reading the temporal fields directly (e.g.: "identificatie"/"volgnummer").
         # It does allow use_pk_only_optimization() when lookup_field == "pk".
-        id_value, id_version = split_on_separator(getattr(obj, self.lookup_field))
+        try:
+            id_value, id_version = split_on_separator(getattr(obj, self.lookup_field))
+        except ValueError as e:
+            if str(e).startswith("not enough values to unpack"):
+                raise ValueError(f"{view_name}, {self.lookup_field}: {e}") from e
+            else:
+                raise
+
         base_url = self.reverse(
             view_name, kwargs={self.lookup_url_kwarg: id_value}, request=request, format=format
         )
