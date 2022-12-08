@@ -63,7 +63,6 @@ EXPOSED_SHORTNAMES = {
     # Datasets that used shortnames, which we've accidentally exposed instead of the actual names.
     # By limiting the compatibility check to this list, new datasets won't get the compat fields.
     # After all, they don't need to transition their API clients.
-    "brk",
     "loopfietsnetwerk",
     "standbedrijven",
     "standvastgoed",
