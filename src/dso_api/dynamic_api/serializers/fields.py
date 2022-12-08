@@ -78,10 +78,11 @@ class TemporalHyperlinkedRelatedField(serializers.HyperlinkedRelatedField):
         # reading the temporal fields directly (e.g.: "identificatie"/"volgnummer").
         # It does allow use_pk_only_optimization() when lookup_field == "pk".
         try:
-            id_value, id_version = split_on_separator(getattr(obj, self.lookup_field))
+            id_value = getattr(obj, self.lookup_field)
+            id_value, id_version = split_on_separator(id_value)
         except ValueError as e:
-            if str(e).startswith("not enough values to unpack"):
-                raise ValueError(f"{view_name}, {self.lookup_field}: {e}") from e
+            if str(e).startswith("not enough values to unpack"):  # Missing "volgnummer".
+                id_version = "*"
             else:
                 raise
 
