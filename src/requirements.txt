@@ -26,7 +26,7 @@ bandit==1.7.4
     # via -r requirements.in
 cachetools==5.2.0
     # via google-auth
-certifi==2022.9.24
+certifi==2022.12.7
     # via
     #   django-healthchecks
     #   requests
@@ -143,7 +143,7 @@ idna==3.4
     # via
     #   jsonschema
     #   requests
-importlib-metadata==5.0.0
+importlib-metadata==5.1.0
     # via markdown
 importlib-resources==5.10.0
     # via openapi-spec-validator
@@ -390,7 +390,7 @@ wirerope==0.4.6
     # via methodtools
 wrapt==1.14.1
     # via deprecated
-zipp==3.10.0
+zipp==3.11.0
     # via
     #   importlib-metadata
     #   importlib-resources
