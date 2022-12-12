@@ -12,5 +12,7 @@ schematools.contrib.django package
    schematools.contrib.django.auth_backend
    schematools.contrib.django.db
    schematools.contrib.django.factories
+   schematools.contrib.django.loaders
    schematools.contrib.django.managers
    schematools.contrib.django.models
+   schematools.contrib.django.signals
