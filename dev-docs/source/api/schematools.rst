@@ -10,6 +10,8 @@ schematools package
    :maxdepth: 1
 
    schematools.datasetcollection
+   schematools.factories
+   schematools.loaders
+   schematools.naming
    schematools.types
-   schematools.utils
    schematools.validation
