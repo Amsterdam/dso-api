@@ -29,7 +29,6 @@ from django.core.exceptions import ImproperlyConfigured
 from django.db import models
 from django.db.models.fields import AutoFieldMixin
 from django.db.models.fields.related import RelatedField
-from django.db.models.fields.reverse_related import ForeignObjectRel
 from django.utils.functional import SimpleLazyObject
 from drf_spectacular.drainage import set_override
 from rest_framework import serializers
@@ -72,7 +71,7 @@ EXPOSED_SHORTNAMES = {
 
 
 def _needs_shortname_compatibility(
-    field_schema: DatasetFieldSchema, model_field: models.Field | ForeignObjectRel
+    field_schema: DatasetFieldSchema, model_field: models.Field | models.ForeignObjectRel
 ):
     """Tell whether the field needs to provide backwards compatibility.
     We've accidentally exposed shortnames in the API.
@@ -332,7 +331,7 @@ def _links_serializer_factory(
         # This includes LooseRelationManyToManyField
         elif isinstance(model_field, models.ManyToManyField):
             _build_m2m_serializer_field(serializer_part, model_field)
-        elif isinstance(model_field, (RelatedField, ForeignObjectRel)):
+        elif isinstance(model_field, (RelatedField, models.ForeignObjectRel)):
             _build_link_serializer_field(serializer_part, model_field)
 
     # Generate serializer class
@@ -476,7 +475,7 @@ def _build_serializer_field(  # noqa: C901
             # Forward relation, or loose relation, add an id field in the main body.
             _build_serializer_related_id_field(serializer_part, model_field)
         return
-    elif isinstance(model_field, ForeignObjectRel):
+    elif isinstance(model_field, models.ForeignObjectRel):
         # Reverse relations, are only added as embedded field when there is an explicit declaration
         field_schema = DynamicModel.get_field_schema(model_field)
         additional_relation = field_schema.reverse_relation
@@ -493,7 +492,7 @@ def _build_serializer_field(  # noqa: C901
 
 def _build_serializer_embedded_field(
     serializer_part: SerializerAssemblyLine,
-    model_field: RelatedField | ForeignObjectRel,
+    model_field: RelatedField | models.ForeignObjectRel,
     nesting_level: int,
 ):
     """Build a embedded field for the serializer"""
@@ -695,7 +694,7 @@ def _build_plain_serializer_field(
 
 
 def _build_link_serializer_field(
-    serializer_part: SerializerAssemblyLine, model_field: models.Field | models.ForeignObjectRel
+    serializer_part: SerializerAssemblyLine, model_field: RelatedField | models.ForeignObjectRel
 ):
     """Build a field that will be an item in the ``_links`` section."""
     related_model = model_field.related_model
