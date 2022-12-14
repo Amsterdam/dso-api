@@ -137,6 +137,13 @@ class SerializerAssemblyLine:
         }
         self.deprecate_fields = []
 
+    def __repr__(self):
+        """Give a better overview during debugging which layer a function constructs."""
+        table_id = self.class_attrs["table_schema"].qualified_id
+        factory_function = self.class_attrs["_factory_function"]
+        factory = f" by {factory_function}()" if factory_function else ""
+        return f"<SerializerAssemblyLine: for '{table_id}'{factory}>"
+
     def add_field(self, name, field: serializers.Field, is_deprecated=False):
         """Add a field to the serializer assembly"""
         self.class_attrs[name] = field
