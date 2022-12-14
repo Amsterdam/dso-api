@@ -1,0 +1,90 @@
+{
+  "type": "dataset",
+  "id": "aardgasverbruik",
+  "title": "aardgasverbruik",
+  "status": "beschikbaar",
+  "version": "1.0.0",
+  "owner": "Liander / Gemeente Amsterdam",
+  "publisher": "Datateam Basisstatistiek",
+  "crs": "EPSG:28992",
+  "creator": "Onderzoek en Statistiek",
+  "auth": "OPENBAAR",
+  "authorizationGrantor": "OIS",
+  "tables": [
+    {
+      "id": "mraLiander",
+      "title": "Data over Standaard Jaarverbruik (SJV) en aantal aansluitingen per postcode-range in de MRA",
+      "type": "table",
+      "version": "1.0.0",
+      "schema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "identifier": "id",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "schema"
+        ],
+        "display": "id",
+        "properties": {
+          "schema": {
+            "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.1#/definitions/schema"
+          },
+          "id": {
+            "title": "id",
+            "type": "string",
+            "description": "Unieke identificatie"
+          },
+          "dataDate": {
+            "title": "dataDate",
+            "type": "string",
+            "format": "date",
+            "description": "Datum van de aangeleverde data"
+          },
+          "postcodeVanaf": {
+            "title": "postcodeVanaf",
+            "type": "string",
+            "description": "Postcode vanaf (eerste postcode in postcoderange)"
+          },
+          "postcodeTotEnMet": {
+            "title": "postcodeTotEnMet",
+            "type": "string",
+            "description": "Postcode t/m (laatste postcode in postcoderange)"
+          }
+        }
+      }
+    },
+    {
+      "id": "mraStatistiekenPcranges",
+      "type": "table",
+      "version": "1.0.0",
+      "schema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "identifier": "id",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "schema"
+        ],
+        "display": "id",
+        "properties": {
+          "schema": {
+            "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.1#/definitions/schema"
+          },
+          "id": {
+            "title": "id",
+            "type": "string",
+            "description": "Unieke identificatie",
+            "relation": "aardgasverbruik:mraLiander"
+          },
+          "gemiddeldVerbruik": {
+            "title": "gemiddeldAardgasverbruikPerAansluiting",
+            "type": "number",
+            "description": "Gemiddeld standaard jaarverbruik per aansluiting"
+          }
+        }
+      }
+    }
+  ]
+}

@@ -199,6 +199,16 @@ def schema_loader() -> FileSystemSchemaLoader:
     return FileSystemSchemaLoader(HERE / "files/datasets")
 
 
+@pytest.fixture
+def aardgasverbruik_schema(schema_loader) -> DatasetSchema:
+    return schema_loader.get_dataset_from_file("aardgasverbruik.json")
+
+
+@pytest.fixture
+def aardgasverbruik_dataset(aardgasverbruik_schema) -> Dataset:
+    return Dataset.create_for_schema(aardgasverbruik_schema)
+
+
 @pytest.fixture()
 def afval_schema(schema_loader) -> DatasetSchema:
     return schema_loader.get_dataset_from_file("afval.json")
