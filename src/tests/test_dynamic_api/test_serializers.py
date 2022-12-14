@@ -7,7 +7,7 @@ from schematools.permissions import UserScopes
 from schematools.types import ProfileSchema
 
 from dso_api.dynamic_api.serializers import clear_serializer_factory_cache, serializer_factory
-from dso_api.dynamic_api.serializers.fields import HALLooseRelationUrlField
+from dso_api.dynamic_api.serializers.fields import HALRawIdentifierUrlField
 from rest_framework_dso.fields import EmbeddedField
 from tests.utils import (
     api_request_with_scopes,
@@ -809,8 +809,8 @@ class TestDynamicSerializer:
             statistiek, context={"request": drf_request}
         )
         buurt_field = statistieken_serializer.fields["_links"].fields["buurt"]
-        assert buurt_field.__class__.__name__ == "GebiedenBuurtenLooseLinkSerializer"
-        assert isinstance(buurt_field.fields["href"], HALLooseRelationUrlField)
+        assert buurt_field.__class__.__name__ == "GebiedenBuurtenRawIdentifierSerializer"
+        assert isinstance(buurt_field.fields["href"], HALRawIdentifierUrlField)
 
         assert (
             statistieken_serializer.data["_links"]["buurt"]["href"]

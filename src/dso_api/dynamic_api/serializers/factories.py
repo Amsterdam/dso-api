@@ -45,7 +45,7 @@ from schematools.types import DatasetFieldSchema, DatasetTableSchema, Temporal
 
 from dso_api.dynamic_api.utils import get_view_name
 from rest_framework_dso.fields import AbstractEmbeddedField, get_embedded_field_class
-from rest_framework_dso.serializers import HALLooseLinkSerializer
+from rest_framework_dso.serializers import HALRawIdentifierLinkSerializer
 
 from . import base, fields
 from .base import LinkSerializer
@@ -440,13 +440,14 @@ def _temporal_link_serializer_factory(
     return serializer_part.construct_class(serializer_name, base_class=LinkSerializer)
 
 
-def _loose_link_serializer_factory(
+def _raw_identifier_link_serializer_factory(
     related_model: type[DynamicModel],
-) -> type[HALLooseLinkSerializer]:
-    """Construct a serializer that represents a loose relationship.
+) -> type[HALRawIdentifierLinkSerializer]:
+    """Construct a serializer that displays an object structure for a relationship ID.
 
-    At runtime, a loose relationship does not receive an object but a
-    str, since LooseRelationField inherits from CharField.
+    At runtime, this serializer doesn't receive an object but a str.
+    This is used to display a LooseRelationField (that inherits from CharField),
+    and a OneToOneField as primary key (when that doesn't need to read its source).
 
     The primary id of the relation is used to construct the href, title and id field.
     """
@@ -454,12 +455,12 @@ def _loose_link_serializer_factory(
     dataset_schema = table_schema.dataset
     serializer_part = SerializerAssemblyLine(
         model=related_model,
-        openapi_docs=f"The identifier of the loose relationship to {table_schema.id}.",
-        factory_name="_loose_link_serializer_factory",
+        openapi_docs=f"The identifier of the relationship to {table_schema.id}.",
+        factory_name="_raw_identifier_link_serializer_factory",
     )
     serializer_part.add_field(
         "href",
-        _build_href_field(related_model, field_cls=fields.HALLooseRelationUrlField),
+        _build_href_field(related_model, field_cls=fields.HALRawIdentifierUrlField),
     )
     if related_model.has_display_field():
         # Using source="*" because the source is already a str.
@@ -470,10 +471,14 @@ def _loose_link_serializer_factory(
     serializer_part.add_field(primary_field.name, serializers.CharField(source="*"))
 
     # Construct the class
-    serializer_name = f"{dataset_schema.python_name}{table_schema.python_name}LooseLinkSerializer"
+    serializer_name = (
+        f"{dataset_schema.python_name}{table_schema.python_name}RawIdentifierSerializer"
+    )
     serializer_part.class_attrs.pop("Meta")  # we dont need Meta on regular Serializers
 
-    return serializer_part.construct_class(serializer_name, base_class=HALLooseLinkSerializer)
+    return serializer_part.construct_class(
+        serializer_name, base_class=HALRawIdentifierLinkSerializer
+    )
 
 
 def _build_serializer_field(  # noqa: C901
@@ -727,7 +732,7 @@ def _build_link_serializer_field(
     # The link element itself is constructed using a serializer instead of some simple field,
     # because this provides a proper field definition for the generated OpenAPI spec.
     if isinstance(model_field, LooseRelationField):
-        field_class = _loose_link_serializer_factory(related_model)
+        field_class = _raw_identifier_link_serializer_factory(related_model)
         field_kwargs["source"] = model_field.attname  # receives ID value, not full object.
     elif model_field.related_model.table_schema().is_temporal:
         field_class = _temporal_link_serializer_factory(related_model)
@@ -741,8 +746,8 @@ def _build_link_serializer_field(
     ):
         # Optimization for OneToOneField. If the whole link object just needs the field ID,
         # there is no need to create a standard _nontemporal_link_serializer_factory().
-        # Reusing the "loose link" factory, because this is the exact same layout as needed.
-        field_class = _loose_link_serializer_factory(related_model)
+        # Reusing the "raw-id link" factory, because this is the exact same layout as needed.
+        field_class = _raw_identifier_link_serializer_factory(related_model)
         field_kwargs["source"] = model_field.attname  # receives ID value, not full object.
     else:
         field_class = _nontemporal_link_serializer_factory(related_model)
