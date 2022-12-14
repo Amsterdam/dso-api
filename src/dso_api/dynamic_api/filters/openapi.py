@@ -75,7 +75,7 @@ def get_table_filter_params(table_schema: DatasetTableSchema) -> list[dict]:  # 
     """
     openapi_params = []
 
-    for field in table_schema.get_fields(include_subfields=False):
+    for field in table_schema.fields:
         if field.is_array_of_objects:
             # M2M relation or nested table.
             for sub_field in field.subfields:
