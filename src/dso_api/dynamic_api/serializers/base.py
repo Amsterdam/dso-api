@@ -545,6 +545,20 @@ class LinkSerializer(FieldAccessMixin, DSOModelSerializerBase):
     This applies the field permissions to the display_name field (through FieldAccessMixin).
     """
 
+    def build_standard_field(self, field_name, model_field):
+        field_class, field_kwargs = super().build_standard_field(field_name, model_field)
+        if model_field.one_to_one and model_field.primary_key:
+            # When the OneToOneField is a primary key, and field isn't statically declared,
+            # DRF will generate one when on the fly but complain about a missing "view_name".
+            # In case code changes lead to this error, make it easier to trace the actual solution.
+            raise RuntimeError(
+                f"serializer_factory() has incomplete definition"
+                f" for '{self.field_name}.{field_name}', either fix the 'source' value"
+                " or make sure a proper field is predefined."
+            )
+
+        return field_class, field_kwargs
+
     def build_relational_field(self, field_name: str, relation_info: RelationInfo):
         """Factory logic - This makes sure temporal links get a different field class."""
         field_class, field_kwargs = super().build_relational_field(field_name, relation_info)

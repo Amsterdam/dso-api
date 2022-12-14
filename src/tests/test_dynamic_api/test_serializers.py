@@ -314,6 +314,52 @@ class TestDynamicSerializer:
         }
 
     @staticmethod
+    def test_pk_with_relation(
+        drf_request, aardgasverbruik_dataset, dynamic_models, django_assert_num_queries
+    ):
+        # Data used only once, creating locally:
+        MraLiander = dynamic_models["aardgasverbruik"]["mra_liander"]
+        PostcodeRange = dynamic_models["aardgasverbruik"]["mra_statistieken_pcranges"]
+        PostcodeRange.objects.create(
+            id=MraLiander.objects.create(id="123"), gemiddeld_verbruik=200
+        )
+
+        # Prove that the serializer can be constructed
+        PostcodeRangeSerializer = serializer_factory(PostcodeRange)
+
+        # Also prove that the optimizations work and the underlying model
+        # doesn't have to be fetched to render the _links.id field:
+        with django_assert_num_queries(1):
+            pc_range = PostcodeRange.objects.get(id="123")
+            postcode_serializer = PostcodeRangeSerializer(
+                pc_range, context={"request": drf_request}
+            )
+            data = normalize_data(postcode_serializer.data)
+            assert data == {
+                "_links": {
+                    "schema": (
+                        "https://schemas.data.amsterdam.nl"
+                        "/datasets/aardgasverbruik/dataset#mraStatistiekenPcranges"
+                    ),
+                    "self": {
+                        "href": (
+                            "http://testserver/v1/aardgasverbruik/mra_statistieken_pcranges/123/"
+                        ),
+                        "id": "123",
+                        "title": "123",
+                    },
+                    "id": {
+                        # PK relation is mentioned in the _links field:
+                        "href": "http://testserver/v1/aardgasverbruik/mra_liander/123/",
+                        "id": "123",
+                        "title": "123",
+                    },
+                },
+                # Other values:
+                "gemiddeldVerbruik": 200.0,
+            }
+
+    @staticmethod
     def test_backwards_relation(drf_request, gebieden_models):
         """Show backwards"""
         drf_request.table_temporal_slice = None

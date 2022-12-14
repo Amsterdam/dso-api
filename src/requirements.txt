@@ -4,7 +4,7 @@
 #
 #    pip-compile --output-file=requirements.txt requirements.in
 #
-amsterdam-schema-tools[django]==5.1
+amsterdam-schema-tools[django]==5.1.5
     # via -r requirements.in
 arrow==1.2.3
     # via isoduration
@@ -48,7 +48,7 @@ cryptography==38.0.1
     #   jwcrypto
     #   msal
     #   pyjwt
-datapunt-authorization-django==1.3.2
+datapunt-authorization-django==1.3.3
     # via -r requirements.in
 decorator==5.1.1
     # via jsonpath-rw

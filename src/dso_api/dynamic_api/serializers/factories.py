@@ -363,17 +363,27 @@ def _nontemporal_link_serializer_factory(
 
     serializer_part.add_field("href", _build_href_field(related_model))
     if related_model.has_display_field():
-        source = related_model.get_display_field()
+        # In case the display field is a PK with a relation (OneToOneField), "id_id" is used:
+        source = _get_attname_source(related_model.table_schema().display_field)
         serializer_part.add_field(
             "title", serializers.CharField(source=source if source != "title" else None)
         )
 
     primary_field = table_schema.identifier_fields[0]
-    serializer_part.add_field_name(primary_field.name, source=primary_field.python_name)
+    serializer_part.add_field_name(primary_field.name, source=_get_attname_source(primary_field))
 
     # Construct the class
     serializer_name = f"{dataset_schema.python_name}{related_model.__name__}LinkSerializer"
     return serializer_part.construct_class(serializer_name, base_class=LinkSerializer)
+
+
+def _get_attname_source(field_schema: DatasetFieldSchema):
+    """Make sure the source data reads the raw field value, not the actual relation."""
+    source = field_schema.python_name
+    if field_schema.relation is not None:
+        # Optimization for OneToOneField, read attname instead of linked model.
+        source += "_id"
+    return source
 
 
 @cached(cache=_temporal_link_serializer_factory_cache)
@@ -478,8 +488,8 @@ def _build_serializer_field(  # noqa: C901
         # Embedded relations are only added to the main serializer.
         _build_serializer_embedded_field(serializer_part, model_field, nesting_level)
 
-        if isinstance(model_field, models.ForeignKey):
-            # Forward relation, or loose relation, add an id field in the main body.
+        if isinstance(model_field, models.ForeignKey) and not model_field.one_to_one:
+            # Forward relation, or loose relation, add an ..._id field in the main body.
             _build_serializer_related_id_field(serializer_part, model_field)
         return
     elif isinstance(model_field, models.ForeignObjectRel):
@@ -721,6 +731,19 @@ def _build_link_serializer_field(
         field_kwargs["source"] = model_field.attname  # receives ID value, not full object.
     elif model_field.related_model.table_schema().is_temporal:
         field_class = _temporal_link_serializer_factory(related_model)
+    elif (
+        model_field.one_to_one
+        and model_field.primary_key
+        and (
+            not related_model.has_display_field()
+            or related_model.get_display_field() == related_model._meta.pk.name
+        )
+    ):
+        # Optimization for OneToOneField. If the whole link object just needs the field ID,
+        # there is no need to create a standard _nontemporal_link_serializer_factory().
+        # Reusing the "loose link" factory, because this is the exact same layout as needed.
+        field_class = _loose_link_serializer_factory(related_model)
+        field_kwargs["source"] = model_field.attname  # receives ID value, not full object.
     else:
         field_class = _nontemporal_link_serializer_factory(related_model)
 
@@ -798,6 +821,11 @@ def _build_href_field(
     """Generate a link field for a regular, temporal or loose relation.
     Use the 'lookup_field' argument to change the source of the hyperlink ID.
     """
+    if lookup_field == "pk" and target_model._meta.pk.one_to_one:
+        # Optimization for OneToOneField, avoid reading the related model to get the id value.
+        kwargs.setdefault("lookup_url_kwarg", lookup_field)
+        lookup_field = target_model._meta.pk.attname
+
     return field_cls(
         view_name=get_view_name(target_model, "detail"),
         read_only=True,  # avoids having to add a queryset
