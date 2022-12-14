@@ -313,8 +313,8 @@ class DynamicSerializer(FieldAccessMixin, DSOModelSerializer):
 
     serializer_field_mapping = {
         **DSOModelSerializer.serializer_field_mapping,
-        LooseRelationField: fields.HALLooseRelationUrlField,
-        LooseRelationManyToManyField: fields.HALLooseRelationUrlField,
+        LooseRelationField: fields.HALRawIdentifierUrlField,
+        LooseRelationManyToManyField: fields.HALRawIdentifierUrlField,
     }
 
     table_schema: DatasetTableSchema = None

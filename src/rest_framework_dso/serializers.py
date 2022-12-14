@@ -735,8 +735,11 @@ class DSOModelSerializer(DSOSerializer, DSOModelSerializerBase):
             return empty
 
 
-class HALLooseLinkSerializer(serializers.Serializer):
-    """This is an empty class that is used to type a _links subfield
-    as a loose relation. This information is necessary to determine the
-    runtime behavior of the serializer object structure, for example
-    when resolving the prefetch lookups for a queryset."""
+class HALRawIdentifierLinkSerializer(serializers.Serializer):
+    """Tagging interface to recognize serializers that don't receive objects.
+
+    This is an empty class that is used to tag a '_links' subfield
+    that only receives a raw identifier as its 'source' value.
+    This information is necessary to determine the runtime behavior,
+    for example when resolving the prefetch lookups for a queryset.
+    """

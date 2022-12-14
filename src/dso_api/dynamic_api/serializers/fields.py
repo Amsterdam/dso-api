@@ -116,8 +116,8 @@ class TemporalReadOnlyField(serializers.ReadOnlyField):
         return split_on_separator(str(value))[0]
 
 
-class HALLooseRelationUrlField(HyperlinkedRelatedField):
-    """Wrap the URL from LooseRelationUrlField according to HAL specs."""
+class HALRawIdentifierUrlField(HyperlinkedRelatedField):
+    """Generate an URL value based on the incoming string value.."""
 
     def use_pk_only_optimization(self):
         return True
@@ -129,7 +129,7 @@ class HALLooseRelationUrlField(HyperlinkedRelatedField):
         )
 
 
-class HALLooseM2MUrlField(HALLooseRelationUrlField):
+class HALLooseM2MUrlField(HALRawIdentifierUrlField):
     def get_url(self, obj, *args, **kwargs):
         """Generate /path/{<primary_id>}/
 

@@ -31,7 +31,7 @@ def get_serializer_relation_lookups(
     """Find all relations that a serializer instance would request.
     This allows to prepare a ``prefetch_related()`` call on the queryset.
     """
-    from rest_framework_dso.serializers import HALLooseLinkSerializer
+    from rest_framework_dso.serializers import HALRawIdentifierLinkSerializer
 
     # Unwrap the list serializer construct for the one-to-many relationships.
     if isinstance(serializer, serializers.ListSerializer):
@@ -40,9 +40,9 @@ def get_serializer_relation_lookups(
     lookups: dict[str, serializers.Field] = {}
 
     for field in serializer.fields.values():  # type: serializers.Field
-        if isinstance(field, HALLooseLinkSerializer):
-            # shortcircuit loose relations, which can not be passed to prefetch_related
-            # because they are regular CharFields
+        if isinstance(field, HALRawIdentifierLinkSerializer):
+            # Shortcircuit serializer objects that only receive a string value (like a CharField).
+            # This doesn't need to be passed to prefetch_related.
             continue
         elif field.source == "*":
             if isinstance(field, serializers.BaseSerializer):
