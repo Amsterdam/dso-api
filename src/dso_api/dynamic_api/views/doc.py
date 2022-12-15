@@ -57,14 +57,18 @@ class DocsOverview(TemplateView):
     def get_context_data(self, **kwargs):
         datasets = Dataset.objects.api_enabled().db_enabled()
         context = super().get_context_data(**kwargs)
-        context["datasets"] = [
-            {
-                "uri": reverse(f"dynamic_api:doc-{ds.schema.id}"),
-                "title": ds.schema.title or ds.schema.id,
-                "tables": [table.id for table in ds.schema.tables],
-            }
-            for ds in datasets
-        ]
+        context["datasets"] = sorted(
+            [
+                {
+                    "id": ds.schema.id,
+                    "uri": reverse(f"dynamic_api:doc-{ds.schema.id}"),
+                    "title": ds.schema.title or ds.schema.id,
+                    "tables": [table.id for table in ds.schema.tables],
+                }
+                for ds in datasets
+            ],
+            key=operator.itemgetter("title"),
+        )
         return context
 
 
