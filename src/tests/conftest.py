@@ -369,6 +369,16 @@ def hcbrk_dataset() -> Dataset:
     )
 
 
+@pytest.fixture()
+def hoofdroutes_schema(schema_loader):
+    return schema_loader.get_dataset_from_file(HERE / "files/datasets/hoofdroutes.json")
+
+
+@pytest.fixture()
+def hoofdroutes_dataset(hoofdroutes_schema):
+    return Dataset.create_for_schema(hoofdroutes_schema)
+
+
 # Dataset with auth scopes on fields.
 
 
