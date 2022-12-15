@@ -46,7 +46,7 @@
 <ul>
   {% for ds in datasets %}
   <li>
-    <a href="{{ ds.uri }}">{{ ds.title|title }}</a>
+    <a href="{{ ds.uri }}" title="{{ ds.id }}">{{ ds.title|title }}</a>
     <ul>
     {% for table in ds.tables %}
       <li><a href="{{ ds.uri }}#{{ table }}">{{ table.title }}</a></li>
