@@ -9,6 +9,7 @@ from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.utils.safestring import mark_safe
 from django.views import View
+from django.views.decorators.cache import cache_page
 from django.views.decorators.gzip import gzip_page
 from django.views.generic import TemplateView
 from markdown import Markdown
@@ -20,8 +21,12 @@ from schematools.types import DatasetFieldSchema, DatasetSchema, DatasetTableSch
 
 markdown = Markdown(extensions=[TableExtension(), "fenced_code"])
 
+CACHE_DURATION = 3600  # seconds.
 
-@method_decorator(gzip_page, name="get")
+decorators = [cache_page(CACHE_DURATION), gzip_page]
+
+
+@method_decorator(decorators, name="get")
 class GenericDocs(View):
     PRE = """
     <!DOCTYPE html>
@@ -50,7 +55,7 @@ class GenericDocs(View):
         return HttpResponse(self.PRE + html + self.POST)
 
 
-@method_decorator(gzip_page, name="dispatch")
+@method_decorator(decorators, name="dispatch")
 class DocsOverview(TemplateView):
     template_name = "dso_api/dynamic_api/docs/overview.html"
 
@@ -72,7 +77,7 @@ class DocsOverview(TemplateView):
         return context
 
 
-@method_decorator(gzip_page, name="dispatch")
+@method_decorator(decorators, name="dispatch")
 class DatasetDocView(TemplateView):
     template_name = "dso_api/dynamic_api/docs/dataset.html"
 
