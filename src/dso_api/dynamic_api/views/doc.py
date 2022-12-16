@@ -82,8 +82,9 @@ class DatasetDocView(TemplateView):
     template_name = "dso_api/dynamic_api/docs/dataset.html"
 
     def get_context_data(self, **kwargs):
+        dataset_name = to_snake_case(kwargs["dataset_name"])
         ds: DatasetSchema = get_object_or_404(
-            Dataset.objects.api_enabled().db_enabled(), name=kwargs["dataset_name"]
+            Dataset.objects.api_enabled().db_enabled(), name=dataset_name
         ).schema
 
         main_title = ds.title or ds.db_name.replace("_", " ").capitalize()
@@ -218,8 +219,9 @@ LOOKUP_CONTEXT = {
 
 def _table_context(table: DatasetTableSchema):
     """Collect all table data for the REST API spec."""
+    dataset_name = to_snake_case(table.dataset.id)
     table_name = table.db_name_variant(with_dataset_prefix=False)
-    uri = reverse(f"dynamic_api:{table.dataset.id}-{table_name}-list")
+    uri = reverse(f"dynamic_api:{dataset_name}-{table_name}-list")
     table_fields = table.fields
     fields = _list_fields(table_fields)
     filters = _get_filters(table_fields)

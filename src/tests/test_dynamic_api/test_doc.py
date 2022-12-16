@@ -53,12 +53,11 @@ def test_dataset(api_client, filled_router, gebieden_dataset):
     )
 
 
-
 @pytest.mark.django_db
 def test_dataset_casing(api_client, filled_router, hoofdroutes_dataset):
     """Tests documentation for dataset that needs camel casing."""
     hoofdroutes_doc = reverse(
-        "dynamic_api:doc-hoofdroutes"
+        "dynamic_api:doc-hoofdroutes2"
     )
     assert hoofdroutes_doc
 
@@ -66,7 +65,6 @@ def test_dataset_casing(api_client, filled_router, hoofdroutes_dataset):
     assert response.status_code == 200
     content = response.rendered_content
 
-    # Check for self-link to wijken.
     assert """<a id="routesGevaarlijkeStoffen">""" in content
 
 
