@@ -1,6 +1,6 @@
 """Dataset documentation views."""
 import operator
-from typing import Any, FrozenSet, List, NamedTuple, Optional
+from typing import Any, FrozenSet, List, NamedTuple, Optional, Iterable
 
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
@@ -222,16 +222,15 @@ def _table_context(table: DatasetTableSchema):
     dataset_name = to_snake_case(table.dataset.id)
     table_name = table.db_name_variant(with_dataset_prefix=False)
     uri = reverse(f"dynamic_api:{dataset_name}-{table_name}-list")
-    table_fields = table.fields
-    fields = _list_fields(table_fields)
-    filters = _get_filters(table_fields)
+    fields = _list_fields(table.fields)
+    filters = _get_filters(table.fields)
 
     return {
         "id": table.id,
         "title": to_snake_case(table.id).replace("_", " ").capitalize(),
         "uri": uri,
         "description": table.get("description"),
-        "fields": [_get_field_context(field) for field in fields],
+        "fields": [ctx for field in fields for ctx in _get_field_context(field)],
         "filters": filters,
         "auth": _fix_auth(table.auth | table.dataset.auth),
         "expands": _make_table_expands(table),
@@ -245,13 +244,14 @@ def _table_context_wfs(table: DatasetTableSchema):
     uri = reverse("dynamic_api:wfs", kwargs={"dataset_name": table.dataset.id})
     snake_name = to_snake_case(table.dataset.id)
     snake_id = to_snake_case(table.id)
+    fields = _list_fields(table.fields)
 
     return {
         "title": snake_id.replace("_", " ").capitalize(),
         "typenames": [f"app:{snake_id}", snake_id],
         "uri": uri,
         "description": table.get("description"),
-        "fields": [_get_field_context(field) for field in (_list_fields(table.fields))],
+        "fields": [ctx for field in fields for ctx in _get_field_context(field)],
         "auth": _fix_auth(table.dataset.auth | table.auth),
         "expands": _make_table_expands(table),
         "source": table,
@@ -349,7 +349,7 @@ def _field_data(field: DatasetFieldSchema):
     return type, value_example, lookups
 
 
-def _get_field_context(field: DatasetFieldSchema) -> dict[str, Any]:
+def _get_field_context(field: DatasetFieldSchema) -> Iterable[dict[str, Any]]:
     """Get context data for a field."""
     python_name = _get_dotted_python_name(field)
     api_name = _get_dotted_api_name(field)
@@ -363,7 +363,7 @@ def _get_field_context(field: DatasetFieldSchema) -> dict[str, Any]:
         # First identifier gets parent field description.
         description = field.parent_field.description
 
-    return {
+    yield {
         "id": field.id,
         "python_name": python_name,
         "api_name": api_name,
@@ -377,9 +377,26 @@ def _get_field_context(field: DatasetFieldSchema) -> dict[str, Any]:
         "auth": _fix_auth(field.auth | field.table.auth | field.table.dataset.auth),
     }
 
+    if not field.relation:
+        return
+
+    # Yield another context for relations with the old "Id" suffix.
+    yield {
+        "id": field.id,
+        "python_name": python_name,
+        "api_name": field.id + "Id",
+        "is_identifier": field.is_identifier_part,
+        "is_deprecated": True,
+        "is_relation": bool(field.relation),
+        "is_foreign_id": is_foreign_id,
+        "type": (type or "").capitalize(),
+        "description": description or "",
+        "source": field,
+        "auth": _fix_auth(field.auth | field.table.auth | field.table.dataset.auth),
+    }
+
 
 def _get_dotted_python_name(field: DatasetFieldSchema) -> str:
-    """Find the snake and camel names of a field"""
     snake_name = to_snake_case(field.id)
 
     parent_field = field.parent_field
@@ -392,7 +409,6 @@ def _get_dotted_python_name(field: DatasetFieldSchema) -> str:
 
 
 def _get_dotted_api_name(field: DatasetFieldSchema) -> str:
-    """Find the snake and camel names of a field"""
     camel_name = field.name
     parent_field = field.parent_field
     while parent_field is not None:

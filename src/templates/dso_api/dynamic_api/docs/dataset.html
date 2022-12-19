@@ -64,11 +64,12 @@
       {% for field in table.fields %}
         <tr>
           <td>
-            {% if field.is_deprecated %}
-            <s><code>{{ field.api_name }}</code></s> <i>gaat vervallen</i>
-            {% else %}
+          {% if field.is_deprecated %}
+            <s><code>{{ field.api_name }}</code></s>
+            <small><abbr title="Wordt over drie maanden niet meer ondersteund">gaat vervallen</abbr></small>
+          {% else %}
             <code>{{ field.api_name }}</code>
-            {% endif %}
+          {% endif %}
           </td>
           <td>
             {{ field.type|default:"" }}
