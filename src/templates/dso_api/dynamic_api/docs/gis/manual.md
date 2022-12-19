@@ -10,23 +10,23 @@ Voor HTTP-clients, voeg je
 toe. De `?expand` en `?embed` parameters (bovenaan beschreven) werken
 ook.
 
-## Export formaten
+## Exportformats
 
-De volgende export formaten zijn beschikbaar:
+De volgende exportformats zijn beschikbaar:
 
   - GeoJSON
   - CSV
 
 Deze worden opgevraagd door zelf een **GetFeature** aanvraag samen te
 stellen. Hiervoor zijn de parameters `TYPENAMES={laagnaam}` en
-`OUTPUTFORMAT={formaat}` nodig. De volledige URL wordt dan:
+`OUTPUTFORMAT={format}` nodig. De volledige URL wordt dan:
 
-`https://api.data.amsterdam.nl/v1/wfs/{dataset}/?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES={laagnaam}&OUTPUTFORMAT={formaat}`.
+`https://api.data.amsterdam.nl/v1/wfs/{dataset}/?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES={laagnaam}&OUTPUTFORMAT={format}`.
 
 Bijvoorbeeld:
 
-  - [...\&TYPENAMES=wijken\&OUTPUTFORMAT=geojson](https://api.data.amsterdam.nl/v1/wfs/gebieden/?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=wijken&COUNT=10&OUTPUTFORMAT=geojson)
-  - [...\&TYPENAMES=wijken\&OUTPUTFORMAT=csv](https://api.data.amsterdam.nl/v1/wfs/gebieden/?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=wijken&COUNT=10&OUTPUTFORMAT=csv)
+  - [...&TYPENAMES=wijken&OUTPUTFORMAT=geojson](https://api.data.amsterdam.nl/v1/wfs/gebieden/?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=wijken&COUNT=10&OUTPUTFORMAT=geojson)
+  - [...&TYPENAMES=wijken&OUTPUTFORMAT=csv](https://api.data.amsterdam.nl/v1/wfs/gebieden/?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=wijken&COUNT=10&OUTPUTFORMAT=csv)
 
 <div class="tip">
 
@@ -43,26 +43,25 @@ datasets dit met een goede performance leveren.
 
 </div>
 
-## Relaties bij exportformaten
+## Relaties bij exportformats
 
-De exportformaten ondersteunen tevens het embedden/nesten van relaties.
+De exportformats ondersteunen tevens het embedden/nesten van relaties.
 Hiervoor is het voldoende om de nesting-parameters te gebruiken bij het
 export links.
 
 Bijvoorbeeld:
 
-  - [?embed=ligt\_in\_stadsdeel&...\&TYPENAMES=wijken\&OUTPUTFORMAT=geojson](https://api.data.amsterdam.nl/v1/wfs/gebieden/?embed=ligt_in_stadsdeel&SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=wijken&COUNT=10&OUTPUTFORMAT=geojson)
-  - [?expand=ligt\_in\_stadsdeel&...\&TYPENAMES=wijken\&OUTPUTFORMAT=geojson](https://api.data.amsterdam.nl/v1/wfs/gebieden/?expand=ligt_in_stadsdeel&SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=wijken&COUNT=10&OUTPUTFORMAT=geojson)
-  - [?embed=ligt\_in\_stadsdeel&...\&TYPENAMES=wijken\&OUTPUTFORMAT=csv](https://api.data.amsterdam.nl/v1/wfs/gebieden/?embed=ligt_in_stadsdeel&SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=wijken&COUNT=10&OUTPUTFORMAT=csv)
-  - [?expand=ligt\_in\_stadsdeel&...\&TYPENAMES=wijken\&OUTPUTFORMAT=csv](https://api.data.amsterdam.nl/v1/wfs/gebieden/?expand=ligt_in_stadsdeel&SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=wijken&COUNT=10&OUTPUTFORMAT=csv)
+  - [?embed=ligt\_in\_stadsdeel&...&TYPENAMES=wijken&OUTPUTFORMAT=geojson](https://api.data.amsterdam.nl/v1/wfs/gebieden/?embed=ligt_in_stadsdeel&SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=wijken&COUNT=10&OUTPUTFORMAT=geojson)
+  - [?expand=ligt\_in\_stadsdeel&...&TYPENAMES=wijken&OUTPUTFORMAT=geojson](https://api.data.amsterdam.nl/v1/wfs/gebieden/?expand=ligt_in_stadsdeel&SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=wijken&COUNT=10&OUTPUTFORMAT=geojson)
+  - [?embed=ligt\_in\_stadsdeel&...&TYPENAMES=wijken&OUTPUTFORMAT=csv](https://api.data.amsterdam.nl/v1/wfs/gebieden/?embed=ligt_in_stadsdeel&SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=wijken&COUNT=10&OUTPUTFORMAT=csv)
+  - [?expand=ligt\_in\_stadsdeel&...&TYPENAMES=wijken&OUTPUTFORMAT=csv](https://api.data.amsterdam.nl/v1/wfs/gebieden/?expand=ligt_in_stadsdeel&SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=wijken&COUNT=10&OUTPUTFORMAT=csv)
 
 <div class="admonition">
 
-Sommige formaten hebben beperkingen
+Sommige formats hebben beperkingen.
 
-De CSV export kan alleen complexe relaties verwerken als deze ook
-platgeslagen kunnen worden. Dit is een beperking van het bestandsformaat
-zelf.
+De CSV-export kan alleen complexe relaties verwerken als deze ook
+platgeslagen kunnen worden. Dit is een beperking van het format zelf.
 
 </div>
 
@@ -97,7 +96,7 @@ de waarde als XML wordt uitgedrukt:
 
 Dit wordt dan in de request verwerkt, bijvoorbeeld:
 
-  - [...\&TYPENAMES=wijken\&OUTPUTFORMAT=geojson\&FILTER=%3CFilter%3E%3CPropertyIsEqualTo%3E%3CValueReference...](https://api.data.amsterdam.nl/v1/wfs/gebieden/?expand=ligt_in_stadsdeel&SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=wijken&COUNT=10&OUTPUTFORMAT=geojson&FILTER=%3CFilter%3E%3CPropertyIsEqualTo%3E%3CValueReference%3Eligt_in_stadsdeel/naam%3C/ValueReference%3E%3CLiteral%3ECentrum%3C/Literal%3E%3C/PropertyIsEqualTo%3E%3C/Filter%3E)
+  - [...&TYPENAMES=wijken&OUTPUTFORMAT=geojson&FILTER=%3CFilter%3E%3CPropertyIsEqualTo%3E%3CValueReference...](https://api.data.amsterdam.nl/v1/wfs/gebieden/?expand=ligt_in_stadsdeel&SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=wijken&COUNT=10&OUTPUTFORMAT=geojson&FILTER=%3CFilter%3E%3CPropertyIsEqualTo%3E%3CValueReference%3Eligt_in_stadsdeel/naam%3C/ValueReference%3E%3CLiteral%3ECentrum%3C/Literal%3E%3C/PropertyIsEqualTo%3E%3C/Filter%3E)
 
 De `FILTER` parameter vervangt de losse parameters `BBOX` en
 `RESOURCEID`. Als je deze parameters ook gebruikt, moet je deze opnemen
