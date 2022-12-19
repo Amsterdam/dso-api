@@ -59,9 +59,6 @@ instance/
 # Scrapy stuff:
 .scrapy
 
-# Sphinx documentation
-docs/_build/
-
 # PyBuilder
 target/
 
@@ -122,10 +119,6 @@ ENV/
 
 # Local experiments
 /scratch
-
-# Docs
-/docs/source/datasets/
-/docs/source/wfs-datasets/
 
 # Docker
 docker-compose.override.*.y*ml

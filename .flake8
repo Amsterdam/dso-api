@@ -13,7 +13,6 @@ extend-ignore=
   R102,
 exclude=.git,
         **/migrations/*,
-        docs,
         scripts,
 format = ${cyan}%(path)s${reset}:${yellow_bold}%(row)d${reset}:${green_bold}%(col)d${reset}: ${red_bold}%(code)s${reset} %(text)s
 max-complexity=8

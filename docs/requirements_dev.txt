@@ -1,3 +1,0 @@
--r ./requirements.txt
-
-sphinx-autobuild == 2021.3.14
