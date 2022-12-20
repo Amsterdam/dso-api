@@ -17,7 +17,7 @@ def get_patterns(router_urls):
             GenericDocs.as_view(),
             name="docs-generic",
         ),
-        path("docs/", DocsOverview.as_view(), name="docs-index"),
+        path("docs/index.html", DocsOverview.as_view(), name="docs-index"),
         path("mvt/", views.DatasetMVTIndexView.as_view(), name="mvt-index"),
         path("wfs/", views.DatasetWFSIndexView.as_view()),
         path("", include(router_urls), name="api-root"),
