@@ -1338,6 +1338,13 @@ class TestEmbedTemporalTables:
             "page": {"number": 1, "size": 20},
         }
 
+    def test_nested_expand_array(self, api_client, movies_data_with_actors, filled_router):
+        """Prove that _expandScope works with an array-typed relation."""
+        response = api_client.get("/v1/movies/movie/?_expandScope=actors")
+        data = read_response_json(response)
+        assert response.status_code == 200, data
+        assert data["_embedded"]["actors"][0]["name"] == "John Doe"
+
     def test_detail_no_expand_for_temporal_fk_relation(
         self, api_client, buurten_data, wijken_data, filled_router
     ):
