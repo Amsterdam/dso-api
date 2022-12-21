@@ -10,13 +10,13 @@ sync:
 
 .PHONY: requirements
 requirements: requirements.in
-	pip-compile -v --output-file requirements.txt requirements.in
+	pip-compile -v --generate-hashes --output-file requirements.txt requirements.in
 
 .PHONY: upgrade
 upgrade:
 	pur --patch=Django -r requirements.in
 	pur --no-recursive -r requirements_dev.txt
-	pip-compile -v --upgrade --output-file requirements.txt requirements.in
+	pip-compile -v --generate-hashes --upgrade --output-file requirements.txt requirements.in
 
 .PHONY: test
 test:
