@@ -8,10 +8,10 @@ from __future__ import annotations
 
 import re
 
-from schematools.types import DatasetFieldSchema, DatasetTableSchema
+from schematools.types import DatasetFieldSchema, DatasetTableSchema, Temporal
 
 from dso_api.dynamic_api.filters import parser
-from dso_api.dynamic_api.filters.parser import QueryFilterEngine
+from dso_api.dynamic_api.filters.parser import QueryFilterEngine, ALLOWED_SCALAR_LOOKUPS
 
 RE_GEOJSON_TYPE = re.compile(r"^https://geojson\.org/schema/(?P<geotype>[a-zA-Z]+)\.json$")
 
@@ -93,6 +93,23 @@ def get_table_filter_params(table_schema: DatasetTableSchema) -> list[dict]:  # 
         else:
             # Flat direct field
             openapi_params.extend(_get_field_openapi_params(field))
+
+    temporal: Temporal = table_schema.temporal
+    if temporal is not None:
+        for name, fields in temporal.dimensions.items():
+            start = fields.start  # Assume fields.end has the same type.
+            lookups = ALLOWED_SCALAR_LOOKUPS[start.format or start.type]
+
+            for lookup in lookups:
+                openapi_params.append({
+                    "name": name if lookup == "" else f"{name}[{lookup}]",
+                    "in": "query",
+                    # TODO: add description
+                    "schema": {
+                        "type": start.type,
+                        "format": start.format,
+                    },
+                })
 
     return openapi_params
 
