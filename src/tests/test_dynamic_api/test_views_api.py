@@ -110,8 +110,9 @@ class TestDSOViewMixin:
     def test_bogus_crs(self, api_client, afval_dataset, filled_router):
         """Prove that invalid CRS leads to a 406 status"""
         url = reverse("dynamic_api:afvalwegingen-containers-list")
-        response = api_client.get(url, HTTP_ACCEPT_CRS="nonsense")
-        assert response.status_code == 406, response.data
+        for crs in ("nonsense", "EPSG:", "EPSG:foo"):
+            response = api_client.get(url, HTTP_ACCEPT_CRS=crs)
+            assert response.status_code == 406, response.data
 
     def test_response_has_crs_from_accept_crs(self, api_client, afval_dataset, filled_router):
         """Prove that response has a CRS header taken from the Accept-Crs header"""

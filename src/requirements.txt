@@ -265,9 +265,9 @@ django-environ==0.9.0 \
     # via
     #   -r requirements.in
     #   amsterdam-schema-tools
-django-gisserver==1.2.3 \
-    --hash=sha256:1b4474b1bed4339332b5653611aaafa4d14d5187a713cd134b427f39501958a1 \
-    --hash=sha256:3e316b5caddaeec8ba3fe289c1cf62e3a91524e2d86af430aca02797a01bdb6c
+django-gisserver==1.2.5 \
+    --hash=sha256:46771b96f49b9dd7a1bda3bed7bbbe6b0021f8ceca1777d5842a53abd32b818b \
+    --hash=sha256:853a88fd4739104f9f1722aaafd14f59e03134408071a685e8d589ad553f6b36
     # via
     #   -r requirements.in
     #   amsterdam-schema-tools
