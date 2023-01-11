@@ -4,6 +4,7 @@ from inspect import isgeneratorfunction
 from typing import Optional, Union
 
 from django.http import HttpResponseNotFound, JsonResponse
+from gisserver.exceptions import ExternalValueError
 from rest_framework import status
 from rest_framework.exceptions import APIException, ErrorDetail, NotAcceptable, ValidationError
 from rest_framework.renderers import JSONRenderer
@@ -327,7 +328,7 @@ class DSOViewMixin:
 
         try:
             accept_crs = crs.CRS.from_string(value)
-        except ValueError as e:
+        except ExternalValueError as e:
             raise NotAcceptable(f"Chosen CRS is invalid: {e}") from e
 
         if accept_crs not in self.accept_crs:

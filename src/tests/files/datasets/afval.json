@@ -4,6 +4,7 @@
   "title": "Afvalwegingen",
   "status": "beschikbaar",
   "description": "unit testing version of afvalwegingen",
+  "publisher": "Nobody",
   "license": "CC0 1.0",
   "version": "0.0.1",
   "crs": "EPSG:28992",
