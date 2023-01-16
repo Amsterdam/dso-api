@@ -11,6 +11,8 @@ extend-ignore=
   E731,
   # Allow raise Exception()
   R102,
+  # line break before binary operator (incompatible with black):
+  W503,
 exclude=.git,
         **/migrations/*,
         scripts,
