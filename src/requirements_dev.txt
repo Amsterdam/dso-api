@@ -6,12 +6,19 @@ pip-tools == 6.9.0
 pur == 7.0.0
 
 # Useful extra developer packages:
-black == 22.10.0
-isort == 5.10.1
-pytest-sugar == 0.9.5
-termcolor >= 2.0.1  # for pytest-sugar
-pre-commit == 2.20.0
+black == 22.10.0 \
+    --hash=sha256:72ef3925f30e12a184889aac03d77d031056860ccae8a1e519f6cbb742736383
+isort == 5.10.1 \
+    --hash=sha256:6f62d78e2f89b4500b080fe3a81690850cd254227f27f75c3a0c491a1f351ba7
+pytest-sugar == 0.9.5 \
+    --hash=sha256:3da42de32ce4e1e95b448d61c92804433f5d4058c0a765096991c2e93d5a289f
+termcolor == 2.0.1 \
+    --hash=sha256:7e597f9de8e001a3208c4132938597413b9da45382b6f1d150cff8d062b7aaa3 # for pytest-sugar
+pre-commit == 2.20.0 \
+    --hash=sha256:51a5ba7c480ae8072ecdb6933df22d2f812dc897d5fe848778116129a681aac7
 
 # Debugging
-django-debug-toolbar == 3.7.0
-django-extensions == 3.2.1
+django-debug-toolbar == 3.7.0 \
+    --hash=sha256:80de23066b624d3970fd296cf02d61988e5d56c31aa0dc4a428970b46e2883a8
+django-extensions == 3.2.1 \
+    --hash=sha256:421464be390289513f86cb5e18eb43e5dc1de8b4c27ba9faa3b91261b0d67e09
