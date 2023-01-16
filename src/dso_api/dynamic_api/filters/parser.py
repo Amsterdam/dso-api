@@ -526,7 +526,7 @@ def _get_field_by_id(  # noqa: C901
                 field = parent.get_field_by_id(name[:-2])
             except SchemaObjectNotFound:
                 pass
-            if not field.relation:
+            if field and not field.relation:
                 field = None  # only allow relations for "Id" suffix.
 
     if field is not None:
