@@ -3,6 +3,7 @@
   "id": "bag",
   "title": "bag",
   "status": "beschikbaar",
+  "publisher": "Nobody",
   "version": "0.0.1",
   "crs": "EPSG:28992",
   "identifier": "identificatie",

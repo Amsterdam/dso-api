@@ -3,6 +3,7 @@
     "id": "fietspaaltjesnodisplay",
     "title": "fietspaaltjesnodisplay",
     "status": "beschikbaar",
+    "publisher": "Nobody",
     "version": "0.0.1",
     "crs": "EPSG:28992",
     "tables": [

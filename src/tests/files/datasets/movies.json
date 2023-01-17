@@ -3,6 +3,7 @@
   "id": "movies",
   "title": "Movies",
   "status": "beschikbaar",
+  "publisher": "Nobody",
   "version": "0.0.0",
   "identifier": "id",
   "tables": [
