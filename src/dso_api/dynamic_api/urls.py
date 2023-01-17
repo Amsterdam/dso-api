@@ -13,6 +13,11 @@ def get_patterns(router_urls):
     """Generate the actual URL patterns for this file."""
     return [
         path(
+            "docs/generic/<str:category>.html",
+            GenericDocs.as_view(),
+            name="docs-generic",
+        ),
+        path(
             "docs/generic/<str:category>/<str:topic>.html",
             GenericDocs.as_view(),
             name="docs-generic",
