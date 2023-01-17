@@ -338,8 +338,8 @@ fqdn==1.5.1 \
     --hash=sha256:105ed3677e767fb5ca086a0c1f4bb66ebc3c100be518f0e0d755d9eae164d89f \
     --hash=sha256:3a179af3761e4df6eb2e026ff9e1a3033d3587bf980a0b1b2e1e5d08d7358014
     # via jsonschema
-future==0.18.2 \
-    --hash=sha256:b1bead90b70cf6ec3f0710ae53a525360fa360d306a86583adc6bf83a4db537d
+future==0.18.3 \
+    --hash=sha256:34a17436ed1e96697a86f9de3d15a3b0be01d8bc8de9c1dffd59fb8234ed5307
     # via mapbox-vector-tile
 geoalchemy2==0.12.5 \
     --hash=sha256:31c2502dce317b57b335e4eb87562d501fa39e46c728be514d9b86091e08dd67 \
