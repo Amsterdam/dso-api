@@ -1,11 +1,12 @@
 """Dataset documentation views."""
+import logging
 import operator
 from typing import Any, FrozenSet, List, NamedTuple, Optional, Iterable
 
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.template.loader import render_to_string
-from django.urls import reverse
+from django.urls import NoReverseMatch, reverse
 from django.utils.decorators import method_decorator
 from django.utils.safestring import mark_safe
 from django.views import View
@@ -18,6 +19,8 @@ from schematools.contrib.django.models import Dataset
 from schematools.naming import to_snake_case
 from schematools.types import DatasetFieldSchema, DatasetSchema, DatasetTableSchema
 
+
+logger = logging.getLogger(__name__)
 
 markdown = Markdown(extensions=[TableExtension(), "fenced_code"])
 
@@ -60,20 +63,24 @@ class DocsOverview(TemplateView):
     template_name = "dso_api/dynamic_api/docs/overview.html"
 
     def get_context_data(self, **kwargs):
-        datasets = Dataset.objects.api_enabled().db_enabled()
-        context = super().get_context_data(**kwargs)
-        context["datasets"] = sorted(
-            [
+        datasets = []
+        for ds in Dataset.objects.api_enabled().db_enabled():
+            try:
+                uri = reverse(f"dynamic_api:doc-{ds.schema.id}")
+            except NoReverseMatch as e:
+                logger.warning("dataset %s: %s", ds.schema.id, e)
+            datasets.append(
                 {
                     "id": ds.schema.id,
-                    "uri": reverse(f"dynamic_api:doc-{ds.schema.id}"),
+                    "uri": uri,
                     "title": ds.schema.title or ds.schema.id,
                     "tables": [table.id for table in ds.schema.tables],
                 }
-                for ds in datasets
-            ],
-            key=operator.itemgetter("title"),
-        )
+            )
+        datasets.sort(key=operator.itemgetter("title"))
+
+        context = super().get_context_data(**kwargs)
+        context["datasets"] = datasets
         return context
 
 
