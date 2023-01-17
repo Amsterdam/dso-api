@@ -4,6 +4,7 @@
   "title": "Meldingen",
   "status": "beschikbaar",
   "description": "SIA (Signalen Informatievoorziening Amsterdam) meldingen",
+  "publisher": "Nobody",
   "version": "0.0.1",
   "crs": "EPSG:28992",
   "tables": [

@@ -2,6 +2,7 @@
   "type": "dataset",
   "id": "woningbouwplannen",
   "title": "Woningbouwplannen en Strategische ruimtes",
+  "publisher": "Nobody",
   "status": "beschikbaar",
   "version": "0.0.1",
   "crs": "EPSG:28992",

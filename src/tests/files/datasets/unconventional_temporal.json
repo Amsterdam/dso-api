@@ -3,6 +3,7 @@
   "type": "dataset",
   "title": "",
   "status": "beschikbaar",
+  "publisher": "Nobody",
   "version": "0.0.1",
   "default_version": "0.0.1",
   "crs": "EPSG:28992",

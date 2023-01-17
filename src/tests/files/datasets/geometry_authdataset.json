@@ -3,6 +3,7 @@
   "type": "dataset",
   "title": "Geometry authorization test with dataset scopes",
   "status": "beschikbaar",
+  "publisher": "Nobody",
   "version": "0.0.1",
   "auth": "TEST/TOP",
   "crs": "EPSG:28992",

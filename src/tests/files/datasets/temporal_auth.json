@@ -3,6 +3,7 @@
   "id": "temporalauth",
   "title": "Dataset with authorization on temporal dimensions",
   "status": "beschikbaar",
+  "publisher": "Nobody",
   "version": "0.0.0",
   "identifier": "id",
   "tables": [

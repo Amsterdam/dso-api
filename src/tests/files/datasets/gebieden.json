@@ -3,6 +3,7 @@
   "id": "gebieden",
   "title": "gebieden",
   "status": "beschikbaar",
+  "publisher": "Nobody",
   "version": "0.0.1",
   "identifier": "identificatie",
   "crs": "EPSG:28992",
