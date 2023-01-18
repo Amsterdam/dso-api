@@ -1,7 +1,7 @@
 """Dataset documentation views."""
 import logging
 import operator
-from typing import Any, FrozenSet, List, NamedTuple, Optional, Iterable
+from typing import Any, FrozenSet, Iterable, List, NamedTuple, Optional
 
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
@@ -18,7 +18,6 @@ from markdown.extensions.tables import TableExtension
 from schematools.contrib.django.models import Dataset
 from schematools.naming import to_snake_case
 from schematools.types import DatasetFieldSchema, DatasetSchema, DatasetTableSchema
-
 
 logger = logging.getLogger(__name__)
 
@@ -77,7 +76,7 @@ class DocsOverview(TemplateView):
                     "tables": [table.id for table in ds.schema.tables],
                 }
             )
-        datasets.sort(key=operator.itemgetter("title"))
+        datasets.sort(key=lambda ds: ds["title"].lower())
 
         context = super().get_context_data(**kwargs)
         context["datasets"] = datasets
