@@ -280,13 +280,13 @@ if CLOUD_ENV.lower().startswith("azure"):
         "formatter": "audit_azure",
     }
 
-    LOGGING["root"]["handlers"] = ["azure", "console"]
+    LOGGING["root"]["handlers"] = ["azure"]
     LOGGING["root"]["level"] = DJANGO_LOG_LEVEL
     for logger_name, logger_details in LOGGING["loggers"].items():
         if "audit_console" in logger_details["handlers"]:
-            LOGGING["loggers"][logger_name]["handlers"] = ["audit_azure"]
+            LOGGING["loggers"][logger_name]["handlers"] = ["audit_azure", "console"]
         else:
-            LOGGING["loggers"][logger_name]["handlers"] = ["azure"]
+            LOGGING["loggers"][logger_name]["handlers"] = ["azure", "console"]
 
 # -- Third party app settings
 
