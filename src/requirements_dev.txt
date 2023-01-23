@@ -2,7 +2,6 @@
 -r ./requirements.txt
 
 # Tools for maintaining requirements.txt:
-pip-tools == 6.9.0
 pur == 7.0.0
 
 # Useful extra developer packages:
