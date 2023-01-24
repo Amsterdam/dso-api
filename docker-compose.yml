@@ -50,7 +50,7 @@ services:
       - ./docs/build/html:/docs-static
       - "../amsterdam-schema/datasets:/tmp/datasets"
       # - "../schema-tools/src/schematools:/usr/local/lib/python3.9/site-packages/schematools"
-    command: uwsgi --py-auto-reload=1 --enable-threads --lazy-apps
+    command: uwsgi --py-auto-reload=1 --enable-threads --lazy-apps --buffer-size=65535
 
   schemas:
     image: nginx
