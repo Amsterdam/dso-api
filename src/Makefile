@@ -9,14 +9,16 @@ sync:
 	pip-sync requirements.txt requirements_dev.txt
 
 .PHONY: requirements
-requirements: requirements.in
+requirements: requirements.in requirements_dev.in
 	pip-compile -v --generate-hashes --output-file requirements.txt requirements.in
+	pip-compile -v --generate-hashes --output-file requirements_dev.txt requirements_dev.in
 
 .PHONY: upgrade
 upgrade:
 	pur --patch=Django -r requirements.in
-	pur --no-recursive -r requirements_dev.txt
+	pur --no-recursive -r requirements_dev.in
 	pip-compile -v --generate-hashes --upgrade --output-file requirements.txt requirements.in
+	pip-compile -v --generate-hashes --upgrade --output-file requirements_dev.txt requirements_dev.in
 
 .PHONY: test
 test:
