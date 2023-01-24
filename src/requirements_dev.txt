@@ -4,9 +4,9 @@
 #
 #    pip-compile --generate-hashes --output-file=requirements_dev.txt requirements_dev.in
 #
-amsterdam-schema-tools[django]==5.5.2 \
-    --hash=sha256:5d43640552f451a53f5d7e4dab551d47868d950361472bcffb1df4d775c7eaf2 \
-    --hash=sha256:ea8c5bb12274693ad5325b5cde81da935429b4b0228b34fee65313e464cfdc4d
+amsterdam-schema-tools[django]==5.6.1 \
+    --hash=sha256:39c2491d00dc389f9ef244dd805fac5613b7a6d5a43a66390b1963fb3c7072ae \
+    --hash=sha256:67b8f4b4c504be25fe87cd6dc95c13d77301ff5ac33d3d401d220949da80db58
     # via -r ./requirements.txt
 arrow==1.2.3 \
     --hash=sha256:3934b30ca1b9f292376d9db15b19446088d12ec58629bc3f0da28fd55fb633a1 \
@@ -1090,6 +1090,10 @@ pur==7.0.0 \
     # via
     #   -r ./requirements.txt
     #   -r requirements_dev.in
+py==1.11.0 \
+    --hash=sha256:51c75c4126074b472f746a24399ad32f6053d1b34b68d2fa41e558e6f4a98719 \
+    --hash=sha256:607c53218732647dff4acdfcd50cb62615cedf612e72d1724fb1a0cc6405b378
+    # via -r requirements_dev.in
 pyasn1==0.4.8 \
     --hash=sha256:39c7e2ec30515947ff4e87fb6f456dfc6e84857d34be479c9d4a4ba4bf46aa5d \
     --hash=sha256:aef77c9fb94a3ac588e87841208bdec464471d9871bd5050a287cc9a475cd0ba

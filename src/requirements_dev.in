@@ -10,6 +10,7 @@ isort == 5.10.1
 pytest-sugar == 0.9.5
 termcolor == 2.0.1
 pre-commit == 2.20.0
+py         == 1.11.0
 
 # Debugging
 django-debug-toolbar == 3.7.0
