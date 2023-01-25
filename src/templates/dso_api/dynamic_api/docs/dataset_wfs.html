@@ -40,7 +40,7 @@
     {% for field in table.fields %}
       <tr>
         <td>
-          <code>{{ field.python_name }}</code>
+          <code>{{ field.name }}</code>
           {% if field.auth %}(autorisatie: {{ field.auth|join:", " }}){% endif %}
         </td>
         <td>{{ field.type|default:"" }}</td>
@@ -58,7 +58,7 @@
       <tbody>
       {% for expand in table.expands %}
         <tr>
-          <td><code>{{ expand.python_name }}</code></td>
+          <td><code>{{ expand.name }}</code></td>
           <td><a href="{{ expand.target_doc }}"><code>{{ expand.relation_id }}</code></a></td>
           <td>{{ expand.related_table.description|default:"" }}</td>
         </tr>
@@ -69,7 +69,7 @@
     {% if table.expands|length > 1 %}
       <p>
         Je kunt meerdere velden insluiten door te ze scheiden met komma's. Bijvoorbeeld:
-        <code>?embed={{ table.expands.0.python_name }},{{ table.expands.1.python_name }}</code>.
+        <code>?embed={{ table.expands.0.name }},{{ table.expands.1.name }}</code>.
       </p>
     {% endif %}
   {% endif %}

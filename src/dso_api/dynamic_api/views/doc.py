@@ -20,6 +20,8 @@ from schematools.contrib.django.models import Dataset
 from schematools.naming import to_snake_case
 from schematools.types import DatasetFieldSchema, DatasetSchema, DatasetTableSchema
 
+from dso_api.dynamic_api.filters.parser import QueryFilterEngine
+
 logger = logging.getLogger(__name__)
 
 markdown = Markdown(extensions=[TableExtension(), "fenced_code"])
@@ -154,14 +156,12 @@ class LookupContext(NamedTuple):
 
 
 def lookup_context(op, example, descr):
-    # disable mark_safe() warnigns because this is static HTML in this file.
+    # disable mark_safe() warnings because this is static HTML in this very file.
     return LookupContext(op, mark_safe(example), mark_safe(descr))  # nosec B308 B703
 
 
 # This should match ALLOWED_SCALAR_LOOKUPS in filters.parser (except for the "exact" lookup).
-_comparison_lookups = ["gt", "gte", "lt", "lte", "not", "in", "isnull"]
 _identifier_lookups = ["in", "not", "isnull"]
-_polygon_lookups = ["contains", "isnull", "not"]
 _string_lookups = ["in", "like", "not", "isnull", "isempty"]
 
 FORMAT_ALIASES = {
@@ -169,26 +169,19 @@ FORMAT_ALIASES = {
 }
 
 VALUE_EXAMPLES = {
-    "string": ("Tekst", _string_lookups),
-    "boolean": ("<code>true</code> | <code>false</code>", []),
-    "integer": ("Geheel getal", _comparison_lookups),
-    "number": ("Getal", _comparison_lookups),
-    "time": ("<code>hh:mm[:ss[.ms]]</code>", _comparison_lookups),
-    "date": ("<code>yyyy-mm-dd</code>", _comparison_lookups),
-    "date-time": (
-        "<code>yyyy-mm-dd</code> of <code>yyyy-mm-ddThh:mm[:ss[.ms]]</code>",
-        _comparison_lookups,
-    ),
-    "uri": ("<code>https://...</code>", _string_lookups),
-    "array": ("value,value", ["contains"]),  # comma separated list of strings
-    "https://geojson.org/schema/Geometry.json": ("geometry", _polygon_lookups),
-    "https://geojson.org/schema/Polygon.json": (
-        "GeoJSON of <code>POLYGON(x y ...)</code>",
-        _polygon_lookups,
-    ),
+    "string": "Tekst",
+    "boolean": "<code>true</code> | <code>false</code>",
+    "integer": "Geheel getal",
+    "number": "Getal",
+    "time": "<code>hh:mm[:ss[.ms]]</code>",
+    "date": "<code>yyyy-mm-dd</code>",
+    "date-time": "<code>yyyy-mm-dd</code> of <code>yyyy-mm-ddThh:mm[:ss[.ms]]</code>",
+    "uri": "<code>https://...</code>",
+    "array": "value1,value2",  # comma separated list of strings
+    "https://geojson.org/schema/Geometry.json": "geometry",
+    "https://geojson.org/schema/Polygon.json": "GeoJSON of <code>POLYGON(x y ...)</code>",
     "https://geojson.org/schema/MultiPolygon.json": (
-        "GeoJSON of <code>MULTIPOLYGON(x y ...)</code>",
-        _polygon_lookups,
+        "GeoJSON of <code>MULTIPOLYGON(x y ...)</code>"
     ),
 }
 
@@ -211,7 +204,7 @@ LOOKUP_CONTEXT = {
         ),
         lookup_context("not", None, "Test of waarde niet overeenkomt (<code>!=</code>)."),
         lookup_context(
-            "contains", "Comma gescheiden lijst", "Test of er een intersectie is met de waarde."
+            "contains", "Kommagescheiden lijst", "Test of er een intersectie is met de waarde."
         ),
         lookup_context(
             "isnull",
@@ -240,10 +233,10 @@ def _table_context(table: DatasetTableSchema):
         "title": to_snake_case(table.id).replace("_", " ").capitalize(),
         "uri": uri,
         "description": table.get("description"),
-        "fields": [ctx for field in fields for ctx in _get_field_context(field)],
+        "fields": [ctx for field in fields for ctx in _get_field_context(field, wfs=False)],
         "filters": filters,
         "auth": _fix_auth(table.auth | table.dataset.auth),
-        "expands": _make_table_expands(table),
+        "expands": _make_table_expands(table, wfs=False),
         "source": table,
         "has_geometry": table.has_geometry_fields,
     }
@@ -261,9 +254,9 @@ def _table_context_wfs(table: DatasetTableSchema):
         "typenames": [f"app:{snake_id}", snake_id],
         "uri": uri,
         "description": table.get("description"),
-        "fields": [ctx for field in fields for ctx in _get_field_context(field)],
+        "fields": [ctx for field in fields for ctx in _get_field_context(field, wfs=True)],
         "auth": _fix_auth(table.dataset.auth | table.auth),
-        "expands": _make_table_expands(table),
+        "expands": _make_table_expands(table, wfs=True),
         "source": table,
         "has_geometry": table.has_geometry_fields,
         "wfs_typename": f"app:{snake_name}",
@@ -286,13 +279,12 @@ def _make_link(to_table: DatasetTableSchema) -> str:
     return reverse(f"dynamic_api:doc-{to_table.dataset.id}") + f"#{to_table.id}"
 
 
-def _make_table_expands(table: DatasetTableSchema):
+def _make_table_expands(table: DatasetTableSchema, wfs: bool):
     """Return which relations can be expanded"""
     expands = [
         {
             "id": field.id,
-            "api_name": field.name,
-            "python_name": field.python_name,
+            "name": field.python_name if wfs else field.name,
             "relation_id": field["relation"],
             "target_doc": _make_link(field.related_table),
             "related_table": field.related_table,
@@ -306,8 +298,7 @@ def _make_table_expands(table: DatasetTableSchema):
         (
             {
                 "id": additional_relation.id,
-                "api_name": additional_relation.name,
-                "python_name": additional_relation.python_name,
+                "name": additional_relation.python_name if wfs else additional_relation.name,
                 "relation_id": additional_relation.relation,
                 "target_doc": _make_link(additional_relation.related_table),
                 "related_table": additional_relation.related_table,
@@ -336,7 +327,8 @@ def _field_data(field: DatasetFieldSchema):
     type = field.type
     format = field.format
     try:
-        value_example, lookups = VALUE_EXAMPLES[format or type]
+        value_example = VALUE_EXAMPLES[format or type]
+        lookups = QueryFilterEngine.get_allowed_lookups(field) - {""}
     except KeyError:
         value_example = ""
         lookups = []
@@ -359,11 +351,8 @@ def _field_data(field: DatasetFieldSchema):
     return type, value_example, lookups
 
 
-def _get_field_context(field: DatasetFieldSchema) -> Iterable[dict[str, Any]]:
+def _get_field_context(field: DatasetFieldSchema, wfs: bool) -> Iterable[dict[str, Any]]:
     """Get context data for a field."""
-    python_name = _get_dotted_python_name(field)
-    api_name = _get_dotted_api_name(field)
-
     type, _, _ = _field_data(field)
     description = field.description
     is_foreign_id = (
@@ -372,37 +361,35 @@ def _get_field_context(field: DatasetFieldSchema) -> Iterable[dict[str, Any]]:
     if not description and is_foreign_id and field.id in field.parent_field.related_field_ids:
         # First identifier gets parent field description.
         description = field.parent_field.description
+    auth = _fix_auth(field.auth | field.table.auth | field.table.dataset.auth)
 
     yield {
         "id": field.id,
-        "python_name": python_name,
-        "api_name": api_name,
+        # WFS uses the ORM names of fields.
+        "name": _get_dotted_python_name(field) if wfs else _get_dotted_api_name(field),
         "is_identifier": field.is_identifier_part,
         "is_deprecated": False,
-        "is_relation": bool(field.relation),
-        "is_foreign_id": is_foreign_id,
+        "is_relation": is_foreign_id or bool(field.relation),
         "type": (type or "").capitalize(),
         "description": description or "",
         "source": field,
-        "auth": _fix_auth(field.auth | field.table.auth | field.table.dataset.auth),
+        "auth": auth,
     }
 
-    if not field.relation:
+    if not field.relation or not wfs:
         return
 
     # Yield another context for relations with the old "Id" suffix.
     yield {
         "id": field.id,
-        "python_name": python_name,
-        "api_name": field.id + "Id",
+        "name": field.id + "Id",
         "is_identifier": field.is_identifier_part,
         "is_deprecated": True,
-        "is_relation": bool(field.relation),
-        "is_foreign_id": is_foreign_id,
+        "is_relation": True,
         "type": (type or "").capitalize(),
         "description": description or "",
         "source": field,
-        "auth": _fix_auth(field.auth | field.table.auth | field.table.dataset.auth),
+        "auth": auth,
     }
 
 

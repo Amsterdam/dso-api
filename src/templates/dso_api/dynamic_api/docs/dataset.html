@@ -65,15 +65,15 @@
         <tr>
           <td>
           {% if field.is_deprecated %}
-            <s><code>{{ field.api_name }}</code></s>
+            <s><code>{{ field.name }}</code></s>
             <small><abbr title="Wordt over drie maanden niet meer ondersteund">gaat vervallen</abbr></small>
           {% else %}
-            <code>{{ field.api_name }}</code>
+            <code>{{ field.name }}</code>
           {% endif %}
           </td>
           <td>
             {{ field.type|default:"" }}
-            {% if field.is_relation or field.is_foreign_id %}(<i>relatie</i>){% endif %}
+            {% if field.is_relation %}(<i>relatie</i>){% endif %}
           </td>
           <td>{% if field.is_identifier %}☑{% endif %}</td>
           <td>{{ field.description|default:"" }}</td>
@@ -138,7 +138,7 @@
         <tbody>
           {% for expand in table.expands %}
             <tr>
-              <td>{{ expand.api_name }}</td>
+              <td>{{ expand.name }}</td>
               <td><a href="{{ expand.target_doc }}">{{ expand.relation_id }}</a></td>
               <td>{{ expand.related_table.description|default:"" }}</td>
             </tr>
