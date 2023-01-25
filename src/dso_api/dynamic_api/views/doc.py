@@ -20,6 +20,8 @@ from schematools.contrib.django.models import Dataset
 from schematools.naming import to_snake_case
 from schematools.types import DatasetFieldSchema, DatasetSchema, DatasetTableSchema
 
+from dso_api.dynamic_api.filters.parser import QueryFilterEngine
+
 logger = logging.getLogger(__name__)
 
 markdown = Markdown(extensions=[TableExtension(), "fenced_code"])
@@ -154,14 +156,12 @@ class LookupContext(NamedTuple):
 
 
 def lookup_context(op, example, descr):
-    # disable mark_safe() warnigns because this is static HTML in this file.
+    # disable mark_safe() warnings because this is static HTML in this very file.
     return LookupContext(op, mark_safe(example), mark_safe(descr))  # nosec B308 B703
 
 
 # This should match ALLOWED_SCALAR_LOOKUPS in filters.parser (except for the "exact" lookup).
-_comparison_lookups = ["gt", "gte", "lt", "lte", "not", "in", "isnull"]
 _identifier_lookups = ["in", "not", "isnull"]
-_polygon_lookups = ["contains", "isnull", "not"]
 _string_lookups = ["in", "like", "not", "isnull", "isempty"]
 
 FORMAT_ALIASES = {
@@ -169,26 +169,19 @@ FORMAT_ALIASES = {
 }
 
 VALUE_EXAMPLES = {
-    "string": ("Tekst", _string_lookups),
-    "boolean": ("<code>true</code> | <code>false</code>", []),
-    "integer": ("Geheel getal", _comparison_lookups),
-    "number": ("Getal", _comparison_lookups),
-    "time": ("<code>hh:mm[:ss[.ms]]</code>", _comparison_lookups),
-    "date": ("<code>yyyy-mm-dd</code>", _comparison_lookups),
-    "date-time": (
-        "<code>yyyy-mm-dd</code> of <code>yyyy-mm-ddThh:mm[:ss[.ms]]</code>",
-        _comparison_lookups,
-    ),
-    "uri": ("<code>https://...</code>", _string_lookups),
-    "array": ("value,value", ["contains"]),  # comma separated list of strings
-    "https://geojson.org/schema/Geometry.json": ("geometry", _polygon_lookups),
-    "https://geojson.org/schema/Polygon.json": (
-        "GeoJSON of <code>POLYGON(x y ...)</code>",
-        _polygon_lookups,
-    ),
+    "string": "Tekst",
+    "boolean": "<code>true</code> | <code>false</code>",
+    "integer": "Geheel getal",
+    "number": "Getal",
+    "time": "<code>hh:mm[:ss[.ms]]</code>",
+    "date": "<code>yyyy-mm-dd</code>",
+    "date-time": "<code>yyyy-mm-dd</code> of <code>yyyy-mm-ddThh:mm[:ss[.ms]]</code>",
+    "uri": "<code>https://...</code>",
+    "array": "value1,value2",  # comma separated list of strings
+    "https://geojson.org/schema/Geometry.json": "geometry",
+    "https://geojson.org/schema/Polygon.json": "GeoJSON of <code>POLYGON(x y ...)</code>",
     "https://geojson.org/schema/MultiPolygon.json": (
-        "GeoJSON of <code>MULTIPOLYGON(x y ...)</code>",
-        _polygon_lookups,
+        "GeoJSON of <code>MULTIPOLYGON(x y ...)</code>"
     ),
 }
 
@@ -211,7 +204,7 @@ LOOKUP_CONTEXT = {
         ),
         lookup_context("not", None, "Test of waarde niet overeenkomt (<code>!=</code>)."),
         lookup_context(
-            "contains", "Comma gescheiden lijst", "Test of er een intersectie is met de waarde."
+            "contains", "Kommagescheiden lijst", "Test of er een intersectie is met de waarde."
         ),
         lookup_context(
             "isnull",
@@ -336,7 +329,8 @@ def _field_data(field: DatasetFieldSchema):
     type = field.type
     format = field.format
     try:
-        value_example, lookups = VALUE_EXAMPLES[format or type]
+        value_example = VALUE_EXAMPLES[format or type]
+        lookups = QueryFilterEngine.get_allowed_lookups(field) - {""}
     except KeyError:
         value_example = ""
         lookups = []
