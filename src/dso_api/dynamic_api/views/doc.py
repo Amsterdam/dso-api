@@ -233,10 +233,10 @@ def _table_context(table: DatasetTableSchema):
         "title": to_snake_case(table.id).replace("_", " ").capitalize(),
         "uri": uri,
         "description": table.get("description"),
-        "fields": [ctx for field in fields for ctx in _get_field_context(field)],
+        "fields": [ctx for field in fields for ctx in _get_field_context(field, wfs=False)],
         "filters": filters,
         "auth": _fix_auth(table.auth | table.dataset.auth),
-        "expands": _make_table_expands(table),
+        "expands": _make_table_expands(table, wfs=False),
         "source": table,
         "has_geometry": table.has_geometry_fields,
     }
@@ -254,9 +254,9 @@ def _table_context_wfs(table: DatasetTableSchema):
         "typenames": [f"app:{snake_id}", snake_id],
         "uri": uri,
         "description": table.get("description"),
-        "fields": [ctx for field in fields for ctx in _get_field_context(field)],
+        "fields": [ctx for field in fields for ctx in _get_field_context(field, wfs=True)],
         "auth": _fix_auth(table.dataset.auth | table.auth),
-        "expands": _make_table_expands(table),
+        "expands": _make_table_expands(table, wfs=True),
         "source": table,
         "has_geometry": table.has_geometry_fields,
         "wfs_typename": f"app:{snake_name}",
@@ -279,13 +279,12 @@ def _make_link(to_table: DatasetTableSchema) -> str:
     return reverse(f"dynamic_api:doc-{to_table.dataset.id}") + f"#{to_table.id}"
 
 
-def _make_table_expands(table: DatasetTableSchema):
+def _make_table_expands(table: DatasetTableSchema, wfs: bool):
     """Return which relations can be expanded"""
     expands = [
         {
             "id": field.id,
-            "api_name": field.name,
-            "python_name": field.python_name,
+            "name": field.python_name if wfs else field.name,
             "relation_id": field["relation"],
             "target_doc": _make_link(field.related_table),
             "related_table": field.related_table,
@@ -299,8 +298,7 @@ def _make_table_expands(table: DatasetTableSchema):
         (
             {
                 "id": additional_relation.id,
-                "api_name": additional_relation.name,
-                "python_name": additional_relation.python_name,
+                "name": additional_relation.python_name if wfs else additional_relation.name,
                 "relation_id": additional_relation.relation,
                 "target_doc": _make_link(additional_relation.related_table),
                 "related_table": additional_relation.related_table,
@@ -353,11 +351,8 @@ def _field_data(field: DatasetFieldSchema):
     return type, value_example, lookups
 
 
-def _get_field_context(field: DatasetFieldSchema) -> Iterable[dict[str, Any]]:
+def _get_field_context(field: DatasetFieldSchema, wfs: bool) -> Iterable[dict[str, Any]]:
     """Get context data for a field."""
-    python_name = _get_dotted_python_name(field)
-    api_name = _get_dotted_api_name(field)
-
     type, _, _ = _field_data(field)
     description = field.description
     is_foreign_id = (
@@ -369,8 +364,8 @@ def _get_field_context(field: DatasetFieldSchema) -> Iterable[dict[str, Any]]:
 
     yield {
         "id": field.id,
-        "python_name": python_name,
-        "api_name": api_name,
+        # WFS uses the ORM names of fields.
+        "name": _get_dotted_python_name(field) if wfs else _get_dotted_api_name(field),
         "is_identifier": field.is_identifier_part,
         "is_deprecated": False,
         "is_relation": is_foreign_id or bool(field.relation),
@@ -380,14 +375,13 @@ def _get_field_context(field: DatasetFieldSchema) -> Iterable[dict[str, Any]]:
         "auth": _fix_auth(field.auth | field.table.auth | field.table.dataset.auth),
     }
 
-    if not field.relation:
+    if not field.relation or not wfs:
         return
 
     # Yield another context for relations with the old "Id" suffix.
     yield {
         "id": field.id,
-        "python_name": python_name,
-        "api_name": field.id + "Id",
+        "name": field.id + "Id",
         "is_identifier": field.is_identifier_part,
         "is_deprecated": True,
         "is_relation": True,
