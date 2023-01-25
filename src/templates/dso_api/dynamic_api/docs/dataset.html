@@ -73,7 +73,7 @@
           </td>
           <td>
             {{ field.type|default:"" }}
-            {% if field.is_relation or field.is_foreign_id %}(<i>relatie</i>){% endif %}
+            {% if field.is_relation %}(<i>relatie</i>){% endif %}
           </td>
           <td>{% if field.is_identifier %}☑{% endif %}</td>
           <td>{{ field.description|default:"" }}</td>
