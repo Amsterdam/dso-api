@@ -361,6 +361,7 @@ def _get_field_context(field: DatasetFieldSchema, wfs: bool) -> Iterable[dict[st
     if not description and is_foreign_id and field.id in field.parent_field.related_field_ids:
         # First identifier gets parent field description.
         description = field.parent_field.description
+    auth = _fix_auth(field.auth | field.table.auth | field.table.dataset.auth)
 
     yield {
         "id": field.id,
@@ -372,7 +373,7 @@ def _get_field_context(field: DatasetFieldSchema, wfs: bool) -> Iterable[dict[st
         "type": (type or "").capitalize(),
         "description": description or "",
         "source": field,
-        "auth": _fix_auth(field.auth | field.table.auth | field.table.dataset.auth),
+        "auth": auth,
     }
 
     if not field.relation or not wfs:
@@ -388,7 +389,7 @@ def _get_field_context(field: DatasetFieldSchema, wfs: bool) -> Iterable[dict[st
         "type": (type or "").capitalize(),
         "description": description or "",
         "source": field,
-        "auth": _fix_auth(field.auth | field.table.auth | field.table.dataset.auth),
+        "auth": auth,
     }
 
 
