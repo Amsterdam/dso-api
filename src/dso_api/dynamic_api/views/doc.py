@@ -3,8 +3,9 @@ import logging
 import operator
 from typing import Any, FrozenSet, Iterable, List, NamedTuple, Optional
 
-from django.http import HttpResponse
+from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404
+from django.template import TemplateDoesNotExist
 from django.template.loader import render_to_string
 from django.urls import NoReverseMatch, reverse
 from django.utils.decorators import method_decorator
@@ -52,7 +53,10 @@ class GenericDocs(View):
     def get(self, request, category, topic="index", *args, **kwargs):
         uri = request.build_absolute_uri(reverse("dynamic_api:api-root"))
         template = f"dso_api/dynamic_api/docs/{category}/{topic}.md"
-        md = render_to_string(template, context={"uri": uri})
+        try:
+            md = render_to_string(template, context={"uri": uri})
+        except TemplateDoesNotExist as e:
+            raise Http404() from e
         html = markdown.convert(md)
         return HttpResponse(self.PRE + html + self.POST)
 
