@@ -10,13 +10,17 @@ INSTALLED_APPS += [
     "tests.test_rest_framework_dso",
 ]
 
+TEST_NOINHERIT_ROLE = "user_application"
+DB_USER = "dataservices"
 DATABASES = {
     "default": env.db_url(
         "DATABASE_URL",
-        default="postgres://dataservices:insecure@localhost:5416/dataservices",
+        default=f"postgres://{DB_USER}:insecure@localhost:5416/dataservices",
         engine="django.contrib.gis.db.backends.postgis",
     ),
 }
+TEST_USER_EMAIL = "test@tester.nl"
+DATABASE_SET_ROLE = False
 
 CACHES = {
     "default": {

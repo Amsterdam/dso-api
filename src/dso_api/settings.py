@@ -173,6 +173,13 @@ else:
 
 DATABASES["default"]["OPTIONS"]["application_name"] = "DSO-API"
 
+# These constants that are used for end-user context switching
+# are configured in our dp-infra repo
+USER_ROLE = "{user_email}_role"
+INTERNAL_ROLE = "medewerker_role"
+ANONYMOUS_ROLE = "anonymous_role"
+ANONYMOUS_APP_NAME = "DSO-openbaar"
+
 locals().update(env.email_url(default="smtp://"))
 
 SENTRY_DSN = env.str("SENTRY_DSN", default="")
