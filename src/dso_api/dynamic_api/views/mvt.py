@@ -5,12 +5,10 @@ import time
 
 from django.core.exceptions import FieldDoesNotExist, PermissionDenied
 from django.http import Http404
-from django.shortcuts import get_object_or_404
 from django.urls.base import reverse
 from django.views.generic import TemplateView
 from schematools.contrib.django.models import Dataset
 from schematools.exceptions import SchemaObjectNotFound
-from schematools.naming import to_snake_case
 from schematools.types import DatasetTableSchema
 from vectortiles.postgis.views import MVTView
 
@@ -72,20 +70,25 @@ class DatasetMVTSingleView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        ds = get_object_or_404(
-            Dataset.objects.api_enabled().db_enabled(), name=kwargs["dataset_name"]
-        )
+        try:
+            from dso_api.dynamic_api.urls import router
+
+            dataset_name = kwargs["dataset_name"]
+            models = router.all_models[dataset_name]
+        except KeyError:
+            raise Http404(f"Unknown dataset: {dataset_name!r}") from None
+
         geo_tables = sorted(
-            to_snake_case(table.id)
-            for table in ds.schema.tables  # type: DatasetTableSchema
-            if any(field.is_geo for field in table.fields)
+            table_name
+            for table_name, model in models.items()
+            if any(field.is_geo for field in model.table_schema().fields)
         )
         if len(geo_tables) == 0:
             raise Http404("Dataset does not support MVT") from None
 
-        context["name"] = ds.name
+        context["name"] = dataset_name
         context["tables"] = geo_tables
-        context["schema"] = ds.schema
+        context["schema"] = models[geo_tables[0]].table_schema().dataset
 
         return context
 
