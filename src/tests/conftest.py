@@ -14,6 +14,7 @@ from django.db import connection
 from django.utils.functional import SimpleLazyObject
 from django.utils.timezone import make_aware
 from jwcrypto.jwt import JWT
+from psycopg2.sql import SQL, Identifier
 from rest_framework.request import Request
 from rest_framework.test import APIClient, APIRequestFactory
 from schematools.contrib.django.models import Dataset, DynamicModel, Profile
@@ -191,6 +192,113 @@ def _create_tables_if_missing(dynamic_models):
             for model in models.values():
                 if model._meta.db_table not in table_names:
                     schema_editor.create_model(model)
+
+
+@pytest.fixture
+def activate_dbroles(settings, movies_dataset, movies_data, directors_data):
+    """Fixture for testing enduser context against movies data.
+    This mimicks the setup in aaddbroles pipeline in the dp-infra repo
+
+    It creates the following structure:
+
+        scope_director                       scope_openbaar
+            |    _________________________________|
+            |   |                   |             |
+        test_user_email_role  anonymous_role  internal_role
+                |_________________|_______________|
+                                  |
+                            test_noinherit_role (noinherit)
+                                  |
+                                db_user (inherit)
+
+    With the following scope privileges:
+
+        movies_movie SELECT -> scope_openbaar
+        movies_category SELECT -> scope_openbaar
+        movies_director SELECT -> scope_director
+    """
+    test_user_role = Identifier(f"{settings.TEST_USER_EMAIL}_role")
+
+    with connection.cursor() as curs:
+        curs.execute(
+            SQL(
+                """
+                    CREATE ROLE {0};
+                    CREATE ROLE {1};
+                    CREATE ROLE {2};
+                    CREATE ROLE {3} NOINHERIT;
+                    GRANT {0},{1},{2} TO {3};
+                    GRANT {3} TO {4};
+                """
+            ).format(
+                Identifier(settings.INTERNAL_ROLE),
+                Identifier(settings.ANONYMOUS_ROLE),
+                test_user_role,
+                Identifier(settings.TEST_NOINHERIT_ROLE),
+                Identifier(settings.DB_USER),
+            )
+        )
+
+        # Create scopes
+        movies_table = movies_dataset.tables.get(name="movie").db_table
+        category_table = movies_dataset.tables.get(name="category").db_table
+        actor_table = movies_dataset.tables.get(name="actor").db_table
+        director_table = movies_dataset.tables.get(name="director").db_table
+        actors_through_table = movies_dataset.schema.through_tables[0].db_name
+        curs.execute(
+            SQL(
+                """
+                CREATE ROLE scope_openbaar;
+                CREATE ROLE scope_director;
+                GRANT scope_openbaar to {0},{1},{2};
+                GRANT scope_director to {2};
+            """
+            ).format(
+                Identifier(settings.ANONYMOUS_ROLE),
+                Identifier(settings.INTERNAL_ROLE),
+                test_user_role,
+            )
+        )
+
+    # We execute the grants of table permissions in the default connection,
+    # because the tables are only visible inside the test session transaction.
+    with connection.cursor() as c:
+        c.execute(
+            SQL(
+                """
+                GRANT SELECT ON {0},{1},{2},{3} TO scope_openbaar;
+                GRANT SELECT ON {4} TO scope_director;
+            """
+            ).format(
+                Identifier(movies_table),
+                Identifier(category_table),
+                Identifier(actor_table),
+                Identifier(actors_through_table),
+                Identifier(director_table),
+            )
+        )
+
+    settings.DATABASE_SET_ROLE = True
+
+    yield
+
+    settings.DATABASE_SET_ROLE = False
+
+    with connection.cursor() as curs:
+        curs.execute(
+            SQL(
+                """
+                DROP OWNED BY scope_openbaar,scope_director;
+                DROP ROLE IF EXISTS {0},{1},{2},{3};
+                DROP ROLE IF EXISTS scope_openbaar,scope_director;
+            """
+            ).format(
+                Identifier(settings.INTERNAL_ROLE),
+                Identifier(settings.ANONYMOUS_ROLE),
+                Identifier(settings.TEST_NOINHERIT_ROLE),
+                test_user_role,
+            )
+        )
 
 
 @pytest.fixture()
@@ -488,6 +596,21 @@ def movies_data(movies_model, movies_category):
     ]
 
 
+@pytest.fixture()
+def directors_model(movies_dataset, dynamic_models):
+    return dynamic_models["movies"]["director"]
+
+
+@pytest.fixture
+def directors_data(directors_model):
+    return [
+        directors_model.objects.create(
+            id=66,
+            name="Sjaak Fellini",
+        ),
+    ]
+
+
 @pytest.fixture
 def movies_data_with_actors(movies_data, dynamic_models):
     """Extended fixture to test M2M"""
@@ -637,29 +760,24 @@ def vestiging_models(vestiging_dataset, dynamic_models):
 
 
 @pytest.fixture
-def fetch_tokendata():
+def fetch_tokendata(settings):
     """Fixture to create valid token data, scopes is flexible"""
 
-    def _fetcher(scopes):
+    def _fetcher(scopes, subject):
         now = int(time.time())
-        return {
-            "iat": now,
-            "exp": now + 30,
-            "scopes": scopes,
-            "sub": "test@tester.nl",
-        }
+        return {"iat": now, "exp": now + 30, "scopes": scopes, "sub": subject}
 
     return _fetcher
 
 
 @pytest.fixture
-def fetch_auth_token(fetch_tokendata):
+def fetch_auth_token(fetch_tokendata, settings):
     """Fixture to create an auth token, scopes is flexible"""
 
-    def _fetcher(scopes):
+    def _fetcher(scopes, subject=settings.TEST_USER_EMAIL):
         kid = "2aedafba-8170-4064-b704-ce92b7c89cc6"
         key = jwks.get_keyset().get_key(kid)
-        token = JWT(header={"alg": "ES256", "kid": kid}, claims=fetch_tokendata(scopes))
+        token = JWT(header={"alg": "ES256", "kid": kid}, claims=fetch_tokendata(scopes, subject))
         token.make_signed_token(key)
         return token.serialize()
 

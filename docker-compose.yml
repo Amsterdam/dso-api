@@ -17,6 +17,7 @@ services:
       - .:/host
     extra_hosts:
       admin.data.amsterdam.nl: 10.243.16.4
+    command: ["postgres", "-c", "log_statement=all"]
   web:
     build:
       context: src/
