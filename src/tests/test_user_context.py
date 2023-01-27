@@ -210,3 +210,25 @@ def test_internal_user_when_subject_without_role(
     with connection.cursor() as c:
         c.execute("SELECT current_user;")
         assert c.fetchone()[0] == settings.DB_USER
+
+
+@pytest.mark.django_db
+def test_permission_error_for_external_unknown_users(
+    filled_router,
+    api_client,
+    activate_dbroles,
+    fetch_auth_token,
+    settings,
+):
+    url = reverse("dynamic_api:movies-movie-list")
+    email = "harry@rotterdam.nl"
+    token = fetch_auth_token(["OPENBAAR"], email)
+
+    with pytest.raises(PermissionError):
+        api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
+
+    assert DatabaseRoles._get_role(connection) is None
+
+    with connection.cursor() as c:
+        c.execute("SELECT current_user;")
+        assert c.fetchone()[0] == settings.DB_USER
