@@ -142,6 +142,9 @@ class DatabaseRoles:
             except DatabaseError as e:
                 logger.debug("Switch role failed for %s: %s", role_name, e)
                 c.execute("ROLLBACK TO user_ctx;")
+                if not cls._original_role():
+                    c.execute("ROLLBACK;")
+
                 cls._revert_role(c)
                 raise
             else:
