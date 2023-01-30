@@ -113,7 +113,7 @@ def test_user_when_token(
     settings,
 ):
     url = reverse("dynamic_api:movies-director-list")
-    token = fetch_auth_token(["OPENBAAR", "DIRECTOR"])
+    token = fetch_auth_token(["TEST_OPENBAAR", "TEST_DIRECTOR"])
     response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
     assert response.status_code == 200
     assert DatabaseRoles._get_end_user() == settings.TEST_USER_EMAIL
@@ -143,7 +143,7 @@ def test_user_switches_on_consecutive_requests(
     settings,
 ):
     url = reverse("dynamic_api:movies-director-list")
-    token = fetch_auth_token(["OPENBAAR", "DIRECTOR"])
+    token = fetch_auth_token(["TEST_OPENBAAR", "TEST_DIRECTOR"])
     response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
     assert response.status_code == 200
     assert DatabaseRoles._get_end_user() == settings.TEST_USER_EMAIL
@@ -192,7 +192,7 @@ def test_internal_user_when_subject_without_role(
 ):
     url = reverse("dynamic_api:movies-movie-list")
     email = "harry@amsterdam.nl"
-    token = fetch_auth_token(["OPENBAAR"], email)
+    token = fetch_auth_token(["TEST_OPENBAAR"], email)
     response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
     assert response.status_code == 200
     assert DatabaseRoles._get_end_user() == email
@@ -222,7 +222,7 @@ def test_permission_error_for_external_unknown_users(
 ):
     url = reverse("dynamic_api:movies-movie-list")
     email = "harry@rotterdam.nl"
-    token = fetch_auth_token(["OPENBAAR"], email)
+    token = fetch_auth_token(["TEST_OPENBAAR"], email)
 
     with pytest.raises(PermissionError):
         api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")

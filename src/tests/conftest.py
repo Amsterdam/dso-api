@@ -201,7 +201,7 @@ def activate_dbroles(settings, movies_dataset, movies_data, directors_data):
 
     It creates the following structure:
 
-        scope_director                       scope_openbaar
+        scope_test_director                       scope_test_openbaar
             |    _________________________________|
             |   |                   |             |
         test_user_email_role  anonymous_role  internal_role
@@ -213,9 +213,9 @@ def activate_dbroles(settings, movies_dataset, movies_data, directors_data):
 
     With the following scope privileges:
 
-        movies_movie SELECT -> scope_openbaar
-        movies_category SELECT -> scope_openbaar
-        movies_director SELECT -> scope_director
+        movies_movie SELECT -> scope_test_openbaar
+        movies_category SELECT -> scope_test_openbaar
+        movies_director SELECT -> scope_test_director
     """
     test_user_role = Identifier(f"{settings.TEST_USER_EMAIL}_role")
 
@@ -248,10 +248,10 @@ def activate_dbroles(settings, movies_dataset, movies_data, directors_data):
         curs.execute(
             SQL(
                 """
-                CREATE ROLE scope_openbaar;
-                CREATE ROLE scope_director;
-                GRANT scope_openbaar to {0},{1},{2};
-                GRANT scope_director to {2};
+                CREATE ROLE scope_test_openbaar;
+                CREATE ROLE scope_test_director;
+                GRANT scope_test_openbaar to {0},{1},{2};
+                GRANT scope_test_director to {2};
             """
             ).format(
                 Identifier(settings.ANONYMOUS_ROLE),
@@ -266,8 +266,8 @@ def activate_dbroles(settings, movies_dataset, movies_data, directors_data):
         c.execute(
             SQL(
                 """
-                GRANT SELECT ON {0},{1},{2},{3} TO scope_openbaar;
-                GRANT SELECT ON {4} TO scope_director;
+                GRANT SELECT ON {0},{1},{2},{3} TO scope_test_openbaar;
+                GRANT SELECT ON {4} TO scope_test_director;
             """
             ).format(
                 Identifier(movies_table),
@@ -288,9 +288,9 @@ def activate_dbroles(settings, movies_dataset, movies_data, directors_data):
         curs.execute(
             SQL(
                 """
-                DROP OWNED BY scope_openbaar,scope_director;
+                DROP OWNED BY scope_test_openbaar,scope_test_director;
                 DROP ROLE IF EXISTS {0},{1},{2},{3};
-                DROP ROLE IF EXISTS scope_openbaar,scope_director;
+                DROP ROLE IF EXISTS scope_test_openbaar,scope_test_director;
             """
             ).format(
                 Identifier(settings.INTERNAL_ROLE),
