@@ -328,7 +328,7 @@ class DSOViewMixin:
 
         try:
             accept_crs = crs.CRS.from_string(value)
-        except (ExternalValueError, SyntaxError) as e:
+        except ExternalValueError as e:
             raise NotAcceptable(f"Chosen CRS is invalid: {e}") from e
 
         if accept_crs not in self.accept_crs:
