@@ -7,6 +7,7 @@ RUN apt update && apt install --no-install-recommends -y \
     build-essential \
     libgeos-dev \
     libpq-dev
+RUN python -m pip install uwsgi
 RUN python -m pip install --no-cache-dir -r $PIP_REQUIREMENTS
 
 # Start runtime image,
@@ -17,8 +18,7 @@ RUN apt update && apt install --no-install-recommends -y \
     libgdal28 \
     libgeos-c1v5 \
     libpq5 \
-    netcat-openbsd \
-    uwsgi-core
+    netcat-openbsd
 
 # Copy python build artifacts from builder image
 COPY --from=builder /usr/local/bin/ /usr/local/bin/
