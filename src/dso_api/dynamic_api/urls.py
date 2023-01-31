@@ -2,6 +2,7 @@ import sys
 from importlib import import_module, reload
 
 from django.conf import settings
+from django.conf.urls.static import static
 from django.urls import clear_url_caches, get_urlconf, include, path
 
 from . import views
@@ -28,7 +29,7 @@ def get_patterns(router_urls):
         path("", include(router_urls), name="api-root"),
         # Swagger, OpenAPI and OAuth2 login logic.
         path("oauth2-redirect.html", views.oauth2_redirect, name="oauth2-redirect"),
-    ]
+    ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
 
 app_name = "dynamic_api"
