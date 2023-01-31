@@ -11,6 +11,7 @@ RUN python -m pip install --no-cache-dir -r $PIP_REQUIREMENTS
 
 # Start runtime image,
 FROM python:3.11-slim-bullseye
+RUN useradd -U -r dsoapi
 RUN apt update && apt install --no-install-recommends -y \
     curl \
     libgdal28 \
@@ -30,4 +31,5 @@ ENV DJANGO_SETTINGS_MODULE=dso_api.settings DJANGO_DEBUG=false
 RUN python manage.py collectstatic --noinput
 
 EXPOSE 8000
+USER dsoapi
 CMD ["uwsgi"]
