@@ -85,7 +85,11 @@ class DatabaseRoles:
             return
 
         if cls._get_role(user_connection):
-            logger.debug("%s: End-user already set, no need to switch roles again", log_source)
+            logger.debug(
+                "%s: End-user already set, no need to switch roles again. Current role %s",
+                log_source,
+                cls._get_role(user_connection),
+            )
             return
 
         user_email = cls._get_end_user()
