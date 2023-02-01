@@ -342,6 +342,13 @@ REST_FRAMEWORK = dict(
     VIEW_NAME_FUNCTION="rest_framework_dso.views.get_view_name",
 )
 
+# Disable X-Content-Type-Options: nosniff header. Workaround for the fact
+# that our static files don't get a Content-Type.
+#
+# The nosniff option is meant to secure uploaded files, which we don't have.
+# TODO: fix the Content-Type issue and remove this.
+SECURE_CONTENT_TYPE_NOSNIFF = False
+
 SPECTACULAR_SETTINGS = {
     "TITLE": "DSO-API",
     "VERSION": "v1",
