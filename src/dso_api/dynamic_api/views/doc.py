@@ -74,6 +74,7 @@ class DocsOverview(TemplateView):
                 uri = reverse(f"dynamic_api:doc-{ds.schema.id}")
             except NoReverseMatch as e:
                 logger.warning("dataset %s: %s", ds.schema.id, e)
+                continue
             datasets.append(
                 {
                     "id": ds.schema.id,
