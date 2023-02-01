@@ -1,12 +1,12 @@
 FROM python:3.11-slim-bullseye AS builder
 MAINTAINER datapunt@amsterdam.nl
 
-COPY requirements* ./
-ARG PIP_REQUIREMENTS=requirements.txt
 RUN apt update && apt install --no-install-recommends -y \
     build-essential \
     libgeos-dev \
     libpq-dev
+COPY requirements* ./
+ARG PIP_REQUIREMENTS=requirements.txt
 RUN python -m pip install uwsgi
 RUN python -m pip install --no-cache-dir -r $PIP_REQUIREMENTS
 
