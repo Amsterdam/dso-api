@@ -21,6 +21,7 @@ DATABASES = {
 TEST_USER_EMAIL = "test@tester.nl"
 DB_USER = DATABASES["default"]["USER"]
 DATABASE_SET_ROLE = False
+OAUTH_URL = ""
 
 CACHES = {
     "default": {
