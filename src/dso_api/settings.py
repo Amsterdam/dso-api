@@ -85,6 +85,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -342,12 +343,7 @@ REST_FRAMEWORK = dict(
     VIEW_NAME_FUNCTION="rest_framework_dso.views.get_view_name",
 )
 
-# Disable X-Content-Type-Options: nosniff header. Workaround for the fact
-# that our static files don't get a Content-Type.
-#
-# The nosniff option is meant to secure uploaded files, which we don't have.
-# TODO: fix the Content-Type issue and remove this.
-SECURE_CONTENT_TYPE_NOSNIFF = False
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "DSO-API",
