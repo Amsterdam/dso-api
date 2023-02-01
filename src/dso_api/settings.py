@@ -85,6 +85,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -341,6 +342,8 @@ REST_FRAMEWORK = dict(
     # View configuration
     VIEW_NAME_FUNCTION="rest_framework_dso.views.get_view_name",
 )
+
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "DSO-API",
