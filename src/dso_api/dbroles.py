@@ -20,10 +20,11 @@ because the current user doesn't change; only the current role does.
 from __future__ import annotations
 
 import logging
+from typing import Optional
 
 from asgiref.local import Local
 from django.conf import settings
-from django.core.signals import request_finished
+from django.core.signals import got_request_exception, request_finished
 from django.db import DataError
 from django.db import connection as default_connection
 from django.db.backends.base.base import BaseDatabaseWrapper
@@ -48,6 +49,7 @@ def _connection_created(sender, connection: BaseDatabaseWrapper, **kwargs):
     DatabaseRoles.activate_end_user(connection, log_source="connection_created")
 
 
+@receiver(got_request_exception)
 @receiver(request_finished)
 def _request_finished(sender, **kwargs):
     """Make sure the connection is reset on completion, so it can be reused for another session."""
@@ -59,10 +61,13 @@ class DatabaseRoles:
 
     #: The current user, tracked locally here by this class.
     current_user = Local()
+    ANONYMOUS = "ANONYMOUS"
 
     @classmethod
-    def set_end_user(cls, user_email: str):
+    def set_end_user(cls, user_email: Optional[str]):
         """Tell which end user should be used for the database connection"""
+        if user_email is None:
+            user_email = cls.ANONYMOUS
         setattr(cls.current_user, "email", user_email)
 
         # Immediately activate the user too, in case a connection was already established.
@@ -72,33 +77,55 @@ class DatabaseRoles:
             cls.activate_end_user(default_connection, log_source="set_end_user")
 
     @classmethod
+    def _unset_end_user(cls) -> str | None:
+        return setattr(cls.current_user, "email", None)
+
+    @classmethod
     def _get_end_user(cls) -> str | None:
         """Tell which user was selected"""
         return getattr(cls.current_user, "email", None)
 
     @classmethod
-    def activate_end_user(cls, user_connection: BaseDatabaseWrapper, *, log_source: str):
+    def _role_from_user(cls, user: Optional[str]) -> str:
+        if not user:
+            raise ValueError("A user email is required to resolve a role")
+
+        if user == cls.ANONYMOUS:
+            return settings.ANONYMOUS_ROLE
+        return settings.USER_ROLE.format(user_email=user)
+
+    @classmethod
+    def activate_end_user(  # noqa: C901
+        cls, user_connection: BaseDatabaseWrapper, *, log_source: str
+    ):
         """Switch to the end-user role in the database."""
         if not settings.DATABASE_SET_ROLE:
             # Feature flag for previous hosting location
             logger.info("%s: End-user feature disabled (DATABASE_SET_ROLE=false)", log_source)
             return
 
-        if cls._get_role(user_connection):
-            logger.debug("%s: End-user already set, no need to switch roles again", log_source)
+        user_email = cls._get_end_user()
+        # in this case we are not in a request cycle
+        if not user_email:
+            logger.debug("%s: No request cycle. Not setting role.", log_source)
             return
 
-        user_email = cls._get_end_user()
-        if not user_email:
+        role_name = cls._role_from_user(user_email)
+        active_role = cls._get_role(user_connection)
+
+        if active_role is not None:
+            # If we are activating a new role (for example when
+            # the context is not cleaned up properly), then we
+            # first revert the context.
+            cls.deactivate_end_user()
+
+        if user_email == cls.ANONYMOUS:
             logger.debug("%s: No end-user email, switching to anonymous role", log_source)
             cls._set_role(user_connection, settings.ANONYMOUS_ROLE, settings.ANONYMOUS_APP_NAME)
             return
 
         logger.debug("%s: Activating end-user context for %s", log_source, user_email)
 
-        # Log which role was activated
-        # Define which role to switch to
-        role_name = settings.USER_ROLE.format(user_email=user_email)
         try:
             # BBN2: Exact account for specific access.
             cls._set_role(user_connection, role_name, user_email)
@@ -165,7 +192,11 @@ class DatabaseRoles:
     @classmethod
     def deactivate_end_user(cls):
         """Rollback the transaction when the local user was activated."""
+        # It is possible that the connection is already closed
+        # so we always unset the session user
         user_email = cls._get_end_user()
+        cls._unset_end_user()
+
         if not cls._get_role(default_connection):
             logger.debug("No end-user to revert")
             return

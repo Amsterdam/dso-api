@@ -86,7 +86,7 @@ def test_anonymous_when_no_token(filled_router, api_client, activate_dbroles, se
     url = reverse("dynamic_api:movies-movie-list")
     response = api_client.get(url)
     assert response.status_code == 200
-    assert DatabaseRoles._get_end_user() is None
+    assert DatabaseRoles._get_end_user() == DatabaseRoles.ANONYMOUS
 
     # The user context is terminated when content is streamed so we
     # can make assertions about the session state here
@@ -98,6 +98,7 @@ def test_anonymous_when_no_token(filled_router, api_client, activate_dbroles, se
     assert json.loads("".join([x.decode() for x in response.streaming_content])) == movie_data
     # Ensure the connection session context is cleaned up
     assert DatabaseRoles._get_role(connection) is None
+    assert DatabaseRoles._get_end_user() is None
 
     with connection.cursor() as c:
         c.execute("SELECT current_user;")
@@ -166,7 +167,7 @@ def test_user_switches_on_consecutive_requests(
     url = reverse("dynamic_api:movies-movie-list")
     response = api_client.get(url)
     assert response.status_code == 200
-    assert DatabaseRoles._get_end_user() is None
+    assert DatabaseRoles._get_end_user() == "ANONYMOUS"
 
     with connection.cursor() as c:
         c.execute("SELECT current_user;")

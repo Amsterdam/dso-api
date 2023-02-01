@@ -26,6 +26,9 @@ class AuthMiddleware:
             request.user_scopes = UserScopes(request.GET, scopes, self._all_profiles)
 
         # The token subject contains the username/email address of the user (on Azure)
-        DatabaseRoles.set_end_user(request.get_token_subject)
+        email = request.get_token_subject
+        if getattr(request, "get_token_claims", None) and "email" in request.get_token_claims:
+            email = request.get_token_claims["email"]
+        DatabaseRoles.set_end_user(email)
 
         return self._get_response(request)
