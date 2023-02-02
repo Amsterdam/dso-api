@@ -1,10 +1,46 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>{% load i18n static %}
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>Title</title>
+  <title>Amsterdam Datapunt API Documentatie v1</title>
+  <link rel="stylesheet" type="text/css" href="/v1/static/rest_framework/css/bootstrap.min.css"/>
+  <link rel="stylesheet" type="text/css" href="/v1/static/rest_framework/css/bootstrap-tweaks.css"/>
+  <link rel="stylesheet" type="text/css" href="/v1/static/rest_framework/css/default.css"/>
+  {% block extrahead %}{% endblock %}
 </head>
 <body>
+<div class="container">
 
+  <script src="{% static "dso_api/dynamic_api/js/fuse.js" %}"></script>
+  <script>
+    const DEBUG = true;
+
+    let query = "{{ query|escape }}";
+    let url = "/v1/docs/searchindex.json";
+    fetch(url)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error('could not fetch search index');
+        }
+        return response.json();
+      })
+      .then((data) => {
+        results = document.getElementById('results');
+        fuse = new Fuse(data, {keys: ["fields", "id", "title"]});
+        fuse_results = fuse.search(query);
+        if (DEBUG) {
+          console.log(fuse_results);
+        }
+        fuse_results.forEach(r => {
+          elem = document.createElement('li');
+          elem.innerHTML = `<a href="${ r.item.uri }">${ r.item.title }</a>`
+          results.appendChild(elem);
+        });
+      });
+  </script>
+
+  <ol id="results">
+  </ol>
+
+</div>
 </body>
 </html>
