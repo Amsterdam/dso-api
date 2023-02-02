@@ -8,6 +8,6 @@ Hiermee kunnen GIS-pakketten de ruimtelijke data direct visualiseren en er queri
 Van de twee opties biedt WFS de meeste functionaliteit (m.n. filters).
 MVT is beperkter, maar ook vele malen sneller om te laden.
 
-* [Werken met GQIS](gis/qgis.html)
-* [WFS handmatig koppelen](gis/manual.html)
-* [Technische achtergrond](gis/wfs_technical.html)
+* [Werken met GQIS](qgis.html)
+* [WFS handmatig koppelen](manual.html)
+* [Technische achtergrond](wfs_technical.html)
