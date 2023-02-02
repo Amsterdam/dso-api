@@ -3,7 +3,7 @@ import logging
 import operator
 from typing import Any, FrozenSet, Iterable, List, NamedTuple, Optional
 
-from django.http import Http404, HttpResponse
+from django.http import Http404, HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.template import TemplateDoesNotExist
 from django.template.loader import render_to_string
@@ -29,6 +29,36 @@ markdown = Markdown(extensions=[TableExtension(), "fenced_code"])
 CACHE_DURATION = 3600  # seconds.
 
 decorators = [cache_page(CACHE_DURATION), gzip_page]
+
+
+@gzip_page
+def search(request: HttpRequest) -> HttpResponse:
+    template = "dso_api/dynamic_api/docs/search.html"
+    query = request.GET.get("q", "")
+    return HttpResponse(render_to_string(template, context={"query": query}))
+
+
+@cache_page(CACHE_DURATION)
+@gzip_page
+def search_index(_request) -> HttpResponse:
+    index = []
+    for ds in Dataset.objects.api_enabled().db_enabled():
+        try:
+            uri = reverse(f"dynamic_api:doc-{ds.schema.id}")
+        except NoReverseMatch as e:
+            logger.warning("dataset %s: %s", ds.schema.id, e)
+            continue
+        schema: DatasetSchema = ds.schema
+        index.append(
+            {
+                "fields": [f.title or f.id for t in schema.get_tables() for f in t.fields],
+                "id": schema.id,
+                "title": schema.title,
+                "uri": uri,
+            }
+        )
+
+    return JsonResponse(index, safe=False)  # safe=False needed to return a list.
 
 
 @method_decorator(decorators, name="get")
@@ -120,6 +150,7 @@ class DatasetDocView(TemplateView):
         return context
 
 
+@method_decorator(decorators, name="dispatch")
 class DatasetWFSDocView(TemplateView):
     """WFS-specific documentation for a single dataset."""
 
