@@ -10,7 +10,7 @@
 <body>
 <div class="container">
 
-  <script src="{% static "dso_api/dynamic_api/js/fuse.js" %}"></script>
+  <script src="{% static "dso_api/dynamic_api/js/lunr.js" %}"></script>
   <script>
     const DEBUG = true;
 
@@ -23,20 +23,43 @@
         }
         return response.json();
       })
-      .then((data) => {
-        results = document.getElementById('results');
-        fuse = new Fuse(data, {keys: ["fields", "id", "title"]});
-        fuse_results = fuse.search(query);
+      .then((docs) => {
+        var index = lunr(function() {
+          this.ref('uri');
+          this.field('description');
+          this.field('id');
+          this.field('fields');
+          this.field('title');
+
+          for (const uri in docs) {
+            console.log(uri);
+            var doc = docs[uri];
+            doc.uri = uri;
+            this.add(doc);
+          }
+        });
+        var search_results = index.search(query);
         if (DEBUG) {
-          console.log(fuse_results);
+          console.log(search_results);
         }
-        fuse_results.forEach(r => {
+
+        summary = document.getElementById('summary');
+        if (search_results.length == 0) {
+          summary.innerHTML = `Geen resultaten voor <tt>${ escape(query) }</tt>.`;
+        } else {
+          summary.innerHTML = `${ search_results.length } resultaten voor <tt>${ escape(query) }</tt>:`;
+        }
+
+        results = document.getElementById('results');
+        search_results.forEach(r => {
           elem = document.createElement('li');
-          elem.innerHTML = `<a href="${ r.item.uri }">${ r.item.title }</a>`
+          elem.innerHTML = `<a href="${ r.ref }">${ docs[r.ref].title }</a>`
           results.appendChild(elem);
         });
       });
   </script>
+
+  <div id="summary"></div>
 
   <ol id="results">
   </ol>
