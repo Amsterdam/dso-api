@@ -193,7 +193,7 @@ def remote_viewset_factory(
         (RemoteViewSet,),
         {
             "__doc__": _get_viewset_api_docs(table_schema),
-            "client": clients.make_client(endpoint_url, table_schema),
+            "client": clients.make_client(endpoint_url, table_schema.dataset.id, table_schema.id),
             "serializer_class": serializer_class,
             "dataset_id": table_schema.dataset.id,
             "table_id": table_schema.id,

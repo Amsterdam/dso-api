@@ -18,7 +18,6 @@ from django.core.exceptions import ImproperlyConfigured
 from more_ds.network.url import URL
 from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, ValidationError
 from rest_framework.status import HTTP_401_UNAUTHORIZED, HTTP_403_FORBIDDEN
-from schematools.types import DatasetTableSchema
 from urllib3 import HTTPResponse
 
 from dso_api.dynamic_api.filters import FilterInput
@@ -51,11 +50,11 @@ class RemoteClient:
     """
 
     _endpoint_url: URL
-    _table_schema: DatasetTableSchema
+    _table_id: str
 
-    def __init__(self, endpoint_url: str, table_schema: DatasetTableSchema):
+    def __init__(self, endpoint_url: str, table_id: str):
         self._endpoint_url = endpoint_url
-        self._table_schema = table_schema
+        self._table_id = table_id
 
     def call(self, request, path="", query_params=None) -> RemoteResponse:
         """Make a request to the remote server based on the client's request."""
@@ -164,7 +163,7 @@ class RemoteClient:
         else:
             url = URL(self._endpoint_url) / path
 
-        url = URL(url.replace("{table_id}", self._table_schema.id))
+        url = URL(url.replace("{table_id}", self._table_id))
         return url // query_params
 
     def _raise_http_error(self, response: HTTPResponse) -> None:
@@ -359,13 +358,13 @@ class HCBRKClient(HaalCentraalClient):
             return self.__http_pool
 
 
-def make_client(endpoint_url: str, table_schema: DatasetTableSchema) -> RemoteClient:
+def make_client(endpoint_url: str, dataset_id: str, table_id: str) -> RemoteClient:
     """Construct client for a remote API."""
 
     client_class: type[RemoteClient] = AuthForwardingClient
-    if table_schema.dataset.id == "haalcentraalbag":
+    if dataset_id == "haalcentraalbag":
         client_class = HCBAGClient
-    elif table_schema.dataset.id == "haalcentraalbrk":
+    elif dataset_id == "haalcentraalbrk":
         client_class = HCBRKClient
 
-    return client_class(endpoint_url, table_schema)
+    return client_class(endpoint_url, table_id)
