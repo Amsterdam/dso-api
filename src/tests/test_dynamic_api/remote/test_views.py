@@ -864,5 +864,5 @@ REMOTE_SCHEMA = DatasetTableSchema(
 )
 def test_make_url(case):
     base, expect = case
-    client = RemoteClient(base, REMOTE_SCHEMA)
+    client = RemoteClient(base, REMOTE_SCHEMA.id)
     assert client._make_url("foo", {"bar": "baz"}) == expect
