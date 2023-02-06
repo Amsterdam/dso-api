@@ -226,8 +226,8 @@ class RemoteClient:
             )
 
 
-class AuthForwardingClient(RemoteClient):
-    """RemoteClient that passes Authorization headers through to the remote."""
+class BRPClient(RemoteClient):
+    """RemoteClient for brp. Passes Authorization headers through to the remote."""
 
     def _get_headers(self, request):
         headers = super()._get_headers(request)
@@ -361,10 +361,11 @@ class HCBRKClient(HaalCentraalClient):
 def make_client(endpoint_url: str, dataset_id: str, table_id: str) -> RemoteClient:
     """Construct client for a remote API."""
 
-    client_class: type[RemoteClient] = AuthForwardingClient
+    if dataset_id in ("brp", "brp_test"):
+        return BRPClient(endpoint_url, table_id)
     if dataset_id == "haalcentraalbag":
-        client_class = HCBAGClient
+        return HCBAGClient(endpoint_url, table_id)
     elif dataset_id == "haalcentraalbrk":
-        client_class = HCBRKClient
+        return HCBRKClient(endpoint_url, table_id)
 
-    return client_class(endpoint_url, table_id)
+    raise ValueError(f"unknown remote {dataset_id!r}")
