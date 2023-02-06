@@ -44,7 +44,6 @@ class RemoteViewSet(DSOViewMixin, ViewSet):
 
     client: clients.RemoteClient = None
     serializer_class = None
-    pagination_class = None
     table_schema: Optional[DatasetTableSchema] = None
 
     # The 'bronhouder' of the associated dataset
@@ -89,10 +88,6 @@ class RemoteViewSet(DSOViewMixin, ViewSet):
         # and no fields will be added that didn't match the schema
         serializer = self.get_serializer(data=data, many=True, content_crs=response.content_crs)
         self.validate(serializer)
-
-        # TODO: add pagination:
-        # paginator = self.pagination_class()
-        # paginator.get_paginated_response(serializer.data)
 
         # Work around the serializer producing the wrong format.
         # TODO: fix the serializer instead? What we get from the Kadaster remote
@@ -179,10 +174,6 @@ class RemoteViewSet(DSOViewMixin, ViewSet):
         )
 
 
-def _get_viewset_api_docs(table_schema: DatasetTableSchema) -> str:
-    return table_schema.description or "Forwarding proxy"
-
-
 def remote_viewset_factory(
     endpoint_url, serializer_class, table_schema: DatasetTableSchema
 ) -> type[RemoteViewSet]:
@@ -192,7 +183,6 @@ def remote_viewset_factory(
         f"{table_schema.python_name}ViewSet",
         (RemoteViewSet,),
         {
-            "__doc__": _get_viewset_api_docs(table_schema),
             "client": clients.make_client(endpoint_url, table_schema.dataset.id, table_schema.id),
             "serializer_class": serializer_class,
             "dataset_id": table_schema.dataset.id,
