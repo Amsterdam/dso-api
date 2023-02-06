@@ -111,44 +111,8 @@ class RemoteClient:
             data=orjson.loads(response.data),
         )
 
-    def _get_headers(self, request):  # noqa: C901
-        """Collect the headers to submit to the remote service.
-
-        Subclasses may override this method.
-        """
-        client_ip = request.META["REMOTE_ADDR"]
-        if isinstance(client_ip, str):
-            client_ip = client_ip.encode("iso-8859-1")
-        forward = request.headers.get("X-Forwarded-For", "")
-        if forward:
-            if isinstance(forward, str):
-                forward = forward.encode("iso-8859-1")
-            forward = b"%b %b" % (forward, client_ip)
-        else:
-            forward = client_ip
-
-        headers = {
-            "Accept": "application/json",
-            "X-Forwarded-For": forward,
-        }
-
-        # We check if we already have a X-Correlation-ID header
-        x_correlation_id = request.headers.get("X-Correlation-ID")
-        if not x_correlation_id:
-            # Otherwise we set it to a part of the X-Unique-ID header
-            # The X-Correlation-ID cannot be longer then 40 characters because MKS suite
-            # cannot handle this. Therefore  we use only part of it.
-            # The X-Unique-ID is defined in Openstack with :
-            # [client_ip]:[client_port]_[bind_ip]:[bind_port]_[timestamp]_[request_counter]:[pid]
-            # But bind_ip and bind_port are always the same. So we can remove them
-            x_unique_id = request.headers.get("X-Unique-ID")
-            if x_unique_id:
-                x_correlation_id = x_unique_id[:14] + x_unique_id[28:]
-        if x_correlation_id:
-            # And if defined pass on to the destination
-            headers["X-Correlation-ID"] = x_correlation_id.encode("iso-8859-1")
-
-        return headers
+    def _get_headers(self, request):
+        raise NotImplementedError()
 
     def _get_http_pool(self) -> urllib3.PoolManager:
         """Returns a PoolManager for making HTTP requests."""
@@ -230,7 +194,26 @@ class BRPClient(RemoteClient):
     """RemoteClient for brp. Passes Authorization headers through to the remote."""
 
     def _get_headers(self, request):
-        headers = super()._get_headers(request)
+        headers = {
+            "Accept": "application/json",
+            "X-Fowarded-For": self._forwarded_for(request),
+        }
+
+        # We check if we already have an X-Correlation-ID header
+        x_correlation_id = request.headers.get("X-Correlation-ID")
+        if not x_correlation_id:
+            # Otherwise we set it to a part of the X-Unique-ID header
+            # The X-Correlation-ID cannot be longer then 40 characters because MKS suite
+            # cannot handle this. Therefore  we use only part of it.
+            # The X-Unique-ID is defined in Openstack with :
+            # [client_ip]:[client_port]_[bind_ip]:[bind_port]_[timestamp]_[request_counter]:[pid]
+            # But bind_ip and bind_port are always the same. So we can remove them
+            x_unique_id = request.headers.get("X-Unique-ID")
+            if x_unique_id:
+                x_correlation_id = x_unique_id[:14] + x_unique_id[28:]
+        if x_correlation_id:
+            # And if defined pass on to the destination
+            headers["X-Correlation-ID"] = x_correlation_id.encode("iso-8859-1")
 
         auth = request.headers.get("Authorization", "")
         if auth:
@@ -241,6 +224,22 @@ class BRPClient(RemoteClient):
             headers["Authorization"] = auth
 
         return headers
+
+    def _forwarded_for(self, request) -> bytes:
+        client_ip = request.META["REMOTE_ADDR"]
+        if isinstance(client_ip, str):
+            client_ip = client_ip.encode("ascii")
+        forw_for = request.headers.get("X-Forwarded-For", b"")
+        if forw_for:
+            if isinstance(forw_for, str):
+                forw_for = forw_for.encode("ascii")
+            # XXX X-Forwarded-For usually takes a comma-separated list.
+            # I'm not sure why we have a space-separated list here, but we've always had it.
+            forw_for = b"%b %b" % (forw_for, client_ip)
+        else:
+            forw_for = client_ip
+
+        return forw_for
 
     def _raise_http_error(self, response: HTTPResponse) -> None:
         super()._raise_http_error(response)
@@ -303,12 +302,9 @@ class HCBAGClient(HaalCentraalClient):
         return True  # Just let the remote handle the filters.
 
     def _get_headers(self, request):
-        headers = super()._get_headers(request)
-
+        headers = {"Accept": "application/hal+json"}
         if (apikey := settings.HAAL_CENTRAAL_BAG_API_KEY) is not None:
             headers["X-Api-Key"] = apikey
-        headers["accept"] = "application/hal+json"
-
         return headers
 
     def _make_url(self, path: str, query_params: dict) -> URL:
@@ -333,14 +329,13 @@ class HCBRKClient(HaalCentraalClient):
         return p in self.__ALLOWED_PARAMS
 
     def _get_headers(self, request):
-        headers = super()._get_headers(request)
-
+        headers = {
+            "Accept": "application/hal+json",
+            # Currently for kadaster HaalCentraal, only RD (epsg:28992) is supported.
+            "Accept-Crs": "epsg:28992",
+        }
         if (apikey := settings.HAAL_CENTRAAL_API_KEY) is not None:
             headers["X-Api-Key"] = apikey
-        headers["accept"] = "application/hal+json"
-        # Currently for kadaster HaalCentraal only RD (epsg:28992) is supported
-        headers["Accept-Crs"] = "epsg:28992"
-
         return headers
 
     def _get_http_pool(self) -> urllib3.PoolManager:
