@@ -156,7 +156,7 @@ def _build_declared_fields(
         # create converted field names on the serializer construction.
         # The space replacement is unlikely for a remote field, but kept for consistency.
         model_field_name = field.python_name
-        serializer_field_name = field.name
+        serializer_field_name = field.id
 
         kwargs = {"required": field.required, "allow_null": not field.required}
         if field.type == "string" and not field.required:
