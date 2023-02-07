@@ -76,6 +76,21 @@
             "relation": "gebieden:bouwblokken",
             "description": "Het bouwblok waarin het pand ligt."
           },
+          "status": {
+              "type": "object",
+              "properties": {
+                  "code": {
+                      "type": "integer"
+                  },
+                  "omschrijving": {
+                      "type": "string"
+                  }
+              }
+          },
+          "bagProces": {
+              "type": "object",
+              "format": "json"
+          },
           "heeftDossier": {
             "type": "string",
             "relation": "bag:dossiers",
