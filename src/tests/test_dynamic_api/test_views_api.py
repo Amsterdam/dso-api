@@ -1177,6 +1177,9 @@ class TestEmbedTemporalTables:
                         "id": "0363100012061164.3",
                         "ligtInBouwblokId": "03630012096483",
                         "naam": "Voorbeeldpand",
+                        "statusCode": 7,
+                        "statusOmschrijving": "Sloopvergunning verleend",
+                        "bagProces": {"code": 1},
                         "beginGeldigheid": "2021-02-28T10:00:00",
                         "eindGeldigheid": None,
                         "heeftDossierId": "GV00000406",
@@ -2495,3 +2498,23 @@ class TestFormats:
         assert response.status_code == 200, response.getvalue()
         assert "X-Total-Count" not in response
         assert "X-Pagination-Count" not in response
+
+
+@pytest.mark.django_db
+def test_nested_object_field_response(
+    api_client, verblijfsobjecten_model, panden_data, verblijfsobjecten_data, filled_router
+):
+    """Prove that a nested object fields provides a correct response.
+
+    The nested field will be "flattened", so the subfields will be expanded into the main table.
+    """
+    url = reverse("dynamic_api:bag-panden-list")
+    response = api_client.get(
+        url,
+        data={"_expand": "true", "id": "0363100012061164.3"},
+    )
+    data = read_response_json(response)
+    assert response.status_code == 200, data
+    assert data["_embedded"]["panden"][0]["statusCode"] == 7
+    assert data["_embedded"]["panden"][0]["statusOmschrijving"] == "Sloopvergunning verleend"
+    assert data["_embedded"]["panden"][0]["bagProces"] == {"code": 1}
