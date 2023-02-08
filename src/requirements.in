@@ -37,7 +37,7 @@ pur == 7.0.0
 
 # Testing
 bandit == 1.7.4
-cryptography == 38.0.3
+cryptography == 39.0.1
 flake8 == 5.0.4
 flake8-blind-except == 0.2.1
 flake8-colors == 0.1.9
