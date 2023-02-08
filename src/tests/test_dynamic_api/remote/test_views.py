@@ -644,22 +644,7 @@ HCBRK_FILES = Path(__file__).parent.parent.parent / "files" / "haalcentraalbrk"
 HCBRK_NATUURLIJKPERSOON = (HCBRK_FILES / "hcbrk_natuurlijkpersoon.json").read_text()
 HCBRK_ONROERENDE_ZAAK = (HCBRK_FILES / "hcbrk_onroerendezaak.json").read_text()
 DSO_NATUURLIJKPERSOON = json.load(open(HCBRK_FILES / "dso_natuurlijkpersoon.json"))
-DSO_NATUURLIJKPERSOON_UNAUTH = json.load(open(HCBRK_FILES / "dso_natuurlijkpersoon_unauth.json"))
 DSO_ONROERENDE_ZAAK = json.load(open(HCBRK_FILES / "dso_onroerendezaak.json"))
-
-DSO_ONROERENDE_ZAAK_UNAUTH = {
-    field: value
-    for field, value in DSO_ONROERENDE_ZAAK.items()
-    if field
-    not in (
-        "koopsom",
-        "aardCultuurBebouwd",
-        "toelichtingBewaarder",
-        "hypotheekIdentificaties",
-        "zakelijkGerechtigdeIdentificaties",
-        "privaatrechtelijkeBeperkingIdentificaties",
-    )
-}
 
 
 @pytest.mark.django_db
@@ -667,65 +652,38 @@ DSO_ONROERENDE_ZAAK_UNAUTH = {
     "case",
     [
         {
-            # Natuurlijke persoon, with full authorisation.
-            "table": "kadasternatuurlijkpersonen",
-            "ident": 70882239,
-            "scopes": ["BRK/RS", "BRK/RSN", "TEST/VOORNAAMPARTNER"],
+            "subpath": "kadasternatuurlijkpersonen/70882239",
             "from_kadaster": HCBRK_NATUURLIJKPERSOON,
             "output": DSO_NATUURLIJKPERSOON,
         },
         {
-            # Natuurlijke persoon, with minimal authorisation.
-            "table": "kadasternatuurlijkpersonen",
-            "ident": 70882239,
-            "scopes": ["BRK/RS"],
-            "from_kadaster": HCBRK_NATUURLIJKPERSOON,
-            "output": DSO_NATUURLIJKPERSOON_UNAUTH,
-        },
-        {
-            # Onroerende zaak, with full authorisation.
-            "table": "kadastraalonroerendezaken",
-            "ident": 76870487970000,
-            "scopes": ["BRK/RS", "BRK/RO"],
+            "subpath": "kadastraalonroerendezaken/76870487970000",
             "from_kadaster": HCBRK_ONROERENDE_ZAAK,
             "output": DSO_ONROERENDE_ZAAK,
         },
-        {
-            # Onroerende zaak, with minimal authorisation.
-            "table": "kadastraalonroerendezaken",
-            "ident": 76870487970000,
-            "scopes": ["BRK/RS"],
-            "from_kadaster": HCBRK_ONROERENDE_ZAAK,
-            "output": DSO_ONROERENDE_ZAAK_UNAUTH,
-        },
     ],
 )
-def test_haalcentraalbrk_client(
-    settings, api_client, fetch_auth_token, router, hcbrk_dataset, urllib3_mocker, case
-):
+@override_settings(HAAL_CENTRAAL_API_KEY="super secret key")
+def test_hcbrk_client(settings, api_client, fetch_auth_token, urllib3_mocker, case):
     """Test Haal Centraal BRK remote client."""
-
-    remote_key = "I_ve_got_the_secret"
 
     def respond(request):
         assert "Authorization" not in request.headers
-        assert request.headers.get("X-Api-Key") == remote_key
+        assert request.headers.get("X-Api-Key") == settings.HAAL_CENTRAAL_API_KEY
         assert request.body is None
         return (200, {"Content-Crs": "epsg:28992"}, case["from_kadaster"])
 
-    table, ident = case["table"], case["ident"]
+    subpath = case["subpath"]
 
-    router.reload()
     urllib3_mocker.add_callback(
         "GET",
-        f"/esd/bevragen/v1/{table}/{ident}",
+        f"/esd/bevragen/v1/{subpath}",
         callback=respond,
         content_type="application/json",
     )
 
-    url = reverse(f"dynamic_api:haalcentraalbrk-{table}-detail", kwargs={"pk": str(ident)})
-    token = fetch_auth_token(case["scopes"])
-    settings.HAAL_CENTRAAL_API_KEY = remote_key
+    url = reverse("dynamic_api:haalcentraal-brk", kwargs={"subpath": subpath})
+    token = fetch_auth_token(["BRK/RO", "BRK/RS", "BRK/RSN"])
     response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
     data = read_response_json(response)
 
@@ -734,53 +692,11 @@ def test_haalcentraalbrk_client(
 
 
 @pytest.mark.django_db
-def test_haalcentraalbrk_geojson(
-    settings, api_client, fetch_auth_token, router, hcbrk_dataset, urllib3_mocker
-):
-    """Test whether remote API responses are properly converted."""
-
-    remote_key = "to_another_way"
-
+@override_settings(HAAL_CENTRAAL_API_KEY="super secret key")
+def test_hcbrk_unauthorized(settings, api_client, fetch_auth_token, urllib3_mocker):
     def respond(request):
-        assert "Authorization" not in request.headers
-        assert request.headers.get("X-Api-Key") == remote_key
-        assert request.body is None
-        return (200, {"Content-Crs": "epsg:28992"}, HCBRK_ONROERENDE_ZAAK)
+        raise Exception("don't call me")
 
-    router.reload()
-    urllib3_mocker.add_callback(
-        "GET",
-        "/esd/bevragen/v1/kadastraalonroerendezaken/76870487970000",
-        callback=respond,
-        content_type="application/json",
-    )
-
-    url = reverse(
-        "dynamic_api:haalcentraalbrk-kadastraalonroerendezaken-detail",
-        kwargs={"pk": "76870487970000"},
-    )
-    token = fetch_auth_token(["BRK/RS", "BRK/RO"])
-    settings.HAAL_CENTRAAL_API_KEY = remote_key
-    response = api_client.get(url, {"_format": "geojson"}, HTTP_AUTHORIZATION=f"Bearer {token}")
-    data = read_response_json(response)
-
-    assert response.status_code == 200, data
-    rounder = lambda p: [round(c, 6) for c in p]
-
-    # Prove that coordinates are properly transformed from RD/NEW to WGS84
-    plaatscoordinaten = data["properties"]["plaatscoordinaten"]
-    assert plaatscoordinaten["type"] == "Point"
-    assert rounder(plaatscoordinaten["coordinates"]) == [5.966022, 52.164126]
-
-
-@pytest.mark.django_db
-def test_hcbrk_listing(api_client, fetch_auth_token, router, hcbrk_dataset, urllib3_mocker):
-    """HCBRK listings should have the right format."""
-
-    def respond(request):
-        return 200, {}, (HCBRK_FILES / "hcbrk_onroerendezaak_list.json").read_text()
-
-    router.reload()
     urllib3_mocker.add_callback(
         "GET",
         "/esd/bevragen/v1/kadastraalonroerendezaken",
@@ -788,42 +704,38 @@ def test_hcbrk_listing(api_client, fetch_auth_token, router, hcbrk_dataset, urll
         content_type="application/json",
     )
 
-    url = reverse(
-        "dynamic_api:haalcentraalbrk-kadastraalonroerendezaken-list",
+    for scopes in [[], ["BRK/RSN"], ["BRK/RO", "BRK/RSN"], ["BRK/RS", "BRK/RSN"]]:
+        url = reverse(
+            "dynamic_api:haalcentraal-brk", kwargs={"subpath": "kadastraalonroerendezaken"}
+        )
+        token = fetch_auth_token(scopes)
+        response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
+        assert response.status_code == 403
+
+
+@pytest.mark.django_db
+@override_settings(HAAL_CENTRAAL_API_KEY="super secret key")
+def test_hcbrk_listing(api_client, fetch_auth_token, urllib3_mocker):
+    """HCBRK listings should have links changed to ones pointing at us."""
+
+    def respond(request):
+        return 200, {}, (HCBRK_FILES / "hcbrk_onroerendezaak_list.json").read_text()
+
+    urllib3_mocker.add_callback(
+        "GET",
+        "/esd/bevragen/v1/kadastraalonroerendezaken",
+        callback=respond,
+        content_type="application/json",
     )
-    token = fetch_auth_token(["BRK/RSN"])
+
+    url = reverse("dynamic_api:haalcentraal-brk", kwargs={"subpath": "kadastraalonroerendezaken"})
+    token = fetch_auth_token(["BRK/RO", "BRK/RS", "BRK/RSN"])
     response = api_client.get(url, {}, HTTP_AUTHORIZATION=f"Bearer {token}")
     data = read_response_json(response)
     assert response.status_code == 200, data
 
     expect = json.loads((HCBRK_FILES / "dso_onroerendezaak_list.json").read_text())
     assert data == expect
-
-
-@pytest.mark.django_db
-def test_hcbrk_listing_by_bsn(api_client, fetch_auth_token, router, hcbrk_dataset, urllib3_mocker):
-    """Searching by BSN should not be allowed."""
-
-    def respond(request):
-        raise Exception("don't call me")
-
-    router.reload()
-    urllib3_mocker.add_callback(
-        "GET",
-        "/esd/bevragen/v1/kadastraalonroerendezaken",
-        callback=respond,
-        content_type="application/json",
-    )
-
-    url = reverse(
-        "dynamic_api:haalcentraalbrk-kadastraalonroerendezaken-list",
-    )
-    token = fetch_auth_token(["BRK/RSN"])
-    response = api_client.get(
-        url, {"burgerservicenummer": "1234567890"}, HTTP_AUTHORIZATION=f"Bearer {token}"
-    )
-    data = read_response_json(response)
-    assert response.status_code == 400, data  # XXX 403 may be nicer.
 
 
 V1 = SemVer("1.0.0")

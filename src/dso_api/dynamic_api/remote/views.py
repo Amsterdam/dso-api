@@ -3,16 +3,18 @@ Currently it mainly performs authorization, data retrieval, and schema validatio
 """
 import logging
 from typing import Callable, Optional
+from urllib.parse import urljoin, urlparse
 
+import certifi
 import orjson
+import rest_framework.exceptions
 import urllib3
 from django.conf import settings
-from django.core.exceptions import ImproperlyConfigured
+from django.core.exceptions import ImproperlyConfigured, PermissionDenied
 from django.http import HttpRequest, HttpResponse
 from django.views import View
 from more_ds.network.url import URL
 from rest_framework import status
-from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework.serializers import BaseSerializer
 from rest_framework.viewsets import ViewSet
@@ -37,7 +39,7 @@ def _rewrite_links(data, fn: Callable[[str], str], in_links: bool = False):
     if isinstance(data, list):
         for i in range(len(data)):
             data[i] = _rewrite_links(data[i], fn, in_links)
-            return data
+        return data
     elif isinstance(data, dict):
         if in_links and isinstance(href := data.get("href"), str):
             data["href"] = fn(href)
@@ -54,7 +56,7 @@ class HaalCentraalBAG(View):
     then fix up the response so that self/next/prev links point to us instead of HC.
     """
 
-    _BASE_URL = settings.DATAPUNT_API_URL + "v1/haalcentraal/bag/"  # XXX use reverse?
+    _BASE_URL = urljoin(settings.DATAPUNT_API_URL, "v1/haalcentraal/bag/")  # XXX use reverse?
 
     def __init__(self):
         super().__init__()
@@ -76,6 +78,58 @@ class HaalCentraalBAG(View):
         if href.startswith(settings.HAAL_CENTRAAL_BAG_ENDPOINT):
             href = self._BASE_URL + href[len(settings.HAAL_CENTRAAL_BAG_ENDPOINT) :]
         return href
+
+
+class HaalCentraalBRK(View):
+    """View that proxies Haal Centraal BRK.
+
+    This is a pass-through proxy like BAG, but with authorization added.
+    """
+
+    _BASE_URL = urljoin(settings.DATAPUNT_API_URL, "v1/haalcentraal/brk/")  # XXX use reverse?
+    _BASE_URL_BAG = urljoin(settings.DATAPUNT_API_URL, "v1/haalcentraal/bag/")
+    _NEEDED_SCOPES = ["BRK/RO", "BRK/RS", "BRK/RSN"]
+
+    def __init__(self):
+        super().__init__()
+        if ".acceptatie." in urlparse(settings.HAAL_CENTRAAL_BRK_ENDPOINT).netloc:
+            self.pool = urllib3.PoolManager()
+        else:
+            self.pool = urllib3.PoolManager(
+                cert_file=settings.HAAL_CENTRAAL_CERTFILE,
+                cert_reqs="CERT_REQUIRED",
+                key_file=settings.HAAL_CENTRAAL_KEYFILE,
+                ca_certs=certifi.where(),
+            )
+
+    def get(self, request: HttpRequest, subpath: str):
+        access = request.user_scopes.has_all_scopes(*self._NEEDED_SCOPES)
+        permissions.log_access(request, access)
+        if not access:
+            raise PermissionDenied(f"You need scopes {self._NEEDED_SCOPES}")
+
+        url: str = settings.HAAL_CENTRAAL_BRK_ENDPOINT + subpath
+        headers = {
+            "Accept": "application/hal+json",
+            "Accept-Crs": "epsg:28992",
+        }
+        if (apikey := settings.HAAL_CENTRAAL_API_KEY) is not None:
+            headers["X-Api-Key"] = apikey
+
+        logger.info("calling %s", url)  # Log without query parameters, since those are sensitive.
+        response = call(self.pool, url, fields=request.GET, headers=headers)
+        data = orjson.loads(response.data)
+        data = _rewrite_links(data, self._rewrite_href)
+        return HttpResponse(orjson.dumps(data), content_type=response.headers.get("Content-Type"))
+
+    def _rewrite_href(self, href: str):
+        # Unlike HC BAG, HC BRK produces relative URLs. But it may also produce links to the BAG,
+        # which are absolute URLs that point to api.bag.kadaster.nl.
+        if href.startswith("/"):
+            return self._BASE_URL + href[1:]
+        elif href.startswith("https://api.bag.kadaster.nl/esd/huidigebevragingen/v1/"):
+            href = href[len("https://api.bag.kadaster.nl/esd/huidigebevragingen/v1/") :]
+            return self._BASE_URL_BAG + href
 
 
 def _del_none(d):
@@ -130,7 +184,7 @@ class RemoteViewSet(DSOViewMixin, ViewSet):
         ) and request.user_scopes.has_table_access(self.table_schema)
         permissions.log_access(request, access)
         if not access:
-            raise PermissionDenied()
+            raise rest_framework.exceptions.PermissionDenied()
 
         # Retrieve the remote JSON data
         response = self.client.call(request, query_params=request.query_params)
@@ -145,9 +199,6 @@ class RemoteViewSet(DSOViewMixin, ViewSet):
         self.validate(serializer)
 
         # Work around the serializer producing the wrong format.
-        # TODO: fix the serializer instead? What we get from the Kadaster remote
-        #  looks more what we want than what comes out of the serializer.
-        #  Is something wrong with BRP remote output?
         data = serializer.data
 
         id_field = self.table_schema.identifier[0]
@@ -186,7 +237,7 @@ class RemoteViewSet(DSOViewMixin, ViewSet):
         ) and request.user_scopes.has_table_access(self.table_schema)
         permissions.log_access(request, access)
         if not access:
-            raise PermissionDenied()
+            raise rest_framework.exceptions.PermissionDenied()
 
         # Retrieve the remote JSON data
         response = self.client.call(request, path=self.kwargs["pk"])

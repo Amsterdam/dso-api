@@ -314,7 +314,7 @@ class DynamicRouter(routers.DefaultRouter):
         return tmp_router.registry
 
     def _build_remote_viewsets(self, api_datasets: Iterable[Dataset]):
-        """Initialize viewsets that are are proxies for remote URLs"""
+        """Initialize viewsets that are proxies for remote URLs"""
         tmp_router = routers.SimpleRouter()
 
         for dataset in api_datasets:

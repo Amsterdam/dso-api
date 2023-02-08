@@ -425,6 +425,13 @@ HAAL_CENTRAAL_BAG_ENDPOINT = os.getenv(
     "https://api.bag.acceptatie.kadaster.nl/esd/huidigebevragingen/v1/",
 )
 
+# Defaults to the acceptance endpoint. For production, set
+# HAAL_CENTRAAL_BRK_ENDPOINT=https://api.brk.kadaster.nl/esd/bevragen/v1/
+HAAL_CENTRAAL_BRK_ENDPOINT = os.getenv(
+    "HAAL_CENTRAAL_BRK_ENDPOINT",
+    "https://api.brk.acceptatie.kadaster.nl/esd/bevragen/v1/",
+)
+
 # mTLS client certificate for Haal Centraal BRK.
 HAAL_CENTRAAL_KEYFILE = os.getenv("HC_KEYFILE")
 HAAL_CENTRAAL_CERTFILE = os.getenv("HC_CERTFILE")

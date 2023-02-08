@@ -5,7 +5,7 @@ from django.conf import settings
 from django.urls import clear_url_caches, get_urlconf, include, path
 
 from . import views
-from .remote.views import HaalCentraalBAG
+from .remote.views import HaalCentraalBAG, HaalCentraalBRK
 from .routers import DynamicRouter
 from .views.doc import DocsOverview, GenericDocs, search, search_index
 
@@ -28,6 +28,9 @@ def get_patterns(router_urls):
         path("docs/searchindex.json", search_index),
         path(
             "haalcentraal/bag/<path:subpath>", HaalCentraalBAG.as_view(), name="haalcentraal-bag"
+        ),
+        path(
+            "haalcentraal/brk/<path:subpath>", HaalCentraalBRK.as_view(), name="haalcentraal-brk"
         ),
         path("mvt/", views.DatasetMVTIndexView.as_view(), name="mvt-index"),
         path("wfs/", views.DatasetWFSIndexView.as_view()),

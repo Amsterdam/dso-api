@@ -4,23 +4,20 @@ Endpoints are queried with raw urllib3,
 to avoid the overhead of the requests library.
 """
 import logging
-import threading
 import time
 from dataclasses import dataclass
-from typing import Any, Final, Optional, Union
+from typing import Optional, Union
 from urllib.parse import urlparse
 
 import certifi
 import orjson
 import urllib3
-from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from more_ds.network.url import URL
-from rest_framework.exceptions import NotFound, ParseError, PermissionDenied, ValidationError
+from rest_framework.exceptions import NotFound, ParseError, PermissionDenied
 from rest_framework.status import HTTP_401_UNAUTHORIZED, HTTP_403_FORBIDDEN
 from urllib3 import HTTPResponse
 
-from dso_api.dynamic_api.filters import FilterInput
 from rest_framework_dso.crs import CRS
 from rest_framework_dso.exceptions import (
     BadGateway,
@@ -249,92 +246,9 @@ class BRPClient(RemoteClient):
         return forw_for
 
 
-class HCBRKClient(RemoteClient):
-    """Client for Haal Centraal Basisregistratie Kadaster (HCBRK)."""
-
-    __NON_FILTERS: Final[dict[str, str]] = {
-        "_expand": "expand",
-        "_fields": "fields",
-        "_pageSize": "pageSize",
-        "fields": "fields",
-        "page_size": "pageSize",
-    }
-
-    # Lazily initialized shared HTTP pool.
-    __http_pool = None
-    __http_pool_lock = threading.Lock()
-
-    # Restrict the filter parameters, so a search on BSN is disallowed.
-    __ALLOWED_PARAMS = frozenset(
-        ("kadastraleAanduiding", "nummeraanduidingIdentificatie", "postcode")
-    )
-
-    def call(self, request, path="", query_params=None) -> RemoteResponse:
-        """Make a request to the remote server based on the client's request."""
-        url = self._make_url(path, query_params or {})
-        response = call(self._get_http_pool(), url, headers=self._get_headers(request))
-        return self._parse_response(response)
-
-    def _make_url(self, path: str, query_params: dict[str, Any]) -> URL:
-        # The Haal Centraal remotes handle the search parameters
-        # in a different way than we do.
-        # Add support for [exact] by stripping it off field parameters,
-        # translate the non-filter parameters, bail for anything we don't allow,
-        # pass the rest on.
-
-        remote_params = {}
-
-        for p, v in query_params.items():
-            if p in ("_format", "format"):
-                continue  # Should be handled by the serializer.
-
-            # Translate non-filter parameters to their Haal Centraal equivalents.
-            if p_hc := self.__NON_FILTERS.get(p):
-                remote_params[p_hc] = v
-                continue
-
-            if p not in self.__ALLOWED_PARAMS:
-                raise ValidationError(f"unknown filter {p!r}")
-
-            filt = FilterInput.from_parameter(p, [])
-            if filt.lookup not in ["", "exact"]:
-                raise ValidationError(f"filter operator {filt.lookup!r} not supported")
-
-            remote_params[filt.key] = v
-
-        return super()._make_url(path, remote_params)
-
-    def _get_headers(self, request):
-        headers = {
-            "Accept": "application/hal+json",
-            # Currently for kadaster HaalCentraal, only RD (epsg:28992) is supported.
-            "Accept-Crs": "epsg:28992",
-        }
-        if (apikey := settings.HAAL_CENTRAAL_API_KEY) is not None:
-            headers["X-Api-Key"] = apikey
-        return headers
-
-    def _get_http_pool(self) -> urllib3.PoolManager:
-        if ".acceptatie." in urlparse(self._endpoint_url).netloc:
-            return _http_pool_generic
-
-        with self.__http_pool_lock:
-            if self.__http_pool is None:
-                self.__http_pool = urllib3.PoolManager(
-                    cert_file=settings.HAAL_CENTRAAL_CERTFILE,
-                    cert_reqs="CERT_REQUIRED",
-                    key_file=settings.HAAL_CENTRAAL_KEYFILE,
-                    ca_certs=certifi.where(),
-                )
-            return self.__http_pool
-
-
 def make_client(endpoint_url: str, dataset_id: str, table_id: str) -> RemoteClient:
     """Construct client for a remote API."""
 
-    if dataset_id in ("brp", "brp_test"):
-        return BRPClient(endpoint_url, table_id)
-    elif dataset_id == "haalcentraalbrk":
-        return HCBRKClient(endpoint_url, table_id)
-
-    raise ValueError(f"unknown remote {dataset_id!r}")
+    if dataset_id not in ("brp", "brp_test"):
+        raise ValueError(f"unknown remote {dataset_id!r}")
+    return BRPClient(endpoint_url, table_id)
