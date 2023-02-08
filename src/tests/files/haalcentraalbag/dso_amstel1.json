@@ -1,0 +1,49 @@
+{
+  "_links": {
+    "self": {
+      "href": "https://api.data.amsterdam.nl/v1/haalcentraal/bag/adressen?postcode=1011PN&huisnummer=1"
+    }
+  },
+  "_embedded": {
+    "adressen": [
+      {
+        "straat": "Amstel",
+        "huisnummer": 1,
+        "postcode": "1011PN",
+        "woonplaats": "Amsterdam",
+        "adresregel1": "Amstel 1",
+        "adresregel2": "1011 PN  AMSTERDAM",
+        "korteNaam": "Amstel",
+        "nummeraanduidingIdentificatie": "0363200011872554",
+        "openbareRuimteIdentificatie": "0363300000002701",
+        "woonplaatsIdentificatie": "3594",
+        "adresseerbaarObjectIdentificatie": "0363010011872295",
+        "pandIdentificaties": [
+          "0363100012186092"
+        ],
+        "_links": {
+          "self": {
+            "href": "https://api.data.amsterdam.nl/v1/haalcentraal/bag/adressen/0363200011872554"
+          },
+          "openbareRuimte": {
+            "href": "https://api.data.amsterdam.nl/v1/haalcentraal/bag/openbareruimten/0363300000002701"
+          },
+          "nummeraanduiding": {
+            "href": "https://api.data.amsterdam.nl/v1/haalcentraal/bag/nummeraanduidingen/0363200011872554"
+          },
+          "woonplaats": {
+            "href": "https://api.data.amsterdam.nl/v1/haalcentraal/bag/woonplaatsen/3594"
+          },
+          "adresseerbaarObject": {
+            "href": "https://api.data.amsterdam.nl/v1/haalcentraal/bag/adresseerbareobjecten/0363010011872295"
+          },
+          "panden": [
+            {
+              "href": "https://api.data.amsterdam.nl/v1/haalcentraal/bag/panden/0363100012186092"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

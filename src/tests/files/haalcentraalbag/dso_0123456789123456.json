@@ -1,0 +1,45 @@
+{
+  "identificatie": "0123456789123456",
+  "domein": "NL.IMBAG.Verblijfsobject",
+  "type": "verblijfsobject",
+  "documentdatum": "1900-01-01",
+  "documentnummer": "Z9--9999--99",
+  "gebruiksdoelen": [
+    "woonfunctie"
+  ],
+  "geometrie": {
+    "punt": {
+      "type": "Point",
+      "coordinates": [
+        78019.53,
+        429423.35,
+        0
+      ]
+    }
+  },
+  "pandIdentificaties": [
+    "1234567898765432"
+  ],
+  "nummeraanduidingIdentificaties": [
+    {
+      "nummeraanduidingIdentificatie": "6543216543216543"
+    }
+  ],
+  "oppervlakte": 345,
+  "status": "Verblijfsobject in gebruik",
+  "_links": {
+    "adressen": [
+      {
+        "href": "https://api.data.amsterdam.nl/v1/haalcentraal/bag/adressen/6543216543216543"
+      }
+    ],
+    "panden": [
+      {
+        "href": "https://api.data.amsterdam.nl/v1/haalcentraal/bag/panden/1234567898765432"
+      }
+    ],
+    "self": {
+      "href": "https://api.data.amsterdam.nl/v1/haalcentraal/bag/adresseerbareobjecten/0123456789123456"
+    }
+  }
+}

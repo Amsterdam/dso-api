@@ -295,24 +295,6 @@ class HaalCentraalClient(RemoteClient):
         return super()._make_url(path, remote_params)
 
 
-class HCBAGClient(HaalCentraalClient):
-    """Client for Haal Centraal Basisregistratie Addressen en Gebouwen (HCBAG)."""
-
-    def _allow_filter(self, p) -> bool:
-        return True  # Just let the remote handle the filters.
-
-    def _get_headers(self, request):
-        headers = {"Accept": "application/hal+json"}
-        if (apikey := settings.HAAL_CENTRAAL_BAG_API_KEY) is not None:
-            headers["X-Api-Key"] = apikey
-        return headers
-
-    def _make_url(self, path: str, query_params: dict) -> URL:
-        url = super()._make_url(path, query_params)
-        logger.info(f"calling {url!r}")
-        return url
-
-
 class HCBRKClient(HaalCentraalClient):
     """Client for Haal Centraal Basisregistratie Kadaster (HCBRK)."""
 
@@ -358,8 +340,6 @@ def make_client(endpoint_url: str, dataset_id: str, table_id: str) -> RemoteClie
 
     if dataset_id in ("brp", "brp_test"):
         return BRPClient(endpoint_url, table_id)
-    if dataset_id == "haalcentraalbag":
-        return HCBAGClient(endpoint_url, table_id)
     elif dataset_id == "haalcentraalbrk":
         return HCBRKClient(endpoint_url, table_id)
 

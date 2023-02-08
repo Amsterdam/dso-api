@@ -4,7 +4,12 @@ Currently it mainly performs authorization, data retrieval, and schema validatio
 import logging
 from typing import Optional
 
+import orjson
+import urllib3
+from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
+from django.http import HttpResponse
+from django.views import View
 from more_ds.network.url import URL
 from rest_framework import status
 from rest_framework.exceptions import PermissionDenied
@@ -21,6 +26,54 @@ from .. import permissions
 from . import clients, serializers
 
 logger = logging.getLogger(__name__)
+
+
+def _rewrite_links(data, old_prefix: str, new_prefix: str, in_links: bool = False):
+    """Rewrite hrefs in _links sections that start with old_prefix
+    to start with new_prefix instead.
+
+    May modify data destructively.
+    """
+    if isinstance(data, list):
+        for i in range(len(data)):
+            data[i] = _rewrite_links(data[i], old_prefix, new_prefix, in_links)
+            return data
+    elif isinstance(data, dict):
+        if in_links and data.get("href", "").startswith(old_prefix):
+            data["href"] = new_prefix + data["href"][len(old_prefix) :]
+            return data
+        return {
+            k: _rewrite_links(v, old_prefix, new_prefix, in_links or k == "_links")
+            for k, v in data.items()
+        }
+    else:
+        return data
+
+
+class HaalCentraalBAG(View):
+    """View that proxies Haal Centraal BAG.
+
+    This is simple pass-through proxy: we change the url, send the request on,
+    then fix up the response so that self/next/prev links point to us instead of HC.
+    """
+
+    _BASE_URL = settings.DATAPUNT_API_URL + "v1/haalcentraal/bag/"  # XXX use reverse?
+
+    def __init__(self):
+        super().__init__()
+        self.pool = urllib3.PoolManager()
+
+    def get(self, request, subpath: str):
+        url: str = settings.HAAL_CENTRAAL_BAG_ENDPOINT + subpath
+        headers = {"Accept": "application/hal+json"}
+        if (apikey := settings.HAAL_CENTRAAL_BAG_API_KEY) is not None:
+            headers["X-Api-Key"] = apikey
+
+        logger.info("calling %s", url)
+        response = self.pool.request("GET", url, headers=headers)
+        data = orjson.loads(response.data)
+        data = _rewrite_links(data, settings.HAAL_CENTRAAL_BAG_ENDPOINT, self._BASE_URL)
+        return HttpResponse(orjson.dumps(data), content_type=response.headers.get("Content-Type"))
 
 
 def _del_none(d):
