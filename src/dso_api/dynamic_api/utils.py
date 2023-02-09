@@ -14,13 +14,15 @@ from schematools.naming import to_snake_case
 
 from rest_framework_dso.fields import GeoJSONIdentifierField
 
-PK_SPLIT = re.compile("[_.]")
+AFTER_SEP = re.compile("[^_.]*$")
 
 
-def split_on_separator(value):
+def split_on_separator(value: str):
     """Split on the last separator, which can be a dot or underscore."""
-    # reversal is king
-    return [part[::-1] for part in PK_SPLIT.split(value[::-1], 1)][::-1]
+    before, after = "", AFTER_SEP.search(value).group(0)
+    if len(after) < len(value):
+        before = value[: -len(after) - 1]
+    return before, after
 
 
 def get_view_name(model: type[DynamicModel], suffix: str):
