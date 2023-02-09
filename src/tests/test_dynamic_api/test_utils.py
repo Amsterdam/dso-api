@@ -7,11 +7,13 @@ from tests.test_rest_framework_dso import models
 @pytest.mark.parametrize(
     "instr,result",
     [
-        ("aa_bb", ["aa", "bb"]),
-        ("aa.bb", ["aa", "bb"]),
-        ("aa.bb.cc", ["aa.bb", "cc"]),
-        ("aa_bb.cc", ["aa_bb", "cc"]),
-        ("aa.bb_cc", ["aa.bb", "cc"]),
+        ("aa", ("aa",)),
+        ("_aa", ("", "aa")),
+        ("aa_bb", ("aa", "bb")),
+        ("aa.bb", ("aa", "bb")),
+        ("aa.bb.cc", ("aa.bb", "cc")),
+        ("aa_bb.cc", ("aa_bb", "cc")),
+        ("aa.bb_cc", ("aa.bb", "cc")),
     ],
 )
 def test_split(instr, result):
