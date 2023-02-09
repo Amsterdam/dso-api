@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 from typing import Any, NamedTuple, Union
+from urllib.parse import urlparse
 
 import orjson
 import pytest
@@ -592,6 +593,7 @@ def test_hcbag_list(
         assert "Authorization" not in request.headers
         assert request.headers.get("X-Api-Key") == settings.HAAL_CENTRAAL_BAG_API_KEY
         assert request.body is None
+        assert set(urlparse(request.url).query.split("&")) == {"huisnummer=1", "postcode=1011PN"}
         return (200, {"Content-Crs": "epsg:28992"}, hcbag_example_list_input)
 
     urllib3_mocker.add_callback(

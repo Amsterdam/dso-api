@@ -8,7 +8,7 @@ import orjson
 import urllib3
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
-from django.http import HttpResponse
+from django.http import HttpRequest, HttpResponse
 from django.views import View
 from more_ds.network.url import URL
 from rest_framework import status
@@ -63,14 +63,14 @@ class HaalCentraalBAG(View):
         super().__init__()
         self.pool = urllib3.PoolManager()
 
-    def get(self, request, subpath: str):
+    def get(self, request: HttpRequest, subpath: str):
         url: str = settings.HAAL_CENTRAAL_BAG_ENDPOINT + subpath
         headers = {"Accept": "application/hal+json"}
         if (apikey := settings.HAAL_CENTRAAL_BAG_API_KEY) is not None:
             headers["X-Api-Key"] = apikey
 
         logger.info("calling %s", url)
-        response = self.pool.request("GET", url, headers=headers)
+        response = self.pool.request("GET", url, fields=request.GET, headers=headers)
         data = orjson.loads(response.data)
         data = _rewrite_links(data, settings.HAAL_CENTRAAL_BAG_ENDPOINT, self._BASE_URL)
         return HttpResponse(orjson.dumps(data), content_type=response.headers.get("Content-Type"))
