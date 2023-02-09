@@ -5,6 +5,7 @@ from typing import Any, NamedTuple, Union
 import orjson
 import pytest
 import urllib3
+from django.test import override_settings
 from django.urls import reverse
 from rest_framework.status import HTTP_200_OK, HTTP_403_FORBIDDEN
 from schematools.contrib.django import models
@@ -583,16 +584,15 @@ def test_remote_timeout(api_client, fetch_auth_token, router, brp_dataset, urlli
 
 
 @pytest.mark.django_db
+@override_settings(HAAL_CENTRAAL_BAG_API_KEY="super secret key")
 def test_hcbag_list(
-    settings, api_client, hcbag_dataset, hcbag_example_list, urllib3_mocker, filled_router
+    settings, api_client, hcbag_example_list_input, hcbag_example_list_output, urllib3_mocker
 ):
-    remote_key = "I_ve_got_the_key"
-
     def respond(request):
         assert "Authorization" not in request.headers
-        assert request.headers.get("X-Api-Key") == remote_key
+        assert request.headers.get("X-Api-Key") == settings.HAAL_CENTRAAL_BAG_API_KEY
         assert request.body is None
-        return (200, {"Content-Crs": "epsg:28992"}, hcbag_example_list)
+        return (200, {"Content-Crs": "epsg:28992"}, hcbag_example_list_input)
 
     urllib3_mocker.add_callback(
         "GET",
@@ -601,25 +601,24 @@ def test_hcbag_list(
         content_type="application/json",
     )
 
-    url = reverse("dynamic_api:haalcentraalbag-adressen-list")
-    settings.HAAL_CENTRAAL_BAG_API_KEY = remote_key
+    url = reverse("dynamic_api:haalcentraal-bag", args=["adressen"])
     response = api_client.get(url, {"postcode": "1011PN", "huisnummer": "1"})
     data = read_response_json(response)
 
     assert response.status_code == 200, data
+    assert data == json.loads(hcbag_example_list_output)
 
 
 @pytest.mark.django_db
+@override_settings(HAAL_CENTRAAL_BAG_API_KEY="super secret key")
 def test_hcbag_single(
-    settings, api_client, hcbag_dataset, hcbag_example_single, urllib3_mocker, filled_router
+    settings, api_client, hcbag_example_single_input, hcbag_example_single_output, urllib3_mocker
 ):
-    remote_key = "I_ve_got_the_key"
-
     def respond(request):
         assert "Authorization" not in request.headers
-        assert request.headers.get("X-Api-Key") == remote_key
+        assert request.headers.get("X-Api-Key") == settings.HAAL_CENTRAAL_BAG_API_KEY
         assert request.body is None
-        return (200, {"Content-Crs": "epsg:28992"}, hcbag_example_single)
+        return (200, {"Content-Crs": "epsg:28992"}, hcbag_example_single_input)
 
     urllib3_mocker.add_callback(
         "GET",
@@ -628,17 +627,12 @@ def test_hcbag_single(
         content_type="application/json",
     )
 
-    url = reverse(
-        "dynamic_api:haalcentraalbag-adresseerbareobjecten-detail",
-        kwargs={"pk": "0123456789123456"},
-    )
-    settings.HAAL_CENTRAAL_BAG_API_KEY = remote_key
+    url = reverse("dynamic_api:haalcentraal-bag", args=["adresseerbareobjecten/0123456789123456"])
     response = api_client.get(url)
     data = read_response_json(response)
 
     assert response.status_code == 200, data
-    assert "1234567898765432" in data["pandIdentificaties"]
-    assert data["oppervlakte"] == 345
+    assert data == json.loads(hcbag_example_single_output)
 
 
 # Load Haal Centraal BRK example data (from
