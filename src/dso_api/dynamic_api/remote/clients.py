@@ -249,12 +249,8 @@ class BRPClient(RemoteClient):
         return forw_for
 
 
-class HaalCentraalClient(RemoteClient):
-    """Base class for Haal Centraal clients."""
-
-    def _allow_filter(self, p) -> bool:
-        """Must return false for filters that we don't want to send to the remote."""
-        raise NotImplementedError()
+class HCBRKClient(RemoteClient):
+    """Client for Haal Centraal Basisregistratie Kadaster (HCBRK)."""
 
     __NON_FILTERS: Final[dict[str, str]] = {
         "_expand": "expand",
@@ -263,6 +259,15 @@ class HaalCentraalClient(RemoteClient):
         "fields": "fields",
         "page_size": "pageSize",
     }
+
+    # Lazily initialized shared HTTP pool.
+    __http_pool = None
+    __http_pool_lock = threading.Lock()
+
+    # Restrict the filter parameters, so a search on BSN is disallowed.
+    __ALLOWED_PARAMS = frozenset(
+        ("kadastraleAanduiding", "nummeraanduidingIdentificatie", "postcode")
+    )
 
     def call(self, request, path="", query_params=None) -> RemoteResponse:
         """Make a request to the remote server based on the client's request."""
@@ -288,7 +293,7 @@ class HaalCentraalClient(RemoteClient):
                 remote_params[p_hc] = v
                 continue
 
-            if not self._allow_filter(p):
+            if p not in self.__ALLOWED_PARAMS:
                 raise ValidationError(f"unknown filter {p!r}")
 
             filt = FilterInput.from_parameter(p, [])
@@ -298,22 +303,6 @@ class HaalCentraalClient(RemoteClient):
             remote_params[filt.key] = v
 
         return super()._make_url(path, remote_params)
-
-
-class HCBRKClient(HaalCentraalClient):
-    """Client for Haal Centraal Basisregistratie Kadaster (HCBRK)."""
-
-    # Lazily initialized shared HTTP pool.
-    __http_pool = None
-    __http_pool_lock = threading.Lock()
-
-    # Restrict the filter parameters, so a search on BSN is disallowed.
-    __ALLOWED_PARAMS = frozenset(
-        ("kadastraleAanduiding", "nummeraanduidingIdentificatie", "postcode")
-    )
-
-    def _allow_filter(self, p) -> bool:
-        return p in self.__ALLOWED_PARAMS
 
     def _get_headers(self, request):
         headers = {
