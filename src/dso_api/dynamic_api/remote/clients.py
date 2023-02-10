@@ -42,6 +42,109 @@ class RemoteResponse:
     data: Union[list, dict]
 
 
+def call(pool: urllib3.PoolManager, url: str, **kwargs) -> HTTPResponse:
+    """Make an HTTP GET call. kwargs are passed to pool.request."""
+
+    host = urlparse(url).netloc
+    t0 = time.perf_counter_ns()
+    try:
+        # Using urllib directly instead of requests for performance
+        response: HTTPResponse = pool.request(
+            "GET",
+            url,
+            timeout=60,
+            retries=False,
+            **kwargs,
+        )
+    except (TimeoutError, urllib3.exceptions.TimeoutError) as e:
+        # Socket timeout
+        logger.error("Proxy call to %s failed, timeout from remote server: %s", host, e)
+        raise GatewayTimeout() from e
+    except (OSError, urllib3.exceptions.HTTPError) as e:
+        # Socket connect / SSL error (HTTPError is the base class for errors)
+        logger.error("Proxy call to %s failed, error when connecting to server: %s", host, e)
+        raise ServiceUnavailable(str(e)) from e
+
+    # Log response and timing results
+    level = logging.ERROR if response.status >= 400 else logging.INFO
+    logger.log(
+        level,
+        "Proxy call to %s, status %s: %s, took: %.3fs",
+        host,
+        response.status,
+        response.reason,
+        (time.perf_counter_ns() - t0) * 1e-9,
+    )
+
+    if response.status >= 200 and response.status < 300:
+        return response
+
+    # We got an error.
+    if logger.isEnabledFor(logging.DEBUG):
+        logger.debug("  Response body: %s", response.data)
+
+    _raise_http_error(response)
+
+
+def _raise_http_error(response: HTTPResponse) -> None:
+    # Translate the remote HTTP error to the proper response.
+    #
+    # This translates some errors into a 502 "Bad Gateway" or 503 "Gateway Timeout"
+    # error to reflect the fact that this API is calling another service as backend.
+
+    content_type = response.headers.get("content-type", "")
+    if content_type.startswith("text/html"):
+        # HTML error, probably hit the completely wrong page.
+        detail_message = None
+    else:
+        # Consider the actual JSON response to be relevant here.
+        detail_message = response.data.decode()
+
+    if response.status == 400:  # "bad request"
+        if content_type == "application/problem+json":
+            # Translate proper "Bad Request" to REST response
+            raise RemoteAPIException(
+                title=ParseError.default_detail,
+                detail=orjson.loads(response.data),
+                code=ParseError.default_code,
+                status_code=400,
+            )
+        else:
+            raise BadGateway(detail_message)
+    elif response.status in (HTTP_401_UNAUTHORIZED, HTTP_403_FORBIDDEN):
+        # We translate 401 to 403 because 401 MUST have a WWW-Authenticate
+        # header in the response and we can't easily set that from here.
+        # Also, RFC 7235 says we MUST NOT change such a header,
+        # which presumably includes making one up.
+        raise RemoteAPIException(
+            title=PermissionDenied.default_detail,
+            detail=f"{response.status} from remote: {response.data!r}",
+            status_code=HTTP_403_FORBIDDEN,
+            code=PermissionDenied.default_code,
+        )
+    elif response.status == 404:  # "not found"
+        # Return 404 to client (in DRF format)
+        if content_type == "application/problem+json":
+            # Forward the problem-json details, but still in a 404:
+            raise RemoteAPIException(
+                title=NotFound.default_detail,
+                detail=orjson.loads(response.data),
+                status_code=404,
+                code=NotFound.default_code,
+            )
+        raise NotFound(detail_message)
+    else:
+        # Unexpected response, call it a "Bad Gateway"
+        logger.error(
+            "Proxy call failed, unexpected status code from endpoint: %s %s",
+            response.status,
+            detail_message,
+        )
+        raise BadGateway(
+            detail_message or f"Unexpected HTTP {response.status} from internal endpoint"
+        )
+
+
 class RemoteClient:
     """Generic remote API client.
 
@@ -56,52 +159,8 @@ class RemoteClient:
         self._endpoint_url = endpoint_url
         self._table_id = table_id
 
-    def call(self, request, path="", query_params=None) -> RemoteResponse:
-        """Make a request to the remote server based on the client's request."""
-        url = self._make_url(path, query_params or {})
-        host = urlparse(url).netloc
-
-        headers = self._get_headers(request)
-        http_pool = self._get_http_pool()
-        t0 = time.perf_counter_ns()
-
-        try:
-            # Using urllib directly instead of requests for performance
-            response: HTTPResponse = http_pool.request(
-                "GET",
-                url,
-                headers=headers,
-                timeout=60,
-                retries=False,
-            )
-        except (TimeoutError, urllib3.exceptions.TimeoutError) as e:
-            # Socket timeout
-            logger.error("Proxy call to %s failed, timeout from remote server: %s", host, e)
-            raise GatewayTimeout() from e
-        except (OSError, urllib3.exceptions.HTTPError) as e:
-            # Socket connect / SSL error (HTTPError is the base class for errors)
-            logger.error("Proxy call to %s failed, error when connecting to server: %s", host, e)
-            raise ServiceUnavailable(str(e)) from e
-
-        # Log response and timing results
-        level = logging.ERROR if response.status >= 400 else logging.INFO
-        logger.log(
-            level,
-            "Proxy call to %s, status %s: %s, took: %.3fs",
-            host,
-            response.status,
-            response.reason,
-            (time.perf_counter_ns() - t0) * 1e-9,
-        )
-
-        if response.status == 200:
-            return self._parse_response(response)
-        else:
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug("  Response body: %s", response.data)
-
-            self._raise_http_error(response)
-            raise Exception("_raise_http_error should have raised an exception")
+    def call(self, request, path="", query_params=None):
+        raise NotImplementedError()
 
     def _parse_response(self, response: HTTPResponse) -> RemoteResponse:
         """Parse the retrieved HTTP response"""
@@ -110,9 +169,6 @@ class RemoteClient:
             content_crs=CRS.from_string(content_crs) if content_crs else None,
             data=orjson.loads(response.data),
         )
-
-    def _get_headers(self, request):
-        raise NotImplementedError()
 
     def _get_http_pool(self) -> urllib3.PoolManager:
         """Returns a PoolManager for making HTTP requests."""
@@ -130,68 +186,19 @@ class RemoteClient:
         url = URL(url.replace("{table_id}", self._table_id))
         return url // query_params
 
-    def _raise_http_error(self, response: HTTPResponse) -> None:
-        """Translate the remote HTTP error to the proper response.
-
-        This translates some errors into a 502 "Bad Gateway" or 503 "Gateway Timeout"
-        error to reflect the fact that this API is calling another service as backend.
-        """
-
-        content_type = response.headers.get("content-type", "")
-        if content_type.startswith("text/html"):
-            # HTML error, probably hit the completely wrong page.
-            detail_message = None
-        else:
-            # Consider the actual JSON response to be relevant here.
-            detail_message = response.data.decode()
-
-        if response.status == 400:  # "bad request"
-            if content_type == "application/problem+json":
-                # Translate proper "Bad Request" to REST response
-                raise RemoteAPIException(
-                    title=ParseError.default_detail,
-                    detail=orjson.loads(response.data),
-                    code=ParseError.default_code,
-                    status_code=400,
-                )
-            else:
-                raise BadGateway(detail_message)
-        elif response.status in (HTTP_401_UNAUTHORIZED, HTTP_403_FORBIDDEN):
-            # We translate 401 to 403 because 401 MUST have a WWW-Authenticate
-            # header in the response and we can't easily set that from here.
-            # Also, RFC 7235 says we MUST NOT change such a header,
-            # which presumably includes making one up.
-            raise RemoteAPIException(
-                title=PermissionDenied.default_detail,
-                detail=f"{response.status} from remote: {response.data!r}",
-                status_code=HTTP_403_FORBIDDEN,
-                code=PermissionDenied.default_code,
-            )
-        elif response.status == 404:  # "not found"
-            # Return 404 to client (in DRF format)
-            if content_type == "application/problem+json":
-                # Forward the problem-json details, but still in a 404:
-                raise RemoteAPIException(
-                    title=NotFound.default_detail,
-                    detail=orjson.loads(response.data),
-                    status_code=404,
-                    code=NotFound.default_code,
-                )
-            raise NotFound(detail_message)
-        else:
-            # Unexpected response, call it a "Bad Gateway"
-            logger.error(
-                "Proxy call failed, unexpected status code from endpoint: %s %s",
-                response.status,
-                detail_message,
-            )
-            raise BadGateway(
-                detail_message or f"Unexpected HTTP {response.status} from internal endpoint"
-            )
-
 
 class BRPClient(RemoteClient):
     """RemoteClient for brp. Passes Authorization headers through to the remote."""
+
+    def call(self, request, path="", query_params=None) -> RemoteResponse:
+        """Make a request to the remote server based on the client's request."""
+        url = self._make_url(path, query_params or {})
+        response = call(self._get_http_pool(), url, headers=self._get_headers(request))
+        if 300 <= response.status <= 399 and (
+            "/oauth/authorize" in response.headers.get("Location", "")
+        ):
+            raise PermissionDenied("Invalid token")
+        return self._parse_response(response)
 
     def _get_headers(self, request):
         headers = {
@@ -241,14 +248,6 @@ class BRPClient(RemoteClient):
 
         return forw_for
 
-    def _raise_http_error(self, response: HTTPResponse) -> None:
-        super()._raise_http_error(response)
-
-        if 300 <= response.status <= 399 and (
-            "/oauth/authorize" in response.headers.get("Location", "")
-        ):
-            raise PermissionDenied("Invalid token")
-
 
 class HaalCentraalClient(RemoteClient):
     """Base class for Haal Centraal clients."""
@@ -264,6 +263,12 @@ class HaalCentraalClient(RemoteClient):
         "fields": "fields",
         "page_size": "pageSize",
     }
+
+    def call(self, request, path="", query_params=None) -> RemoteResponse:
+        """Make a request to the remote server based on the client's request."""
+        url = self._make_url(path, query_params or {})
+        response = call(self._get_http_pool(), url, headers=self._get_headers(request))
+        return self._parse_response(response)
 
     def _make_url(self, path: str, query_params: dict[str, Any]) -> URL:
         # The Haal Centraal remotes handle the search parameters
