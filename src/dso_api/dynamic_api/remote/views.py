@@ -24,6 +24,7 @@ from rest_framework_dso.views import DSOViewMixin
 
 from .. import permissions
 from . import clients, serializers
+from .clients import call
 
 logger = logging.getLogger(__name__)
 
@@ -70,7 +71,7 @@ class HaalCentraalBAG(View):
             headers["X-Api-Key"] = apikey
 
         logger.info("calling %s", url)
-        response = self.pool.request("GET", url, fields=request.GET, headers=headers)
+        response = call(self.pool, url, fields=request.GET, headers=headers)
         data = orjson.loads(response.data)
         data = _rewrite_links(data, settings.HAAL_CENTRAAL_BAG_ENDPOINT, self._BASE_URL)
         return HttpResponse(orjson.dumps(data), content_type=response.headers.get("Content-Type"))
