@@ -79,6 +79,11 @@ Then the ``DATABASE_URL`` can be pointed at it::
 Completing the Setup
 --------------------
 
+Install static files::
+
+    export DSO_STATIC_DIR="$HOME/dso_static"
+    ./manage.py collectstatic
+
 Create database tables::
 
     ./manage.py migrate
