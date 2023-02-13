@@ -1,5 +1,5 @@
 """Additional exception classes"""
-from rest_framework import exceptions, status
+from rest_framework import status
 from rest_framework.exceptions import APIException
 
 
@@ -27,7 +27,7 @@ class GatewayTimeout(APIException):
     default_code = "gateway_timeout"
 
 
-class PreconditionFailed(exceptions.APIException):
+class PreconditionFailed(APIException):
     """Render an HTTP 412 Precondition Failed."""
 
     status_code = status.HTTP_412_PRECONDITION_FAILED
