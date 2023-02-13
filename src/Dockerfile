@@ -28,7 +28,7 @@ COPY --from=builder /usr/local/lib/python3.11/site-packages/ /usr/local/lib/pyth
 WORKDIR /app
 COPY . ./
 
-ENV DJANGO_SETTINGS_MODULE=dso_api.settings DJANGO_DEBUG=false
+ENV DJANGO_SETTINGS_MODULE=dso_api.settings DJANGO_DEBUG=false DSO_STATIC_DIR=/static
 RUN python manage.py collectstatic --noinput
 
 EXPOSE 8000

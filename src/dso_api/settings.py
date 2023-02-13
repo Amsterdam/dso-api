@@ -30,9 +30,9 @@ DSO_API_LOG_LEVEL = env.str("DSO_API_LOG_LEVEL", "INFO")
 DSO_API_AUDIT_LOG_LEVEL = env.str("DSO_API_AUDIT_LOG_LEVEL", "INFO")
 SENTRY_BLOCKED_PATHS: Final[list[str]] = env.list("SENTRY_BLOCKED_PATHS", default=[])
 
-# Paths
+# Whitenoise needs a place to store static files and their gzipped versions.
 STATIC_URL = "/v1/static/"
-STATIC_ROOT = "/static/"
+STATIC_ROOT = env.str("DSO_STATIC_DIR")
 
 DATAPUNT_API_URL = env.str("DATAPUNT_API_URL", "https://api.data.amsterdam.nl/")
 SCHEMA_URL = env.str("SCHEMA_URL", "https://schemas.data.amsterdam.nl/datasets/")
