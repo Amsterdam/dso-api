@@ -11,8 +11,8 @@ import drf_spectacular.plumbing
 from django.conf import settings
 from django.urls import URLPattern, URLResolver, get_resolver, get_urlconf
 from django.utils.functional import lazy
-from drf_spectacular.views import SpectacularSwaggerView
 from rest_framework import permissions, renderers
+from rest_framework.response import Response
 from rest_framework.schemas import get_schema_view
 from rest_framework.views import APIView
 from schematools.contrib.django.models import Dataset
@@ -20,7 +20,7 @@ from schematools.permissions import UserScopes
 from schematools.types import DatasetSchema
 
 from rest_framework_dso.openapi import DSOSchemaGenerator
-from rest_framework_dso.renderers import HALJSONRenderer
+from rest_framework_dso.renderers import BrowsableAPIRenderer, HALJSONRenderer
 
 __all__ = (
     "get_openapi_json_view",
@@ -44,17 +44,21 @@ def build_mock_request(method, path, view, original_request, **kwargs):
     return request
 
 
-class DSOSwaggerView(SpectacularSwaggerView):
-    """Overwritten SwaggerUI to support Azure OAuth."""
+class openAPIBrowserView(APIView):
+    """Browsable API View."""
 
-    template_name_js = "dso_api/dynamic_api/swagger_ui.js"
-    schema = None  # exclude from schema detection
+    # Restrict available formats browsable API
+    renderer_classes = [BrowsableAPIRenderer]
+
+    name = "DSO-API"
+    description = (
+        "To use the DSO-API, see the documentation at <https://api.data.amsterdam.nl/v1/docs/>. "
+    )
+    authorization_grantor = None
+    response_formatter = "openapi_formatter"
 
     def get(self, request, *args, **kwargs):
-        if self.url.startswith("?"):
-            # Better visual appearance on the UI page
-            self.url = f"{request.path}{self.url}"
-        return super().get(request, *args, **kwargs)
+        return Response()
 
 
 class DynamicApiSchemaGenerator(DSOSchemaGenerator):
@@ -136,16 +140,16 @@ def get_openapi_json_view(dataset: Dataset):
     }
 
     # Wrap the view in a "decorator" that shows the Swagger interface for browsers.
-    return _swagger_on_browser(openapi_view)
+    return _html_on_browser(openapi_view, dataset_schema)
 
 
-def _swagger_on_browser(openapi_view):
-    """A 'decorator' that shows the swagger interface on browser requests.
+def _html_on_browser(openapi_view, dataset_schema):
+    """A 'decorator' that shows the browsable interface on browser requests.
     This is a separate function to reduce the closure context data.
     """
     # The ?format=json isn't really needed, but makes the fetch/XMLHttpRequest explicit
     # to request the OpenAPI JSON and avoids any possible browser-interaction.
-    swagger_view = DSOSwaggerView.as_view(url="?format=json")
+    browsable_view = openAPIBrowserView
 
     @wraps(openapi_view)
     def _switching_view(request):
@@ -155,10 +159,13 @@ def _swagger_on_browser(openapi_view):
             # Not a browser, give the JSON view.
             return openapi_view(request)
         else:
-            # Browser that accepts HTML, showing the swagger view.
-            # This doesn't redirect to /swagger/
+            # Browser that accepts HTML, showing the browsable view.
             # Using the view so the addressbar path remains the same.
-            return swagger_view(request)
+            return browsable_view().as_view(
+                name=dataset_schema.title or dataset_schema.id,
+                description=dataset_schema.description or "",
+                authorization_grantor=dataset_schema.data.get("authorizationGrantor", None),
+            )(request)
 
     return _switching_view
 

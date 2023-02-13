@@ -24,7 +24,7 @@ def test_get_patterns(afval_dataset, fietspaaltjes_dataset, filled_router):
 
 
 @pytest.mark.django_db
-def test_openapi_swagger(api_client, afval_dataset, filled_router):
+def test_openapi_frontend(api_client, afval_dataset, filled_router):
     """Prove that the OpenAPI page can be rendered."""
     url = reverse("dynamic_api:openapi-afvalwegingen")
     assert url == "/v1/afvalwegingen/"
@@ -33,7 +33,19 @@ def test_openapi_swagger(api_client, afval_dataset, filled_router):
     assert response.status_code == 200
     assert response["content-type"] == "text/html; charset=utf-8"
     content = read_response(response)
-    assert "ui.initOAuth(" in content
+    assert "/v1/oauth2-redirect.html" in content
+
+
+@pytest.mark.django_db
+def test_openapi_swagger(api_client, afval_dataset, filled_router):
+    """Prove that the oauth redirect page can be rendered."""
+    url = "/v1/oauth2-redirect.html"
+
+    response = api_client.get(url, HTTP_ACCEPT="text/html")
+    assert response.status_code == 200
+    assert response["content-type"] == "text/html; charset=utf-8"
+    content = read_response(response)
+    assert " <title>Swagger UI: OAuth2 Redirect</title>" in content
 
 
 @pytest.mark.django_db
