@@ -2,9 +2,8 @@
 
 This makes sure the response gets the desired ``application/hal+json``
 """
-import inspect
 from datetime import datetime
-from io import BytesIO, StringIO
+from io import BytesIO
 from types import GeneratorType
 from typing import Optional
 
@@ -12,7 +11,6 @@ import orjson
 from django.conf import settings
 from django.urls import reverse
 from rest_framework import renderers
-from rest_framework.exceptions import ValidationError
 from rest_framework.relations import HyperlinkedRelatedField
 from rest_framework.serializers import ListSerializer, Serializer, SerializerMethodField
 from rest_framework.utils.breadcrumbs import get_breadcrumbs as drf_get_breadcrumbs
@@ -133,19 +131,6 @@ class BrowsableAPIRenderer(RendererMixin, renderers.BrowsableAPIRenderer):
 
         return context
 
-    def get_content(self, renderer, data, accepted_media_type, renderer_context):
-        """Fix showing generator content for browsable API, convert back to one string"""
-        # Pass paginator information to the actual renderer we wrapped.
-        renderer.setup_pagination(self.paginator)
-        content = super().get_content(renderer, data, accepted_media_type, renderer_context)
-        if inspect.isgenerator(content):
-            # Convert back to string. Might become a very large response!
-            sample = StringIO()
-            sample.writelines(map(bytes.decode, content))
-            content = sample.getvalue()
-
-        return content
-
     def get_breadcrumbs(self, request):
         """
         Given a request returns a list of breadcrumbs, which are each a
@@ -159,23 +144,6 @@ class BrowsableAPIRenderer(RendererMixin, renderers.BrowsableAPIRenderer):
         return breadcrumbs
 
     def render(self, data, accepted_media_type=None, renderer_context=None):
-        # Protect the browsable API from being used as DOS (Denial of Service) attack vector.
-        # While we allow infinitely large pages in our streaming responses, the browsable API
-        # still has to render that in-memory as part of the HTML template response.
-        from rest_framework.generics import GenericAPIView  # circular import via DRF settings
-
-        request = renderer_context["request"]
-        view = renderer_context["view"]
-        if (
-            isinstance(view, GenericAPIView)
-            and view.paginator.get_page_size(request) > BROWSABLE_MAX_PAGE_SIZE
-        ):
-            raise ValidationError(
-                "Browsable HTML API does not support this page size. "
-                "Use ?_format=json if you want larger pages.",
-                code="_pageSize",
-            )
-
         ret = super().render(
             data,
             accepted_media_type=accepted_media_type,
