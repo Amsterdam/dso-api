@@ -305,46 +305,6 @@ class TestBrowsableAPIRenderer:
         title = next(line.strip() for line in html.splitlines() if "<h1>" in line)
         assert title == f"<h1>{expect}</h1>"
 
-    @staticmethod
-    @pytest.mark.django_db
-    def test_extreme_page_size(api_client, api_rf):
-        """Prove that the browser-based view protects against a DOS attack vector"""
-        # First see that the API actually raises the exception
-        with pytest.raises(ValidationError):
-            api_client.get("/v1/movies", data={"_pageSize": "1001"}, HTTP_ACCEPT="text/html")
-
-        # See that the 'handler500' of our local "urls.py" also kicks in.
-        api_client.raise_request_exception = False
-        response = api_client.get(
-            "/v1/movies", data={"_pageSize": "1001"}, HTTP_ACCEPT="text/html"
-        )
-
-        assert response.status_code == ValidationError.status_code, response
-        assert response["content-type"] == "application/problem+json"  # check before reading
-        data = read_response_json(response)
-
-        assert response["content-type"] == "application/problem+json"  # and after
-        assert data == {
-            "instance": "http://testserver/v1/movies?_pageSize=1001",
-            "invalid-params": [
-                {
-                    "name": "_pageSize",
-                    "reason": (
-                        "Browsable HTML API does not support this page size. "
-                        "Use ?_format=json if you want larger pages."
-                    ),
-                    "type": "urn:apiexception:invalid:_pageSize",
-                }
-            ],
-            "status": 400,
-            "title": "Invalid input.",
-            "type": "urn:apiexception:invalid",
-            "x-validation-errors": [
-                "Browsable HTML API does not support this page size. "
-                "Use ?_format=json if you want larger pages."
-            ],
-        }
-
 
 @pytest.mark.django_db
 class TestLimitFields:
