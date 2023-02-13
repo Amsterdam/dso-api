@@ -122,6 +122,7 @@ function updatePageRequest(url, method = "GET", pushHistory = true, headerSettin
   let reqInfoEl = document.getElementById("request-info")
   reqInfoEl.innerHTML = `<pre><b>${method}</b> ${PAGEURL}</pre>`
   document.getElementById("response-content").innerHTML = "Retrieving data..."
+  document.getElementById("formatted-response-content").innerHTML = "Retrieving data..."
   let page = PAGEURL.searchParams.get("page");
   setPageLinks(page);
   getData(url, method, headers).catch(parseException).then(data => {
@@ -297,6 +298,7 @@ function getData(url, method = "GET", headers = DEFAULT_HEADERS, doParseHeaders 
           let result = JSON.parse(this.responseText);
           callback(result);
         } catch (error) {
+          parseResponseHeaders(this);
           err([error, this.responseText]);
         }
       }
@@ -352,8 +354,6 @@ function pushSetting(key, val, active, op = "eq", type = "header") {
     paramsEl.appendChild(newParam);
     paramsEl.appendChild(createParamEl(null, null, "eq", true, type));
   }
-
-
 }
 
 function escapeString(string) {
@@ -391,11 +391,17 @@ function parseException(err) {
   console.error("Failed to retrieve JSON API response from server:", exception);
 
   let contentElement = document.getElementById("response-content");
-  contentElement.innerHTML = responseText.replace(/&/g, "&amp;")
+  let formattedContentElement = document.getElementById("formatted-response-content");
+  contentElement.innerHTML = `Failed to retrieve valid response from server.
+  
+  `
+  contentElement.innerHTML += responseText.replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
+  document.getElementById("response-info").className = "show-raw";
+  formattedContentElement.innerHTML = "Failed to retrieve valid response from server.";
 }
 
 function parseData(data) {
@@ -449,6 +455,18 @@ function parseData(data) {
   // Create highlighted html string and set content
   let jsonString = JSON.stringify(data, markCoordinates, 4);
   contentElement.innerHTML = syntaxHighlight(jsonString);
+
+  // Format response if formatter is available
+  if (typeof FORMATTER  !== "undefined") {
+    let formattedContentElement = document.getElementById("formatted-response-content");
+    try {
+      formattedContentElement.innerHTML = FORMATTER(data);
+    } catch (error) {
+      document.getElementById("response-info").className = "show-raw";
+      formattedContentElement.innerHTML = "No formatting available";
+    }
+  }
+
 }
 
 function syntaxHighlight(jsonString) {

@@ -128,9 +128,14 @@
       <pre ><b>{{ request.method }}</b> {{ request.get_full_path }}</pre>
     </div>
 
-    <div class="response-info" aria-label="{% trans "response info" %}">
-      <pre ><span class="meta nocode"><span id="response-headers"></span></span> 
+    <div id="response-info" class="response-info {% if response_formatter %}show-formatted{% else %}show-raw{% endif %}" aria-label="{% trans "response info" %}">
+      <div class="response-tabs">
+        <div class="tab response-tab raw-tab" onclick="event.target.parentElement.parentElement.className='show-raw'" id="raw-tab">Raw</div><div id="formatted-tab" class="tab response-tab formatted-tab {% if not response_formatter %}disabled{% endif %}" onclick="event.target.parentElement.parentElement.className='show-formatted'">Formatted</div>
+      </div>
+      <pre class="response-container" id="raw-response-container"><span class="meta nocode"><span id="response-headers"></span></span> 
 <span id="response-content">Retrieving data...</span></pre>
+      <pre class="response-container" id="formatted-response-container"> 
+<span id="formatted-response-content">Retrieving data...</span></pre>
     </div>
   </div>
 
@@ -351,6 +356,9 @@
 <script src="{% static "rest_framework/js/ajax-form.js" %}"></script>
 <script src="{% static "rest_framework/js/csrf.js" %}"></script>
 <script src="{% static "rest_framework/js/bootstrap.min.js" %}"></script>
+{% if response_formatter %}
+  <script src="{% static response_formatter  %}"></script>
+{% endif %}
 
 <script>
   $(document).ready(function() {

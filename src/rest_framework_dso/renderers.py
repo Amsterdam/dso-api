@@ -118,6 +118,12 @@ class BrowsableAPIRenderer(RendererMixin, renderers.BrowsableAPIRenderer):
         # Maintain compatibility with other types of ViewSets
         context["authorization_grantor"] = getattr(context["view"], "authorization_grantor", None)
 
+        # Insert formatter into context
+        if (
+            response_formatter := getattr(context["view"], "response_formatter", None)
+        ) is not None:
+            context["response_formatter"] = "dso_api/dynamic_api/js/" + response_formatter + ".js"
+
         if dataset_id := getattr(context["view"], "dataset_id", False):
             context["dataset_url"] = reverse(f"dynamic_api:openapi-{dataset_id}")
         # Fix response content-type when it's filled in by the exception_handler

@@ -29,6 +29,7 @@ class APIIndexView(APIView):
     description = (
         "To use the DSO-API, see the documentation at <https://api.data.amsterdam.nl/v1/docs/>. "
     )
+    response_formatter = "index_formatter"
 
     # Set by as_view
     api_type = "rest_json"
