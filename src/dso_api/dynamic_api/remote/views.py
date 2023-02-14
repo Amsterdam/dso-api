@@ -2,7 +2,7 @@
 Currently it mainly performs authorization, data retrieval, and schema validation.
 """
 import logging
-from typing import Optional
+from typing import Callable, Optional
 
 import orjson
 import urllib3
@@ -29,24 +29,20 @@ from .clients import call
 logger = logging.getLogger(__name__)
 
 
-def _rewrite_links(data, old_prefix: str, new_prefix: str, in_links: bool = False):
-    """Rewrite hrefs in _links sections that start with old_prefix
-    to start with new_prefix instead.
+def _rewrite_links(data, fn: Callable[[str], str], in_links: bool = False):
+    """Replace hrefs in _links sections by whatever fn returns for them.
 
     May modify data destructively.
     """
     if isinstance(data, list):
         for i in range(len(data)):
-            data[i] = _rewrite_links(data[i], old_prefix, new_prefix, in_links)
+            data[i] = _rewrite_links(data[i], fn, in_links)
             return data
     elif isinstance(data, dict):
-        if in_links and data.get("href", "").startswith(old_prefix):
-            data["href"] = new_prefix + data["href"][len(old_prefix) :]
+        if in_links and isinstance(href := data.get("href"), str):
+            data["href"] = fn(href)
             return data
-        return {
-            k: _rewrite_links(v, old_prefix, new_prefix, in_links or k == "_links")
-            for k, v in data.items()
-        }
+        return {k: _rewrite_links(v, fn, in_links or k == "_links") for k, v in data.items()}
     else:
         return data
 
@@ -73,8 +69,13 @@ class HaalCentraalBAG(View):
         logger.info("calling %s", url)
         response = call(self.pool, url, fields=request.GET, headers=headers)
         data = orjson.loads(response.data)
-        data = _rewrite_links(data, settings.HAAL_CENTRAAL_BAG_ENDPOINT, self._BASE_URL)
+        data = _rewrite_links(data, self._rewrite_href)
         return HttpResponse(orjson.dumps(data), content_type=response.headers.get("Content-Type"))
+
+    def _rewrite_href(self, href: str) -> str:
+        if href.startswith(settings.HAAL_CENTRAAL_BAG_ENDPOINT):
+            href = self._BASE_URL + href[len(settings.HAAL_CENTRAAL_BAG_ENDPOINT) :]
+        return href
 
 
 def _del_none(d):
