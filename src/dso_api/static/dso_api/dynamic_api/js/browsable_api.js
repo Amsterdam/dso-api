@@ -144,10 +144,10 @@ function updatePageRequest(url, method = "GET", pushHistory = true, headerSettin
 
 function authorize() {
   // Start authorization flow
-  if (!oaSpec) {
-    return
+  authUrl = new URL(OAUTHURI)
+  if (oaSpec) {
+    authUrl = new URL(oaSpec.components.securitySchemes.oauth2.flows.implicit.authorizationUrl);
   }
-  authUrl = new URL(oaSpec.components.securitySchemes.oauth2.flows.implicit.authorizationUrl);
   authUrl.searchParams.set("client_id", CLIENTID);
   authUrl.searchParams.set("redirect_uri", REDIRECTURI);
   authUrl.searchParams.set("response_type", "token");
