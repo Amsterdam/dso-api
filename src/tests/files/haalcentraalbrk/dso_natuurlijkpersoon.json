@@ -1,40 +1,81 @@
 {
-  "schema": "https://schemas.data.amsterdam.nl/datasets/remote/haalcentraal/brk/dataset#kadasternatuurlijkpersonen",
-  "naam": {
-    "aanhef": "Geachte heer Jansens",
-    "voornamen": "Willem",
-    "geslachtsnaam": "Jansens",
-    "aanschrijfwijze": "W. Jansens",
-    "gebruikInLopendeTekst": "de heer Jansens"
-  },
+  "identificatie": "70882239",
+  "omschrijving": "Willem Jansens",
   "domein": "NL.IMKAD.Persoon",
-  "geboorte": {
-    "datum": {
-      "dag": 1,
-      "jaar": 1971,
-      "datum": "1971-11-01",
-      "maand": 11
-    }
+  "beschikkingsbevoegdheid": {
+    "code": "6",
+    "waarde": "Voogdij"
   },
   "woonadres": {
+    "straat": "Burggang",
+    "huisnummer": 1,
+    "huisletter": "D",
+    "huisnummertoevoeging": "9",
+    "postcode": "4331AD",
+    "woonplaats": "MIDDELBURG",
     "adresregel1": "Burggang 1D-9",
     "adresregel2": "4331AD MIDDELBURG"
   },
-  "omschrijving": "Willem Jansens",
-  "identificatie": "70882239",
+  "postadres": {
+    "straat": "Abdij",
+    "huisnummer": 2,
+    "huisletter": "E",
+    "huisnummertoevoeging": "8",
+    "postcode": "4331BK",
+    "woonplaats": "MIDDELBURG",
+    "adresregel1": "Abdij 2E-8",
+    "adresregel2": "4331BK MIDDELBURG"
+  },
+  "kadastraalOnroerendeZaakIdentificaties": [
+    "76870487970000",
+    "76870482670000"
+  ],
+  "geslachtsaanduiding": "man",
   "heeftPartnerschap": [
     {
       "naam": {
-        "voornamen": "Sidonia",
-        "geslachtsnaam": "Jansens"
+        "geslachtsnaam": "Jansens",
+        "voornamen": "Sidonia"
       }
     }
   ],
-  "geslachtsaanduiding": "man",
-  "kadastraalOnroerendeZaakIdentificaties": ["76870487970000", "76870482670000"],
+  "naam": {
+    "geslachtsnaam": "Jansens",
+    "voornamen": "Willem",
+    "aanschrijfwijze": "W. Jansens",
+    "aanhef": "Geachte heer Jansens",
+    "gebruikInLopendeTekst": "de heer Jansens"
+  },
+  "geboorte": {
+    "plaats": "OSS",
+    "datum": {
+      "dag": 1,
+      "datum": "1971-11-01",
+      "jaar": 1971,
+      "maand": 11
+    },
+    "land": {
+      "code": "6030",
+      "waarde": "Nederland"
+    }
+  },
   "_links": {
     "self": {
-      "href": "http://testserver/v1/remote/haalcentraal/brk/kadasternatuurlijkpersonen/70882239/"
-    }
+      "href": "https://api.data.amsterdam.nl/v1/haalcentraal/brk/kadasternatuurlijkpersonen/70882239"
+    },
+    "kadastraalOnroerendeZaken": [
+      {
+        "href": "https://api.data.amsterdam.nl/v1/haalcentraal/brk/kadastraalonroerendezaken/{kadastraalOnroerendeZaakIdentificaties}",
+        "templated": true
+      }
+    ],
+    "zakelijkGerechtigden": [
+      {
+        "href": "https://api.data.amsterdam.nl/v1/haalcentraal/brk/kadastraalonroerendezaken/76870487970000/zakelijkgerechtigden/30493367"
+      },
+      {
+        "href": "https://api.data.amsterdam.nl/v1/haalcentraal/brk/kadastraalonroerendezaken/76870482670000/zakelijkgerechtigden/1000003519"
+      }
+    ]
   }
 }

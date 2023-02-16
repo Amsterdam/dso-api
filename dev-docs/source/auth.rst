@@ -151,7 +151,7 @@ After setting the latter and getting a token with
 ::
 
     export PUB_JWKS="$(cat jwks_test.json)"  # in src/
-    token=$(python manage.py maketoken BRK/RSN)
+    token=$(python manage.py maketoken BRK/RO BRK/RS BRK/RSN)
 
 you can issue a curl command such as
 ::

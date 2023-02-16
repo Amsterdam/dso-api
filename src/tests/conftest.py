@@ -465,18 +465,6 @@ def hcbag_example_single_output():
 
 
 @pytest.fixture()
-def hcbrk_dataset() -> Dataset:
-    return Dataset.objects.create(
-        name="haalcentraalbrk",
-        schema_data=(HERE / "files/datasets/haalcentraalbrk/dataset.json").read_text(),
-        enable_db=False,
-        # URL netloc needs ".acceptatie." because of HTTP pool selection.
-        endpoint_url="http://fake.acceptatie.kadaster/esd/bevragen/v1/{table_id}",
-        path="remote/haalcentraal/brk",
-    )
-
-
-@pytest.fixture()
 def hoofdroutes_schema(schema_loader):
     return schema_loader.get_dataset_from_file(HERE / "files/datasets/hoofdroutes.json")
 

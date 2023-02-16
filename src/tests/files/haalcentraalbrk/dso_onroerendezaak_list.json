@@ -1,6 +1,11 @@
 {
+  "_links": {
+    "self": {
+      "href": "https://api.data.amsterdam.nl/v1/haalcentraal/brk/kadastraalonroerendezaken?postcode=7361EW&_format=json"
+    }
+  },
   "_embedded": {
-    "kadastraalonroerendezaken": [
+    "kadastraalOnroerendeZaken": [
       {
         "identificatie": "76870482570000",
         "domein": "NL.IMKAD.KadastraalObject",
@@ -63,7 +68,6 @@
             ]
           ]
         },
-        "perceelnummerRotatie": null,
         "plaatscoordinaten": {
           "type": "Point",
           "coordinates": [
@@ -75,18 +79,15 @@
         "kadastraleAanduiding": "Beekbergen K 4825",
         "kadastraleGrootte": {
           "soortGrootte": {
-            "code": 1,
+            "code": "1",
             "waarde": "Vastgesteld"
           },
-          "waarde": "350"
+          "waarde": 350
         },
-        "perceelnummerVerschuiving": null,
         "adressen": [
           {
             "straat": "Atalanta",
             "huisnummer": 21,
-            "huisletter": null,
-            "huisnummertoevoeging": null,
             "postcode": "7361EW",
             "woonplaats": "Beekbergen",
             "nummeraanduidingIdentificatie": "0200200000003730",
@@ -98,19 +99,41 @@
             }
           }
         ],
+        "zakelijkGerechtigdeIdentificaties": [
+          "20170719",
+          "20170717",
+          "20170718"
+        ],
+        "hypotheekIdentificaties": [
+          "25381030"
+        ],
         "_links": {
-          "schema": "https://schemas.data.amsterdam.nl/datasets/remote/haalcentraal/brk/dataset#kadastraalonroerendezaken",
           "self": {
-            "href": "http://testserver/v1/remote/haalcentraal/brk/kadastraalonroerendezaken/76870482570000",
-            "title": "76870482570000"
-          }
+            "href": "https://api.data.amsterdam.nl/v1/haalcentraal/brk/kadastraalonroerendezaken/76870482570000"
+          },
+          "zakelijkGerechtigden": [
+            {
+              "href": "https://api.data.amsterdam.nl/v1/haalcentraal/brk/kadastraalonroerendezaken/76870482570000/zakelijkgerechtigden/{zakelijkGerechtigdeIdentificaties}",
+              "templated": true
+            }
+          ],
+          "hypotheken": [
+            {
+              "href": "https://api.data.amsterdam.nl/v1/haalcentraal/brk/kadastraalonroerendezaken/76870482570000/hypotheken/{hypotheekIdentificaties}",
+              "templated": true
+            }
+          ],
+          "adressen": [
+            {
+              "href": "https://api.data.amsterdam.nl/v1/haalcentraal/bag/adressen/{adressen.nummeraanduidingIdentificatie}",
+              "templated": true
+            }
+          ]
         }
       },
       {
         "identificatie": "76870482670000",
         "domein": "NL.IMKAD.KadastraalObject",
-        "begrenzingPerceel": null,
-        "perceelnummerRotatie": null,
         "plaatscoordinaten": {
           "type": "Point",
           "coordinates": [
@@ -118,22 +141,27 @@
             469424.101
           ]
         },
+        "koopsom": {
+          "koopsom": 226500,
+          "koopjaar": 2018
+        },
         "type": "perceel",
+        "aardCultuurBebouwd": {
+          "code": "11",
+          "waarde": "Wonen"
+        },
         "kadastraleAanduiding": "Beekbergen K 4826",
         "kadastraleGrootte": {
           "soortGrootte": {
-            "code": 1,
+            "code": "1",
             "waarde": "Vastgesteld"
           },
-          "waarde": "140"
+          "waarde": 140
         },
-        "perceelnummerVerschuiving": null,
         "adressen": [
           {
             "straat": "Atalanta",
             "huisnummer": 25,
-            "huisletter": null,
-            "huisnummertoevoeging": null,
             "postcode": "7361EW",
             "woonplaats": "Beekbergen",
             "nummeraanduidingIdentificatie": "0200200000003732",
@@ -142,15 +170,64 @@
             "koppelingswijze": {
               "code": "ADM_GEO",
               "waarde": "administratief en geometrisch"
-            }
+            },
+            "adresseerbaarObjectIdentificatie": "0200010000132504"
           }
         ],
+        "zakelijkGerechtigdeIdentificaties": [
+          "1000003519",
+          "1000003520"
+        ],
+        "hypotheekIdentificaties": [
+          "1000002150",
+          "35139325"
+        ],
+        "isVermeldInStukdeelIdentificaties": [
+          "500001938598"
+        ],
+        "stukIdentificaties": [
+          "20200227000564"
+        ],
         "_links": {
-          "schema": "https://schemas.data.amsterdam.nl/datasets/remote/haalcentraal/brk/dataset#kadastraalonroerendezaken",
           "self": {
-            "href": "http://testserver/v1/remote/haalcentraal/brk/kadastraalonroerendezaken/76870482670000",
-            "title": "76870482670000"
-          }
+            "href": "https://api.data.amsterdam.nl/v1/haalcentraal/brk/kadastraalonroerendezaken/76870482670000"
+          },
+          "zakelijkGerechtigden": [
+            {
+              "href": "https://api.data.amsterdam.nl/v1/haalcentraal/brk/kadastraalonroerendezaken/76870482670000/zakelijkgerechtigden/{zakelijkGerechtigdeIdentificaties}",
+              "templated": true
+            }
+          ],
+          "hypotheken": [
+            {
+              "href": "https://api.data.amsterdam.nl/v1/haalcentraal/brk/kadastraalonroerendezaken/76870482670000/hypotheken/{hypotheekIdentificaties}",
+              "templated": true
+            }
+          ],
+          "stukken": [
+            {
+              "href": "https://api.data.amsterdam.nl/v1/haalcentraal/brk/stukken/{stukIdentificaties}",
+              "templated": true
+            }
+          ],
+          "stukdelen": [
+            {
+              "href": "https://api.data.amsterdam.nl/v1/haalcentraal/brk/stukdelen/{isVermeldInStukdeelIdentificaties}",
+              "templated": true
+            }
+          ],
+          "adressen": [
+            {
+              "href": "https://api.data.amsterdam.nl/v1/haalcentraal/bag/adressen/{adressen.nummeraanduidingIdentificatie}",
+              "templated": true
+            }
+          ],
+          "adresseerbareObjecten": [
+            {
+              "href": "https://api.data.amsterdam.nl/v1/haalcentraal/bag/adresseerbareobjecten/{adressen.adresseerbaarObjectIdentificatie}",
+              "templated": true
+            }
+          ]
         }
       },
       {
@@ -219,14 +296,23 @@
             464154.308
           ]
         },
+        "koopsom": {
+          "koopsom": 185000,
+          "koopjaar": 2015
+        },
+        "toelichtingBewaarder": "Hier kan een toelichting staan van de bewaarder.",
         "type": "perceel",
+        "aardCultuurBebouwd": {
+          "code": "11",
+          "waarde": "Wonen"
+        },
         "kadastraleAanduiding": "Beekbergen K 4879",
         "kadastraleGrootte": {
           "soortGrootte": {
-            "code": 1,
+            "code": "1",
             "waarde": "Vastgesteld"
           },
-          "waarde": "224"
+          "waarde": 224
         },
         "perceelnummerVerschuiving": {
           "deltax": -6.453,
@@ -236,8 +322,6 @@
           {
             "straat": "Atalanta",
             "huisnummer": 29,
-            "huisletter": null,
-            "huisnummertoevoeging": null,
             "postcode": "7361EW",
             "woonplaats": "Beekbergen",
             "nummeraanduidingIdentificatie": "0200200000003734",
@@ -246,15 +330,54 @@
             "koppelingswijze": {
               "code": "ADM_GEO",
               "waarde": "administratief en geometrisch"
-            }
+            },
+            "adresseerbaarObjectIdentificatie": "0200010000017317"
           }
         ],
+        "zakelijkGerechtigdeIdentificaties": [
+          "30493367",
+          "30493368"
+        ],
+        "privaatrechtelijkeBeperkingIdentificaties": [
+          "30336965"
+        ],
+        "hypotheekIdentificaties": [
+          "35052041"
+        ],
         "_links": {
-          "schema": "https://schemas.data.amsterdam.nl/datasets/remote/haalcentraal/brk/dataset#kadastraalonroerendezaken",
           "self": {
-            "href": "http://testserver/v1/remote/haalcentraal/brk/kadastraalonroerendezaken/76870487970000",
-            "title": "76870487970000"
-          }
+            "href": "https://api.data.amsterdam.nl/v1/haalcentraal/brk/kadastraalonroerendezaken/76870487970000"
+          },
+          "zakelijkGerechtigden": [
+            {
+              "href": "https://api.data.amsterdam.nl/v1/haalcentraal/brk/kadastraalonroerendezaken/76870487970000/zakelijkgerechtigden/{zakelijkGerechtigdeIdentificaties}",
+              "templated": true
+            }
+          ],
+          "privaatrechtelijkeBeperkingen": [
+            {
+              "href": "https://api.data.amsterdam.nl/v1/haalcentraal/brk/kadastraalonroerendezaken/76870487970000/privaatrechtelijkebeperkingen/{privaatrechtelijkeBeperkingIdentificaties}",
+              "templated": true
+            }
+          ],
+          "hypotheken": [
+            {
+              "href": "https://api.data.amsterdam.nl/v1/haalcentraal/brk/kadastraalonroerendezaken/76870487970000/hypotheken/{hypotheekIdentificaties}",
+              "templated": true
+            }
+          ],
+          "adressen": [
+            {
+              "href": "https://api.data.amsterdam.nl/v1/haalcentraal/bag/adressen/{adressen.nummeraanduidingIdentificatie}",
+              "templated": true
+            }
+          ],
+          "adresseerbareObjecten": [
+            {
+              "href": "https://api.data.amsterdam.nl/v1/haalcentraal/bag/adresseerbareobjecten/{adressen.adresseerbaarObjectIdentificatie}",
+              "templated": true
+            }
+          ]
         }
       },
       {
@@ -299,7 +422,6 @@
             ]
           ]
         },
-        "perceelnummerRotatie": null,
         "plaatscoordinaten": {
           "type": "Point",
           "coordinates": [
@@ -311,18 +433,15 @@
         "kadastraleAanduiding": "Beekbergen K 4880",
         "kadastraleGrootte": {
           "soortGrootte": {
-            "code": 5,
+            "code": "5",
             "waarde": "Voorlopig"
           },
-          "waarde": "135"
+          "waarde": 135
         },
-        "perceelnummerVerschuiving": null,
         "adressen": [
           {
             "straat": "Atalanta",
             "huisnummer": 27,
-            "huisletter": null,
-            "huisnummertoevoeging": null,
             "postcode": "7361EW",
             "woonplaats": "Beekbergen",
             "nummeraanduidingIdentificatie": "0200200000003733",
@@ -331,22 +450,46 @@
             "koppelingswijze": {
               "code": "ADM_GEO",
               "waarde": "administratief en geometrisch"
-            }
+            },
+            "adresseerbaarObjectIdentificatie": "0200010000017314"
           }
         ],
+        "zakelijkGerechtigdeIdentificaties": [
+          "30493369"
+        ],
+        "privaatrechtelijkeBeperkingIdentificaties": [
+          "30336966"
+        ],
         "_links": {
-          "schema": "https://schemas.data.amsterdam.nl/datasets/remote/haalcentraal/brk/dataset#kadastraalonroerendezaken",
           "self": {
-            "href": "http://testserver/v1/remote/haalcentraal/brk/kadastraalonroerendezaken/76870488070000",
-            "title": "76870488070000"
-          }
+            "href": "https://api.data.amsterdam.nl/v1/haalcentraal/brk/kadastraalonroerendezaken/76870488070000"
+          },
+          "zakelijkGerechtigden": [
+            {
+              "href": "https://api.data.amsterdam.nl/v1/haalcentraal/brk/kadastraalonroerendezaken/76870488070000/zakelijkgerechtigden/{zakelijkGerechtigdeIdentificaties}",
+              "templated": true
+            }
+          ],
+          "privaatrechtelijkeBeperkingen": [
+            {
+              "href": "https://api.data.amsterdam.nl/v1/haalcentraal/brk/kadastraalonroerendezaken/76870488070000/privaatrechtelijkebeperkingen/{privaatrechtelijkeBeperkingIdentificaties}",
+              "templated": true
+            }
+          ],
+          "adressen": [
+            {
+              "href": "https://api.data.amsterdam.nl/v1/haalcentraal/bag/adressen/{adressen.nummeraanduidingIdentificatie}",
+              "templated": true
+            }
+          ],
+          "adresseerbareObjecten": [
+            {
+              "href": "https://api.data.amsterdam.nl/v1/haalcentraal/bag/adresseerbareobjecten/{adressen.adresseerbaarObjectIdentificatie}",
+              "templated": true
+            }
+          ]
         }
       }
     ]
-  },
-  "_links": {
-    "self": {
-      "href": "http://testserver/v1/remote/haalcentraal/brk/kadastraalonroerendezaken/"
-    }
   }
 }
