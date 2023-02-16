@@ -122,7 +122,7 @@ class HaalCentraalBRK(View):
         data = _rewrite_links(data, self._rewrite_href)
         return HttpResponse(orjson.dumps(data), content_type=response.headers.get("Content-Type"))
 
-    def _rewrite_href(self, href: str):
+    def _rewrite_href(self, href: str) -> str:
         # Unlike HC BAG, HC BRK produces relative URLs. But it may also produce links to the BAG,
         # which are absolute URLs that point to api.bag.kadaster.nl.
         if href.startswith("/"):
@@ -130,6 +130,8 @@ class HaalCentraalBRK(View):
         elif href.startswith("https://api.bag.kadaster.nl/esd/huidigebevragingen/v1/"):
             href = href[len("https://api.bag.kadaster.nl/esd/huidigebevragingen/v1/") :]
             return self._BASE_URL_BAG + href
+        else:
+            return href
 
 
 def _del_none(d):
