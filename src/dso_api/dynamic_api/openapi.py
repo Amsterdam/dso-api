@@ -11,6 +11,8 @@ import drf_spectacular.plumbing
 from django.conf import settings
 from django.urls import URLPattern, URLResolver, get_resolver, get_urlconf
 from django.utils.functional import lazy
+from django.views.decorators.cache import cache_page
+from django.views.decorators.gzip import gzip_page
 from rest_framework import permissions, renderers
 from rest_framework.response import Response
 from rest_framework.schemas import get_schema_view
@@ -140,7 +142,12 @@ def get_openapi_json_view(dataset: Dataset):
     }
 
     # Wrap the view in a "decorator" that shows the Swagger interface for browsers.
-    return _html_on_browser(openapi_view, dataset_schema)
+    view = gzip_page(openapi_view)
+    view = cache_page(CACHE_DURATION)(view)
+    return _html_on_browser(view, dataset_schema)
+
+
+CACHE_DURATION = 3600  # Seconds.
 
 
 def _html_on_browser(openapi_view, dataset_schema):
