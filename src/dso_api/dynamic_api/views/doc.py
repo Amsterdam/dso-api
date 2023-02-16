@@ -34,14 +34,14 @@ decorators = [cache_page(CACHE_DURATION), gzip_page]
 @gzip_page
 def search(request: HttpRequest) -> HttpResponse:
     template = "dso_api/dynamic_api/docs/search.html"
-    query = request.GET.get("q", "")
+    query = request.GET.get("q", "").strip()
     return HttpResponse(render_to_string(template, context={"query": query}))
 
 
 @cache_page(CACHE_DURATION)
 @gzip_page
 def search_index(_request) -> HttpResponse:
-    index = []
+    index = {}
     for ds in Dataset.objects.api_enabled().db_enabled():
         try:
             uri = reverse(f"dynamic_api:doc-{ds.schema.id}")
@@ -49,16 +49,18 @@ def search_index(_request) -> HttpResponse:
             logger.warning("dataset %s: %s", ds.schema.id, e)
             continue
         schema: DatasetSchema = ds.schema
-        index.append(
-            {
-                "fields": [f.title or f.id for t in schema.get_tables() for f in t.fields],
-                "id": schema.id,
-                "title": schema.title,
-                "uri": uri,
-            }
-        )
+        index[uri] = {
+            "description": schema.description,
+            "fields": [
+                f.title + " " + f.id + " " + f.description
+                for t in schema.get_tables()
+                for f in t.fields
+            ],
+            "id": schema.id,
+            "title": schema.title,
+        }
 
-    return JsonResponse(index, safe=False)  # safe=False needed to return a list.
+    return JsonResponse(index)
 
 
 @method_decorator(decorators, name="get")
