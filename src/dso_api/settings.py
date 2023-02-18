@@ -419,10 +419,10 @@ else:
     HAAL_CENTRAAL_BAG_API_KEY = os.getenv("HAAL_CENTRAAL_BAG_API_KEY")
 
 # Defaults to the acceptance endpoint. For production, set
-# HAAL_CENTRAAL_BAG_ENDPOINT=https://api.bag.kadaster.nl/esd/huidigebevragingen/v1/
+# HAAL_CENTRAAL_BAG_ENDPOINT=https://api.bag.kadaster.nl/lvbag/individuelebevragingen/v2/
 HAAL_CENTRAAL_BAG_ENDPOINT = os.getenv(
     "HAAL_CENTRAAL_BAG_ENDPOINT",
-    "https://api.bag.acceptatie.kadaster.nl/esd/huidigebevragingen/v1/",
+    "https://api.bag.acceptatie.kadaster.nl/lvbag/individuelebevragingen/v2/",
 )
 
 # Defaults to the acceptance endpoint. For production, set

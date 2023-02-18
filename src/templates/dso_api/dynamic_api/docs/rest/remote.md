@@ -6,8 +6,8 @@ Meer bepaald zijn dit:
 
 * [brp]({{uri}}brp), een verbinding met de Basisregistratie Personen, bijgehouden door
   Team Basis- en Kernregistraties, Gemeente Amsterdam;
-* [haalcentraal/bag]({{uri}haalcentraal/bag), de [Basisregistratie Adressen en Gebouwen van
-  Haal Centraal](https://vng-realisatie.github.io/Haal-Centraal-BAG-bevragen/);
+* [haalcentraal/bag]({{uri}haalcentraal/bag), de [Landelijke Voorziening Basisregistratie
+  Adressen en Gebouwen van Haal Centraal](https://lvbag.github.io/BAG-API/)
 * [haalcentraal/brk]({{uri}haalcentraal/brk), de [Basisregistratie Kadaster van Haal Centraal](
   https://vng-realisatie.github.io/Haal-Centraal-BRK-bevragen).
 

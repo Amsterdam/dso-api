@@ -589,52 +589,36 @@ def test_remote_timeout(api_client, fetch_auth_token, router, brp_dataset, urlli
 def test_hcbag_list(
     settings, api_client, hcbag_example_list_input, hcbag_example_list_output, urllib3_mocker
 ):
+    queryparams = {
+        "postcode": "2631CR",
+        "huisnummer": "15",
+        "huisletter": "C",
+        "exacteMatch": "true",
+        "page": "1",
+        "pageSize": "20",
+        "inclusiefEindStatus": "true",
+    }
+
     def respond(request):
         assert "Authorization" not in request.headers
         assert request.headers.get("X-Api-Key") == settings.HAAL_CENTRAAL_BAG_API_KEY
         assert request.body is None
-        assert set(urlparse(request.url).query.split("&")) == {"huisnummer=1", "postcode=1011PN"}
+        assert dict(p.split("=", 1) for p in urlparse(request.url).query.split("&")) == queryparams
         return (200, {"Content-Crs": "epsg:28992"}, hcbag_example_list_input)
 
     urllib3_mocker.add_callback(
         "GET",
-        "/esd/huidigebevragingen/v1/adressen",
+        "/lvbag/individuelebevragingen/v2/adressen",
         callback=respond,
         content_type="application/json",
     )
 
     url = reverse("dynamic_api:haalcentraal-bag", args=["adressen"])
-    response = api_client.get(url, {"postcode": "1011PN", "huisnummer": "1"})
+    response = api_client.get(url, queryparams)
     data = read_response_json(response)
 
     assert response.status_code == 200, data
     assert data == json.loads(hcbag_example_list_output)
-
-
-@pytest.mark.django_db
-@override_settings(HAAL_CENTRAAL_BAG_API_KEY="super secret key")
-def test_hcbag_single(
-    settings, api_client, hcbag_example_single_input, hcbag_example_single_output, urllib3_mocker
-):
-    def respond(request):
-        assert "Authorization" not in request.headers
-        assert request.headers.get("X-Api-Key") == settings.HAAL_CENTRAAL_BAG_API_KEY
-        assert request.body is None
-        return (200, {"Content-Crs": "epsg:28992"}, hcbag_example_single_input)
-
-    urllib3_mocker.add_callback(
-        "GET",
-        "/esd/huidigebevragingen/v1/adresseerbareobjecten/0123456789123456",
-        callback=respond,
-        content_type="application/json",
-    )
-
-    url = reverse("dynamic_api:haalcentraal-bag", args=["adresseerbareobjecten/0123456789123456"])
-    response = api_client.get(url)
-    data = read_response_json(response)
-
-    assert response.status_code == 200, data
-    assert data == json.loads(hcbag_example_single_output)
 
 
 # Load Haal Centraal BRK example data (from

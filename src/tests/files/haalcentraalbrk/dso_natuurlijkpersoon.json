@@ -61,20 +61,20 @@
   },
   "_links": {
     "self": {
-      "href": "https://api.data.amsterdam.nl/v1/haalcentraal/brk/kadasternatuurlijkpersonen/70882239"
+      "href": "/v1/haalcentraal/brk/kadasternatuurlijkpersonen/70882239"
     },
     "kadastraalOnroerendeZaken": [
       {
-        "href": "https://api.data.amsterdam.nl/v1/haalcentraal/brk/kadastraalonroerendezaken/{kadastraalOnroerendeZaakIdentificaties}",
+        "href": "/v1/haalcentraal/brk/kadastraalonroerendezaken/{kadastraalOnroerendeZaakIdentificaties}",
         "templated": true
       }
     ],
     "zakelijkGerechtigden": [
       {
-        "href": "https://api.data.amsterdam.nl/v1/haalcentraal/brk/kadastraalonroerendezaken/76870487970000/zakelijkgerechtigden/30493367"
+        "href": "/v1/haalcentraal/brk/kadastraalonroerendezaken/76870487970000/zakelijkgerechtigden/30493367"
       },
       {
-        "href": "https://api.data.amsterdam.nl/v1/haalcentraal/brk/kadastraalonroerendezaken/76870482670000/zakelijkgerechtigden/1000003519"
+        "href": "/v1/haalcentraal/brk/kadastraalonroerendezaken/76870482670000/zakelijkgerechtigden/1000003519"
       }
     ]
   }

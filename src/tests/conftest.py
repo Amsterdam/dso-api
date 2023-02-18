@@ -446,22 +446,12 @@ def brp_dataset(brp_schema_json, brp_endpoint_url) -> Dataset:
 
 @pytest.fixture()
 def hcbag_example_list_input():
-    return (HERE / "files/haalcentraalbag/hc_amstel1.json").read_bytes()
+    return (HERE / "files/haalcentraalbag/hc_2631cr.json").read_bytes()
 
 
 @pytest.fixture()
 def hcbag_example_list_output():
-    return (HERE / "files/haalcentraalbag/dso_amstel1.json").read_bytes()
-
-
-@pytest.fixture()
-def hcbag_example_single_input():
-    return (HERE / "files/haalcentraalbag/hc_0123456789123456.json").read_bytes()
-
-
-@pytest.fixture()
-def hcbag_example_single_output():
-    return (HERE / "files/haalcentraalbag/dso_0123456789123456.json").read_bytes()
+    return (HERE / "files/haalcentraalbag/dso_2631cr.json").read_bytes()
 
 
 @pytest.fixture()
