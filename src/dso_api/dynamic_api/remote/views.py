@@ -3,7 +3,7 @@ Currently it mainly performs authorization, data retrieval, and schema validatio
 """
 import logging
 from typing import Callable, Optional
-from urllib.parse import urljoin, urlparse
+from urllib.parse import urlparse
 
 import certifi
 import orjson
@@ -12,6 +12,7 @@ import urllib3
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured, PermissionDenied
 from django.http import HttpRequest, HttpResponse
+from django.urls import reverse
 from django.views import View
 from more_ds.network.url import URL
 from rest_framework import status
@@ -56,11 +57,11 @@ class HaalCentraalBAG(View):
     then fix up the response so that self/next/prev links point to us instead of HC.
     """
 
-    _BASE_URL = urljoin(settings.DATAPUNT_API_URL, "v1/haalcentraal/bag/")  # XXX use reverse?
-
     def __init__(self):
         super().__init__()
-        self.pool = urllib3.PoolManager()
+        # XXX We can't call reverse with args=[] or args=[""], so we get an extra trailing /.
+        self._base_url = reverse("dynamic_api:haalcentraal-bag", args=["/"])[:-1]
+        self._pool = urllib3.PoolManager()
 
     def get(self, request: HttpRequest, subpath: str):
         url: str = settings.HAAL_CENTRAAL_BAG_ENDPOINT + subpath
@@ -69,14 +70,14 @@ class HaalCentraalBAG(View):
             headers["X-Api-Key"] = apikey
 
         logger.info("calling %s", url)
-        response = call(self.pool, url, fields=request.GET, headers=headers)
+        response = call(self._pool, url, fields=request.GET, headers=headers)
         data = orjson.loads(response.data)
         data = _rewrite_links(data, self._rewrite_href)
         return HttpResponse(orjson.dumps(data), content_type=response.headers.get("Content-Type"))
 
     def _rewrite_href(self, href: str) -> str:
         if href.startswith(settings.HAAL_CENTRAAL_BAG_ENDPOINT):
-            href = self._BASE_URL + href[len(settings.HAAL_CENTRAAL_BAG_ENDPOINT) :]
+            href = self._base_url + href[len(settings.HAAL_CENTRAAL_BAG_ENDPOINT) :]
         return href
 
 
@@ -86,16 +87,19 @@ class HaalCentraalBRK(View):
     This is a pass-through proxy like BAG, but with authorization added.
     """
 
-    _BASE_URL = urljoin(settings.DATAPUNT_API_URL, "v1/haalcentraal/brk/")  # XXX use reverse?
-    _BASE_URL_BAG = urljoin(settings.DATAPUNT_API_URL, "v1/haalcentraal/bag/")
     _NEEDED_SCOPES = ["BRK/RO", "BRK/RS", "BRK/RSN"]
 
     def __init__(self):
         super().__init__()
+
+        # XXX We can't call reverse with args=[] or args=[""], so we get an extra trailing /.
+        self._base_url = reverse("dynamic_api:haalcentraal-brk", args=["/"])[:-1]
+        self._base_url_bag = reverse("dynamic_api:haalcentraal-bag", args=["/"])[:-1]
+
         if ".acceptatie." in urlparse(settings.HAAL_CENTRAAL_BRK_ENDPOINT).netloc:
-            self.pool = urllib3.PoolManager()
+            self._pool = urllib3.PoolManager()
         else:
-            self.pool = urllib3.PoolManager(
+            self._pool = urllib3.PoolManager(
                 cert_file=settings.HAAL_CENTRAAL_CERTFILE,
                 cert_reqs="CERT_REQUIRED",
                 key_file=settings.HAAL_CENTRAAL_KEYFILE,
@@ -117,7 +121,7 @@ class HaalCentraalBRK(View):
             headers["X-Api-Key"] = apikey
 
         logger.info("calling %s", url)  # Log without query parameters, since those are sensitive.
-        response = call(self.pool, url, fields=request.GET, headers=headers)
+        response = call(self._pool, url, fields=request.GET, headers=headers)
         data = orjson.loads(response.data)
         data = _rewrite_links(data, self._rewrite_href)
         return HttpResponse(orjson.dumps(data), content_type=response.headers.get("Content-Type"))
@@ -126,10 +130,10 @@ class HaalCentraalBRK(View):
         # Unlike HC BAG, HC BRK produces relative URLs. But it may also produce links to the BAG,
         # which are absolute URLs that point to api.bag.kadaster.nl.
         if href.startswith("/"):
-            return self._BASE_URL + href[1:]
+            return self._base_url + href[1:]
         elif href.startswith("https://api.bag.kadaster.nl/esd/huidigebevragingen/v1/"):
             href = href[len("https://api.bag.kadaster.nl/esd/huidigebevragingen/v1/") :]
-            return self._BASE_URL_BAG + href
+            return self._base_url_bag + href
         else:
             return href
 

@@ -72,47 +72,47 @@
   "stukIdentificaties": ["20170102999999"],
   "_links": {
     "self": {
-      "href": "https://api.data.amsterdam.nl/v1/haalcentraal/brk/kadastraalonroerendezaken/76870487970000"
+      "href": "/v1/haalcentraal/brk/kadastraalonroerendezaken/76870487970000"
     },
     "zakelijkGerechtigden": [
       {
-        "href": "https://api.data.amsterdam.nl/v1/haalcentraal/brk/kadastraalonroerendezaken/76870487970000/zakelijkgerechtigden/{zakelijkGerechtigdeIdentificaties}",
+        "href": "/v1/haalcentraal/brk/kadastraalonroerendezaken/76870487970000/zakelijkgerechtigden/{zakelijkGerechtigdeIdentificaties}",
         "templated": true
       }
     ],
     "privaatrechtelijkeBeperkingen": [
       {
-        "href": "https://api.data.amsterdam.nl/v1/haalcentraal/brk/kadastraalonroerendezaken/76870487970000/privaatrechtelijkebeperkingen/{privaatrechtelijkeBeperkingIdentificaties}",
+        "href": "/v1/haalcentraal/brk/kadastraalonroerendezaken/76870487970000/privaatrechtelijkebeperkingen/{privaatrechtelijkeBeperkingIdentificaties}",
         "templated": true
       }
     ],
     "hypotheken": [
       {
-        "href": "https://api.data.amsterdam.nl/v1/haalcentraal/brk/kadastraalonroerendezaken/76870487970000/hypotheken/{hypotheekIdentificaties}",
+        "href": "/v1/haalcentraal/brk/kadastraalonroerendezaken/76870487970000/hypotheken/{hypotheekIdentificaties}",
         "templated": true
       }
     ],
     "stukken": [
       {
-        "href": "https://api.data.amsterdam.nl/v1/haalcentraal/brk/stukken/{stukIdentificaties}",
+        "href": "/v1/haalcentraal/brk/stukken/{stukIdentificaties}",
         "templated": true
       }
     ],
     "stukdelen": [
       {
-        "href": "https://api.data.amsterdam.nl/v1/haalcentraal/brk/stukdelen/{isVermeldInStukdeelIdentificaties}",
+        "href": "/v1/haalcentraal/brk/stukdelen/{isVermeldInStukdeelIdentificaties}",
         "templated": true
       }
     ],
     "adressen": [
       {
-        "href": "https://api.data.amsterdam.nl/v1/haalcentraal/bag/adressen/{adressen.nummeraanduidingIdentificatie}",
+        "href": "/v1/haalcentraal/bag/adressen/{adressen.nummeraanduidingIdentificatie}",
         "templated": true
       }
     ],
     "adresseerbareObjecten": [
       {
-        "href": "https://api.data.amsterdam.nl/v1/haalcentraal/bag/adressen/adresseerbareobjecten/{adressen.adresseerbaarObjectIdentificatie}",
+        "href": "/v1/haalcentraal/bag/adressen/adresseerbareobjecten/{adressen.adresseerbaarObjectIdentificatie}",
         "templated": true
       }
     ]
