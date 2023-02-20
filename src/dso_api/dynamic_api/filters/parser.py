@@ -37,7 +37,6 @@ LOOKUP_PARSERS = {
 # because the 'contains' lookup value differs between array fields and geometry fields.
 MULTI_VALUE_LOOKUPS = {"not", "in"}  # lookups that may hold multiple values in the query string
 SPLIT_VALUE_LOOKUPS = {"in"}  # lookups that take comma-separated values lists
-LOOKUP_MERGE_OPERATORS = {"not": operator.and_}  # which ones should be merged for the QuerySet
 
 SCALAR_PARSERS = {
     "boolean": str2bool,
@@ -212,7 +211,7 @@ class QueryFilterEngine:
     def filter_queryset(self, queryset: models.QuerySet) -> models.QuerySet:
         """Apply the filtering"""
         compiled_filter = self._compile_filters(queryset.model.table_schema())
-        if compiled_filter is not None:
+        if compiled_filter.q_object:
             try:
                 queryset = queryset.filter(compiled_filter.q_object)
             except DjangoValidationError as e:
@@ -229,23 +228,20 @@ class QueryFilterEngine:
 
         return queryset
 
-    def _compile_filters(self, table_schema: DatasetTableSchema) -> CompiledFilter | None:
-        """Create the filters based on the table schem and current request query string."""
-        filters = []
+    def _compile_filters(self, table_schema: DatasetTableSchema) -> CompiledFilter:
+        """Create the filters based on the table schema and current request query string."""
+        filters = Q()
+        any_is_many = False
         for filter_input in self.filter_inputs:
             if table_schema.temporal and filter_input.key in table_schema.temporal.dimensions:
                 # Skip handling of temporal fields, is handled elsewhere.
                 continue
 
-            filters.append(self._compile_filter(table_schema, filter_input))
+            q, is_many = self._compile_filter(table_schema, filter_input)
+            filters &= q
+            any_is_many |= is_many
 
-        if not filters:
-            return None
-        else:
-            # Merge the results
-            q = reduce(operator.and_, (filter.q_object for filter in filters))
-            is_many = any(filter.is_many for filter in filters)
-            return CompiledFilter(q, is_many)
+        return CompiledFilter(filters, any_is_many)
 
     def _compile_filter(
         self, table_schema: DatasetTableSchema, filter_input: FilterInput
@@ -258,10 +254,9 @@ class QueryFilterEngine:
         lookup = self._translate_lookup(filter_input, parts[-1], value)
         q_path = f"{orm_path}__{lookup}"
 
-        operator = LOOKUP_MERGE_OPERATORS.get(filter_input.lookup)
-        if operator is not None:
+        if filter_input.lookup == "not":
             # for [not] lookup: field != 1 AND field != 2
-            q_object = reduce(operator, (Q(**{q_path: v}) for v in value))
+            q_object = reduce(operator.and_, (Q(**{q_path: v}) for v in value))
         else:
             q_object = Q(**{q_path: value})
 
@@ -269,8 +264,7 @@ class QueryFilterEngine:
         # but only match the selected point in time.
         # Don't do this for isnull, which checks whether a relation exists at all.
         if lookup != "isnull":
-            if temporal_lookups := self._create_temporal_filters(parts):
-                q_object &= temporal_lookups
+            q_object &= self._create_temporal_filters(parts)
 
         # Also tell whether the filter-path walks over many-to-many relationships.
         # These will need extra care to avoid duplicate results in the final filter call.
@@ -282,11 +276,11 @@ class QueryFilterEngine:
         )
         return CompiledFilter(q_object, is_many)
 
-    def _create_temporal_filters(self, parts: list[FilterPathPart]) -> Q | None:
+    def _create_temporal_filters(self, parts: list[FilterPathPart]) -> Q:
         """For loose relations, find the extra needed queries to reduce temporal records.
         Otherwise, the loose relation would match
         """
-        filters = []
+        q = Q()
         prefix = ""
         for filter_part in parts:
             prefix = f"{prefix}{filter_part.python_name}__"
@@ -298,10 +292,9 @@ class QueryFilterEngine:
                     self.user_scopes,
                     filter_part.field.related_table,
                 )
-                if (range_q := temp.create_range_filter(prefix)) is not None:
-                    filters.append(range_q)
+                q &= temp.create_range_filter(prefix)
 
-        return reduce(operator.and_, filters) if filters else None
+        return q
 
     def _translate_lookup(
         self, filter_input: FilterInput, filter_part: FilterPathPart, value: Any
