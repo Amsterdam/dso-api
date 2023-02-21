@@ -207,12 +207,25 @@ input:invalid {
   z-index: 10;
 }
 
+.param-info .copy-to-clipboard{
+  bottom: 0;
+  right: 0;
+  font-size: 1.5em;
+  visibility: visible;
+  position: absolute;
+  cursor: pointer;
+}
+
+.copy-to-clipboard:active {
+  border: 1px solid #0000;
+}
+
 .param-info .summary {
   width: fit-content;
   background: white;
   display: ruby;
   position: absolute;
-  right: -23px;
+  right: -3px;
   padding: 2px;
   top: -3px;
   padding-right: 20px;
