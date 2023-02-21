@@ -147,10 +147,10 @@ class TemporalTableQuery:
 
         return self._filter_queryset(queryset, prefix="")
 
-    def create_range_filter(self, prefix: str) -> Q | None:
+    def create_range_filter(self, prefix: str) -> Q:
         """Create a simple Q-object for filtering on a temporal range."""
         if not self.is_versioned or self.slice_value == "*":
-            return None
+            return Q()
         else:
             return self._compile_range_query(prefix)[0]
 
