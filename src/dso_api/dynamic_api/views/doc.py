@@ -52,7 +52,7 @@ def search_index(_request) -> HttpResponse:
         index[uri] = {
             "description": schema.description,
             "fields": [
-                f.title + " " + f.id + " " + f.description
+                (f.title or "") + " " + f.id + " " + (f.description or "")
                 for t in schema.get_tables()
                 for f in t.fields
             ],
