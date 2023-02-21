@@ -11,6 +11,9 @@ import drf_spectacular.plumbing
 from django.conf import settings
 from django.urls import URLPattern, URLResolver, get_resolver, get_urlconf
 from django.utils.functional import lazy
+from django.views.decorators.cache import cache_page
+from django.views.decorators.gzip import gzip_page
+from django.views.decorators.vary import vary_on_headers
 from rest_framework import permissions, renderers
 from rest_framework.response import Response
 from rest_framework.schemas import get_schema_view
@@ -160,7 +163,12 @@ def _html_on_browser(openapi_view, dataset_schema):
         format = request.GET.get("format", "")
         if not is_browser or format == "json":
             # Not a browser, give the JSON view.
-            return openapi_view(request)
+            # Add accept and format to the Vary header so cache is
+            # triggered on the json response only
+            view = vary_on_headers("Accept", "format")(openapi_view)
+            view = gzip_page(view)
+            view = cache_page(CACHE_DURATION)(view)
+            return view(request)
         else:
             # Browser that accepts HTML, showing the browsable view.
             # Using the view so the addressbar path remains the same.
