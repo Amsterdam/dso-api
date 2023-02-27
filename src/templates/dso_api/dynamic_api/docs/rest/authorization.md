@@ -1,4 +1,4 @@
-# Autorisaties
+# Autorisatie
 
 Veel van de REST API endpoints zijn anoniem toegankelijk. Echter, voor
 sommige endpoints is autorisatie nodig. Deze autorisatie vindt plaats
