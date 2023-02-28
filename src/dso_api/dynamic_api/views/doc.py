@@ -262,6 +262,19 @@ def _table_context(table: DatasetTableSchema):
     fields = _list_fields(table.fields)
     filters = _get_filters(table.fields)
 
+    if (temporal := table.temporal) is not None:
+        for name, fields in temporal.dimensions.items():
+            filters.append(
+                {
+                    "name": name,
+                    "type": "Datetime",
+                    "value_example": "<code>yyyy-mm-dd</code> of "
+                    "<code>yyyy-mm-ddThh:mm[:ss[.ms]]</code>",
+                }
+            )
+
+    filters.sort(key=operator.itemgetter("name"))
+
     return {
         "id": table.id,
         "title": to_snake_case(table.id).replace("_", " ").capitalize(),
@@ -483,7 +496,7 @@ def _filter_payload(
 
 
 def _filter_context(field: DatasetFieldSchema) -> List[dict[str, Any]]:
-    """Return zero or more filter context(s) from the a field schema.
+    """Return zero or more filter context(s) from a field schema.
 
     This function essentially reconstructs the output of the FilterSet
     generation in the dynamic api directly from the underlying schema.
