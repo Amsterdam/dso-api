@@ -602,6 +602,7 @@ def test_hcbag_list(
     def respond(request):
         assert "Authorization" not in request.headers
         assert request.headers.get("X-Api-Key") == settings.HAAL_CENTRAAL_BAG_API_KEY
+        assert request.headers.get("Accept-Crs") == "my_shiny_crs"
         assert request.body is None
         assert dict(p.split("=", 1) for p in urlparse(request.url).query.split("&")) == queryparams
         return (200, {"Content-Crs": "epsg:28992"}, hcbag_example_list_input)
@@ -614,7 +615,7 @@ def test_hcbag_list(
     )
 
     url = reverse("dynamic_api:haalcentraal-bag", args=["adressen"])
-    response = api_client.get(url, queryparams)
+    response = api_client.get(url, queryparams, HTTP_ACCEPT_CRS="my_shiny_crs")
     data = read_response_json(response)
 
     assert response.status_code == 200, data

@@ -68,6 +68,8 @@ class HaalCentraalBAG(View):
         headers = {"Accept": "application/hal+json"}
         if (apikey := settings.HAAL_CENTRAAL_BAG_API_KEY) is not None:
             headers["X-Api-Key"] = apikey
+        if (acceptCRS := request.headers.get("Accept-Crs")) is not None:
+            headers["Accept-Crs"] = acceptCRS
 
         logger.info("calling %s", url)
         response = call(self._pool, url, fields=request.GET, headers=headers)
@@ -119,6 +121,8 @@ class HaalCentraalBRK(View):
         }
         if (apikey := settings.HAAL_CENTRAAL_API_KEY) is not None:
             headers["X-Api-Key"] = apikey
+        if (acceptCRS := request.headers.get("Accept-Crs")) is not None:
+            headers["Accept-Crs"] = acceptCRS
 
         logger.info("calling %s", url)  # Log without query parameters, since those are sensitive.
         response = call(self._pool, url, fields=request.GET, headers=headers)
