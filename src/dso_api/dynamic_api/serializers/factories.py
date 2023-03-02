@@ -259,8 +259,6 @@ def serializer_factory(
         nesting_level,
     )
 
-    unwanted_identifiers = table_schema.identifier if table_schema.temporal else []
-
     # Parse fields for serializer
     for model_field in model._meta.get_fields():
         if model_field.auto_created and isinstance(model_field, AutoFieldMixin):
@@ -273,10 +271,12 @@ def serializer_factory(
         if (
             # Do not render PK and FK to parent on nested tables
             (model.has_parent_table() and model_field.name in ["id", "parent"])
-            # Do not render temporal fields (e.g.: "volgnummer" and "identificatie").
-            # Yet "id" / "pk" is still part of the main body.
-            or (table_schema.temporal and field_schema.id in unwanted_identifiers)
-            # Dont render intermediate keys (e.g. "relation_identificatie" / "relation_volgnummer")
+            # Don't render synthetic "id" fields derived from temporal fields.
+            or (
+                field_schema.id == "id" and table_schema.temporal and not field_schema.parent_field
+            )
+            # Don't render intermediate keys, e.g.,
+            # "relation_identificatie" / "relation_volgnummer".
             or (
                 field_schema.parent_field is not None
                 and field_schema.parent_field.is_through_table

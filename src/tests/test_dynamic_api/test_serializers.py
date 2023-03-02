@@ -398,11 +398,13 @@ class TestDynamicSerializer:
                     }
                 ],
             },
-            "id": "0363.1",
+            "identificatie": "0363",
+            "volgnummer": 1,
             "naam": "Stadsdeel",
             "code": None,
             "eindGeldigheid": None,
             "beginGeldigheid": None,
+            "ligtInGemeenteIdentificatie": None,
             "registratiedatum": None,
             "documentdatum": None,
             "documentnummer": None,
@@ -832,7 +834,7 @@ class TestDynamicSerializer:
         fields = serializer.fields
         assert set(fields.keys()) == {
             "_links",
-            # "unconventionalIdentifier",
+            "unconventionalIdentifier",
             "unconventionalTemporalId",
             "beginGeldigheid",
             "eindGeldigheid",

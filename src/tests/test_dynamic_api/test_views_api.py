@@ -960,7 +960,7 @@ class TestEmbedTemporalTables:
         response = api_client.get(url, data={"_expand": "true"})
         data = read_response_json(response)
         assert response.status_code == 200, data
-        assert data["_embedded"]["ligtInWijk"]["id"] == "03630012052035.1"
+        assert data["_embedded"]["ligtInWijk"]["identificatie"] == "03630012052035"
         assert data["_embedded"]["ligtInWijk"]["_links"]["buurt"] == {
             "count": 1,
             "href": "http://testserver/v1/gebieden/buurten/?ligtInWijkId=03630012052035.1",
@@ -987,7 +987,8 @@ class TestEmbedTemporalTables:
             "code": None,
             "eindGeldigheid": None,
             "geometrie": None,
-            "id": "03630000000078.2",
+            "identificatie": "03630000000078",
+            "volgnummer": 2,
             "ligtInWijkId": "03630012052035",
             "naam": "AAA v2",
             "_embedded": {
@@ -1023,7 +1024,8 @@ class TestEmbedTemporalTables:
                             "volgnummer": 1,
                         },
                     },
-                    "id": "03630012052035.1",
+                    "identificatie": "03630012052035",
+                    "volgnummer": 1,
                     "code": "A01",
                     "naam": "Burgwallen-Nieuwe Zijde",
                     "beginGeldigheid": "2021-02-28",
@@ -1054,7 +1056,9 @@ class TestEmbedTemporalTables:
                             "documentnummer": None,
                             "eindGeldigheid": None,
                             "geometrie": None,
-                            "id": "03630000000018.1",
+                            "identificatie": "03630000000018",
+                            "volgnummer": 1,
+                            "ligtInGemeenteIdentificatie": None,
                             "naam": "Centrum",
                             "registratiedatum": None,
                         }
@@ -1089,7 +1093,8 @@ class TestEmbedTemporalTables:
                     }
                 ],
             },
-            "id": "03630000000018.1",
+            "identificatie": "03630000000018",
+            "volgnummer": 1,
             "code": "A",
             "naam": "Centrum",
             "geometrie": None,
@@ -1098,6 +1103,7 @@ class TestEmbedTemporalTables:
             "registratiedatum": None,
             "beginGeldigheid": "2021-02-28",
             "eindGeldigheid": None,
+            "ligtInGemeenteIdentificatie": None,
             "_embedded": {
                 "wijken": [
                     # reverse relation
@@ -1116,7 +1122,8 @@ class TestEmbedTemporalTables:
                             },
                             # ligtInStadsdeel is removed (as it's a backward->forward match)
                         },
-                        "id": "03630012052035.1",
+                        "identificatie": "03630012052035",
+                        "volgnummer": 1,
                         "code": "A01",
                         "naam": "Burgwallen-Nieuwe Zijde",
                         "beginGeldigheid": "2021-02-28",
@@ -1174,7 +1181,8 @@ class TestEmbedTemporalTables:
                                 "volgnummer": 1,
                             },
                         },
-                        "id": "0363100012061164.3",
+                        "identificatie": "0363100012061164",
+                        "volgnummer": 3,
                         "ligtInBouwblokId": "03630012096483",
                         "naam": "Voorbeeldpand",
                         "statusCode": 7,
@@ -1215,7 +1223,8 @@ class TestEmbedTemporalTables:
                         "code": None,
                         "eindGeldigheid": None,
                         "geometrie": None,
-                        "id": "03630012096483.1",
+                        "identificatie": "03630012096483",
+                        "volgnummer": 1,
                         "ligtInBuurtId": "03630000000078",
                         "registratiedatum": None,
                         "_embedded": {
@@ -1245,7 +1254,8 @@ class TestEmbedTemporalTables:
                                     },
                                     "onderdeelVanGGWGebieden": [],
                                 },
-                                "id": "03630000000078.2",
+                                "identificatie": "03630000000078",
+                                "volgnummer": 2,
                                 "naam": "AAA v2",
                                 "code": None,
                                 "geometrie": None,
@@ -1279,7 +1289,9 @@ class TestEmbedTemporalTables:
                                                 "documentnummer": None,
                                                 "eindGeldigheid": None,
                                                 "geometrie": None,
-                                                "id": "03630000000018.1",
+                                                "identificatie": "03630000000018",
+                                                "volgnummer": 1,
+                                                "ligtInGemeenteIdentificatie": None,
                                                 "naam": "Centrum",
                                                 "registratiedatum": None,
                                             }
@@ -1320,7 +1332,8 @@ class TestEmbedTemporalTables:
                                         "beginGeldigheid": "2021-02-28",
                                         "code": "A01",
                                         "eindGeldigheid": None,
-                                        "id": "03630012052035.1",
+                                        "identificatie": "03630012052035",
+                                        "volgnummer": 1,
                                         "ligtInStadsdeelId": "03630000000018",
                                         "naam": "Burgwallen-Nieuwe " "Zijde",
                                     }
@@ -1380,7 +1393,8 @@ class TestEmbedTemporalTables:
             "code": None,
             "eindGeldigheid": None,
             "geometrie": None,
-            "id": "03630000000078.2",
+            "identificatie": "03630000000078",
+            "volgnummer": 2,
             "ligtInWijkId": "03630012052035",
             "naam": "AAA v2",
         }
@@ -1397,7 +1411,8 @@ class TestEmbedTemporalTables:
         response = api_client.get(url)
         data = read_response_json(response)
         assert response.status_code == 200, data
-        assert data["_embedded"]["ligtInWijk"][0]["id"] == "03630012052035.1"
+        assert data["_embedded"]["ligtInWijk"][0]["identificatie"] == "03630012052035"
+        assert data["_embedded"]["ligtInWijk"][0]["volgnummer"] == 1
         assert data["_embedded"]["ligtInWijk"][0]["_links"]["buurt"] == {
             "count": 1,
             "href": (
@@ -1427,7 +1442,8 @@ class TestEmbedTemporalTables:
                             },
                             "onderdeelVanGGWGebieden": [],
                         },
-                        "id": "03630000000078.2",
+                        "identificatie": "03630000000078",
+                        "volgnummer": 2,
                         "code": None,
                         "naam": "AAA v2",
                         "beginGeldigheid": "2021-06-11",
@@ -1461,7 +1477,8 @@ class TestEmbedTemporalTables:
                         "beginGeldigheid": "2021-02-28",
                         "code": "A01",
                         "eindGeldigheid": None,
-                        "id": "03630012052035.1",
+                        "identificatie": "03630012052035",
+                        "volgnummer": 1,
                         "ligtInStadsdeelId": "03630000000018",
                         "naam": "Burgwallen-Nieuwe Zijde",
                         "_embedded": {
@@ -1483,7 +1500,9 @@ class TestEmbedTemporalTables:
                                 "documentnummer": None,
                                 "eindGeldigheid": None,
                                 "geometrie": None,
-                                "id": "03630000000018.1",
+                                "identificatie": "03630000000018",
+                                "volgnummer": 1,
+                                "ligtInGemeenteIdentificatie": None,
                                 "naam": "Centrum",
                                 "registratiedatum": None,
                             }
@@ -1568,7 +1587,8 @@ class TestEmbedTemporalTables:
                     "code": None,
                     "eindGeldigheid": None,
                     "geometrie": None,
-                    "id": "03630000000078.2",
+                    "identificatie": "03630000000078",
+                    "volgnummer": 2,
                     "ligtInWijkId": "03630012052035",
                     "naam": "AAA v2",
                     "_embedded": {
@@ -1610,7 +1630,8 @@ class TestEmbedTemporalTables:
                             }
                         ],
                     },
-                    "id": "03630950000000.1",
+                    "identificatie": "03630950000000",
+                    "volgnummer": 1,
                     "registratiedatum": None,
                     "naam": None,
                     "beginGeldigheid": "2021-02-28",
@@ -1631,7 +1652,8 @@ class TestEmbedTemporalTables:
                         },
                         "ligtInWijk": None,
                     },
-                    "id": "03630000000078.2",
+                    "identificatie": "03630000000078",
+                    "volgnummer": 2,
                     "naam": "AAA v2",
                     "code": None,
                     "beginGeldigheid": "2021-06-11",
@@ -1687,7 +1709,8 @@ class TestEmbedTemporalTables:
                     "code": None,
                     "eindGeldigheid": None,
                     "geometrie": None,
-                    "id": "03630000000078.2",
+                    "identificatie": "03630000000078",
+                    "volgnummer": 2,
                     "ligtInWijkId": "03630012052035",
                     "naam": "AAA v2",
                 }
@@ -1714,7 +1737,8 @@ class TestEmbedTemporalTables:
                     "beginGeldigheid": "2021-02-28",
                     "eindGeldigheid": None,
                     "geometrie": None,
-                    "id": "03630950000000.1",
+                    "identificatie": "03630950000000",
+                    "volgnummer": 1,
                     "naam": None,
                     "registratiedatum": None,
                 }
@@ -1753,7 +1777,8 @@ class TestEmbedTemporalTables:
                 ],
             },
             "geometrie": None,
-            "id": "03630950000000.1",
+            "identificatie": "03630950000000",
+            "volgnummer": 1,
             "eindGeldigheid": None,
             "beginGeldigheid": "2021-02-28",
             "naam": None,
@@ -1838,7 +1863,8 @@ class TestEmbedTemporalTables:
                     "geometrie": None,
                     "eindGeldigheid": None,
                     "beginGeldigheid": "2021-06-11",
-                    "id": "03630000000078.2",
+                    "identificatie": "03630000000078",
+                    "volgnummer": 2,
                     "ligtInWijkId": "03630012052035",
                     "_embedded": {
                         "ligtInWijk": None,
@@ -1861,7 +1887,6 @@ class TestEmbedTemporalTables:
         assert response.status_code == 200, data
 
         # Main object:
-        assert data["_embedded"]["statistieken"][0]["id"] == 1
         assert data["_embedded"]["statistieken"][0]["_links"]["buurt"] == {
             "href": "http://testserver/v1/gebieden/buurten/03630000000078/",
             "title": "03630000000078",
@@ -1870,7 +1895,8 @@ class TestEmbedTemporalTables:
         assert "_embedded" not in data["_embedded"]["statistieken"][0]
 
         # Embedded object from loose relation:
-        assert data["_embedded"]["buurt"][0]["id"] == "03630000000078.2"
+        assert data["_embedded"]["buurt"][0]["identificatie"] == "03630000000078"
+        assert data["_embedded"]["buurt"][0]["volgnummer"] == 2
         assert data["_embedded"]["buurt"][0]["_links"]["self"] == {
             "href": "http://testserver/v1/gebieden/buurten/03630000000078/?volgnummer=2",
             "identificatie": "03630000000078",
@@ -1913,8 +1939,8 @@ class TestEmbedTemporalTables:
             "identificatie": "03630000000078",
             "volgnummer": 2,
         }
-        #  Check "id" is resolved to correct identificatie.volgnummer format
-        assert data["_embedded"]["buurten"][0]["id"] == "03630000000078.2"
+        assert data["_embedded"]["buurten"][0]["identificatie"] == "03630000000078"
+        assert data["_embedded"]["buurten"][0]["volgnummer"] == 2
 
     def test_links_loose_many_to_many_to_temporal(
         self, api_client, buurten_data, woningbouwplannen_data, filled_router
@@ -1997,7 +2023,8 @@ class TestEmbedTemporalTables:
         assert response.status_code == 200, data
         assert "buurten" not in data  # because it must be in  "_embedded"
         buurten = data["_embedded"]["buurten"]
-        assert buurten[0]["id"] == "03630000000078.2"
+        assert buurten[0]["identificatie"] == "03630000000078"
+        assert buurten[0]["volgnummer"] == 2
         assert buurten[0]["_links"]["self"]["href"] == (
             "http://testserver/v1/gebieden/buurten/03630000000078/?volgnummer=2"
         )
@@ -2391,8 +2418,9 @@ class TestFormats:
 
         # fields don't include bestaatUitBuurten
         assert data == (
-            "Id,Registratiedatum,Naam,Begingeldigheid,Eindgeldigheid,Geometrie\r\n"
-            "03630950000000.1,,,2021-02-28,,\r\n"
+            "Identificatie,Volgnummer,Registratiedatum,Naam,Begingeldigheid,Eindgeldigheid,"
+            "Geometrie\r\n"
+            "03630950000000,1,,,2021-02-28,,\r\n"
         )
 
     DETAIL_FORMATS = {
