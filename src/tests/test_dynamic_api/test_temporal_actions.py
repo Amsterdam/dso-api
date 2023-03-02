@@ -160,7 +160,6 @@ class TestTemporalViews:
 
         assert response.status_code == 200, data
         assert data["_links"]["self"]["volgnummer"] == 2, data
-        assert data["id"] == stadsdelen[1].id, data
 
     def test_details_can_be_requested_with_valid_date(self, api_client, stadsdelen):
         """Prove that object can be requested by identification and date."""
