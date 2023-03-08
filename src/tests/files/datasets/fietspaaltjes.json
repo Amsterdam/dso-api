@@ -3,7 +3,9 @@
     "id": "fietspaaltjes",
     "title": "fietspaaltjes",
     "status": "beschikbaar",
-    "publisher": "Nobody",
+    "publisher": {
+      "$ref": "/publishers/NOBODY"
+    },
     "version": "0.0.1",
     "crs": "EPSG:28992",
     "tables": [

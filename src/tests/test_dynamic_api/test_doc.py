@@ -52,13 +52,16 @@ def test_dataset(api_client, filled_router, gebieden_dataset):
         in content
     )
 
+    # Check for publisher.
+    # Disabled for now because of issues with schema loaders.
+    # assert "<strong>Uitgever:</strong> Nobody" in content
+    # assert "publisher/" not in content
+
 
 @pytest.mark.django_db
 def test_dataset_casing(api_client, filled_router, hoofdroutes_dataset):
     """Tests documentation for dataset that needs camel casing."""
-    hoofdroutes_doc = reverse(
-        "dynamic_api:doc-hoofdroutes2"
-    )
+    hoofdroutes_doc = reverse("dynamic_api:doc-hoofdroutes2")
     assert hoofdroutes_doc
 
     response = api_client.get(hoofdroutes_doc)

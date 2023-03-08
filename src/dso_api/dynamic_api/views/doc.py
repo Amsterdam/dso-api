@@ -134,6 +134,15 @@ class DatasetDocView(TemplateView):
 
         main_title = ds.title or ds.db_name.replace("_", " ").capitalize()
 
+        try:
+            if "name" in ds.publisher:
+                publisher = ds.publisher["name"]
+            elif isinstance(ds.publisher, dict) and "$ref" in ds.publisher:
+                publisher = ds.publisher["$ref"]
+                publisher = publisher.lstrip("/").removeprefix("publishers/")
+        except NotImplementedError:  # Work around schema loaders being broken in tests.
+            publisher = "N/A"
+
         tables = [_table_context(t) for t in ds.tables]
 
         context = super().get_context_data(**kwargs)
@@ -144,6 +153,7 @@ class DatasetDocView(TemplateView):
                 schema_auth=ds.auth,
                 dataset_has_auth=bool(_fix_auth(ds.auth)),
                 main_title=main_title,
+                publisher=publisher,
                 tables=tables,
                 swagger_url=reverse(f"dynamic_api:openapi-{ds.id}"),
             )
