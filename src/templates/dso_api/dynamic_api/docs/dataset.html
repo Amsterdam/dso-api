@@ -18,12 +18,12 @@
     <li><strong>Autorisatie:</strong> {{ schema.auth }}</li>
     <li><strong>Licentie:</strong> {{ schema.license }}</li>
     <li><strong>Eigenaar:</strong> {{ schema.owner }}</li>
-    <li><strong>Uitgever:</strong> {{ schema.publisher }}</li>
+    <li><strong>Uitgever:</strong> {{ publisher }}</li>
     <li><strong>Bronhouder:</strong> {{ schema.creator }}</li>
   </ul>
 
   {% if dataset_has_auth %}
-    <p>Toegang kan worden aangevraagd bij de uitgever: {{ schema.publisher }}</p>
+    <p>Toegang kan worden aangevraagd bij de uitgever: {{ publisher }}</p>
   {% endif %}
 
   <h1>Endpoints</h1>

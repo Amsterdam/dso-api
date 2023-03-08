@@ -1,0 +1,10 @@
+{
+  "name": "Datateam No-one",
+  "id": "NOBODY",
+  "shortname": "nobody",
+  "tags": {
+    "team": "nemo",
+    "costcenter": "00000000.0000"
+  },
+  "type": "publisher"
+}
