@@ -2546,3 +2546,22 @@ def test_nested_object_field_response(
     assert data["_embedded"]["panden"][0]["statusCode"] == 7
     assert data["_embedded"]["panden"][0]["statusOmschrijving"] == "Sloopvergunning verleend"
     assert data["_embedded"]["panden"][0]["bagProces"] == {"code": 1}
+
+
+@pytest.mark.django_db
+def test_array_of_nested_auth(
+    api_client, dynamic_models, fetch_auth_token, array_auth, filled_router
+):
+    url = reverse("dynamic_api:arrayauth-things-list")
+    thing = dynamic_models["arrayauth"]["things"].objects.create(id=1)
+    dynamic_models["arrayauth"]["things_secret_array"].objects.create(parent=thing)
+
+    token = fetch_auth_token(["AUTH/DATASET", "AUTH/TABLE"])
+    response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
+    data = read_response_json(response)
+    assert "secretArray" not in data["_embedded"]["things"][0]
+
+    token = fetch_auth_token(["AUTH/DATASET", "AUTH/TABLE", "AUTH/FIELD"])
+    response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
+    data = read_response_json(response)
+    assert "secretArray" in data["_embedded"]["things"][0]

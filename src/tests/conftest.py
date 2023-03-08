@@ -382,6 +382,12 @@ def afval_adresloopafstand(afval_adresloopafstand_model):
 
 
 @pytest.fixture()
+def array_auth(schema_loader):
+    schema = schema_loader.get_dataset_from_file("array_auth.json")
+    return Dataset.create_for_schema(schema=schema)
+
+
+@pytest.fixture()
 def bommen_schema_json() -> dict:
     """Fixture to return the schema json for"""
     path = HERE / "files/datasets/bommen.json"
