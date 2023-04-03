@@ -177,23 +177,22 @@ class HALJSONRenderer(RendererMixin, renderers.JSONRenderer):
         if self.paginator:
             return self.paginator.get_footer()
 
-    def _render_json(self, data, level=0):  # noqa: C901
+    def _render_json(self, data, top=True):  # noqa: C901
         if not data:
             yield orjson.dumps(data)
             return
         elif isinstance(data, dict):
             # Streaming output per key, which can be a whole list in case of embedding
-            yield b"{"
-            sep = b"\n  "
+            sep = b"{\n  "
             for key, value in data.items():
                 if hasattr(value, "__iter__") and not isinstance(value, str):
                     # Recurse streaming for actual complex values.
                     yield b"%b%b:" % (sep, orjson.dumps(key))
-                    yield from self._render_json(value, level=level + 1)
+                    yield from self._render_json(value, top=False)
                 else:
                     yield b"%b%b:%b" % (sep, orjson.dumps(key), orjson.dumps(value))
                 sep = b",\n  "
-            if level == 0:
+            if top:
                 if (footer := self._get_footer()) is not None:
                     yield b"%b%b" % (sep, orjson.dumps(footer)[1:-1])
             yield b"\n}"
@@ -209,7 +208,7 @@ class HALJSONRenderer(RendererMixin, renderers.JSONRenderer):
         else:
             yield orjson.dumps(data)
 
-        if not level:
+        if top:
             yield b"\n"
 
 
@@ -500,7 +499,7 @@ def _chunked_output(stream, chunk_size=DEFAULT_CHUNK_SIZE, write_exception=None)
         for row in stream:
             buffer.write(row)
 
-            # Calling buffer.tell() is faster then tracking the buffer size in a local integer,
+            # Calling buffer.tell() is faster than tracking the buffer size in a local integer,
             # because integer addition means allocating a new object.
             if buffer.tell() > chunk_size:
                 yield buffer.getvalue()
