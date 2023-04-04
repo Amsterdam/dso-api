@@ -172,10 +172,6 @@ class ObservableQuerySet(QuerySet):
 
         return iterator
 
-    def add_observer(self, callback: Callable):
-        """Install an observer callback that is notified when items are iterated"""
-        self._item_callbacks.append(callback)
-
     def _item_observer(self, item, is_empty=False):
         """Notify all observers."""
         for callback in self._item_callbacks:
