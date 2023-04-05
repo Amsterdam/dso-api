@@ -1,21 +1,28 @@
 """Mapbox Vector Tiles (MVT) views of geographic datasets."""
 
+import itertools
 import logging
 import time
 from urllib.parse import unquote
 
-from django.core.exceptions import PermissionDenied
+import mercantile
+from django.contrib.gis.db.models import functions
+from django.core.exceptions import FieldDoesNotExist, PermissionDenied
+from django.db import connection
 from django.db.models import F, Model
-from django.http import Http404
+from django.http import Http404, HttpResponse, StreamingHttpResponse
 from django.urls.base import reverse
+from django.views import View
 from django.views.generic import TemplateView
 from schematools.contrib.django.models import Dataset
+from schematools.exceptions import SchemaObjectNotFound
 from schematools.naming import toCamelCase
 from schematools.permissions import UserScopes
 from schematools.types import DatasetTableSchema
 from vectortiles import VectorLayer
 from vectortiles.backends import BaseVectorLayerMixin
-from vectortiles.views import MVTView, TileJSONView
+from vectortiles.backends.postgis.functions import AsMVTGeom, MakeEnvelope
+from vectortiles.views import TileJSONView
 
 from dso_api.dynamic_api.datasets import get_active_datasets
 from dso_api.dynamic_api.filters.values import AMSTERDAM_BOUNDS, DAM_SQUARE
@@ -99,10 +106,16 @@ class DatasetMVTSingleView(TemplateView):
         return context
 
 
-class DatasetMVTView(CheckPermissionsMixin, MVTView):
+class DatasetMVTView(CheckPermissionsMixin, View):
     """An MVT view for a single table.
     This view generates the Mapbox Vector Tile format as output.
     """
+
+    _CONTENT_TYPE = "application/vnd.mapbox-vector-tile"
+    _EXTENT = 4096  # Default extent for MVT.
+    # Name of temporary MVT row that we add to our queryset.
+    # No field name starting with an underscore ever occurs in our datasets.
+    _MVT_ROW = "_geom_prepared_for_mvt"
 
     def setup(self, request, *args, **kwargs):
         super().setup(request, *args, **kwargs)
@@ -116,6 +129,12 @@ class DatasetMVTView(CheckPermissionsMixin, MVTView):
         except KeyError:
             raise Http404(f"Invalid table: {dataset_name}.{table_name}") from None
 
+        schema: DatasetTableSchema = model.table_schema()
+        try:
+            self._main_geo = schema.main_geometry_field.python_name
+        except SchemaObjectNotFound as e:
+            raise FieldDoesNotExist(f"No field named '{schema.main_geometry}'") from e
+
         self.model = model
         self.check_permissions(request, [self.model])
 
@@ -128,19 +147,18 @@ class DatasetMVTView(CheckPermissionsMixin, MVTView):
         return [layer]
 
     def get(self, request, *args, **kwargs):
-        kwargs.pop("dataset_name")
-        kwargs.pop("table_name")
-        self.z = kwargs["z"]
+        x, y, z = kwargs["x"], kwargs["y"], kwargs["z"]
 
-        t0 = time.perf_counter_ns()
-        result = super().get(request, *args, **kwargs)
-        logging.info(
-            "retrieved tile for %s (%d bytes) in %.3fs",
-            request.path,
-            len(result.content),
-            (time.perf_counter_ns() - t0) * 1e-9,
+        tile = self._stream_tile(x, y, z)
+        try:
+            chunk = next(tile)
+        except StopIteration:
+            return HttpResponse(content=b"", content_type=self._CONTENT_TYPE, status=204)
+        tile = itertools.chain((chunk,), tile)
+
+        return StreamingHttpResponse(
+            streaming_content=tile, content_type=self._CONTENT_TYPE, status=200
         )
-        return result
 
     def _schemafy_layer(self, layer: BaseVectorLayerMixin) -> None:
         schema: DatasetTableSchema = self.model.table_schema()
@@ -181,6 +199,74 @@ class DatasetMVTView(CheckPermissionsMixin, MVTView):
                     queryset = queryset.annotate(**{field_name: F(field.db_name)})
         layer.queryset = queryset
         layer.tile_fields = tile_fields
+
+    def _stream_tile(self, x: int, y: int, z: int):
+        qs = self.model.objects.all()
+        bbox = MakeEnvelope(*mercantile.xy_bounds(x, y, z), 3857)
+        qs = qs.filter(
+            **{
+                f"{self._main_geo}__intersects": bbox,
+            }
+        )
+        # Add MVT row and restrict to the fields we want in the response.
+        qs = qs.annotate(
+            **{self._MVT_ROW: AsMVTGeom(functions.Transform(self._main_geo, 3857), bbox)}
+        )
+        qs = qs.values(self._MVT_ROW, *self._property_fields(z))
+
+        sql, params = qs.query.sql_with_params()
+        with connection.cursor() as cursor:
+            # This hairy query generates the MVT tile using ST_AsMVT, then breaks it up into rows
+            # that we can stream to the client. We do this because the tile is a potentially very
+            # large bytea in PostgreSQL, which psycopg would otherwise consume in its entirety
+            # before passing it on to us. Since psycopg also needs to keep the hex-encoded
+            # PostgreSQL wire format representation of the tile in memory while decoding it, it
+            # needs 3*n memory to decode an n-byte tile, and tiles can be up to hundreds of
+            # megabytes.
+            #
+            # To make matters worse, what psycopg returns is a memoryview, and Django accepts
+            # memoryviews just fine but casts them to bytes objects, meaning the entire tile gets
+            # copied again. That happens after the hex version has been decoded, but it still
+            # means a slow client can keep our memory use at 2*n for the duration of the request.
+            CHUNK_SIZE = 8192
+            cursor.execute(
+                f"""
+                WITH mvt AS (
+                    SELECT ST_AsMVT(_sub.*, %s, %s, %s) FROM ({sql}) as _sub
+                )
+                SELECT * FROM (
+                    /* This is SQL for range(1, len(x), CHUNK_SIZE), sort of. */
+                    WITH RECURSIVE chunk(i) AS (
+                            VALUES (1)
+                        UNION ALL
+                            SELECT chunk.i+{CHUNK_SIZE} FROM chunk, mvt
+                            WHERE i < octet_length(mvt.ST_AsMVT)
+                    ),
+                    sorted AS (SELECT * FROM chunk ORDER BY i)
+                    SELECT substring(mvt.ST_AsMVT FROM sorted.i FOR {CHUNK_SIZE}) FROM mvt, sorted
+                ) AS chunked_mvt WHERE octet_length(substring) > 0
+                """,  # noqa: S608
+                params=["default", self._EXTENT, self._MVT_ROW, *params],
+            )
+            for chunk in cursor:
+                yield chunk[0]
+
+    def _property_fields(self, z) -> tuple:
+        """Returns fields to include in the tile as MVT properties alongside the geometry."""
+        # If we are zoomed far out (low z), only fetch the geometry field for a smaller payload.
+        # The cutoff is arbitrary. Play around with
+        # https://www.maptiler.com/google-maps-coordinates-tile-bounds-projection/#14/4.92/52.37
+        # to get a feel for the MVT zoom levels and how much detail a single tile should contain.
+        if z < 15:
+            return ()
+
+        user_scopes = self.request.user_scopes
+        return tuple(
+            f.name
+            for f in self.model._meta.get_fields()
+            if f.name != self._main_geo
+            and user_scopes.has_field_access(self.model.get_field_schema(f))
+        )
 
     def check_permissions(self, request, models) -> None:
         """Override CheckPermissionsMixin to add extra checks"""
