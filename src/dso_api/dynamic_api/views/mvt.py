@@ -114,6 +114,7 @@ class DatasetMVTView(CheckPermissionsMixin, MVTView):
     def get(self, request, *args, **kwargs):
         kwargs.pop("dataset_name")
         kwargs.pop("table_name")
+        self.z = kwargs["z"]
 
         t0 = time.perf_counter_ns()
         result = super().get(request, *args, **kwargs)
@@ -129,7 +130,14 @@ class DatasetMVTView(CheckPermissionsMixin, MVTView):
         return self.model.objects.all()
 
     @property
-    def vector_tile_fields(self) -> tuple[str]:
+    def vector_tile_fields(self) -> tuple:
+        # If we are zoomed far out (low z), only fetch the geometry field for a smaller payload.
+        # The cutoff is arbitrary. Play around with
+        # https://www.maptiler.com/google-maps-coordinates-tile-bounds-projection/#14/4.92/52.37
+        # to get a feel for the MVT zoom levels and how much detail a single tile should contain.
+        if self.z < 15:
+            return ()
+
         geom_name = self.vector_tile_geom_name
         user_scopes = self.request.user_scopes
         return tuple(

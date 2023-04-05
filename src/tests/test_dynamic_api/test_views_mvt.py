@@ -1,5 +1,9 @@
+from datetime import date, datetime
+
 import mapbox_vector_tile
 import pytest
+from django.contrib.gis.geos import Point
+from django.utils.timezone import make_aware
 
 CONTENT_TYPE = "application/vnd.mapbox-vector-tile"
 
@@ -104,9 +108,23 @@ def test_mvt_single(api_client, afval_container, filled_router):
 
 
 @pytest.mark.django_db
-def test_mvt_content(api_client, afval_container, filled_router):
+def test_mvt_content(api_client, afval_container_model, afval_cluster, filled_router):
     """Prove that the MVT view produces vector tiles."""
-    url = "/v1/mvt/afvalwegingen/containers/1/0/0.pbf"
+
+    # Coordinates below have been calculated using https://oms.wff.ch/calc.htm
+    # and https://www.maptiler.com/google-maps-coordinates-tile-bounds-projection/.
+    afval_container_model.objects.create(
+        id=1,
+        serienummer="foobar-123",
+        eigenaar_naam="Dataservices",
+        # set to fixed dates to the CSV export can also check for desired formatting
+        datum_creatie=date(2021, 1, 3),
+        datum_leegmaken=make_aware(datetime(2021, 1, 3, 12, 13, 14)),
+        cluster=afval_cluster,
+        geometry=Point(123207.6558130105, 486624.6399002579),
+    )
+
+    url = "/v1/mvt/afvalwegingen/containers/17/67327/43077.pbf"
     response = api_client.get(url)
     # MVT view returns 204 when the tile is empty.
     assert response.status_code == 200
@@ -120,7 +138,7 @@ def test_mvt_content(api_client, afval_container, filled_router):
             "version": 2,
             "features": [
                 {
-                    "geometry": {"type": "Point", "coordinates": [4171, 1247]},
+                    "geometry": {"type": "Point", "coordinates": [1928, 2558]},
                     "properties": {
                         # TODO These are snake-cased database field names.
                         # We should return schema field names instead.
@@ -132,6 +150,30 @@ def test_mvt_content(api_client, afval_container, filled_router):
                         "eigenaar_naam": "Dataservices",
                         "datum_leegmaken": "2021-01-03 12:13:14+01",
                     },
+                    "id": 0,
+                    "type": 1,
+                }
+            ],
+        }
+    }
+
+    # Try again at a higher zoom level. We should get the same features, but with no properties.
+    url = "/v1/mvt/afvalwegingen/containers/14/8415/5384.pbf"
+    response = api_client.get(url)
+    # MVT view returns 204 when the tile is empty.
+    assert response.status_code == 200
+    assert response["Content-Type"] == CONTENT_TYPE
+
+    vt = mapbox_vector_tile.decode(response.content)
+
+    assert vt == {
+        "default": {
+            "extent": 4096,
+            "version": 2,
+            "features": [
+                {
+                    "geometry": {"type": "Point", "coordinates": [3825, 1344]},
+                    "properties": {},
                     "id": 0,
                     "type": 1,
                 }
@@ -153,17 +195,25 @@ def test_mvt_forbidden(api_client, geometry_auth_thing, fetch_auth_token, filled
 
 
 @pytest.mark.django_db
-def test_mvt_model_auth(api_client, geometry_auth_thing, fetch_auth_token, filled_router):
+def test_mvt_model_auth(api_client, geometry_auth_model, fetch_auth_token, filled_router):
     """Prove that unauthorized fields are excluded from vector tiles"""
 
-    url = "/v1/mvt/geometry_auth/things/1/0/0.pbf"
+    # See test_mvt_content for how to compute the coordinates.
+    geometry_auth_model.objects.create(
+        id=1,
+        metadata="secret",
+        geometry_with_auth=Point(123207.6558130105, 486624.6399002579),
+    )
+
+    # We have to zoom in far to get the secret fields in the first place.
+    url = "/v1/mvt/geometry_auth/things/17/67327/43077.pbf"
     content = {
         "default": {
             "extent": 4096,
             "version": 2,
             "features": [
                 {
-                    "geometry": {"type": "Point", "coordinates": [4171, 1247]},
+                    "geometry": {"type": "Point", "coordinates": [1928, 2558]},
                     "id": 0,
                     "properties": {"id": 1, "metadata": "secret"},
                     "type": 1,
