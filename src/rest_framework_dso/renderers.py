@@ -190,18 +190,18 @@ class HALJSONRenderer(RendererMixin, renderers.JSONRenderer):
                     yield b"%b%b:" % (sep, orjson.dumps(key))
                     yield from self._render_json(value, top=False)
                 else:
-                    yield b"%b%b:%b" % (sep, orjson.dumps(key), orjson.dumps(value))
+                    yield sep + orjson.dumps({key: value})[1:-1]
                 sep = b",\n  "
             if top:
                 if (footer := self._get_footer()) is not None:
-                    yield b"%b%b" % (sep, orjson.dumps(footer)[1:-1])
+                    yield sep + orjson.dumps(footer)[1:-1]
             yield b"\n}"
         elif hasattr(data, "__iter__") and not isinstance(data, str):
             # Streaming per item, outputs each record on a new row.
             yield b"["
             sep = b"\n  "
             for item in data:
-                yield b"%b%b" % (sep, orjson.dumps(item))
+                yield sep + orjson.dumps(item)
                 sep = b",\n  "
 
             yield b"\n]"
