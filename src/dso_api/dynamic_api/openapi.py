@@ -12,7 +12,6 @@ from django.conf import settings
 from django.urls import URLPattern, URLResolver, get_resolver, get_urlconf
 from django.utils.functional import lazy
 from django.views.decorators.cache import cache_page
-from django.views.decorators.gzip import gzip_page
 from django.views.decorators.vary import vary_on_headers
 from rest_framework import permissions, renderers
 from rest_framework.response import Response
@@ -166,7 +165,6 @@ def _html_on_browser(openapi_view, dataset_schema):
             # Add accept and format to the Vary header so cache is
             # triggered on the json response only
             view = vary_on_headers("Accept", "format")(openapi_view)
-            view = gzip_page(view)
             view = cache_page(CACHE_DURATION)(view)
             return view(request)
         else:
