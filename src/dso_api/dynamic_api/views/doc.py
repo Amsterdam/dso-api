@@ -12,7 +12,6 @@ from django.utils.decorators import method_decorator
 from django.utils.safestring import mark_safe
 from django.views import View
 from django.views.decorators.cache import cache_page
-from django.views.decorators.gzip import gzip_page
 from django.views.generic import TemplateView
 from markdown import Markdown
 from markdown.extensions.tables import TableExtension
@@ -28,10 +27,9 @@ markdown = Markdown(extensions=[TableExtension(), "fenced_code"])
 
 CACHE_DURATION = 3600  # seconds.
 
-decorators = [cache_page(CACHE_DURATION), gzip_page]
+decorators = [cache_page(CACHE_DURATION)]
 
 
-@gzip_page
 def search(request: HttpRequest) -> HttpResponse:
     template = "dso_api/dynamic_api/docs/search.html"
     query = request.GET.get("q", "").strip()
@@ -39,7 +37,6 @@ def search(request: HttpRequest) -> HttpResponse:
 
 
 @cache_page(CACHE_DURATION)
-@gzip_page
 def search_index(_request) -> HttpResponse:
     index = {}
     for ds in Dataset.objects.api_enabled().db_enabled():
