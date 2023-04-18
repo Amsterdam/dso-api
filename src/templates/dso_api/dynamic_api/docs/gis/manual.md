@@ -1,14 +1,14 @@
 # WFS handmatig koppelen
 
-De WFS server kan rechtstreeks vanuit de browser of HTTP client (curl
+De WFS server kan rechtstreeks vanuit de browser of HTTP-client (curl
 e.d.) uitgelezen worden. Gebruik de basis URL
 `https://api.data.amsterdam.nl/v1/wfs/{<dataset naam>}/` in een
 WFS-client.
 
-Voor HTTP-clients, voeg je
+Voor HTTP-clients voeg je
 `?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES={laagnaam}`
-toe. De `?expand` en `?embed` parameters (bovenaan beschreven) werken
-ook.
+toe. De parameters `?expand` en `?embed`
+([elders beschreven](../rest/embeds.html)) werken ook.
 
 ## Exportformats
 
@@ -131,7 +131,7 @@ De `RESOURCEID` kan in het filter meermaals voorkomen:
 
 ## Complexe filters
 
-De WFS Filter Encoding Standaard (FES) ondersteund veel operatoren. Deze
+De WFS Filter Encoding Standaard (FES) ondersteunt veel operatoren. Deze
 tags worden allemaal ondersteund:
 
 | Element                            | SQL equivalent            | Omschrijving                                                                                      |
@@ -168,8 +168,8 @@ Tip
 
 </div>
 
-Bij de `<BBOX>` operator mag het geometrieveld weggelaten worden. Het
-standaard geometrieveld wordt dan gebruikt (doorgaans het eerste veld).
+Bij de operator `<BBOX>` mag het geometrieveld weggelaten worden. Het
+standaardgeometrieveld wordt dan gebruikt (doorgaans het eerste veld).
 
 </div>
 
@@ -281,7 +281,7 @@ De volgende functies zijn beschikbaar in de server:
 | `atan2(x, y)`                        | `ATAN2()`                    | Arctangens, voor bereik buiten een circel.                 |
 | `cos(radians)`                       | `COS()`                      | Cosinus                                                    |
 | `sin(radians)`                       | `SIN()`                      | Sinus                                                      |
-| `tan(radians)`                       | `TAN()`                      | Tanges                                                     |
+| `tan(radians)`                       | `TAN()`                      | Tangens                                                    |
 | `pi()`                               | `PI`                         | De waarde van π (3,141592653...)                           |
 | `toDegrees(radians)`                 | `DEGREES()`                  | Omzetting radialen naar graden.                            |
 | `toRadians(degree)`                  | `RADIANS()`                  | Omzetting graden naar radialen.                            |
@@ -296,7 +296,7 @@ De volgende functies zijn beschikbaar in de server:
 ## Filter compatibiliteit
 
 Officieel zijn XML-namespaces verplicht in het filter. Aangezien veel
-clients deze achterwege laten, ondersteund de server ook aanvragen
+clients deze achterwege laten, ondersteunt de server ook aanvragen
 zonder namespaces. Voor de volledigheid zal het request er met
 namespaces zo uit zien:
 
@@ -312,7 +312,7 @@ namespaces zo uit zien:
 </fes:Filter>
 ```
 
-Bij geometrie filters is dat officieel zelfs:
+Bij geometriefilters is dat officieel zelfs:
 
 ``` xml
 <fes:Filter
@@ -338,10 +338,10 @@ Conform de XML-regels mag hier de "fes" namespace alias hernoemd worden,
 of weggelaten worden als er alleen `xmlns="..."` gebruikt wordt i.p.v.
 `xmlns:fes="..."`.
 
-Diverse bestaande filters gebruiken nog andere WFS 1 elementen, zoals
+Diverse bestaande filters gebruiken nog andere WFS 1-elementen, zoals
 `<PropertyName>` in plaats van `<ValueReference>`. Voor compatibiliteit
 wordt deze tag ook ondersteund.
 
-De WFS 1 expressies `<Add>`, `<Sub>`, `<Mul>` en `<Div>` zijn tevens
+De WFS 1-expressies `<Add>`, `<Sub>`, `<Mul>` en `<Div>` zijn tevens
 geïmplementeerd om rekenkundige operaties te ondersteunen vanuit QGIS
 (optellen, aftrekken, vermenigvuldigen en delen).
