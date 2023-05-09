@@ -9,8 +9,8 @@ const FORMATTER = (rawJson) => {
 
     let openApiEl = document.createElement('div');
     openApiEl.innerHTML = `
-      <h3>Open API ${rawJson.info.title}</h3>
-      <p><dt>Open API version</dt> <dd>${rawJson.openapi}</dd></p>
+      <h3>OpenAPI ${rawJson.info.title}</h3>
+      <p><dt>OpenAPI version</dt> <dd>${rawJson.openapi}</dd></p>
       <p>
         <dt>${rawJson.externalDocs.description}</dt> 
         <dd><a href="${rawJson.externalDocs.url}" style="display:inline-block">${rawJson.externalDocs.url}</a></dd>
