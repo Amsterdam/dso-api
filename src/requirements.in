@@ -8,7 +8,7 @@ django-vectortiles == 0.2.0
 djangorestframework == 3.14.0
 djangorestframework-csv == 2.1.1
 djangorestframework-gis == 1.0
-amsterdam-schema-tools[django] == 5.8.3
+amsterdam-schema-tools[django] == 5.11.4
 datapunt-authorization-django==1.3.3
 drf-spectacular == 0.25.1
 Geoalchemy2 == 0.11.1
