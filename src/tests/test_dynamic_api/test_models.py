@@ -1,7 +1,7 @@
 import pytest
 from django.contrib.gis.db import models
-from django_postgres_unlimited_varchar import UnlimitedCharField
 from schematools.contrib.django.factories import model_factory, schema_models_factory
+from schematools.contrib.django.fields import UnlimitedCharField
 
 
 @pytest.mark.django_db
