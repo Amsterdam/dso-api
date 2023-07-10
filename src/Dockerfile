@@ -8,7 +8,10 @@ RUN apt update && apt install --no-install-recommends -y \
 COPY requirements* ./
 ARG PIP_REQUIREMENTS=requirements.txt
 RUN python -m pip install uwsgi
-RUN python -m pip install --no-cache-dir -r $PIP_REQUIREMENTS
+# The `--no-deps` has been added because of a pip bug with --require-hashes
+# The dependencies have already been resolved during the generation of
+# the requirements.txt, so adding `--no-deps` can safely be done.
+RUN python -m pip install --no-cache-dir --no-deps -r $PIP_REQUIREMENTS
 
 # Start runtime image,
 FROM python:3.11-slim-bullseye
