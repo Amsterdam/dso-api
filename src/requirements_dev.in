@@ -7,5 +7,5 @@ termcolor==2.0.1
 pre-commit==2.20.0
 django-debug-toolbar==3.7.0
 django-extensions==3.2.1
-pip-tools==6.12.1
+pip-tools==6.13.0
 tomli==1.1.0
