@@ -1324,3 +1324,13 @@ def verblijfsobjecten_data(verblijfsobjecten_model, buurten_data, nummeraanduidi
         heeft_hoofdadres_identificatie="nm3",
         heeft_hoofdadres_volgnummer=6,
     )
+
+
+@pytest.fixture(autouse=True)
+def disable_apikey_middelware(settings):
+    # The apikey middleware sets up a thread that wants
+    # to grab signings keys. We remove this middelware.
+    try:
+        settings.MIDDLEWARE.remove("apikeyclient.ApiKeyMiddleware")
+    except ValueError:
+        pass

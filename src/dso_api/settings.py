@@ -93,6 +93,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "authorization_django.authorization_middleware",
     "dso_api.middleware.AuthMiddleware",
+    "apikeyclient.ApiKeyMiddleware",
 ]
 
 AUTHENTICATION_BACKENDS = [
@@ -104,7 +105,7 @@ if DEBUG:
         "debug_toolbar",
         "django_extensions",
     ]
-    MIDDLEWARE.insert(0, "debug_toolbar.middleware.DebugToolbarMiddleware")
+    MIDDLEWARE.insert(1, "debug_toolbar.middleware.DebugToolbarMiddleware")
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
@@ -443,3 +444,6 @@ SHELL_PLUS_POST_IMPORTS = (
     "from dso_api.dynamic_api.serializers import serializer_factory",
     "from pprint import pprint",
 )
+APIKEY_MANDATORY = False
+APIKEY_ENDPOINT = env.str("APIKEY_ENDPOINT", "http://localhost:8001/signingkeys/")
+APIKEY_LOCALKEYS = env.json("APIKEY_LOCALKEYS", None)
