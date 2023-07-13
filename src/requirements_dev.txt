@@ -64,7 +64,9 @@ black==22.10.0 \
 build==0.10.0 \
     --hash=sha256:af266720050a66c893a6096a2f410989eeac74ff9a68ba194b3f6473e8e26171 \
     --hash=sha256:d5b71264afdb5951d6704482aac78de887c80691c52b88a9ad195983ca2c9269
-    # via pip-tools
+    # via
+    #   datadiensten-apikeyclient
+    #   pip-tools
 cachetools==5.3.0 \
     --hash=sha256:13dfddc7b8df938c21a940dfa6557ce6e94a2f1cdfa58eb90c805721d58f2c14 \
     --hash=sha256:429e1a1e845c008ea6c85aa35d4b98b65d6a9763eeef3e37e92728a12d1de9d4
@@ -327,6 +329,10 @@ cryptography==39.0.1 \
     #   jwcrypto
     #   msal
     #   pyjwt
+datadiensten-apikeyclient==0.1.0 \
+    --hash=sha256:9909965bc0d69eadce88f63d91621e3a9c82d56f7ae02bd0c9daa0249bd979db \
+    --hash=sha256:f4ab32837e3c60d8414fbdb4dbd044edc6e7f1e87a027d78c25bc7c11a116f06
+    # via -r ./requirements.in
 datapunt-authorization-django==1.3.3 \
     --hash=sha256:3c73944aa4d7e184a3cb00848486eaf1b4019aa979d2c41f410e9b45e58a7158 \
     --hash=sha256:e68ed2da074d8e82f66497d75d5ebc59dc43a11dc95aedd23d7cde18c49b50c2
@@ -967,6 +973,9 @@ pathspec==0.11.0 \
     --hash=sha256:3a66eb970cbac598f9e5ccb5b2cf58930cd8e3ed86d393d541eaf2d8b1705229 \
     --hash=sha256:64d338d4e0914e91c1792321e6907b5a593f1ab1851de7fc269557a21b30ebbc
     # via black
+pause==0.3 \
+    --hash=sha256:82284ec6213376f718a86a51cf1df04eaa77ce85e349bff63c0071e7db33daba
+    # via datadiensten-apikeyclient
 pbr==5.11.1 \
     --hash=sha256:567f09558bae2b3ab53cb3c1e2e33e726ff3338e7bae3db5dc954b3a44eef12b \
     --hash=sha256:aefc51675b0b533d56bb5fd1c8c6c0522fe31896679882e1c4c63d5e4a0fccb3
@@ -975,9 +984,9 @@ pg-grant==0.3.2 \
     --hash=sha256:941c4195c6c9cc7489fac5eab41c805a4d066aa64fc2cfd7fd4eac1685a17a42 \
     --hash=sha256:e407693541e58b42fb23aee948fb3c665704b061fde7259f43cf0087cdf2ed0b
     # via amsterdam-schema-tools
-pip-tools==6.12.1 \
-    --hash=sha256:88efb7b29a923ffeac0713e6f23ef8529cc6175527d42b93f73756cc94387293 \
-    --hash=sha256:f0c0c0ec57b58250afce458e2e6058b1f30a4263db895b7d72fd6311bf1dc6f7
+pip-tools==6.13.0 \
+    --hash=sha256:50943f151d87e752abddec8158622c34ad7f292e193836e90e30d87da60b19d9 \
+    --hash=sha256:61d46bd2eb8016ed4a924e196e6e5b0a268cd3babd79e593048720db23522bb1
     # via -r requirements_dev.in
 platformdirs==2.6.2 \
     --hash=sha256:83c8f6d04389165de7c9b6f0c682439697887bca0aa2f1c87ef1826be3584490 \
@@ -1131,7 +1140,9 @@ pyflakes==2.5.0 \
 pyjwt[crypto]==2.6.0 \
     --hash=sha256:69285c7e31fc44f68a1feb309e948e0df53259d579295e6cfe2b1792329f05fd \
     --hash=sha256:d83c3d892a77bbb74d3e1a2cfa90afaadb60945205d1095d9221f04466f64c14
-    # via msal
+    # via
+    #   datadiensten-apikeyclient
+    #   msal
 pyproject-hooks==1.0.0 \
     --hash=sha256:283c11acd6b928d2f6a7c73fa0d01cb2bdc5f07c57a2eeb6e83d5e56b97976f8 \
     --hash=sha256:f271b298b97f5955d53fb12b72c1fb1948c22c1a6b70b315c54cedaca0264ef5
@@ -1261,6 +1272,7 @@ requests==2.31.0 \
     #   -r ./requirements.in
     #   amsterdam-schema-tools
     #   azure-core
+    #   datadiensten-apikeyclient
     #   datapunt-authorization-django
     #   django-healthchecks
     #   google-api-core
