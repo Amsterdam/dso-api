@@ -25,6 +25,7 @@ BASE_DIR = Path(__file__).parents[1]
 DEBUG = env.bool("DJANGO_DEBUG", False)
 
 CLOUD_ENV = env.str("CLOUD_ENV", "default").lower()
+CLOUD_ENV = "azure"
 DJANGO_LOG_LEVEL = env.str("DJANGO_LOG_LEVEL", "INFO")
 DSO_API_LOG_LEVEL = env.str("DSO_API_LOG_LEVEL", "INFO")
 DSO_API_AUDIT_LOG_LEVEL = env.str("DSO_API_AUDIT_LOG_LEVEL", "INFO")
@@ -146,22 +147,23 @@ CACHES = {"default": env.cache_url(default="locmemcache://")}
 if _USE_SECRET_STORE or CLOUD_ENV.startswith("azure"):
     # On Azure, passwords are NOT passed via environment variables,
     # because the container environment can be inspected, and those vars export to subprocesses.
-    pgpassword = Path(env.str("AZ_PG_TOKEN_PATH")).read_text()
+    # pgpassword = Path(env.str("AZ_PG_TOKEN_PATH")).read_text()
+    pgpassword = "insecure"
 
     DATABASES = {
         "default": {
             "ENGINE": "django.contrib.gis.db.backends.postgis",
-            "NAME": env.str("PGDATABASE"),
-            "USER": env.str("PGUSER"),
+            "NAME": "dataservices",  # env.str("PGDATABASE"),
+            "USER": "dataservices",  # env.str("PGUSER"),
             "PASSWORD": pgpassword,
-            "HOST": env.str("PGHOST"),
-            "PORT": env.str("PGPORT"),
+            "HOST": "localhost",  # env.str("PGHOST"),
+            "PORT": 5416,  # env.str("PGPORT"),
             "OPTIONS": {
                 "sslmode": env.str("PGSSLMODE", default="require"),
             },
         }
     }
-    DATABASE_SET_ROLE = True
+    DATABASE_SET_ROLE = False
 else:
     # Regular development
     DATABASES = {
@@ -250,6 +252,20 @@ LOGGING = {
 
 if CLOUD_ENV.lower().startswith("azure"):
 
+    from opencensus.ext.azure.trace_exporter import AzureExporter
+
+    # def callback_function(envelope):
+    #     breakpoint()
+    #     envelope.data.baseData.properties['os_type'] = 'linux'
+    #     return True
+    # exporter = AzureExporter(connection_string=AZURE_APPI_CONNECTION_STRING, service_name="dso-api")
+    # exporter.add_telemetry_processor(callback_function)
+    from . import trace_exporter
+
+    exporter = trace_exporter.DSOAzureExporter(
+        connection_string=AZURE_APPI_CONNECTION_STRING, service_name="dso-api"
+    )
+
     if AZURE_APPI_CONNECTION_STRING is None:
         raise ImproperlyConfigured(
             "Please specify the 'AZURE_APPI_CONNECTION_STRING' environment variable."
@@ -263,10 +279,11 @@ if CLOUD_ENV.lower().startswith("azure"):
     OPENCENSUS = {
         "TRACE": {
             "SAMPLER": "opencensus.trace.samplers.ProbabilitySampler(rate=1)",
-            "EXPORTER": f"""opencensus.ext.azure.trace_exporter.AzureExporter(
-                connection_string='{AZURE_APPI_CONNECTION_STRING}',
-                service_name='dso-api'
-            )""",
+            # "EXPORTER": f"""opencensus.ext.azure.trace_exporter.AzureExporter(
+            #     connection_string='{AZURE_APPI_CONNECTION_STRING}',
+            #     service_name='dso-api'
+            # )""",
+            "EXPORTER": exporter,
             "EXCLUDELIST_PATHS": [],
         }
     }
@@ -414,8 +431,10 @@ DATASETS_EXCLUDE = env.list("DATASETS_EXCLUDE", default=None)
 
 # TODO the variables without _BAG_ are for BRK. Rename them.
 if _USE_SECRET_STORE or CLOUD_ENV.startswith("azure"):
-    HAAL_CENTRAAL_API_KEY = Path("/mnt/secrets-store/haalcentraal-api-key").read_text()
-    HAAL_CENTRAAL_BAG_API_KEY = Path("/mnt/secrets-store/haalcentraal-bag-api-key").read_text()
+    HAAL_CENTRAAL_API_KEY = "aa"  # Path("/mnt/secrets-store/haalcentraal-api-key").read_text()
+    HAAL_CENTRAAL_BAG_API_KEY = (
+        "bb"  # Path("/mnt/secrets-store/haalcentraal-bag-api-key").read_text()
+    )
 else:
     HAAL_CENTRAAL_API_KEY = os.getenv("HAAL_CENTRAAL_API_KEY")
     HAAL_CENTRAAL_BAG_API_KEY = os.getenv("HAAL_CENTRAAL_BAG_API_KEY")
