@@ -31,6 +31,19 @@
 
 {% block content %}
 
+<p />
+<blockquote>
+    <p>
+      Gemeente Amsterdam gaat het gebruik van een API key bij het gebruik van haar API's vanaf 1 november 2023 verplicht
+      stellen, zodat gemeente Amsterdam kan communiceren over updates en wijzigingen in de API's. Eventuele wijzigingen in de
+      API's kunnen dan tijdig geïmplementeerd worden in uw systemen.<br>
+      Het gebruik van een API key in iedere API call van gemeente Amsterdam is vanaf 1 augustus 2023 optioneel en wordt vanaf
+        1 november verplicht. Vanaf dat moment kunt u de Amsterdam API's niet meer gebruiken zonder een API key mee te geven.</p>
+    <p><em>Dit heeft gevolgen voor uw systemen!</em></p>
+    <p><a href="https://keys.api.data.amsterdam.nl/clients/v1/">Vraag tijdig een API key aan</a> om uw systemen voor 1 november hierop aan te passen.
+    </p>
+</blockquote>
+
 <div class="content-main" role="main"  aria-label="{% trans "main content" %}">
   <btn id="authorize-btn" class="btn btn-primary {% if not oauth_url %}disabled{% endif %}" onclick="authorize()">Authorize</btn>
   <div class="page-header">
