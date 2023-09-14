@@ -39,7 +39,7 @@
               "type": "object",
               "properties": {
                 "identificatie": {
-                  "id": "integer"
+                  "type": "integer"
                 }
               }
             },
