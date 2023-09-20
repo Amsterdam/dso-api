@@ -283,3 +283,7 @@ dt, dd {
 .request-method.get {
   color: blue
 }
+
+blockquote {
+    border-color: #ec0101;
+}
