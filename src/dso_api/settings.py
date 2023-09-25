@@ -246,6 +246,7 @@ LOGGING = {
             "level": DSO_API_AUDIT_LOG_LEVEL,
             "propagate": False,
         },
+        "apikeyclient": {"handlers": ["console"], "propagate": False},
     },
 }
 
