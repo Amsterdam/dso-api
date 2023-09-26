@@ -4,9 +4,9 @@
 #
 #    pip-compile --generate-hashes --output-file=requirements.txt --resolver=legacy requirements.in
 #
-amsterdam-schema-tools[django]==5.17.3 \
-    --hash=sha256:63a0be45eb246df0d75793f05bbe6c4f7883c2ca8ae9c150d98a185aa2a395a9 \
-    --hash=sha256:d7dd12e6f57ef51ae0d8cfe3451cf39202222e7e2be9929b7df22b8ee87d4525
+amsterdam-schema-tools[django]==5.17.7 \
+    --hash=sha256:77a9dbd63ec051af0076e4669ee9ae1e77370a5cdbd94687ced239bae8c035c4 \
+    --hash=sha256:e11d949b784af44b8ed87fab9f7e8f5b15d167434f9403154e124265a82a6948
     # via -r requirements.in
 arrow==1.2.3 \
     --hash=sha256:3934b30ca1b9f292376d9db15b19446088d12ec58629bc3f0da28fd55fb633a1 \
@@ -750,7 +750,9 @@ more-ds==0.0.6 \
 more-itertools==9.1.0 \
     --hash=sha256:cabaa341ad0389ea83c17a94566a53ae4c9d07349861ecb14dc6d0345cf9ac5d \
     --hash=sha256:d2bc7f02446e86a68911e58ded76d6561eea00cddfb2a91e7019bbb586c799f3
-    # via -r requirements.in
+    # via
+    #   -r requirements.in
+    #   amsterdam-schema-tools
 msal==1.22.0 \
     --hash=sha256:8a82f5375642c1625c89058018430294c109440dce42ea667d466c2cab520acd \
     --hash=sha256:9120b7eafdf061c92f7b3d744e5f325fca35873445fa8ffebb40b1086a13dd58
