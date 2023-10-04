@@ -116,6 +116,7 @@ def test_openapi_json(api_client, afval_dataset, fietspaaltjes_dataset, filled_r
     assert set(afval_parameters) == {
         "Accept-Crs",
         "Content-Crs",
+        "X-Api-Key",
         "_count",
         "_expand",
         "_expandScope",
