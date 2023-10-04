@@ -334,6 +334,13 @@ class DSOAutoSchema(openapi.AutoSchema):
                     description="Content-Crs header for Geo queries",
                     required=False,
                 ),
+                OpenApiParameter(
+                    "X-Api-Key",
+                    type=OpenApiTypes.STR,
+                    location=OpenApiParameter.HEADER,
+                    description="Api Key for statistical purposes, not for authentication",
+                    required=False,
+                ),
             ]
 
         # Expose expand parameters too.
