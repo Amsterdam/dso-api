@@ -94,8 +94,10 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "authorization_django.authorization_middleware",
     "dso_api.middleware.AuthMiddleware",
-    "apikeyclient.ApiKeyMiddleware",
 ]
+
+if env.bool("APIKEY_ENABLED", True):
+    MIDDLEWARE.append("apikeyclient.ApiKeyMiddleware")
 
 AUTHENTICATION_BACKENDS = [
     "schematools.contrib.django.auth_backend.ProfileAuthorizationBackend",
