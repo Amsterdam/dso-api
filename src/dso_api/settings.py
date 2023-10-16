@@ -452,3 +452,6 @@ APIKEY_MANDATORY = False
 APIKEY_ENDPOINT = env.str("APIKEY_ENDPOINT", "http://localhost:8001/signingkeys/")
 APIKEY_LOCALKEYS = env.json("APIKEY_LOCALKEYS", None)
 APIKEY_LOGGER = "opencensus"
+
+# Initially we are proxy-ing from cvps HAProxy
+USE_X_FORWARDED_HOST = True
