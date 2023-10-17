@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import logging
 from typing import Optional
+from urllib.parse import urlparse
 
 from asgiref.local import Local
 from django.conf import settings
@@ -64,7 +65,7 @@ class DatabaseRoles:
     ANONYMOUS = "ANONYMOUS"
 
     @classmethod
-    def set_end_user(cls, user_email: Optional[str]):
+    def set_end_user(cls, user_email: Optional[str], token_issuer: Optional[str]):
         """Tell which end user should be used for the database connection"""
         if user_email is None:
             user_email = cls.ANONYMOUS
@@ -74,7 +75,9 @@ class DatabaseRoles:
         # Otherwise, the request waits for the 'connection_created' signal.
         # In case of static files, no database connection might be created at all.
         if default_connection.connection is not None:
-            cls.activate_end_user(default_connection, log_source="set_end_user")
+            cls.activate_end_user(
+                default_connection, log_source="set_end_user", token_issuer=token_issuer
+            )
 
     @classmethod
     def _unset_end_user(cls) -> str | None:
@@ -96,7 +99,7 @@ class DatabaseRoles:
 
     @classmethod
     def activate_end_user(  # noqa: C901
-        cls, user_connection: BaseDatabaseWrapper, *, log_source: str
+        cls, user_connection: BaseDatabaseWrapper, *, log_source: str, token_issuer: str = None
     ):
         """Switch to the end-user role in the database."""
         if not settings.DATABASE_SET_ROLE:
@@ -122,6 +125,13 @@ class DatabaseRoles:
         if user_email == cls.ANONYMOUS:
             logger.debug("%s: No end-user email, switching to anonymous role", log_source)
             cls._set_role(user_connection, settings.ANONYMOUS_ROLE, settings.ANONYMOUS_APP_NAME)
+            return
+
+        # If the token was issued by keycloak
+        # don't set role, because database role might not exist
+        # Fallback to internal role but do write user email to database logs
+        if token_issuer and urlparse(token_issuer).netloc == "iam.amsterdam.nl":
+            cls._set_role(user_connection, settings.INTERNAL_ROLE, user_email)
             return
 
         logger.debug("%s: Activating end-user context for %s", log_source, user_email)
