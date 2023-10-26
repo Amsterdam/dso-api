@@ -165,6 +165,33 @@ if _USE_SECRET_STORE or CLOUD_ENV.startswith("azure"):
         }
     }
     DATABASE_SET_ROLE = True
+
+    if env.str("PGHOST_REPLICA_1"):
+        DATABASES.update({"replica_1": {
+            "ENGINE": "django.contrib.gis.db.backends.postgis",
+            "NAME": env.str("PGDATABASE"),
+            "USER": env.str("PGUSER"),
+            "PASSWORD": pgpassword,
+            "HOST": env.str("PGHOST_REPLICA_1"),
+            "PORT": env.str("PGPORT"),
+            "OPTIONS": {
+                "sslmode": env.str("PGSSLMODE", default="require"),
+            }
+         }})
+        DATABASE_ROUTERS = ['dso_api.router.DatabaseRouter']
+
+    if env.str("PGHOST_REPLICA_2"):
+        DATABASES.update({"replica_2": {
+            "ENGINE": "django.contrib.gis.db.backends.postgis",
+            "NAME": env.str("PGDATABASE"),
+            "USER": env.str("PGUSER"),
+            "PASSWORD": pgpassword,
+            "HOST": env.str("PGHOST_REPLICA_2"),
+            "PORT": env.str("PGPORT"),
+            "OPTIONS": {
+                "sslmode": env.str("PGSSLMODE", default="require"),
+            }
+         }})
 else:
     # Regular development
     DATABASES = {
