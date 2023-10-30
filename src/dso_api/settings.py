@@ -166,32 +166,26 @@ if _USE_SECRET_STORE or CLOUD_ENV.startswith("azure"):
     }
     DATABASE_SET_ROLE = True
 
-    if env.str("PGHOST_REPLICA_1"):
-        DATABASES.update({"replica_1": {
-            "ENGINE": "django.contrib.gis.db.backends.postgis",
-            "NAME": env.str("PGDATABASE"),
-            "USER": env.str("PGUSER"),
-            "PASSWORD": pgpassword,
-            "HOST": env.str("PGHOST_REPLICA_1"),
-            "PORT": env.str("PGPORT"),
-            "OPTIONS": {
-                "sslmode": env.str("PGSSLMODE", default="require"),
-            }
-         }})
+    # Support up to 10 replicas configured with environment variables using PGHOST_REPLICA_1 to PGHOST_REPLICA_10
+    for replica_count in range(1,11):
+        if env.str(f"PGHOST_REPLICA_{replica_count}"):
+            DATABASES.update({f"replica_{replica_count}": {
+                "ENGINE": "django.contrib.gis.db.backends.postgis",
+                "NAME": env.str("PGDATABASE"),
+                "USER": env.str("PGUSER"),
+                "PASSWORD": pgpassword,
+                "HOST": env.str(f"PGHOST_REPLICA_{replica_count}"),
+                "PORT": env.str("PGPORT"),
+                "OPTIONS": {
+                    "sslmode": env.str("PGSSLMODE", default="require"),
+                }
+            }})
+        else:
+            break
+
+    if len(DATABASES) > 1:
         DATABASE_ROUTERS = ['dso_api.router.DatabaseRouter']
 
-    if env.str("PGHOST_REPLICA_2"):
-        DATABASES.update({"replica_2": {
-            "ENGINE": "django.contrib.gis.db.backends.postgis",
-            "NAME": env.str("PGDATABASE"),
-            "USER": env.str("PGUSER"),
-            "PASSWORD": pgpassword,
-            "HOST": env.str("PGHOST_REPLICA_2"),
-            "PORT": env.str("PGPORT"),
-            "OPTIONS": {
-                "sslmode": env.str("PGSSLMODE", default="require"),
-            }
-         }})
 else:
     # Regular development
     DATABASES = {
