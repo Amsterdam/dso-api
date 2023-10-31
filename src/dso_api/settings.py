@@ -168,7 +168,7 @@ if _USE_SECRET_STORE or CLOUD_ENV.startswith("azure"):
 
     # Support up to 10 replicas configured with environment variables using PGHOST_REPLICA_1 to PGHOST_REPLICA_10
     for replica_count in range(1,11):
-        if env.str(f"PGHOST_REPLICA_{replica_count}"):
+        if env.str(f"PGHOST_REPLICA_{replica_count}", False):
             DATABASES.update({f"replica_{replica_count}": {
                 "ENGINE": "django.contrib.gis.db.backends.postgis",
                 "NAME": env.str("PGDATABASE"),
