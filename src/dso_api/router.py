@@ -20,6 +20,7 @@ class DatabaseRouter:
     When using replica databases, route all read requests to the
     replica database(s) and all write requests to the default database.
     """
+
     def db_for_read(self, model, **hints):
         """
         Assign the replica databases to read requests.
