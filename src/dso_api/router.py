@@ -3,11 +3,12 @@
 
 import random
 import environ
+from django.conf import settings
 
 env = environ.Env()
 
 replicas = []
-for replica in range(1, 11):
+for replica in range(1, settings.MAX_REPLICA_COUNT + 1):
     if env.str(f"PGHOST_REPLICA_{replica}", False):
         replicas.append(f"replica_{replica}")
     else:
@@ -15,8 +16,16 @@ for replica in range(1, 11):
 
 
 class DatabaseRouter:
+    """
+    When using replica databases, route all read requests to the
+    replica database(s) and all write requests to the default database.
+    """
     def db_for_read(self, model, **hints):
-        if replicas:
+        """
+        Assign the replica databases to read requests.
+        When multple replica databases are available, choose one at random
+        """
+        if len(replicas) > 1:
             return random.choice(replicas)
         return "replica_1"
 

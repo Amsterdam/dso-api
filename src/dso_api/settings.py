@@ -55,6 +55,8 @@ AZURE_APPI_AUDIT_CONNECTION_STRING: Optional[str] = env.str(
     "AZURE_APPI_AUDIT_CONNECTION_STRING", None
 )
 
+MAX_REPLICA_COUNT = env.int("MAX_REPLICA_COUNT", 5)
+
 # -- Security
 
 # SECURITY WARNING: keep the secret key used in production secret!
@@ -166,9 +168,9 @@ if _USE_SECRET_STORE or CLOUD_ENV.startswith("azure"):
     }
     DATABASE_SET_ROLE = True
 
-    # Support up to 10 replicas configured with environment variables using
-    # PGHOST_REPLICA_1 to PGHOST_REPLICA_10
-    for replica_count in range(1, 11):
+    # Support up to 5 replicas configured with environment variables using
+    # PGHOST_REPLICA_1 to PGHOST_REPLICA_5
+    for replica_count in range(1, MAX_REPLICA_COUNT + 1):
         if env.str(f"PGHOST_REPLICA_{replica_count}", False):
             DATABASES.update(
                 {
