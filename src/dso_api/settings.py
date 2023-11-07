@@ -55,6 +55,8 @@ AZURE_APPI_AUDIT_CONNECTION_STRING: Optional[str] = env.str(
     "AZURE_APPI_AUDIT_CONNECTION_STRING", None
 )
 
+MAX_REPLICA_COUNT = env.int("MAX_REPLICA_COUNT", 5)
+
 # -- Security
 
 # SECURITY WARNING: keep the secret key used in production secret!
@@ -165,6 +167,32 @@ if _USE_SECRET_STORE or CLOUD_ENV.startswith("azure"):
         }
     }
     DATABASE_SET_ROLE = True
+
+    # Support up to 5 replicas configured with environment variables using
+    # PGHOST_REPLICA_1 to PGHOST_REPLICA_5
+    for replica_count in range(1, MAX_REPLICA_COUNT + 1):
+        if env.str(f"PGHOST_REPLICA_{replica_count}", False):
+            DATABASES.update(
+                {
+                    f"replica_{replica_count}": {
+                        "ENGINE": "django.contrib.gis.db.backends.postgis",
+                        "NAME": env.str("PGDATABASE"),
+                        "USER": env.str("PGUSER"),
+                        "PASSWORD": pgpassword,
+                        "HOST": env.str(f"PGHOST_REPLICA_{replica_count}"),
+                        "PORT": env.str("PGPORT"),
+                        "OPTIONS": {
+                            "sslmode": env.str("PGSSLMODE", default="require"),
+                        },
+                    }
+                }
+            )
+        else:
+            break
+
+    if len(DATABASES) > 1:
+        DATABASE_ROUTERS = ["dso_api.router.DatabaseRouter"]
+
 else:
     # Regular development
     DATABASES = {
@@ -253,7 +281,6 @@ LOGGING = {
 }
 
 if CLOUD_ENV.lower().startswith("azure"):
-
     if AZURE_APPI_CONNECTION_STRING is None:
         raise ImproperlyConfigured(
             "Please specify the 'AZURE_APPI_CONNECTION_STRING' environment variable."
