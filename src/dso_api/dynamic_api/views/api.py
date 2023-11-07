@@ -83,12 +83,26 @@ class DynamicApiViewSet(DSOViewMixin, viewsets.ReadOnlyModelViewSet):
         return queryset
 
     def get_object(self) -> DynamicModel:
-        """An improved version of GenericAPIView.get_object() that supports temporal objects."""
-        if not self.temporal:
-            return super().get_object()
+        """An improved version of GenericAPIView.get_object() that supports temporal objects.
+
+        Initially there was a shortcut in this method. For non-temporal objects,
+        the item was collected using a `get_object()` call. However, database access
+        has changed, so this approach resulted in a permission error for fields that
+        were not allowed according to the scopes of the requesting user.
+        """
+
+        # We determine the fieldnames that are allowed for this particul request.
+        user_scopes = self.request.user_scopes
+        fields = self.model.table_schema().fields
+        available_field_names = {
+            f.python_name for f in fields if user_scopes.has_field_access(f)
+        } - {"schema"}
 
         # Despite being a detail view, still allow filters (e.g. ?volgnummer=...)
         queryset = self.filter_queryset(self.get_queryset())
+
+        if len(fields) - 1 > len(available_field_names):
+            queryset = queryset.only(*available_field_names)
 
         pk = self.kwargs[self.lookup_url_kwarg]
         if self.lookup_field != "pk":
