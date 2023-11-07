@@ -2496,7 +2496,7 @@ class TestFormats:
         data = json.loads(response.getvalue())
         assert data == {
             "type": "urn:apiexception:not_found",
-            "title": "No containers matches the given query.",
+            "title": "No Containers found matching the query",
             "detail": "Not found.",
             "status": 404,
         }
