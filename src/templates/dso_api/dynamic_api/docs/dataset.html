@@ -10,6 +10,28 @@
 <body>
 <div class="container">
 
+    <h2>Introductie API Keys</h2>
+    <blockquote style="border-color: #ec0101">
+        <p>
+            Het Dataplatform van de gemeente Amsterdam gaat het gebruik van een identificatie key bij het aanroepen van haar API's
+            vanaf 1 februari 2024 verplicht stellen. Vanaf 1 februari 2024 kun je de API's van het Dataplatform niet meer zonder een
+            key gebruiken. Vraag tijdig een key aan via dit aanvraagformulier. Doe je dit niet, dan werkt je applicatie of website
+            vanaf 1 februari 2024 niet meer. Dit geldt voor alle API's die op deze pagina gedocumenteerd zijn.
+        </p>
+        <p>
+            Door de API key kunnen we contact houden met de gebruikers van onze API's. Zo kunnen we gebruikers informeren over
+            updates. Daarnaast krijgen we hiermee inzicht in het gebruik van de API's en in wie welke dataset via de API bevraagt. Ook voor
+            dataeigenaren is dit waardevolle informatie.
+        </p>
+        <p>
+            Meer info: <br>
+            Deadline: 1 februari 2024 <br>
+            <a href="https://keys.api.data.amsterdam.nl/clients/v1/register/">Pagina API key aanvragen</a> <br>
+            <a href="https://keys.api.data.amsterdam.nl/clients/v1/docs/">Technische documentatie</a> <br>
+            Vragen? Mail naar dataplatform@amsterdam.nl <br>
+        <p>
+    </blockquote>
+
   <h1>{% if schema.title %}{{ schema.title }}{% else %}{{ name|title }}{% endif %}</h1>
   <p>{% if schema.description %}{{ schema.description }}{% endif %}</p>
   <ul>
