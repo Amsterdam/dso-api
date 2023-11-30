@@ -4,7 +4,8 @@ MAINTAINER datapunt@amsterdam.nl
 RUN apt update && apt install --no-install-recommends -y \
     build-essential \
     libgeos-dev \
-    libpq-dev
+    libpq-dev \
+    python3-dev
 COPY requirements* ./
 ARG PIP_REQUIREMENTS=requirements.txt
 RUN python -m pip install uwsgi
@@ -22,7 +23,9 @@ RUN apt update && apt install --no-install-recommends -y \
     libgeos-c1v5 \
     libpq5 \
     media-types \
-    netcat-openbsd
+    netcat-openbsd \
+    libpq-dev \ 
+    python3-dev
 
 # Copy python build artifacts from builder image
 COPY --from=builder /usr/local/bin/ /usr/local/bin/
@@ -30,6 +33,7 @@ COPY --from=builder /usr/local/lib/python3.11/site-packages/ /usr/local/lib/pyth
 
 WORKDIR /app
 COPY . ./
+RUN pip install -e 'schema-tools/[dev,tests,django]'
 
 ENV DJANGO_SETTINGS_MODULE=dso_api.settings DJANGO_DEBUG=false DSO_STATIC_DIR=/static
 RUN python manage.py collectstatic --noinput
