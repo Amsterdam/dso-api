@@ -60,9 +60,9 @@ function onPageLoad() {
   setHeaders();
   setPageLinks(page);
 
-  getData(PAGEURL).catch(parseException).then(data => {
-    if (data) {
-      parseData(data);
+  getData(PAGEURL).catch(parseException).then(result => {
+    if (result.data) {
+      parseData(result.data);
     }
     window.history.replaceState(JSON.parse(JSON.stringify({
       "url": PAGEURL,
@@ -101,6 +101,56 @@ function onPageLoad() {
       e.preventDefault();
     }
   }
+
+  document.getElementById("download-button").onclick = e => {
+    url = getUrlFromSettings();
+    formatValue = url.searchParams.get("_format") || "json";
+    downloadData(url, "output." + formatValue)
+    e.preventDefault();
+  }
+  for (let optEl of document.getElementsByClassName("download-format-option")) {
+    optEl.onclick = e => {
+      let formatValue = e.target.innerHTML;
+      url = getUrlFromSettings();
+      url.searchParams.set("_format", formatValue);
+      updateSetting("Accept", "*/*");
+      downloadData(url, "output." + formatValue)
+      e.preventDefault();
+    }
+  }
+}
+
+function downloadData(url, defaultFilename) {
+  headerSettings = getRequestSettings("headers");
+  headers = {};
+  headerSettings.forEach(h => {
+    if (h.active) {
+      headers[h.key] = h.value;
+    }
+  })
+
+  getData(url, "GET", headers, false, true).catch(parseException).then(result => {
+    let headerValue = result.response.getResponseHeader('Content-Disposition');
+    let fileName = defaultFilename 
+    if (headerValue) fileName = /.*filename=\"(.*)\"/.exec(headerValue)[1]
+      
+    // the document has to be compatible with Excel, we export in UTF-8
+    // we add the BOF for UTF-8, Excel requires this information to show chars with accents etc.
+    let blob = new Blob([new Uint8Array([0xef, 0xbb, 0xbf]), result.data], {
+        type: 'text/plain;charset=utf-8',
+      });
+
+      if (window.navigator.msSaveOrOpenBlob) {
+        window.navigator.msSaveBlob(blob, filename);
+      } else {
+        let elem = window.document.createElement('a');
+        elem.href = window.URL.createObjectURL(blob);
+        elem.download = fileName;
+        document.body.appendChild(elem);
+        elem.click();
+        document.body.removeChild(elem);
+      }
+    })
 }
 
 function updatePageRequest(url, method = "GET", pushHistory = true, headerSettings = null) {
@@ -125,7 +175,7 @@ function updatePageRequest(url, method = "GET", pushHistory = true, headerSettin
   document.getElementById("formatted-response-content").innerHTML = "Retrieving data..."
   let page = PAGEURL.searchParams.get("page");
   setPageLinks(page);
-  getData(url, method, headers).catch(parseException).then(data => {
+  getData(url, method, headers).catch(parseException).then(result => {
     if (pushHistory) {
       window.history.pushState(JSON.parse(JSON.stringify({
         "url": url,
@@ -134,8 +184,8 @@ function updatePageRequest(url, method = "GET", pushHistory = true, headerSettin
         "headers": headerSettings
       })), "", url);
     }
-    if (data) {
-      parseData(data);
+    if (result.data) {
+      parseData(result.data);
     }
     setParams();
     setHeaders(headerSettings);
@@ -280,7 +330,7 @@ function setPageLinks(page) {
   containerEl.classList.add("active");
 }
 
-function getData(url, method = "GET", headers = DEFAULT_HEADERS, doParseHeaders = true) {
+function getData(url, method = "GET", headers = DEFAULT_HEADERS, doParseHeaders = true, raw = false) {
   return new Promise(function(callback, err) {
     let http = new XMLHttpRequest();
     http.open(method, url, true);
@@ -295,8 +345,11 @@ function getData(url, method = "GET", headers = DEFAULT_HEADERS, doParseHeaders 
       }
       if (this.readyState === 4) {
         try {
-          let result = JSON.parse(this.responseText);
-          callback(result);
+          let result = this.responseText;
+          if (!raw && (result.length > 0 && result[0] === '{')) {
+            result = JSON.parse(this.responseText);
+          } 
+          callback({data: result, response: this});
         } catch (error) {
           parseResponseHeaders(this);
           err([error, this.responseText]);
@@ -585,7 +638,8 @@ function getOpenApi(callback) {
   oaURL.search = "?format=json";
   return getData(oaURL.href, "GET", {
     Accept: "*/*"
-  }, false).then(oaJSON => {
+  }, false).then(result => {
+    oaJSON = result.data
     oaSpec = oaJSON;
     let oaPath = findOAPath(PAGEURL.pathname, oaJSON.paths);
 
