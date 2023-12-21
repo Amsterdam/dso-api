@@ -10,8 +10,8 @@ sync:
 
 .PHONY: requirements
 requirements: requirements.in requirements_dev.in
-	pip-compile -v --generate-hashes --resolver=backtracking --output-file requirements.txt requirements.in
-	pip-compile -v --generate-hashes --resolver=backtracking --output-file requirements_dev.txt requirements_dev.in
+	pip-compile -v --generate-hashes --resolver=legacy --output-file requirements.txt requirements.in
+	pip-compile -v --generate-hashes --resolver=legacy --output-file requirements_dev.txt requirements_dev.in
 
 .PHONY: upgrade
 upgrade:
