@@ -482,3 +482,5 @@ APIKEY_LOGGER = "opencensus"
 
 # Initially we are proxy-ing from cvps HAProxy
 USE_X_FORWARDED_HOST = True
+
+SEAL_WARN_ONLY = True
