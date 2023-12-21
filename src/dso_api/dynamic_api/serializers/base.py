@@ -54,6 +54,7 @@ from dso_api.dynamic_api.utils import (
     has_field_access,
     limit_queryset_for_scopes,
     resolve_model_lookup,
+    user_scopes_have_table_fields_access,
 )
 from rest_framework_dso.embedding import EmbeddedFieldMatch
 from rest_framework_dso.fields import AbstractEmbeddedField, DSORelatedLinkField
@@ -240,8 +241,8 @@ class FieldAccessMixin(serializers.ModelSerializer):
             # The sub serializers do their own permission checks for their fields.
             # Anything else (even with source="*") passes through to enforce checks.
             return True
-        elif isinstance(field, FieldAccessMixin) and not user_scopes.has_table_fields_access(
-            field.Meta.model.table_schema()
+        elif isinstance(field, FieldAccessMixin) and not user_scopes_have_table_fields_access(
+            user_scopes, field.Meta.model.table_schema()
         ):
             # Extra case for the _links section: when a LinkSerializer object will not render
             # any fields (due to not having access to the table), don't render that block at all.
