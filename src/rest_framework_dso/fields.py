@@ -294,7 +294,10 @@ class AbstractEmbeddedField:
         self.parent_serializer_class = None
 
     def __repr__(self):
-        parent_serializer = self.parent_serializer_class.__name__
+        try:
+            parent_serializer = self.parent_serializer_class.__name__
+        except AttributeError:
+            parent_serializer = "not bound"
         return (
             f"<{self.__class__.__name__}: {parent_serializer}.{self.field_name},"
             f" {self.serializer_class.__name__}>"

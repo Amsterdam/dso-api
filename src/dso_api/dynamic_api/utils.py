@@ -11,6 +11,8 @@ from rest_framework import serializers
 from schematools.contrib.django.models import DynamicModel
 from schematools.contrib.django.signals import dynamic_models_removed
 from schematools.naming import to_snake_case
+from schematools.permissions import UserScopes
+from schematools.types import DatasetFieldSchema
 
 from rest_framework_dso.fields import GeoJSONIdentifierField
 
@@ -166,3 +168,34 @@ def get_source_model_fields(
         orm_path.append(model_field)
 
     return orm_path
+
+
+def has_field_access(user_scopes: UserScopes, field: DatasetFieldSchema) -> bool:
+    """Determine if a fields can be accessed given a particular user scope.
+
+    Also check the related tables to see if all fields have access.
+    """
+    related = (related_table := field.related_table) is not None
+    table_access = related and user_scopes.has_table_fields_access(related_table)
+    field_access = user_scopes.has_field_access(field)
+
+    if related and table_access and field_access:
+        return True
+    if not related and field_access:
+        return True
+    return False
+
+
+def limit_queryset_for_scopes(
+    user_scopes: UserScopes, fields: list[DatasetFieldSchema], queryset: models.QuerySet
+) -> models.QuerySet:
+    """Narrow the queryset to only query the fields that are allowed."""
+    available_field_names = set()
+    for f in fields:
+        if has_field_access(user_scopes, f):
+            available_field_names.add(f.python_name)
+    available_field_names -= {"schema"}
+
+    if len(fields) - 1 > len(available_field_names):
+        queryset = queryset.only(*available_field_names)
+    return queryset

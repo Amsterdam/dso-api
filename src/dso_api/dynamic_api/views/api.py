@@ -22,6 +22,7 @@ from schematools.contrib.django.models import DynamicModel
 
 from dso_api.dynamic_api import filters, permissions, serializers
 from dso_api.dynamic_api.temporal import TemporalTableQuery
+from dso_api.dynamic_api.utils import limit_queryset_for_scopes
 from rest_framework_dso.views import DSOViewMixin
 
 
@@ -46,7 +47,10 @@ class DynamicApiViewSet(DSOViewMixin, viewsets.ReadOnlyModelViewSet):
     lookup_url_kwarg = "pk"
 
     # Use our custom Amsterdam-schema backend for query filtering
-    filter_backends = [filters.DynamicFilterBackend, filters.DynamicOrderingFilter]
+    filter_backends = [
+        filters.DynamicFilterBackend,
+        filters.DynamicOrderingFilter,
+    ]
 
     # Custom permission that checks amsterdam schema auth settings
     permission_classes = [permissions.HasOAuth2Scopes]
@@ -75,6 +79,10 @@ class DynamicApiViewSet(DSOViewMixin, viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self) -> models.QuerySet:
         queryset = super().get_queryset()
+        queryset = limit_queryset_for_scopes(
+            self.request.user_scopes, self.model.table_schema().fields, queryset
+        )
+
         # Apply the ?geldigOp=... filters, unless ?volgnummer=.. is requested.
         # The version_value is checked for here, as the TemporalTableQuery can be
         # checked for a sub object too.
@@ -91,18 +99,8 @@ class DynamicApiViewSet(DSOViewMixin, viewsets.ReadOnlyModelViewSet):
         were not allowed according to the scopes of the requesting user.
         """
 
-        # We determine the fieldnames that are allowed for this particul request.
-        user_scopes = self.request.user_scopes
-        fields = self.model.table_schema().fields
-        available_field_names = {
-            f.python_name for f in fields if user_scopes.has_field_access(f)
-        } - {"schema"}
-
         # Despite being a detail view, still allow filters (e.g. ?volgnummer=...)
         queryset = self.filter_queryset(self.get_queryset())
-
-        if len(fields) - 1 > len(available_field_names):
-            queryset = queryset.only(*available_field_names)
 
         pk = self.kwargs[self.lookup_url_kwarg]
         if self.lookup_field != "pk":

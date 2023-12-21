@@ -14,6 +14,7 @@ from tests.utils import (
     normalize_data,
     patch_field_auth,
     to_drf_request,
+    to_serializer_view,
     unlazy,
 )
 
@@ -91,7 +92,8 @@ class TestDynamicSerializer:
         # Prove that data is serialized with relations.
         # Both the cluster_id field and 'cluster' field are generated.
         container_serializer = ContainerSerializer(
-            afval_container, context={"request": drf_request}
+            afval_container,
+            context={"request": drf_request, "view": to_serializer_view(afval_container_model)},
         )
         data = normalize_data(container_serializer.data)
         assert data == {
@@ -130,7 +132,7 @@ class TestDynamicSerializer:
         # Prove that expands work on object-detail level
         container_serializer = ContainerSerializer(
             afval_container,
-            context={"request": drf_request},
+            context={"request": drf_request, "view": to_serializer_view(afval_container_model)},
             fields_to_expand=["cluster"],
         )
         data = normalize_data(container_serializer.data)
@@ -185,7 +187,7 @@ class TestDynamicSerializer:
         )
         container_serializer = ContainerSerializer(
             container_without_cluster,
-            context={"request": drf_request},
+            context={"request": drf_request, "view": to_serializer_view(afval_container_model)},
             fields_to_expand=["cluster"],
         )
         data = normalize_data(container_serializer.data)
@@ -224,7 +226,7 @@ class TestDynamicSerializer:
         )
         container_serializer = ContainerSerializer(
             container_invalid_cluster,
-            context={"request": drf_request},
+            context={"request": drf_request, "view": to_serializer_view(afval_container_model)},
             fields_to_expand=["cluster"],
         )
         data = normalize_data(container_serializer.data)
@@ -272,7 +274,7 @@ class TestDynamicSerializer:
         # Prove that expands work on object-detail level
         container_serializer = ContainerSerializer(
             afval_container,
-            context={"request": drf_request},
+            context={"request": drf_request, "view": to_serializer_view(afval_container_model)},
             fields_to_expand=["cluster"],
         )
         data = normalize_data(container_serializer.data)
@@ -332,7 +334,8 @@ class TestDynamicSerializer:
         with django_assert_num_queries(1):
             pc_range = PostcodeRange.objects.get(id="123")
             postcode_serializer = PostcodeRangeSerializer(
-                pc_range, context={"request": drf_request}
+                pc_range,
+                context={"request": drf_request, "view": to_serializer_view(PostcodeRange)},
             )
             data = normalize_data(postcode_serializer.data)
             assert data == {
@@ -377,7 +380,7 @@ class TestDynamicSerializer:
         StadsdelenSerializer = serializer_factory(stadsdelen_model)
         stadsdelen_serializer = StadsdelenSerializer(
             stadsdeel,
-            context={"request": drf_request},
+            context={"request": drf_request, "view": to_serializer_view(stadsdelen_model)},
         )
         data = normalize_data(stadsdelen_serializer.data)
         assert data == {
@@ -425,7 +428,10 @@ class TestDynamicSerializer:
 
         vestiging_serializer = VestigingSerializer(
             vestiging1,
-            context={"request": drf_request},
+            context={
+                "request": drf_request,
+                "view": to_serializer_view(vestiging_vestiging_model),
+            },
         )
         data = normalize_data(vestiging_serializer.data)
         assert data == {
@@ -455,7 +461,10 @@ class TestDynamicSerializer:
 
         vestiging_serializer = VestigingSerializer(
             vestiging2,
-            context={"request": drf_request},
+            context={
+                "request": drf_request,
+                "view": to_serializer_view(vestiging_vestiging_model),
+            },
         )
         data = normalize_data(vestiging_serializer.data)
         assert data == {
@@ -486,7 +495,7 @@ class TestDynamicSerializer:
         AdresSerializer = serializer_factory(vestiging_adres_model)
         adres_serializer = AdresSerializer(
             post_adres1,
-            context={"request": drf_request},
+            context={"request": drf_request, "view": to_serializer_view(vestiging_adres_model)},
         )
         data = normalize_data(adres_serializer.data)
         assert data == {
@@ -557,7 +566,13 @@ class TestDynamicSerializer:
 
         # Prove that data is serialized with relations.
 
-        parkeervak_serializer = ParkeervakSerializer(parkeervak, context={"request": drf_request})
+        parkeervak_serializer = ParkeervakSerializer(
+            parkeervak,
+            context={
+                "request": drf_request,
+                "view": to_serializer_view(parkeervakken_parkeervak_model),
+            },
+        )
         data = normalize_data(parkeervak_serializer.data)
         assert data == {
             "_links": {
@@ -600,7 +615,8 @@ class TestDynamicSerializer:
         FietsplaatjesSerializer = serializer_factory(fietspaaltjes_model)
 
         fietsplaatjes_serializer = FietsplaatjesSerializer(
-            fietspaaltjes_data, context={"request": drf_request}
+            fietspaaltjes_data,
+            context={"request": drf_request, "view": to_serializer_view(fietspaaltjes_model)},
         )
 
         assert "'title', 'reference for DISPLAY FIELD'" in str(fietsplaatjes_serializer.data)
@@ -613,7 +629,11 @@ class TestDynamicSerializer:
 
         FietsplaatjesSerializer = serializer_factory(fietspaaltjes_model_no_display)
         fietsplaatjes_serializer = FietsplaatjesSerializer(
-            fietspaaltjes_data_no_display, context={"request": drf_request}
+            fietspaaltjes_data_no_display,
+            context={
+                "request": drf_request,
+                "view": to_serializer_view(fietspaaltjes_model_no_display),
+            },
         )
 
         assert "'title', 'reference for DISPLAY FIELD'" not in str(fietsplaatjes_serializer.data)
@@ -630,7 +650,8 @@ class TestDynamicSerializer:
 
         ExplosievenSerializer = serializer_factory(explosieven_model)
         explosieven_serializer = ExplosievenSerializer(
-            explosieven_data, context={"request": drf_request}
+            explosieven_data,
+            context={"request": drf_request, "view": to_serializer_view(explosieven_model)},
         )
 
         # Validation passes if outcome is None
@@ -642,7 +663,8 @@ class TestDynamicSerializer:
 
         ExplosievenSerializer = serializer_factory(explosieven_model)
         explosieven_serializer = ExplosievenSerializer(
-            explosieven_data, context={"request": drf_request}
+            explosieven_data,
+            context={"request": drf_request, "view": to_serializer_view(explosieven_model)},
         )
 
         # Validation passes if a space does not exists (translated to %20)
@@ -658,7 +680,8 @@ class TestDynamicSerializer:
 
         ExplosievenSerializer = serializer_factory(explosieven_model)
         explosieven_serializer = ExplosievenSerializer(
-            explosieven_data, context={"request": drf_request}
+            explosieven_data,
+            context={"request": drf_request, "view": to_serializer_view(explosieven_model)},
         )
 
         # Validation passes if outcome is None
@@ -677,7 +700,8 @@ class TestDynamicSerializer:
         """Prove that the ``_links`` field also handles permissions."""
         ContainerSerializer = serializer_factory(afval_container_model)
         container_serializer = ContainerSerializer(
-            afval_container, context={"request": drf_request}
+            afval_container,
+            context={"request": drf_request, "view": to_serializer_view(afval_container_model)},
         )
         data = normalize_data(container_serializer.data)
         assert data == {
@@ -710,7 +734,8 @@ class TestDynamicSerializer:
         # And again with scopes
         drf_request = to_drf_request(api_request_with_scopes(["BAG/R"]))
         container_serializer = ContainerSerializer(
-            afval_container, context={"request": drf_request}
+            afval_container,
+            context={"request": drf_request, "view": to_serializer_view(afval_container_model)},
         )
         data = normalize_data(container_serializer.data)
         assert data["_links"]["cluster"] == {
@@ -752,7 +777,8 @@ class TestDynamicSerializer:
 
         FietspaaltjesSerializer = serializer_factory(fietspaaltjes_model)
         fietspaaltjes_serializer = FietspaaltjesSerializer(
-            fietspaaltjes_data, context={"request": drf_request}
+            fietspaaltjes_data,
+            context={"request": drf_request, "view": to_serializer_view(fietspaaltjes_model)},
         )
 
         assert fietspaaltjes_serializer.data["area"] == "A"
@@ -789,7 +815,7 @@ class TestDynamicSerializer:
         FietspaaltjesSerializer = serializer_factory(fietspaaltjes_model)
         fietspaaltjes_serializer = FietspaaltjesSerializer(
             fietspaaltjes_model.objects.all(),
-            context={"request": drf_request},
+            context={"request": drf_request, "view": to_serializer_view(fietspaaltjes_model)},
             many=True,
         )
 
@@ -808,7 +834,8 @@ class TestDynamicSerializer:
         StatistiekenSerializer = serializer_factory(statistieken_model)
 
         statistieken_serializer = StatistiekenSerializer(
-            statistiek, context={"request": drf_request}
+            statistiek,
+            context={"request": drf_request, "view": to_serializer_view(statistieken_model)},
         )
         buurt_field = statistieken_serializer.fields["_links"].fields["buurt"]
         assert buurt_field.__class__.__name__ == "GebiedenBuurtenRawIdentifierSerializer"
@@ -829,7 +856,13 @@ class TestDynamicSerializer:
             eind_geldigheid="2021-01-01",
         )
         serializer_class = serializer_factory(unconventional_temporal_model)
-        serializer = serializer_class(obj, context={"request": drf_request})
+        serializer = serializer_class(
+            obj,
+            context={
+                "request": drf_request,
+                "view": to_serializer_view(unconventional_temporal_model),
+            },
+        )
 
         fields = serializer.fields
         assert set(fields.keys()) == {
@@ -852,3 +885,147 @@ class TestDynamicSerializer:
             fields["_links"]["self"]["unconventionalTemporalId"].source
             == "unconventional_temporal_id"
         )
+
+    @staticmethod
+    def test_skipping_protected_relations(drf_request, monumenten_models):
+        """Prove that title element shows display value if display field is specified"""
+
+        monumenten_model = monumenten_models["monumenten"]
+        complexen_model = monumenten_models["complexen"]
+        ComplexenSerializer = serializer_factory(complexen_model)
+        MonumentenSerializer = serializer_factory(monumenten_model)
+        monumenten_data = monumenten_model.objects.create(
+            identificatie="AB.CD",
+            monumentnummer=1,
+            beschrijving="oud gebouw",
+        )
+        complexen_data = complexen_model.objects.create(
+            identificatie="AB",
+            naam="Paleis",
+            beschrijving="prachtig complex",
+        )
+        monumenten_data.ligt_in_monumenten_complex = complexen_data
+        complexen_data.bestaat_uit_monumenten_monumenten.set([monumenten_data])
+
+        drf_request = to_drf_request(api_request_with_scopes(["BAG/R"]))
+        complexen_serializer = ComplexenSerializer(
+            complexen_data,
+            context={"request": drf_request, "view": to_serializer_view(complexen_model)},
+        )
+
+        monumenten_serializer = MonumentenSerializer(
+            monumenten_data,
+            context={"request": drf_request, "view": to_serializer_view(monumenten_model)},
+        )
+
+        # Because the monumenten schema has on protected field,
+        # the M2M link to monumenten will no be available in the output.
+        data = normalize_data(complexen_serializer.data)
+        assert data == {
+            "_links": {
+                "schema": "https://schemas.data.amsterdam.nl/"
+                "datasets/monumenten/dataset#complexen",
+                "self": {
+                    "href": "http://testserver/v1/monumenten/complexen/AB/",
+                    "identificatie": "AB",
+                    "title": "AB",
+                },
+            },
+            "identificatie": "AB",
+            "naam": "Paleis",
+        }
+
+        data = normalize_data(monumenten_serializer.data)
+        assert data == {
+            "_links": {
+                "schema": "https://schemas.data.amsterdam.nl/"
+                "datasets/monumenten/dataset#monumenten",
+                "self": {
+                    "href": "http://testserver/v1/monumenten/monumenten/AB.CD/",
+                    "identificatie": "AB.CD",
+                    "title": "AB.CD",
+                },
+            },
+            "identificatie": "AB.CD",
+            "ligtInMonumentenComplexId": "AB",
+            "monumentnummer": 1,
+        }
+
+    @staticmethod
+    def test_getting_protected_relations_when_using_scope(monumenten_models):
+        """Prove that title element shows display value if display field is specified"""
+
+        monumenten_model = monumenten_models["monumenten"]
+        complexen_model = monumenten_models["complexen"]
+        ComplexenSerializer = serializer_factory(complexen_model)
+        MonumentenSerializer = serializer_factory(monumenten_model)
+        monumenten_data = monumenten_model.objects.create(
+            identificatie="AB.CD",
+            monumentnummer=1,
+            beschrijving="oud gebouw",
+        )
+        complexen_data = complexen_model.objects.create(
+            identificatie="AB",
+            naam="Paleis",
+            beschrijving="prachtig complex",
+        )
+        monumenten_data.ligt_in_monumenten_complex = complexen_data
+        complexen_data.bestaat_uit_monumenten_monumenten.set([monumenten_data])
+
+        drf_request = to_drf_request(api_request_with_scopes(["MON/RDM"]))
+        complexen_serializer = ComplexenSerializer(
+            complexen_data,
+            context={"request": drf_request, "view": to_serializer_view(complexen_model)},
+        )
+
+        monumenten_serializer = MonumentenSerializer(
+            monumenten_data,
+            context={"request": drf_request, "view": to_serializer_view(monumenten_model)},
+        )
+
+        # Because the monumenten schema has on protected field,
+        # the M2M link to monumenten will no be available in the output.
+        data = normalize_data(complexen_serializer.data)
+        assert data == {
+            "_links": {
+                "bestaatUitMonumentenMonumenten": [
+                    {
+                        "href": "http://testserver/v1/monumenten/monumenten/AB.CD/",
+                        "identificatie": "AB.CD",
+                        "title": "AB.CD",
+                    }
+                ],
+                "schema": "https://schemas.data.amsterdam.nl/"
+                "datasets/monumenten/dataset#complexen",
+                "self": {
+                    "href": "http://testserver/v1/monumenten/complexen/AB/",
+                    "identificatie": "AB",
+                    "title": "AB",
+                },
+            },
+            "beschrijving": "prachtig complex",
+            "identificatie": "AB",
+            "naam": "Paleis",
+        }
+
+        data = normalize_data(monumenten_serializer.data)
+        assert data == {
+            "_links": {
+                "ligtInMonumentenComplex": {
+                    "href": "http://testserver/v1/monumenten/complexen/AB/",
+                    "identificatie": "AB",
+                    "title": "AB",
+                },
+                "schema": "https://schemas.data.amsterdam.nl/"
+                "datasets/monumenten/dataset#monumenten",
+                "self": {
+                    "href": "http://testserver/v1/monumenten/monumenten/AB.CD/",
+                    "identificatie": "AB.CD",
+                    "title": "AB.CD",
+                },
+            },
+            "beschrijving": "oud gebouw",
+            "identificatie": "AB.CD",
+            "ligtInMonumentenComplexId": "AB",
+            "monumentnummer": 1,
+        }
