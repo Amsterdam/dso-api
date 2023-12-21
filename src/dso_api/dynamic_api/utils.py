@@ -8,7 +8,7 @@ from django.db.models import Model
 from django.db.models.fields.related import RelatedField
 from django.db.models.fields.reverse_related import ForeignObjectRel
 from rest_framework import serializers
-from schematools.contrib.django.models import DynamicModel
+from schematools.contrib.django.models import DatasetTableSchema, DynamicModel
 from schematools.contrib.django.signals import dynamic_models_removed
 from schematools.naming import to_snake_case
 from schematools.permissions import UserScopes
@@ -170,13 +170,24 @@ def get_source_model_fields(
     return orm_path
 
 
+def user_scopes_have_table_fields_access(user_scopes: UserScopes, table: DatasetTableSchema):
+    """Temporary replacement function, because we cannot upgrade schematools.
+
+    Reason: incompatible Django version.
+    This function has to be removed when schematools can be upgraded again.
+    Then use:
+        `user_scopes.has_table_fields_access(table)`
+    """
+    return all(user_scopes.has_field_access(field) for field in table.fields)
+
+
 def has_field_access(user_scopes: UserScopes, field: DatasetFieldSchema) -> bool:
     """Determine if a fields can be accessed given a particular user scope.
 
     Also check the related tables to see if all fields have access.
     """
     related = (related_table := field.related_table) is not None
-    table_access = related and user_scopes.has_table_fields_access(related_table)
+    table_access = related and user_scopes_have_table_fields_access(user_scopes, related_table)
     field_access = user_scopes.has_field_access(field)
 
     if related and table_access and field_access:
