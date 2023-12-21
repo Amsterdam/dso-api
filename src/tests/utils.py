@@ -184,6 +184,14 @@ def to_drf_request(api_request):
     return request
 
 
+def to_serializer_view(model):
+    class DummyView:
+        def __init__(self, model):
+            self.model = model
+
+    return DummyView(model)
+
+
 def unlazy(value: SimpleLazyObject):
     """Extract the original object from a SimpleLazyObject()
     so it can be used for 'is' reference comparisons.

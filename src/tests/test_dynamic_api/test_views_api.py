@@ -480,10 +480,6 @@ class TestAuth:
         assert response.status_code == 200, data
         assert data == {
             "_links": {
-                "schema": (
-                    "https://schemas.data.amsterdam.nl"
-                    "/datasets/parkeervakken/dataset#parkeervakken"
-                ),
                 "self": {"href": "http://testserver/v1/parkeervakken/parkeervakken/1/", "id": "1"},
             },
             # no ID field (not authorized)
@@ -525,10 +521,6 @@ class TestAuth:
         data = read_response_json(response)
         assert data == {
             "_links": {
-                "schema": (
-                    "https://schemas.data.amsterdam.nl"
-                    "/datasets/parkeervakken/dataset#parkeervakken"
-                ),
                 "self": {"href": "http://testserver/v1/parkeervakken/parkeervakken/1/", "id": "1"},
             },
             "soort": "N",  # letters:1
@@ -541,10 +533,6 @@ class TestAuth:
         assert response.status_code == 200, data
         assert data == {
             "_links": {
-                "schema": (
-                    "https://schemas.data.amsterdam.nl"
-                    "/datasets/parkeervakken/dataset#parkeervakken"
-                ),
                 "self": {"href": "http://testserver/v1/parkeervakken/parkeervakken/1/", "id": "1"},
             },
             "type": "Langs",  # read permission
@@ -2458,9 +2446,10 @@ class TestFormats:
     }
 
     @pytest.mark.parametrize("format", sorted(DETAIL_FORMATS.keys()))
-    def test_detail(self, format, api_client, afval_container, filled_router):
+    def test_detail(self, format, api_client, afval_schema, afval_container, filled_router):
         """Prove that the detail view also returns an export of a single feature."""
         decoder, expected_type, expected_data = self.DETAIL_FORMATS[format]
+        patch_table_auth(afval_schema, "clusters", auth=["OPENBAAR"])
         url = reverse(
             "dynamic_api:afvalwegingen-containers-detail",
             kwargs={"pk": afval_container.pk},

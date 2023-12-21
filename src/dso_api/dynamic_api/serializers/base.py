@@ -23,7 +23,7 @@ from __future__ import annotations
 
 import logging
 from functools import wraps
-from typing import Any, Callable, Iterable, Union, cast
+from typing import Any, Callable, Iterable, OrderedDict, Union, cast
 
 from django.db import models
 from django.db.models.fields.related import RelatedField
@@ -34,12 +34,15 @@ from drf_spectacular.utils import extend_schema_field
 from more_itertools import first
 from rest_framework import serializers
 from rest_framework.exceptions import ParseError
+from rest_framework.fields import SkipField
+from rest_framework.relations import PKOnlyObject
 from rest_framework.utils.model_meta import RelationInfo
 from schematools.contrib.django.models import (
     DynamicModel,
     LooseRelationField,
     LooseRelationManyToManyField,
 )
+from schematools.naming import to_snake_case
 from schematools.types import DatasetTableSchema, Json
 
 from dso_api.dynamic_api.permissions import filter_unauthorized_expands
@@ -48,6 +51,8 @@ from dso_api.dynamic_api.utils import (
     get_serializer_source_fields,
     get_source_model_fields,
     get_view_name,
+    has_field_access,
+    limit_queryset_for_scopes,
     resolve_model_lookup,
 )
 from rest_framework_dso.embedding import EmbeddedFieldMatch
@@ -122,6 +127,12 @@ class DynamicListSerializer(DSOModelListSerializer):
         queryset accordingly. In effect, this reduces field access when "?_fields=..." is used
         on the request, and it avoids requesting database fields that the user has no access to.
         """
+        context = self.context
+        queryset = limit_queryset_for_scopes(
+            context["request"].user_scopes,
+            context["view"].model.table_schema().fields,
+            queryset,
+        )
         only_fields = get_serializer_source_fields(self)
         if only_fields:
             # Make sure no unnecessary fields are requested from the database.
@@ -229,7 +240,7 @@ class FieldAccessMixin(serializers.ModelSerializer):
             # The sub serializers do their own permission checks for their fields.
             # Anything else (even with source="*") passes through to enforce checks.
             return True
-        elif isinstance(field, FieldAccessMixin) and not user_scopes.has_table_access(
+        elif isinstance(field, FieldAccessMixin) and not user_scopes.has_table_fields_access(
             field.Meta.model.table_schema()
         ):
             # Extra case for the _links section: when a LinkSerializer object will not render
@@ -459,6 +470,36 @@ class DynamicLinksSerializer(FieldAccessMixin, DSOModelSerializerBase):
         table = instance.get_table_id()
         dataset_path = instance.get_dataset_path()
         return f"https://schemas.data.amsterdam.nl/datasets/{dataset_path}/dataset#{table}"
+
+    def to_representation(self, instance):
+        """Copy of `to_representation` of superclass with extra auth checks.
+
+        Unfortunately, we cannot do a `super()` call, because that already
+        leads to accessing the database causing permission errors
+        for unauthorized users.
+        """
+        user_scopes = self.context["request"].user_scopes
+        schema_fields_lookup = {
+            sf.python_name: sf for sf in self.context["view"].model.table_schema().fields
+        }
+        ret = OrderedDict()
+
+        for field in self._readable_fields:
+            snaked_field_name = to_snake_case(field.field_name)
+            if snaked_field_name in schema_fields_lookup and not has_field_access(
+                user_scopes, schema_fields_lookup[snaked_field_name]
+            ):
+                continue
+            try:
+                attribute = field.get_attribute(instance)
+            except SkipField:
+                continue
+            check_for_none = attribute.pk if isinstance(attribute, PKOnlyObject) else attribute
+            if check_for_none is None:
+                ret[field.field_name] = None
+            else:
+                ret[field.field_name] = field.to_representation(attribute)
+        return ret
 
     def get_fields(self) -> dict[str, serializers.Field]:
         """Override to avoid adding fields that loop back to a parent."""

@@ -1334,3 +1334,18 @@ def disable_apikey_middelware(settings):
         settings.MIDDLEWARE.remove("apikeyclient.ApiKeyMiddleware")
     except ValueError:
         pass
+
+
+@pytest.fixture()
+def monumenten_schema(schema_loader) -> DatasetSchema:
+    return schema_loader.get_dataset_from_file("monumenten.json")
+
+
+@pytest.fixture()
+def monumenten_dataset(monumenten_schema) -> Dataset:
+    return Dataset.create_for_schema(monumenten_schema)
+
+
+@pytest.fixture()
+def monumenten_models(monumenten_dataset, dynamic_models):
+    return dynamic_models["monumenten"]
