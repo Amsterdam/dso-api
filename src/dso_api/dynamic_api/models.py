@@ -1,4 +1,9 @@
+import logging
+
+from django.conf import settings
 from schematools.contrib.django.models import DynamicModel
+
+logger = logging.getLogger(__name__)
 
 
 class SealedDynamicModel(DynamicModel):
@@ -18,9 +23,15 @@ class SealedDynamicModel(DynamicModel):
         the queryset/manager and queryset iterator.
         """
         if fields and fields[0] not in self.__dict__:
-            raise RuntimeError(
+
+            message = (
                 f"Deferred attribute access: field '{fields[0]}' "
                 f"was excluded by .only() but was still accessed."
             )
+            if settings.SEAL_WARN_ONLY:
+                logger.warning(message)
+                return None
+            else:
+                raise RuntimeError(message)
 
         return super().refresh_from_db(using=using, fields=fields)
