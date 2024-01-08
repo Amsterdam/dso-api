@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 from functools import lru_cache
+from typing import Iterable
 
 from django.db import models
 from django.db.models import Model
@@ -198,15 +199,17 @@ def has_field_access(user_scopes: UserScopes, field: DatasetFieldSchema) -> bool
 
 
 def limit_queryset_for_scopes(
-    user_scopes: UserScopes, fields: list[DatasetFieldSchema], queryset: models.QuerySet
+    user_scopes: UserScopes, fields: Iterable[DatasetFieldSchema], queryset: models.QuerySet
 ) -> models.QuerySet:
     """Narrow the queryset to only query the fields that are allowed."""
     available_field_names = set()
-    for f in fields:
+    # Explicit conversion to list, because we need len()
+    fields_list = list(fields)
+    for f in fields_list:
         if has_field_access(user_scopes, f):
             available_field_names.add(f.python_name)
     available_field_names -= {"schema"}
 
-    if len(fields) - 1 > len(available_field_names):
+    if len(fields_list) - 1 > len(available_field_names):
         queryset = queryset.only(*available_field_names)
     return queryset
