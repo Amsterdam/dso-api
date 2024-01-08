@@ -80,7 +80,9 @@ class DynamicApiViewSet(DSOViewMixin, viewsets.ReadOnlyModelViewSet):
     def get_queryset(self) -> models.QuerySet:
         queryset = super().get_queryset()
         queryset = limit_queryset_for_scopes(
-            self.request.user_scopes, self.model.table_schema().fields, queryset
+            self.request.user_scopes,
+            self.model.table_schema().get_fields(include_subfields=True),
+            queryset,
         )
 
         # Apply the ?geldigOp=... filters, unless ?volgnummer=.. is requested.

@@ -131,7 +131,7 @@ class DynamicListSerializer(DSOModelListSerializer):
         context = self.context
         queryset = limit_queryset_for_scopes(
             context["request"].user_scopes,
-            context["view"].model.table_schema().fields,
+            context["view"].model.table_schema().get_fields(include_subfields=True),
             queryset,
         )
         only_fields = get_serializer_source_fields(self)
