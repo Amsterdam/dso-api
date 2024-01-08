@@ -6,7 +6,6 @@ from rest_framework.viewsets import ViewSetMixin
 from schematools.permissions import UserScopes
 from schematools.types import DatasetFieldSchema
 
-from dso_api.dynamic_api.utils import user_scopes_have_table_fields_access
 from rest_framework_dso.embedding import EmbeddedFieldMatch
 from rest_framework_dso.serializers import ExpandableSerializer
 
@@ -50,9 +49,7 @@ def filter_unauthorized_expands(
     result = []
     for match in expanded_fields:
         field_perm = user_scopes.has_field_access(match.field.field_schema)
-        table_perm = user_scopes_have_table_fields_access(
-            user_scopes, match.field.related_model.table_schema()
-        )
+        table_perm = user_scopes.has_table_fields_access(match.field.related_model.table_schema())
         if field_perm and table_perm:
             # Only add the field when there is permission
             result.append(match)
