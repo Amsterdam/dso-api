@@ -265,6 +265,13 @@ class FieldAccessMixin(serializers.ModelSerializer):
         for model_field in model_fields:
             field_schema = DynamicModel.get_field_schema(model_field)
 
+            # XXX Temporary fix. This has been fixed in schematools
+            # on the field_schema.auth property, however atm we cannot
+            # use that version of schematools, because of incompatible django
+            # version.
+            # So remove this if statement after upgrading to schematools >= 5.21.0
+            if field_schema.is_subfield:
+                field_schema = field_schema.parent_field
             # Check access
             permission = user_scopes.has_field_access(field_schema)
             if not permission:
