@@ -638,8 +638,8 @@ jsonschema-spec==0.1.3 \
     --hash=sha256:8d8db7c255e524fab1016a952a9143e5b6e3c074f4ed25d1878f8e97806caec0 \
     --hash=sha256:b3cde007ad65c2e631e2f8653cf187124a2c714d02d9fafbab68ad64bf5745d6
     # via openapi-spec-validator
-jwcrypto==1.4.2 \
-    --hash=sha256:80a35e9ed1b3b2c43ce03d92c5d48e6d0b6647e2aa2618e4963448923d78a37b
+jwcrypto==1.5.1 \
+    --hash=sha256:48bb9bf433777136253579e52b75ffe0f9a4a721d133d01f45a0b91ed5f4f1ae
     # via datapunt-authorization-django
 lark-parser==0.12.0 \
     --hash=sha256:0eaf30cb5ba787fe404d73a7d6e61df97b21d5a63ac26c5008c78a494373c675 \
