@@ -70,6 +70,12 @@
       <li><strong>REST URI:</strong> <a href="{{ table.uri }}">{{ table.uri }}</a></li>
       <li><strong>CSV-export:</strong> <a href="{{ table.uri }}?_format=csv">{{ table.uri }}?_format=csv</a></li>
       <li><strong>GeoJSON-export:</strong> <a href="{{ table.uri }}?_format=geojson">{{ table.uri }}?_format=geojson</a></li>
+      {% for export_info in table.exports %}
+        {% for ext_info in export_info %}
+            <li><strong>Downloadable {{ ext_info.type }} export:</strong> 
+                    <a href="{{ ext_info.url }}">{{ ext_info.url }}</a></li>
+        {% endfor %}
+      {% endfor %}
     </ul>
 
     <p>De volgende velden zijn beschikbaar:</p>

@@ -3,6 +3,7 @@ import logging
 import operator
 from typing import Any, FrozenSet, Iterable, List, NamedTuple, Optional
 
+from django.conf import settings
 from django.http import Http404, HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.template import TemplateDoesNotExist
@@ -154,34 +155,35 @@ class DatasetDocView(TemplateView):
 
     def get_context_data(self, **kwargs):
         dataset_name = to_snake_case(kwargs["dataset_name"])
-        ds: DatasetSchema = get_object_or_404(
+        ds: Dataset = get_object_or_404(
             Dataset.objects.api_enabled().db_enabled(), name=dataset_name
-        ).schema
+        )
+        ds_schema: DatasetSchema = ds.schema
 
-        main_title = ds.title or ds.db_name.replace("_", " ").capitalize()
+        main_title = ds_schema.title or ds_schema.db_name.replace("_", " ").capitalize()
 
         try:
-            if "name" in ds.publisher:
-                publisher = ds.publisher["name"]
-            elif isinstance(ds.publisher, dict) and "$ref" in ds.publisher:
-                publisher = ds.publisher["$ref"]
+            if "name" in ds_schema.publisher:
+                publisher = ds_schema.publisher["name"]
+            elif isinstance(ds_schema.publisher, dict) and "$ref" in ds_schema.publisher:
+                publisher = ds_schema.publisher["$ref"]
                 publisher = publisher.lstrip("/").removeprefix("publishers/")
         except NotImplementedError:  # Work around schema loaders being broken in tests.
             publisher = "N/A"
 
-        tables = [_table_context(t) for t in ds.tables]
+        tables = [_table_context(ds, t) for t in ds_schema.tables]
 
         context = super().get_context_data(**kwargs)
         context.update(
             dict(
                 schema=ds,
-                schema_name=ds.db_name,
-                schema_auth=ds.auth,
-                dataset_has_auth=bool(_fix_auth(ds.auth)),
+                schema_name=ds_schema.db_name,
+                schema_auth=ds_schema.auth,
+                dataset_has_auth=bool(_fix_auth(ds_schema.auth)),
                 main_title=main_title,
                 publisher=publisher,
                 tables=tables,
-                swagger_url=reverse(f"dynamic_api:openapi-{ds.id}"),
+                swagger_url=reverse(f"dynamic_api:openapi-{ds_schema.id}"),
             )
         )
 
@@ -290,13 +292,30 @@ LOOKUP_CONTEXT = {
 }
 
 
-def _table_context(table: DatasetTableSchema):
+def _table_context(ds: Dataset, table: DatasetTableSchema):
     """Collect all table data for the REST API spec."""
     dataset_name = to_snake_case(table.dataset.id)
     table_name = table.db_name_variant(with_dataset_prefix=False)
     uri = reverse(f"dynamic_api:{dataset_name}-{table_name}-list")
     fields = _list_fields(table.fields)
     filters = _get_filters(table.fields)
+    exports = []
+    # if dataset_name in settings.EXPORTED_DATASETS.split(","):
+    if ds.enable_export:
+        export_info = []
+        for type_, extension in (
+            ("csv", "csv"),
+            ("geopackage", "gpkg"),
+            ("jsonlines", "jsonl"),
+        ):
+            ext_info = {
+                "extension": extension,
+                "type": type_,
+                "url": f"{settings.EXPORT_BASE_URI}/{type_}/"
+                f"{dataset_name}_{table_name}.{extension}.zip",
+            }
+            export_info.append(ext_info)
+        exports.append(export_info)
 
     if (temporal := table.temporal) is not None:
         for name, fields in temporal.dimensions.items():
@@ -315,6 +334,7 @@ def _table_context(table: DatasetTableSchema):
         "id": table.id,
         "title": to_snake_case(table.id).replace("_", " ").capitalize(),
         "uri": uri,
+        "exports": exports,
         "description": table.get("description"),
         "fields": [ctx for field in fields for ctx in _get_field_context(field, wfs=False)],
         "filters": filters,
