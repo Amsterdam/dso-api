@@ -484,3 +484,6 @@ APIKEY_LOGGER = "opencensus"
 USE_X_FORWARDED_HOST = True
 
 SEAL_WARN_ONLY = True
+
+# Configuration for canned exports
+EXPORT_BASE_URI = "https://amsterdamdadipub.blob.core.windows.net/bulk-data"

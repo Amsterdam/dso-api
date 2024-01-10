@@ -59,6 +59,26 @@ def test_dataset(api_client, filled_router, gebieden_dataset):
 
 
 @pytest.mark.django_db
+def test_dataset_for_export_links(api_client, filled_router, gebieden_dataset):
+    """Tests documentation for a single dataset."""
+    gebieden_dataset.enable_export = True
+    gebieden_dataset.save()
+    gebieden_doc = reverse(
+        "dynamic_api:doc-gebieden"
+    )  # Gebieden has relationships between its tables.
+    assert gebieden_doc
+
+    response = api_client.get(gebieden_doc)
+    assert response.status_code == 200
+    content = response.rendered_content
+    # Extensions for exported format followed by ".zip"
+    # are signalling links to the generated exports.
+    assert "gpkg.zip" in content
+    assert "jsonl.zip" in content
+    assert "csv.zip" in content
+
+
+@pytest.mark.django_db
 def test_dataset_casing(api_client, filled_router, hoofdroutes_dataset):
     """Tests documentation for dataset that needs camel casing."""
     hoofdroutes_doc = reverse("dynamic_api:doc-hoofdroutes2")
