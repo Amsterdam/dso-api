@@ -295,7 +295,7 @@ LOOKUP_CONTEXT = {
 def _table_context(ds: Dataset, table: DatasetTableSchema):
     """Collect all table data for the REST API spec."""
     dataset_name = to_snake_case(table.dataset.id)
-    table_name = table.db_name_variant(with_dataset_prefix=False)
+    table_name = to_snake_case(table.id)
     uri = reverse(f"dynamic_api:{dataset_name}-{table_name}-list")
     fields = _list_fields(table.fields)
     filters = _get_filters(table.fields)
