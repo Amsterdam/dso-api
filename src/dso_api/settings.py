@@ -475,7 +475,7 @@ SHELL_PLUS_POST_IMPORTS = (
     "from dso_api.dynamic_api.serializers import serializer_factory",
     "from pprint import pprint",
 )
-APIKEY_MANDATORY = False
+APIKEY_MANDATORY = env.bool("APIKEY_MANDATORY", False)
 APIKEY_ENDPOINT = env.str("APIKEY_ENDPOINT", "http://localhost:8001/signingkeys/")
 APIKEY_LOCALKEYS = env.json("APIKEY_LOCALKEYS", None)
 APIKEY_LOGGER = "opencensus"
