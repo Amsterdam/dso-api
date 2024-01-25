@@ -476,6 +476,7 @@ SHELL_PLUS_POST_IMPORTS = (
     "from pprint import pprint",
 )
 APIKEY_MANDATORY = env.bool("APIKEY_MANDATORY", False)
+APIKEY_ALLOW_EMPTY = env.bool("APIKEY_ALLOW_EMPTY", True)
 APIKEY_ENDPOINT = env.str("APIKEY_ENDPOINT", "http://localhost:8001/signingkeys/")
 APIKEY_LOCALKEYS = env.json("APIKEY_LOCALKEYS", None)
 APIKEY_LOGGER = "opencensus"
