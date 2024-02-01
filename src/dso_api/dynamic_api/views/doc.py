@@ -98,7 +98,6 @@ class GenericDocs(View):
         </p>
         <p>
             Meer info: <br>
-            Deadline: 1 februari 2024 <br>
             <a href="https://keys.api.data.amsterdam.nl/clients/v1/register/">
                 Pagina API key aanvragen</a> <br>
             <a href="https://keys.api.data.amsterdam.nl/clients/v1/docs/">
