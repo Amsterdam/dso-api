@@ -193,6 +193,14 @@ if _USE_SECRET_STORE or CLOUD_ENV.startswith("azure"):
     if len(DATABASES) > 1:
         DATABASE_ROUTERS = ["dso_api.router.DatabaseRouter"]
 
+    # Configure cache from a secret
+    # CACHES = {
+    #     "default": {
+    #         "BACKEND": "django.core.cache.backends.redis.RedisCache",
+    #         "LOCATION": "redis://username:password@127.0.0.1:6379",
+    #     }
+    # }
+
 else:
     # Regular development
     DATABASES = {
