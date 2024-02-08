@@ -46,11 +46,12 @@ services:
       CLOUD_ENV: "${CLOUD_ENV}"
       DATAPUNT_API_URL: "${DATAPUNT_API_URL}"
       DJANGO_DEBUG: 1
+      APIKEY_ENABLED: "${APIKEY_ENABLED}"
     volumes:
       - ./src:/app
       - ./docs/build/html:/docs-static
       - "../amsterdam-schema/datasets:/tmp/datasets"
-      # - "../schema-tools/src/schematools:/usr/local/lib/python3.9/site-packages/schematools"
+      - "../schema-tools:/tmp/schema-tools"
     command: uwsgi --py-auto-reload=1 --enable-threads --lazy-apps --buffer-size=65535
 
   schemas:
