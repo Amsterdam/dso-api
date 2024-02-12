@@ -193,13 +193,19 @@ if _USE_SECRET_STORE or CLOUD_ENV.startswith("azure"):
     if len(DATABASES) > 1:
         DATABASE_ROUTERS = ["dso_api.router.DatabaseRouter"]
 
-    # Configure cache from a secret
-    # CACHES = {
-    #     "default": {
-    #         "BACKEND": "django.core.cache.backends.redis.RedisCache",
-    #         "LOCATION": "redis://username:password@127.0.0.1:6379",
-    #     }
-    # }
+    # Configure cache from a secret, so we cannot use CACHE_URL
+    # because that would expose redis passwd in an env var.
+    redis_password = Path(env.str("REDIS_PASSWD_PATH")).read_text()
+    redis_host = env.str("REDIS_HOSTNAME")
+    redis_port = env.int("REDIS_PORT", 6379)
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.redis.RedisCache",
+            # "LOCATION": "redis://username:password@127.0.0.1:6379",
+            # We leave out the username, defaults to `default` for redis
+            "LOCATION": f"redis://:{redis_password}@{redis_host}:{redis_port}",
+        }
+    }
 
 else:
     # Regular development
