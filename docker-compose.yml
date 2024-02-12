@@ -54,6 +54,13 @@ services:
       - "../schema-tools:/tmp/schema-tools"
     command: uwsgi --py-auto-reload=1 --enable-threads --lazy-apps --buffer-size=65535
 
+  redis:
+    image: 'bitnami/redis:latest'
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    ports:
+      - '6379:6379'
+
   schemas:
     image: nginx
     ports:
