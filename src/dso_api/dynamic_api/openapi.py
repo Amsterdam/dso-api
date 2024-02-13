@@ -146,7 +146,7 @@ def get_openapi_json_view(dataset: Dataset):
     return _html_on_browser(openapi_view, dataset_schema)
 
 
-CACHE_DURATION = 3600  # Seconds.
+CACHE_DURATION = 60 * 60 * 24 * 7  # Seconds.
 
 
 def _html_on_browser(openapi_view, dataset_schema):
