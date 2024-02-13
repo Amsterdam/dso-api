@@ -200,7 +200,7 @@ if _USE_SECRET_STORE or CLOUD_ENV.startswith("azure"):
     redis_port = env.int("REDIS_PORT", 6379)
     CACHES = {
         "default": {
-            "BACKEND": "django.core.cache.backends.redis.RedisCache",
+            "BACKEND": "django_redis.cache.RedisCache",
             # "LOCATION": "redis://username:password@127.0.0.1:6379",
             # We leave out the username, defaults to `default` for redis
             "LOCATION": f"redis://:{redis_password}@{redis_host}:{redis_port}",
