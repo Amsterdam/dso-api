@@ -63,7 +63,7 @@ def search_index(_request) -> HttpResponse:
 
 @method_decorator(decorators, name="get")
 class GenericDocs(View):
-    PRE = """
+    PRE = f"""
     <!DOCTYPE html>
     <html lang="en">
     <head>
@@ -98,9 +98,9 @@ class GenericDocs(View):
         </p>
         <p>
             Meer info: <br>
-            <a href="https://keys.api.data.amsterdam.nl/clients/v1/register/">
+            <a href="{settings.KEYS_API_URL}clients/v1/register/">
                 Pagina API key aanvragen</a> <br>
-            <a href="https://keys.api.data.amsterdam.nl/clients/v1/docs/">
+            <a href="{settings.KEYS_API_URL}clients/v1/docs/">
                 Technische documentatie</a> <br>
             Vragen? Mail naar dataplatform@amsterdam.nl <br>
         <p>
