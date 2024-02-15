@@ -38,7 +38,7 @@ STATIC_ROOT = env.str("DSO_STATIC_DIR")
 # -- Datapunt settings
 ENVIRONMENT_SUBDOMAIN = env.str("ENVIRONMENT_SUBDOMAIN", "data")
 
-KEYS_API_URL = env.str("KEYS_API_URL", f"https://keys.api.{ENVIRONMENT_SUBDOMAIN}.amsterdam.nl/")
+APIKEYSERV_API_URL = env.str("APIKEYSERV_API_URL", f"https://keys.api.{ENVIRONMENT_SUBDOMAIN}.amsterdam.nl/")
 DATAPUNT_API_URL = env.str("DATAPUNT_API_URL", "https://api.data.amsterdam.nl/")
 SCHEMA_URL = env.str("SCHEMA_URL", "https://schemas.data.amsterdam.nl/datasets/")
 PROFILES_URL = env.str("PROFILES_URL", "https://schemas.data.amsterdam.nl/profiles/")

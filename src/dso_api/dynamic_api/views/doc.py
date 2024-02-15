@@ -98,9 +98,9 @@ class GenericDocs(View):
         </p>
         <p>
             Meer info: <br>
-            <a href="{settings.KEYS_API_URL}clients/v1/register/">
+            <a href="{settings.APIKEYSERV_API_URL}clients/v1/register/">
                 Pagina API key aanvragen</a> <br>
-            <a href="{settings.KEYS_API_URL}clients/v1/docs/">
+            <a href="{settings.APIKEYSERV_API_URL}clients/v1/docs/">
                 Technische documentatie</a> <br>
             Vragen? Mail naar dataplatform@amsterdam.nl <br>
         <p>
