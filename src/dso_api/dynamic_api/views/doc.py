@@ -2,6 +2,7 @@
 import logging
 import operator
 from typing import Any, FrozenSet, Iterable, List, NamedTuple, Optional
+from urllib.parse import urljoin
 
 from django.conf import settings
 from django.http import Http404, HttpRequest, HttpResponse, JsonResponse
@@ -63,7 +64,7 @@ def search_index(_request) -> HttpResponse:
 
 @method_decorator(decorators, name="get")
 class GenericDocs(View):
-    PRE = """
+    PRE = f"""
     <!DOCTYPE html>
     <html lang="en">
     <head>
@@ -98,9 +99,9 @@ class GenericDocs(View):
         </p>
         <p>
             Meer info: <br>
-            <a href="https://keys.api.data.amsterdam.nl/clients/v1/register/">
+            <a href="{urljoin(settings.APIKEYSERV_API_URL, "/clients/v1/register/")}">
                 Pagina API key aanvragen</a> <br>
-            <a href="https://keys.api.data.amsterdam.nl/clients/v1/docs/">
+            <a href="{urljoin(settings.APIKEYSERV_API_URL, "/clients/v1/docs/")}">
                 Technische documentatie</a> <br>
             Vragen? Mail naar dataplatform@amsterdam.nl <br>
         <p>
