@@ -162,8 +162,8 @@ def normalize_data(data):
     return orjson.loads(json.dumps(data, default=_default))
 
 
-def api_request_with_scopes(scopes) -> Request:
-    request = APIRequestFactory().get("/v1/dummy/")
+def api_request_with_scopes(scopes, data=None) -> Request:
+    request = APIRequestFactory().get("/v1/dummy/", data=data)
     request.accept_crs = None  # for DSOSerializer, expects to be used with DSOViewMixin
     request.response_content_crs = None
 
