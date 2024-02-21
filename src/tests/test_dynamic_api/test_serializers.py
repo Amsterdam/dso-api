@@ -2,6 +2,7 @@ from datetime import date
 
 import pytest
 from django.apps import apps
+from django.core.exceptions import PermissionDenied
 from django.core.validators import EmailValidator, URLValidator
 from schematools.permissions import UserScopes
 from schematools.types import ProfileSchema
@@ -888,7 +889,7 @@ class TestDynamicSerializer:
 
     @staticmethod
     def test_skipping_protected_relations(drf_request, monumenten_models):
-        """Prove that title element shows display value if display field is specified"""
+        """Prove that protected relations are skipped in the output."""
 
         monumenten_model = monumenten_models["monumenten"]
         complexen_model = monumenten_models["complexen"]
@@ -953,7 +954,8 @@ class TestDynamicSerializer:
 
     @staticmethod
     def test_getting_protected_relations_when_using_scope(monumenten_models):
-        """Prove that title element shows display value if display field is specified"""
+        """Prove that protected relations are available in the output
+        when request has the right scope."""
 
         monumenten_model = monumenten_models["monumenten"]
         complexen_model = monumenten_models["complexen"]
@@ -1029,3 +1031,113 @@ class TestDynamicSerializer:
             "ligtInMonumentenComplexId": "AB",
             "monumentnummer": 1,
         }
+
+    @staticmethod
+    def test_request_unprotected_fields_without_scopes_should_be_allowed(
+        drf_request, monumenten_models
+    ):
+        """Prove that unprotected fields can be fetched without scopes."""
+
+        monumenten_model = monumenten_models["monumenten"]
+        complexen_model = monumenten_models["complexen"]
+        MonumentenSerializer = serializer_factory(monumenten_model)
+        monumenten_data = monumenten_model.objects.create(
+            identificatie="AB.CD",
+            monumentnummer=1,
+            beschrijving="oud gebouw",
+        )
+        complexen_data = complexen_model.objects.create(
+            identificatie="AB",
+            naam="Paleis",
+            beschrijving="prachtig complex",
+        )
+        monumenten_data.ligt_in_monumenten_complex = complexen_data
+        complexen_data.bestaat_uit_monumenten_monumenten.set([monumenten_data])
+
+        drf_request = to_drf_request(
+            api_request_with_scopes(
+                [],
+                data={
+                    "_expandScope": "ligtInMonumentenComplex",
+                    "_fields": "ligtInMonumentenComplex.naam",
+                },
+            )
+        )
+
+        monumenten_serializer = MonumentenSerializer(
+            monumenten_data,
+            context={"request": drf_request, "view": to_serializer_view(monumenten_model)},
+        )
+
+        data = normalize_data(monumenten_serializer.data)
+
+        assert data == {
+            "_embedded": {
+                "ligtInMonumentenComplex": {
+                    "_links": {
+                        "schema": "https://schemas.data.amsterdam.nl/datasets"
+                        "/monumenten/dataset#complexen",
+                        "self": {
+                            "href": "http://testserver/v1/monumenten/complexen/AB/",
+                            "identificatie": "AB",
+                            "title": "AB",
+                        },
+                    },
+                    "naam": "Paleis",
+                }
+            },
+            "_links": {
+                "schema": "https://schemas.data.amsterdam.nl/datasets"
+                "/monumenten/dataset#monumenten",
+                "self": {
+                    "href": "http://testserver/v1/monumenten/monumenten/AB.CD/",
+                    "identificatie": "AB.CD",
+                    "title": "AB.CD",
+                },
+            },
+            "identificatie": "AB.CD",
+            "ligtInMonumentenComplexId": "AB",
+            "monumentnummer": 1,
+        }
+
+    @staticmethod
+    def test_request_protected_fields_without_scopes_should_not_be_allowed(
+        drf_request, monumenten_models
+    ):
+        """Prove that protected fields cannot be fetched without scopes."""
+
+        monumenten_model = monumenten_models["monumenten"]
+        complexen_model = monumenten_models["complexen"]
+        MonumentenSerializer = serializer_factory(monumenten_model)
+        monumenten_data = monumenten_model.objects.create(
+            identificatie="AB.CD",
+            monumentnummer=1,
+            beschrijving="oud gebouw",
+        )
+        complexen_data = complexen_model.objects.create(
+            identificatie="AB",
+            naam="Paleis",
+            beschrijving="prachtig complex",
+        )
+        monumenten_data.ligt_in_monumenten_complex = complexen_data
+        complexen_data.bestaat_uit_monumenten_monumenten.set([monumenten_data])
+
+        drf_request = to_drf_request(
+            api_request_with_scopes(
+                [],
+                data={
+                    "_expandScope": "ligtInMonumentenComplex",
+                    "_fields": "ligtInMonumentenComplex.beschrijving",
+                },
+            )
+        )
+
+        monumenten_serializer = MonumentenSerializer(
+            monumenten_data,
+            context={"request": drf_request, "view": to_serializer_view(monumenten_model)},
+        )
+
+        # Trying to fetch the data (Serializer tries to render the data)
+        # should not be allowed.
+        with pytest.raises(PermissionDenied):
+            monumenten_serializer.data
