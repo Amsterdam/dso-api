@@ -119,6 +119,10 @@ class FieldsToDisplay:
             )
 
     @property
+    def allow_all(self):
+        return self._allow_all
+
+    @property
     def includes(self) -> Iterable[str]:
         """Tell which fields must be included.
         Note that any item in :attr:`children` should also be considerd for inclusion.

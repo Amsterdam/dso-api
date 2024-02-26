@@ -41,15 +41,21 @@ def check_filter_field_access(field_name: str, field: DatasetFieldSchema, user_s
                 raise PermissionDenied(f"Access denied to filter on: {field_name}")
 
 
-def _get_embedded_schemafields(expanded_field: EmbeddedFieldMatch) -> list[DatasetFieldSchema]:
+def _get_table_fields_perm(expanded_field: EmbeddedFieldMatch, user_scopes: UserScopes) -> bool:
+    """Do the user_scopes have access for the indicated expanded_field."""
     serializer = expanded_field.embedded_serializer
     if not isinstance(serializer, DSOSerializer):
-        return []
+        return True
+    fields_to_display = serializer.fields_to_display
     table_schema = expanded_field.field.related_model.table_schema()
-    return [
-        table_schema.get_field_by_id(field_id)
-        for field_id in serializer.fields_to_display.includes
+    if fields_to_display.allow_all:
+        return user_scopes.has_table_fields_access(table_schema)
+
+    included_fields = [
+        table_schema.get_field_by_id(field_id) for field_id in fields_to_display.includes
     ]
+
+    return all(user_scopes.has_field_access(schema_field) for schema_field in included_fields)
 
 
 def filter_unauthorized_expands(
@@ -61,10 +67,7 @@ def filter_unauthorized_expands(
     for match in expanded_fields:
         field_perm = user_scopes.has_field_access(match.field.field_schema)
         table_perm = user_scopes.has_table_access(match.field.related_model.table_schema())
-        table_fields_perm = all(
-            user_scopes.has_field_access(schema_field)
-            for schema_field in _get_embedded_schemafields(match)
-        )
+        table_fields_perm = _get_table_fields_perm(match, user_scopes)
         if field_perm and table_perm and table_fields_perm:
             # Only add the field when there is permission
             result.append(match)

@@ -375,6 +375,10 @@ class DynamicSerializer(FieldAccessMixin, DSOModelSerializer):
 
         This override makes sure the correct temporal slice is returned.
         """
+        fields_to_display = self.fields_to_display
+        fields_subset = []
+        if not (allow_all := fields_to_display.allow_all):
+            fields_subset = fields_to_display.includes
         if embedded_field.is_loose:
             # Loose relations always point to a temporal object. In this case, the link happens on
             # the first key only, and the temporal slice makes sure that a second WHERE condition
@@ -382,11 +386,16 @@ class DynamicSerializer(FieldAccessMixin, DSOModelSerializer):
             # When 'identifier' is ["identificatie", "volgnummer"], take the first as grouper.
             model = embedded_field.related_model
             id_field = embedded_field.related_id_field or model.table_schema().identifier[0]
-            return filter_temporal_slice(self._request, model.objects.all()).filter(
+            filtered_slice = filter_temporal_slice(self._request, model.objects.all()).filter(
                 **{f"{id_field}__in": id_list}
             )
+            if not allow_all:
+                filtered_slice = filtered_slice.only(*fields_subset)
+            return filtered_slice
         else:
             queryset = super().get_embedded_objects_by_id(embedded_field, id_list=id_list)
+            if not allow_all:
+                queryset = queryset.only(*fields_subset)
 
             # For all relations: if they are in fact temporal objects
             # still only return those that fit within the current timeframe.
