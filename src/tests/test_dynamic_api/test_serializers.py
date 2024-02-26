@@ -1053,6 +1053,8 @@ class TestDynamicSerializer:
         )
         monumenten_data.ligt_in_monumenten_complex = complexen_data
         complexen_data.bestaat_uit_monumenten_monumenten.set([monumenten_data])
+        monumenten_data._state.fields_cache.clear()
+        complexen_data._state.fields_cache.clear()
 
         drf_request = to_drf_request(
             api_request_with_scopes(
@@ -1128,6 +1130,47 @@ class TestDynamicSerializer:
                 data={
                     "_expandScope": "ligtInMonumentenComplex",
                     "_fields": "ligtInMonumentenComplex.beschrijving",
+                },
+            )
+        )
+
+        monumenten_serializer = MonumentenSerializer(
+            monumenten_data,
+            context={"request": drf_request, "view": to_serializer_view(monumenten_model)},
+        )
+
+        # Trying to fetch the data (Serializer tries to render the data)
+        # should not be allowed.
+        with pytest.raises(PermissionDenied):
+            monumenten_serializer.data
+
+    @staticmethod
+    def test_request_expand_scope_for_protected_expand_should_not_be_allowed(
+        drf_request, monumenten_models
+    ):
+        """Prove that the full table (not `_fields`) cannot be fetched without scopes."""
+
+        monumenten_model = monumenten_models["monumenten"]
+        complexen_model = monumenten_models["complexen"]
+        MonumentenSerializer = serializer_factory(monumenten_model)
+        monumenten_data = monumenten_model.objects.create(
+            identificatie="AB.CD",
+            monumentnummer=1,
+            beschrijving="oud gebouw",
+        )
+        complexen_data = complexen_model.objects.create(
+            identificatie="AB",
+            naam="Paleis",
+            beschrijving="prachtig complex",
+        )
+        monumenten_data.ligt_in_monumenten_complex = complexen_data
+        complexen_data.bestaat_uit_monumenten_monumenten.set([monumenten_data])
+
+        drf_request = to_drf_request(
+            api_request_with_scopes(
+                [],
+                data={
+                    "_expandScope": "ligtInMonumentenComplex",
                 },
             )
         )
