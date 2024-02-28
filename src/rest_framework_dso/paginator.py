@@ -274,6 +274,6 @@ class DSOPage(DjangoPage):
         # as a sentinel to detect wether more items exist beyond this page
         # and hence a next page exists.
         # This object should not be rendered so we call next() again to stop the iterator.
-        if observable_iterator.number_returned == self.paginator.per_page:
+        if observable_iterator.number_returned == self.paginator.per_page + 1:
             # Throw away the sentinel item
             next(observable_iterator)
