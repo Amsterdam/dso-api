@@ -104,6 +104,10 @@
             "reasonsNonPublic": ["5.1 1d: Bevat persoonsgegevens"],
             "type": "string",
             "description": "Afgeschermde beschrijving van het complex aan de hand van gebouwtype en bouwgeschiedenis, architectonische verschijningsvorm en cultuurhistorische context"
+          },
+          "beschrijvingPubliek": {
+            "type": "string",
+            "description": "Publieke beschrijving van het complex aan de hand van gebouwtype en bouwgeschiedenis, architectonische verschijningsvorm en cultuurhistorische context"
           }
         }
       }

@@ -903,7 +903,8 @@ class TestDynamicSerializer:
         complexen_data = complexen_model.objects.create(
             identificatie="AB",
             naam="Paleis",
-            beschrijving="prachtig complex",
+            beschrijving="prachtig complex (geheim)",
+            beschrijving_publiek="prachtig complex",
         )
         monumenten_data.ligt_in_monumenten_complex = complexen_data
         complexen_data.bestaat_uit_monumenten_monumenten.set([monumenten_data])
@@ -932,6 +933,7 @@ class TestDynamicSerializer:
                     "title": "AB",
                 },
             },
+            "beschrijvingPubliek": "prachtig complex",
             "identificatie": "AB",
             "naam": "Paleis",
         }
@@ -969,7 +971,8 @@ class TestDynamicSerializer:
         complexen_data = complexen_model.objects.create(
             identificatie="AB",
             naam="Paleis",
-            beschrijving="prachtig complex",
+            beschrijving="prachtig complex (geheim)",
+            beschrijving_publiek="prachtig complex",
         )
         monumenten_data.ligt_in_monumenten_complex = complexen_data
         complexen_data.bestaat_uit_monumenten_monumenten.set([monumenten_data])
@@ -1005,7 +1008,8 @@ class TestDynamicSerializer:
                     "title": "AB",
                 },
             },
-            "beschrijving": "prachtig complex",
+            "beschrijving": "prachtig complex (geheim)",
+            "beschrijvingPubliek": "prachtig complex",
             "identificatie": "AB",
             "naam": "Paleis",
         }
@@ -1049,19 +1053,27 @@ class TestDynamicSerializer:
         complexen_data = complexen_model.objects.create(
             identificatie="AB",
             naam="Paleis",
-            beschrijving="prachtig complex",
+            beschrijving="prachtig complex (geheim)",
+            beschrijving_publiek="prachtig complex",
         )
         monumenten_data.ligt_in_monumenten_complex = complexen_data
         complexen_data.bestaat_uit_monumenten_monumenten.set([monumenten_data])
+
+        # Nasty trick to avoid fetching prefetched data.
+        # When prefetching, the `DynamicSerializer.get_embedded_objects_by_id`
+        # is not touched.
         monumenten_data._state.fields_cache.clear()
         complexen_data._state.fields_cache.clear()
 
+        # We also add a camelCased name to the `_fields`, because this
+        # needs an extra snakecasing treatment in the code to work properly.
         drf_request = to_drf_request(
             api_request_with_scopes(
                 [],
                 data={
                     "_expandScope": "ligtInMonumentenComplex",
-                    "_fields": "ligtInMonumentenComplex.naam",
+                    "_fields": "ligtInMonumentenComplex.naam,"
+                    "ligtInMonumentenComplex.beschrijvingPubliek",
                 },
             )
         )
@@ -1085,6 +1097,7 @@ class TestDynamicSerializer:
                             "title": "AB",
                         },
                     },
+                    "beschrijvingPubliek": "prachtig complex",
                     "naam": "Paleis",
                 }
             },

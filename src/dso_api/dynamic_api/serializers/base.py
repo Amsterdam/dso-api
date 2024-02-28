@@ -378,7 +378,9 @@ class DynamicSerializer(FieldAccessMixin, DSOModelSerializer):
         fields_to_display = self.fields_to_display
         fields_subset = []
         if not (allow_all := fields_to_display.allow_all):
-            fields_subset = fields_to_display.includes
+            # Need to snakecase here, we feed this to the queryset.only()
+            # that is expecting snakecased names.
+            fields_subset = [to_snake_case(fn) for fn in fields_to_display.includes]
         if embedded_field.is_loose:
             # Loose relations always point to a temporal object. In this case, the link happens on
             # the first key only, and the temporal slice makes sure that a second WHERE condition
