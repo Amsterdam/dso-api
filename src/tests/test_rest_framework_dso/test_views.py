@@ -632,3 +632,24 @@ class TestListCount:
         assert "X-Pagination-Count" not in response
         assert "totalElements" not in data["page"]
         assert "totalPages" not in data["page"]
+
+    # Test that all object are returned during pagination
+    @pytest.mark.parametrize("page_size_param", ["_pageSize", "page_size"])
+    def test_list_pagination(self, page_size_param, api_client):
+        movie_objects = {"foo", "bar", "baz", "xyz"}
+        for movie in movie_objects:
+            Movie.objects.create(name=movie)
+
+        response_page_1 = api_client.get(
+            "/v1/movies", data={"_count": "true", page_size_param: 2, "page": 1}
+        )
+        response_page_2 = api_client.get(
+            "/v1/movies", data={"_count": "true", page_size_param: 2, "page": 2}
+        )
+        movies_returned = [
+            movie["name"]
+            for movie in read_response_json(response_page_1)["_embedded"]["movie"]
+            + read_response_json(response_page_2)["_embedded"]["movie"]
+        ]
+
+        assert set(movies_returned) == movie_objects
