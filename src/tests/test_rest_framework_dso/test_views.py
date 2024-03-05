@@ -635,8 +635,8 @@ class TestListCount:
 
     # Test that all object are returned during pagination
     @pytest.mark.parametrize("page_size_param", ["_pageSize", "page_size"])
-    @pytest.mark.parametrize("movie_objects", [{"foo", "bar", "baz", "xyz"}])
-    def test_list_pagination(self, movie_objects, page_size_param, api_client):
+    def test_list_pagination(self, page_size_param, api_client):
+        movie_objects = {"foo", "bar", "baz", "xyz"}
         for movie in movie_objects:
             Movie.objects.create(name=movie)
 
