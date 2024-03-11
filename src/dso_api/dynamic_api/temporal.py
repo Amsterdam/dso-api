@@ -173,14 +173,15 @@ class TemporalTableQuery:
             # and allow ?geldigOp=* to return all data
             return queryset
 
+        identifier = self.table_schema.identifier[0]  # from ["identificatie", "volgnummer"]
+
         try:
             range_q, main_ordering = self._compile_range_query(prefix)
-            return queryset.filter(range_q).order_by(main_ordering)
+            return queryset.filter(range_q).order_by(f"{prefix}{identifier}", main_ordering)
         except RuntimeError:
             # Last attempt to get only the current temporal record; order by sequence.
             # does SELECT DISTINCT ON(identifier) ... ORDER BY identifier, sequence DESC
             # Alternative would be something like `HAVING sequence = MAX(SELECT sequence FROM ..)`
-            identifier = self.table_schema.identifier[0]  # from ["identificatie", "volgnummer"]
             sequence_name = self.table_schema.temporal.identifier
             return queryset.distinct(
                 *queryset.query.distinct_fields, f"{prefix}{identifier}"
