@@ -25,7 +25,6 @@ services:
         PIP_REQUIREMENTS: requirements_dev.txt
     ports:
       - "8090:8000"
-      - "9191:9191"
     links:
       - database
     environment:
@@ -53,7 +52,7 @@ services:
       - ./docs/build/html:/docs-static
       - "../amsterdam-schema:/tmp/amsterdam-schema"
       - "../schema-tools:/tmp/schema-tools"
-    command: uwsgi --py-auto-reload=1 --enable-threads --lazy-apps --buffer-size=65535
+    command: uwsgi --py-auto-reload=1 --enable-threads --lazy-apps --buffer-size=65535 --stats /tmp/uwsgi_stats.sock
 
   redis:
     image: 'bitnami/redis:latest'
