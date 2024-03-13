@@ -25,6 +25,7 @@ services:
         PIP_REQUIREMENTS: requirements_dev.txt
     ports:
       - "8090:8000"
+      - "9191:9191"
     links:
       - database
     environment:
@@ -50,7 +51,7 @@ services:
     volumes:
       - ./src:/app
       - ./docs/build/html:/docs-static
-      - "../amsterdam-schema/datasets:/tmp/datasets"
+      - "../amsterdam-schema:/tmp/amsterdam-schema"
       - "../schema-tools:/tmp/schema-tools"
     command: uwsgi --py-auto-reload=1 --enable-threads --lazy-apps --buffer-size=65535
 
