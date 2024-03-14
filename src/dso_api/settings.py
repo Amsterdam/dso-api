@@ -66,7 +66,10 @@ MAX_REPLICA_COUNT = env.int("MAX_REPLICA_COUNT", 5)
 # -- Security
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = env.str("SECRET_KEY", "insecure")
+try:
+    SECRET_KEY = Path("/mnt/secrets-store/django-secret-key").read_text()
+except FileNotFoundError:
+    SECRET_KEY = env.str("SECRET_KEY", "insecure")
 
 SESSION_COOKIE_SECURE = env.bool("SESSION_COOKIE_SECURE", not DEBUG)
 CSRF_COOKIE_SECURE = env.bool("CSRF_COOKIE_SECURE", not DEBUG)
