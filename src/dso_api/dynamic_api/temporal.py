@@ -17,6 +17,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.request import Request
 from schematools.permissions import UserScopes
 from schematools.types import DatasetTableSchema, TemporalDimensionFields
+from schematools.naming import to_snake_case
 
 from dso_api.dynamic_api.permissions import check_filter_field_access
 
@@ -178,7 +179,7 @@ class TemporalTableQuery:
             raise RuntimeError("Schema does not implement usable temporal dimensions")
         sequence_name = self.table_schema.temporal.identifier
         # Order of identifier_set is not guaranteed, so we explicitly remove the sequence_name
-        identifier = list(identifier_set - {sequence_name})[0]
+        identifier = to_snake_case(list(identifier_set - {sequence_name})[0])
 
         try:
             range_q, main_ordering = self._compile_range_query(prefix)
