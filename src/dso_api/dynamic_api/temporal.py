@@ -17,6 +17,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.request import Request
 from schematools.permissions import UserScopes
 from schematools.types import DatasetTableSchema, TemporalDimensionFields
+from schematools.naming import to_snake_case
 
 from dso_api.dynamic_api.permissions import check_filter_field_access
 
@@ -182,7 +183,7 @@ class TemporalTableQuery:
 
         try:
             range_q, main_ordering = self._compile_range_query(prefix)
-            return queryset.filter(range_q).order_by(f"{prefix}{identifier}", main_ordering)
+            return queryset.filter(range_q).order_by(f"{to_snake_case(prefix)}{to_snake_case(identifier)}", main_ordering)
         except RuntimeError:
             # Last attempt to get only the current temporal record; order by sequence.
             # does SELECT DISTINCT ON(identifier) ... ORDER BY identifier, sequence DESC
