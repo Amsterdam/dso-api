@@ -179,11 +179,11 @@ class TemporalTableQuery:
             raise RuntimeError("Schema does not implement usable temporal dimensions")
         sequence_name = self.table_schema.temporal.identifier
         # Order of identifier_set is not guaranteed, so we explicitly remove the sequence_name
-        identifier = list(identifier_set - {sequence_name})[0]
+        identifier = to_snake_case(list(identifier_set - {sequence_name})[0])
 
         try:
             range_q, main_ordering = self._compile_range_query(prefix)
-            return queryset.filter(range_q).order_by(f"{to_snake_case(prefix)}{to_snake_case(identifier)}", main_ordering)
+            return queryset.filter(range_q).order_by(f"{prefix}{identifier}", main_ordering)
         except RuntimeError:
             # Last attempt to get only the current temporal record; order by sequence.
             # does SELECT DISTINCT ON(identifier) ... ORDER BY identifier, sequence DESC
