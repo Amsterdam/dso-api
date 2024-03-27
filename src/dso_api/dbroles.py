@@ -39,7 +39,7 @@ logger = logging.getLogger(__name__)
 
 def is_internal(user_email: str) -> bool:
     """Tell whether a user is an internal user."""
-    return user_email.endswith("@amsterdam.nl")
+    return user_email.endswith(".amsterdam.nl")
 
 
 @receiver(connection_created)
