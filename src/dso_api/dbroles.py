@@ -22,6 +22,7 @@ from __future__ import annotations
 import logging
 from typing import Optional
 from urllib.parse import urlparse
+import re
 
 from asgiref.local import Local
 from django.conf import settings
@@ -39,7 +40,8 @@ logger = logging.getLogger(__name__)
 
 def is_internal(user_email: str) -> bool:
     """Tell whether a user is an internal user."""
-    return user_email.endswith("@amsterdam.nl")
+    if re.search(r"([@\.]amsterdam\.nl)$", user_email):
+        return True
 
 
 @receiver(connection_created)
