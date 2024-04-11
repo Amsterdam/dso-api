@@ -508,3 +508,6 @@ SEAL_WARN_ONLY = True
 
 # Configuration for canned exports
 EXPORT_BASE_URI = "https://amsterdamdadipub.blob.core.windows.net/bulk-data"
+
+# Setting for django-gisserver, disabling this makes WFS much faster
+GISSERVER_CAPABILITIES_BOUNDING_BOX = False
