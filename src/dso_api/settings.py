@@ -445,7 +445,7 @@ DATAPUNT_AUTHZ = {
 
 # -- Local app settings
 
-AMSTERDAM_SCHEMA = {"geosearch_disabled_datasets": ["bag", "meetbouten"]}
+AMSTERDAM_SCHEMA = {"geosearch_disabled_datasets": []}
 
 # On unapplied migrations, the Django 'check' fails when trying to
 # Fetch datasets from the database. Viewsets are not needed when migrating.
