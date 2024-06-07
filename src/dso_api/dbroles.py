@@ -20,9 +20,9 @@ because the current user doesn't change; only the current role does.
 from __future__ import annotations
 
 import logging
+import re
 from typing import Optional
 from urllib.parse import urlparse
-import re
 
 from asgiref.local import Local
 from django.conf import settings

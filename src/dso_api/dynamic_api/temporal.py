@@ -15,9 +15,9 @@ from django.utils.timezone import make_aware, now
 from more_itertools import first
 from rest_framework.exceptions import ValidationError
 from rest_framework.request import Request
+from schematools.naming import to_snake_case
 from schematools.permissions import UserScopes
 from schematools.types import DatasetTableSchema, TemporalDimensionFields
-from schematools.naming import to_snake_case
 
 from dso_api.dynamic_api.permissions import check_filter_field_access
 
