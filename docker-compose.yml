@@ -1,9 +1,4 @@
-version: "3.7"
 services:
-  # This Postgres container is used for testing by Jenkins.
-  # The actual deployment uses a database configured separately.
-  # For development, use the one from dataservices-airflow;
-  # see dev-docs/source/howto/install.rst.
   database:
     image: postgis/postgis:14-3.2
     restart: always
@@ -42,10 +37,10 @@ services:
       UWSGI_MASTER: 1
       UWSGI_STATIC_MAP: "/dso_api/static=/static"
       SECRET_KEY: insecure
-      DATABASE_URL: "${DATABASE_URL:-postgres://postgres:insecure@database/dataservices}"
-      DJANGO_LOG_LEVEL: "${DJANGO_LOG_LEVEL}"
-      DSO_API_LOG_LEVEL: "${DSO_API_LOG_LEVEL}"
-      DSO_API_AUDIT_LOG_LEVEL: "${DSO_API_AUDIT_LOG_LEVEL}"
+      DATABASE_URL: "${DATABASE_URL:-postgresql://postgres:insecure@database/dataservices}"
+      DJANGO_LOG_LEVEL: "${DJANGO_LOG_LEVEL:-INFO}"
+      DSO_API_LOG_LEVEL: "${DSO_API_LOG_LEVEL:-INFO}"
+      DSO_API_AUDIT_LOG_LEVEL: "${DSO_API_AUDIT_LOG_LEVEL:-INFO}"
       AZURE_APPI_AUDIT_CONNECTION_STRING: "${AZURE_APPI_AUDIT_CONNECTION_STRING}"
       AZURE_APPI_CONNECTION_STRING: "${AZURE_APPI_CONNECTION_STRING}"
       OAUTH_CLIENT_ID: "${OAUTH_CLIENT_ID}"
@@ -55,13 +50,16 @@ services:
       DATAPUNT_API_URL: "${DATAPUNT_API_URL}"
       DJANGO_DEBUG: 1
       APIKEY_ENABLED: "${APIKEY_ENABLED}"
+      INITIALIZE_DB: "${INITIALIZE_DB:-true}"
+      SCHEMA_URL: "https://schemas.data.amsterdam.nl/datasets/"
     volumes:
       - ./src:/app
       - ./docs/build/html:/docs-static
       - "../amsterdam-schema/datasets:/tmp/datasets"
       - "../schema-tools:/tmp/schema-tools"
-    command: uwsgi --py-auto-reload=1 --enable-threads --lazy-apps --buffer-size=65535
-
+    command: >
+      /bin/bash -c "sh /app/initialize_db.sh
+      && uwsgi --py-auto-reload=1 --enable-threads --lazy-apps --buffer-size=65535"
   redis:
     image: 'bitnami/redis:latest'
     environment:
