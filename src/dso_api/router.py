@@ -2,6 +2,7 @@
 # Route all write requests to the default database
 
 import random
+
 import environ
 from django.conf import settings
 
@@ -27,7 +28,7 @@ class DatabaseRouter:
         When multple replica databases are available, choose one at random
         """
         if len(replicas) > 1:
-            return random.choice(replicas)
+            return random.choice(replicas)  # nosec: B311
         return "replica_1"
 
     def db_for_write(self, model, **hints):
