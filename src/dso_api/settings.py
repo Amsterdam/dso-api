@@ -317,7 +317,7 @@ if CLOUD_ENV.lower().startswith("azure"):
             "EXPORTER": f"""opencensus.ext.azure.trace_exporter.AzureExporter(
                 connection_string='{AZURE_APPI_CONNECTION_STRING}',
                 service_name='dso-api'
-            )""",
+            )""",  # noqa: E202
             "EXCLUDELIST_PATHS": [],
         }
     }
