@@ -19,9 +19,9 @@ repos:
       - id: flake8
         exclude: migrations/
         additional_dependencies:
-          - flake8-blind-except == 0.1.1
-          - flake8-debugger == 3.2.1
-          - flake8-colors == 0.1.6
+          - flake8-blind-except == 0.2.1
+          - flake8-debugger == 4.1.2
+          - flake8-colors == 0.1.9
           - flake8-raise == 0.0.5
 
   - repo: https://github.com/pycqa/isort
