@@ -6,6 +6,7 @@
   "description": "Belastinggebieden en gerelateerde tarieven.",
   "version": "0.0.1",
   "crs": "EPSG:28992",
+  "publisher": "test",
   "tables": [
     {
       "id": "reclame",

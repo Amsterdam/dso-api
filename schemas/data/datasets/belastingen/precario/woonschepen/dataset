@@ -5,6 +5,8 @@
   "description": "Precariobelasting woonschepen per belastinggebied, per jaar, seizoen en per m2",
   "version": "0.0.1",
   "crs": "EPSG:28992",
+  "publisher": "test",
+  "status": "beschikbaar",
   "tables": [
     {
       "id": "woonschepen",

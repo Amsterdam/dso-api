@@ -5,6 +5,7 @@
   "status": "beschikbaar",
   "version": "0.0.1",
   "crs": "EPSG:28992",
+  "publisher": "test",
   "tables": [
     {
       "id": "bouwblok",
@@ -84,6 +85,9 @@
           "date_modified": {
             "type": "string",
             "format": "date-time"
+          },
+          "id": {
+            "type": "string"
           }
         }
       }
@@ -426,6 +430,9 @@
           },
           "indicatie_in_onderzoek": {
             "type": "integer"
+          },
+          "id": {
+            "type": "string"
           }
         }
       }

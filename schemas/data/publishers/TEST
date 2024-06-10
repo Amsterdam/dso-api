@@ -1,0 +1,10 @@
+{
+  "name": "Testpublisher",
+  "id": "DATESTDI",
+  "shortname": "test",
+  "tags": {
+    "team": "Datadiensten",
+    "costcenter": "76400115.4430"
+  },
+  "type": "publisher"
+}

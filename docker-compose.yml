@@ -27,6 +27,7 @@ services:
       - "8090:8000"
     links:
       - database
+      - schemas
     depends_on:
       database:
         condition: service_healthy
@@ -45,13 +46,14 @@ services:
       AZURE_APPI_CONNECTION_STRING: "${AZURE_APPI_CONNECTION_STRING}"
       OAUTH_CLIENT_ID: "${OAUTH_CLIENT_ID}"
       OAUTH_JWKS_URL: "${OAUTH_JWKS_URL}"
+      PUB_JWKS: "$(cat src/jwks_test.json)"
       OAUTH_URL:  "${OAUTH_URL}"
       CLOUD_ENV: "${CLOUD_ENV}"
       DATAPUNT_API_URL: "${DATAPUNT_API_URL}"
       DJANGO_DEBUG: 1
       APIKEY_ENABLED: "${APIKEY_ENABLED}"
       INITIALIZE_DB: "${INITIALIZE_DB:-true}"
-      SCHEMA_URL: "https://schemas.data.amsterdam.nl/datasets/"
+      SCHEMA_URL: "http://schemas/datasets/" # "https://schemas.data.amsterdam.nl/datasets/"
     volumes:
       - ./src:/app
       - ./docs/build/html:/docs-static
@@ -73,4 +75,5 @@ services:
       - "8080:80"
     volumes:
       - "./schemas/data/datasets:/usr/share/nginx/html/datasets"
+      - "./schemas/data/publishers:/usr/share/nginx/html/publishers"
       - "./schemas/conf/default.conf:/etc/nginx/conf.d/default.conf"
