@@ -507,7 +507,7 @@ def _chunked_output(stream, chunk_size=DEFAULT_CHUNK_SIZE, write_exception=None)
                 buffer.truncate(0)
         if buffer.tell():
             yield buffer.getvalue()
-    except Exception as e:
+    except Exception as e:  # noqa: B902
         # Write the last bit that gives some hint on where it stalled:
         if buffer.tell():
             yield buffer.getvalue()

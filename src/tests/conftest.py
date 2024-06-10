@@ -119,7 +119,7 @@ class _LazyDynamicModels:
         except KeyError:
             available = ",".join(sorted(app.keys()))
             raise KeyError(
-                f"Model {model_name} does not exist in dataset '{dataset_name}'. "
+                f"Model {model_name} does not exist in dataset '{dataset_name}'. "  # noqa: E713
                 f"Available are: {available}"
             ) from None
 

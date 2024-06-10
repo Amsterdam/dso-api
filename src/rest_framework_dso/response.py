@@ -64,7 +64,9 @@ class StreamingResponse(StreamingHttpResponse):
         if content_type is None and hasattr(response, "accepted_renderer"):
             media_type = response.accepted_renderer.media_type
             charset = response.accepted_renderer.charset
-            content_type = f"{media_type}; charset={charset}" if charset else media_type
+            content_type = (
+                f"{media_type}; charset={charset}" if charset else media_type  # noqa: E702
+            )  # noqa: E702
             response["Content-Type"] = content_type
 
         streaming_response = cls(
@@ -95,7 +97,7 @@ class StreamingResponse(StreamingHttpResponse):
 
         try:
             yield from stream
-        except Exception as e:
+        except Exception as e:  # noqa: B902
             yield self.render_exception(e)
             raise  # stops the server rendering
 
