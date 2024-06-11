@@ -18,7 +18,6 @@ from rest_framework.response import Response
 from rest_framework.schemas import get_schema_view
 from rest_framework.views import APIView
 from schematools.contrib.django.models import Dataset
-from schematools.naming import to_snake_case
 from schematools.permissions import UserScopes
 from schematools.types import DatasetSchema
 
@@ -127,7 +126,7 @@ def get_openapi_json_view(dataset: Dataset):
         "externalDocs": {
             "url": urljoin(
                 settings.DATAPUNT_API_URL,  # to preserve hostname
-                f"/v1/docs/datasets/{to_snake_case(dataset_schema.id)}.html",
+                f"/v1/docs/datasets/{dataset.path}.html",
             )
         },
     }
