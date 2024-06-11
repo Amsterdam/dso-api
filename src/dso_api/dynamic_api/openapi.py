@@ -18,7 +18,6 @@ from rest_framework.response import Response
 from rest_framework.schemas import get_schema_view
 from rest_framework.views import APIView
 from schematools.contrib.django.models import Dataset
-from schematools.naming import to_snake_case
 from schematools.permissions import UserScopes
 from schematools.types import DatasetSchema
 
