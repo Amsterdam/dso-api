@@ -829,9 +829,9 @@ more-itertools==9.1.0 \
     # via
     #   -r ./requirements.in
     #   amsterdam-schema-tools
-msal==1.23.0 \
-    --hash=sha256:25c9a33acf84301f93d1fdbe9f1a9c60cd38af0d5fffdbfa378138fc7bc1e86b \
-    --hash=sha256:3342e0837a047007f9d479e814b559c3219767453d57920dc40a31986862048b
+msal==1.28.0 \
+    --hash=sha256:3064f80221a21cd535ad8c3fafbb3a3582cd9c7e9af0bb789ae14f726a0ca99b \
+    --hash=sha256:80bbabe34567cb734efd2ec1869b2d98195c927455369d8077b3c542088c5c9d
     # via
     #   azure-identity
     #   msal-extensions
