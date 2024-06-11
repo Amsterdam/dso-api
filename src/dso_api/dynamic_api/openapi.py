@@ -127,7 +127,7 @@ def get_openapi_json_view(dataset: Dataset):
         "externalDocs": {
             "url": urljoin(
                 settings.DATAPUNT_API_URL,  # to preserve hostname
-                f"/v1/docs/datasets/{to_snake_case(dataset_schema.id)}.html",
+                f"/v1/docs/datasets/{dataset.path}.html",
             )
         },
     }
