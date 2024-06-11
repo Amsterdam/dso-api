@@ -34,9 +34,9 @@ azure-core==1.26.2 \
     # via
     #   azure-identity
     #   opencensus-ext-azure
-azure-identity==1.12.0 \
-    --hash=sha256:2a58ce4a209a013e37eaccfd5937570ab99e9118b3e1acf875eed3a85d541b92 \
-    --hash=sha256:7f9b1ae7d97ea7af3f38dd09305e19ab81a1e16ab66ea186b6579d85c1ca2347
+azure-identity==1.16.1 \
+    --hash=sha256:6d93f04468f240d59246d8afde3091494a5040d4f141cad0f49fc0c399d0d91e \
+    --hash=sha256:8fb07c25642cd4ac422559a8b50d3e77f73dcc2bbfaba419d06d6c9d7cff6726
     # via opencensus-ext-azure
 bandit==1.7.4 \
     --hash=sha256:2d63a8c573417bae338962d4b9b06fbc6080f74ecd955a092849e1e65c717bd2 \
@@ -829,9 +829,9 @@ more-itertools==9.1.0 \
     # via
     #   -r ./requirements.in
     #   amsterdam-schema-tools
-msal==1.23.0 \
-    --hash=sha256:25c9a33acf84301f93d1fdbe9f1a9c60cd38af0d5fffdbfa378138fc7bc1e86b \
-    --hash=sha256:3342e0837a047007f9d479e814b559c3219767453d57920dc40a31986862048b
+msal==1.28.1 \
+    --hash=sha256:563c2d70de77a2ca9786aab84cb4e133a38a6897e6676774edc23d610bfc9e7b \
+    --hash=sha256:d72bbfe2d5c2f2555f4bc6205be4450ddfd12976610dd9a16a9ab0f05c68b64d
     # via
     #   azure-identity
     #   msal-extensions
@@ -1363,7 +1363,6 @@ six==1.16.0 \
     --hash=sha256:8abb2f1d86890a2dfb989f9a77cfcfd3e47c2a354b01111771326f8aa26e0254
     # via
     #   azure-core
-    #   azure-identity
     #   djangorestframework-csv
     #   google-auth
     #   jsonpath-rw
