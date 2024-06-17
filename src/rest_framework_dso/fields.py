@@ -15,6 +15,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework_gis.fields import GeometryField
 from schematools.contrib.django.models import LooseRelationField
+from schematools.types import DatasetFieldSchema
 
 from rest_framework_dso.utils import group_dotted_names, unlazy_object
 
@@ -289,13 +290,23 @@ class AbstractEmbeddedField:
         self,
         serializer_class: type[serializers.Serializer],
         *,
+        field_schema: DatasetFieldSchema | None = None,
         source=None,
     ):
         self.serializer_class = serializer_class
         self.source = source
 
         self.field_name = None
+        self.field_schema = field_schema
         self.parent_serializer_class = None
+
+    def __deepcopy__(self, memo):
+        # Fix a massive performance hit when DRF performs a deepcopy() of all fields
+        result = self.__class__.__new__(self.__class__)
+        memo[id(result)] = self
+        result.__dict__.update({k: v for k, v in self.__dict__.items() if k != "field_schema"})
+        result.field_schema = self.field_schema
+        return result
 
     def __repr__(self):
         try:

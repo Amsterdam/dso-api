@@ -63,7 +63,17 @@ class TemporalHyperlinkedRelatedField(serializers.HyperlinkedRelatedField):
         # Init adds temporal definitions at construction, removing runtime model lookups.
         # It also allows the PK optimization to be used.
         super().__init__(*args, **kwargs)
+
+        # Link the table to perform temporal query filtering
         self.table_schema = table_schema
+
+    def __deepcopy__(self, memo):
+        # Fix a massive performance hit when DRF performs a deepcopy() of all fields
+        result = self.__class__.__new__(self.__class__)
+        memo[id(result)] = self
+        result.__dict__.update({k: v for k, v in self.__dict__.items() if k != "table_schema"})
+        result.table_schema = self.table_schema
+        return result
 
     def use_pk_only_optimization(self):
         return True  # only need to have an "id" here.

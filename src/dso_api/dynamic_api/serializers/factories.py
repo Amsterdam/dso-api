@@ -534,11 +534,9 @@ def _build_serializer_embedded_field(
 
     embedded_field = EmbeddedFieldClass(
         serializer_class=cast(type[base.DynamicSerializer], serializer_class),
-        # serializer_class=serializer_class,
+        field_schema=field_schema,
         source=model_field.name,
     )
-    # Attach the field schema so access rules can be applied here.
-    embedded_field.field_schema = field_schema
 
     # The field name is still generated from the model_field, in case this is a reverse field.
     serializer_part.add_embedded_field(toCamelCase(model_field.name), embedded_field)
