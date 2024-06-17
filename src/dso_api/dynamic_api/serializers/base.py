@@ -70,7 +70,9 @@ logger = logging.getLogger(__name__)
 
 
 class DynamicListSerializer(DSOModelListSerializer):
-    """This serializer class is used internally when :class:`DynamicSerializer`
+    """The serializer for a list of objects.
+
+    This serializer class is used internally when :class:`DynamicSerializer`
     is initialized with the ``many=True`` init kwarg to process a list of objects.
     """
 
@@ -210,7 +212,7 @@ class DynamicListSerializer(DSOModelListSerializer):
         )
 
 
-class FieldAccessMixin(serializers.ModelSerializer):
+class FieldAccessMixin(DSOModelSerializerBase):
     """Mixin for serializers to remove fields the user doesn't have access to."""
 
     fields_always_included = {"_links"}
@@ -420,9 +422,9 @@ class DynamicSerializer(FieldAccessMixin, DSOModelSerializer):
 
 
 class DynamicBodySerializer(DynamicSerializer):
-    """This subclass of the dynamic serializer only exposes the non-relational fields.
+    """The serializer for the *main* object.
 
-    This serializer base class is used for the main object fields.
+    This subclass of the dynamic serializer only exposes the non-relational fields.
     """
 
     def get_fields(self):
@@ -496,15 +498,19 @@ class DynamicLinksSerializer(FieldAccessMixin, DSOModelSerializerBase):
         ret = OrderedDict()
 
         for field in self._readable_fields:
+            # Extra check: remove fields that we don't have access to.
             snaked_field_name = to_snake_case(field.field_name)
             if snaked_field_name in schema_fields_lookup and not has_field_access(
                 user_scopes, schema_fields_lookup[snaked_field_name]
             ):
                 continue
+
+            # This is the base class logic:
             try:
                 attribute = field.get_attribute(instance)
             except SkipField:
                 continue
+
             check_for_none = attribute.pk if isinstance(attribute, PKOnlyObject) else attribute
             if check_for_none is None:
                 ret[field.field_name] = None
