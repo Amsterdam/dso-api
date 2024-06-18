@@ -90,8 +90,8 @@ class Command(BaseCommand):
 
         # Give access to all fields, so these can all be dumped.
         wsgi_request.user_scopes = UserScopes(query_params={}, request_scopes=[])
-        wsgi_request.user_scopes.has_any_scope = lambda *scopes: True
-        wsgi_request.user_scopes.has_all_scopes = lambda *scopes: True
+        wsgi_request.user_scopes.has_any_scope = lambda scopes: True
+        wsgi_request.user_scopes.has_all_scopes = lambda scopes: True
 
         # Wrap in DRF request object, like the view would have done.
         drf_request = Request(wsgi_request)
