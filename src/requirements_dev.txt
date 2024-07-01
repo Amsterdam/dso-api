@@ -409,9 +409,9 @@ django-extensions==3.2.1 \
     --hash=sha256:2a4f4d757be2563cd1ff7cfdf2e57468f5f931cc88b23cf82ca75717aae504a4 \
     --hash=sha256:421464be390289513f86cb5e18eb43e5dc1de8b4c27ba9faa3b91261b0d67e09
     # via -r requirements_dev.in
-django-gisserver==1.2.7 \
-    --hash=sha256:625843059ccf496594b0d1ce83c7f49afd4081c1613e9107ef75744207d0ef0f \
-    --hash=sha256:a371ef22a5aacc4c1468fed096016921c091b33de1d26a99f773291dece97750
+django-gisserver==1.4.0 \
+    --hash=sha256:8f765eb39277540c43c75c264272f34594cef387c2a95efad915837a2c3a26c8 \
+    --hash=sha256:f437c3aff5c6c6d33f2fc28d8e3e5e3428416e9783f3fd4620e0b27271475c71
     # via
     #   -r ./requirements.in
     #   amsterdam-schema-tools

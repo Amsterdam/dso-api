@@ -4,7 +4,7 @@ django-cors-headers == 3.13.0
 django-healthchecks == 1.5.0
 django-postgres-unlimited-varchar == 1.1.2
 django-redis == 5.4.0
-django-gisserver == 1.2.7
+django-gisserver == 1.4.0
 django-vectortiles == 0.2.0
 djangorestframework == 3.14.0
 djangorestframework-csv == 2.1.1
