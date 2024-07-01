@@ -519,3 +519,4 @@ EXPORT_BASE_URI = env.str("BULK_ENDPOINT", "https://api.data.amsterdam.nl/bulk-d
 
 # Setting for django-gisserver, disabling this makes WFS much faster
 GISSERVER_CAPABILITIES_BOUNDING_BOX = False
+GISSERVER_COUNT_NUMBER_MATCHED = 0  # 0 = no counting, 1 = all pages, 2 = only first page
