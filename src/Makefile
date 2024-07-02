@@ -52,8 +52,12 @@ coverage:
 ## Development tools:
 ##
 
-.PHONY: flake8
-flake8:                                ## Report linting errors
-	flake8 .
+format:                                ## Fix code-formatting of all files.
+	black .
+	ruff check --fix-only .
+#	pre-commit run -a
+
+lint:                                  ## Report linting errors for all files
+	ruff check .
 
 ##
