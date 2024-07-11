@@ -21,4 +21,3 @@ rest\_framework\_dso package
    :members:
    :undoc-members:
    :show-inheritance:
-

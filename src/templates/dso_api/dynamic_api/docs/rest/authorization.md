@@ -28,17 +28,17 @@ schrijven zijn de volgende scopes in gebruik:
     over het wagenpark
 
   -   - `FP/STURINGSMIDDELEN`: Deze scope geeft toegang tot financiele
-        gegevens uit de administratie  
+        gegevens uit de administratie
         van de gemeente Amsterdam
 
   - `BRK/RO`: Deze scope geeft toegang tot kadastrale objecten
 
   -   - `BRK/RS`: Deze scope geeft de rechten van `BRK/RO` en bovendien
-        toegang tot niet natuurlijke  
+        toegang tot niet natuurlijke
         subjecten
 
   -   - `BRK/RSN`: Deze scope geeft de rechten van `BRK/RS` en bovendien
-        toegang tot natuurlijke  
+        toegang tot natuurlijke
         subjecten
 
 <div class="note">

@@ -18,7 +18,7 @@ var FORMATTER = (rawJson) => {
         <h3 class='dataset-name' style="text-transform: capitalize;">${dataset.service_name}</h3>
         <p class='dataset-description' style="width:80%;">${dataset.description}</p>
         <p class='dataset-api-authentication'><b>Autorisatie</b>:${dataset.api_authentication}</p>
-        
+
       `
 
       let urls = [

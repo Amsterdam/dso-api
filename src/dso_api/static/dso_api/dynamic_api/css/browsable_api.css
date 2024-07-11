@@ -51,8 +51,8 @@ h1 {
 .bool { color: darkcyan; }
 .number { color: #195f91 }
 .null { color: magenta; }
-.key { 
-  color:  #EC0000; 
+.key {
+  color:  #EC0000;
   font-weight: 550;
 }
 .link { color: #A30000; }

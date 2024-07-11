@@ -1,6 +1,6 @@
 #!/bin/bash
 # Run when INITIALIZE_DB parameter is set and migrations are available.
-if ! django migrate --check && "$INITIALIZE_DB" = "true";  
+if ! django migrate --check && "$INITIALIZE_DB" = "true";
 then
     ./manage.py migrate;
     ./manage.py import_schemas --create-tables;

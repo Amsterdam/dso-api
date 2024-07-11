@@ -9,7 +9,7 @@ services:
       interval: 2s
       timeout: 60s
       retries: 5
-      start_period: 1s  
+      start_period: 1s
     ports:
        - "5415:5432"
     environment:

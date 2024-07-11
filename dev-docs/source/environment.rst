@@ -54,7 +54,7 @@ So, it is possible to ignore certain endpoints based on the `path` part of the u
 using the environment variable `SENTRY_BLOCKED_PATHS`. This environment variable
 should contain a comma-separated list of strings that will flag the endpoint for
 not logging to Sentry when one of the defined strings in this environment variable
-is part of the url. 
+is part of the url.
 
 
 Dataset Schema Locations
