@@ -4,6 +4,7 @@ The "filter backend" classes follow an API of Django REST Framework,
 that allows adapting the QuerySet before the view/serializer starts.
 This gives a chance to add filtering and ordering to the queryset.
 """
+
 from __future__ import annotations
 
 from rest_framework.filters import BaseFilterBackend, OrderingFilter
@@ -64,9 +65,12 @@ class DynamicOrderingFilter(OrderingFilter):
         # The to_orm_path() already checks the user scopes for field access.
         # That prevents leaking data of inaccessible fields (e.g. by sorting on a boolean field)
         return [
-            "-" + QueryFilterEngine.to_orm_path(part[1:], view.table_schema, request.user_scopes)
-            if part.startswith("-")
-            else QueryFilterEngine.to_orm_path(part, view.table_schema, request.user_scopes)
+            (
+                "-"
+                + QueryFilterEngine.to_orm_path(part[1:], view.table_schema, request.user_scopes)
+                if part.startswith("-")
+                else QueryFilterEngine.to_orm_path(part, view.table_schema, request.user_scopes)
+            )
             for part in ordering
         ]
 

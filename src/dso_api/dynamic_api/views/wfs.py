@@ -23,6 +23,7 @@ The models of that dataset become WFS feature types.
 
 .. _django-gisserver: https://github.com/Amsterdam/django-gisserver
 """
+
 from __future__ import annotations
 
 import re

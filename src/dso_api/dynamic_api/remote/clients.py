@@ -3,6 +3,7 @@
 Endpoints are queried with raw urllib3,
 to avoid the overhead of the requests library.
 """
+
 import logging
 import time
 from dataclasses import dataclass

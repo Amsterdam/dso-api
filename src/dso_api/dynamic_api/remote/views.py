@@ -1,6 +1,7 @@
 """The remote views retrieve data from other REST API endpoints.
 Currently it mainly performs authorization, data retrieval, and schema validation.
 """
+
 import logging
 from typing import Callable, Optional
 from urllib.parse import urlparse

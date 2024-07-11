@@ -1,4 +1,5 @@
 """Serializer logic for testing"""
+
 from rest_framework_dso.fields import EmbeddedField, EmbeddedManyToManyField
 from rest_framework_dso.serializers import DSOModelSerializer
 

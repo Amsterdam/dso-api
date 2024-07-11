@@ -1,4 +1,5 @@
 """Functions needed by various tests"""
+
 import itertools
 import json
 from io import BytesIO

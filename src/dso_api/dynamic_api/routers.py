@@ -20,6 +20,7 @@ the :func:`~schematools.contrib.django.factories.model_factory`,
 :func:`~dso_api.dynamic_api.views.viewset_factory` and
 :func:`~dso_api.dynamic_api.remote.remote_viewset_factory` functions.
 """
+
 from __future__ import annotations
 
 import logging

@@ -5,6 +5,7 @@
    from *django-gisserver* pretending that they exist here.
    This needs to be copied when publishing :mod:`rest_framework_dso` as a separate library.
 """
+
 from gisserver.geometries import CRS, WGS84
 
 __all__ = [

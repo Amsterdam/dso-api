@@ -10,6 +10,7 @@ The :func:`~dso_api.dynamic_api.views.viewset_factory` function then generates a
 for the specific model/endpoint. The same two-step logic can be found in the serializer
 and model layer of this application.
 """
+
 from __future__ import annotations
 
 from functools import cached_property

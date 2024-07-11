@@ -4,6 +4,7 @@ This includes things like:
 - Only retrieve certain historical versions of an object.
 - Reduce querysets/get_object logic
 """
+
 from __future__ import annotations
 
 from datetime import date, datetime
