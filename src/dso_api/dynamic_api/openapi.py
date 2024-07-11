@@ -41,8 +41,8 @@ def build_mock_request(method, path, view, original_request, **kwargs):
 
     # Make sure all fields are displayed in the OpenAPI spec:
     request.user_scopes = UserScopes(query_params={}, request_scopes=[])
-    request.user_scopes.has_any_scope = lambda *scopes: True
-    request.user_scopes.has_all_scopes = lambda *scopes: True
+    request.user_scopes.has_any_scope = lambda scopes: True
+    request.user_scopes.has_all_scopes = lambda scopes: True
     return request
 
 
