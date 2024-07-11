@@ -25,7 +25,7 @@ jobs:
 
     - name: Run tests
       run: docker compose exec -T web pytest -v --ds=tests.settings --show-capture=no
-    
+
     - name: Stop containers
       if: always()
       run: docker compose -f "docker-compose.yml" down

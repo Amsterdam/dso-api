@@ -126,5 +126,5 @@ API key middleware
 The DSO API can be protected with an API key. A middleware from `datadiensten-apikeyclient`
 has been added tot the Django middleware settings.
 This middleware tries to fetch signing keys from an endpoint that is configured with `APIKEY_ENDPOINT`.
-During development, the activation of this middleware can be disabled by setting an 
+During development, the activation of this middleware can be disabled by setting an
 environment variable `APIKEY_ENABLED` to `false`.

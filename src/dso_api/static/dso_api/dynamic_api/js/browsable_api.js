@@ -131,9 +131,9 @@ function downloadData(url, defaultFilename) {
 
   getData(url, "GET", headers, false, true).catch(parseException).then(result => {
     let headerValue = result.response.getResponseHeader('Content-Disposition');
-    let fileName = defaultFilename 
+    let fileName = defaultFilename
     if (headerValue) fileName = /.*filename=\"(.*)\"/.exec(headerValue)[1]
-      
+
     // the document has to be compatible with Excel, we export in UTF-8
     // we add the BOF for UTF-8, Excel requires this information to show chars with accents etc.
     let blob = new Blob([new Uint8Array([0xef, 0xbb, 0xbf]), result.data], {
@@ -348,7 +348,7 @@ function getData(url, method = "GET", headers = DEFAULT_HEADERS, doParseHeaders 
           let result = this.responseText;
           if (!raw && (result.length > 0 && result[0] === '{')) {
             result = JSON.parse(this.responseText);
-          } 
+          }
           callback({data: result, response: this});
         } catch (error) {
           parseResponseHeaders(this);
@@ -364,7 +364,7 @@ function showHeaders() {
 }
 
 function addSetting(key, value, op = "eq", type = "header", active = true) {
-  // Add new setting if identical setting does not exist, 
+  // Add new setting if identical setting does not exist,
   // deactivate other settings with same key and operator.
   let requestSettings = getRequestSettings(type + "s");
   let sameSetting = requestSettings.find(x => x.key == key && x.operator == op && x.value == value);
@@ -446,7 +446,7 @@ function parseException(err) {
   let contentElement = document.getElementById("response-content");
   let formattedContentElement = document.getElementById("formatted-response-content");
   contentElement.innerHTML = `Failed to retrieve valid response from server.
-  
+
   `
   contentElement.innerHTML += responseText.replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
@@ -608,16 +608,16 @@ function addParamExampleDatalist(param, name = null) {
 }
 
 function findOAPath(searchPath, paths) {
-  // Find the Open API path template that matches the searchPath. 
+  // Find the Open API path template that matches the searchPath.
   if (paths.hasOwnProperty(searchPath)) {
     return searchPath;
   }
   let parentSearchPath = searchPath.split("/").slice(0,-2).join("/");
   return result = Object.keys(paths).find(path => {
     let parentPath = path.slice(0,-1).split("/");
-    l = parentPath.pop(); 
+    l = parentPath.pop();
     return l.startsWith("{") && parentSearchPath == parentPath.join("/");
-  }) 
+  })
 }
 
 function getOpenApi(callback) {
@@ -647,7 +647,7 @@ function getOpenApi(callback) {
     if (!oaPath) {
       return callback(params);
     }
-    
+
     oaJSON.paths[oaPath].get.parameters.filter(a => !a.name.includes("[")).forEach(x => {
       addParamEnumDatalist(x, x.name + "[eq]");
       addParamExampleDatalist(x, x.name + "[eq]");

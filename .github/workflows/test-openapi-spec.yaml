@@ -33,7 +33,7 @@ jobs:
 
     - name: Run spectral tests
       run: docker run -v ./spectral:/mnt/spectral stoplight/spectral lint /mnt/spectral/openapi.yaml --ruleset /mnt/spectral/.spectral.yaml
-        
+
     - name: Stop containers
       if: always()
       run: docker compose -f "docker-compose.yml" down

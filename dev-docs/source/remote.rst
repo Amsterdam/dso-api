@@ -39,4 +39,3 @@ Its serializers build upon the DSO base classes:
 The serializers have their own factory function;
 :func:`~dso_api.dynamic_api.remote.serializers.remote_serializer_factory`.
 It uses the Amsterdam Schema data to generate the serializer fields.
-

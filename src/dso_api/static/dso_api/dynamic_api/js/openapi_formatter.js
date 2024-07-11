@@ -12,7 +12,7 @@ const FORMATTER = (rawJson) => {
       <h3>OpenAPI ${rawJson.info.title}</h3>
       <p><dt>OpenAPI version</dt> <dd>${rawJson.openapi}</dd></p>
       <p>
-        <dt>${rawJson.externalDocs.description}</dt> 
+        <dt>${rawJson.externalDocs.description}</dt>
         <dd><a href="${rawJson.externalDocs.url}" style="display:inline-block">${rawJson.externalDocs.url}</a></dd>
       </p>
       <h3>Paths:</h3>
@@ -27,7 +27,7 @@ const FORMATTER = (rawJson) => {
 
         let endpointEl = document.createElement('div');
         endpointEl.className = 'endpoint';
-        
+
         endpointEl.innerHTML = `
           <p>
             <div class='request-method get' style="display:inline-block">${method}</div>

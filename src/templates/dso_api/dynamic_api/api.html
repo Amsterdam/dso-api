@@ -1,10 +1,10 @@
 {% extends "rest_framework/base.html" %}
-{% comment %} 
+{% comment %}
   This template extends the DRF base template with some javascript.
 
-  Because DSOPaginator calculates page count during streaming, 
+  Because DSOPaginator calculates page count during streaming,
   we setup the pagination links client-side after the page is loaded.
- 
+
   The page data is not included in the template, instead we load the data in a separate ajax call.
   This improves responsiveness and makes rendering more efficient removing a
   potential DOS-attackvector for large datasets.
@@ -35,16 +35,16 @@
 
 <blockquote>
     <p>
-        Het Dataplatform van gemeente Amsterdam gaat het gebruik van een API key bij het gebruik van API's verplicht stellen. 
-        Hiermee wil het Dataplatform inzicht krijgen wie gebruik maakt van haar APIs, 
-        zodat het Dataplatform kan communiceren over updates en wijzigingen in de API's. 
-        Eventuele wijzigingen in de API's kunnen dan tijdig geïmplementeerd worden in uw systemen. 
+        Het Dataplatform van gemeente Amsterdam gaat het gebruik van een API key bij het gebruik van API's verplicht stellen.
+        Hiermee wil het Dataplatform inzicht krijgen wie gebruik maakt van haar APIs,
+        zodat het Dataplatform kan communiceren over updates en wijzigingen in de API's.
+        Eventuele wijzigingen in de API's kunnen dan tijdig geïmplementeerd worden in uw systemen.
         Dit gaat gelden voor alle zogenaamde 'DSO API's' van het Dataplatform van gemeente Amsterdam.
     </p>
 
     <p>
-        Het gebruik van een API key bij de aanroep van een API van het Dataplatform van gemeente Amsterdam is vanaf half september optioneel. 
-        In overleg met de dataorganisatie wordt een deadline vastgesteld voor het moment vanaf wanneer de API keys verplicht worden. 
+        Het gebruik van een API key bij de aanroep van een API van het Dataplatform van gemeente Amsterdam is vanaf half september optioneel.
+        In overleg met de dataorganisatie wordt een deadline vastgesteld voor het moment vanaf wanneer de API keys verplicht worden.
         U kunt de API's van het Dataplatform dan niet meer gebruiken zonder een API key mee te geven.
     </p>
 
@@ -64,9 +64,9 @@
   </div>
   <div style="float:left">
     {% block description %}{{ block.super }}{% endblock %}
-  </div> 
+  </div>
     <div class="region"  aria-label="{% trans "request form" %}">
-    {% comment %} 
+    {% comment %}
       Add an id to the options button so we can override its behaviour.
       Delete form is removed, as we do not expose this method.
     {% endcomment %}
@@ -78,7 +78,7 @@
     <pre style="box-sizing: border-box;clear:both;overflow:visible;" id="request-headers" class="request-settings"></pre>
     <div>
     {% block request_forms %}
-  
+
     {% if 'GET' in allowed_methods %}
       <form id="get-form" class="pull-right">
         <fieldset>
@@ -171,9 +171,9 @@
       <div class="response-tabs">
         <div class="tab response-tab raw-tab" onclick="event.target.parentElement.parentElement.className='show-raw'" id="raw-tab">Raw</div><div id="formatted-tab" class="tab response-tab formatted-tab {% if not response_formatter %}disabled{% endif %}" onclick="event.target.parentElement.parentElement.className='show-formatted'">Formatted</div>
       </div>
-      <pre class="response-container" id="raw-response-container"><span class="meta nocode"><span id="response-headers"></span></span> 
+      <pre class="response-container" id="raw-response-container"><span class="meta nocode"><span id="response-headers"></span></span>
 <span id="response-content">Retrieving data...</span></pre>
-      <pre class="response-container" id="formatted-response-container"> 
+      <pre class="response-container" id="formatted-response-container">
 <span id="formatted-response-content">Retrieving data...</span></pre>
     </div>
   </div>
