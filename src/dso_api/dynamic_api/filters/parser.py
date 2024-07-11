@@ -449,17 +449,17 @@ class FilterPathPart(NamedTuple):
     @property
     def id(self):
         """Raw unmodified identifier"""
-        return getattr(self.reverse_field or self.field, "id")
+        return (self.reverse_field or self.field).id
 
     @property
     def name(self):
         """Camel cased name (mirroring API fields)"""
-        return getattr(self.reverse_field or self.field, "name")
+        return (self.reverse_field or self.field).name
 
     @property
     def python_name(self):
         """Snake-cased name (for ORM field names)"""
-        return getattr(self.reverse_field or self.field, "python_name")
+        return (self.reverse_field or self.field).python_name
 
 
 def _parse_filter_path(

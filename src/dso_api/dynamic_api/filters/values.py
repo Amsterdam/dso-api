@@ -84,10 +84,9 @@ def str2geo(value: str, crs: CRS | None = None) -> GEOSGeometry:
 
 
 def _parse_point(value: str) -> tuple[float, float]:
-    if m1 := re.match(r"([-+]?\d+(?:\.\d+)?),([-+]?\d+(?:\.\d+)?)", value):
-        x = m1.group(1)
-        y = m1.group(2)
-    elif m1 := re.match(r"POINT\(([-+]?\d+(?:\.\d+)?) ([-+]?\d+(?:\.\d+)?)\)", value):
+    if m1 := re.match(r"([-+]?\d+(?:\.\d+)?),([-+]?\d+(?:\.\d+)?)", value) or (
+        m1 := re.match(r"POINT\(([-+]?\d+(?:\.\d+)?) ([-+]?\d+(?:\.\d+)?)\)", value)
+    ):
         x = m1.group(1)
         y = m1.group(2)
     else:

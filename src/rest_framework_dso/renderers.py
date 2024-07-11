@@ -6,7 +6,6 @@ This makes sure the response gets the desired ``application/hal+json``
 from datetime import datetime
 from io import BytesIO
 from types import GeneratorType
-from typing import Optional
 
 import orjson
 from django.conf import settings
@@ -29,7 +28,7 @@ BROWSABLE_MAX_PAGE_SIZE = 1000
 DEFAULT_CHUNK_SIZE = 4096
 
 
-def get_data_serializer(data) -> Optional[Serializer]:
+def get_data_serializer(data) -> Serializer | None:
     """Find the serializer associated with the incoming 'data'"""
     if isinstance(data, (ReturnDict, ReturnList, ReturnGenerator)):
         serializer = data.serializer
@@ -51,7 +50,7 @@ class RendererMixin:
     supports_inline_embeds = False
     supports_m2m = True
     compatible_paginator_classes = None
-    content_disposition: Optional[str] = None
+    content_disposition: str | None = None
     default_crs = None
     paginator = None
 
@@ -66,7 +65,6 @@ class RendererMixin:
         This hook is used so the 'fields' are properly set before the peek_iterable()
         is called - as that would return the first item as original.
         """
-        pass
 
     def render_exception(self, exception):
         """Inform the client that the stream processing was interrupted with an exception.

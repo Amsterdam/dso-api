@@ -198,9 +198,7 @@ def _get_filter_description(field: DatasetFieldSchema, lookup=None) -> str | dic
 
     if field.is_geo:
         return "GeoJSON | GEOMETRY(...)"
-    elif field.relation:
-        return "id"
-    elif field.nm_relation:
+    elif field.relation or field.nm_relation:
         return "id"
 
     prefix = OPENAPI_LOOKUP_PREFIX.get(lookup, "")

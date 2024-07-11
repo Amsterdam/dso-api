@@ -48,7 +48,7 @@ class _AuthMixin:
         # TODO: remote serializer needs to map camelName to original ID here.
         unauthorized = [
             field_name
-            for field_name in fields.keys()
+            for field_name in fields
             if field_name != "schema"
             and not scopes.has_field_access(self._get_field_by_id(field_name))
         ]

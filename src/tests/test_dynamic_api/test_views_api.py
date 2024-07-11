@@ -138,7 +138,7 @@ class TestDSOViewMixin:
         response = api_client.get(url)
         assert response.status_code == 200, response.data
         assert response.has_header("Content-Crs"), dict(response.items())
-        assert RD_NEW == CRS.from_string(response["Content-Crs"])
+        assert CRS.from_string(response["Content-Crs"]) == RD_NEW
 
 
 @pytest.mark.django_db
@@ -1323,7 +1323,7 @@ class TestEmbedTemporalTables:
                                         "identificatie": "03630012052035",
                                         "volgnummer": 1,
                                         "ligtInStadsdeelId": "03630000000018",
-                                        "naam": "Burgwallen-Nieuwe " "Zijde",
+                                        "naam": "Burgwallen-Nieuwe Zijde",
                                     }
                                 },
                             }

@@ -23,8 +23,10 @@ constructs the derived classes for each dataset.
 from __future__ import annotations
 
 import logging
+from collections import OrderedDict
+from collections.abc import Callable, Iterable
 from functools import wraps
-from typing import Any, Callable, Iterable, OrderedDict, Union, cast
+from typing import Any, cast
 
 from django.db import models
 from django.db.models.fields.related import RelatedField
@@ -90,7 +92,7 @@ class DynamicListSerializer(DSOModelListSerializer):
 
         first_fk = get_source_model_fields(self.parent, self.field_name, self)[-1].remote_field
         second_fk = first(
-            (f for f in target_model._meta.get_fields() if f.is_relation and f is not first_fk)
+            f for f in target_model._meta.get_fields() if f.is_relation and f is not first_fk
         )
         return first_fk, second_fk
 
@@ -144,7 +146,7 @@ class DynamicListSerializer(DSOModelListSerializer):
 
         return super().get_queryset_iterator(queryset)
 
-    def get_prefetch_lookups(self) -> list[Union[models.Prefetch, str]]:
+    def get_prefetch_lookups(self) -> list[models.Prefetch | str]:
         """Optimize prefetch lookups
 
         - Return correct temporal records only (for M2M tables).
@@ -372,8 +374,8 @@ class DynamicSerializer(FieldAccessMixin, DSOModelSerializer):
                 ) from None
 
     def get_embedded_objects_by_id(
-        self, embedded_field: AbstractEmbeddedField, id_list: list[Union[str, int]]
-    ) -> Union[models.QuerySet, Iterable[models.Model]]:
+        self, embedded_field: AbstractEmbeddedField, id_list: list[str | int]
+    ) -> models.QuerySet | Iterable[models.Model]:
         """Retrieve a number of embedded objects by their identifier.
 
         This override makes sure the correct temporal slice is returned.
@@ -538,7 +540,7 @@ class DynamicLinksSerializer(FieldAccessMixin, DSOModelSerializerBase):
         return fields
 
     @cached_property
-    def parent_source_fields(self) -> list[Union[RelatedField, ForeignObjectRel]]:
+    def parent_source_fields(self) -> list[RelatedField | ForeignObjectRel]:
         """Find the ORM relationship fields that lead to this serializer instance"""
         source_fields = []
         parent = self.parent

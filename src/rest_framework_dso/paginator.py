@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 import warnings
+from collections.abc import Callable, Iterable
 from functools import lru_cache
-from typing import Callable, Iterable, Optional, Type, TypeVar
+from typing import TypeVar
 
-from django.core.paginator import EmptyPage
+from django.core.paginator import EmptyPage, PageNotAnInteger
 from django.core.paginator import Page as DjangoPage
-from django.core.paginator import PageNotAnInteger
 from django.core.paginator import Paginator as DjangoPaginator
 from django.db.models.query import QuerySet
 from django.http import Http404
@@ -78,10 +78,10 @@ class DSOPaginator(DjangoPaginator):
         return DSOPage(*args, **kwargs)
 
 
-@lru_cache()
+@lru_cache
 def _create_observable_queryset_subclass(
-    queryset_class: Type[Q],
-) -> Type[Q] | Type[ObservableQuerySet]:
+    queryset_class: type[Q],
+) -> type[Q] | type[ObservableQuerySet]:
     """Insert the ObservableQuerySet into a QuerySet subclass, as if it's a mixin.
     This creates a custom subclass, that inherits both ObservableQuerySet and the QuerySet class.
 
@@ -222,7 +222,7 @@ class DSOPage(DjangoPage):
     def __len__(self):
         return self._length
 
-    def has_next(self) -> Optional[bool]:
+    def has_next(self) -> bool | None:
         """There is a page after this one.
         Returns:
             True, if a next page exist.

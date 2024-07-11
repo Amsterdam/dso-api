@@ -2,7 +2,8 @@
 
 import logging
 import operator
-from typing import Any, FrozenSet, Iterable, List, NamedTuple, Optional
+from collections.abc import Iterable
+from typing import Any, NamedTuple
 from urllib.parse import urljoin
 
 from django.conf import settings
@@ -225,7 +226,7 @@ class DatasetWFSDocView(TemplateView):
 
 class LookupContext(NamedTuple):
     operator: str
-    value_example: Optional[str]
+    value_example: str | None
     description: str
 
 
@@ -400,22 +401,20 @@ def _make_table_expands(table: DatasetTableSchema, wfs: bool):
 
     # Reverse relations can also be expanded
     expands.extend(
-        (
-            {
-                "id": additional_relation.id,
-                "name": additional_relation.python_name if wfs else additional_relation.name,
-                "relation_id": additional_relation.relation,
-                "target_doc": _make_link(additional_relation.related_table),
-                "related_table": additional_relation.related_table,
-            }
-            for additional_relation in table.additional_relations
-        )
+        {
+            "id": additional_relation.id,
+            "name": additional_relation.python_name if wfs else additional_relation.name,
+            "relation_id": additional_relation.relation,
+            "target_doc": _make_link(additional_relation.related_table),
+            "related_table": additional_relation.related_table,
+        }
+        for additional_relation in table.additional_relations
     )
 
     return sorted(expands, key=operator.itemgetter("id"))
 
 
-def _list_fields(table_fields) -> List[DatasetFieldSchema]:
+def _list_fields(table_fields) -> list[DatasetFieldSchema]:
     """List fields and their subfields in a single flat list."""
     result_fields = []
     for field in table_fields:
@@ -521,7 +520,7 @@ def _get_dotted_api_name(field: DatasetFieldSchema) -> str:
     return camel_name
 
 
-def _get_filters(table_fields: List[DatasetFieldSchema]) -> List[dict[str, Any]]:
+def _get_filters(table_fields: list[DatasetFieldSchema]) -> list[dict[str, Any]]:
     filters = []
     id_seen = False
     for field in table_fields:
@@ -553,7 +552,7 @@ def _filter_payload(
     }
 
 
-def _filter_context(field: DatasetFieldSchema) -> List[dict[str, Any]]:
+def _filter_context(field: DatasetFieldSchema) -> list[dict[str, Any]]:
     """Return zero or more filter context(s) from a field schema.
 
     This function essentially reconstructs the output of the FilterSet
@@ -585,7 +584,7 @@ def _filter_context(field: DatasetFieldSchema) -> List[dict[str, Any]]:
     return []
 
 
-def _fix_auth(auth: FrozenSet[str]) -> FrozenSet[str]:
+def _fix_auth(auth: frozenset[str]) -> frozenset[str]:
     """Hide the OPENBAAR tag.
     When the dataset is public, but table isn't,
     this could even mix authorization levels.

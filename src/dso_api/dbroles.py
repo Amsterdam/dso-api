@@ -22,7 +22,6 @@ from __future__ import annotations
 
 import logging
 import re
-from typing import Optional
 from urllib.parse import urlparse
 
 from asgiref.local import Local
@@ -68,11 +67,11 @@ class DatabaseRoles:
     ANONYMOUS = "ANONYMOUS"
 
     @classmethod
-    def set_end_user(cls, user_email: Optional[str], token_issuer: Optional[str]):
+    def set_end_user(cls, user_email: str | None, token_issuer: str | None):
         """Tell which end user should be used for the database connection"""
         if user_email is None:
             user_email = cls.ANONYMOUS
-        setattr(cls.current_user, "email", user_email)
+        cls.current_user.email = user_email
 
         # Immediately activate the user too, in case a connection was already established.
         # Otherwise, the request waits for the 'connection_created' signal.
@@ -92,7 +91,7 @@ class DatabaseRoles:
         return getattr(cls.current_user, "email", None)
 
     @classmethod
-    def _role_from_user(cls, user: Optional[str]) -> str:
+    def _role_from_user(cls, user: str | None) -> str:
         if not user:
             raise ValueError("A user email is required to resolve a role")
 
@@ -161,7 +160,7 @@ class DatabaseRoles:
         # can also ensure the connection is not reused for another session.
         with user_connection.cursor() as c:
             try:
-                if not c.connection.status == STATUS_IN_TRANSACTION:
+                if c.connection.status != STATUS_IN_TRANSACTION:
                     logger.debug("Starting transaction for user-context: %s", role_name)
                     c.execute("BEGIN TRANSACTION;")
                 else:
@@ -173,7 +172,7 @@ class DatabaseRoles:
                     logger.debug(
                         "Transaction already in progress storing original role: %s", original_role
                     )
-                    setattr(cls.current_user, "original_role", original_role)
+                    cls.current_user.original_role = original_role
 
                 c.execute(
                     "SAVEPOINT user_ctx; SET LOCAL ROLE %s; set application_name to %s;",
@@ -188,7 +187,7 @@ class DatabaseRoles:
                 cls._revert_role(c)
                 raise
             else:
-                setattr(user_connection, "_active_user_role", role_name or "NONE")
+                user_connection._active_user_role = role_name or "NONE"
                 logger.info("Activated end-user database role '%s' for '%s'", role_name, app_name)
 
     @classmethod
@@ -200,7 +199,7 @@ class DatabaseRoles:
         if cls._original_role():
             cursor.execute("SET ROLE %s;", (cls._original_role(),))
 
-        setattr(cls.current_user, "original_role", None)
+        cls.current_user.original_role = None
 
     @classmethod
     def deactivate_end_user(cls):
@@ -230,4 +229,4 @@ class DatabaseRoles:
                     c.execute("COMMIT;")
 
                 cls._revert_role(c)
-                setattr(default_connection, "_active_user_role", None)
+                default_connection._active_user_role = None
