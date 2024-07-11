@@ -89,7 +89,7 @@ class HaalCentraalBRK(View):
     This is a pass-through proxy like BAG, but with authorization added.
     """
 
-    _NEEDED_SCOPES = ["BRK/RO", "BRK/RS", "BRK/RSN"]
+    _NEEDED_SCOPES = frozenset({"BRK/RO", "BRK/RS", "BRK/RSN"})
 
     def __init__(self):
         super().__init__()
@@ -109,10 +109,10 @@ class HaalCentraalBRK(View):
             )
 
     def get(self, request: HttpRequest, subpath: str):
-        access = request.user_scopes.has_all_scopes(*self._NEEDED_SCOPES)
+        access = request.user_scopes.has_all_scopes(self._NEEDED_SCOPES)
         permissions.log_access(request, access)
         if not access:
-            raise PermissionDenied(f"You need scopes {self._NEEDED_SCOPES}")
+            raise PermissionDenied(f"You need scopes {','.join(self._NEEDED_SCOPES)}")
 
         url: str = settings.HAAL_CENTRAAL_BRK_ENDPOINT + subpath
         headers = {
