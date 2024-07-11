@@ -8,6 +8,7 @@ by ``to_representation()``, the field also needs to define the OpenAPI details o
 what the field would return. Hence, other fields (e.g. in ``_links``) that return
 more variable fields are constructed as a serializer instead.
 """
+
 from urllib.parse import urlencode
 
 from django.db import models

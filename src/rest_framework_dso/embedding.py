@@ -4,6 +4,7 @@ It's written in an observer/listener style, allowing the embedded data to be det
 during the rendering. Instead of having to load the main results in memory for analysis,
 the main objects are inspected while they are consumed by the output stream.
 """
+
 from __future__ import annotations
 
 import logging

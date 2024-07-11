@@ -3,6 +3,7 @@
 and not :class:`~rest_framework_dso.serializer.DSOModelSerializer`.
 The serializers mainly make sure the response is outputted in a DSO-compatible format.
 """
+
 import logging
 from urllib.parse import urlparse
 

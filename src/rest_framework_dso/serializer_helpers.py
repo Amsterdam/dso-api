@@ -1,4 +1,5 @@
 """Internal serializer tools to make sure generators are properly handled in DRF."""
+
 import itertools
 
 from rest_framework.utils.serializer_helpers import ReturnList

@@ -4,6 +4,7 @@ This generates the most common parameters that are allowed for the filters.
 More fields as possible, since relations can be followed.
 Those fields are not included here.
 """
+
 from __future__ import annotations
 
 import re

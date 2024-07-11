@@ -2,6 +2,7 @@
 
 This translates a query-string into ORM lookups using the Amsterdam Schema definitions.
 """
+
 from __future__ import annotations
 
 import operator
@@ -468,7 +469,7 @@ def _parse_filter_path(
     The result has multiple entries when the path follows over relations.
     """
     parts = []
-    parent: (DatasetTableSchema | DatasetFieldSchema | None) = table_schema
+    parent: DatasetTableSchema | DatasetFieldSchema | None = table_schema
     field_name = ".".join(field_path)
 
     last_item = len(field_path) - 1
@@ -502,7 +503,7 @@ def _parse_filter_path(
 
 
 def _get_field_by_id(  # noqa: C901
-    parent: (DatasetTableSchema | DatasetFieldSchema | None), name: str, is_last: bool
+    parent: DatasetTableSchema | DatasetFieldSchema | None, name: str, is_last: bool
 ) -> FilterPathPart | None:
     """Find the field in the Amsterdam schema.
     Handle workarounds for foreignkey ID fields that were previously exposed.

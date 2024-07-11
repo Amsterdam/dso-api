@@ -5,6 +5,7 @@ it's very limited. That functionality is greatly extended by the use
 of `drf-spectacular <https://drf-spectacular.readthedocs.io/>`_ and the classes in this module.
 This also inludes exposing geometery type classes in the OpenAPI schema.
 """
+
 import logging
 
 from django.contrib.gis.db import models as gis_models

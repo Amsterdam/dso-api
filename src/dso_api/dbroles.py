@@ -17,6 +17,7 @@ has sufficient permission to read metadata about datasets after LOGIN
 Note that when switching to a role, another ``SET ROLE`` command is still possible
 because the current user doesn't change; only the current role does.
 """
+
 from __future__ import annotations
 
 import logging

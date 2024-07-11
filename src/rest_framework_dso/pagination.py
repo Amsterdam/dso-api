@@ -3,6 +3,7 @@
 This is essentially HAL-JSON style pagination as described in:
 https://tools.ietf.org/html/draft-kelly-json-hal-08
 """
+
 from __future__ import annotations
 
 from typing import Union

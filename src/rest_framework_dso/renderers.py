@@ -2,6 +2,7 @@
 
 This makes sure the response gets the desired ``application/hal+json``
 """
+
 from datetime import datetime
 from io import BytesIO
 from types import GeneratorType

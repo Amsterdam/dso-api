@@ -12,6 +12,7 @@ The rendered data also needs to be generated on consumption to have the full ben
 streaming. The :class:`~rest_framework_dso.serializers.DSOListSerializer` achieves this
 by returning the results as a Python generator instead of a pre-rendered list.
 """
+
 from http.client import responses
 from inspect import isgenerator
 

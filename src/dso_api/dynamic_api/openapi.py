@@ -2,6 +2,7 @@
 
 The main logic can be found in :mod:`rest_framework_dso.openapi`.
 """
+
 from copy import copy
 from functools import wraps
 from typing import Callable, Optional, Union

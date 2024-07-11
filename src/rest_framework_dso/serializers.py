@@ -18,6 +18,7 @@ but useful to implement DSO-style responses for other data sources (e.g. remote 
 The model-serializers depend on the ORM logic, and support features like object embedding
 and constructing serializer fields based on the model field metadata.
 """
+
 import inspect
 import logging
 from typing import Generator, Iterable, Optional, Union, cast

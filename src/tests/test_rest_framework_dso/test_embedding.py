@@ -2,6 +2,7 @@
 
 The other embedding tests can be found under "test_serializers" and "test_views".
 """
+
 from itertools import cycle
 
 import pytest
