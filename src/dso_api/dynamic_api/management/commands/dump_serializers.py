@@ -54,7 +54,7 @@ class Command(BaseCommand):
         request = self._create_dummy_request()
         self.seen_serializers = set()  # state to avoid duplicate writes for embedded types
 
-        for prefix, viewset, basename in sorted(router.registry):
+        for _prefix, viewset, _basename in sorted(router.registry):
             try:
                 app_label = viewset.model._meta.app_label
             except AttributeError:
@@ -126,7 +126,7 @@ class Command(BaseCommand):
 
     def write_sub_serializers(self, serializer: DSOSerializer):
         """Write the dependant serializers"""
-        for name, field in serializer.fields.items():
+        for _name, field in serializer.fields.items():
             if isinstance(field, serializers.Serializer):
                 # Make sure generic serializers are not reprinted each time
                 if field.__class__ in self.seen_serializers:
@@ -257,7 +257,7 @@ class Command(BaseCommand):
             return value.__name__
         elif isinstance(value, list):
             # for validators=[...]
-            return "[{0}]".format(",".join(self._format_value(v) for v in value))
+            return "[{}]".format(",".join(self._format_value(v) for v in value))
         elif inspect.isfunction(value):
             # e.g. validators=[some_function]
             return f"{value.__module__}.{value.__qualname__}"

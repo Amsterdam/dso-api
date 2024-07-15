@@ -23,10 +23,10 @@ from rest_framework.viewsets import ViewSet
 from schematools.naming import toCamelCase
 from schematools.types import DatasetTableSchema
 
+from dso_api.dynamic_api import permissions
 from rest_framework_dso.exceptions import RemoteAPIException
 from rest_framework_dso.views import DSOViewMixin
 
-from .. import permissions
 from . import clients, serializers
 from .clients import call
 

@@ -513,18 +513,17 @@ def _validate_model(model: type[DynamicModel]):
     a third party library (django-filter) without having any context on what model fails.
     """
     for field in model._meta.get_fields():
-        if field.remote_field is not None:
-            if isinstance(field.remote_field.model, str):
-                app_label = field.remote_field.model.split(".")[0]
-                try:
-                    dataset_app = apps.get_app_config(app_label)
-                except LookupError as e:
-                    if "No installed app with label" not in str(e):
-                        raise
-                    # Report the dataset we're working with.
-                    raise LookupError(f"{e} (model = {model.get_dataset_schema()})") from e
-                available = sorted(model._meta.model_name for model in dataset_app.get_models())
-                raise ImproperlyConfigured(
-                    f"Field {field} does not point to an existing model:"
-                    f" {field.remote_field.model}. Loaded models are: {', '.join(available)}"
-                )
+        if field.remote_field is not None and isinstance(field.remote_field.model, str):
+            app_label = field.remote_field.model.split(".")[0]
+            try:
+                dataset_app = apps.get_app_config(app_label)
+            except LookupError as e:
+                if "No installed app with label" not in str(e):
+                    raise
+                # Report the dataset we're working with.
+                raise LookupError(f"{e} (model = {model.get_dataset_schema()})") from e
+            available = sorted(model._meta.model_name for model in dataset_app.get_models())
+            raise ImproperlyConfigured(
+                f"Field {field} does not point to an existing model:"
+                f" {field.remote_field.model}. Loaded models are: {', '.join(available)}"
+            )

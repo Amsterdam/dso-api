@@ -188,7 +188,7 @@ def _create_tables_if_missing(dynamic_models):
     table_names = connection.introspection.table_names()
 
     with connection.schema_editor() as schema_editor:
-        for dataset_id, models in dynamic_models.items():
+        for _dataset_id, models in dynamic_models.items():
             for model in models.values():
                 if model._meta.db_table not in table_names:
                     schema_editor.create_model(model)

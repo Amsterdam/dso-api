@@ -6,8 +6,6 @@ https://tools.ietf.org/html/draft-kelly-json-hal-08
 
 from __future__ import annotations
 
-from typing import Union
-
 from django.core.paginator import InvalidPage
 from rest_framework import pagination
 from rest_framework.exceptions import NotFound
@@ -169,7 +167,7 @@ class DSOPageNumberPagination(DelegatedPageNumberPagination):
         data = self._get_paginated_data(data)
         return super().get_paginated_response(data)
 
-    def _get_paginated_data(self, data: Union[ReturnList, ReturnDict, ReturnGenerator]) -> dict:
+    def _get_paginated_data(self, data: ReturnList | ReturnDict | ReturnGenerator) -> dict:
         """Paginate the streaming response.
 
         This only wraps the ``ReturnGenerator`` inside the basic layout.

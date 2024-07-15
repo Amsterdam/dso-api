@@ -33,12 +33,12 @@ class Command(BaseCommand):
                     with connection.cursor() as curs:
                         curs.execute(
                             sql.SQL(
-                                "ALTER TABLE {table} DROP CONSTRAINT IF EXISTS id_not_contains_slash;"  # noqa E501
+                                "ALTER TABLE {table} DROP CONSTRAINT IF EXISTS id_not_contains_slash;"  # noqa: E501
                             ).format(table=sql.Identifier(schema.db_name))
                         )
                         curs.execute(
                             sql.SQL(
-                                "ALTER TABLE {table} ADD CONSTRAINT id_not_contains_slash CHECK (NOT {field} LIKE '%%/%%');"  # noqa E501
+                                "ALTER TABLE {table} ADD CONSTRAINT id_not_contains_slash CHECK (NOT {field} LIKE '%%/%%');"  # noqa: E501
                             ).format(
                                 table=sql.Identifier(schema.db_name),
                                 field=sql.Identifier(pk.db_name),

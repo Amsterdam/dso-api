@@ -79,11 +79,7 @@ def multiple_slashes(request):
 
 def _get_unique_trace_id(request):
     unique_id = request.headers.get("X-Unique-ID")  # X-Unique-ID wordt in haproxy gezet
-    if unique_id:
-        instance = f"X-Unique-ID:{unique_id}"
-    else:
-        instance = request.build_absolute_uri()
-    return instance
+    return f"X-Unique-ID:{unique_id}" if unique_id else request.build_absolute_uri()
 
 
 def server_error(request, *args, **kwargs):

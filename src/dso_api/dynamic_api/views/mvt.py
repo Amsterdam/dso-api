@@ -12,8 +12,9 @@ from schematools.exceptions import SchemaObjectNotFound
 from schematools.types import DatasetTableSchema
 from vectortiles.postgis.views import MVTView
 
-from ..datasets import get_active_datasets
-from ..permissions import CheckPermissionsMixin
+from dso_api.dynamic_api.datasets import get_active_datasets
+from dso_api.dynamic_api.permissions import CheckPermissionsMixin
+
 from .index import APIIndexView
 
 logger = logging.getLogger(__name__)
@@ -98,7 +99,7 @@ class DatasetMVTView(CheckPermissionsMixin, MVTView):
 
     def setup(self, request, *args, **kwargs):
         super().setup(request, *args, **kwargs)
-        from ..urls import router
+        from dso_api.dynamic_api.urls import router
 
         dataset_name = self.kwargs["dataset_name"]
         table_name = self.kwargs["table_name"]

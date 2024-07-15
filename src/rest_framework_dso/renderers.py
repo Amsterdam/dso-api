@@ -175,6 +175,7 @@ class HALJSONRenderer(RendererMixin, renderers.JSONRenderer):
         """Get the footer"""
         if self.paginator:
             return self.paginator.get_footer()
+        return None
 
     def _render_json(self, data, top=True):  # noqa: C901
         if not data:
@@ -191,9 +192,8 @@ class HALJSONRenderer(RendererMixin, renderers.JSONRenderer):
                 else:
                     yield sep + orjson.dumps({key: value})[1:-1]
                 sep = b",\n  "
-            if top:
-                if (footer := self._get_footer()) is not None:
-                    yield sep + orjson.dumps(footer)[1:-1]
+            if top and (footer := self._get_footer()) is not None:
+                yield sep + orjson.dumps(footer)[1:-1]
             yield b"\n}"
         elif hasattr(data, "__iter__") and not isinstance(data, str):
             # Streaming per item, outputs each record on a new row.
@@ -364,7 +364,7 @@ class GeoJSONRenderer(RendererMixin, renderers.JSONRenderer):
         # Learned a trick from django-gisserver: write GeoJSON in bits.
         # Instead of serializing a large dict, each individual item is serialized.
         first_generator = None
-        for feature_type, features in collections.items():
+        for _feature_type, features in collections.items():
             # First a feature needs to be read. This also performs
             # the CRS detection (request.response_content_crs) inside the serializer.
             features_iter = iter(features)

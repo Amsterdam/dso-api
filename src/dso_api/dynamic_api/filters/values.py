@@ -116,9 +116,8 @@ def _validate_correct_x_y(x: float, y: float, srid: int | None) -> Point:
             return Point(x, y, srid=4326)
 
     # Try Dutch Rijksdriehoek coordinates
-    if srid is None or srid == 28992:
-        if _valid_rd(x, y):
-            return Point(x, y, srid=28992)
+    if (srid is None or srid == 28992) and _valid_rd(x, y):
+        return Point(x, y, srid=28992)
 
     # Leave other systems untouched
     if srid and srid not in (4326, 28992):

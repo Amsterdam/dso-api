@@ -142,7 +142,7 @@ class TestDatasetWFSView:
         xml_root = read_response_xml(response)
         data = xml_element_to_dict(xml_root[0][0])
 
-        assert "e_type" in data.keys()
+        assert "e_type" in data
         assert data == {
             "id": "1",
             "type": "Langs",

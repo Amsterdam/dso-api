@@ -182,9 +182,7 @@ def has_field_access(user_scopes: UserScopes, field: DatasetFieldSchema) -> bool
 
     if related and table_access and field_access:
         return True
-    if not related and field_access:
-        return True
-    return False
+    return bool(not related and field_access)
 
 
 def limit_queryset_for_scopes(

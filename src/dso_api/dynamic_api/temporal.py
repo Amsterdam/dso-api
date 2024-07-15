@@ -8,7 +8,7 @@ This includes things like:
 from __future__ import annotations
 
 from datetime import date, datetime
-from typing import Literal, Optional, Union
+from typing import Literal
 
 from django.db import models
 from django.db.models import Q
@@ -30,13 +30,13 @@ class TemporalTableQuery:
     is_versioned: bool
 
     #: Which historical version is requested.
-    version_field: Optional[str] = None
-    version_value: Optional[str] = None
+    version_field: str | None = None
+    version_value: str | None = None
 
     #: Which date is requested
-    slice_dimension: Optional[str] = None
-    slice_value: Optional[Union[Literal["*"], date, datetime]] = None
-    slice_range_fields: Optional[TemporalDimensionFields] = None
+    slice_dimension: str | None = None
+    slice_value: Literal["*"] | date | datetime | None = None
+    slice_range_fields: TemporalDimensionFields | None = None
 
     def __bool__(self):
         return self.is_versioned
@@ -112,7 +112,7 @@ class TemporalTableQuery:
         self.slice_value = slice_value or current_date
 
     @staticmethod
-    def _parse_date(dimension: str, value: str) -> Union[Literal["*"], date, datetime]:
+    def _parse_date(dimension: str, value: str) -> Literal["*"] | date | datetime:
         """Parse and validate the received date"""
         if value == "*":
             return "*"
@@ -207,7 +207,7 @@ class TemporalTableQuery:
             f"-{start}",
         )
 
-    def _get_range_fields(self) -> Optional[TemporalDimensionFields]:
+    def _get_range_fields(self) -> TemporalDimensionFields | None:
         """Tell what the default fields would be to filter temporal objects."""
         dimensions = self.table_schema.temporal.dimensions
         if self.slice_dimension:

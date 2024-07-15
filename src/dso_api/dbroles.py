@@ -42,6 +42,7 @@ def is_internal(user_email: str) -> bool:
     """Tell whether a user is an internal user."""
     if re.search(r"([@\.]amsterdam\.nl)$", user_email):
         return True
+    return None
 
 
 @receiver(connection_created)
@@ -101,7 +102,11 @@ class DatabaseRoles:
 
     @classmethod
     def activate_end_user(  # noqa: C901
-        cls, user_connection: BaseDatabaseWrapper, *, log_source: str, token_issuer: str = None
+        cls,
+        user_connection: BaseDatabaseWrapper,
+        *,
+        log_source: str,
+        token_issuer: str | None = None,
     ):
         """Switch to the end-user role in the database."""
         if not settings.DATABASE_SET_ROLE:

@@ -119,7 +119,7 @@ class ObservableQuerySet(QuerySet):
         super().__init__(*args, **kwargs)
 
     @classmethod
-    def from_queryset(cls, queryset: QuerySet, observers: list[Callable] = None):
+    def from_queryset(cls, queryset: QuerySet, observers: list[Callable] | None = None):
         """Turn a QuerySet instance into an ObservableQuerySet"""
         queryset.__class__ = _create_observable_queryset_subclass(queryset.__class__)
         queryset._item_callbacks = list(observers) if observers else []
@@ -217,7 +217,7 @@ class DSOPage(DjangoPage):
                 self._watch_object_list(None, None, True)
 
     def __repr__(self):
-        return "<Page %s>" % (self.number)
+        return f"<Page {self.number}>"
 
     def __len__(self):
         return self._length
@@ -259,9 +259,8 @@ class DSOPage(DjangoPage):
 
         # If this is not page 1 and the object list is empty
         # user navigated beyond the last page so we throw a 404.
-        if iterator_is_empty:
-            if self.number > 1:
-                raise Http404()
+        if iterator_is_empty and self.number > 1:
+            raise Http404()
 
         # Set the number of objects read up till now
         number_returned = observable_iterator.number_returned

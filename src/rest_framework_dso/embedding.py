@@ -13,7 +13,7 @@ from copy import copy
 from dataclasses import dataclass
 from functools import cached_property
 from itertools import islice
-from typing import Callable, Iterable, Iterator, Optional, TypeVar, Union
+from typing import Callable, Iterable, Iterator, TypeVar
 
 from django.db import models
 from django.db.models import ForeignObjectRel
@@ -49,9 +49,7 @@ class ExpandScope:
       That includes requests with an ``?_expandScope=`` parameter.
     """
 
-    def __init__(
-        self, expand: Optional[str] = None, expand_scope: Optional[Union[list[str], str]] = None
-    ):
+    def __init__(self, expand: str | None = None, expand_scope: list[str] | str | None = None):
         """Parse the (raw) request parameters"""
         self.auto_expand_all = False
         self._expand_scope = None
@@ -241,7 +239,7 @@ def get_all_embedded_field_names(
     serializer_class: type[serializers.Serializer],
     allow_m2m=True,
     max_depth: int = 99,
-    source_fields: list[Union[models.Field, ForeignObjectRel]] = None,
+    source_fields: list[models.Field | ForeignObjectRel] | None = None,
 ) -> DictOfDicts:
     """Find all possible expands, including nested fields.
     The output format is identical to group_dotted_names().
@@ -515,8 +513,8 @@ class EmbeddedResultSet(ReturnGenerator):
         self,
         embedded_field: AbstractEmbeddedField,
         serializer: serializers.Serializer,
-        main_instances: Optional[list] = None,
-        full_name: Optional[str] = None,
+        main_instances: list | None = None,
+        full_name: str | None = None,
     ):
         # Embedded result sets always work on child elements,
         # as the source queryset is iterated over within this class.
