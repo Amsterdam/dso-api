@@ -176,10 +176,7 @@ class RemoteClient:
         if not self._endpoint_url:
             raise ImproperlyConfigured(f"{self.__class__.__name__}._endpoint_url is not set")
 
-        if not path:
-            url = self._endpoint_url
-        else:
-            url = URL(self._endpoint_url) / path
+        url = self._endpoint_url if not path else URL(self._endpoint_url) / path
 
         url = URL(url.replace("{table_id}", self._table_id))
         return url // query_params

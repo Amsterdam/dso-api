@@ -149,7 +149,7 @@ def test_pagination_links(drf_request, movie):
         return object_list
 
     def _iterate_object_list(object_list):
-        return [movie for movie in iter(object_list)]
+        return list(iter(object_list))
 
     # Setup paginator without iterating object_list
     object_list = _setup_paginator(iterate_object_list=False)
@@ -285,7 +285,9 @@ def test_location_transform(drf_request, location):
     # defining a CRS is by default honoured by the OGRCoordinateTransformation class (...).
     # Consequently CRS created with the “EPSG:4326” or “WGS84”
     # strings use the latitude first, longitude second axis order.
-    rounder = lambda p: [round(c, 6) for c in p]
+    def rounder(p):
+        return [round(c, 6) for c in p]
+
     assert rounder(data["geometry"]["coordinates"]) == [3.313688, 47.974858]
 
     # Serializer assigned 'response_content_crs' (used accept_crs)
@@ -312,7 +314,9 @@ def test_location_transform_input(drf_request, location):
     # Tell that the input data is correctly transformed into WGS84,
     # despite not having CRS defined in the input 'data'.
     # The serializer read the content_crs for this.
-    rounder = lambda p: [round(c, 6) for c in p]
+    def rounder(p):
+        return [round(c, 6) for c in p]
+
     assert rounder(data["geometry"]["coordinates"]) == [3.313688, 47.974858]
 
     # Serializer assigned 'response_content_crs' (used accept_crs)

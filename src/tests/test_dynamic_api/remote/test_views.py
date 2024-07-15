@@ -128,7 +128,9 @@ CSV_HEADER = (
     ",Verblijfplaats.Gemeentevaninschrijving.Omschrijving\r\n"
 )
 
-as_is = lambda data: data
+
+def as_is(data):
+    return data
 
 
 class FormatTestInput(NamedTuple):

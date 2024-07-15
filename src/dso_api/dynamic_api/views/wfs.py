@@ -161,7 +161,7 @@ class DatasetWFSView(CheckPermissionsMixin, WFSView):
         Resolve the current model or return a 404 instead.
         """
         super().setup(request, *args, **kwargs)
-        from ..urls import router
+        from dso_api.dynamic_api.urls import router
 
         dataset_name = self.kwargs["dataset_name"]
         try:
@@ -184,11 +184,11 @@ class DatasetWFSView(CheckPermissionsMixin, WFSView):
             if table_schema.is_through_table:
                 continue
 
-            fields = set(
+            fields = {
                 field.name
                 for field in model._meta.get_fields()
                 if isinstance(field, models.ForeignKey)
-            )
+            }
 
             if table_schema.is_nested_table and "parent" in fields:
                 fields.remove("parent")

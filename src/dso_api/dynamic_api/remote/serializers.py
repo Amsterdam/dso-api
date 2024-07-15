@@ -116,6 +116,7 @@ class RemoteFieldSerializer(DSOSerializer, _AuthMixin):
         for field in self.field_schema.subfields:
             if field.id == id:
                 return field
+        return None
 
 
 def remote_serializer_factory(table_schema: DatasetTableSchema):

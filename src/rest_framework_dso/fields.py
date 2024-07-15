@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Iterable, Optional, Union, cast
+from typing import Iterable, cast
 from urllib.parse import quote, urlsplit, urlunsplit
 
 from django.contrib.gis.geos import GEOSGeometry
@@ -30,7 +30,7 @@ class FieldsToDisplay:
     exclusions across nesting levels, e.g. ``?_fields=-customer.name``.
     """
 
-    def __init__(self, fields: Optional[list[str]] = None, prefix: str = ""):
+    def __init__(self, fields: list[str] | None = None, prefix: str = ""):
         # The 'fields' is pre-processed into 3 structures that allow to deal with
         # all possible scenario's that the methods of this class need to cover.
         # For example, this also allows queries like ?_fields=-person.name to properly
@@ -38,7 +38,7 @@ class FieldsToDisplay:
         # AND also still include all other fields at the top-level (not only include person)
         self._includes: set[str] = set()
         self._excludes: set[str] = set()
-        self._children: dict[str, FieldsToDisplay] = dict()
+        self._children: dict[str, FieldsToDisplay] = {}
         self._allow_all = True
         self.prefix = prefix
 
@@ -87,7 +87,7 @@ class FieldsToDisplay:
             name = field[1:] if is_exclude else field
 
             if sub_fields:
-                if any(sub_field.startswith("-") for sub_field in sub_fields.keys()):
+                if any(sub_field.startswith("-") for sub_field in sub_fields):
                     # Avoid ?_fields=person.-name
                     raise ValidationError(
                         "The minus-sign can only be used in front of a field name.", code="fields"
@@ -244,7 +244,7 @@ DENY_SUB_FIELDS_TO_DISPLAY._allow_all = False
 
 
 def get_embedded_field_class(
-    model_field: Union[RelatedField, ForeignObjectRel]
+    model_field: RelatedField | ForeignObjectRel,
 ) -> type[AbstractEmbeddedField]:
     """Return the embedded field type that is suited for a particular model field."""
     if isinstance(model_field, ForeignObjectRel):
@@ -371,7 +371,7 @@ class AbstractEmbeddedField:
         return self.serializer_class.Meta.model
 
     @property
-    def related_id_field(self) -> Optional[str]:
+    def related_id_field(self) -> str | None:
         """The ID field is typically auto-detected.
 
         It can however be overwritten to change the object retrieval query.
@@ -388,7 +388,7 @@ class AbstractEmbeddedField:
     @cached_property
     def source_field(
         self,
-    ) -> Union[RelatedField, models.ForeignObjectRel]:
+    ) -> RelatedField | models.ForeignObjectRel:
         return self.parent_model._meta.get_field(self.source)
 
     @cached_property
@@ -486,7 +486,7 @@ class EmbeddedManyToManyField(AbstractEmbeddedField):
         return [instance.pk]
 
     @cached_property
-    def related_id_field(self) -> Optional[str]:
+    def related_id_field(self) -> str | None:
         # Given a relation (A -> M2M -> B), this field acts on data of the first model (A).
         # So it collects A.pk, and then needs to resolve instances of B.
         #
@@ -514,7 +514,7 @@ class EmbeddedManyToManyRelField(EmbeddedManyToManyField):
     """
 
     @cached_property
-    def related_id_field(self) -> Optional[str]:
+    def related_id_field(self) -> str | None:
         # Given a relation (A -> M2M -> B), this rel-field acts on data from the second model (B).
         # Hence, it collects identifiers from the second relation (B.pk).
         # To retrieve the intended objects (A), the query starts at the first model (A).

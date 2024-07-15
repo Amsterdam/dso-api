@@ -22,7 +22,7 @@ of the declared fields, so per-request changes don't affect the static class.
 from __future__ import annotations
 
 import logging
-from typing import Optional, TypeVar, cast
+from typing import TypeVar, cast
 
 from cachetools import LRUCache, cached
 from cachetools.keys import hashkey
@@ -109,7 +109,7 @@ class SerializerAssemblyLine:
         fields=None,
         depth: int = 0,
         openapi_docs: str = "",
-        factory_name: Optional[str] = None,
+        factory_name: str | None = None,
         **meta_kwargs,
     ):
         """
@@ -596,7 +596,7 @@ def _through_serializer_factory(  # noqa: C901
         factory_name="_through_serializer_factory",
     )
 
-    temporal: Optional[Temporal] = target_table_schema.temporal
+    temporal: Temporal | None = target_table_schema.temporal
     # Add the "href" link which directly reads the M2M foreign key ID.
     # This avoids having to retrieve any foreign object.
     href_field_cls = HyperlinkedRelatedField
@@ -655,7 +655,7 @@ def _through_serializer_factory(  # noqa: C901
         # added if they exist on the model.
         # (e.g. "beginGeldigheid" and "eindGeldigheid" for the "geldigOp" dimension for GOB data)
         existing_fields_names = {f.name for f in through_model._meta.get_fields()}
-        for dimension_name, boundary_fields in temporal.dimensions.items():
+        for _dimension_name, boundary_fields in temporal.dimensions.items():
             for dim_field in boundary_fields:
                 if dim_field.python_name in existing_fields_names:  # TODO: still need this?
                     serializer_part.add_field_name(dim_field.name, source=dim_field.python_name)

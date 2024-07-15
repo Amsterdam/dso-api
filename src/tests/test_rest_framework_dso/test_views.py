@@ -624,7 +624,7 @@ class TestListCount:
             response = api_client.get("/v1/movies", data=data)
 
         # Make sure we are not inadvertently executing a COUNT
-        assert all(["COUNT" not in q["sql"] for q in captured.captured_queries])
+        assert all("COUNT" not in q["sql"] for q in captured.captured_queries)
 
         data = read_response_json(response)
         assert response.status_code == 200
