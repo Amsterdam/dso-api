@@ -1,4 +1,4 @@
-from . import lookups  # noqa (import is needed for registration)
+from . import lookups  # noqa: F401 (needed for registration)
 from .backends import DynamicFilterBackend, DynamicOrderingFilter
 from .parser import FilterInput
 

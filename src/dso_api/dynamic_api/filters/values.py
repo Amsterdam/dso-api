@@ -42,7 +42,8 @@ def str2isodate(value: str) -> date | datetime | None:
     # for something that has no time at inputs, allowing to check against a complete day
     # instead of exactly midnight.
     try:
-        return datetime.strptime(value, "%Y-%m-%d").date()
+        # while this uses strptime(), it only takes the date, which has no tzinfo
+        return datetime.strptime(value, "%Y-%m-%d").date()  # noqa: DTZ007
     except ValueError:
         pass
 
@@ -61,7 +62,8 @@ def str2time(value: str) -> time:
     """Parse a HH:MM:SS or HH:MM time formatted string."""
     for format in ("%H:%M:%S", "%H:%M", "%H:%M:%S.%f"):
         try:
-            return datetime.strptime(value, format).time()
+            # while this uses strptime(), it only takes the time, so no tzinfo neeed.
+            return datetime.strptime(value, format).time()  # noqa: DTZ007
         except ValueError:
             pass
 

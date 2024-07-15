@@ -259,7 +259,7 @@ class DynamicRouter(routers.DefaultRouter):
         # Because dataset are related, we need to 'prewarm'
         # the datasets cache (in schematools)
         for dataset in db_datasets:
-            dataset.schema
+            dataset.schema  # noqa: B018 (load data early)
 
         for dataset in db_datasets:  # type: Dataset
             dataset_id = dataset.schema.id  # not dataset.name which is mangled.

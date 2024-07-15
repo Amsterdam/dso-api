@@ -120,7 +120,7 @@ def read_response_partial(response: HttpResponseBase) -> tuple[str, Exception | 
     try:
         for chunk in iter(response):
             buffer.write(chunk)
-    except Exception as e:  # noqa: B902
+    except Exception as e:  # noqa: B902, BLE001
         return buffer.getvalue().decode(), e
     else:
         return buffer.getvalue().decode(), None

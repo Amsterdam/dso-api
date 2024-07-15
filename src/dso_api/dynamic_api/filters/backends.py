@@ -51,11 +51,10 @@ class DynamicOrderingFilter(OrderingFilter):
     ordering_param = "_sort"  # Enforce DSO-specific name.
 
     def get_ordering(self, request, queryset, view):
-        if self.ordering_param not in request.query_params:
+        if self.ordering_param not in request.query_params and "sorteer" in request.query_params:
             # Allow DSO 1.0 Dutch "sorteer" parameter
             # Can adjust 'self' as this instance is recreated each request.
-            if "sorteer" in request.query_params:
-                self.ordering_param = "sorteer"
+            self.ordering_param = "sorteer"
 
         ordering = super().get_ordering(request, queryset, view)
         if ordering is None:

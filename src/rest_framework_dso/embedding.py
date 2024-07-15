@@ -226,7 +226,7 @@ class EmbeddedFieldMatch:
         child = (
             serializer.child if isinstance(serializer, serializers.ListSerializer) else serializer
         )
-        child.fields  # noqa: perform early checks
+        child.fields  # noqa: B018, perform early checks
 
         # Allow the output format to customize the serializer for the embedded relation.
         renderer = self.serializer.context["request"].accepted_renderer

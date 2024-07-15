@@ -35,8 +35,9 @@ class TestDatasetWFSIndexView:
                         {
                             "name": "production",
                             "api_url": f"{base}/v1/wfs/afvalwegingen/",
-                            "specification_url": f"{base}/v1/wfs/afvalwegingen/"
-                            + "?SERVICE=WFS&REQUEST=GetCapabilities",
+                            "specification_url": (
+                                f"{base}/v1/wfs/afvalwegingen/?SERVICE=WFS&REQUEST=GetCapabilities"
+                            ),
                             "documentation_url": f"{base}/v1/docs/wfs-datasets/afvalwegingen.html",
                         }
                     ],
@@ -69,8 +70,9 @@ class TestDatasetWFSIndexView:
                         {
                             "name": "production",
                             "api_url": f"{base}/v1/wfs/fietspaaltjes/",
-                            "specification_url": f"{base}/v1/wfs/fietspaaltjes/"
-                            + "?SERVICE=WFS&REQUEST=GetCapabilities",
+                            "specification_url": (
+                                f"{base}/v1/wfs/fietspaaltjes/?SERVICE=WFS&REQUEST=GetCapabilities"
+                            ),
                             "documentation_url": f"{base}/v1/docs/wfs-datasets/fietspaaltjes.html",
                         }
                     ],

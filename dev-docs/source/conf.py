@@ -41,7 +41,7 @@ django.setup()
 # -- Project information -----------------------------------------------------
 
 project = "Amsterdam DSO-API"
-copyright = f"{date.today().year}, Gemeente Amsterdam"
+copyright = f"{date.today().year}, Gemeente Amsterdam"  # noqa: DTZ011
 author = (
     "Team Datadiensten van het Dataplatform"
     " onder de Directie Digitale Voorzieningen, Gemeente Amsterdam"

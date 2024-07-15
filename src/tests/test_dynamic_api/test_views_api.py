@@ -2041,11 +2041,13 @@ class TestEmbedTemporalTables:
         assert "totalPages" not in data["page"]
 
 
+def as_is(data):
+    return data
+
+
 @pytest.mark.django_db
 class TestFormats:
     """Prove that common rendering formats work as expected"""
-
-    as_is = lambda data: data
 
     def test_point_wgs84(self):
         """See that our WGS84_POINT is indeed a lon/lat coordinate.

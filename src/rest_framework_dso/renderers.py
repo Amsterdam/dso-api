@@ -338,11 +338,8 @@ class GeoJSONRenderer(RendererMixin, renderers.JSONRenderer):
                 yield self._render_geojson_detail(data, request=request)
                 return
 
-            if "_embed" in data:
-                # Must be a listing, not a detail view which may also have _embed.
-                collections = data["_embed"]
-            else:
-                collections = data
+            # If it's a listing, remove the _embed wrapper.
+            collections = data.get("_embed", data)
         elif isinstance(data, (list, ReturnGenerator, GeneratorType)):
             collections = {"gen": data}
         else:

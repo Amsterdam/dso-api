@@ -62,7 +62,7 @@ class APIIndexView(APIView):
                 # Due to too many of these issues, avoid breaking the whole index listing for this.
                 # Plus, having the front page give a 500 error is not that nice.
                 logging.exception(
-                    f"Internal URL resolving is broken for schema {ds.schema.id}: {e}"
+                    "Internal URL resolving is broken for schema {%s}: {%s}", ds.schema.id, str(e)
                 )
                 env = []
                 rel = []

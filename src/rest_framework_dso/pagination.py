@@ -60,12 +60,14 @@ class DSOHTTPHeaderPageNumberPagination(pagination.PageNumberPagination):
 
     def get_page_size(self, request):
         """Allow the ``page_size`` parameter was fallback."""
-        if self.page_size_query_param not in request.query_params:
+        if (
+            self.page_size_query_param not in request.query_params
+            and "page_size" in request.query_params
+        ):
             # Allow our classic rest "page_size" setting that we leaked into
             # the public API to be used as fallback. This only affects the
             # current request (attribute is set on self, not the class).
-            if "page_size" in request.query_params:
-                self.page_size_query_param = "page_size"
+            self.page_size_query_param = "page_size"
 
         return super().get_page_size(request)
 

@@ -232,7 +232,7 @@ class LookupContext(NamedTuple):
 
 def lookup_context(op, example, descr):
     # disable mark_safe() warnings because this is static HTML in this very file.
-    return LookupContext(op, mark_safe(example), mark_safe(descr))  # nosec B308 B703
+    return LookupContext(op, mark_safe(example), mark_safe(descr))  # noqa: B308, B703, S308
 
 
 # This should match ALLOWED_SCALAR_LOOKUPS in filters.parser (except for the "exact" lookup).
@@ -321,7 +321,7 @@ def _table_context(ds: Dataset, table: DatasetTableSchema):
         exports.append(export_info)
 
     if (temporal := table.temporal) is not None:
-        for name, fields in temporal.dimensions.items():
+        for name in temporal.dimensions:
             filters.append(
                 {
                     "name": name,
@@ -546,7 +546,7 @@ def _filter_payload(
         "name": name,
         "type": type.capitalize(),
         "is_deprecated": is_deprecated,
-        "value_example": mark_safe(value_example or ""),  # nosec B308 B703 (is static HTML)
+        "value_example": mark_safe(value_example or ""),  # noqa: B308, B703, S308 (is static HTML)
         "lookups": [LOOKUP_CONTEXT[op] for op in lookups],
         "auth": _fix_auth(field.auth | field.table.auth | field.table.dataset.auth),
     }

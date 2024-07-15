@@ -392,10 +392,10 @@ class TestDynamicSerializer:
                     "volgnummer": 1,
                     "identificatie": "0363",
                 },
-                "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/dataset#stadsdelen",  # NoQA
+                "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/dataset#stadsdelen",
                 "wijken": [
                     {
-                        "href": "http://testserver/v1/gebieden/wijken/03630000000001/?volgnummer=1",  # NoQA
+                        "href": "http://testserver/v1/gebieden/wijken/03630000000001/?volgnummer=1",
                         "title": "03630000000001.1",
                         "volgnummer": 1,
                         "identificatie": "03630000000001",
@@ -1155,7 +1155,7 @@ class TestDynamicSerializer:
         # Trying to fetch the data (Serializer tries to render the data)
         # should not be allowed.
         with pytest.raises(PermissionDenied):
-            monumenten_serializer.data
+            monumenten_serializer.data  # noqa: B018
 
     @staticmethod
     def test_request_expand_scope_for_protected_expand_should_not_be_allowed(
@@ -1196,4 +1196,4 @@ class TestDynamicSerializer:
         # Trying to fetch the data (Serializer tries to render the data)
         # should not be allowed.
         with pytest.raises(PermissionDenied):
-            monumenten_serializer.data
+            monumenten_serializer.data  # noqa: B018
