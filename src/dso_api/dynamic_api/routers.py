@@ -24,8 +24,9 @@ the :func:`~schematools.contrib.django.factories.model_factory`,
 from __future__ import annotations
 
 import logging
+from collections.abc import Iterable, Iterator
 from itertools import chain
-from typing import TYPE_CHECKING, Iterable, Iterator
+from typing import TYPE_CHECKING
 
 from django.apps import apps
 from django.conf import settings

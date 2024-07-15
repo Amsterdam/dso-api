@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Iterable, cast
+from collections.abc import Iterable
+from typing import cast
 from urllib.parse import quote, urlsplit, urlunsplit
 
 from django.contrib.gis.geos import GEOSGeometry

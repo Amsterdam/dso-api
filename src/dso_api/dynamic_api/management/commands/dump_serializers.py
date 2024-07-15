@@ -1,7 +1,7 @@
 import inspect
 import textwrap
 from argparse import ArgumentParser
-from typing import Any, List, Optional, Tuple, Type
+from typing import Any
 
 from django.apps import apps
 from django.core.management import BaseCommand
@@ -25,7 +25,7 @@ class Command(BaseCommand):
 
     help = "Dump the (dynamic) serializer definitions that Django holds in-memory."  # noqa: A003
 
-    path_aliases: List[Tuple[str, str]] = [
+    path_aliases: list[tuple[str, str]] = [
         ("rest_framework.fields.", "serializers."),
         ("rest_framework.relations.", "serializers."),
         ("dso_api.dynamic_api.serializers.", ""),
@@ -179,7 +179,7 @@ class Command(BaseCommand):
                 doc += "\n"
         self.stdout.write(f'    """{doc}"""\n\n')
 
-    def write_factory_docs(self, serializer_class: Type[DynamicSerializer]) -> None:
+    def write_factory_docs(self, serializer_class: type[DynamicSerializer]) -> None:
         """Write debugging information about the factory function."""
         # Write some factory information
         factory_name = self._get_serializer_factory_name(serializer_class)
@@ -190,7 +190,7 @@ class Command(BaseCommand):
         else:
             self.stdout.write(f"    # Created by {factory_name}():\n")
 
-    def write_serializer_meta(self, serializer_class: Type[DSOSerializer]) -> None:
+    def write_serializer_meta(self, serializer_class: type[DSOSerializer]) -> None:
         """Write the 'class Meta' section."""
         self.stdout.write("    class Meta:\n")
         for name, value in serializer_class.Meta.__dict__.items():
@@ -274,7 +274,7 @@ class Command(BaseCommand):
 
     def _get_serializer_factory_name(
         self, serializer_class: type[serializers.Serializer]
-    ) -> Optional[str]:
+    ) -> str | None:
         # Can be set by SerializerAssemblyLine.
         return getattr(serializer_class, "_factory_function", None)
 

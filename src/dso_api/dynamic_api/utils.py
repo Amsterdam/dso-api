@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Iterable
 from functools import lru_cache
-from typing import Iterable
 
 from django.db import models
 from django.db.models import Model

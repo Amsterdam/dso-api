@@ -9,11 +9,12 @@ from __future__ import annotations
 
 import logging
 from collections import defaultdict
+from collections.abc import Callable, Iterable, Iterator
 from copy import copy
 from dataclasses import dataclass
 from functools import cached_property
 from itertools import islice
-from typing import Callable, Iterable, Iterator, TypeVar
+from typing import TypeVar
 
 from django.db import models
 from django.db.models import ForeignObjectRel

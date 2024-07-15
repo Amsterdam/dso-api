@@ -21,7 +21,8 @@ and constructing serializer fields based on the model field metadata.
 
 import inspect
 import logging
-from typing import Generator, Iterable, Optional, Union, cast
+from collections.abc import Generator, Iterable
+from typing import cast
 
 from django.contrib.gis.db import models as gis_models
 from django.contrib.gis.gdal import GDALException
@@ -149,8 +150,8 @@ class ExpandableSerializer(BaseSerializer):
             raise ParseError(msg) from None
 
     def get_embedded_objects_by_id(
-        self, embedded_field: fields.AbstractEmbeddedField, id_list: list[Union[str, int]]
-    ) -> Union[models.QuerySet, Iterable[models.Model]]:
+        self, embedded_field: fields.AbstractEmbeddedField, id_list: list[str | int]
+    ) -> models.QuerySet | Iterable[models.Model]:
         """Retrieve a number of embedded objects by their identifier.
 
         While the embedded field typically collects the related objects by
@@ -259,7 +260,7 @@ class DSOModelListSerializer(DSOListSerializer):
     https://tools.ietf.org/html/draft-kelly-json-hal-08
     """
 
-    def get_prefetch_lookups(self) -> list[Union[models.Prefetch, str]]:
+    def get_prefetch_lookups(self) -> list[models.Prefetch | str]:
         """Tell which fields should be included for a ``prefetch_related()``."""
         return list(get_serializer_relation_lookups(self))
 
@@ -598,7 +599,7 @@ class DSOSerializer(ExpandableSerializer, serializers.Serializer):
                         " om dit probleem op te lossen."
                     ) from e
 
-    def _get_crs(self, instance) -> Optional[CRS]:
+    def _get_crs(self, instance) -> CRS | None:
         """Find the used CRS in the geometry field(s)."""
         for field in self._geometry_fields:
             if isinstance(instance, dict):

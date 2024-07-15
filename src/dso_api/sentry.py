@@ -1,5 +1,5 @@
 from os.path import normpath
-from typing import Any, Optional
+from typing import Any
 from urllib.parse import urlparse
 
 from django.conf import settings
@@ -11,7 +11,7 @@ Event = dict[str, Any]
 Hint = dict[str, Any]
 
 
-def before_send(event: Event, hint: Hint) -> Optional[Event]:
+def before_send(event: Event, hint: Hint) -> Event | None:
     """Filters events before they are sent to the Sentry server."""
 
     path = urlparse(event["request"]["url"]).path

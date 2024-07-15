@@ -3,7 +3,7 @@ Currently it mainly performs authorization, data retrieval, and schema validatio
 """
 
 import logging
-from typing import Callable, Optional
+from collections.abc import Callable
 from urllib.parse import urlparse
 
 import certifi
@@ -164,7 +164,7 @@ class RemoteViewSet(DSOViewMixin, ViewSet):
 
     client: clients.RemoteClient = None
     serializer_class = None
-    table_schema: Optional[DatasetTableSchema] = None
+    table_schema: DatasetTableSchema | None = None
 
     # The 'bronhouder' of the associated dataset
     authorization_grantor: str = None

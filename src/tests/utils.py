@@ -4,7 +4,6 @@ import itertools
 import json
 from io import BytesIO
 from types import GeneratorType
-from typing import Optional
 from xml.etree import ElementTree as ET
 
 import orjson
@@ -112,7 +111,7 @@ def read_response_xml(response: HttpResponseBase, ignore_content_type=False) -> 
     return ET.fromstring(read_response(response))
 
 
-def read_response_partial(response: HttpResponseBase) -> tuple[str, Optional[Exception]]:
+def read_response_partial(response: HttpResponseBase) -> tuple[str, Exception | None]:
     """Read the response content, return partial data when
     streaming was aborted with an exception.
     This works for both HttpResponse, TemplateResponse and StreamingHttpResponse.
