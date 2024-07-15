@@ -285,18 +285,17 @@ class DSOAutoSchema(openapi.AutoSchema):
         This method transforms the serializer field into a OpenAPI definition.
         We've overwritten this to change the geometry field representation.
         """
-        if not hasattr(field, "_spectacular_annotation"):
-            # Fix support for missing field types:
-            if isinstance(field, GeometryField):
-                # Not using `rest_framework_gis.schema.GeoFeatureAutoSchema` here,
-                # as it duplicates components instead of using $ref.
-                if field.parent and hasattr(field.parent.Meta, "model"):
-                    # model_field.geom_type is uppercase
-                    model_field = field.parent.Meta.model._meta.get_field(field.source)
-                    geojson_type = GEOM_TYPES_TO_GEOJSON.get(model_field.geom_type, "Geometry")
-                else:
-                    geojson_type = "Geometry"
-                return {"$ref": f"#/components/schemas/{geojson_type}"}
+        # Fix support for missing field types:
+        if not hasattr(field, "_spectacular_annotation") and isinstance(field, GeometryField):
+            # Not using `rest_framework_gis.schema.GeoFeatureAutoSchema` here,
+            # as it duplicates components instead of using $ref.
+            if field.parent and hasattr(field.parent.Meta, "model"):
+                # model_field.geom_type is uppercase
+                model_field = field.parent.Meta.model._meta.get_field(field.source)
+                geojson_type = GEOM_TYPES_TO_GEOJSON.get(model_field.geom_type, "Geometry")
+            else:
+                geojson_type = "Geometry"
+            return {"$ref": f"#/components/schemas/{geojson_type}"}
 
         return super()._map_serializer_field(field, direction, bypass_extensions=bypass_extensions)
 

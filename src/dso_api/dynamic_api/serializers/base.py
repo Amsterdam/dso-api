@@ -437,18 +437,19 @@ class DynamicBodySerializer(DynamicSerializer):
         # Remove fields from the _links field too. This is not done in the serializer
         # itself as that creates a cross-dependency between the parent/child.fields property.
         links_field = fields.get("_links")
-        if links_field is not None and isinstance(links_field, DynamicLinksSerializer):
-            if self.fields_to_display.reduced():
-                # The 'invalid_fields' is not checked against here, as that already happened
-                # for the top-level fields reduction.
-                main_and_links_fields = self.get_valid_field_names(fields)
-                fields_to_keep, _ = self.fields_to_display.get_allow_list(main_and_links_fields)
-                fields_to_keep.update(links_field.fields_always_included)
-                links_field.fields = {
-                    name: field
-                    for name, field in links_field.fields.items()
-                    if name in fields_to_keep
-                }
+        if (
+            links_field is not None
+            and isinstance(links_field, DynamicLinksSerializer)
+            and self.fields_to_display.reduced()
+        ):
+            # The 'invalid_fields' is not checked against here, as that already happened
+            # for the top-level fields reduction.
+            main_and_links_fields = self.get_valid_field_names(fields)
+            fields_to_keep, _ = self.fields_to_display.get_allow_list(main_and_links_fields)
+            fields_to_keep.update(links_field.fields_always_included)
+            links_field.fields = {
+                name: field for name, field in links_field.fields.items() if name in fields_to_keep
+            }
 
         return fields
 

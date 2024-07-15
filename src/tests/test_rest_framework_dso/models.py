@@ -20,6 +20,9 @@ class MovieUser(models.Model, NonTemporalMixin):
     class Meta:
         app_label = "test_rest_framework_dso"
 
+    def __str__(self):
+        return self.name
+
 
 class Category(models.Model, NonTemporalMixin):
     """Used to test FK relations."""
@@ -33,6 +36,9 @@ class Category(models.Model, NonTemporalMixin):
         app_label = "test_rest_framework_dso"
         ordering = ("name",)
 
+    def __str__(self):
+        return self.name
+
 
 class Actor(models.Model, NonTemporalMixin):
     """Used to test M2M relations"""
@@ -43,6 +49,9 @@ class Actor(models.Model, NonTemporalMixin):
     class Meta:
         app_label = "test_rest_framework_dso"
         ordering = ("name",)
+
+    def __str__(self):
+        return self.name
 
 
 class Movie(models.Model, NonTemporalMixin):
@@ -67,3 +76,6 @@ class Location(models.Model, NonTemporalMixin):
 
     class Meta:
         app_label = "test_rest_framework_dso"
+
+    def __str__(self):
+        return str(self.geometry)

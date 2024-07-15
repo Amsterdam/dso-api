@@ -630,8 +630,8 @@ def test_hcbag_list(
 HCBRK_FILES = Path(__file__).parent.parent.parent / "files" / "haalcentraalbrk"
 HCBRK_NATUURLIJKPERSOON = (HCBRK_FILES / "hcbrk_natuurlijkpersoon.json").read_text()
 HCBRK_ONROERENDE_ZAAK = (HCBRK_FILES / "hcbrk_onroerendezaak.json").read_text()
-DSO_NATUURLIJKPERSOON = json.load(open(HCBRK_FILES / "dso_natuurlijkpersoon.json"))
-DSO_ONROERENDE_ZAAK = json.load(open(HCBRK_FILES / "dso_onroerendezaak.json"))
+DSO_NATUURLIJKPERSOON = json.loads((HCBRK_FILES / "dso_natuurlijkpersoon.json").read_text())
+DSO_ONROERENDE_ZAAK = json.loads((HCBRK_FILES / "dso_onroerendezaak.json").read_text())
 
 
 @pytest.mark.django_db

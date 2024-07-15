@@ -89,13 +89,10 @@ def _get_http_error(response: HTTPResponse) -> APIException:
     # This translates some errors into a 502 "Bad Gateway" or 503 "Gateway Timeout"
     # error to reflect the fact that this API is calling another service as backend.
 
+    # Consider the actual JSON response here,
+    # unless the request hit the completely wrong page (it got an HTML page).
     content_type = response.headers.get("content-type", "")
-    if content_type.startswith("text/html"):
-        # HTML error, probably hit the completely wrong page.
-        detail_message = None
-    else:
-        # Consider the actual JSON response to be relevant here.
-        detail_message = response.data.decode()
+    detail_message = response.data.decode() if not content_type.startswith("text/html") else None
 
     if response.status == 400:  # "bad request"
         if content_type == "application/problem+json":

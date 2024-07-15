@@ -1,6 +1,4 @@
-from pathlib import Path
-
-from dso_api.settings import *
+from dso_api.settings import *  # noqa: F403, F405
 
 # The reason the settings are defined here, is to make them independent
 # of the regular project sources. Otherwise, the project needs to have

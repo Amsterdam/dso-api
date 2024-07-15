@@ -30,6 +30,7 @@ class DSOPaginator(DjangoPaginator):
                 "DSOPaginator instantiated with non-zero value in orphans. \
                     Orphans are not supported by this class and will be ignored.",
                 RuntimeWarning,
+                stacklevel=2,
             )
         super().__init__(object_list, per_page, 0, allow_empty_first_page)
 
