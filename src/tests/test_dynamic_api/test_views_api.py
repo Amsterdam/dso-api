@@ -2298,19 +2298,17 @@ class TestFormats:
         assert response["Content-Type"] == expected_type  # Test before reading stream
         assert response.status_code == 200, response.getvalue()
         assert isinstance(response, StreamingResponse)
+        data = decoder(response.getvalue())
         assert response["Content-Type"] == expected_type  # And test after reading
 
-        data = decoder(response.getvalue())
-
         if format != "json" and page_size_param == "page_size":
-            # Handling of this synonym is broken: AB#24678.
-            return
-
-        assert data == make_expected(self, page_num, page_size_param)
+            pytest.xfail("Handling of this synonym is broken: AB#24678.")
 
         # Paginator was triggered
         assert response["X-Pagination-Page"] == str(page_num)
         assert response["X-Pagination-Limit"] == "4"
+
+        assert data == make_expected(self, page_num, page_size_param)
 
         # proves middleware detected streaming response, and didn't break it:
         assert "Content-Length" not in response
@@ -2487,8 +2485,8 @@ class TestFormats:
         data = json.loads(response.getvalue())
         assert data == {
             "type": "urn:apiexception:not_found",
-            "title": "No Containers found matching the query",
-            "detail": "Not found.",
+            "title": "Not found.",
+            "detail": "No Containers found matching the query",
             "status": 404,
         }
 

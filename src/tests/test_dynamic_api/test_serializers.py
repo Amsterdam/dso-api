@@ -620,7 +620,7 @@ class TestDynamicSerializer:
             context={"request": drf_request, "view": to_serializer_view(fietspaaltjes_model)},
         )
 
-        assert "'title', 'reference for DISPLAY FIELD'" in str(fietsplaatjes_serializer.data)
+        assert "'title': 'reference for DISPLAY FIELD'" in str(fietsplaatjes_serializer.data)
 
     @staticmethod
     def test_no_display_title_present(

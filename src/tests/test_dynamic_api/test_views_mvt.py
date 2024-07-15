@@ -136,6 +136,7 @@ def test_mvt_content(api_client, afval_container_model, afval_cluster, filled_ro
         "default": {
             "extent": 4096,
             "version": 2,
+            "type": "FeatureCollection",
             "features": [
                 {
                     "geometry": {"type": "Point", "coordinates": [1928, 2558]},
@@ -151,7 +152,7 @@ def test_mvt_content(api_client, afval_container_model, afval_cluster, filled_ro
                         "datum_leegmaken": "2021-01-03 12:13:14+01",
                     },
                     "id": 0,
-                    "type": 1,
+                    "type": "Feature",
                 }
             ],
         }
@@ -170,12 +171,13 @@ def test_mvt_content(api_client, afval_container_model, afval_cluster, filled_ro
         "default": {
             "extent": 4096,
             "version": 2,
+            "type": "FeatureCollection",
             "features": [
                 {
                     "geometry": {"type": "Point", "coordinates": [3825, 1344]},
                     "properties": {},
                     "id": 0,
-                    "type": 1,
+                    "type": "Feature",
                 }
             ],
         }
@@ -211,12 +213,13 @@ def test_mvt_model_auth(api_client, geometry_auth_model, fetch_auth_token, fille
         "default": {
             "extent": 4096,
             "version": 2,
+            "type": "FeatureCollection",
             "features": [
                 {
                     "geometry": {"type": "Point", "coordinates": [1928, 2558]},
                     "id": 0,
                     "properties": {"id": 1, "metadata": "secret"},
-                    "type": 1,
+                    "type": "Feature",
                 }
             ],
         }

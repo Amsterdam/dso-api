@@ -24,7 +24,7 @@ from functools import lru_cache
 from itertools import islice
 from typing import TypeVar
 
-from django.db import models
+from django.db import connections, models
 from django.db.models.query import QuerySet
 from lru import LRU
 
@@ -40,19 +40,13 @@ DEFAULT_SQL_CHUNK_SIZE = 2000  # allow unit tests to alter this.
 class ChunkedQuerySetIterator(Iterable[M]):
     """An optimal strategy to perform ``prefetch_related()`` on large datasets.
 
-    It fetches data from the queryset in chunks,
-    and performs ``prefetch_related()`` behavior on each chunk.
+    Originally, this was here as Django didn't allow combining ``QuerySet.iterator()``
+    with ``prefetch_related()``. That support landed in Django 4.2.
 
-    Django's ``QuerySet.prefetch_related()`` works by loading the whole queryset into memory,
-    and performing an analysis of the related objects to fetch. When working on large datasets,
-    this is very inefficient as more memory is consumed. Instead, ``QuerySet.iterator()``
-    is preferred here as it returns instances while reading them. Nothing is stored in memory.
-    Hence, both approaches are fundamentally incompatible. This class performs a
-    mixed strategy: load a chunk, and perform prefetches for that particular batch.
-
-    As extra performance benefit, a local cache avoids prefetching the same records
-    again when the next chunk is analysed. It has a "least recently used" cache to avoid
-    flooding the caches when foreign keys constantly point to different unique objects.
+    This code is still relevant, as it also adds an extra performance benefit.
+    It keeps a local cache of foreign-key objects, to avoid prefetching the same records
+    again when the next chunk is analysed. This is done using a "least recently used" dict
+    so the cache won't be flooded when foreign keys constantly point to different unique objects.
     """
 
     def __init__(self, queryset: models.QuerySet, chunk_size=None, sql_chunk_size=None):
@@ -69,7 +63,7 @@ class ChunkedQuerySetIterator(Iterable[M]):
 
     def __iter__(self):
         # Using iter() ensures the ModelIterable is resumed with the next chunk.
-        qs_iter = iter(self.queryset.iterator(chunk_size=self.sql_chunk_size))
+        qs_iter = iter(self._get_queryset_iterator())
         chunk_id = 0
 
         # Keep fetching chunks
@@ -80,6 +74,28 @@ class ChunkedQuerySetIterator(Iterable[M]):
                 chunk_id += 1
 
             yield from instances
+
+    def _get_queryset_iterator(self) -> Iterable:
+        """The body of queryset.iterator(), while circumventing prefetching."""
+        # The old code did `return self.queryset.iterator(chunk_size=self.sql_chunk_size)`
+        # However, Django 4 supports using prefetch_related() with iterator() in that scenario.
+        #
+        # This code is the core of Django's QuerySet.iterator() that only produces the iteration,
+        # without any prefetches. Those are added by this class instead.
+        use_chunked_fetch = not connections[self.queryset.db].settings_dict.get(
+            "DISABLE_SERVER_SIDE_CURSORS"
+        )
+        iterable = self.queryset._iterable_class(
+            self.queryset, chunked_fetch=use_chunked_fetch, chunk_size=self.sql_chunk_size
+        )
+        if isinstance(self.queryset, ObservableQuerySet):
+            # As the _iterator() and __iter__() is bypassed here,
+            # the logic of the ObservableQuerySet needs to be restored.
+            # Otherwise, it will return the sentinel item which the DSOPage
+            # uses to detect whether there is a next page.
+            iterable = self.queryset.wrap_iterator(iterable)
+
+        yield from iterable
 
     def _add_prefetches(self, instances: list[M], chunk_id):
         """Merge the prefetched objects for this batch with the model instances."""
@@ -198,22 +214,22 @@ class ObservableQuerySet(QuerySet):
         clone._item_callbacks = self._item_callbacks.copy()
         return clone
 
-    def iterator(self, *args, **kwargs):
+    def _iterator(self, *args, **kwargs):
         """Return observable iterator and add observer.
         Wraps an observable iterator around the iterator
         returned by the base class.
         """
-        iterator = super().iterator(*args, **kwargs)
-        return self._wrap_iterator(iterator)
+        iterator = super()._iterator(*args, **kwargs)
+        return self.wrap_iterator(iterator)
 
     def __iter__(self):
         """Return observable iterator and add observer.
         Wraps an observable iterator around the iterator
         returned by the base class.
         """
-        return self._wrap_iterator(super().__iter__())
+        return self.wrap_iterator(super().__iter__())
 
-    def _wrap_iterator(self, iterator: Iterable) -> ObservableIterator:
+    def wrap_iterator(self, iterator: Iterable) -> ObservableIterator:
         """Wrap an iterator inside an ObservableIterator"""
         iterator = ObservableIterator(iterator)
         iterator.add_observer(self._item_observer)

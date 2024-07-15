@@ -16,9 +16,9 @@ from __future__ import annotations
 from functools import cached_property
 
 from django.db import models
-from django.http import Http404
 from django.utils.translation import gettext as _
 from rest_framework import viewsets
+from rest_framework.exceptions import NotFound
 from schematools.contrib.django.models import DynamicModel
 
 from dso_api.dynamic_api import filters, permissions, serializers
@@ -115,7 +115,7 @@ class DynamicApiViewSet(DSOViewMixin, viewsets.ReadOnlyModelViewSet):
         # Only retrieve the correct temporal object, unless filters change this
         obj = queryset.order_by().first()  # reverse ordering already applied
         if obj is None:
-            raise Http404(
+            raise NotFound(
                 _("No %(verbose_name)s found matching the query")
                 % {"verbose_name": queryset.model._meta.verbose_name}
             )
