@@ -15,7 +15,7 @@ import orjson
 import urllib3
 from django.core.exceptions import ImproperlyConfigured
 from more_ds.network.url import URL
-from rest_framework.exceptions import NotFound, ParseError, PermissionDenied
+from rest_framework.exceptions import APIException, NotFound, ParseError, PermissionDenied
 from rest_framework.status import HTTP_401_UNAUTHORIZED, HTTP_403_FORBIDDEN
 from urllib3 import HTTPResponse
 
@@ -81,10 +81,10 @@ def call(pool: urllib3.PoolManager, url: str, **kwargs) -> HTTPResponse:
     if logger.isEnabledFor(logging.DEBUG):
         logger.debug("  Response body: %s", response.data)
 
-    _raise_http_error(response)
+    raise _get_http_error(response)
 
 
-def _raise_http_error(response: HTTPResponse) -> None:
+def _get_http_error(response: HTTPResponse) -> APIException:
     # Translate the remote HTTP error to the proper response.
     #
     # This translates some errors into a 502 "Bad Gateway" or 503 "Gateway Timeout"
@@ -101,20 +101,20 @@ def _raise_http_error(response: HTTPResponse) -> None:
     if response.status == 400:  # "bad request"
         if content_type == "application/problem+json":
             # Translate proper "Bad Request" to REST response
-            raise RemoteAPIException(
+            return RemoteAPIException(
                 title=ParseError.default_detail,
                 detail=orjson.loads(response.data),
                 code=ParseError.default_code,
                 status_code=400,
             )
         else:
-            raise BadGateway(detail_message)
+            return BadGateway(detail_message)
     elif response.status in (HTTP_401_UNAUTHORIZED, HTTP_403_FORBIDDEN):
         # We translate 401 to 403 because 401 MUST have a WWW-Authenticate
         # header in the response and we can't easily set that from here.
         # Also, RFC 7235 says we MUST NOT change such a header,
         # which presumably includes making one up.
-        raise RemoteAPIException(
+        return RemoteAPIException(
             title=PermissionDenied.default_detail,
             detail=f"{response.status} from remote: {response.data!r}",
             status_code=HTTP_403_FORBIDDEN,
@@ -124,13 +124,13 @@ def _raise_http_error(response: HTTPResponse) -> None:
         # Return 404 to client (in DRF format)
         if content_type == "application/problem+json":
             # Forward the problem-json details, but still in a 404:
-            raise RemoteAPIException(
+            return RemoteAPIException(
                 title=NotFound.default_detail,
                 detail=orjson.loads(response.data),
                 status_code=404,
                 code=NotFound.default_code,
             )
-        raise NotFound(detail_message)
+        return NotFound(detail_message)
     else:
         # Unexpected response, call it a "Bad Gateway"
         logger.error(
@@ -138,7 +138,7 @@ def _raise_http_error(response: HTTPResponse) -> None:
             response.status,
             detail_message,
         )
-        raise BadGateway(
+        return BadGateway(
             detail_message or f"Unexpected HTTP {response.status} from internal endpoint"
         )
 
