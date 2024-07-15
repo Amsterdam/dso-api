@@ -61,7 +61,7 @@ class DSOPaginator(DjangoPaginator):
         # One additional sentinel object, is given to the page.
         # This object should not be rendered, but it allows the page
         # to detect whether more items exist beyond it and hence whether a next page exists.
-        sentinel = 1  # thrown away in DSOPage using next()
+        sentinel = 1
         return self._get_page(self.object_list[bottom : top + sentinel], number, self)
 
     def _get_page(self, *args, **kwargs):
