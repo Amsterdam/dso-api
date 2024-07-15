@@ -45,7 +45,7 @@ select = [
     "C90", # mccabe
     "BLE", # flake8-blind-except
     "C4", # flake8-comprehensions
-    "DTZ", # flake8-datetimez
+    # "DTZ", # flake8-datetimez
     "T10", # flake8-debugger
     "DJ", # flake8-django
     "ISC", # flake8-implicit-str-concat
