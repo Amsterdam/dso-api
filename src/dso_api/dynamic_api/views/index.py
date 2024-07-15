@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Iterable
+from collections.abc import Iterable
 
 from django.urls import NoReverseMatch
 from rest_framework.response import Response

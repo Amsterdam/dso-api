@@ -7,7 +7,6 @@ to avoid the overhead of the requests library.
 import logging
 import time
 from dataclasses import dataclass
-from typing import Optional, Union
 from urllib.parse import urlparse
 
 import certifi
@@ -36,8 +35,8 @@ _http_pool_generic = urllib3.PoolManager(cert_reqs="CERT_REQUIRED", ca_certs=cer
 class RemoteResponse:
     """The response from the remote system"""
 
-    content_crs: Optional[CRS]
-    data: Union[list, dict]
+    content_crs: CRS | None
+    data: list | dict
 
 
 def call(pool: urllib3.PoolManager, url: str, **kwargs) -> HTTPResponse:

@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from typing import Any, NamedTuple, Union
+from typing import Any, NamedTuple
 from urllib.parse import urlparse
 
 import orjson
@@ -138,7 +138,7 @@ class FormatTestInput(NamedTuple):
     format: str
     parser: callable
     expected_type: str
-    expected_data: Union[str, dict]
+    expected_data: str | dict
 
 
 SUCCESS_FORMAT_TESTS = {

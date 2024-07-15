@@ -1,7 +1,6 @@
 import json
 import sys
 from inspect import isgeneratorfunction
-from typing import Optional, Union
 
 from django.http import HttpResponseNotFound, JsonResponse
 from gisserver.exceptions import ExternalValueError
@@ -219,7 +218,7 @@ def exception_handler(exc, context):
 
 
 def get_invalid_params(
-    exc: ValidationError, detail: Union[ErrorDetail, dict, list], field_name=None
+    exc: ValidationError, detail: ErrorDetail | dict | list, field_name=None
 ) -> list:
     """Flatten the entire chain of DRF messages.
     This can be a recursive tree for POST requests with complex serializer data.
@@ -313,7 +312,7 @@ class DSOViewMixin:
     def table_schema(self) -> DatasetTableSchema:
         return self.model._table_schema
 
-    def _parse_accept_crs(self, value: Optional[str]) -> Optional[crs.CRS]:
+    def _parse_accept_crs(self, value: str | None) -> crs.CRS | None:
         """Parse the HTTP Accept-Crs header value.
 
         Clients provide this header to indicate which CRS

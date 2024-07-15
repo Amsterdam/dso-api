@@ -3,7 +3,7 @@ import logging
 import os
 import sys
 from pathlib import Path
-from typing import Final, Optional
+from typing import Final
 
 import environ
 import sentry_sdk
@@ -57,8 +57,8 @@ OAUTH_CLIENT_ID = os.getenv("OAUTH_CLIENT_ID", "dso-api-open-api")
 # -- Azure specific settings
 
 # Microsoft recommended abbreviation for Application Insights is `APPI`
-AZURE_APPI_CONNECTION_STRING: Optional[str] = env.str("AZURE_APPI_CONNECTION_STRING", None)
-AZURE_APPI_AUDIT_CONNECTION_STRING: Optional[str] = env.str(
+AZURE_APPI_CONNECTION_STRING: str | None = env.str("AZURE_APPI_CONNECTION_STRING", None)
+AZURE_APPI_AUDIT_CONNECTION_STRING: str | None = env.str(
     "AZURE_APPI_AUDIT_CONNECTION_STRING", None
 )
 

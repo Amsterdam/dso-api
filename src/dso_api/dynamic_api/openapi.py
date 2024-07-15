@@ -3,9 +3,9 @@
 The main logic can be found in :mod:`rest_framework_dso.openapi`.
 """
 
+from collections.abc import Callable
 from copy import copy
 from functools import wraps
-from typing import Callable, Optional, Union
 from urllib.parse import urljoin
 
 import drf_spectacular.plumbing
@@ -180,7 +180,7 @@ def _html_on_browser(openapi_view, dataset_schema):
     return _switching_view
 
 
-def get_dataset_patterns(dataset_id: str) -> list[Union[URLPattern, URLResolver]]:
+def get_dataset_patterns(dataset_id: str) -> list[URLPattern | URLResolver]:
     """Find the URL patterns for a specific dataset.
 
     This returns a subtree of the URLConf that only contains the
@@ -198,7 +198,7 @@ def get_dataset_patterns(dataset_id: str) -> list[Union[URLPattern, URLResolver]
 _lazy_get_dataset_patterns = lazy(get_dataset_patterns, list)
 
 
-def _get_patterns(matcher: Callable[[APIView], bool], patterns: Optional[list] = None, prefix=""):
+def _get_patterns(matcher: Callable[[APIView], bool], patterns: list | None = None, prefix=""):
     """Find a subset of URL patterns, based on a matching predicate."""
     if patterns is None:
         resolver = get_resolver(get_urlconf())
