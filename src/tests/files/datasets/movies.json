@@ -61,7 +61,7 @@
           "movies": {
             "table": "movie",
             "field": "actors",
-            "format": "expanded",
+            "format": "embedded",
             "$comment": "Reverse M2M back to movies"
           }
         },
@@ -92,7 +92,7 @@
           "movies": {
             "table": "movie",
             "field": "category",
-            "format": "expanded",
+            "format": "embedded",
             "$comment": "Reverse FK back to movies"
           }
         },
