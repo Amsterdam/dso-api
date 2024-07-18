@@ -1,9 +1,6 @@
 from __future__ import annotations
 
 import warnings
-from collections.abc import Callable, Iterable
-from functools import lru_cache
-from typing import TypeVar
 
 from django.core.paginator import EmptyPage, PageNotAnInteger
 from django.core.paginator import Page as DjangoPage
@@ -12,9 +9,7 @@ from django.db.models.query import QuerySet
 from django.http import Http404
 from django.utils.translation import gettext_lazy as _
 
-from rest_framework_dso.embedding import ObservableIterator
-
-Q = TypeVar("Q", bound=QuerySet)
+from rest_framework_dso.iterators import ObservableIterator, ObservableQuerySet
 
 
 class DSOPaginator(DjangoPaginator):
@@ -65,8 +60,8 @@ class DSOPaginator(DjangoPaginator):
 
         # One additional sentinel object, is given to the page.
         # This object should not be rendered, but it allows the page
-        # to detect whether more items exist beyond it and hence wether a next page exists.
-        sentinel = 1
+        # to detect whether more items exist beyond it and hence whether a next page exists.
+        sentinel = 1  # thrown away in DSOPage using next()
         return self._get_page(self.object_list[bottom : top + sentinel], number, self)
 
     def _get_page(self, *args, **kwargs):
@@ -77,106 +72,6 @@ class DSOPaginator(DjangoPaginator):
         standard :cls:`Page` object.
         """
         return DSOPage(*args, **kwargs)
-
-
-@lru_cache
-def _create_observable_queryset_subclass(
-    queryset_class: type[Q],
-) -> type[Q] | type[ObservableQuerySet]:
-    """Insert the ObservableQuerySet into a QuerySet subclass, as if it's a mixin.
-    This creates a custom subclass, that inherits both ObservableQuerySet and the QuerySet class.
-
-    Otherwise, custom methods on the queryset class are lost after
-    wrapping the queryset into an observable queryset,
-    """
-    if queryset_class is QuerySet:
-        # No need to create a custom class.
-        return ObservableQuerySet
-    else:
-        # Extend from both:
-        name = queryset_class.__name__.replace("QuerySet", "") + "ObservableQuerySet"
-        return type(name, (ObservableQuerySet, queryset_class), {})
-
-
-class ObservableQuerySet(QuerySet):
-    """A QuerySet that has observable iterators.
-
-    This class overloads the iterator and __iter__ methods
-    and wraps the iterators returned by the base class
-    in ObservableIterators.
-
-    All QuerySet methods that return another QuerySet,
-    return an ObservableQuerySet with the same observers
-    as the parent instance.
-
-    Observers added to an instance will be notified of
-    iteration events on the last iterator created by
-    the instance.
-    """
-
-    def __init__(self, *args, **kwargs):
-        self._item_callbacks: list[Callable] = []
-        self._obs_iterator: ObservableIterator = None
-        super().__init__(*args, **kwargs)
-
-    @classmethod
-    def from_queryset(cls, queryset: QuerySet, observers: list[Callable] | None = None):
-        """Turn a QuerySet instance into an ObservableQuerySet"""
-        queryset.__class__ = _create_observable_queryset_subclass(queryset.__class__)
-        queryset._item_callbacks = list(observers) if observers else []
-        queryset._obs_iterator = None
-        return queryset
-
-    def _clone(self, *args, **kwargs):
-        """Clone this instance, including its observers.
-        So any iterators created by the clone will also call
-        the observers.
-        """
-        # It's not classy to touch privates, but we want to observe
-        # iteration on all chained objects as well.
-        # The _clone() method is used by Django in all methods
-        # that return another QuerySet, like filter() and prefetch_related().
-        # Overloading this method handles all of those in one go.
-        clone = super()._clone(*args, **kwargs)
-        clone._item_callbacks = self._item_callbacks.copy()
-        return clone
-
-    def iterator(self, *args, **kwargs):
-        """Return observable iterator and add observer.
-        Wraps an observable iterator around the iterator
-        returned by the base class.
-        """
-        iterator = super().iterator(*args, **kwargs)
-        return self._wrap_iterator(iterator)
-
-    def __iter__(self):
-        """Return observable iterator and add observer.
-        Wraps an observable iterator around the iterator
-        returned by the base class.
-        """
-        return self._wrap_iterator(super().__iter__())
-
-    def _wrap_iterator(self, iterator: Iterable) -> ObservableIterator:
-        """Wrap an iterator inside an ObservableIterator"""
-        iterator = ObservableIterator(iterator)
-        iterator.add_observer(self._item_observer)
-
-        # Remove observer from existing oberservable iterator
-        if self._obs_iterator is not None:
-            self._obs_iterator.clear_observers()
-
-        self._obs_iterator = iterator
-
-        # Notify observers of empty iterator
-        if not iterator:
-            self._item_observer(None, True)
-
-        return iterator
-
-    def _item_observer(self, item, is_empty=False):
-        """Notify all observers."""
-        for callback in self._item_callbacks:
-            callback(item, self._obs_iterator, is_empty)
 
 
 class DSOPage(DjangoPage):
@@ -271,7 +166,7 @@ class DSOPage(DjangoPage):
         self._has_next = number_returned > self.paginator.per_page
 
         # The page was passed an extra object in its object_list
-        # as a sentinel to detect wether more items exist beyond this page
+        # as a sentinel to detect whether more items exist beyond this page
         # and hence a next page exists.
         # This object should not be rendered so we call next() again to stop the iterator.
         if observable_iterator.number_returned == self.paginator.per_page + 1:

@@ -1,7 +1,5 @@
 """Internal serializer tools to make sure generators are properly handled in DRF."""
 
-import itertools
-
 from rest_framework.utils.serializer_helpers import ReturnList
 
 
@@ -27,16 +25,3 @@ class ReturnGenerator(ReturnList):
     def __bool__(self):
         # Generators are always true, calls to "if data: ..." should not fail.
         return True
-
-
-def peek_iterable(generator):
-    """Take a quick look at the first item of a generator/iterable.
-    This returns a modified iterable that contains all elements, including the peeked item.
-    """
-    iterable = iter(generator)  # make sure this is an iterator, so it can't restart.
-    try:
-        item = next(iterable)
-    except StopIteration:
-        return None, iterable
-
-    return item, itertools.chain([item], iterable)
