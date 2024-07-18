@@ -143,7 +143,7 @@ def test_pagination_links(drf_request, movie):
 
         # Iterate the object_list, as if the renderer is streaming it.
         # If it is not iterated the paginator does not know the number of items
-        # on the page, or wether a next link is available.
+        # on the page, or whether a next link is available.
         if iterate_object_list:
             _iterate_object_list(object_list)
         return object_list

@@ -42,10 +42,10 @@ from rest_framework_dso.embedding import (
     EmbeddedFieldMatch,
     EmbeddedResultSet,
     ExpandScope,
-    ObservableIterator,
 )
 from rest_framework_dso.exceptions import HumanReadableGDALException
-from rest_framework_dso.serializer_helpers import ReturnGenerator, peek_iterable
+from rest_framework_dso.iterators import ObservableIterator, peek_iterable
+from rest_framework_dso.serializer_helpers import ReturnGenerator
 from rest_framework_dso.utils import get_serializer_relation_lookups
 
 logger = logging.getLogger(__name__)
