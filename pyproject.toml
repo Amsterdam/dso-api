@@ -45,7 +45,7 @@ select = [
     "C90", # mccabe
     "BLE", # flake8-blind-except
     "C4", # flake8-comprehensions
-    # "DTZ", # flake8-datetimez
+    "DTZ", # flake8-datetimez
     "T10", # flake8-debugger
     "DJ", # flake8-django
     "ISC", # flake8-implicit-str-concat
@@ -84,6 +84,9 @@ allow-dict-calls-with-keyword-arguments = true
 
 [tool.ruff.lint.flake8-gettext]
 extend-function-names = ["gettext_lazy", "ngettext_lazy", "pgettext", "pgettext_lazy", "npgettext", "npgettext_lazy"]
+
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+"django.utils.timezone.make_aware".msg = "There is no need for make_aware(), pass tzinfo directly."
 
 [tool.ruff.lint.isort]
 known-first-party = ["dso_api", "rest_framework_dso"]

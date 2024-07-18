@@ -10,6 +10,7 @@ from types import GeneratorType
 import orjson
 from django.conf import settings
 from django.urls import reverse
+from django.utils.timezone import get_current_timezone
 from rest_framework import renderers
 from rest_framework.relations import HyperlinkedRelatedField
 from rest_framework.serializers import ListSerializer, Serializer, SerializerMethodField
@@ -91,7 +92,7 @@ class RendererMixin:
     def get_http_headers(self, renderer_context: dict):
         """Return the http headers for the response."""
         if self.content_disposition:
-            now = datetime.now().isoformat()
+            now = datetime.now(tz=get_current_timezone()).isoformat()
             dataset_id = renderer_context.get("dataset_id", "dataset")
             table_id = renderer_context.get("table_id", "table")
             return {

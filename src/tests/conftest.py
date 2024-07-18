@@ -12,7 +12,7 @@ from django.contrib.gis.geos import GEOSGeometry, Point
 from django.core.handlers.wsgi import WSGIRequest
 from django.db import connection
 from django.utils.functional import SimpleLazyObject
-from django.utils.timezone import make_aware
+from django.utils.timezone import get_current_timezone
 from jwcrypto.jwt import JWT
 from psycopg2.sql import SQL, Identifier
 from rest_framework.request import Request
@@ -26,8 +26,8 @@ from tests.test_rest_framework_dso.models import Actor, Category, Location, Movi
 from tests.utils import api_request_with_scopes, to_drf_request
 
 HERE = Path(__file__).parent
-DATE_2021_FEB = make_aware(datetime(2021, 2, 28, 10, 0))
-DATE_2021_JUNE = make_aware(datetime(2021, 6, 11, 10, 0))
+DATE_2021_FEB = datetime(2021, 2, 28, 10, 0, tzinfo=get_current_timezone())
+DATE_2021_JUNE = datetime(2021, 6, 11, 10, 0, tzinfo=get_current_timezone())
 
 
 @pytest.fixture()
@@ -367,7 +367,7 @@ def afval_container(afval_container_model, afval_cluster):
         eigenaar_naam="Dataservices",
         # set to fixed dates to the CSV export can also check for desired formatting
         datum_creatie=date(2021, 1, 3),
-        datum_leegmaken=make_aware(datetime(2021, 1, 3, 12, 13, 14)),
+        datum_leegmaken=datetime(2021, 1, 3, 12, 13, 14, tzinfo=get_current_timezone()),
         cluster=afval_cluster,
         geometry=Point(10, 10),  # no SRID on purpose, should use django model field.
     )
@@ -571,10 +571,16 @@ def movies_model(movies_dataset, dynamic_models):
 def movies_data(movies_model, movies_category):
     return [
         movies_model.objects.create(
-            id=3, name="foo123", category=movies_category, date_added=datetime(2020, 1, 1, 0, 45)
+            id=3,
+            name="foo123",
+            category=movies_category,
+            date_added=datetime(2020, 1, 1, 0, 45, tzinfo=get_current_timezone()),
         ),
         movies_model.objects.create(
-            id=4, name="test", category=movies_category, date_added=datetime(2020, 2, 2, 13, 15)
+            id=4,
+            name="test",
+            category=movies_category,
+            date_added=datetime(2020, 2, 2, 13, 15, tzinfo=get_current_timezone()),
         ),
     ]
 

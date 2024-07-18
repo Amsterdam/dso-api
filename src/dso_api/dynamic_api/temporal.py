@@ -12,7 +12,7 @@ from typing import Literal
 
 from django.db import models
 from django.db.models import Q
-from django.utils.timezone import make_aware, now
+from django.utils.timezone import get_current_timezone, now
 from more_itertools import first
 from rest_framework.exceptions import ValidationError
 from rest_framework.request import Request
@@ -119,7 +119,9 @@ class TemporalTableQuery:
 
         try:
             if "T" in value or " " in value:
-                return make_aware(datetime.fromisoformat(value))
+                # Add timezone if needed.
+                val = datetime.fromisoformat(value)
+                return val.replace(tzinfo=get_current_timezone()) if val.tzinfo is None else val
             else:
                 return date.fromisoformat(value)
         except ValueError:
