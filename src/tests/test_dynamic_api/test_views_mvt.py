@@ -3,7 +3,7 @@ from datetime import date, datetime
 import mapbox_vector_tile
 import pytest
 from django.contrib.gis.geos import Point
-from django.utils.timezone import make_aware
+from django.utils.timezone import get_current_timezone
 
 CONTENT_TYPE = "application/vnd.mapbox-vector-tile"
 
@@ -119,7 +119,7 @@ def test_mvt_content(api_client, afval_container_model, afval_cluster, filled_ro
         eigenaar_naam="Dataservices",
         # set to fixed dates to the CSV export can also check for desired formatting
         datum_creatie=date(2021, 1, 3),
-        datum_leegmaken=make_aware(datetime(2021, 1, 3, 12, 13, 14)),
+        datum_leegmaken=datetime(2021, 1, 3, 12, 13, 14, tzinfo=get_current_timezone()),
         cluster=afval_cluster,
         geometry=Point(123207.6558130105, 486624.6399002579),
     )
