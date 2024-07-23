@@ -310,7 +310,6 @@ class TestSort:
         }
 
 
-# TODO: Make parametrized, too much repetion. JJM
 @pytest.mark.django_db
 class TestAuth:
     """Test authorization"""
@@ -539,27 +538,17 @@ class TestAuth:
             "soort": "NIET FISCA",  # read permission
         }
 
-    def test_auth_on_dataset_schema_protects_containers(
-        self, api_client, afval_schema, afval_dataset, filled_router
+    @pytest.mark.parametrize("table_name", ["containers", "clusters"])
+    def test_auth_on_dataset(
+        self, api_client, afval_schema, afval_dataset, filled_router, table_name
     ):
-        """Prove that auth protection at dataset level leads to a 403 on the container listview."""
+        """Prove that auth protection at dataset level leads to a 403 on the table listviews."""
         patch_dataset_auth(afval_schema, auth=["BAG/R"])
-        url = reverse("dynamic_api:afvalwegingen-containers-list")
+        url = reverse(f"dynamic_api:afvalwegingen-{table_name}-list")
         response = api_client.get(url)
         assert response.status_code == 403, response.data
 
-    def test_auth_on_dataset_schema_protects_cluster(
-        self, api_client, afval_schema, afval_dataset, filled_router
-    ):
-        """Prove that auth protection at dataset level leads to a 403 on the cluster listview."""
-        patch_dataset_auth(afval_schema, auth=["BAG/R"])
-        url = reverse("dynamic_api:afvalwegingen-clusters-list")
-        response = api_client.get(url)
-        assert response.status_code == 403, response.data
-
-    def test_auth_on_table_schema_protects(
-        self, api_client, afval_schema, afval_dataset, filled_router
-    ):
+    def test_auth_on_table(self, api_client, afval_schema, afval_dataset, filled_router):
         """Prove that auth protection at table level (container)
         leads to a 403 on the container listview."""
         patch_table_auth(afval_schema, "containers", auth=["BAG/R"])
@@ -567,7 +556,7 @@ class TestAuth:
         response = api_client.get(url)
         assert response.status_code == 403, response.data
 
-    def test_auth_on_table_schema_does_not_protect_sibling_tables(
+    def test_auth_on_table_does_not_protect_sibling_tables(
         self, api_client, fetch_auth_token, afval_schema, afval_dataset, filled_router
     ):
         """Prove that auth protection at table level (cluster)
@@ -577,96 +566,119 @@ class TestAuth:
         response = api_client.get(url)
         assert response.status_code == 200, response.data
 
-    def test_auth_on_table_schema_with_token_for_valid_scope(
-        self, api_client, fetch_auth_token, afval_schema, afval_container, filled_router
-    ):
-        """Prove that auth protected table (container) can be
-        viewed with a token with the correct scope."""
-        patch_table_auth(afval_schema, "containers", auth=["BAG/R"])
-        url = reverse("dynamic_api:afvalwegingen-containers-list")
-        token = fetch_auth_token(["BAG/R"])
-        response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
-        assert response.status_code == 200, response.data
-
-    def test_auth_on_table_schema_with_token_for_invalid_scope(
-        self, api_client, fetch_auth_token, afval_schema, afval_dataset, filled_router
-    ):
-        """Prove that auth protected table (container) cannot be
-        viewed with a token with an incorrect scope.
-        """
-        patch_table_auth(afval_schema, "containers", auth=["BAG/R"])
-        url = reverse("dynamic_api:afvalwegingen-containers-list")
-        token = fetch_auth_token(["BAG/RSN"])
-        response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
-        assert response.status_code == 403, response.data
-
-    def test_auth_on_embedded_fields_with_token_for_valid_scope(
-        self, api_client, fetch_auth_token, afval_schema, afval_container, filled_router
-    ):
-        """Prove that expanded fields are shown when a reference field is protected
-        with an auth scope and there is a valid token"""
-        patch_table_auth(afval_schema, "clusters", auth=["BAG/R"])
-        url = reverse("dynamic_api:afvalwegingen-containers-list")
-        token = fetch_auth_token(["BAG/R"])
-        response = api_client.get(
-            url, data={"_expand": "true"}, HTTP_AUTHORIZATION=f"Bearer {token}"
-        )
-        data = read_response_json(response)
-        assert response.status_code == 200, data
-        assert "cluster" in data["_embedded"], data
-
-    def test_auth_on_embedded_fields_without_token_for_valid_scope(
-        self, api_client, fetch_auth_token, afval_schema, afval_container, filled_router
-    ):
-        """Prove that expanded fields are *not* shown when a reference field is protected
-        with an auth scope. For expand=true, we return a result,
-        without the fields that are protected"""
-        patch_table_auth(afval_schema, "clusters", auth=["BAG/R"])
-        url = reverse("dynamic_api:afvalwegingen-containers-list")
-        response = api_client.get(url, data={"_expand": "true"})
-        data = read_response_json(response)
-        assert response.status_code == 200, data
-        assert "cluster" not in data["_embedded"], data
-
-    def test_auth_on_specified_embedded_fields_without_token_for_valid_scope(
-        self, api_client, fetch_auth_token, afval_schema, afval_container, filled_router
-    ):
-        """Prove that a 403 is returned when asked for a specific expanded field that is protected
-        and there is no authorization in the token for that field.
-        """
-        patch_table_auth(afval_schema, "clusters", auth=["BAG/R"])
-        url = reverse("dynamic_api:afvalwegingen-containers-list")
-        response = api_client.get(url, data={"_expandScope": "cluster"})
-        assert response.status_code == 403, response.data
-
-    @pytest.mark.parametrize("use_header", (False, True))
-    def test_auth_on_individual_fields_with_token_for_valid_scope(
+    @pytest.mark.parametrize(["token_scope", "expect_code"], [("BAG/R", 200), ("BAG/RSN", 403)])
+    def test_auth_on_table_with_token(
         self,
         api_client,
         fetch_auth_token,
         afval_schema,
         afval_container,
         filled_router,
-        use_header,
+        token_scope,
+        expect_code,
     ):
-        """Prove that protected fields are shown
-        with an auth scope and there is a valid token"""
+        """Prove that auth protected table (container) can be
+        viewed with a token with the correct scope."""
+        patch_table_auth(afval_schema, "containers", auth=["BAG/R"])
+        url = reverse("dynamic_api:afvalwegingen-containers-list")
+        token = fetch_auth_token([token_scope])
+        response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
+        assert response.status_code == expect_code, response.data
+
+    @pytest.mark.parametrize(
+        ["token_scope", "expect_expand"],
+        [
+            ("BAG/R", True),
+            ("BAG/NOPE", False),
+        ],
+    )
+    def test_auth_on_embedded_fields_expand_all(
+        self,
+        api_client,
+        fetch_auth_token,
+        afval_schema,
+        afval_container,
+        filled_router,
+        token_scope,
+        expect_expand,
+    ):
+        """Prove that expanded fields are shown when a reference field is protected
+        with an auth scope and there is a valid token.
+
+        When the expanded field is auth-protected,
+        it will not be included in th default _expand=true.
+        """
+        patch_table_auth(afval_schema, "clusters", auth=["BAG/R"])
+        url = reverse("dynamic_api:afvalwegingen-containers-list")
+        token = fetch_auth_token([token_scope])
+        response = api_client.get(
+            url, data={"_expand": "true"}, HTTP_AUTHORIZATION=f"Bearer {token}"
+        )
+        data = read_response_json(response)
+        assert response.status_code == 200, data
+        assert ("cluster" in data["_embedded"]) == expect_expand, data
+
+    @pytest.mark.parametrize(["use_token", "expect_code"], [(True, 200), (False, 403)])
+    def test_auth_on_embedded_fields_expand_specific(
+        self,
+        api_client,
+        fetch_auth_token,
+        afval_schema,
+        afval_container,
+        filled_router,
+        use_token,
+        expect_code,
+    ):
+        """Prove that a 403 is returned when asked for a specific expanded field that is protected
+        and there is no authorization in the token for that field.
+        """
+        patch_table_auth(afval_schema, "clusters", auth=["BAG/R"])
+        url = reverse("dynamic_api:afvalwegingen-containers-list")
+        header = (
+            {"HTTP_AUTHORIZATION": f"Bearer {fetch_auth_token(['BAG/R'])}"} if use_token else {}
+        )
+        response = api_client.get(url, data={"_expandScope": "cluster"}, **header)
+        assert response.status_code == expect_code, response.data
+
+    @pytest.mark.parametrize(
+        ["token_scope", "expect_field"],
+        [
+            ("BAG/R", True),
+            ("BAG/NOT", False),
+            ("", False),
+        ],
+    )
+    def test_auth_on_field(
+        self,
+        api_client,
+        fetch_auth_token,
+        afval_schema,
+        afval_container,
+        filled_router,
+        token_scope,
+        expect_field,
+    ):
+        """Prove that protected fields are shown/hidden depending on the token.
+        This is tested with an valid/invalid/missing token."""
         patch_field_auth(afval_schema, "containers", "eigenaarNaam", auth=["BAG/R"])
         url = reverse("dynamic_api:afvalwegingen-containers-list")
-        token = fetch_auth_token(["BAG/R"])
 
         # First fetch should NOT return the field,
         # Second fetch should with token should return the field.
-        header = {"HTTP_AUTHORIZATION": f"Bearer {token}"} if use_header else {}
+        header = (
+            {"HTTP_AUTHORIZATION": f"Bearer {fetch_auth_token([token_scope])}"}
+            if token_scope
+            else {}
+        )
         response = api_client.get(url, **header)
         data = read_response_json(response)
 
         assert response.status_code == 200, data
         field_names = data["_embedded"]["containers"][0].keys()
-        assert ("eigenaarNaam" in field_names) == use_header, field_names
+        assert ("eigenaarNaam" in field_names) == expect_field, field_names
 
     @pytest.mark.parametrize("use_header", (False, True))
-    def test_auth_on_individual_fields_with_token_for_valid_scope_per_profile(
+    def test_auth_on_field_via_profile(
         self,
         api_client,
         fetch_auth_token,
@@ -698,7 +710,7 @@ class TestAuth:
             )
         )
         url = reverse("dynamic_api:afvalwegingen-containers-list")
-        token = fetch_auth_token(["BRK/RO", "BRK/RSN"])
+        token = fetch_auth_token(["BRK/RO", "BRK/RSN"])  # not BAG/R
 
         # First fetch should NOT return the field,
         # Second fetch should with token should return the field.
@@ -709,20 +721,6 @@ class TestAuth:
         assert response.status_code == 200, data
         field_names = data["_embedded"]["containers"][0].keys()
         assert ("eigenaarNaam" in field_names) == use_header, field_names  # profile read access
-
-    def test_auth_on_individual_fields_without_token_for_valid_scope(
-        self, api_client, fetch_auth_token, afval_schema, afval_container, filled_router
-    ):
-        """Prove that protected fields are *not* shown
-        with an auth scope and there is not a valid token"""
-        patch_field_auth(afval_schema, "containers", "eigenaarNaam", auth=["BAG/R"])
-        url = reverse("dynamic_api:afvalwegingen-containers-list")
-        response = api_client.get(url)
-        data = read_response_json(response)
-
-        assert response.status_code == 200, data
-        field_names = data["_embedded"]["containers"][0].keys()
-        assert "eigenaarNaam" not in field_names, field_names  # profile read access
 
     @pytest.mark.parametrize("use_header", (False, True))
     def test_auth_on_field_level_is_not_cached(
@@ -748,36 +746,36 @@ class TestAuth:
         field_names = data["_embedded"]["parkeervakken"][0]["regimes"][0].keys()
         assert ("dagen" in field_names) == use_header, field_names
 
-    def test_auth_on_dataset_protects_detail_view(
-        self, api_client, fetch_auth_token, afval_schema, afval_container, filled_router
+    @pytest.mark.parametrize(
+        ["token_scope", "expect_code"],
+        [
+            ("BAG/R", 200),
+            ("BAG/NOPE", 403),
+            ("", 403),
+        ],
+    )
+    def test_detail_view_dataset_auth(
+        self,
+        api_client,
+        fetch_auth_token,
+        afval_schema,
+        afval_container,
+        filled_router,
+        token_scope,
+        expect_code,
     ):
         """Prove that protection at datasets level protects detail views"""
         patch_dataset_auth(afval_schema, auth=["BAG/R"])
         url = reverse("dynamic_api:afvalwegingen-containers-detail", args=[1])
-        response = api_client.get(url)
-        assert response.status_code == 403, response.data
+        header = (
+            {"HTTP_AUTHORIZATION": f"Bearer {fetch_auth_token([token_scope])}"}
+            if token_scope
+            else {}
+        )
+        response = api_client.get(url, **header)
+        assert response.status_code == expect_code, response.data
 
-    def test_auth_on_datasettable_protects_detail_view(
-        self, api_client, afval_schema, fetch_auth_token, afval_container, filled_router
-    ):
-        """Prove that protection at datasets level protects detail views"""
-        patch_table_auth(afval_schema, "containers", auth=["BAG/R"])
-        url = reverse("dynamic_api:afvalwegingen-containers-detail", args=[1])
-
-        response = api_client.get(url)
-        assert response.status_code == 403, response.data
-
-    def test_auth_on_dataset_detail_with_token_for_valid_scope(
-        self, api_client, fetch_auth_token, afval_schema, afval_container, filled_router
-    ):
-        """Prove that protection at datasets level protects detail views"""
-        patch_dataset_auth(afval_schema, auth=["BAG/R"])
-        url = reverse("dynamic_api:afvalwegingen-containers-detail", args=[1])
-        token = fetch_auth_token(["BAG/R"])
-        response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
-        assert response.status_code == 200, response.data
-
-    def test_auth_on_dataset_detail_has_profile_field_permission(
+    def test_detail_view_auth_on_dataset_via_profiles(
         self,
         api_client,
         fetch_auth_token,
