@@ -50,7 +50,7 @@ flake8-colors == 0.1.9
 flake8-debugger == 4.1.2
 flake8-raise == 0.0.5
 mapbox-vector-tile == 2.1.0
-pytest == 8.2.2
+pytest == 8.3.1
 pytest-django == 4.8.0
 pytest-cov == 5.0.0
 python-owasp-zap-v2.4 == 0.1.0
