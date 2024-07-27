@@ -9,3 +9,4 @@ django-debug-toolbar==4.4.6
 django-extensions==3.2.3
 pip-tools==7.4.1
 tomli==2.0.1
+wat-inspector==0.2.1
