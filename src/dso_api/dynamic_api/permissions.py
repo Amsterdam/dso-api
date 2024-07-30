@@ -31,13 +31,13 @@ def log_access(request, access: bool):
 
 def check_filter_field_access(field_name: str, field: DatasetFieldSchema, user_scopes: UserScopes):
     """Check whether the field ca be used for filtering."""
-    if not user_scopes.has_field_access(field):
+    if not user_scopes.has_field_filter_access(field):
         raise PermissionDenied(f"Access denied to filter on: {field_name}")
 
     if field.related_field_ids is not None:
         # Check if related ID fields are accessible.
         for related_id_field in field.related_fields:
-            if not user_scopes.has_field_access(related_id_field):
+            if not user_scopes.has_field_filter_access(related_id_field):
                 raise PermissionDenied(f"Access denied to filter on: {field_name}")
 
 
