@@ -287,11 +287,11 @@
     <option value="false">false</option>
   </datalist>
 </div>
-<script>
-  window.drf = {
-    csrfHeaderName: "{{ csrf_header_name|default:'X-CSRFToken' }}",
-    csrfToken: "{% if request %}{{ csrf_token }}{% endif %}"
-  };
+<script type="application/json" id="drf_csrf">
+  {
+    "csrfHeaderName": "{{ csrf_header_name|default:'X-CSRFToken' }}",
+    "csrfToken": "{% if request %}{{ csrf_token }}{% endif %}"
+  }
 </script>
 <script>
   const DATASET_URL = "{{ dataset_url }}";
