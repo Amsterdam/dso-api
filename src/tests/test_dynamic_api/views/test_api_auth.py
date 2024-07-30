@@ -520,3 +520,25 @@ class TestAuth:
         response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
         data = read_response_json(response)
         assert "secretArray" in data["_embedded"]["things"][0]
+
+    def test_filter_auth(
+        self, api_client, afval_schema, afval_dataset, afval_container, filled_router
+    ):
+        """Prove that filters can have authentication, while the field is still accessible."""
+        patch_field_auth(
+            afval_schema,
+            "containers",
+            "eigenaarNaam",
+            filterAuth=["SEE/CREATION"],
+        )
+
+        url = reverse("dynamic_api:afvalwegingen-containers-list")
+        response = api_client.get(url, {"eigenaarNaam": "FOOBAR"})
+        data = read_response_json(response)
+        assert response.status_code == 403, data
+        assert data["title"] == "Access denied to filter on: eigenaarNaam"
+
+        # But even with the auth, the field itself still exists and can be read.
+        response = api_client.get(url)
+        data = read_response_json(response)
+        assert "eigenaarNaam" in data["_embedded"]["containers"][0]
