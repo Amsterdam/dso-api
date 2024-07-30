@@ -41,17 +41,31 @@ def patch_table_auth(schema: DatasetSchema, table_id, *, auth: list[str]):
     model.table_schema()["auth"] = auth
 
 
-def patch_field_auth(schema: DatasetSchema, table_id, field_id, *subfields: str, auth: list[str]):
-    """Monkeypatch an Amsterdam Schema to set "auth" on a table."""
+def patch_field_auth(
+    schema: DatasetSchema,
+    table_id,
+    field_id,
+    *subfields: str,
+    **update_fields: list[str],
+):
+    """Monkeypatch an Amsterdam Schema to set "auth" or "filterAuth" on a table."""
     # This updates the low-level dict data so all high-level objects get it.
     table = schema.get_table_by_id(table_id)
-    table.get_field_by_id(field_id)  # check existence
-    del table.__dict__["fields"]  # clear cached property
 
-    raw_table = next(t for t in schema["tables"] if t["id"] == table_id)
-    patch_raw_field_auth(raw_table, field_id, *subfields, auth=auth)
+    # Patch underlying data that gave rise to it all
+    # (needed for fields that read schema data, like DynamicOrderingFilter)
+    raw_table: dict = next(t for t in schema["tables"] if t["id"] == table_id)
+    patch_raw_field_auth(raw_table, field_id, *subfields, **update_fields)
 
-    # Also patch the active model, if its already created
+    # table.fields / field.subfields becomes cached property, also update that.
+    # (needed for filtering queries that read schema data, like QueryFilterEngine)
+    field_schema = table.get_field_by_id(field_id)
+    for subfield in subfields:
+        field_schema = field_schema.get_field_by_id(subfield)
+    field_schema.update(update_fields)
+
+    # Also patch the active model, if its already created (it fetched schema data from database)
+    # (needed for serializer fields, these access the model fields to retrieve the schema data)
     if schema.id in apps.app_configs:
         model = apps.get_model(schema.id, table_id)
         model._table_schema = table
@@ -60,10 +74,13 @@ def patch_field_auth(schema: DatasetSchema, table_id, field_id, *subfields: str,
         for subfield in subfields:
             model_field = model_field.related_model._meta.get_field(subfield)
 
-        model_field.field_schema["auth"] = auth
+        if model_field.field_schema is not field_schema:
+            model_field.field_schema.update(update_fields)
 
 
-def patch_raw_field_auth(raw_table, field_id, *subfields: str, auth: list[str]):
+def patch_raw_field_auth(
+    raw_table: dict, field_id: str, *subfields: str, **update_fields: list[str]
+):
     """Monkeypatch the JSON contents of an Amsterdam Schema to add auth rules."""
     raw_field = next(
         f for f_id, f in raw_table["schema"]["properties"].items() if f_id == field_id
@@ -80,7 +97,7 @@ def patch_raw_field_auth(raw_table, field_id, *subfields: str, auth: list[str]):
         raw_field = raw_field[subfield]
 
     # Patch the field
-    raw_field["auth"] = auth
+    raw_field.update(update_fields)
 
 
 def read_response(response: HttpResponseBase) -> str:
