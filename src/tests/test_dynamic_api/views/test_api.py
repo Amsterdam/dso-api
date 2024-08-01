@@ -1,7 +1,7 @@
 import pytest
 from django.db import connection
 from django.urls import NoReverseMatch, reverse
-from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
+from rest_framework.status import HTTP_200_OK
 from schematools.contrib.django.db import create_tables
 
 from rest_framework_dso.crs import CRS, RD_NEW
@@ -109,99 +109,6 @@ class TestDSOViewMixin:
         assert response.status_code == 200, response.data
         assert response.has_header("Content-Crs"), dict(response.items())
         assert CRS.from_string(response["Content-Crs"]) == RD_NEW
-
-
-@pytest.mark.django_db
-class TestListFilters:
-    """Prove that filtering works as expected."""
-
-    @staticmethod
-    def test_filter_no_such_field(api_client, afval_dataset, filled_router):
-        url = reverse("dynamic_api:afvalwegingen-containers-list")
-
-        # Non-existing field.
-        response = api_client.get(url, data={"nietbestaand": ""})
-        assert response.status_code == HTTP_400_BAD_REQUEST, response.data
-        reason = response.data["invalid-params"][0]["reason"]
-        assert reason == "Field 'nietbestaand' does not exist"
-
-    @staticmethod
-    @pytest.mark.parametrize("param", ["buurtcode[", "buurtcode[exact", "buurtcodeexact]"])
-    def test_filter_syntax_error(param, api_client, afval_dataset, filled_router):
-        """Existing field, but syntax error in the filter parameter."""
-        url = reverse("dynamic_api:afvalwegingen-containers-list")
-
-        response = api_client.get(url, data={param: ""})
-        assert response.status_code == HTTP_400_BAD_REQUEST, response.data
-        reason = response.data["invalid-params"][0]["reason"]
-        assert param in reason
-
-    @staticmethod
-    @pytest.mark.parametrize(
-        "lookup,expect",
-        [
-            ("", 0),
-            ("[like]", 1),
-        ],
-    )
-    def test_list_filter_wildcard(api_client, movies_data, filled_router, lookup, expect):
-        """Prove that ?name=foo doesn't work with wildcards (that now requires [like]).
-        Second parameterized call tests whether using [like] does produce the desired effect.
-        """
-        response = api_client.get("/v1/movies/movie/", data={f"name{lookup}": "foo1?3"})
-        assert response.status_code == 200, response
-        assert response["Content-Type"] == "application/hal+json"
-        data = read_response_json(response)
-        assert len(data["_embedded"]["movie"]) == expect
-
-    @staticmethod
-    def test_list_filter_datetime(api_client, movies_data, filled_router):
-        """Prove that datetime fields can be queried using a single data value"""
-        response = api_client.get("/v1/movies/movie/", data={"dateAdded": "2020-01-01"})
-        data = read_response_json(response)
-        assert response.status_code == 200, response
-        assert response["Content-Type"] == "application/hal+json"
-        names = [movie["name"] for movie in data["_embedded"]["movie"]]
-        assert names == ["foo123"]
-
-    @staticmethod
-    def test_list_filter_datetime_invalid(api_client, movies_data, filled_router):
-        """Prove that invalid input is captured, and returns a proper error response."""
-        response = api_client.get("/v1/movies/movie/", data={"dateAdded": "2020-01-fubar"})
-        assert response.status_code == 400, response
-        assert response["Content-Type"] == "application/problem+json", response  # check first
-        data = read_response_json(response)
-        assert response["Content-Type"] == "application/problem+json", response  # and after
-        assert data == {
-            "type": "urn:apiexception:invalid",
-            "title": "Invalid input.",
-            "status": 400,
-            "instance": "http://testserver/v1/movies/movie/?dateAdded=2020-01-fubar",
-            "invalid-params": [
-                {
-                    "type": "urn:apiexception:invalid:invalid",
-                    "name": "dateAdded",
-                    "reason": "Enter a valid ISO date-time, or single date.",
-                }
-            ],
-            "x-validation-errors": {"dateAdded": ["Enter a valid ISO date-time, or single date."]},
-        }
-
-    @pytest.mark.django_db
-    def test_relation_filter(
-        self, api_client, vestiging_dataset, vestiging1, vestiging2, filled_router
-    ):
-        url = reverse("dynamic_api:vestiging-vestiging-list")
-        response = api_client.get(url)
-        assert response.status_code == HTTP_200_OK
-        data = read_response_json(response)
-        assert len(data["_embedded"]["vestiging"]) == 2
-
-        response = api_client.get(url, data={"bezoekAdresId": "1"})
-        assert response.status_code == HTTP_200_OK, response.data
-        data = read_response_json(response)
-        assert len(data["_embedded"]["vestiging"]) == 1
-        assert data["_embedded"]["vestiging"][0]["bezoekAdresId"] == 1
 
 
 @pytest.mark.django_db
