@@ -55,6 +55,7 @@ services:
       DJANGO_DEBUG: 1
       APIKEY_ENABLED: "${APIKEY_ENABLED}"
       INITIALIZE_DB: "${INITIALIZE_DB:-true}"
+      MOCK_DATA: "${MOCK_DATA:-false}"
       SCHEMA_URL: "http://schemas/datasets/" # "https://schemas.data.amsterdam.nl/datasets/"
     volumes:
       - ./src:/app
