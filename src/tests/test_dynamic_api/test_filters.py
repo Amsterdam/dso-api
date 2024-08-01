@@ -252,6 +252,24 @@ class TestFilterEngine:
 
     @staticmethod
     @pytest.mark.parametrize(
+        "query",
+        [
+            "nonexistant",
+            "buurt.nonexistant=test",
+            "buurt.identificatie.nonexistant=test",
+            "buurt.naam.nonexistant=test",
+        ],
+    )
+    def test_filter_loose_relation_invalid(
+        api_client, statistieken_model, statistieken_data, query
+    ):
+        """Prove that field-resolving on invalid fields is properly handled."""
+        engine = create_filter_engine(query)
+        with pytest.raises(ValidationError):
+            engine.filter_queryset(statistieken_model.objects.all())
+
+    @staticmethod
+    @pytest.mark.parametrize(
         "query,expect",
         [
             ("buurt.ligtInWijk.ligtInStadsdeel=03630000000018.1", 1),
@@ -365,6 +383,24 @@ class TestDynamicFilterSet:
         data = read_response_json(response)
         assert response.status_code == 200, data
         assert len(data["_embedded"]["parkeervakken"]) == expect
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        ["query", "expect_code"],
+        [
+            ("regimes.dagen=ma,di,wo,do,vr", 200),
+            ("regimes.dagen.foo=test", 400),
+            ("regimes.foo=test", 400),  # subfield has different codepath if not found.
+            ("foobar=test", 400),
+        ],
+    )
+    def test_parsing_invalid(
+        parkeervakken_parkeervak_model, parkeervakken_regime_model, query, expect_code
+    ):
+        """Prove that looking for a relation on a nested field won't crash."""
+        response = APIClient().get(f"/v1/parkeervakken/parkeervakken/?{query}")
+        data = read_response_json(response)
+        assert response.status_code == expect_code, data
 
     @staticmethod
     def test_numerical_filters(parkeervakken_parkeervak_model, filled_router):
@@ -574,6 +610,26 @@ class TestDynamicFilterSet:
         assert len(data["_embedded"]["actor"]) == 2, data
         names = [a["name"] for a in data["_embedded"]["actor"]]
         assert names == ["John Doe", "Jane Doe"]
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "url",
+        [
+            "/v1/movies/movie/?nonexistent=foo123",  # invalid normal field
+            "/v1/movies/movie/?name.nonexistent=foo123",  # not a relation
+            "/v1/movies/category/?movies.nonexistent=foo123",  # using reverse FK
+            "/v1/movies/category/?movies.name.nonexistent=foo123",  # using reverse FK
+            "/v1/movies/actor/?movies.nonexistent=foo123",  # using reverse M2M
+            "/v1/movies/actor/?movies.name.nonexistent=foo123",  # using reverse M2M
+        ],
+    )
+    def test_filter_invalid_field(movies_model, filled_router, url):
+        """Prove that walking over M2M models works and doesn't crash the parser.
+        Note this uses the "movies" dataset, not the hardcoded movie models/serializers.
+        """
+        response = APIClient().get(url)
+        data = read_response_json(response)
+        assert response.status_code == 400, data
 
     @staticmethod
     @pytest.mark.parametrize("params", [{"e_type": "whatever"}, {"_sort": "e_type"}])

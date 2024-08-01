@@ -527,16 +527,20 @@ def _get_field_by_id(  # noqa: C901
         # Found regular field, or forward relation
         return FilterPathPart(field=field, is_many=field.is_array)
 
-    try:
-        additional_relation = parent.get_additional_relation_by_id(name)
-    except SchemaObjectNotFound:
-        return None
-    else:
-        # The additional relation name is used as ORM path to navigate over the relation.
-        # Yet when directly filtering, the value/lookup should work directly
-        # against the primary key of the reverse table (hence field is also resolved here)
-        return FilterPathPart(
-            field=additional_relation.related_table.identifier_fields[0],
-            reverse_field=additional_relation,
-            is_many=True,
-        )
+    if isinstance(parent, DatasetTableSchema):
+        # For tables, see if a reverse relation can be traversed. This is not possible for fields.
+        try:
+            additional_relation = parent.get_additional_relation_by_id(name)
+        except SchemaObjectNotFound:
+            return None
+        else:
+            # The additional relation name is used as ORM path to navigate over the relation.
+            # Yet when directly filtering, the value/lookup should work directly
+            # against the primary key of the reverse table (hence field is also resolved here)
+            return FilterPathPart(
+                field=additional_relation.related_table.identifier_fields[0],
+                reverse_field=additional_relation,
+                is_many=True,
+            )
+
+    return None
