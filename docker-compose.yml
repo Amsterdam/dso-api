@@ -6,10 +6,10 @@ services:
     shm_size: 128mb
     healthcheck:
       test: ["CMD-SHELL", "pg_isready", "-U", "$${POSTGRES_DB} -U $${POSTGRES_USER}"]
-      interval: 2s
+      interval: 10s
       timeout: 60s
       retries: 5
-      start_period: 1s
+      start_period: 20s
     ports:
        - "5415:5432"
     environment:
@@ -31,6 +31,8 @@ services:
     depends_on:
       database:
         condition: service_healthy
+      redis:
+        condition: service_started
     environment:
       UWSGI_HTTP_SOCKET: ":8000"
       UWSGI_MODULE: "dso_api.wsgi"
