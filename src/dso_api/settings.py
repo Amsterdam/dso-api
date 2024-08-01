@@ -371,6 +371,7 @@ CORS_ALLOW_HEADERS = list(default_headers) + [
     "Accept-Crs",
     "Content-Crs",
 ]
+SECURE_CROSS_ORIGIN_OPENER_POLICY = "unsafe-none"
 
 HEALTH_CHECKS = {
     "app": lambda request: True,
