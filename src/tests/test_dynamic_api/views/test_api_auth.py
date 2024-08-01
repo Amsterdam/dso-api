@@ -7,9 +7,32 @@ from tests.utils import patch_dataset_auth, patch_field_auth, patch_table_auth, 
 
 
 @pytest.mark.django_db
-class TestAuth:
-    """Test authorization"""
+class TestMandatoryFilterSet:
+    """Test authorization using mandatoryFilters"""
 
+    @pytest.mark.parametrize(
+        ["scopes", "query_params", "expect_code"],
+        [
+            ("", "", 403),
+            # See that only the proper filters activate the profile (via mandatoryFilterSets)
+            ("PROFIEL/SCOPE", "?buurtcode=A05d", 403),
+            ("PROFIEL/SCOPE", "?buurtcode=A05d&type=E9", 200),
+            ("PROFIEL/SCOPE", "?buurtcode[like]=*&type[like]=*", 403),  # test circumvention
+            ("PROFIEL/SCOPE", "?regimes.eindtijd=20:05", 200),
+            ("PROFIEL/SCOPE", "?regimes.eindtijd=", 403),
+            ("PROFIEL/SCOPE", "?regimes.eindtijd", 403),
+            # See that 'auth' satisfies without needing a profile
+            ("DATASET/SCOPE PROFIEL/SCOPE", "", 200),
+            ("DATASET/SCOPE", "", 200),
+            ("DATASET/SCOPE", "?regimes.noSuchField=whatever", 400),  # invalid field
+            # See that both profiles can be active
+            ("PROFIEL2/SCOPE", "?regimes.aantal[gte]=2", 200),
+            ("PROFIEL/SCOPE PROFIEL2/SCOPE", "", 403),  # still mandatory
+            ("PROFIEL/SCOPE PROFIEL2/SCOPE", "?regimes.eindtijd=20:05", 200),  # matched profile 1
+            ("PROFIEL/SCOPE PROFIEL2/SCOPE", "?regimes.aantal[gte]=2", 200),  # matched profile 2
+            ("PROFIEL/SCOPE PROFIEL2/SCOPE", "?regimes.noSuchField=whatever", 403),  # no access
+        ],
+    )
     def test_mandatory_filters(
         self,
         api_client,
@@ -17,92 +40,35 @@ class TestAuth:
         parkeervakken_schema,
         parkeervakken_parkeervak_model,
         filled_router,
+        profile1_mandatory,
+        profile2_mandatory,
+        scopes,
+        query_params,
+        expect_code,
     ):
         """
         Tests that profile permissions with are activated
         through querying with the right mandatoryFilterSets
         """
         patch_table_auth(parkeervakken_schema, "parkeervakken", auth=["DATASET/SCOPE"])
-        models.Profile.create_for_schema(
-            ProfileSchema.from_dict(
-                {
-                    "name": "parkeerwacht",
-                    "scopes": ["PROFIEL/SCOPE"],
-                    "datasets": {
-                        "parkeervakken": {
-                            "tables": {
-                                "parkeervakken": {
-                                    "permissions": "read",
-                                    "mandatoryFilterSets": [
-                                        ["buurtcode", "type"],
-                                        ["regimes.eindtijd"],
-                                    ],
-                                }
-                            }
-                        }
-                    },
-                }
-            )
-        )
-        models.Profile.create_for_schema(
-            ProfileSchema.from_dict(
-                {
-                    "name": "parkeerwacht",
-                    "scopes": ["PROFIEL2/SCOPE"],
-                    "datasets": {
-                        "parkeervakken": {
-                            "tables": {
-                                "parkeervakken": {
-                                    "permissions": "read",
-                                    "mandatoryFilterSets": [
-                                        ["regimes.aantal[gte]"],
-                                    ],
-                                }
-                            }
-                        }
-                    },
-                }
-            )
-        )
-
-        def _assert_get(token, params="", expect=200):
-            response = api_client.get(f"{base_url}{params}", HTTP_AUTHORIZATION=f"Bearer {token}")
-            data = read_response_json(response)
-            assert response.status_code == expect, data
-            return data
-
-        token = fetch_auth_token(["PROFIEL/SCOPE"])
         base_url = reverse("dynamic_api:parkeervakken-parkeervakken-list")
-        assert api_client.get(base_url).status_code == 403
-        _assert_get(token, expect=403)
+        headers = (
+            {"HTTP_AUTHORIZATION": f"Bearer {fetch_auth_token(scopes.split())}"} if scopes else {}
+        )
+        response = api_client.get(f"{base_url}{query_params}", **headers)
+        data = read_response_json(response)
+        assert response.status_code == expect_code, data
 
-        # See that only the proper filters activate the profile (via mandatoryFilterSets)
-        _assert_get(token, "?buurtcode=A05d", expect=403)
-        _assert_get(token, "?buurtcode=A05d&type=E9", expect=200)
-        _assert_get(token, "?regimes.eindtijd=20:05", expect=200)
-        _assert_get(token, "?regimes.eindtijd=", expect=403)
-        _assert_get(token, "?regimes.eindtijd", expect=403)
-
-        # See that 'auth' satisfies without needing a profile
-        token2 = fetch_auth_token(["DATASET/SCOPE", "PROFIEL/SCOPE"])
-        _assert_get(token2, expect=200)
-
-        token3 = fetch_auth_token(["DATASET/SCOPE"])
-        _assert_get(token3, expect=200)
-
-        # See that both profiles can be active
-        token4 = fetch_auth_token(["PROFIEL/SCOPE", "PROFIEL2/SCOPE"])
-        # TODO should be 400.
-        _assert_get(token4, "?regimes.noSuchField=whatever", expect=403)
-        _assert_get(token4, "?regimes.aantal[gte]=2", expect=200)
-
-    def test_profile_field_permissions(
+    def test_mixed_profile1(
         self,
         api_client,
         fetch_auth_token,
         parkeervakken_schema,
         parkeervakken_parkeervak_model,
+        basic_parkeervak,
         filled_router,
+        profile_limited_type,
+        profile_limited_soort,
     ):
         """
         Tests combination of profiles with auth scopes on dataset level.
@@ -111,64 +77,11 @@ class TestAuth:
         """
         # Patch the whole dataset so related tables are also restricted
         patch_dataset_auth(parkeervakken_schema, auth=["DATASET/SCOPE"])
-        models.Profile.create_for_schema(
-            ProfileSchema.from_dict(
-                {
-                    "name": "parkeerwacht",
-                    "scopes": ["PROFIEL/SCOPE"],
-                    "datasets": {
-                        "parkeervakken": {
-                            "tables": {
-                                "parkeervakken": {
-                                    "mandatoryFilterSets": [
-                                        ["id"],
-                                    ],
-                                    "fields": {
-                                        "type": "read",
-                                        "soort": "letters:1",
-                                    },
-                                }
-                            }
-                        }
-                    },
-                }
-            )
-        )
-        models.Profile.create_for_schema(
-            ProfileSchema.from_dict(
-                {
-                    "name": "parkeerwacht2",
-                    "scopes": ["PROFIEL2/SCOPE"],
-                    "datasets": {
-                        "parkeervakken": {
-                            "tables": {
-                                "parkeervakken": {
-                                    "mandatoryFilterSets": [
-                                        ["id", "type"],
-                                    ],
-                                    "fields": {
-                                        "type": "letters:1",
-                                        "soort": "read",
-                                    },
-                                }
-                            }
-                        }
-                    },
-                }
-            )
-        )
-        parkeervakken_parkeervak_model.objects.create(
-            id=1,
-            type="Langs",
-            soort="NIET FISCA",
-            aantal="1.0",
-        )
 
         # 1) profile scope only
         # Using 'detail' URL because filtering on ?id=..
         # is prohibited when the field is not accessible.
         token = fetch_auth_token(["PROFIEL/SCOPE"])
-        list_url = reverse("dynamic_api:parkeervakken-parkeervakken-list")
         detail_url = reverse("dynamic_api:parkeervakken-parkeervakken-detail", args=("1",))
         response = api_client.get(detail_url, HTTP_AUTHORIZATION=f"Bearer {token}")
         data = read_response_json(response)
@@ -182,8 +95,21 @@ class TestAuth:
             "type": "Langs",  # read permission
         }
 
-        # 2) profile and dataset scope -> all allowed (auth of dataset is satisfied)
+    def test_auth_satisfies(
+        self,
+        api_client,
+        fetch_auth_token,
+        parkeervakken_schema,
+        parkeervakken_parkeervak_model,
+        basic_parkeervak,
+        filled_router,
+        profile_limited_type,
+        profile_limited_soort,
+    ):
+        """Prove that profile + dataset scope = all allowed (auth of dataset is satisfied)"""
+        patch_dataset_auth(parkeervakken_schema, auth=["DATASET/SCOPE"])
         token = fetch_auth_token(["PROFIEL/SCOPE", "DATASET/SCOPE"])
+        list_url = reverse("dynamic_api:parkeervakken-parkeervakken-list")
         response = api_client.get(f"{list_url}?id=1", HTTP_AUTHORIZATION=f"Bearer {token}")
         data = read_response_json(response)
         assert response.status_code == 200, data
@@ -209,8 +135,21 @@ class TestAuth:
             "volgnummer": None,
         }
 
-        # 3) two profile scopes, only one matches (mandatory filtersets)
+    def test_mixed_match_through_filters(
+        self,
+        api_client,
+        fetch_auth_token,
+        parkeervakken_schema,
+        parkeervakken_parkeervak_model,
+        basic_parkeervak,
+        filled_router,
+        profile_limited_type,
+        profile_limited_soort,
+    ):
+        """Prove two profile scopes, only one matches (because of mandatory filtersets)"""
+        patch_dataset_auth(parkeervakken_schema, auth=["DATASET/SCOPE"])
         token = fetch_auth_token(["PROFIEL/SCOPE", "PROFIEL2/SCOPE"])
+        detail_url = reverse("dynamic_api:parkeervakken-parkeervakken-detail", args=("1",))
         # trigger one profile
         response = api_client.get(detail_url, HTTP_AUTHORIZATION=f"Bearer {token}")
         data = read_response_json(response)
@@ -222,7 +161,21 @@ class TestAuth:
             "type": "Langs",  # read permission
         }
 
-        # 4) both profiles + mandatory filtersets
+    def test_mixed_match_both(
+        self,
+        api_client,
+        fetch_auth_token,
+        parkeervakken_schema,
+        parkeervakken_parkeervak_model,
+        basic_parkeervak,
+        filled_router,
+        profile_limited_type,
+        profile_limited_soort,
+    ):
+        """Prove that when both profiles are matched, the limitations (letters:1) is removed."""
+        patch_dataset_auth(parkeervakken_schema, auth=["DATASET/SCOPE"])
+        token = fetch_auth_token(["PROFIEL/SCOPE", "PROFIEL2/SCOPE"])
+        detail_url = reverse("dynamic_api:parkeervakken-parkeervakken-detail", args=("1",))
         response = api_client.get(f"{detail_url}?type=Langs", HTTP_AUTHORIZATION=f"Bearer {token}")
         data = read_response_json(response)
         assert response.status_code == 200, data
@@ -233,6 +186,51 @@ class TestAuth:
             "type": "Langs",  # read permission
             "soort": "NIET FISCA",  # read permission
         }
+
+    @pytest.mark.parametrize(
+        ["scopes", "query_params", "expect_code"],
+        [
+            ("MAY/NOT", "", 403),
+            ("MAY/NOT", "?volgnummer=1", 403),  # still not possible in profile
+            ("MAY/NOT", "?buurtcode=1&type=1", 404),  # so filters allow, but doesn't apply.
+            ("MAY/ENTER", "", 200),
+            ("MAY/ENTER", "", 200),
+            ("MAY/ENTER", "?volgnummer=1", 200),
+            ("MAY/ENTER", "?volgnummer=3", 404),
+            ("DATASET/SCOPE", "", 200),
+            ("ONLY/VOLGNUMMER", "", 403),
+            ("ONLY/VOLGNUMMER", "?volgnummer=1", 200),  # id + volgnummer is mandatory
+            ("ONLY/VOLGNUMMER", "?volgnummer=3", 404),
+        ],
+    )
+    def test_detail_view_enforces_mandatory_filters(
+        self,
+        api_client,
+        fetch_auth_token,
+        parkeervakken_schema,
+        parkeervakken_parkeervak_model,
+        profiles_may,
+        filled_router,
+        scopes,
+        query_params,
+        expect_code,
+    ):
+        """Prove that mandatory filters are also applied on a detail view."""
+        patch_table_auth(parkeervakken_schema, "parkeervakken", auth=["DATASET/SCOPE"])
+        parkeervakken_parkeervak_model.objects.create(id="121138489047", volgnummer=1)
+        detail_url = (
+            reverse("dynamic_api:parkeervakken-parkeervakken-detail", args=["121138489047"])
+            + query_params
+        )
+
+        token = fetch_auth_token(scopes.split())
+        response = api_client.get(detail_url, HTTP_AUTHORIZATION=f"Bearer {token}")
+        assert response.status_code == expect_code, response.data
+
+
+@pytest.mark.django_db
+class TestAuth:
+    """Test authorization"""
 
     @pytest.mark.parametrize("table_name", ["containers", "clusters"])
     def test_auth_on_dataset(
@@ -470,113 +468,6 @@ class TestAuth:
         )
         response = api_client.get(url, **header)
         assert response.status_code == expect_code, response.data
-
-    def test_detail_view_auth_on_dataset_via_profiles(
-        self,
-        api_client,
-        fetch_auth_token,
-        parkeervakken_schema,
-        parkeervakken_parkeervak_model,
-        filled_router,
-    ):
-        """Prove that having no scope on the dataset, but a
-        mandatory query on ['id'] gives access to its detailview.
-        """
-        patch_table_auth(parkeervakken_schema, "parkeervakken", auth=["DATASET/SCOPE"])
-        parkeervakken_parkeervak_model.objects.create(id="121138489047")
-        models.Profile.create_for_schema(
-            ProfileSchema.from_dict(
-                {
-                    "name": "mag_niet",
-                    "scopes": ["MAY/NOT"],
-                    "datasets": {
-                        "parkeervakken": {
-                            "tables": {
-                                "parkeervakken": {
-                                    "permissions": "read",
-                                    "mandatoryFilterSets": [
-                                        ["buurtcode", "type"],
-                                    ],
-                                }
-                            }
-                        }
-                    },
-                }
-            )
-        )
-        models.Profile.create_for_schema(
-            ProfileSchema.from_dict(
-                {
-                    "name": "mag_wel",
-                    "scopes": ["MAY/ENTER"],
-                    "datasets": {
-                        "parkeervakken": {
-                            "tables": {
-                                "parkeervakken": {
-                                    "permissions": "read",
-                                    "mandatoryFilterSets": [
-                                        ["buurtcode", "type"],
-                                        ["id"],
-                                    ],
-                                }
-                            }
-                        }
-                    },
-                }
-            )
-        )
-        models.Profile.create_for_schema(
-            ProfileSchema.from_dict(
-                {
-                    "name": "alleen_volgnummer",
-                    "scopes": ["ONLY/VOLGNUMMER"],
-                    "datasets": {
-                        "parkeervakken": {
-                            "tables": {
-                                "parkeervakken": {
-                                    "permissions": "read",
-                                    "mandatoryFilterSets": [
-                                        ["id", "volgnummer"],
-                                    ],
-                                }
-                            }
-                        }
-                    },
-                }
-            )
-        )
-
-        detail_url = reverse(
-            "dynamic_api:parkeervakken-parkeervakken-detail", args=["121138489047"]
-        )
-        detail_met_volgnummer = detail_url + "?volgnummer=3"
-
-        may_not = fetch_auth_token(["MAY/NOT"])
-        may_enter = fetch_auth_token(["MAY/ENTER"])
-        dataset_scope = fetch_auth_token(["DATASET/SCOPE"])
-        profiel_met_volgnummer = fetch_auth_token(["ONLY/VOLGNUMMER"])
-
-        response = api_client.get(detail_url, HTTP_AUTHORIZATION=f"Bearer {may_not}")
-        assert response.status_code == 403, response.data
-
-        response = api_client.get(detail_url, HTTP_AUTHORIZATION=f"Bearer {may_enter}")
-        assert response.status_code == 200, response.data
-
-        response = api_client.get(detail_met_volgnummer, HTTP_AUTHORIZATION=f"Bearer {may_enter}")
-        assert response.status_code == 404, response.data
-
-        response = api_client.get(detail_url, HTTP_AUTHORIZATION=f"Bearer {dataset_scope}")
-        assert response.status_code == 200, response.data
-
-        response = api_client.get(
-            detail_url, HTTP_AUTHORIZATION=f"Bearer {profiel_met_volgnummer}"
-        )
-        assert response.status_code == 403, response.data
-
-        response = api_client.get(
-            detail_met_volgnummer, HTTP_AUTHORIZATION=f"Bearer {profiel_met_volgnummer}"
-        )
-        assert response.status_code == 404, response.data
 
     def test_auth_options_requests_are_not_protected(
         self, api_client, afval_schema, afval_dataset, filled_router
