@@ -334,6 +334,7 @@ django==4.2.15 \
     #   amsterdam-schema-tools
     #   datapunt-authorization-django
     #   django-cors-headers
+    #   django-filter
     #   django-gisserver
     #   django-healthchecks
     #   django-postgres-unlimited-varchar
@@ -356,6 +357,10 @@ django-environ==0.11.2 \
     # via
     #   -r requirements.in
     #   amsterdam-schema-tools
+django-filter==24.3 \
+    --hash=sha256:c4852822928ce17fb699bcfccd644b3574f1a2d80aeb2b4ff4f16b02dd49dc64 \
+    --hash=sha256:d8ccaf6732afd21ca0542f6733b11591030fa98669f8d15599b358e24a2cd9c3
+    # via djangorestframework-gis
 django-gisserver==1.4.0 \
     --hash=sha256:8f765eb39277540c43c75c264272f34594cef387c2a95efad915837a2c3a26c8 \
     --hash=sha256:f437c3aff5c6c6d33f2fc28d8e3e5e3428416e9783f3fd4620e0b27271475c71
@@ -389,9 +394,9 @@ djangorestframework-csv==3.0.2 \
     --hash=sha256:b269b692feda1971e1342f395a21d339c6a16d2961ff64357a9a6188f27af10f \
     --hash=sha256:d1bcfbaaeaa5145af6bb0985a36a5bbf2f853d9961c722f69c7b0c9c3bcc269a
     # via -r requirements.in
-djangorestframework-gis==1.0 \
-    --hash=sha256:921c5adbc9a7c0502c905957a6695b67f55d7bf6582e1ab837888b55a1fce5a6 \
-    --hash=sha256:bb715f05a111c02b9acc4021b17566e40c0b90dd833c583bac3d67f92be9667d
+djangorestframework-gis==1.1 \
+    --hash=sha256:84b915503a59263ed9473ecde34b19260c3e9c5c8ebb3aea8d91a67fd39f7215 \
+    --hash=sha256:fd8631c2c10208df5f05ee297ce333aaa9a794acd654420207f72e8f9acd59ea
     # via -r requirements.in
 drf-spectacular==0.27.2 \
     --hash=sha256:a199492f2163c4101055075ebdbb037d59c6e0030692fc83a1a8c0fc65929981 \
@@ -520,9 +525,9 @@ importlib-metadata==8.2.0 \
     --hash=sha256:11901fa0c2f97919b288679932bb64febaeacf289d18ac84dd68cb2e74213369 \
     --hash=sha256:72e8d4399996132204f9a16dcc751af254a48f8d1b20b9ff0f98d4a8f901e73d
     # via -r requirements.in
-importlib-resources==6.4.2 \
-    --hash=sha256:6cbfbefc449cc6e2095dd184691b7a12a04f40bc75dd4c55d31c34f174cdf57a \
-    --hash=sha256:8bba8c54a8a3afaa1419910845fa26ebd706dc716dd208d9b158b4b6966f5c5c
+importlib-resources==6.4.3 \
+    --hash=sha256:2d6dfe3b9e055f72495c2085890837fc8c758984e209115c8792bddcb762cd93 \
+    --hash=sha256:4a202b9b9d38563b46da59221d77bb73862ab5d79d461307bcb826d725448b98
     # via -r requirements.in
 inflection==0.5.1 \
     --hash=sha256:1a29730d366e996aaacffb2f1f1cb9593dc38e2ddd30c91250c6dde09ea9b417 \
@@ -715,9 +720,9 @@ mappyfile==1.0.2 \
     --hash=sha256:43ada1b98cfc0fd670e6f384d74b15f6601aadb5ab9e1f1d506e839a37a9b8dc \
     --hash=sha256:695c9a8841ce3e8fef49314f9873d7efda2544dea0825b6550540d9a7e650ceb
     # via amsterdam-schema-tools
-markdown==3.6 \
-    --hash=sha256:48f276f4d8cfb8ce6527c8f79e2ee29708508bf4d40aa410fbc3b4ee832c850f \
-    --hash=sha256:ed4f41f6daecbeeb96e576ce414c41d2d876daa9a16cb35fa8ed8c2ddfad0224
+markdown==3.7 \
+    --hash=sha256:2ae2471477cfd02dbbf038d5d9bc226d40def84b4fe2986e49b59b6b472bbed2 \
+    --hash=sha256:7eb6df5690b81a1d7942992c97fad2938e956e79df20cbc6186e9c3a77b1c803
     # via -r requirements.in
 markdown-it-py==3.0.0 \
     --hash=sha256:355216845c60bd96232cd8d8c40e8f9765cc86f46880e43a8fd22dc1a1a8cab1 \
