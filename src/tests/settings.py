@@ -47,7 +47,12 @@ INITIALIZE_DYNAMIC_VIEWSETS = False
 
 # Prevent tests to crash because of missing staticfiles manifests
 WHITENOISE_MANIFEST_STRICT = False
-STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
+STORAGES = {
+    **STORAGES,
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
 
 # During testing we want to see if there is unwanted deferred access
 SEAL_WARN_ONLY = False

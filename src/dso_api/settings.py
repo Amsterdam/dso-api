@@ -405,7 +405,14 @@ REST_FRAMEWORK = dict(
     VIEW_NAME_FUNCTION="rest_framework_dso.views.get_view_name",
 )
 
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "DSO-API",
