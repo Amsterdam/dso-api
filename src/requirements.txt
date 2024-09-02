@@ -361,9 +361,9 @@ django-filter==24.3 \
     --hash=sha256:c4852822928ce17fb699bcfccd644b3574f1a2d80aeb2b4ff4f16b02dd49dc64 \
     --hash=sha256:d8ccaf6732afd21ca0542f6733b11591030fa98669f8d15599b358e24a2cd9c3
     # via djangorestframework-gis
-django-gisserver==1.4.0 \
-    --hash=sha256:8f765eb39277540c43c75c264272f34594cef387c2a95efad915837a2c3a26c8 \
-    --hash=sha256:f437c3aff5c6c6d33f2fc28d8e3e5e3428416e9783f3fd4620e0b27271475c71
+django-gisserver==1.4.1 \
+    --hash=sha256:2ce649a501ff13e31222d052e367aaee1a0f6e8e4d192eece2b2b7ba92174b25 \
+    --hash=sha256:6c58f5e1d7d6e8ff56bd7102126ddff2728690f7292a280f8b611e8a14417295
     # via
     #   -r requirements.in
     #   amsterdam-schema-tools
@@ -521,13 +521,13 @@ idna==3.7 \
     # via
     #   jsonschema
     #   requests
-importlib-metadata==8.2.0 \
-    --hash=sha256:11901fa0c2f97919b288679932bb64febaeacf289d18ac84dd68cb2e74213369 \
-    --hash=sha256:72e8d4399996132204f9a16dcc751af254a48f8d1b20b9ff0f98d4a8f901e73d
+importlib-metadata==8.4.0 \
+    --hash=sha256:66f342cc6ac9818fc6ff340576acd24d65ba0b3efabb2b4ac08b598965a4a2f1 \
+    --hash=sha256:9a547d3bc3608b025f93d403fdd1aae741c24fbb8314df4b155675742ce303c5
     # via -r requirements.in
-importlib-resources==6.4.3 \
-    --hash=sha256:2d6dfe3b9e055f72495c2085890837fc8c758984e209115c8792bddcb762cd93 \
-    --hash=sha256:4a202b9b9d38563b46da59221d77bb73862ab5d79d461307bcb826d725448b98
+importlib-resources==6.4.4 \
+    --hash=sha256:20600c8b7361938dc0bb2d5ec0297802e575df486f5a544fa414da65e13721f7 \
+    --hash=sha256:dda242603d1c9cd836c3368b1174ed74cb4049ecd209e7a1a0104620c18c5c11
     # via -r requirements.in
 inflection==0.5.1 \
     --hash=sha256:1a29730d366e996aaacffb2f1f1cb9593dc38e2ddd30c91250c6dde09ea9b417 \
@@ -1156,9 +1156,9 @@ pytest-cov==5.0.0 \
     --hash=sha256:4f0764a1219df53214206bf1feea4633c3b558a2925c8b59f144f682861ce652 \
     --hash=sha256:5837b58e9f6ebd335b0f8060eecce69b662415b16dc503883a02f45dfeb14857
     # via -r requirements.in
-pytest-django==4.8.0 \
-    --hash=sha256:5d054fe011c56f3b10f978f41a8efb2e5adfc7e680ef36fb571ada1f24779d90 \
-    --hash=sha256:ca1ddd1e0e4c227cf9e3e40a6afc6d106b3e70868fd2ac5798a22501271cd0c7
+pytest-django==4.9.0 \
+    --hash=sha256:1d83692cb39188682dbb419ff0393867e9904094a549a7d38a3154d5731b2b99 \
+    --hash=sha256:8bf7bc358c9ae6f6fc51b6cebb190fe20212196e6807121f11bd6a3b03428314
     # via -r requirements.in
 python-dateutil==2.9.0.post0 \
     --hash=sha256:37dd54208da7e1cd875388217d5e00ebd4179249f90fb72437e91a35459a0ad3 \
@@ -1546,9 +1546,9 @@ zaproxy==0.3.2 \
     --hash=sha256:77aab50bcfd9fb5b6d1adc3208bbb1a108af765953ba8a695ee8279d4878ec5b \
     --hash=sha256:e41b417b6eb71ad38873c9cfcafc4e93409198aeb36d5d47f3bba0d3ac155378
     # via python-owasp-zap-v2-4
-zipp==3.20.0 \
-    --hash=sha256:0145e43d89664cfe1a2e533adc75adafed82fe2da404b4bbb6b026c0157bdb31 \
-    --hash=sha256:58da6168be89f0be59beb194da1250516fdaa062ccebd30127ac65d30045e10d
+zipp==3.20.1 \
+    --hash=sha256:9960cd8967c8f85a56f920d5d507274e74f9ff813a0ab8889a5b5be2daf44064 \
+    --hash=sha256:c22b14cc4763c5a5b04134207736c107db42e9d3ef2d9779d465f5f1bcba572b
     # via
     #   -r requirements.in
     #   importlib-metadata
