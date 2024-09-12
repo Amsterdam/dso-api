@@ -281,6 +281,9 @@ LOGGING = {
             "class": "logging.StreamHandler",
             "formatter": "audit_json",
         },
+        'opentelemetry': {
+            'class': 'opentelemetry.instrumentation.logging.OpenTelemetryLoggingHandler',
+        },
     },
     "root": {"level": "INFO", "handlers": ["console"]},
     "loggers": {
@@ -307,13 +310,12 @@ LOGGING = {
 }
 
 if CLOUD_ENV.lower().startswith("azure"):
-    LOGGING["root"]["handlers"] = ["azure"]
-    LOGGING["root"]["level"] = DJANGO_LOG_LEVEL
+
     for logger_name, logger_details in LOGGING["loggers"].items():
         if "audit_console" in logger_details["handlers"]:
-            LOGGING["loggers"][logger_name]["handlers"] = ["audit_azure", "console"]
+            LOGGING["loggers"][logger_name]["handlers"] = ["console", "opentelemetry"]
         else:
-            LOGGING["loggers"][logger_name]["handlers"] = ["azure", "console"]
+            LOGGING["loggers"][logger_name]["handlers"] = ["console"]
 
     from azure.monitor.opentelemetry import configure_azure_monitor
     from opentelemetry.sdk.resources import SERVICE_NAME, Resource
