@@ -10,7 +10,6 @@ import sentry_sdk
 import sentry_sdk.utils
 from corsheaders.defaults import default_headers
 from django.core.exceptions import ImproperlyConfigured
-from opencensus.trace import config_integration
 from sentry_sdk.integrations.django import DjangoIntegration
 from sentry_sdk.integrations.logging import LoggingIntegration
 
@@ -285,7 +284,6 @@ LOGGING = {
     },
     "root": {"level": "INFO", "handlers": ["console"]},
     "loggers": {
-        "opencensus": {"handlers": ["console"], "level": DJANGO_LOG_LEVEL, "propagate": False},
         "django": {"handlers": ["console"], "level": DJANGO_LOG_LEVEL, "propagate": False},
         "django.utils.autoreload": {"handlers": ["console"], "level": "INFO", "propagate": False},
         "dso_api": {"handlers": ["console"], "level": DSO_API_LOG_LEVEL, "propagate": False},
@@ -309,46 +307,6 @@ LOGGING = {
 }
 
 if CLOUD_ENV.lower().startswith("azure"):
-    if AZURE_APPI_CONNECTION_STRING is None:
-        raise ImproperlyConfigured(
-            "Please specify the 'AZURE_APPI_CONNECTION_STRING' environment variable."
-        )
-    if AZURE_APPI_AUDIT_CONNECTION_STRING is None:
-        logging.warning(
-            "Using AZURE_APPI_CONNECTION_STRING as AZURE_APPI_AUDIT_CONNECTION_STRING."
-        )
-
-    MIDDLEWARE.append("opencensus.ext.django.middleware.OpencensusMiddleware")
-    OPENCENSUS = {
-        "TRACE": {
-            "SAMPLER": "opencensus.trace.samplers.ProbabilitySampler(rate=1)",
-            "EXPORTER": f"""opencensus.ext.azure.trace_exporter.AzureExporter(
-                connection_string='{AZURE_APPI_CONNECTION_STRING}',
-                service_name='dso-api'
-            )""",  # noqa: E202
-            "EXCLUDELIST_PATHS": [],
-        }
-    }
-    config_integration.trace_integrations(["logging"])
-    azure_json = base_log_fmt.copy()
-    azure_json.update({"message": "%(message)s"})
-    audit_azure_json = {"audit": True}
-    audit_azure_json.update(azure_json)
-    LOGGING["formatters"]["azure"] = {"format": json.dumps(azure_json)}
-    LOGGING["formatters"]["audit_azure"] = {"format": json.dumps(audit_azure_json)}
-    LOGGING["handlers"]["azure"] = {
-        "level": "DEBUG",
-        "class": "opencensus.ext.azure.log_exporter.AzureLogHandler",
-        "connection_string": AZURE_APPI_CONNECTION_STRING,
-        "formatter": "azure",
-    }
-    LOGGING["handlers"]["audit_azure"] = {
-        "level": "DEBUG",
-        "class": "opencensus.ext.azure.log_exporter.AzureLogHandler",
-        "connection_string": AZURE_APPI_AUDIT_CONNECTION_STRING,
-        "formatter": "audit_azure",
-    }
-
     LOGGING["root"]["handlers"] = ["azure"]
     LOGGING["root"]["level"] = DJANGO_LOG_LEVEL
     for logger_name, logger_details in LOGGING["loggers"].items():
@@ -356,6 +314,47 @@ if CLOUD_ENV.lower().startswith("azure"):
             LOGGING["loggers"][logger_name]["handlers"] = ["audit_azure", "console"]
         else:
             LOGGING["loggers"][logger_name]["handlers"] = ["azure", "console"]
+
+    from azure.monitor.opentelemetry import configure_azure_monitor
+    from opentelemetry.sdk.resources import SERVICE_NAME, Resource
+    from opentelemetry.instrumentation.django import DjangoInstrumentor
+    from opentelemetry.instrumentation.psycopg import PsycopgInstrumentor
+
+
+    # Configure OpenTelemetry to use Azure Monitor with the specified connection string
+    APPLICATIONINSIGHTS_CONNECTION_STRING = os.getenv("APPLICATIONINSIGHTS_CONNECTION_STRING")
+    if APPLICATIONINSIGHTS_CONNECTION_STRING is not None:
+        configure_azure_monitor(
+            logger_name="root",
+            instrumentation_options={
+                "azure_sdk": {"enabled": False},
+                "django": {"enabled": False},
+                "fastapi": {"enabled": False},
+                "flask": {"enabled": False},  # Configure flask manually
+                "psycopg2": {"enabled": False},  # Configure psycopg2 manually
+                "requests": {"enabled": True},
+                "urllib": {"enabled": True},
+                "urllib3": {"enabled": True},
+            },
+            resource=Resource.create({SERVICE_NAME: "dso-api"}),
+        )
+        logger = logging.getLogger("root")
+        logger.info("OpenTelemetry has been enabled")
+
+
+        def response_hook(span, request, response):
+            if span and span.is_recording():
+                email = request.get_token_subject
+                if getattr(request, "get_token_claims", None) and "email" in request.get_token_claims:
+                    email = request.get_token_claims["email"]
+                    span.set_attribute("user.AuthenticatedId", email)
+
+        # Instrument Django app
+        DjangoInstrumentor().instrument(response_hook=response_hook)
+        print("django instrumentor enabled")
+
+        PsycopgInstrumentor().instrument(enable_commenter=True, commenter_options={})
+        print("psycopg instrumentor enabled")
 
 # -- Third party app settings
 
