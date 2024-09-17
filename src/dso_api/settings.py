@@ -280,10 +280,7 @@ LOGGING = {
             "level": "DEBUG",
             "class": "logging.StreamHandler",
             "formatter": "audit_json",
-        },
-        'opentelemetry': {
-            'class': 'opentelemetry.instrumentation.logging.OpenTelemetryLoggingHandler',
-        },
+        }
     },
     "root": {"level": "INFO", "handlers": ["console"]},
     "loggers": {
@@ -313,7 +310,7 @@ if CLOUD_ENV.lower().startswith("azure"):
 
     for logger_name, logger_details in LOGGING["loggers"].items():
         if "audit_console" in logger_details["handlers"]:
-            LOGGING["loggers"][logger_name]["handlers"] = ["console", "opentelemetry"]
+            LOGGING["loggers"][logger_name]["handlers"] = ["console", "audit_console"]
         else:
             LOGGING["loggers"][logger_name]["handlers"] = ["console"]
 
