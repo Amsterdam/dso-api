@@ -321,8 +321,8 @@ if CLOUD_ENV.lower().startswith("azure"):
 
 
     # Configure OpenTelemetry to use Azure Monitor with the specified connection string
-    APPLICATIONINSIGHTS_CONNECTION_STRING = os.getenv("APPLICATIONINSIGHTS_CONNECTION_STRING")
-    if APPLICATIONINSIGHTS_CONNECTION_STRING is not None:
+    AZURE_APPI_CONNECTION_STRING = os.getenv("AZURE_APPI_CONNECTION_STRING")
+    if AZURE_APPI_CONNECTION_STRING is not None:
         configure_azure_monitor(
             logger_name="root",
             instrumentation_options={
