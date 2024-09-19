@@ -280,7 +280,7 @@ LOGGING = {
             "level": "DEBUG",
             "class": "logging.StreamHandler",
             "formatter": "audit_json",
-        }
+        },
     },
     "root": {"level": "INFO", "handlers": ["console"]},
     "loggers": {
@@ -324,6 +324,7 @@ if CLOUD_ENV.lower().startswith("azure"):
     AZURE_APPI_CONNECTION_STRING = os.getenv("AZURE_APPI_CONNECTION_STRING")
     if AZURE_APPI_CONNECTION_STRING is not None:
         configure_azure_monitor(
+            connection_string=AZURE_APPI_CONNECTION_STRING,
             logger_name="root",
             instrumentation_options={
                 "azure_sdk": {"enabled": False},
