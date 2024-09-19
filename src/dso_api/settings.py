@@ -306,7 +306,6 @@ LOGGING = {
 }
 
 if CLOUD_ENV.lower().startswith("azure"):
-
     for logger_name, logger_details in LOGGING["loggers"].items():
         if "audit_console" in logger_details["handlers"]:
             LOGGING["loggers"][logger_name]["handlers"] = ["console", "audit_console"]
@@ -318,8 +317,6 @@ if CLOUD_ENV.lower().startswith("azure"):
     from opentelemetry.instrumentation.psycopg import PsycopgInstrumentor
     from opentelemetry.sdk.resources import Resource
     from opentelemetry.semconv.resource import ResourceAttributes
-
-
 
     # Configure OpenTelemetry to use Azure Monitor with the specified connection string
     AZURE_APPI_CONNECTION_STRING = os.getenv("AZURE_APPI_CONNECTION_STRING")
@@ -342,14 +339,13 @@ if CLOUD_ENV.lower().startswith("azure"):
         logger = logging.getLogger("root")
         logger.info("OpenTelemetry has been enabled")
 
-
         def response_hook(span, request, response):
             if span and span.is_recording():
                 email = request.get_token_subject
                 if (
                     getattr(request, "get_token_claims", None)
                     and "email" in request.get_token_claims
-                    ):
+                ):
                     email = request.get_token_claims["email"]
                     span.set_attribute("user.AuthenticatedId", email)
 
