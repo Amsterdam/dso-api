@@ -81,7 +81,6 @@ class TestFilterParsing:
 
 @pytest.mark.django_db
 class TestFilterFieldTypes:
-
     @staticmethod
     @pytest.mark.parametrize(
         "lookup,expect",

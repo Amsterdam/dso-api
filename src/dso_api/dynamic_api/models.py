@@ -23,7 +23,6 @@ class SealedDynamicModel(DynamicModel):
         the queryset/manager and queryset iterator.
         """
         if fields and fields[0] not in self.__dict__:
-
             message = (
                 f"Deferred attribute access: field '{fields[0]}' "
                 f"was excluded by .only() but was still accessed."
