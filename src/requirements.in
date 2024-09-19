@@ -1,3 +1,4 @@
+azure-monitor-opentelemetry == 1.6.2
 Django == 4.2.15
 django-environ == 0.11.2
 django-cors-headers == 4.4.0
@@ -22,9 +23,6 @@ Markdown == 3.7
 more-ds == 0.0.6
 more-itertools == 10.5.0
 openapi-spec-validator == 0.7.1
-opencensus-ext-azure >= 1.1.13
-opencensus-ext-django >= 0.8
-opencensus-ext-logging >= 0.1.1
 orjson == 3.10.7
 python-string-utils == 1.0.0
 requests == 2.32.3
