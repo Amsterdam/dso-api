@@ -9,7 +9,6 @@ import environ
 import sentry_sdk
 import sentry_sdk.utils
 from corsheaders.defaults import default_headers
-from django.core.exceptions import ImproperlyConfigured
 from sentry_sdk.integrations.django import DjangoIntegration
 from sentry_sdk.integrations.logging import LoggingIntegration
 
@@ -316,6 +315,7 @@ if CLOUD_ENV.lower().startswith("azure"):
 
     from azure.monitor.opentelemetry import configure_azure_monitor
     from opentelemetry.sdk.resources import SERVICE_NAME, Resource
+    from opentelemetry.semconv.resource import ResourceAttributes
     from opentelemetry.instrumentation.django import DjangoInstrumentor
     from opentelemetry.instrumentation.psycopg import PsycopgInstrumentor
 
@@ -336,7 +336,7 @@ if CLOUD_ENV.lower().startswith("azure"):
                 "urllib": {"enabled": True},
                 "urllib3": {"enabled": True},
             },
-            resource=Resource.create({SERVICE_NAME: "dso-api"}),
+            resource=Resource.create({ResourceAttributes.SERVICE_NAME: "dso-api"}),
         )
         logger = logging.getLogger("root")
         logger.info("OpenTelemetry has been enabled")
@@ -345,7 +345,10 @@ if CLOUD_ENV.lower().startswith("azure"):
         def response_hook(span, request, response):
             if span and span.is_recording():
                 email = request.get_token_subject
-                if getattr(request, "get_token_claims", None) and "email" in request.get_token_claims:
+                if (
+                    getattr(request, "get_token_claims", None)
+                    and "email" in request.get_token_claims
+                    ):
                     email = request.get_token_claims["email"]
                     span.set_attribute("user.AuthenticatedId", email)
 
