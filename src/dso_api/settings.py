@@ -314,10 +314,11 @@ if CLOUD_ENV.lower().startswith("azure"):
             LOGGING["loggers"][logger_name]["handlers"] = ["console"]
 
     from azure.monitor.opentelemetry import configure_azure_monitor
-    from opentelemetry.sdk.resources import SERVICE_NAME, Resource
-    from opentelemetry.semconv.resource import ResourceAttributes
     from opentelemetry.instrumentation.django import DjangoInstrumentor
     from opentelemetry.instrumentation.psycopg import PsycopgInstrumentor
+    from opentelemetry.sdk.resources import Resource
+    from opentelemetry.semconv.resource import ResourceAttributes
+
 
 
     # Configure OpenTelemetry to use Azure Monitor with the specified connection string
