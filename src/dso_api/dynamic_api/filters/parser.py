@@ -384,7 +384,7 @@ class QueryFilterEngine:
     def get_allowed_lookups(field_schema: DatasetFieldSchema) -> set[str]:
         """Find which field[lookup] values are possible, given the field type."""
         try:
-            if field_schema.relation or field_schema.nm_relation or field_schema.is_primary:
+            if field_schema.is_relation or field_schema.is_primary:
                 # The 'string' type is needed for the deprecated ?temporalRelationId=.. filter.
                 field_type = "string" if field_schema.is_object else field_schema.type
                 return ALLOWED_IDENTIFIER_LOOKUPS | ALLOWED_SCALAR_LOOKUPS[field_type]
@@ -489,7 +489,7 @@ def _parse_filter_path(
 
         if filter_part.reverse_field is not None:
             parent = filter_part.reverse_field.related_table
-        elif field.relation or field.nm_relation:
+        elif field.is_relation:
             parent = field.related_table
         elif field.subfields:
             # For sub-fields, treat this as a nested table
