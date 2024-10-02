@@ -379,8 +379,9 @@ django-redis==5.4.0 \
     --hash=sha256:6a02abaa34b0fea8bf9b707d2c363ab6adc7409950b2db93602e6cb292818c42 \
     --hash=sha256:ebc88df7da810732e2af9987f7f426c96204bf89319df4c6da6ca9a2942edd5b
     # via -r requirements.in
-django-vectortiles==0.2.0 \
-    --hash=sha256:9710492bb77328b202dcbd889b65f9d08807e7dc061a5593d86cfbf1ea545caf
+django-vectortiles==1.0.0 \
+    --hash=sha256:c651cd5608b564e4d2df50e58fab8d44c970182fb34d898e1d8aafd9a13c8179 \
+    --hash=sha256:ec08c224469ce0ba24fe6ea1dc5e28e55378bba3834aa7eca9280baf0b0bde4a
     # via -r requirements.in
 djangorestframework==3.15.2 \
     --hash=sha256:2b8871b062ba1aefc2de01f773875441a961fefbf79f5eed1e32b2f096944b20 \
