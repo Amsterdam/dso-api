@@ -1,6 +1,6 @@
 Django == 4.2.16
 django-environ == 0.11.2
-django-cors-headers == 4.4.0
+django-cors-headers == 4.5.0
 django-healthchecks == 1.5.0
 django-postgres-unlimited-varchar == 1.1.2
 django-redis == 5.4.0
@@ -28,7 +28,7 @@ opencensus-ext-logging >= 0.1.1
 orjson == 3.10.7
 python-string-utils == 1.0.0
 requests == 2.32.3
-sentry-sdk == 2.14.0
+sentry-sdk == 2.16.0
 urllib3 == 2.2.3
 urllib3-mock == 0.3.3
 whitenoise == 6.7.0
