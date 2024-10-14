@@ -343,9 +343,9 @@ django==4.2.16 \
     #   djangorestframework
     #   drf-spectacular
     #   opencensus-ext-django
-django-cors-headers==4.4.0 \
-    --hash=sha256:5c6e3b7fe870876a1efdfeb4f433782c3524078fa0dc9e0195f6706ce7a242f6 \
-    --hash=sha256:92cf4633e22af67a230a1456cb1b7a02bb213d6536d2dcb2a4a24092ea9cebc2
+django-cors-headers==4.5.0 \
+    --hash=sha256:28c1ded847aa70208798de3e42422a782f427b8b720e8d7319d34b654b5978e6 \
+    --hash=sha256:6c01a85cf1ec779a7bde621db853aa3ce5c065a5ba8e27df7a9f9e8dac310f4f
     # via -r requirements.in
 django-db-comments==0.4.1 \
     --hash=sha256:18a4bdbae8a466d88077fc5022dcc0076293321cd4cce2b385156266cd42463b \
@@ -1384,9 +1384,9 @@ rsa==4.9 \
     --hash=sha256:90260d9058e514786967344d0ef75fa8727eed8a7d2e43ce9f4bcf1b536174f7 \
     --hash=sha256:e38464a49c6c85d7f1351b0126661487a7e0a14a50f1675ec50eb34d4f20ef21
     # via google-auth
-sentry-sdk==2.14.0 \
-    --hash=sha256:1e0e2eaf6dad918c7d1e0edac868a7bf20017b177f242cefe2a6bcd47955961d \
-    --hash=sha256:b8bc3dc51d06590df1291b7519b85c75e2ced4f28d9ea655b6d54033503b5bf4
+sentry-sdk==2.16.0 \
+    --hash=sha256:49139c31ebcd398f4f6396b18910610a0c1602f6e67083240c33019d1f6aa30c \
+    --hash=sha256:90f733b32e15dfc1999e6b7aca67a38688a567329de4d6e184154a73f96c6892
     # via -r requirements.in
 shapely==2.0.5 \
     --hash=sha256:03bd7b5fa5deb44795cc0a503999d10ae9d8a22df54ae8d4a4cd2e8a93466195 \
