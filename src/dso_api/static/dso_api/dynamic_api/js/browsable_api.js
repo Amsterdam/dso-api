@@ -459,6 +459,14 @@ function parseException(err) {
 
 function parseData(data) {
   let contentElement = document.getElementById("response-content");
+  let formattedContentElement = document.getElementById("formatted-response-content");
+
+  if(typeof data === "string") {
+    document.getElementById("response-info").className = "show-raw";
+    contentElement.innerText = data;
+    formattedContentElement.innerHTML = "No formatting available";
+    return;
+  }
 
   // We need to mark coordinates fields so we can make them collapsible.
   let markCoordinates = (key, value) => {
@@ -511,7 +519,6 @@ function parseData(data) {
 
   // Format response if formatter is available
   if (typeof FORMATTER  !== "undefined") {
-    let formattedContentElement = document.getElementById("formatted-response-content");
     try {
       formattedContentElement.innerHTML = FORMATTER(data);
     } catch (error) {
