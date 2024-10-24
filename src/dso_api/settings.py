@@ -168,6 +168,7 @@ if _USE_SECRET_STORE or CLOUD_ENV.startswith("azure"):
             "PASSWORD": pgpassword,
             "HOST": env.str("PGHOST"),
             "PORT": env.str("PGPORT"),
+            "DISABLE_SERVER_SIDE_CURSORS": True,
             "OPTIONS": {
                 "sslmode": env.str("PGSSLMODE", default="require"),
             },
@@ -188,6 +189,7 @@ if _USE_SECRET_STORE or CLOUD_ENV.startswith("azure"):
                         "PASSWORD": pgpassword,
                         "HOST": env.str(f"PGHOST_REPLICA_{replica_count}"),
                         "PORT": env.str("PGPORT"),
+                        "DISABLE_SERVER_SIDE_CURSORS": True,
                         "OPTIONS": {
                             "sslmode": env.str("PGSSLMODE", default="require"),
                         },
@@ -231,6 +233,7 @@ else:
         ),
     }
     DATABASES["default"].setdefault("OPTIONS", {})
+    DATABASES["default"].setdefault("DISABLE_SERVER_SIDE_CURSORS", True)
     DATABASE_SET_ROLE = env.bool("DATABASE_SET_ROLE", False)
 
 DATABASES["default"]["OPTIONS"]["application_name"] = "DSO-API"

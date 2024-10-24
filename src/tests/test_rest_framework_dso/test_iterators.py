@@ -69,12 +69,21 @@ class TestChunkedQuerySetIterator:
 class TestObservableIterator:
     """Test whether the iterator observing works as advertised."""
 
+    @staticmethod
+    def _list_observer(list):
+        def _listener(item, **kwargs):
+            list.append(item)
+
+        return _listener
+
     def test_final_outcome(self):
         """Prove that the final result is as desired"""
         seen1 = []
         seen2 = []
 
-        observer = ObservableIterator("abcd", observers=[seen1.append, seen2.append])
+        observer = ObservableIterator(
+            "abcd", observers=[self._list_observer(seen1), self._list_observer(seen2)]
+        )
         assert list(observer) == ["a", "b", "c", "d"]
 
         assert seen1 == ["a", "b", "c", "d"]
@@ -86,7 +95,9 @@ class TestObservableIterator:
         seen1 = []
         seen2 = []
 
-        observer = ObservableIterator("abcd", observers=[seen1.append, seen2.append])
+        observer = ObservableIterator(
+            "abcd", observers=[self._list_observer(seen1), self._list_observer(seen2)]
+        )
         assert bool(observer)  # Prove that inspecting first doesn't break
 
         assert next(observer) == "a"
@@ -104,6 +115,34 @@ class TestObservableIterator:
         assert seen1 == ["a", "b", "c", "d"]
         assert seen1 == seen2
         assert bool(observer)
+
+    def test_empty_bool(self):
+        empty = []
+
+        def _is_empty(**kwargs):
+            empty.append(True)
+
+        observer = ObservableIterator([], [], [_is_empty])
+        assert not observer
+        assert empty == [True]
+        with pytest.raises(StopIteration):
+            next(observer)
+        assert empty == [True]  # no new event was raised
+
+    def test_empty_loop(self):
+        empty = []
+
+        def _is_empty(**kwargs):
+            empty.append(True)
+
+        observer = ObservableIterator([], [], [_is_empty])
+        with pytest.raises(StopIteration):
+            next(observer)
+        assert empty == [True]  # event was raised
+        with pytest.raises(StopIteration):
+            next(observer)
+        assert not observer
+        assert empty == [True]  # no new event was raised
 
 
 def test_peek_iterable():
