@@ -589,6 +589,29 @@ class TestExceptionHandler:
             " */\n"
         ), data
 
+    @staticmethod
+    @pytest.mark.django_db
+    def test_pagination_beyond_last_page(api_client):
+        """Prove that going beyond the last page gives a 404."""
+        response_page_1 = api_client.get("/v1/movies", data={"page": 1})
+        data = read_response_json(response_page_1)
+        assert response_page_1.status_code == 200, data  # empty page
+        assert data == {
+            "_embedded": {"movie": []},
+            "_links": {"self": {"href": "http://testserver/v1/movies?page=1"}},
+            "page": {"number": 1, "size": 20},
+        }
+
+        response_page_2 = api_client.get("/v1/movies", data={"page": 2})
+        data = read_response_json(response_page_2)
+        assert response_page_2.status_code == 404, data  # not existent
+        assert data == {
+            "detail": "Invalid page.",
+            "status": 404,
+            "title": "Not found.",
+            "type": "urn:apiexception:not_found",
+        }
+
 
 @pytest.mark.django_db
 class TestListCount:

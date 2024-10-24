@@ -6,8 +6,8 @@ from django.core.paginator import EmptyPage, PageNotAnInteger
 from django.core.paginator import Page as DjangoPage
 from django.core.paginator import Paginator as DjangoPaginator
 from django.db.models.query import QuerySet
-from django.http import Http404
 from django.utils.translation import gettext_lazy as _
+from rest_framework.exceptions import NotFound
 
 from rest_framework_dso.iterators import ObservableIterator, ObservableQuerySet
 
@@ -86,8 +86,7 @@ class DSOPage(DjangoPage):
     """
 
     def __init__(self, object_list, number, paginator):
-        self.number = number
-        self.paginator = paginator
+        super().__init__([], number=number, paginator=paginator)
         self._length = 0
         self._has_next = None
         self._object_list_iterator = None
@@ -104,13 +103,12 @@ class DSOPage(DjangoPage):
             # So in order to watch the iterators created later on by the queryset we have to
             # wrap it here.
             self.object_list = ObservableQuerySet.from_queryset(
-                object_list, [self._watch_object_list]
+                object_list, [self._watch_object_list], [self._empty_object_list]
             )
         else:
-            self.object_list = ObservableIterator(object_list, [self._watch_object_list])
-            # Object list is empty
-            if not self.object_list:
-                self._watch_object_list(None, None, True)
+            self.object_list = ObservableIterator(
+                object_list, [self._watch_object_list], [self._empty_object_list]
+            )
 
     def __repr__(self):
         return f"<Page {self.number}>"
@@ -136,39 +134,32 @@ class DSOPage(DjangoPage):
         """
         return self._object_list_iterator is not None and self._object_list_iterator.is_iterated()
 
-    def _watch_object_list(
-        self, item, observable_iterator: ObservableIterator = None, iterator_is_empty=False
-    ):
+    def _watch_object_list(self, item, observable_iterator: ObservableIterator):
         """Adjust page length and throw away the sentinel item"""
-
-        # Make sure we are not iterating again.
         if self.is_iterated():
+            # Make sure we are not iterating again.
             return
-
-        # Observable queryset returns the iterator
-        # Observable iterator does not
-        if observable_iterator is None:
-            observable_iterator = self.object_list
 
         # Keep track of the iterator
         self._object_list_iterator = observable_iterator
 
-        # If this is not page 1 and the object list is empty
-        # user navigated beyond the last page so we throw a 404.
-        if iterator_is_empty and self.number > 1:
-            raise Http404()
-
         # Set the number of objects read up till now
-        number_returned = observable_iterator.number_returned
-        self._length = min(self.paginator.per_page, number_returned)
+        number_retrieved = observable_iterator.number_returned
+        self._length = min(self.paginator.per_page, number_retrieved)
 
         # If the sentinel item was returned a next page exists
-        self._has_next = number_returned > self.paginator.per_page
+        self._has_next = number_retrieved > self.paginator.per_page
 
         # The page was passed an extra object in its object_list
         # as a sentinel to detect whether more items exist beyond this page
         # and hence a next page exists.
         # This object should not be rendered so we call next() again to stop the iterator.
-        if observable_iterator.number_returned == self.paginator.per_page + 1:
+        if number_retrieved == self.paginator.per_page + 1:
             # Throw away the sentinel item
             next(observable_iterator)
+
+    def _empty_object_list(self, observable_iterator: ObservableIterator):
+        # Normally the PageNumberPagination.paginate_queryset() will detect the empty page,
+        # and raise InvalidPage -> NotFound.
+        if self.number > 1:
+            raise NotFound(_("Invalid page."))
