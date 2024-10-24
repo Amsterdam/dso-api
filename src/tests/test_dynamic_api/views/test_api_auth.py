@@ -1,4 +1,6 @@
 import pytest
+from django.db import ProgrammingError
+from django.db.backends.utils import CursorWrapper
 from django.urls import reverse
 from schematools.contrib.django import models
 from schematools.types import ProfileSchema
@@ -542,3 +544,56 @@ class TestAuth:
         response = api_client.get(url)
         data = read_response_json(response)
         assert "eigenaarNaam" in data["_embedded"]["containers"][0]
+
+    @pytest.mark.parametrize("page", [1, 2])
+    def test_database_denies_access_list(
+        self, api_client, afval_dataset, page, monkeypatch, filled_router
+    ):
+        """Prove that database access issues are gracefully handled."""
+
+        def _mock_execute(*args, **kwargs):
+            raise ProgrammingError("permission denied for TABLE foobar")
+
+        url = reverse("dynamic_api:afvalwegingen-containers-list")
+        qs_args = {"page": page, "_fields": "id,serienummer"}
+        api_client.get(url, data=qs_args)  # warm up AuthMiddleware
+
+        monkeypatch.setattr(CursorWrapper, "execute", _mock_execute)
+        response = api_client.get(url, data=qs_args)
+        data = read_response_json(response)
+        assert response.status_code == 403, data  # permission denied
+        assert data == {
+            "type": "urn:apiexception:db_permission_denied",
+            "title": "You do not have permission to perform this action.",
+            "detail": (
+                "Database role has no access to the given tables"
+                " (schema permissions were satisfied)."
+            ),
+            "status": 403,
+        }
+
+    def test_database_denies_access_detail(
+        self, api_client, afval_dataset, afval_container, monkeypatch, filled_router
+    ):
+        """Prove that database access issues are gracefully handled."""
+
+        def _mock_execute(*args, **kwargs):
+            raise ProgrammingError("permission denied for TABLE foobar")
+
+        url = reverse("dynamic_api:afvalwegingen-containers-detail", args=[afval_container.pk])
+        qs_args = {"_fields": "id,serienummer"}
+        api_client.get(url, data=qs_args)  # warm up AuthMiddleware
+
+        monkeypatch.setattr(CursorWrapper, "execute", _mock_execute)
+        response = api_client.get(url, data=qs_args)
+        data = read_response_json(response)
+        assert response.status_code == 403, data  # permission denied
+        assert data == {
+            "type": "urn:apiexception:db_permission_denied",
+            "title": "You do not have permission to perform this action.",
+            "detail": (
+                "Database role has no access to the given tables"
+                " (schema permissions were satisfied)."
+            ),
+            "status": 403,
+        }
