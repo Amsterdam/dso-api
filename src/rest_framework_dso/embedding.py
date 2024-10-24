@@ -369,8 +369,9 @@ class EmbeddedResultSet(ReturnGenerator):
             for instance in main_instances:
                 self.inspect_instance(instance)
 
-    def inspect_instance(self, instance):
-        """Inspect a main object to find any references for this embedded result."""
+    def inspect_instance(self, instance, **kwargs):
+        """Inspect a main object to find any references for this embedded result.
+        (kwargs can be the observable_iterator)."""
         ids = self.embedded_field.get_related_ids(instance)
         if ids:
             self.id_list.extend(ids)

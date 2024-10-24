@@ -22,7 +22,7 @@ from collections import defaultdict
 from collections.abc import Callable, Iterable, Iterator
 from functools import lru_cache
 from itertools import islice
-from typing import TypeVar
+from typing import TypeVar, cast
 
 from django.db import connections, models
 from django.db.models.query import QuerySet
@@ -189,16 +189,23 @@ class ObservableQuerySet(QuerySet):
 
     def __init__(self, *args, **kwargs):
         self._item_callbacks: list[Callable] = []
+        self._is_empty_callbacks: list[Callable] = []
         self._obs_iterator: ObservableIterator = None
         super().__init__(*args, **kwargs)
 
     @classmethod
-    def from_queryset(cls, queryset: QuerySet, observers: list[Callable] | None = None):
+    def from_queryset(
+        cls,
+        queryset: QuerySet,
+        observers: list[Callable] | None = None,
+        is_empty_observers: list[Callable] | None = None,
+    ) -> ObservableQuerySet:
         """Turn a QuerySet instance into an ObservableQuerySet"""
         queryset.__class__ = _create_observable_queryset_subclass(queryset.__class__)
         queryset._item_callbacks = list(observers) if observers else []
+        queryset._is_empty_callbacks = list(is_empty_observers) if is_empty_observers else []
         queryset._obs_iterator = None
-        return queryset
+        return cast(ObservableQuerySet, queryset)
 
     def _clone(self, *args, **kwargs):
         """Clone this instance, including its observers.
@@ -212,6 +219,7 @@ class ObservableQuerySet(QuerySet):
         # Overloading this method handles all of those in one go.
         clone = super()._clone(*args, **kwargs)
         clone._item_callbacks = self._item_callbacks.copy()
+        clone._is_empty_callbacks = self._is_empty_callbacks.copy()
         return clone
 
     def _iterator(self, *args, **kwargs):
@@ -231,25 +239,19 @@ class ObservableQuerySet(QuerySet):
 
     def wrap_iterator(self, iterator: Iterable) -> ObservableIterator:
         """Wrap an iterator inside an ObservableIterator"""
-        iterator = ObservableIterator(iterator)
-        iterator.add_observer(self._item_observer)
+        iterator = ObservableIterator(
+            iterator,
+            # Just pass the listeners of this class to the next level.
+            observers=self._item_callbacks,
+            is_empty_observers=self._is_empty_callbacks,
+        )
 
-        # Remove observer from existing oberservable iterator
+        # Remove observer from existing observable iterator
         if self._obs_iterator is not None:
             self._obs_iterator.clear_observers()
 
         self._obs_iterator = iterator
-
-        # Notify observers of empty iterator
-        if not iterator:
-            self._item_observer(None, True)
-
         return iterator
-
-    def _item_observer(self, item, is_empty=False):
-        """Notify all observers."""
-        for callback in self._item_callbacks:
-            callback(item, self._obs_iterator, is_empty)
 
 
 class ObservableIterator(Iterator[T]):
@@ -259,20 +261,18 @@ class ObservableIterator(Iterator[T]):
     As built-in feature, the number of returned objects is also counted.
     """
 
-    def __init__(self, iterable: Iterable[T], observers=None):
+    def __init__(self, iterable: Iterable[T], observers=None, is_empty_observers=None):
         self.number_returned = 0
         self._iterable = iter(iterable)
         self._item_callbacks = list(observers) if observers else []
+        self._is_empty_callbacks = list(is_empty_observers) if is_empty_observers else []
         self._has_items = None
         self._is_iterated = False
-
-    def add_observer(self, callback: Callable[[T], None]):
-        """Install an observer callback that is notified when items are iterated"""
-        self._item_callbacks.append(callback)
 
     def clear_observers(self):
         """Remove all observers"""
         self._item_callbacks = []
+        self._is_empty_callbacks = []
 
     def __iter__(self) -> ObservableIterator[T]:
         return self
@@ -282,17 +282,23 @@ class ObservableIterator(Iterator[T]):
         try:
             value = next(self._iterable)
         except StopIteration:
-            self._is_iterated = True
-            raise
+            pass  # continue below
+        else:
+            self.number_returned += 1
+            self._has_items = True
 
-        self.number_returned += 1
-        self._has_items = True
+            # Notify observers
+            for notify_callback in self._item_callbacks:
+                notify_callback(value, observable_iterator=self)
 
-        # Notify observers
-        for notify_callback in self._item_callbacks:
-            notify_callback(value)
+            return value
 
-        return value
+        # The StopIteration is handled here so any exceptions from event handlers
+        # are not seen as "During handling of the above exception, another exception occurred".
+        if self.number_returned == 0:
+            self._notify_is_empty()
+        self._is_iterated = True
+        raise StopIteration()
 
     def is_iterated(self):
         """Tell whether the iterator has finished."""
@@ -301,12 +307,22 @@ class ObservableIterator(Iterator[T]):
     def __bool__(self):
         """Tell whether the generator would contain items."""
         if self._has_items is None:
-            # Perform an inspection of the generator:
+            # When bool(iterable) is called before looping over things,
+            # this method can only answer by performing an inspection of the generator:
             first_item, items = peek_iterable(self._iterable)
             self._iterable = items
             self._has_items = first_item is not None
+            if not self._has_items:
+                self._notify_is_empty()
 
         return self._has_items
+
+    def _notify_is_empty(self):
+        """Notify only once that the list is empty (this also prevents duplicate signalling)."""
+        if not self._is_iterated:
+            for is_empty_callback in self._is_empty_callbacks:
+                is_empty_callback(observable_iterator=self)
+        self._is_iterated = True
 
 
 def peek_iterable(generator):
