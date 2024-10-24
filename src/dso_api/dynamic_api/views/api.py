@@ -13,18 +13,22 @@ and model layer of this application.
 
 from __future__ import annotations
 
+import logging
 from functools import cached_property
 
 from django.db import models
+from django.db.utils import ProgrammingError
 from django.utils.translation import gettext as _
 from rest_framework import viewsets
-from rest_framework.exceptions import NotFound
+from rest_framework.exceptions import NotFound, PermissionDenied
 from schematools.contrib.django.models import DynamicModel
 
 from dso_api.dynamic_api import filters, permissions, serializers
 from dso_api.dynamic_api.temporal import TemporalTableQuery
 from dso_api.dynamic_api.utils import limit_queryset_for_scopes
 from rest_framework_dso.views import DSOViewMixin
+
+logger = logging.getLogger(__name__)
 
 
 class DynamicApiViewSet(DSOViewMixin, viewsets.ReadOnlyModelViewSet):
@@ -58,6 +62,33 @@ class DynamicApiViewSet(DSOViewMixin, viewsets.ReadOnlyModelViewSet):
 
     # The 'bronhouder' of the associated dataset
     authorization_grantor: str = None
+
+    def list(self, request, *args, **kwargs):
+        try:
+            return super().list(request, *args, **kwargs)
+        except ProgrammingError as e:
+            self._handle_db_error(e)
+            raise
+
+    def retrieve(self, request, *args, **kwargs):
+        try:
+            return super().retrieve(request, *args, **kwargs)
+        except ProgrammingError as e:
+            self._handle_db_error(e)
+            raise
+
+    def _handle_db_error(self, e: ProgrammingError) -> None:
+        """Make sure database permission errors are gratefully handled.
+        This is a common source of 500 error issues,
+        and giving a better response to the user helps.
+        """
+        if str(e).startswith("permission denied for "):
+            logger.exception("Database role has no access (while application allowed): %s", e)
+            raise PermissionDenied(
+                "Database role has no access to the given tables"
+                " (schema permissions were satisfied).",
+                code="db_permission_denied",
+            ) from e
 
     def initial(self, request, *args, **kwargs):
         super().initial(request, *args, **kwargs)
