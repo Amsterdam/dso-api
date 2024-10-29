@@ -1,4 +1,3 @@
-import json
 import logging
 import os
 import sys
@@ -9,8 +8,7 @@ import environ
 import sentry_sdk
 import sentry_sdk.utils
 from corsheaders.defaults import default_headers
-from django.core.exceptions import ImproperlyConfigured
-from opencensus.trace import config_integration
+from pythonjsonlogger import jsonlogger
 from sentry_sdk.integrations.django import DjangoIntegration
 from sentry_sdk.integrations.logging import LoggingIntegration
 
@@ -54,15 +52,6 @@ OAUTH_URL = env.str(
 OAUTH_DEFAULT_SCOPE = env.str("OAUTH_DEFAULT_SCOPE", None)
 OAUTH_CLIENT_ID = os.getenv("OAUTH_CLIENT_ID", "dso-api-open-api")
 
-# -- Azure specific settings
-
-# Microsoft recommended abbreviation for Application Insights is `APPI`
-AZURE_APPI_CONNECTION_STRING: str | None = env.str("AZURE_APPI_CONNECTION_STRING", None)
-AZURE_APPI_AUDIT_CONNECTION_STRING: str | None = env.str(
-    "AZURE_APPI_AUDIT_CONNECTION_STRING", None
-)
-
-MAX_REPLICA_COUNT = env.int("MAX_REPLICA_COUNT", 5)
 
 # -- Security
 
@@ -177,6 +166,7 @@ if _USE_SECRET_STORE or CLOUD_ENV.startswith("azure"):
 
     # Support up to 5 replicas configured with environment variables using
     # PGHOST_REPLICA_1 to PGHOST_REPLICA_5
+    MAX_REPLICA_COUNT = env.int("MAX_REPLICA_COUNT", 5)
     for replica_count in range(1, MAX_REPLICA_COUNT + 1):
         if env.str(f"PGHOST_REPLICA_{replica_count}", False):
             DATABASES.update(
@@ -257,19 +247,43 @@ if SENTRY_DSN:
     )
     sentry_sdk.utils.MAX_STRING_LENGTH = 2048  # for WFS FILTER exceptions
 
-base_log_fmt = {"time": "%(asctime)s", "name": "%(name)s", "level": "%(levelname)s"}
-log_fmt = base_log_fmt.copy()
-log_fmt["message"] = "%(message)s"
+# -- Logging
 
-audit_log_fmt = {"audit": True}
-audit_log_fmt.update(log_fmt)
+
+class CustomJsonFormatter(jsonlogger.JsonFormatter):
+    def __init__(self, *args, **kwargs):
+        # Make sure some 'extra' fields are not included:
+        super().__init__(*args, **kwargs)
+        self._skip_fields.update({"request": "request", "taskName": "taskName"})
+
+    def add_fields(self, log_record: dict, record, message_dict: dict):
+        # The 'rename_fields' logic fails when fields are missing, this is easier:
+        super().add_fields(log_record, record, message_dict)
+        # An in-place reordering, sotime/level appear first (easier for docker log scrolling)
+        ordered_dict = {
+            "time": log_record.pop("asctime", record.asctime),
+            "level": log_record.pop("levelname", record.levelname),
+            **log_record,
+        }
+        log_record.clear()
+        log_record.update(ordered_dict)
+
+
+_json_log_formatter = {
+    "()": CustomJsonFormatter,
+    "format": "%(asctime)s $(levelname)s %(name)s %(message)s",  # parsed as a fields list.
+}
+
+DJANGO_LOG_LEVEL = env.str("DJANGO_LOG_LEVEL", "INFO")
+LOG_LEVEL = env.str("LOG_LEVEL", "DEBUG" if DEBUG else "INFO")
+AUDIT_LOG_LEVEL = env.str("AUDIT_LOG_LEVEL", "INFO")
 
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": True,
     "formatters": {
-        "json": {"format": json.dumps(log_fmt)},
-        "audit_json": {"format": json.dumps(audit_log_fmt)},
+        "json": _json_log_formatter,
+        "audit_json": _json_log_formatter | {"static_fields": {"audit": True}},
     },
     "handlers": {
         "console": {
@@ -277,15 +291,22 @@ LOGGING = {
             "class": "logging.StreamHandler",
             "formatter": "json",
         },
+        "console_print": {
+            "level": "DEBUG",
+            "class": "logging.StreamHandler",
+        },
         "audit_console": {
+            # For azure, this is replaced below.
             "level": "DEBUG",
             "class": "logging.StreamHandler",
             "formatter": "audit_json",
         },
     },
-    "root": {"level": "INFO", "handlers": ["console"]},
+    "root": {
+        "level": DJANGO_LOG_LEVEL,
+        "handlers": ["console"],
+    },
     "loggers": {
-        "opencensus": {"handlers": ["console"], "level": DJANGO_LOG_LEVEL, "propagate": False},
         "django": {"handlers": ["console"], "level": DJANGO_LOG_LEVEL, "propagate": False},
         "django.utils.autoreload": {"handlers": ["console"], "level": "INFO", "propagate": False},
         "dso_api": {"handlers": ["console"], "level": DSO_API_LOG_LEVEL, "propagate": False},
@@ -308,54 +329,85 @@ LOGGING = {
     },
 }
 
-if CLOUD_ENV.lower().startswith("azure"):
-    if AZURE_APPI_CONNECTION_STRING is None:
-        raise ImproperlyConfigured(
-            "Please specify the 'AZURE_APPI_CONNECTION_STRING' environment variable."
+if DEBUG:
+    # Print tracebacks without JSON formatting.
+    LOGGING["loggers"]["django.request"] = {
+        "handlers": ["console_print"],
+        "level": "ERROR",
+        "propagate": False,
+    }
+
+# -- Azure specific settings
+if CLOUD_ENV.startswith("azure"):
+    from azure.monitor.opentelemetry import configure_azure_monitor
+    from opentelemetry.instrumentation.django import DjangoInstrumentor
+    from opentelemetry.instrumentation.psycopg2 import Psycopg2Instrumentor
+    from opentelemetry.sdk.resources import Resource
+    from opentelemetry.semconv.resource import ResourceAttributes
+
+    # Microsoft recommended abbreviation for Application Insights is `APPI`
+    AZURE_APPI_CONNECTION_STRING = env.str("AZURE_APPI_CONNECTION_STRING")
+    AZURE_APPI_AUDIT_CONNECTION_STRING: str | None = env.str(
+        "AZURE_APPI_AUDIT_CONNECTION_STRING", None
+    )
+
+    # Configure OpenTelemetry to use Azure Monitor with the specified connection string
+    if AZURE_APPI_CONNECTION_STRING is not None:
+        configure_azure_monitor(
+            connection_string=AZURE_APPI_CONNECTION_STRING,
+            logger_name="root",
+            instrumentation_options={
+                "azure_sdk": {"enabled": False},
+                "django": {"enabled": False},  # Manually done
+                "fastapi": {"enabled": False},
+                "flask": {"enabled": False},
+                "psycopg2": {"enabled": False},  # Manually done
+                "requests": {"enabled": True},
+                "urllib": {"enabled": True},
+                "urllib3": {"enabled": True},
+            },
+            resource=Resource.create({ResourceAttributes.SERVICE_NAME: "haal-centraal-proxy"}),
         )
-    if AZURE_APPI_AUDIT_CONNECTION_STRING is None:
-        logging.warning(
-            "Using AZURE_APPI_CONNECTION_STRING as AZURE_APPI_AUDIT_CONNECTION_STRING."
+        print("OpenTelemetry has been enabled")
+
+        def response_hook(span, request, response):
+            if (
+                span.is_recording()
+                and hasattr(request, "get_token_claims")
+                and (email := request.get_token_claims.get("email", request.get_token_subject))
+            ):
+                span.set_attribute("user.AuthenticatedId", email)
+
+        DjangoInstrumentor().instrument(response_hook=response_hook)
+        print("Django instrumentor enabled")
+
+        Psycopg2Instrumentor().instrument(enable_commenter=True, commenter_options={})
+        print("Psycopg instrumentor enabled")
+
+    if AZURE_APPI_AUDIT_CONNECTION_STRING is not None:
+        # Configure audit logging to an extra log (not telemetry data).
+        from azure.monitor.opentelemetry.exporter import AzureMonitorLogExporter
+        from opentelemetry.sdk._logs import LoggerProvider
+        from opentelemetry.sdk._logs.export import BatchLogRecordProcessor
+
+        audit_logger_provider = LoggerProvider()
+        audit_logger_provider.add_log_record_processor(
+            BatchLogRecordProcessor(
+                AzureMonitorLogExporter(connection_string=AZURE_APPI_AUDIT_CONNECTION_STRING)
+            )
         )
 
-    MIDDLEWARE.append("opencensus.ext.django.middleware.OpencensusMiddleware")
-    OPENCENSUS = {
-        "TRACE": {
-            "SAMPLER": "opencensus.trace.samplers.ProbabilitySampler(rate=1)",
-            "EXPORTER": f"""opencensus.ext.azure.trace_exporter.AzureExporter(
-                connection_string='{AZURE_APPI_CONNECTION_STRING}',
-                service_name='dso-api'
-            )""",  # noqa: E202
-            "EXCLUDELIST_PATHS": [],
+        LOGGING["handlers"]["audit_console"] = {
+            # This does: handler = LoggingHandler(logger_provider=audit_logger_provider)
+            "level": "DEBUG",
+            "class": "opentelemetry.sdk._logs.LoggingHandler",
+            "logger_provider": audit_logger_provider,
+            "formatter": "audit_json",
         }
-    }
-    config_integration.trace_integrations(["logging"])
-    azure_json = base_log_fmt.copy()
-    azure_json.update({"message": "%(message)s"})
-    audit_azure_json = {"audit": True}
-    audit_azure_json.update(azure_json)
-    LOGGING["formatters"]["azure"] = {"format": json.dumps(azure_json)}
-    LOGGING["formatters"]["audit_azure"] = {"format": json.dumps(audit_azure_json)}
-    LOGGING["handlers"]["azure"] = {
-        "level": "DEBUG",
-        "class": "opencensus.ext.azure.log_exporter.AzureLogHandler",
-        "connection_string": AZURE_APPI_CONNECTION_STRING,
-        "formatter": "azure",
-    }
-    LOGGING["handlers"]["audit_azure"] = {
-        "level": "DEBUG",
-        "class": "opencensus.ext.azure.log_exporter.AzureLogHandler",
-        "connection_string": AZURE_APPI_AUDIT_CONNECTION_STRING,
-        "formatter": "audit_azure",
-    }
+        for logger_name, logger_details in LOGGING["loggers"].items():
+            if "audit_console" in logger_details["handlers"]:
+                LOGGING["loggers"][logger_name]["handlers"] = ["audit_console", "console"]
 
-    LOGGING["root"]["handlers"] = ["azure"]
-    LOGGING["root"]["level"] = DJANGO_LOG_LEVEL
-    for logger_name, logger_details in LOGGING["loggers"].items():
-        if "audit_console" in logger_details["handlers"]:
-            LOGGING["loggers"][logger_name]["handlers"] = ["audit_azure", "console"]
-        else:
-            LOGGING["loggers"][logger_name]["handlers"] = ["azure", "console"]
 
 # -- Third party app settings
 
