@@ -369,7 +369,7 @@ if CLOUD_ENV.startswith("azure"):
                 "urllib": {"enabled": True},
                 "urllib3": {"enabled": True},
             },
-            resource=Resource.create({ResourceAttributes.SERVICE_NAME: "haal-centraal-proxy"}),
+            resource=Resource.create({ResourceAttributes.SERVICE_NAME: "dso-api"}),
         )
         print("OpenTelemetry has been enabled")
 
@@ -410,6 +410,7 @@ if CLOUD_ENV.startswith("azure"):
         for logger_name, logger_details in LOGGING["loggers"].items():
             if "audit_console" in logger_details["handlers"]:
                 LOGGING["loggers"][logger_name]["handlers"] = ["audit_console", "console"]
+        print("Audit logging has been enabled")
 
 
 # -- Third party app settings
