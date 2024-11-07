@@ -5,14 +5,8 @@ from pathlib import Path
 from typing import Final
 
 import environ
-import sentry_sdk
-import sentry_sdk.utils
 from corsheaders.defaults import default_headers
 from pythonjsonlogger import jsonlogger
-from sentry_sdk.integrations.django import DjangoIntegration
-from sentry_sdk.integrations.logging import LoggingIntegration
-
-from dso_api.sentry import before_send
 
 env = environ.Env()
 _USE_SECRET_STORE = os.path.exists("/mnt/secrets-store")
@@ -239,6 +233,12 @@ locals().update(env.email_url(default="smtp://"))
 
 SENTRY_DSN = env.str("SENTRY_DSN", default="")
 if SENTRY_DSN:
+    import sentry_sdk.utils
+    from sentry_sdk.integrations.django import DjangoIntegration
+    from sentry_sdk.integrations.logging import LoggingIntegration
+
+    from dso_api.sentry import before_send
+
     sentry_sdk.init(
         dsn=SENTRY_DSN,
         environment="dso-api",
