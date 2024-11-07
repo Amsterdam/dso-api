@@ -3,14 +3,15 @@
 import logging
 import time
 
-from django.core.exceptions import FieldDoesNotExist, PermissionDenied
+from django.core.exceptions import PermissionDenied
 from django.http import Http404
 from django.urls.base import reverse
 from django.views.generic import TemplateView
 from schematools.contrib.django.models import Dataset
-from schematools.exceptions import SchemaObjectNotFound
 from schematools.types import DatasetTableSchema
-from vectortiles.postgis.views import MVTView
+from vectortiles import VectorLayer
+from vectortiles.backends import BaseVectorLayerMixin
+from vectortiles.views import MVTView
 
 from dso_api.dynamic_api.datasets import get_active_datasets
 from dso_api.dynamic_api.permissions import CheckPermissionsMixin
@@ -90,7 +91,6 @@ class DatasetMVTSingleView(TemplateView):
         context["name"] = dataset_name
         context["tables"] = geo_tables
         context["schema"] = models[geo_tables[0]].table_schema().dataset
-
         return context
 
 
@@ -112,6 +112,29 @@ class DatasetMVTView(CheckPermissionsMixin, MVTView):
         self.model = model
         self.check_permissions(request, [self.model])
 
+    def get_layers(self):
+        """Provide all layer definitions for this rendering."""
+        schema: DatasetTableSchema = self.model.table_schema()
+        layer: BaseVectorLayerMixin = VectorLayer()
+        layer.id = "default"
+        layer.model = self.model
+        layer.queryset = self.model.objects.all()
+        layer.geom_field = schema.main_geometry_field.python_name
+
+        # If we are zoomed far out (low z), only fetch the geometry field for a smaller payload.
+        # The cutoff is arbitrary. Play around with
+        # https://www.maptiler.com/google-maps-coordinates-tile-bounds-projection/#14/4.92/52.37
+        # to get a feel for the MVT zoom levels and how much detail a single tile should contain.
+        if self.z >= 15:
+            user_scopes = self.request.user_scopes
+            layer.tile_fields = tuple(
+                f.name
+                for f in self.model._meta.get_fields()
+                if f.name != layer.geom_field
+                and user_scopes.has_field_access(self.model.get_field_schema(f))
+            )
+        return [layer]
+
     def get(self, request, *args, **kwargs):
         kwargs.pop("dataset_name")
         kwargs.pop("table_name")
@@ -127,40 +150,12 @@ class DatasetMVTView(CheckPermissionsMixin, MVTView):
         )
         return result
 
-    def get_queryset(self):
-        return self.model.objects.all()
-
-    @property
-    def vector_tile_fields(self) -> tuple:
-        # If we are zoomed far out (low z), only fetch the geometry field for a smaller payload.
-        # The cutoff is arbitrary. Play around with
-        # https://www.maptiler.com/google-maps-coordinates-tile-bounds-projection/#14/4.92/52.37
-        # to get a feel for the MVT zoom levels and how much detail a single tile should contain.
-        if self.z < 15:
-            return ()
-
-        geom_name = self.vector_tile_geom_name
-        user_scopes = self.request.user_scopes
-        return tuple(
-            f.name
-            for f in self.model._meta.get_fields()
-            if f.name != geom_name and user_scopes.has_field_access(self.model.get_field_schema(f))
-        )
-
-    @property
-    def vector_tile_geom_name(self) -> str:
-        schema: DatasetTableSchema = self.model.table_schema()
-        try:
-            return schema.main_geometry_field.python_name
-        except SchemaObjectNotFound as e:
-            raise FieldDoesNotExist(f"No field named '{schema.main_geometry}'") from e
-
     def check_permissions(self, request, models) -> None:
         """Override CheckPermissionsMixin to add extra checks"""
         super().check_permissions(request, models)
 
         # Check whether the geometry field can be accessed, otherwise reading MVT is pointless.
-        model_field = self.model._meta.get_field(self.vector_tile_geom_name)
-        field_schema = self.model.get_field_schema(model_field)
-        if not self.request.user_scopes.has_field_access(field_schema):
+        if not self.request.user_scopes.has_field_access(
+            self.model.table_schema().main_geometry_field
+        ):
             raise PermissionDenied()
