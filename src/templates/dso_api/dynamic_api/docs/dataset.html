@@ -1,10 +1,11 @@
-<!doctype html>{% load i18n %}
+<!doctype html>{% load i18n static %}
 <html>
 <head>
   <title>{% if schema.title %}{{ schema.title }}{% else %}{{ name|title }}{% endif %} &mdash; Amsterdam Datapunt API Documentatie v1</title>
-  <link rel="stylesheet" type="text/css" href="/v1/static/rest_framework/css/bootstrap.min.css"/>
-  <link rel="stylesheet" type="text/css" href="/v1/static/rest_framework/css/bootstrap-tweaks.css"/>
-  <link rel="stylesheet" type="text/css" href="/v1/static/rest_framework/css/default.css"/>
+  <link rel="stylesheet" type="text/css" href="{% static 'rest_framework/css/bootstrap.min.css' %}"/>
+  <link rel="stylesheet" type="text/css" href="{% static 'rest_framework/css/bootstrap-tweaks.css' %}"/>
+  <link rel="stylesheet" type="text/css" href="{% static 'rest_framework/css/default.css' %}"/>
+  <link rel="stylesheet" type="text/css" href="{% static 'dso_api/dynamic_api/css/docs.css' %}"/>
   {% block extrahead %}{% endblock %}
 </head>
 <body>
@@ -78,7 +79,7 @@
     </ul>
 
     <p>De volgende velden zijn beschikbaar:</p>
-    <table>
+    <table class="table table-striped">
       <thead>
         <tr>
           <th>Veldnaam</th>
@@ -110,7 +111,7 @@
     </table>
 
     <p>De volgende query-parameters zijn te gebruiken:</p>
-    <table>
+    <table class="table table-striped">
       <thead>
         <tr>
           <th>Parameter</th>
@@ -154,7 +155,7 @@
     {% if table.expands %}
       <h3>Insluitbare relaties</h3>
       <p>De volgende velden kunnen ingesloten worden met <code>?_expandScope=...</code>:</p>
-      <table>
+      <table class="table table-striped">
         <thead>
           <tr>
             <th>Relatie</th>

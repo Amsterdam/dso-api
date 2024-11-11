@@ -13,25 +13,28 @@ from .views.doc import DocsOverview, GenericDocs, search, search_index
 def get_patterns(router_urls):
     """Generate the actual URL patterns for this file."""
     return [
+        # Doc endpoints
         path(
-            "docs/generic/<str:category>.html",
+            "docs/generic/<slug:category>.html",
             GenericDocs.as_view(),
             name="docs-generic",
         ),
         path(
-            "docs/generic/<str:category>/<str:topic>.html",
+            "docs/generic/<slug:category>/<slug:topic>.html",
             GenericDocs.as_view(),
             name="docs-generic",
         ),
         path("docs/index.html", DocsOverview.as_view(), name="docs-index"),
         path("docs/search.html", search),
         path("docs/searchindex.json", search_index),
+        # Override some API endpoints:
         path(
             "haalcentraal/bag/<path:subpath>", HaalCentraalBAG.as_view(), name="haalcentraal-bag"
         ),
         path(
             "haalcentraal/brk/<path:subpath>", HaalCentraalBRK.as_view(), name="haalcentraal-brk"
         ),
+        # All API types:
         path("mvt/", views.DatasetMVTIndexView.as_view(), name="mvt-index"),
         path("wfs/", views.DatasetWFSIndexView.as_view()),
         path("", include(router_urls), name="api-root"),
