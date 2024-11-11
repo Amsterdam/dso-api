@@ -1,0 +1,34 @@
+/* Override bootstrap 3 defaults */
+body { line-height: 1.6; }
+
+a:not([href]) { color: inherit; }
+a:not([href]):hover { color: inherit; text-decoration: none; }
+
+/* Inspired by readthedocs style */
+.tip,
+.warning,
+.danger,
+.note {
+    padding: 12px;
+    margin: 12px 0 24px;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.note { background: #e7f2fa; }
+.tip { background: #dbfaf4; }
+.warning { background: #ffedcc; }
+.danger { background: #fdf3f2; }
+
+.title {
+    font-weight: 700;
+    display: block;
+    color: #fff;
+    padding: 6px 12px;
+    margin: -12px -12px 12px;
+}
+
+.note .title { background: #6ab0de; }
+.tip .title { background: #1abc9c; }
+.warning .title { background: #f0b37e; }
+.danger .title { background: #f29f97; }

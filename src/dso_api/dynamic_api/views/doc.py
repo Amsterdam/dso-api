@@ -18,7 +18,6 @@ from django.template.loader import render_to_string
 from django.urls import NoReverseMatch, reverse
 from django.utils.decorators import method_decorator
 from django.utils.safestring import mark_safe
-from django.views import View
 from django.views.decorators.cache import cache_page
 from django.views.generic import TemplateView
 from markdown import Markdown
@@ -68,66 +67,30 @@ def search_index(_request) -> HttpResponse:
     return JsonResponse(index)
 
 
-@method_decorator(decorators, name="get")
-class GenericDocs(View):
+# @method_decorator(decorators, name="get")
+class GenericDocs(TemplateView):
     """Documentation pages from ``/v1/docs/generic/...``."""
 
-    PRE = f"""
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="UTF-8">
-      <title>Amsterdam DataPunt API Documentatie</title>
-      <link rel="stylesheet" type="text/css"
-            href="/v1/static/rest_framework/css/bootstrap.min.css"/>
-      <link rel="stylesheet" type="text/css"
-            href="/v1/static/rest_framework/css/bootstrap-tweaks.css"/>
-      <link rel="stylesheet" type="text/css"
-            href="/v1/static/rest_framework/css/default.css"/>
-    </head>
-    <body>
-      <div class="container">
+    template_name = "dso_api/dynamic_api/docs/rest/base.html"
 
-    <h2>Introductie API Keys</h2>
-    <blockquote style="border-color: #ec0101">
-        <p>
-            Het Dataplatform van de gemeente Amsterdam gaat het gebruik van een identificatie key
-            bij het aanroepen van haar API's vanaf 1 februari 2024 verplicht stellen.
-            Vanaf 1 februari 2024 kun je de API's van het Dataplatform niet meer zonder
-            een key gebruiken. Vraag tijdig een key aan via dit aanvraagformulier.
-            Doe je dit niet, dan werkt je applicatie of website vanaf 1 februari 2024 niet meer.
-            Dit geldt voor alle API's die op deze pagina gedocumenteerd zijn.
-        </p>
-        <p>
-            Door de API key kunnen we contact houden met de gebruikers van onze API's.
-            Zo kunnen we gebruikers informeren over updates.
-            Daarnaast krijgen we hiermee inzicht in het gebruik van de API's
-            en in wie welke dataset via de API bevraagt.
-            Ook voor dataeigenaren is dit waardevolle informatie.
-        </p>
-        <p>
-            Meer info: <br>
-            <a href="{urljoin(settings.APIKEYSERV_API_URL, "/clients/v1/register/")}">
-                Pagina API key aanvragen</a> <br>
-            <a href="{urljoin(settings.APIKEYSERV_API_URL, "/clients/v1/docs/")}">
-                Technische documentatie</a> <br>
-            Vragen? Mail naar dataplatform@amsterdam.nl <br>
-        <p>
-    </blockquote>
-
-    """
-
-    POST = """</div></body></html>"""
-
-    def get(self, request, category, topic="index", *args, **kwargs):
-        uri = request.build_absolute_uri(reverse("dynamic_api:api-root"))
+    def get_context_data(self, **kwargs):
+        category = self.kwargs["category"]
+        topic = self.kwargs.get("topic", "index")
+        uri = self.request.build_absolute_uri(reverse("dynamic_api:api-root"))
         template = f"dso_api/dynamic_api/docs/{category}/{topic}.md"
         try:
             md = render_to_string(template, context={"uri": uri})
         except TemplateDoesNotExist as e:
             raise Http404() from e
+
         html = markdown.convert(md)
-        return HttpResponse(self.PRE + html + self.POST)
+        html = html.replace("<table>", '<table class="table">')
+
+        return {
+            "markdown_content": mark_safe(html),  # noqa: S308
+            "apikey_register_url": urljoin(settings.APIKEYSERV_API_URL, "/clients/v1/register/"),
+            "apikey_docs_url": urljoin(settings.APIKEYSERV_API_URL, "/clients/v1/docs/"),
+        }
 
 
 @method_decorator(decorators, name="dispatch")
@@ -242,7 +205,7 @@ class LookupContext(NamedTuple):
 
 def lookup_context(op, example, descr):
     # disable mark_safe() warnings because this is static HTML in this very file.
-    return LookupContext(op, mark_safe(example), mark_safe(descr))  # noqa: B308, B703, S308
+    return LookupContext(op, mark_safe(example or ""), mark_safe(descr or ""))  # noqa: S308
 
 
 # This should match ALLOWED_SCALAR_LOOKUPS in filters.parser (except for the "exact" lookup).
@@ -293,12 +256,12 @@ LOOKUP_CONTEXT = {
         ),
         lookup_context(
             "isnull",
-            "<code>true</code> of <code>false</code>",
+            "<code>true</code> | <code>false</code>",
             "Test op ontbrekende waarden (<code>IS NULL</code> / <code>IS NOT NULL</code>).",
         ),
         lookup_context(
             "isempty",
-            "<code>true</code> of <code>false</code>",
+            "<code>true</code> | <code>false</code>",
             "Test of de waarde leeg is (<code>== ''</code> / <code>!= ''</code>)",
         ),
     ]
@@ -336,8 +299,7 @@ def _table_context(ds: Dataset, table: DatasetTableSchema):
                 {
                     "name": name,
                     "type": "Datetime",
-                    "value_example": "<code>yyyy-mm-dd</code> of "
-                    "<code>yyyy-mm-ddThh:mm[:ss[.ms]]</code>",
+                    "value_example": mark_safe(VALUE_EXAMPLES["date-time"]),  # noqa: S308
                 }
             )
 
@@ -556,7 +518,7 @@ def _filter_payload(
         "name": name,
         "type": type.capitalize(),
         "is_deprecated": is_deprecated,
-        "value_example": mark_safe(value_example or ""),  # noqa: B308, B703, S308 (is static HTML)
+        "value_example": mark_safe(value_example or ""),  # noqa: S308 (is static HTML)
         "lookups": [LOOKUP_CONTEXT[op] for op in lookups],
         "auth": _fix_auth(field.auth | field.table.auth | field.table.dataset.auth),
     }
