@@ -1,7 +1,7 @@
-schematools.datasetcollection module
+dso\_api.dynamic\_api.filters module
 ====================================
 
-.. automodule:: schematools.datasetcollection
+.. automodule:: dso_api.dynamic_api.filters
    :members:
    :undoc-members:
    :show-inheritance:

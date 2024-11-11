@@ -12,7 +12,6 @@ import re
 from schematools.types import DatasetFieldSchema, DatasetTableSchema, Temporal
 
 from dso_api.dynamic_api.filters import parser
-from dso_api.dynamic_api.filters.parser import ALLOWED_SCALAR_LOOKUPS, QueryFilterEngine
 
 RE_GEOJSON_TYPE = re.compile(r"^https://geojson\.org/schema/(?P<geotype>[a-zA-Z]+)\.json$")
 
@@ -99,7 +98,7 @@ def get_table_filter_params(table_schema: DatasetTableSchema) -> list[dict]:  # 
     if temporal is not None:
         for name, fields in temporal.dimensions.items():
             start = fields.start  # Assume fields.end has the same type.
-            lookups = ALLOWED_SCALAR_LOOKUPS[start.format or start.type]
+            lookups = parser.ALLOWED_SCALAR_LOOKUPS[start.format or start.type]
 
             for lookup in lookups:
                 openapi_params.append(
@@ -123,7 +122,7 @@ def _get_field_openapi_params(field: DatasetFieldSchema, prefix="") -> list[dict
         prefix = f"{prefix}{field.parent_field.name}."
 
     openapi_params = []
-    for lookup in QueryFilterEngine.get_allowed_lookups(field):
+    for lookup in parser.QueryFilterEngine.get_allowed_lookups(field):
         param = {
             "name": _get_filter_name(prefix, field, lookup),
             "in": "query",

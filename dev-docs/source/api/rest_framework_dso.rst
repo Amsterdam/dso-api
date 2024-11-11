@@ -5,9 +5,10 @@ rest\_framework\_dso package
    :maxdepth: 1
 
    rest_framework_dso.crs
+   rest_framework_dso.embedding
    rest_framework_dso.exceptions
    rest_framework_dso.fields
-   rest_framework_dso.filters
+   rest_framework_dso.iterators
    rest_framework_dso.openapi
    rest_framework_dso.pagination
    rest_framework_dso.parsers

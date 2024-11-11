@@ -65,7 +65,7 @@ class DatasetMVTIndexView(APIIndexView):
 
 
 class DatasetMVTSingleView(TemplateView):
-    """Shows info about a dataset and its geo-tables."""
+    """Shows an HTML page about a dataset and its geo-tables."""
 
     template_name = "dso_api/dynamic_api/mvt_single.html"
 
@@ -95,7 +95,9 @@ class DatasetMVTSingleView(TemplateView):
 
 
 class DatasetMVTView(CheckPermissionsMixin, MVTView):
-    """An MVT view for a single dataset."""
+    """An MVT view for a single table.
+    This view generates the Mapbox Vector Tile format as output.
+    """
 
     def setup(self, request, *args, **kwargs):
         super().setup(request, *args, **kwargs)
