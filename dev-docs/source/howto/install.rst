@@ -30,14 +30,7 @@ Database Setup
 --------------
 
 DSO-API talks to a PostgreSQL instance that contains its data.
-Normally, you should use the one from the dataservices-airflow project.
-If you don't already have it running, do::
-
-    git clone https://github.com/Amsterdam/dataservices-airflow
-    cd dataservices-airflow
-    docker-compose up dso_database
-
-Then point to that PostgreSQL in the environment::
+The database endpoint can be configured in the environment::
 
     DATABASE_URL=postgres://dataservices:insecure@localhost:5416/dataservices
 
@@ -48,6 +41,7 @@ Then point to that PostgreSQL in the environment::
 
     Add a ``.envrc`` to your project folder, and direnv ensures the proper
     environment variables are loaded when you cd into your project directory.
+
 
 Using a Virtual Machine
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -118,6 +112,11 @@ Then start DSO-API:
     ./manage.py runserver localhost:8000
 
 The API can now be accessed at: http://localhost:8000.
+
+.. tip::
+
+    If you need a token to access a view,
+    it can be :ref:`generated <create-test-tokens>` using the ``manage.py maketoken`` command.
 
 
 API key middleware
