@@ -172,16 +172,8 @@ on the embedded section to avoid many repeated queries.
 Prefetching Optimization
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-One problem with ``QuerySet.iterator()`` is that it's incompatible with ``QuerySet.prefetch_related()``.
-This happens because ``prefetch_related()`` reads over the internal results to collect all
-identifiers that need to be "prefetched" with a single query.
+Before Django 4.1, using ``QuerySet.iterator()`` was incompatible with ``QuerySet.prefetch_related()``.
+This was fixed by letting Django fetch the results in chunks and perform ``prefetch_related()`` on each chunk to retrieve related objects.
 
-To have the best of both words, the ``ChunkedQuerySetIterator`` avoids this problem by reading
-the table in chunks of 1000 records. For every batch, records are prefetched and given to
-the next generator. It also tracks the most recently retrieved prefetches so the next batch
-likely doesn't need an extra prefetch. But even when it does,
-this is still better then no having prefetching at all.
-
-Also note that internally, Django's ``QuerySet.iterator()`` may still request 1000 records from the
-database cursor at once. Hence, the ``ChunkedQuerySetIterator`` also follows this pattern
-to request the exact same amount of records.
+However, this optimization is avoided here as our ``ChunkedQuerySetIterator`` has more optimizations.
+It also tracks the most recently retrieved prefetches so the next batch likely doesn't need an extra prefetch.

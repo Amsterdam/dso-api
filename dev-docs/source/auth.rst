@@ -31,7 +31,7 @@ The schema definitions can add an ``auth`` field on various levels:
 The absence of an ``auth`` field makes a resource publicly available.
 
 At every level, the ``auth`` field contains a list of *scopes*.
-The JWT token of the request must contain one of these scopes to access the resource.
+The JWT token of the request must contain *at least one* of these scopes to access the resource.
 
 When there is a scope at both the dataset, table and field level
 these should *all* be satisfied to have access to the field.
@@ -43,6 +43,24 @@ the field is omitted from the response.
 
 Sometimes it's not possible to remove a field (for example, a geometry field for Mapbox Vector Tiles).
 In that case, the endpoints produces a HTTP 403 error to completely deny access.
+
+.. note::
+   The schema validation also require an ``authReason`` to be present when ``auth`` is used.
+   Government data is expected to be public, unless there is a valid reason for it.
+   The ``authReason`` field forces schema authors to consider why data has to be restricted.
+
+Restricting Querying
+~~~~~~~~~~~~~~~~~~~~
+
+Besides the ``auth`` field, the ``filterAuth`` attribute allows restricting queries for a field.
+This feature can be utilized to make it *harder* to query for a particular field.
+Let's say, avoid retrieving all properties owned by a real estate owner.
+
+.. warning::
+
+   If someone manages to dump the whole table, they can off course still query everything within their local copy.
+   Hence, it is generally better to restrict access to a field entirely using ``auth`` instead.
+   The ``filterAuth`` feature is useful for well-monitored internal data, that is already protected using the ``auth`` field.
 
 Profiles
 ~~~~~~~~
@@ -137,9 +155,10 @@ See the :doc:`wfs` documentation for more details.
     When changing the authorization logic, make sure to test the WFS server endpoint too.
     While most logic is shared, it's important to double-check no additional data is exposed.
 
+.. _create-test-tokens:
 
-Testing
--------
+Creating Test Tokens
+--------------------
 
 When testing datasets with authorization from the command line
 you can use the `maketoken` management command, which generates
@@ -150,7 +169,8 @@ This requires DSO-API to be installed in the current virtualenv
 After setting the latter and getting a token with
 ::
 
-    export PUB_JWKS="$(cat jwks_test.json)"  # in src/
+    cd src/
+    export PUB_JWKS="$(cat jwks_test.json)"
     token=$(python manage.py maketoken BRK/RO BRK/RS BRK/RSN)
 
 you can issue a curl command such as

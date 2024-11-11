@@ -44,7 +44,7 @@ A simplified diagram of the main project dependencies:
       schematools_contrib_django [label="schematools.contrib.django"]
 
       ams [label="Amsterdam Schema", shape=note]
-      airflow [label="Airflow", shape=cylinder]
+      databricks [label="Databricks", shape=cylinder]
 
       schematools_contrib_django -> dso_api
       django -> drf
@@ -54,7 +54,7 @@ A simplified diagram of the main project dependencies:
       django -> schematools_contrib_django
       schematools -> schematools_contrib_django
       ams -> dso_api [style=dotted, label="import"]
-      airflow -> dso_api [style=dotted, label="data"]
+      databricks -> dso_api [style=dotted, label="data"]
    }
 
 .. toctree::
@@ -66,6 +66,7 @@ A simplified diagram of the main project dependencies:
    features
    dynamic_models
    dynamic_api
+   database
    remote
    temporal
    streaming

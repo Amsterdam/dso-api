@@ -30,4 +30,4 @@ The following features are implemented in the application:
 * Browsable API (default for browsers).
 * Azure BLOB fields for large documents.
 * Internal schema reload endpoint (though unused).
-* Database routing to read tables for other databases (``DATABASE_SCHEMAS`` setting).
+* :doc:`Database roles to have per-user permissions <database>`.
