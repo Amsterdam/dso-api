@@ -1,4 +1,8 @@
-"""Dataset documentation views."""
+"""These views service documentation of the available datasets.
+
+By implementing this part of the documentation as Django views,
+the dataset definitions are always in sync with the actual live data models.
+"""
 
 import logging
 import operator
@@ -66,6 +70,8 @@ def search_index(_request) -> HttpResponse:
 
 @method_decorator(decorators, name="get")
 class GenericDocs(View):
+    """Documentation pages from ``/v1/docs/generic/...``."""
+
     PRE = f"""
     <!DOCTYPE html>
     <html lang="en">
@@ -126,6 +132,8 @@ class GenericDocs(View):
 
 @method_decorator(decorators, name="dispatch")
 class DocsOverview(TemplateView):
+    """The ``/v1/docs/index.html`` page."""
+
     template_name = "dso_api/dynamic_api/docs/overview.html"
 
     def get_context_data(self, **kwargs):
@@ -153,6 +161,8 @@ class DocsOverview(TemplateView):
 
 @method_decorator(decorators, name="dispatch")
 class DatasetDocView(TemplateView):
+    """REST API-specific documentation for a single dataset (``/v1/docs/datasets/...```)."""
+
     template_name = "dso_api/dynamic_api/docs/dataset.html"
 
     def get_context_data(self, **kwargs):
@@ -194,7 +204,7 @@ class DatasetDocView(TemplateView):
 
 @method_decorator(decorators, name="dispatch")
 class DatasetWFSDocView(TemplateView):
-    """WFS-specific documentation for a single dataset."""
+    """WFS-specific documentation for a single dataset (``/v1/docs/wfs-datasets/...``)."""
 
     template_name = "dso_api/dynamic_api/docs/dataset_wfs.html"
 

@@ -9,9 +9,9 @@ schematools package
 .. toctree::
    :maxdepth: 1
 
-   schematools.datasetcollection
    schematools.factories
    schematools.loaders
    schematools.naming
+   schematools.permissions
    schematools.types
    schematools.validation

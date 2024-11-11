@@ -82,8 +82,8 @@ ALLOWED_SCALAR_LOOKUPS = {
 
 class FilterInput:
     """The data for a single filter parameter.
-    This contains the parsed details from a single parameter,
-    for example: "?someField[isnull]=false"
+    This contains the parsed details from a single query-string parameter,
+    for example: ``?someField[isnull]=false``.
     """
 
     def __init__(self, key: str, path: list[str], lookup: str | None, raw_values: list[str]):
@@ -157,10 +157,10 @@ class QueryFilterEngine:
     querystring are directly mapped against schema fields.
     """
 
+    #: Which querystring fields should not be treated as table-field names.
+    #: Except for "page", the non-underscore-prefixed parameters are for backward compatibility.
     NON_FILTER_PARAMS = {
         # Allowed request parameters.
-        # Except for "page", all the non-underscore-prefixed parameters
-        # are for backward compatibility.
         "_count",
         "_expand",
         "_expandScope",
@@ -176,7 +176,7 @@ class QueryFilterEngine:
     }
 
     @classmethod
-    def from_request(cls, request):
+    def from_request(cls, request) -> QueryFilterEngine:
         """Construct the parser from the request data."""
         return cls(
             user_scopes=request.user_scopes,
@@ -188,6 +188,7 @@ class QueryFilterEngine:
     def __init__(
         self, user_scopes: UserScopes, query: MultiValueDict, input_crs: CRS, request_date=None
     ):
+        """Initialize the filtering engine using the context provided by the request."""
         self.user_scopes = user_scopes
         self.query = query
         self.input_crs = input_crs
@@ -382,7 +383,9 @@ class QueryFilterEngine:
 
     @staticmethod
     def get_allowed_lookups(field_schema: DatasetFieldSchema) -> set[str]:
-        """Find which field[lookup] values are possible, given the field type."""
+        """Find which ``field[lookup]`` values are possible, given the field type.
+        This function feeds the documentation and OpenAPI spec.
+        """
         try:
             if field_schema.is_relation or field_schema.is_primary:
                 # The 'string' type is needed for the deprecated ?temporalRelationId=.. filter.
@@ -397,7 +400,7 @@ class QueryFilterEngine:
     def to_orm_path(
         field_path: str, table_schema: DatasetTableSchema, user_scopes: UserScopes
     ) -> str:
-        """Translate a field name into a ORM path.
+        """Translate a field name into an ORM path.
         This also checks whether the field is accessible according to the request scope.
         """
         parts = _parse_filter_path(field_path.split("."), table_schema, user_scopes)

@@ -9,7 +9,7 @@ dso\_api.dynamic\_api package
 .. toctree::
    :maxdepth: 1
 
-   dso_api.dynamic_api.filterset
+   dso_api.dynamic_api.filters
    dso_api.dynamic_api.openapi
    dso_api.dynamic_api.permissions
    dso_api.dynamic_api.remote
