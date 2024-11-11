@@ -15,25 +15,11 @@ import sys
 from datetime import date
 
 import django
-from sphinx.ext.autodoc.mock import _MockModule
 
 sys.path.insert(0, os.path.abspath("../../src"))
 os.environ["DJANGO_DEBUG"] = "false"
 os.environ["DJANGO_SETTINGS_MODULE"] = "dso_api.settings"
 os.environ["SCHEMA_URL"] = "https://schemas.data.amsterdam.nl/"
-
-# At readthedocs, GDAL is not part of the build container.
-# Feature request here: https://github.com/readthedocs/readthedocs.org/issues/8160
-# The workaround to use 'autodoc_mock_imports' doesn't work either, and is applied too late.
-# Instead, the internal machinery of 'autodoc_mock_imports' is reused here to avoid GDAL imports.
-
-
-class GDALMockModule(_MockModule):
-    GDAL_VERSION = (3, 0)
-
-
-sys.modules["django.contrib.gis.geos.libgeos"] = _MockModule("django.contrib.gis.geos.libgeos")
-sys.modules["django.contrib.gis.gdal.libgdal"] = GDALMockModule("django.contrib.gis.gdal.libgdal")
 
 django.setup()
 
@@ -95,6 +81,7 @@ html_theme_options = {"includehidden": False}
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
 
+html_baseurl = os.environ.get("READTHEDOCS_CANONICAL_URL", "/")
 
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3/", None),

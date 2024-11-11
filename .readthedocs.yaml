@@ -6,13 +6,15 @@ sphinx:
 formats: []
 
 build:
-  image: testing  # For Python 3.9
-# Not needed yet because of conf.py hack:
-#  apt_packages:
-#    - libgdal20
-#    - libproj13
+  os: ubuntu-24.04
+  apt_packages:
+    # To allow running autodoc
+    - libgdal20
+    - libproj13
+  tools:
+    python: "3.11"
 
 python:
-   version: 3.9
    install:
+   - requirements: src/requirements.txt
    - requirements: dev-docs/requirements.txt
