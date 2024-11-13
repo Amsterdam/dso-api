@@ -21,6 +21,7 @@ from django.utils.safestring import mark_safe
 from django.views.decorators.cache import cache_page
 from django.views.generic import TemplateView
 from markdown import Markdown
+from markdown.extensions.codehilite import CodeHiliteExtension
 from markdown.extensions.tables import TableExtension
 from schematools.contrib.django.models import Dataset
 from schematools.naming import to_snake_case
@@ -30,7 +31,13 @@ from dso_api.dynamic_api.filters.parser import QueryFilterEngine
 
 logger = logging.getLogger(__name__)
 
-markdown = Markdown(extensions=[TableExtension(), "fenced_code"])
+markdown = Markdown(
+    extensions=[
+        TableExtension(),
+        "fenced_code",
+        CodeHiliteExtension(use_pygments=True, noclasses=False),
+    ]
+)
 
 CACHE_DURATION = 3600  # seconds.
 
