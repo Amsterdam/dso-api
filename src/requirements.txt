@@ -4,9 +4,9 @@
 #
 #    pip-compile --generate-hashes --output-file=requirements.txt requirements.in
 #
-amsterdam-schema-tools[django]==6.1.1 \
-    --hash=sha256:69d71adc49540ddc59172b7e5093dd1bae654a80481652f7cffa3f64badbcd9b \
-    --hash=sha256:dc503ae694a9b35b86709ee5a546145c5fa323abbae950e3f7584b92131473ff
+amsterdam-schema-tools[django]==6.1.2 \
+    --hash=sha256:51d7ae996156af1ec57e7821a1add45d8b64b110343c3d7e4fd4f737f97c8dc2 \
+    --hash=sha256:e5e017d964fc6e0f940fa4c7dc8076b63495400d8433678b33927f8e3170f26e
     # via -r requirements.in
 argparse==1.4.0 \
     --hash=sha256:62b089a55be1d8949cd2bc7e0df0bddb9e028faefc8c32038cc84862aefdd6e4 \
@@ -500,9 +500,9 @@ fqdn==1.5.1 \
     --hash=sha256:105ed3677e767fb5ca086a0c1f4bb66ebc3c100be518f0e0d755d9eae164d89f \
     --hash=sha256:3a179af3761e4df6eb2e026ff9e1a3033d3587bf980a0b1b2e1e5d08d7358014
     # via jsonschema
-geoalchemy2==0.15.2 \
-    --hash=sha256:3af0272db927373e74ee3b064cdc9464ba08defdb945c51745db1b841482f5dc \
-    --hash=sha256:546455dc39f5bcdfc5b871e57d3f7546c8a6f798eb364c474200f488ace6fd32
+geoalchemy2==0.16.0 \
+    --hash=sha256:b0f27d5500ee757af4654c6262e0f834b7a843504d193653ec747ef1128d2ab5 \
+    --hash=sha256:df64bb72af70daafaac3f359492c96501c37ab85ed20f9510c99cc6d02881100
     # via
     #   -r requirements.in
     #   amsterdam-schema-tools
@@ -1785,9 +1785,9 @@ zaproxy==0.3.2 \
     --hash=sha256:77aab50bcfd9fb5b6d1adc3208bbb1a108af765953ba8a695ee8279d4878ec5b \
     --hash=sha256:e41b417b6eb71ad38873c9cfcafc4e93409198aeb36d5d47f3bba0d3ac155378
     # via python-owasp-zap-v2-4
-zipp==3.20.2 \
-    --hash=sha256:a817ac80d6cf4b23bf7f2828b7cabf326f15a001bea8b1f9b49631780ba28350 \
-    --hash=sha256:bc9eb26f4506fda01b81bcde0ca78103b6e62f991b381fec825435c836edbc29
+zipp==3.21.0 \
+    --hash=sha256:2c9958f6430a2040341a52eb608ed6dd93ef4392e02ffe219417c1b28b5dd1f4 \
+    --hash=sha256:ac1bbe05fd2991f160ebce24ffbac5f6d11d83dc90891255885223d42b3cd931
     # via
     #   -r requirements.in
     #   importlib-metadata
