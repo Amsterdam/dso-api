@@ -332,7 +332,17 @@ class DatasetWFSView(CheckPermissionsMixin, WFSView):
                     )
                 )
 
-        return fields + other_geo_fields
+        all_fields = fields + other_geo_fields
+
+        # Filter fields if propertyname is specified
+        if "PROPERTYNAME" in self.KVP:
+            property_names = {name.strip() for name in self.KVP["PROPERTYNAME"].split(",")}
+            return [
+                field for field in all_fields
+                if field.name == main_geometry_field_name or field.name in property_names
+            ]
+
+        return all_fields
 
     def get_expanded_fields(self, model) -> list[FieldDef]:
         """Define which fields to include in an expanded relation.

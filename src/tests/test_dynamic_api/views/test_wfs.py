@@ -3,7 +3,7 @@ import urllib.parse
 import pytest
 from schematools.contrib.django.db import create_tables
 
-from tests.utils import read_response, read_response_xml, xml_element_to_dict
+from tests.utils import read_response, read_response_json, read_response_xml, xml_element_to_dict
 
 
 @pytest.mark.django_db
@@ -223,6 +223,72 @@ class TestDatasetWFSView:
         )
         response = api_client.get(wfs_url)
         assert response.status_code == 404
+
+    def test_wfs_propertyname_filter(self, api_client, fietspaaltjes_model, fietspaaltjes_data):
+        """Test that propertyname parameter correctly filters fields."""
+
+        fietspaaltjes_data.save()
+
+        wfs_url = (
+            "/v1/wfs/fietspaaltjes/"
+            "?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=fietspaaltjes"
+            "&PROPERTYNAME=at,area,score_current"
+            "&OUTPUTFORMAT=geojson"
+        )
+
+        response = api_client.get(wfs_url)
+        assert response.status_code == 200
+
+        data = read_response_json(response)
+        assert "features" in data, "Response should contain 'features' key"
+        assert len(data["features"]) > 0, "Response should contain at least one feature"
+
+        properties = data["features"][0]["properties"]
+        assert "at" in properties
+        assert "area" in properties
+        assert "score_current" in properties
+        assert "ruimte" not in properties
+
+    def test_wfs_propertyname_empty(
+        self, api_client, fietspaaltjes_model_no_display, fietspaaltjes_data_no_display
+    ):
+        """Test that empty propertyname return no properties."""
+
+        fietspaaltjes_data_no_display.save()
+
+        wfs_url = (
+            "/v1/wfs/fietspaaltjesnodisplay/"
+            "?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=fietspaaltjesnodisplay"
+            "&PROPERTYNAME="
+            "&OUTPUTFORMAT=geojson"
+        )
+
+        response = api_client.get(wfs_url)
+        assert response.status_code == 200
+
+        data = read_response_json(response)
+
+        assert "features" in data
+        assert len(data["features"]) > 0
+        assert len(data["features"][0]["properties"]) == 0
+
+    def test_wfs_propertyname_invalid_field(
+        self, api_client, fietspaaltjes_model_no_display, fietspaaltjes_data_no_display
+    ):
+        """Test behavior with invalid field in propertyname."""
+
+        fietspaaltjes_data_no_display.save()
+
+        wfs_url = (
+            "/v1/wfs/fietspaaltjesnodisplay/"
+            "?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=fietspaaltjesnodisplay"
+            "&PROPERTYNAME=nonexistent_field"
+            "&OUTPUTFORMAT=geojson"
+        )
+
+        response = api_client.get(wfs_url)
+        assert response.status_code == 400
+        assert "InvalidParameterValue" in response.content.decode("utf-8")
 
 
 @pytest.mark.django_db
