@@ -4,10 +4,10 @@
 #
 #    pip-compile --generate-hashes --output-file=requirements_dev.txt --resolver=legacy requirements_dev.in
 #
-amsterdam-schema-tools[django]==6.1.1 \
-    --hash=sha256:69d71adc49540ddc59172b7e5093dd1bae654a80481652f7cffa3f64badbcd9b \
-    --hash=sha256:dc503ae694a9b35b86709ee5a546145c5fa323abbae950e3f7584b92131473ff
-    # via -r /home/diederik/Sites/amsterdam/dso-api/src/requirements.in
+amsterdam-schema-tools[django]==6.1.2 \
+    --hash=sha256:51d7ae996156af1ec57e7821a1add45d8b64b110343c3d7e4fd4f737f97c8dc2 \
+    --hash=sha256:e5e017d964fc6e0f940fa4c7dc8076b63495400d8433678b33927f8e3170f26e
+    # via -r ./requirements.in
 argparse==1.4.0 \
     --hash=sha256:62b089a55be1d8949cd2bc7e0df0bddb9e028faefc8c32038cc84862aefdd6e4 \
     --hash=sha256:c31647edb69fd3d465a847ea3157d37bed1f95f19760b11a47aa91c04b666314
@@ -47,19 +47,19 @@ azure-core-tracing-opentelemetry==1.0.0b11 \
 azure-identity==1.19.0 \
     --hash=sha256:500144dc18197d7019b81501165d4fa92225f03778f17d7ca8a2a180129a9c83 \
     --hash=sha256:e3f6558c181692d7509f09de10cca527c7dce426776454fb97df512a46527e81
-    # via -r /home/diederik/Sites/amsterdam/dso-api/src/requirements.in
+    # via -r ./requirements.in
 azure-monitor-opentelemetry==1.6.4 \
     --hash=sha256:014142ffa420bc2b287ff3bd30de6c31d64b2846423d011a8280334d7afcb01a \
     --hash=sha256:9f5ce4c666caf1f9b536f8ab4ee207dff94777d568517c74f26e3327f75c3fc3
-    # via -r /home/diederik/Sites/amsterdam/dso-api/src/requirements.in
+    # via -r ./requirements.in
 azure-monitor-opentelemetry-exporter==1.0.0b32 \
     --hash=sha256:48fe5e2c29e509b65413c9715040a9dc6cc052bb7cc932933535373ca0c54ba7 \
     --hash=sha256:f16d1d5636fa3dd834f3f63972dee78c9f17fd296a39525772e6f281e7f258cd
     # via azure-monitor-opentelemetry
-bandit==1.7.10 \
-    --hash=sha256:59ed5caf5d92b6ada4bf65bc6437feea4a9da1093384445fed4d472acc6cff7b \
-    --hash=sha256:665721d7bebbb4485a339c55161ac0eedde27d51e638000d91c8c2d68343ad02
-    # via -r /home/diederik/Sites/amsterdam/dso-api/src/requirements.in
+bandit==1.8.0 \
+    --hash=sha256:b1a61d829c0968aed625381e426aa378904b996529d048f8d908fa28f6b13e38 \
+    --hash=sha256:b5bfe55a095abd9fe20099178a7c6c060f844bfd4fe4c76d28e35e4c52b9d31e
+    # via -r ./requirements.in
 black==24.10.0 \
     --hash=sha256:14b3502784f09ce2443830e3133dacf2c0110d45191ed470ecb04d0f5f6fcb0f \
     --hash=sha256:17374989640fbca88b6a448129cd1745c5eb8d9547b464f281b251dd00155ccd \
@@ -93,7 +93,7 @@ build==1.2.2.post1 \
 cachetools==5.5.0 \
     --hash=sha256:02134e8439cdc2ffb62023ce1debca2944c3f289d66bb17ead3ab3dede74b292 \
     --hash=sha256:2cc24fb4cbe39633fb7badd9db9ca6295d766d9c2995f245725a46715d050f2a
-    # via -r /home/diederik/Sites/amsterdam/dso-api/src/requirements.in
+    # via -r ./requirements.in
 certifi==2024.8.30 \
     --hash=sha256:922820b53db7a7257ffbda3f597266d435245903d80737e34f8a45ff3e3230d8 \
     --hash=sha256:bec941d2aa8195e248a60b31ff9f0558284cf01a52591ceda73ea9afffd69fd9
@@ -385,7 +385,7 @@ cryptography==43.0.3 \
     --hash=sha256:f46304d6f0c6ab8e52770addfa2fc41e6629495548862279641972b6215451cd \
     --hash=sha256:f7b178f11ed3664fd0e995a47ed2b5ff0a12d893e41dd0494f406d1cf555cab7
     # via
-    #   -r /home/diederik/Sites/amsterdam/dso-api/src/requirements.in
+    #   -r ./requirements.in
     #   azure-identity
     #   jwcrypto
     #   msal
@@ -393,11 +393,11 @@ cryptography==43.0.3 \
 datadiensten-apikeyclient==0.6.0 \
     --hash=sha256:4988b82e27886b31ed1d935d00e814cc9cfca4d4df5dc589c598f22433c010e0 \
     --hash=sha256:6dab4a24c5c72028d57feb4d259b0a7df29da66e7709c7e68fd9ebace8959cb7
-    # via -r /home/diederik/Sites/amsterdam/dso-api/src/requirements.in
+    # via -r ./requirements.in
 datapunt-authorization-django==1.3.3 \
     --hash=sha256:3c73944aa4d7e184a3cb00848486eaf1b4019aa979d2c41f410e9b45e58a7158 \
     --hash=sha256:e68ed2da074d8e82f66497d75d5ebc59dc43a11dc95aedd23d7cde18c49b50c2
-    # via -r /home/diederik/Sites/amsterdam/dso-api/src/requirements.in
+    # via -r ./requirements.in
 decorator==5.1.1 \
     --hash=sha256:637996211036b6385ef91435e4fae22989472f9d571faba8927ba8253acbc330 \
     --hash=sha256:b8c3f85900b9dc423225913c5aace94729fe1fa9763b38939a95226f02d37186
@@ -424,7 +424,7 @@ django==4.2.16 \
     --hash=sha256:1ddc333a16fc139fd253035a1606bb24261951bbc3a6ca256717fa06cc41a898 \
     --hash=sha256:6f1616c2786c408ce86ab7e10f792b8f15742f7b7b7460243929cb371e7f1dad
     # via
-    #   -r /home/diederik/Sites/amsterdam/dso-api/src/requirements.in
+    #   -r ./requirements.in
     #   amsterdam-schema-tools
     #   datapunt-authorization-django
     #   django-cors-headers
@@ -441,7 +441,7 @@ django==4.2.16 \
 django-cors-headers==4.6.0 \
     --hash=sha256:14d76b4b4c8d39375baeddd89e4f08899051eeaf177cb02a29bd6eae8cf63aa8 \
     --hash=sha256:8edbc0497e611c24d5150e0055d3b178c6534b8ed826fb6f53b21c63f5d48ba3
-    # via -r /home/diederik/Sites/amsterdam/dso-api/src/requirements.in
+    # via -r ./requirements.in
 django-db-comments==0.4.1 \
     --hash=sha256:18a4bdbae8a466d88077fc5022dcc0076293321cd4cce2b385156266cd42463b \
     --hash=sha256:b2b8de7ea89d6a495e9fe99267eb6be2fb1139325c2ab02dff12e872ed49ee86
@@ -454,7 +454,7 @@ django-environ==0.11.2 \
     --hash=sha256:0ff95ab4344bfeff693836aa978e6840abef2e2f1145adff7735892711590c05 \
     --hash=sha256:f32a87aa0899894c27d4e1776fa6b477e8164ed7f6b3e410a62a6d72caaf64be
     # via
-    #   -r /home/diederik/Sites/amsterdam/dso-api/src/requirements.in
+    #   -r ./requirements.in
     #   amsterdam-schema-tools
 django-extensions==3.2.3 \
     --hash=sha256:44d27919d04e23b3f40231c4ab7af4e61ce832ef46d610cc650d53e68328410a \
@@ -468,44 +468,44 @@ django-gisserver==1.4.1 \
     --hash=sha256:2ce649a501ff13e31222d052e367aaee1a0f6e8e4d192eece2b2b7ba92174b25 \
     --hash=sha256:6c58f5e1d7d6e8ff56bd7102126ddff2728690f7292a280f8b611e8a14417295
     # via
-    #   -r /home/diederik/Sites/amsterdam/dso-api/src/requirements.in
+    #   -r ./requirements.in
     #   amsterdam-schema-tools
 django-healthchecks==1.5.0 \
     --hash=sha256:0f167deaa30bde59552796799abf2a97a118bc190e8601eef713379703cf9f64 \
     --hash=sha256:25eb021a4a94240b28d996e82775ad6c3b392a2b262360b965a24b88fcfad78d
-    # via -r /home/diederik/Sites/amsterdam/dso-api/src/requirements.in
+    # via -r ./requirements.in
 django-postgres-unlimited-varchar==1.1.2 \
     --hash=sha256:3ddac6bc5b618341d6e2ef8b7dcc1bd737713e668e15d956dacb987019f69081 \
     --hash=sha256:fc942e8d9ae9d9197471ea7ed96c58b2a7a301f83d88b89009df603904185738
-    # via -r /home/diederik/Sites/amsterdam/dso-api/src/requirements.in
+    # via -r ./requirements.in
 django-redis==5.4.0 \
     --hash=sha256:6a02abaa34b0fea8bf9b707d2c363ab6adc7409950b2db93602e6cb292818c42 \
     --hash=sha256:ebc88df7da810732e2af9987f7f426c96204bf89319df4c6da6ca9a2942edd5b
-    # via -r /home/diederik/Sites/amsterdam/dso-api/src/requirements.in
+    # via -r ./requirements.in
 django-vectortiles==1.0.1 \
     --hash=sha256:37e08d23a525a8cf052e2e9bf7011fa7152c7dd2ad1a3c73d1ca668c6e38e739 \
     --hash=sha256:5f2145fd47010200ca1bdeefe5faf20a3389f700ea9fc822cb7f7c7a4d8721f7
-    # via -r /home/diederik/Sites/amsterdam/dso-api/src/requirements.in
+    # via -r ./requirements.in
 djangorestframework==3.15.2 \
     --hash=sha256:2b8871b062ba1aefc2de01f773875441a961fefbf79f5eed1e32b2f096944b20 \
     --hash=sha256:36fe88cd2d6c6bec23dca9804bab2ba5517a8bb9d8f47ebc68981b56840107ad
     # via
-    #   -r /home/diederik/Sites/amsterdam/dso-api/src/requirements.in
+    #   -r ./requirements.in
     #   djangorestframework-csv
     #   djangorestframework-gis
     #   drf-spectacular
 djangorestframework-csv==3.0.2 \
     --hash=sha256:b269b692feda1971e1342f395a21d339c6a16d2961ff64357a9a6188f27af10f \
     --hash=sha256:d1bcfbaaeaa5145af6bb0985a36a5bbf2f853d9961c722f69c7b0c9c3bcc269a
-    # via -r /home/diederik/Sites/amsterdam/dso-api/src/requirements.in
+    # via -r ./requirements.in
 djangorestframework-gis==1.1 \
     --hash=sha256:84b915503a59263ed9473ecde34b19260c3e9c5c8ebb3aea8d91a67fd39f7215 \
     --hash=sha256:fd8631c2c10208df5f05ee297ce333aaa9a794acd654420207f72e8f9acd59ea
-    # via -r /home/diederik/Sites/amsterdam/dso-api/src/requirements.in
-drf-spectacular==0.27.2 \
-    --hash=sha256:a199492f2163c4101055075ebdbb037d59c6e0030692fc83a1a8c0fc65929981 \
-    --hash=sha256:b1c04bf8b2fbbeaf6f59414b4ea448c8787aba4d32f76055c3b13335cf7ec37b
-    # via -r /home/diederik/Sites/amsterdam/dso-api/src/requirements.in
+    # via -r ./requirements.in
+drf-spectacular==0.28.0 \
+    --hash=sha256:2c778a47a40ab2f5078a7c42e82baba07397bb35b074ae4680721b2805943061 \
+    --hash=sha256:856e7edf1056e49a4245e87a61e8da4baff46c83dbc25be1da2df77f354c7cb4
+    # via -r ./requirements.in
 factory-boy==3.3.1 \
     --hash=sha256:7b1113c49736e1e9995bc2a18f4dbf2c52cf0f841103517010b1d825712ce3ca \
     --hash=sha256:8317aa5289cdfc45f9cae570feb07a6177316c82e34d14df3c2e1f22f26abef0
@@ -527,34 +527,34 @@ flake8==7.1.1 \
     --hash=sha256:049d058491e228e03e67b390f311bbf88fce2dbaa8fa673e7aea87b7198b8d38 \
     --hash=sha256:597477df7860daa5aa0fdd84bf5208a043ab96b8e96ab708770ae0364dd03213
     # via
-    #   -r /home/diederik/Sites/amsterdam/dso-api/src/requirements.in
+    #   -r ./requirements.in
     #   flake8-colors
     #   flake8-debugger
     #   flake8-raise
 flake8-blind-except==0.2.1 \
     --hash=sha256:f25a575a9dcb3eeb3c760bf9c22db60b8b5a23120224ed1faa9a43f75dd7dd16
-    # via -r /home/diederik/Sites/amsterdam/dso-api/src/requirements.in
+    # via -r ./requirements.in
 flake8-colors==0.1.9 \
     --hash=sha256:35a5483a7d156d0438b402faea2fefe45b411571ce5dc93ba28670fd9429cc46 \
     --hash=sha256:e80ed1839dc151730adc51207e632823aa1f393d6db32897ffd0e60dceecfd9f
-    # via -r /home/diederik/Sites/amsterdam/dso-api/src/requirements.in
+    # via -r ./requirements.in
 flake8-debugger==4.1.2 \
     --hash=sha256:0a5e55aeddcc81da631ad9c8c366e7318998f83ff00985a49e6b3ecf61e571bf \
     --hash=sha256:52b002560941e36d9bf806fca2523dc7fb8560a295d5f1a6e15ac2ded7a73840
-    # via -r /home/diederik/Sites/amsterdam/dso-api/src/requirements.in
+    # via -r ./requirements.in
 flake8-raise==0.0.5 \
     --hash=sha256:0a9890e16b851402d9b0d4fafe6c34890eab73835a2c2079c3850a25be575623 \
     --hash=sha256:df26e5c542a58c8f8786d978e18ad7e54126a0ef5c6241c35dafaca7e2bbb808
-    # via -r /home/diederik/Sites/amsterdam/dso-api/src/requirements.in
+    # via -r ./requirements.in
 fqdn==1.5.1 \
     --hash=sha256:105ed3677e767fb5ca086a0c1f4bb66ebc3c100be518f0e0d755d9eae164d89f \
     --hash=sha256:3a179af3761e4df6eb2e026ff9e1a3033d3587bf980a0b1b2e1e5d08d7358014
     # via jsonschema
-geoalchemy2==0.15.2 \
-    --hash=sha256:3af0272db927373e74ee3b064cdc9464ba08defdb945c51745db1b841482f5dc \
-    --hash=sha256:546455dc39f5bcdfc5b871e57d3f7546c8a6f798eb364c474200f488ace6fd32
+geoalchemy2==0.16.0 \
+    --hash=sha256:b0f27d5500ee757af4654c6262e0f834b7a843504d193653ec747ef1128d2ab5 \
+    --hash=sha256:df64bb72af70daafaac3f359492c96501c37ab85ed20f9510c99cc6d02881100
     # via
-    #   -r /home/diederik/Sites/amsterdam/dso-api/src/requirements.in
+    #   -r ./requirements.in
     #   amsterdam-schema-tools
 greenlet==3.1.1 \
     --hash=sha256:0153404a4bb921f0ff1abeb5ce8a5131da56b953eda6e14b88dc6bbc04d2049e \
@@ -684,7 +684,7 @@ jsonschema[format]==4.23.0 \
     --hash=sha256:d71497fef26351a33265337fa77ffeb82423f3ea21283cd9467bb03999266bc4 \
     --hash=sha256:fbadb6f8b144a8f8cf9f0b89ba94501d143e50411a1278633f56a7acf7fd5566
     # via
-    #   -r /home/diederik/Sites/amsterdam/dso-api/src/requirements.in
+    #   -r ./requirements.in
     #   amsterdam-schema-tools
     #   drf-spectacular
     #   mappyfile
@@ -830,12 +830,12 @@ lru-dict==1.3.0 \
     --hash=sha256:f5b88a7c39e307739a3701194993455968fcffe437d1facab93546b1b8a334c1 \
     --hash=sha256:f8f7824db5a64581180ab9d09842e6dd9fcdc46aac9cb592a0807cd37ea55680
     # via
-    #   -r /home/diederik/Sites/amsterdam/dso-api/src/requirements.in
+    #   -r ./requirements.in
     #   django-gisserver
 mapbox-vector-tile==2.1.0 \
     --hash=sha256:29ebdf6cb01a712e2ee08f6bdf7259a23e9c264b01fa69ae83358e33ebdd040c \
     --hash=sha256:9a0572e483c7b06762af73b9b5ee5f4e58441bcca9190105fe55cec71dd16cd8
-    # via -r /home/diederik/Sites/amsterdam/dso-api/src/requirements.in
+    # via -r ./requirements.in
 mappyfile==1.0.2 \
     --hash=sha256:43ada1b98cfc0fd670e6f384d74b15f6601aadb5ab9e1f1d506e839a37a9b8dc \
     --hash=sha256:695c9a8841ce3e8fef49314f9873d7efda2544dea0825b6550540d9a7e650ceb
@@ -843,7 +843,7 @@ mappyfile==1.0.2 \
 markdown==3.7 \
     --hash=sha256:2ae2471477cfd02dbbf038d5d9bc226d40def84b4fe2986e49b59b6b472bbed2 \
     --hash=sha256:7eb6df5690b81a1d7942992c97fad2938e956e79df20cbc6186e9c3a77b1c803
-    # via -r /home/diederik/Sites/amsterdam/dso-api/src/requirements.in
+    # via -r ./requirements.in
 markdown-it-py==3.0.0 \
     --hash=sha256:355216845c60bd96232cd8d8c40e8f9765cc86f46880e43a8fd22dc1a1a8cab1 \
     --hash=sha256:e3f60a94fa066dc52ec76661e37c851cb232d92f9886b15cb560aaada2df8feb
@@ -927,13 +927,13 @@ more-ds==0.0.6 \
     --hash=sha256:777df5b01e3a492ccccd4058156e7d916013e02e85248a8b2c2ca1d1ab13789b \
     --hash=sha256:931d6913beebcf9c4e8155b6b58eef3fc94f000c5b6fb838261b2c0c8886b69c
     # via
-    #   -r /home/diederik/Sites/amsterdam/dso-api/src/requirements.in
+    #   -r ./requirements.in
     #   amsterdam-schema-tools
 more-itertools==10.5.0 \
     --hash=sha256:037b0d3203ce90cca8ab1defbbdac29d5f993fc20131f3664dc8d6acfa872aef \
     --hash=sha256:5482bfef7849c25dc3c6dd53a6173ae4795da2a41a80faea6700d9f5846c5da6
     # via
-    #   -r /home/diederik/Sites/amsterdam/dso-api/src/requirements.in
+    #   -r ./requirements.in
     #   amsterdam-schema-tools
 msal==1.31.0 \
     --hash=sha256:2c4f189cf9cc8f00c80045f66d39b7c0f3ed45873fd3d1f2af9f22db2e12ff4b \
@@ -1025,7 +1025,7 @@ openapi-schema-validator==0.6.2 \
 openapi-spec-validator==0.7.1 \
     --hash=sha256:3c81825043f24ccbcd2f4b149b11e8231abce5ba84f37065e14ec947d8f4e959 \
     --hash=sha256:8577b85a8268685da6f8aa30990b83b7960d4d1117e901d451b5d572605e5ec7
-    # via -r /home/diederik/Sites/amsterdam/dso-api/src/requirements.in
+    # via -r ./requirements.in
 opentelemetry-api==1.28.0 \
     --hash=sha256:578610bcb8aa5cdcb11169d136cc752958548fb6ccffb0969c1036b0ee9e5353 \
     --hash=sha256:8457cd2c59ea1bd0988560f021656cecd254ad7ef6be4ba09dbefeca2409ce52
@@ -1143,67 +1143,84 @@ orderly-set==5.2.2 \
     --hash=sha256:52a18b86aaf3f5d5a498bbdb27bf3253a4e5c57ab38e5b7a56fa00115cd28448 \
     --hash=sha256:f7a37c95a38c01cdfe41c3ffb62925a318a2286ea0a41790c057fc802aec54da
     # via deepdiff
-orjson==3.10.11 \
-    --hash=sha256:03246774131701de8e7059b2e382597da43144a9a7400f178b2a32feafc54bd5 \
-    --hash=sha256:0efabbf839388a1dab5b72b5d3baedbd6039ac83f3b55736eb9934ea5494d258 \
-    --hash=sha256:10f416b2a017c8bd17f325fb9dee1fb5cdd7a54e814284896b7c3f2763faa017 \
-    --hash=sha256:1444f9cb7c14055d595de1036f74ecd6ce15f04a715e73f33bb6326c9cef01b6 \
-    --hash=sha256:1789d9db7968d805f3d94aae2c25d04014aae3a2fa65b1443117cd462c6da647 \
-    --hash=sha256:19b3763e8bbf8ad797df6b6b5e0fc7c843ec2e2fc0621398534e0c6400098f87 \
-    --hash=sha256:1a1222ffcee8a09476bbdd5d4f6f33d06d0d6642df2a3d78b7a195ca880d669b \
-    --hash=sha256:1be83a13312e5e58d633580c5eb8d0495ae61f180da2722f20562974188af205 \
-    --hash=sha256:1f39728c7f7d766f1f5a769ce4d54b5aaa4c3f92d5b84817053cc9995b977acc \
-    --hash=sha256:360a4e2c0943da7c21505e47cf6bd725588962ff1d739b99b14e2f7f3545ba51 \
-    --hash=sha256:461311b693d3d0a060439aa669c74f3603264d4e7a08faa68c47ae5a863f352d \
-    --hash=sha256:496e2cb45de21c369079ef2d662670a4892c81573bcc143c4205cae98282ba97 \
-    --hash=sha256:4bfb30c891b530f3f80e801e3ad82ef150b964e5c38e1fb8482441c69c35c61c \
-    --hash=sha256:4d83f87582d223e54efb2242a79547611ba4ebae3af8bae1e80fa9a0af83bb7f \
-    --hash=sha256:4eed32f33a0ea6ef36ccc1d37f8d17f28a1d6e8eefae5928f76aff8f1df85e67 \
-    --hash=sha256:51f3382415747e0dbda9dade6f1e1a01a9d37f630d8c9049a8ed0e385b7a90c0 \
-    --hash=sha256:52ca832f17d86a78cbab86cdc25f8c13756ebe182b6fc1a97d534051c18a08de \
-    --hash=sha256:52e5834d7d6e58a36846e059d00559cb9ed20410664f3ad156cd2cc239a11230 \
-    --hash=sha256:5576b1e5a53a5ba8f8df81872bb0878a112b3ebb1d392155f00f54dd86c83ff6 \
-    --hash=sha256:63fc9d5fe1d4e8868f6aae547a7b8ba0a2e592929245fff61d633f4caccdcdd6 \
-    --hash=sha256:655a493bac606655db9a47fe94d3d84fc7f3ad766d894197c94ccf0c5408e7d3 \
-    --hash=sha256:65cd3e3bb4fbb4eddc3c1e8dce10dc0b73e808fcb875f9fab40c81903dd9323e \
-    --hash=sha256:677f23e32491520eebb19c99bb34675daf5410c449c13416f7f0d93e2cf5f981 \
-    --hash=sha256:6dade64687f2bd7c090281652fe18f1151292d567a9302b34c2dbb92a3872f1f \
-    --hash=sha256:6f67c570602300c4befbda12d153113b8974a3340fdcf3d6de095ede86c06d92 \
-    --hash=sha256:705f03cee0cb797256d54de6695ef219e5bc8c8120b6654dd460848d57a9af3d \
-    --hash=sha256:77b0fed6f209d76c1c39f032a70df2d7acf24b1812ca3e6078fd04e8972685a3 \
-    --hash=sha256:7dfa8db55c9792d53c5952900c6a919cfa377b4f4534c7a786484a6a4a350c19 \
-    --hash=sha256:80c00d4acded0c51c98754fe8218cb49cb854f0f7eb39ea4641b7f71732d2cb7 \
-    --hash=sha256:80df27dd8697242b904f4ea54820e2d98d3f51f91e97e358fc13359721233e4b \
-    --hash=sha256:82f07c550a6ccd2b9290849b22316a609023ed851a87ea888c0456485a7d196a \
-    --hash=sha256:86b9dd983857970c29e4c71bb3e95ff085c07d3e83e7c46ebe959bac07ebd80b \
-    --hash=sha256:8b5759063a6c940a69c728ea70d7c33583991c6982915a839c8da5f957e0103a \
-    --hash=sha256:96ed1de70fcb15d5fed529a656df29f768187628727ee2788344e8a51e1c1350 \
-    --hash=sha256:9fd0ad1c129bc9beb1154c2655f177620b5beaf9a11e0d10bac63ef3fce96950 \
-    --hash=sha256:a11225d7b30468dcb099498296ffac36b4673a8398ca30fdaec1e6c20df6aa55 \
-    --hash=sha256:a2fc947e5350fdce548bfc94f434e8760d5cafa97fb9c495d2fef6757aa02ec0 \
-    --hash=sha256:a3f29634260708c200c4fe148e42b4aae97d7b9fee417fbdd74f8cfc265f15b0 \
-    --hash=sha256:afacfd1ab81f46dedd7f6001b6d4e8de23396e4884cd3c3436bd05defb1a6446 \
-    --hash=sha256:b592597fe551d518f42c5a2eb07422eb475aa8cfdc8c51e6da7054b836b26782 \
-    --hash=sha256:b7fcfc6f7ca046383fb954ba528587e0f9336828b568282b27579c49f8e16aad \
-    --hash=sha256:b9546b278c9fb5d45380f4809e11b4dd9844ca7aaf1134024503e134ed226161 \
-    --hash=sha256:bc274ac261cc69260913b2d1610760e55d3c0801bb3457ba7b9004420b6b4270 \
-    --hash=sha256:bd9a187742d3ead9df2e49240234d728c67c356516cf4db018833a86f20ec18c \
-    --hash=sha256:c46294faa4e4d0eb73ab68f1a794d2cbf7bab33b1dda2ac2959ffb7c61591899 \
-    --hash=sha256:c95f2ecafe709b4e5c733b5e2768ac569bed308623c85806c395d9cca00e08af \
-    --hash=sha256:cb4d0bea56bba596723d73f074c420aec3b2e5d7d30698bc56e6048066bd560c \
-    --hash=sha256:cdec57fe3b4bdebcc08a946db3365630332dbe575125ff3d80a3272ebd0ddafe \
-    --hash=sha256:d496c74fc2b61341e3cefda7eec21b7854c5f672ee350bc55d9a4997a8a95204 \
-    --hash=sha256:d4a62c49c506d4d73f59514986cadebb7e8d186ad510c518f439176cf8d5359d \
-    --hash=sha256:df8c677df2f9f385fcc85ab859704045fa88d4668bc9991a527c86e710392bec \
-    --hash=sha256:dfbb2d460a855c9744bbc8e36f9c3a997c4b27d842f3d5559ed54326e6911f9b \
-    --hash=sha256:e2f3b7c5803138e67028dde33450e054c87e0703afbe730c105f1fcd873496d5 \
-    --hash=sha256:e35b6d730de6384d5b2dab5fd23f0d76fae8bbc8c353c2f78210aa5fa4beb3ef \
-    --hash=sha256:f1eec3421a558ff7a9b010a6c7effcfa0ade65327a71bb9b02a1c3b77a247284 \
-    --hash=sha256:f35a1b9f50a219f470e0e497ca30b285c9f34948d3c8160d5ad3a755d9299433 \
-    --hash=sha256:f4c57ea78a753812f528178aa2f1c57da633754c91d2124cb28991dab4c79a54 \
-    --hash=sha256:f91d9eb554310472bd09f5347950b24442600594c2edc1421403d7610a0998fd
+orjson==3.10.12 \
+    --hash=sha256:0000758ae7c7853e0a4a6063f534c61656ebff644391e1f81698c1b2d2fc8cd2 \
+    --hash=sha256:038d42c7bc0606443459b8fe2d1f121db474c49067d8d14c6a075bbea8bf14dd \
+    --hash=sha256:03b553c02ab39bed249bedd4abe37b2118324d1674e639b33fab3d1dafdf4d79 \
+    --hash=sha256:0a78bbda3aea0f9f079057ee1ee8a1ecf790d4f1af88dd67493c6b8ee52506ff \
+    --hash=sha256:0b32652eaa4a7539f6f04abc6243619c56f8530c53bf9b023e1269df5f7816dd \
+    --hash=sha256:0eee4c2c5bfb5c1b47a5db80d2ac7aaa7e938956ae88089f098aff2c0f35d5d8 \
+    --hash=sha256:16135ccca03445f37921fa4b585cff9a58aa8d81ebcb27622e69bfadd220b32c \
+    --hash=sha256:165c89b53ef03ce0d7c59ca5c82fa65fe13ddf52eeb22e859e58c237d4e33b9b \
+    --hash=sha256:1da1ef0113a2be19bb6c557fb0ec2d79c92ebd2fed4cfb1b26bab93f021fb885 \
+    --hash=sha256:229994d0c376d5bdc91d92b3c9e6be2f1fbabd4cc1b59daae1443a46ee5e9825 \
+    --hash=sha256:22a51ae77680c5c4652ebc63a83d5255ac7d65582891d9424b566fb3b5375ee9 \
+    --hash=sha256:24ce85f7100160936bc2116c09d1a8492639418633119a2224114f67f63a4559 \
+    --hash=sha256:2b57cbb4031153db37b41622eac67329c7810e5f480fda4cfd30542186f006ae \
+    --hash=sha256:2d879c81172d583e34153d524fcba5d4adafbab8349a7b9f16ae511c2cee8708 \
+    --hash=sha256:35d3081bbe8b86587eb5c98a73b97f13d8f9fea685cf91a579beddacc0d10566 \
+    --hash=sha256:362d204ad4b0b8724cf370d0cd917bb2dc913c394030da748a3bb632445ce7c4 \
+    --hash=sha256:36b4aa31e0f6a1aeeb6f8377769ca5d125db000f05c20e54163aef1d3fe8e833 \
+    --hash=sha256:3f250ce7727b0b2682f834a3facff88e310f52f07a5dcfd852d99637d386e79e \
+    --hash=sha256:43509843990439b05f848539d6f6198d4ac86ff01dd024b2f9a795c0daeeab60 \
+    --hash=sha256:440d9a337ac8c199ff8251e100c62e9488924c92852362cd27af0e67308c16ef \
+    --hash=sha256:475661bf249fd7907d9b0a2a2421b4e684355a77ceef85b8352439a9163418c3 \
+    --hash=sha256:47962841b2a8aa9a258b377f5188db31ba49af47d4003a32f55d6f8b19006543 \
+    --hash=sha256:53206d72eb656ca5ac7d3a7141e83c5bbd3ac30d5eccfe019409177a57634b0d \
+    --hash=sha256:5472be7dc3269b4b52acba1433dac239215366f89dc1d8d0e64029abac4e714e \
+    --hash=sha256:5535163054d6cbf2796f93e4f0dbc800f61914c0e3c4ed8499cf6ece22b4a3da \
+    --hash=sha256:5dee91b8dfd54557c1a1596eb90bcd47dbcd26b0baaed919e6861f076583e9da \
+    --hash=sha256:5f29c5d282bb2d577c2a6bbde88d8fdcc4919c593f806aac50133f01b733846e \
+    --hash=sha256:6334730e2532e77b6054e87ca84f3072bee308a45a452ea0bffbbbc40a67e296 \
+    --hash=sha256:6402ebb74a14ef96f94a868569f5dccf70d791de49feb73180eb3c6fda2ade56 \
+    --hash=sha256:703a2fb35a06cdd45adf5d733cf613cbc0cb3ae57643472b16bc22d325b5fb6c \
+    --hash=sha256:7319cda750fca96ae5973efb31b17d97a5c5225ae0bc79bf5bf84df9e1ec2ab6 \
+    --hash=sha256:73c23a6e90383884068bc2dba83d5222c9fcc3b99a0ed2411d38150734236755 \
+    --hash=sha256:74d5ca5a255bf20b8def6a2b96b1e18ad37b4a122d59b154c458ee9494377f80 \
+    --hash=sha256:750f8b27259d3409eda8350c2919a58b0cfcd2054ddc1bd317a643afc646ef23 \
+    --hash=sha256:77a4e1cfb72de6f905bdff061172adfb3caf7a4578ebf481d8f0530879476c07 \
+    --hash=sha256:7a3273e99f367f137d5b3fecb5e9f45bcdbfac2a8b2f32fbc72129bbd48789c2 \
+    --hash=sha256:7d69af5b54617a5fac5c8e5ed0859eb798e2ce8913262eb522590239db6c6763 \
+    --hash=sha256:7ed119ea7d2953365724a7059231a44830eb6bbb0cfead33fcbc562f5fd8f935 \
+    --hash=sha256:802a3935f45605c66fb4a586488a38af63cb37aaad1c1d94c982c40dcc452e85 \
+    --hash=sha256:855c0833999ed5dc62f64552db26f9be767434917d8348d77bacaab84f787d7b \
+    --hash=sha256:87251dc1fb2b9e5ab91ce65d8f4caf21910d99ba8fb24b49fd0c118b2362d509 \
+    --hash=sha256:888442dcee99fd1e5bd37a4abb94930915ca6af4db50e23e746cdf4d1e63db13 \
+    --hash=sha256:897830244e2320f6184699f598df7fb9db9f5087d6f3f03666ae89d607e4f8ed \
+    --hash=sha256:8a76ba5fc8dd9c913640292df27bff80a685bed3a3c990d59aa6ce24c352f8fc \
+    --hash=sha256:8b8713b9e46a45b2af6b96f559bfb13b1e02006f4242c156cbadef27800a55a8 \
+    --hash=sha256:8dcb9673f108a93c1b52bfc51b0af422c2d08d4fc710ce9c839faad25020bb69 \
+    --hash=sha256:90a5551f6f5a5fa07010bf3d0b4ca2de21adafbbc0af6cb700b63cd767266cb9 \
+    --hash=sha256:910fdf2ac0637b9a77d1aad65f803bac414f0b06f720073438a7bd8906298192 \
+    --hash=sha256:91a5a0158648a67ff0004cb0df5df7dcc55bfc9ca154d9c01597a23ad54c8d0c \
+    --hash=sha256:9a904f9572092bb6742ab7c16c623f0cdccbad9eeb2d14d4aa06284867bddd31 \
+    --hash=sha256:9c5fc1238ef197e7cad5c91415f524aaa51e004be5a9b35a1b8a84ade196f73f \
+    --hash=sha256:a734c62efa42e7df94926d70fe7d37621c783dea9f707a98cdea796964d4cf74 \
+    --hash=sha256:a7974c490c014c48810d1dede6c754c3cc46598da758c25ca3b4001ac45b703f \
+    --hash=sha256:a9e15c06491c69997dfa067369baab3bf094ecb74be9912bdc4339972323f252 \
+    --hash=sha256:ac8010afc2150d417ebda810e8df08dd3f544e0dd2acab5370cfa6bcc0662f8f \
+    --hash=sha256:accfe93f42713c899fdac2747e8d0d5c659592df2792888c6c5f829472e4f85e \
+    --hash=sha256:bb52c22bfffe2857e7aa13b4622afd0dd9d16ea7cc65fd2bf318d3223b1b6252 \
+    --hash=sha256:be604f60d45ace6b0b33dd990a66b4526f1a7a186ac411c942674625456ca548 \
+    --hash=sha256:c1f7a3ce79246aa0e92f5458d86c54f257fb5dfdc14a192651ba7ec2c00f8a05 \
+    --hash=sha256:c22c3ea6fba91d84fcb4cda30e64aff548fcf0c44c876e681f47d61d24b12e6b \
+    --hash=sha256:c34ec9aebc04f11f4b978dd6caf697a2df2dd9b47d35aa4cc606cabcb9df69d7 \
+    --hash=sha256:c47ce6b8d90fe9646a25b6fb52284a14ff215c9595914af63a5933a49972ce36 \
+    --hash=sha256:de365a42acc65d74953f05e4772c974dad6c51cfc13c3240899f534d611be967 \
+    --hash=sha256:ece01a7ec71d9940cc654c482907a6b65df27251255097629d0dea781f255c6d \
+    --hash=sha256:ed459b46012ae950dd2e17150e838ab08215421487371fa79d0eced8d1461d70 \
+    --hash=sha256:f17e6baf4cf01534c9de8a16c0c611f3d94925d1701bf5f4aff17003677d8ced \
+    --hash=sha256:f29de3ef71a42a5822765def1febfb36e0859d33abf5c2ad240acad5c6a1b78d \
+    --hash=sha256:f31422ff9486ae484f10ffc51b5ab2a60359e92d0716fcce1b3593d7bb8a9af6 \
+    --hash=sha256:f4244b7018b5753ecd10a6d324ec1f347da130c953a9c88432c7fbc8875d13be \
+    --hash=sha256:f45653775f38f63dc0e6cd4f14323984c3149c05d6007b58cb154dd080ddc0dc \
+    --hash=sha256:f72e27a62041cfb37a3de512247ece9f240a561e6c8662276beaf4d53d406db4 \
+    --hash=sha256:fc23f691fa0f5c140576b8c365bc942d577d861a9ee1142e4db468e4e17094fb \
+    --hash=sha256:fd6ec8658da3480939c79b9e9e27e0db31dffcd4ba69c334e98c9976ac29140e \
+    --hash=sha256:ff31d22ecc5fb85ef62c7d4afe8301d10c558d00dd24274d4bbe464380d3cd69 \
+    --hash=sha256:ff70ef093895fd53f4055ca75f93f047e088d1430888ca1229393a7c0521100f
     # via
-    #   -r /home/diederik/Sites/amsterdam/dso-api/src/requirements.in
+    #   -r ./requirements.in
     #   amsterdam-schema-tools
     #   django-gisserver
 packaging==24.1 \
@@ -1306,7 +1323,7 @@ psycopg2==2.9.10 \
     # via amsterdam-schema-tools
 pur==7.3.2 \
     --hash=sha256:5f1643e3853b8c3b04850ddf60d52e1e121895399b69361efcf7c9b6ac1f5d9c
-    # via -r /home/diederik/Sites/amsterdam/dso-api/src/requirements.in
+    # via -r ./requirements.in
 pyclipper==1.3.0.post6 \
     --hash=sha256:04214d23cf79f4ddcde36e299dea9f23f07abb88fa47ef399bf0e819438bbefd \
     --hash=sha256:106b8622cd9fb07d80cbf9b1d752334c55839203bae962376a8c59087788af26 \
@@ -1377,7 +1394,7 @@ pygments==2.18.0 \
     --hash=sha256:786ff802f32e91311bff3889f6e9a86e81505fe99f2735bb6d60ae0c5004f199 \
     --hash=sha256:b8e6aca0523f3ab76fee51799c488e38782ac06eafcf95e7ba832985c8e7b13a
     # via
-    #   -r /home/diederik/Sites/amsterdam/dso-api/src/requirements.in
+    #   -r ./requirements.in
     #   rich
 pyjwt[crypto]==2.8.0 \
     --hash=sha256:57e28d156e3d5c10088e0c68abb90bfac3df82b40a71bd0daa20c65ccd5c23de \
@@ -1391,22 +1408,22 @@ pyproject-hooks==1.2.0 \
     # via
     #   build
     #   pip-tools
-pytest==8.3.3 \
-    --hash=sha256:70b98107bd648308a7952b06e6ca9a50bc660be218d53c257cc1fc94fda10181 \
-    --hash=sha256:a6853c7375b2663155079443d2e45de913a911a11d669df02a50814944db57b2
+pytest==8.3.4 \
+    --hash=sha256:50e16d954148559c9a74109af1eaf0c945ba2d8f30f0a3d3335edde19788b6f6 \
+    --hash=sha256:965370d062bce11e73868e0335abac31b4d3de0e82f4007408d242b4f8610761
     # via
-    #   -r /home/diederik/Sites/amsterdam/dso-api/src/requirements.in
+    #   -r ./requirements.in
     #   pytest-cov
     #   pytest-django
     #   pytest-sugar
 pytest-cov==6.0.0 \
     --hash=sha256:eee6f1b9e61008bd34975a4d5bab25801eb31898b032dd55addc93e96fcaaa35 \
     --hash=sha256:fde0b595ca248bb8e2d76f020b465f3b107c9632e6a1d1705f17834c89dcadc0
-    # via -r /home/diederik/Sites/amsterdam/dso-api/src/requirements.in
+    # via -r ./requirements.in
 pytest-django==4.9.0 \
     --hash=sha256:1d83692cb39188682dbb419ff0393867e9904094a549a7d38a3154d5731b2b99 \
     --hash=sha256:8bf7bc358c9ae6f6fc51b6cebb190fe20212196e6807121f11bd6a3b03428314
-    # via -r /home/diederik/Sites/amsterdam/dso-api/src/requirements.in
+    # via -r ./requirements.in
 pytest-sugar==1.0.0 \
     --hash=sha256:6422e83258f5b0c04ce7c632176c7732cab5fdb909cb39cca5c9139f81276c0a \
     --hash=sha256:70ebcd8fc5795dc457ff8b69d266a4e2e8a74ae0c3edc749381c64b5246c8dfd
@@ -1421,16 +1438,16 @@ python-dateutil==2.9.0.post0 \
 python-json-logger==2.0.7 \
     --hash=sha256:23e7ec02d34237c5aa1e29a070193a4ea87583bb4e7f8fd06d3de8264c4b2e1c \
     --hash=sha256:f380b826a991ebbe3de4d897aeec42760035ac760345e57b812938dc8b35e2bd
-    # via -r /home/diederik/Sites/amsterdam/dso-api/src/requirements.in
+    # via -r ./requirements.in
 python-owasp-zap-v2-4==0.1.0 \
     --hash=sha256:2af4252320b3b77a38712081422688e676e038306cf1f2792feed811235afa8b \
     --hash=sha256:d4dc00387b0089d81683be01b8272577ad39fb47674377f65c7da0fd30b8abe9
-    # via -r /home/diederik/Sites/amsterdam/dso-api/src/requirements.in
+    # via -r ./requirements.in
 python-string-utils==1.0.0 \
     --hash=sha256:dcf9060b03f07647c0a603408dc8b03f807f3b54a05c6e19eb14460256fac0cb \
     --hash=sha256:f1a88700baf99db1a9b6953f44181ad9ca56623c81e257e6009707e2e7851fa4
     # via
-    #   -r /home/diederik/Sites/amsterdam/dso-api/src/requirements.in
+    #   -r ./requirements.in
     #   amsterdam-schema-tools
 pyyaml==6.0.2 \
     --hash=sha256:01179a4a8559ab5de078078f37e5c1a30d76bb88519906844fd7bdea1b7729ff \
@@ -1510,7 +1527,7 @@ requests==2.32.3 \
     --hash=sha256:55365417734eb18255590a9ff9eb97e9e1da868d4ccd6402399eaf68af20a760 \
     --hash=sha256:70761cfe03c773ceb22aa2f671b4757976145175cdfca038c02654d061d6dcc6
     # via
-    #   -r /home/diederik/Sites/amsterdam/dso-api/src/requirements.in
+    #   -r ./requirements.in
     #   amsterdam-schema-tools
     #   azure-core
     #   datadiensten-apikeyclient
@@ -1634,30 +1651,30 @@ rpds-py==0.21.0 \
     # via
     #   jsonschema
     #   referencing
-ruff==0.7.2 \
-    --hash=sha256:21aae53ab1490a52bf4e3bf520c10ce120987b047c494cacf4edad0ba0888da2 \
-    --hash=sha256:28bd8220f4d8f79d590db9e2f6a0674f75ddbc3847277dd44ac1f8d30684b828 \
-    --hash=sha256:2b14e77293380e475b4e3a7a368e14549288ed2931fce259a6f99978669e844f \
-    --hash=sha256:576305393998b7bd6c46018f8104ea3a9cb3fa7908c21d8580e3274a3b04b691 \
-    --hash=sha256:5b813ef26db1015953daf476202585512afd6a6862a02cde63f3bafb53d0b2d4 \
-    --hash=sha256:7b792468e9804a204be221b14257566669d1db5c00d6bb335996e5cd7004ba80 \
-    --hash=sha256:853277dbd9675810c6826dad7a428d52a11760744508340e66bf46f8be9701d9 \
-    --hash=sha256:9fd67094e77efbea932e62b5d2483006154794040abb3a5072e659096415ae1e \
-    --hash=sha256:b19fafe261bf741bca2764c14cbb4ee1819b67adb63ebc2db6401dcd652e3748 \
-    --hash=sha256:b73f873b5f52092e63ed540adefc3c36f1f803790ecf2590e1df8bf0a9f72cb8 \
-    --hash=sha256:bb8368cd45bba3f57bb29cbb8d64b4a33f8415d0149d2655c5c8539452ce7760 \
-    --hash=sha256:ccc7e0fc6e0cb3168443eeadb6445285abaae75142ee22b2b72c27d790ab60ba \
-    --hash=sha256:dba53ed84ac19ae4bfb4ea4bf0172550a2285fa27fbb13e3746f04c80f7fa088 \
-    --hash=sha256:dd8800cbe0254e06b8fec585e97554047fb82c894973f7ff18558eee33d1cb88 \
-    --hash=sha256:e00163fb897d35523c70d71a46fbaa43bf7bf9af0f4534c53ea5b96b2e03397b \
-    --hash=sha256:f3c54b538633482dc342e9b634d91168fe8cc56b30a4b4f99287f4e339103e88 \
-    --hash=sha256:fa993cfc9f0ff11187e82de874dfc3611df80852540331bc85c75809c93253a8 \
-    --hash=sha256:fd77877a4e43b3a98e5ef4715ba3862105e299af0c48942cc6d51ba3d97dc859
+ruff==0.8.1 \
+    --hash=sha256:2029b8c22da147c50ae577e621a5bfbc5d1fed75d86af53643d7a7aee1d23871 \
+    --hash=sha256:2666520828dee7dfc7e47ee4ea0d928f40de72056d929a7c5292d95071d881d1 \
+    --hash=sha256:288326162804f34088ac007139488dcb43de590a5ccfec3166396530b58fb89d \
+    --hash=sha256:2954cdbe8dfd8ab359d4a30cd971b589d335a44d444b6ca2cb3d1da21b75e4b6 \
+    --hash=sha256:333c57013ef8c97a53892aa56042831c372e0bb1785ab7026187b7abd0135ad5 \
+    --hash=sha256:3583db9a6450364ed5ca3f3b4225958b24f78178908d5c4bc0f46251ccca898f \
+    --hash=sha256:364e6674450cbac8e998f7b30639040c99d81dfb5bbc6dfad69bc7a8f916b3d1 \
+    --hash=sha256:55873cc1a473e5ac129d15eccb3c008c096b94809d693fc7053f588b67822737 \
+    --hash=sha256:93335cd7c0eaedb44882d75a7acb7df4b77cd7cd0d2255c93b28791716e81790 \
+    --hash=sha256:a885d68342a231b5ba4d30b8c6e1b1ee3a65cf37e3d29b3c74069cdf1ee1e3c9 \
+    --hash=sha256:adf314fc458374c25c5c4a4a9270c3e8a6a807b1bec018cfa2813d6546215540 \
+    --hash=sha256:b12c39b9448632284561cbf4191aa1b005882acbc81900ffa9f9f471c8ff7e26 \
+    --hash=sha256:b22346f845fec132aa39cd29acb94451d030c10874408dbf776af3aaeb53284c \
+    --hash=sha256:b2f2f7a7e7648a2bfe6ead4e0a16745db956da0e3a231ad443d2a66a105c04fa \
+    --hash=sha256:b8a4f7385c2285c30f34b200ca5511fcc865f17578383db154e098150ce0a087 \
+    --hash=sha256:cd054486da0c53e41e0086e1730eb77d1f698154f910e0cd9e0d64274979a209 \
+    --hash=sha256:d2c16e3508c8cc73e96aa5127d0df8913d2290098f776416a4b157657bee44c5 \
+    --hash=sha256:fae0805bd514066f20309f6742f6ee7904a773eb9e6c17c45d6b1600ca65c9b5
     # via -r requirements_dev.in
-sentry-sdk==2.18.0 \
-    --hash=sha256:0dc21febd1ab35c648391c664df96f5f79fb0d92d7d4225cd9832e53a617cafd \
-    --hash=sha256:ee70e27d1bbe4cd52a38e1bd28a5fadb9b17bc29d91b5f2b97ae29c0a7610442
-    # via -r /home/diederik/Sites/amsterdam/dso-api/src/requirements.in
+sentry-sdk==2.19.0 \
+    --hash=sha256:7b0b3b709dee051337244a09a30dbf6e95afe0d34a1f8b430d45e0982a7c125b \
+    --hash=sha256:ee4a4d2ae8bfe3cac012dcf3e4607975904c137e1738116549fc3dbbb6ff0e36
+    # via -r ./requirements.in
 shapely==2.0.6 \
     --hash=sha256:0334bd51828f68cd54b87d80b3e7cee93f249d82ae55a0faf3ea21c9be7b323a \
     --hash=sha256:1bbc783529a21f2bd50c79cef90761f72d41c45622b3e57acf78d984c50a5d13 \
@@ -1777,9 +1794,39 @@ termcolor==2.5.0 \
     # via
     #   -r requirements_dev.in
     #   pytest-sugar
-tomli==2.0.2 \
-    --hash=sha256:2ebe24485c53d303f690b0ec092806a085f07af5a5aa1464f3931eec36caaa38 \
-    --hash=sha256:d46d457a85337051c36524bc5349dd91b1877838e2979ac5ced3e710ed8a60ed
+tomli==2.2.1 \
+    --hash=sha256:023aa114dd824ade0100497eb2318602af309e5a55595f76b626d6d9f3b7b0a6 \
+    --hash=sha256:02abe224de6ae62c19f090f68da4e27b10af2b93213d36cf44e6e1c5abd19fdd \
+    --hash=sha256:286f0ca2ffeeb5b9bd4fcc8d6c330534323ec51b2f52da063b11c502da16f30c \
+    --hash=sha256:2d0f2fdd22b02c6d81637a3c95f8cd77f995846af7414c5c4b8d0545afa1bc4b \
+    --hash=sha256:33580bccab0338d00994d7f16f4c4ec25b776af3ffaac1ed74e0b3fc95e885a8 \
+    --hash=sha256:400e720fe168c0f8521520190686ef8ef033fb19fc493da09779e592861b78c6 \
+    --hash=sha256:40741994320b232529c802f8bc86da4e1aa9f413db394617b9a256ae0f9a7f77 \
+    --hash=sha256:465af0e0875402f1d226519c9904f37254b3045fc5084697cefb9bdde1ff99ff \
+    --hash=sha256:4a8f6e44de52d5e6c657c9fe83b562f5f4256d8ebbfe4ff922c495620a7f6cea \
+    --hash=sha256:4e340144ad7ae1533cb897d406382b4b6fede8890a03738ff1683af800d54192 \
+    --hash=sha256:678e4fa69e4575eb77d103de3df8a895e1591b48e740211bd1067378c69e8249 \
+    --hash=sha256:6972ca9c9cc9f0acaa56a8ca1ff51e7af152a9f87fb64623e31d5c83700080ee \
+    --hash=sha256:7fc04e92e1d624a4a63c76474610238576942d6b8950a2d7f908a340494e67e4 \
+    --hash=sha256:889f80ef92701b9dbb224e49ec87c645ce5df3fa2cc548664eb8a25e03127a98 \
+    --hash=sha256:8d57ca8095a641b8237d5b079147646153d22552f1c637fd3ba7f4b0b29167a8 \
+    --hash=sha256:8dd28b3e155b80f4d54beb40a441d366adcfe740969820caf156c019fb5c7ec4 \
+    --hash=sha256:9316dc65bed1684c9a98ee68759ceaed29d229e985297003e494aa825ebb0281 \
+    --hash=sha256:a198f10c4d1b1375d7687bc25294306e551bf1abfa4eace6650070a5c1ae2744 \
+    --hash=sha256:a38aa0308e754b0e3c67e344754dff64999ff9b513e691d0e786265c93583c69 \
+    --hash=sha256:a92ef1a44547e894e2a17d24e7557a5e85a9e1d0048b0b5e7541f76c5032cb13 \
+    --hash=sha256:ac065718db92ca818f8d6141b5f66369833d4a80a9d74435a268c52bdfa73140 \
+    --hash=sha256:b82ebccc8c8a36f2094e969560a1b836758481f3dc360ce9a3277c65f374285e \
+    --hash=sha256:c954d2250168d28797dd4e3ac5cf812a406cd5a92674ee4c8f123c889786aa8e \
+    --hash=sha256:cb55c73c5f4408779d0cf3eef9f762b9c9f147a77de7b258bef0a5628adc85cc \
+    --hash=sha256:cd45e1dc79c835ce60f7404ec8119f2eb06d38b1deba146f07ced3bbc44505ff \
+    --hash=sha256:d3f5614314d758649ab2ab3a62d4f2004c825922f9e370b29416484086b264ec \
+    --hash=sha256:d920f33822747519673ee656a4b6ac33e382eca9d331c87770faa3eef562aeb2 \
+    --hash=sha256:db2b95f9de79181805df90bedc5a5ab4c165e6ec3fe99f970d0e302f384ad222 \
+    --hash=sha256:e59e304978767a54663af13c07b3d1af22ddee3bb2fb0618ca1593e4f593a106 \
+    --hash=sha256:e85e99945e688e32d5a35c1ff38ed0b3f41f43fad8df0bdf79f72b2ba7bc5272 \
+    --hash=sha256:ece47d672db52ac607a3d9599a9d48dcb2f2f735c6c2d1f34130085bb12b112a \
+    --hash=sha256:f4039b9cbc3048b2416cc57ab3bda989a6fcf9b36cf8937f01a6e731b64f80d7
     # via -r requirements_dev.in
 types-python-dateutil==2.9.0.20241003 \
     --hash=sha256:250e1d8e80e7bbc3a6c99b907762711d1a1cdd00e978ad39cb5940f6f0a87f3d \
@@ -1806,20 +1853,20 @@ urllib3==2.2.3 \
     --hash=sha256:ca899ca043dcb1bafa3e262d73aa25c465bfb49e0bd9dd5d59f1d0acba2f8fac \
     --hash=sha256:e7d814a81dad81e6caf2ec9fdedb284ecc9c73076b62654547cc64ccdcae26e9
     # via
-    #   -r /home/diederik/Sites/amsterdam/dso-api/src/requirements.in
+    #   -r ./requirements.in
     #   requests
     #   sentry-sdk
 urllib3-mock==0.3.3 \
     --hash=sha256:702c90042920d771c9902b7b5b542551cc57f259078f4eada47ab4e8cdd11f1a \
     --hash=sha256:b210037029ac96beac4f3e7b54f466c394b060525ea5a824803d5f5ed14558f1
-    # via -r /home/diederik/Sites/amsterdam/dso-api/src/requirements.in
+    # via -r ./requirements.in
 uwsgi-readiness-check==0.2.0 \
     --hash=sha256:b8c4bfba260ec6f1937ca8d8968f2415aba82428637da17653fc04a3378d752e \
     --hash=sha256:e7a2b5a94407193bc876efd28157a45833cb69c372f7684004fa729eca2f1ab0
-    # via -r /home/diederik/Sites/amsterdam/dso-api/src/requirements.in
+    # via -r ./requirements.in
 uwsgitop==0.12 \
     --hash=sha256:4f9330951f0fb9633226de36cf0c28c04dcf323efab608834aa81f638b6019b2
-    # via -r /home/diederik/Sites/amsterdam/dso-api/src/requirements.in
+    # via -r ./requirements.in
 virtualenv==20.27.1 \
     --hash=sha256:142c6be10212543b32c6c45d3d3893dff89112cc588b7d0879ae5a1ec03a47ba \
     --hash=sha256:f11f1b8a29525562925f745563bfd48b189450f61fb34c4f9cc79dd5aa32a1f4
@@ -1835,7 +1882,7 @@ wheel==0.44.0 \
 whitenoise==6.8.2 \
     --hash=sha256:486bd7267a375fa9650b136daaec156ac572971acc8bf99add90817a530dd1d4 \
     --hash=sha256:df12dce147a043d1956d81d288c6f0044147c6d2ab9726e5772ac50fb45d2280
-    # via -r /home/diederik/Sites/amsterdam/dso-api/src/requirements.in
+    # via -r ./requirements.in
 wrapt==1.16.0 \
     --hash=sha256:0d2691979e93d06a95a26257adb7bfd0c93818e89b1406f5a28f36e0d8c1e1fc \
     --hash=sha256:14d7dc606219cdd7405133c713f2c218d4252f2a469003f8c46bb92d5d095d81 \
@@ -1916,11 +1963,11 @@ zaproxy==0.3.2 \
     --hash=sha256:77aab50bcfd9fb5b6d1adc3208bbb1a108af765953ba8a695ee8279d4878ec5b \
     --hash=sha256:e41b417b6eb71ad38873c9cfcafc4e93409198aeb36d5d47f3bba0d3ac155378
     # via python-owasp-zap-v2-4
-zipp==3.20.2 \
-    --hash=sha256:a817ac80d6cf4b23bf7f2828b7cabf326f15a001bea8b1f9b49631780ba28350 \
-    --hash=sha256:bc9eb26f4506fda01b81bcde0ca78103b6e62f991b381fec825435c836edbc29
+zipp==3.21.0 \
+    --hash=sha256:2c9958f6430a2040341a52eb608ed6dd93ef4392e02ffe219417c1b28b5dd1f4 \
+    --hash=sha256:ac1bbe05fd2991f160ebce24ffbac5f6d11d83dc90891255885223d42b3cd931
     # via
-    #   -r /home/diederik/Sites/amsterdam/dso-api/src/requirements.in
+    #   -r ./requirements.in
     #   importlib-metadata
 
 # WARNING: The following packages were not pinned, but pip requires them to be
