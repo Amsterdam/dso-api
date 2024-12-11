@@ -80,7 +80,7 @@ class AuthenticatedFeatureType(FeatureType):
         # If the main geometry is hidden behind an access scope,
         # accessing the WFS feature is moot (and risks exposure through direct model access)
         if not self.geometry_fields:
-            raise PermissionDenied("typeNames")
+            raise PermissionDenied(locator="typeNames")
 
     def get_queryset(self) -> models.QuerySet:
         # Only return active objects for now.
