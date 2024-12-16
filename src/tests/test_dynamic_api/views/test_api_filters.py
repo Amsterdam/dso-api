@@ -212,7 +212,7 @@ class TestFilterFieldTypes:
         response = api_client.get(
             "/v1/parkeervakken/parkeervakken/",
             data={"geometry[contains]": "121137.7,489046.9"},
-            HTTP_ACCEPT_CRS=28992,
+            HTTP_ACCEPT_CRS="EPSG:28992",
         )
         data = read_response_json(response)
         assert len(data["_embedded"]["parkeervakken"]) == 1, "inside with R/D"
@@ -221,7 +221,7 @@ class TestFilterFieldTypes:
         response = api_client.get(
             "/v1/parkeervakken/parkeervakken/",
             data={"geometry[contains]": "52.388231,4.8897865"},
-            HTTP_ACCEPT_CRS=4326,
+            HTTP_ACCEPT_CRS="EPSG:4326",
         )
         data = read_response_json(response)
         assert response.status_code == 200, data
@@ -231,7 +231,7 @@ class TestFilterFieldTypes:
         response = api_client.get(
             "/v1/parkeervakken/parkeervakken/",
             data={"geometry[contains]": "52.3883019,4.8900356"},
-            HTTP_ACCEPT_CRS=4326,
+            HTTP_ACCEPT_CRS="EPSG:4326",
         )
         data = read_response_json(response)
         assert len(data["_embedded"]["parkeervakken"]) == 0, "Outside using WGS84"
@@ -240,7 +240,7 @@ class TestFilterFieldTypes:
         response = api_client.get(
             "/v1/parkeervakken/parkeervakken/",
             data={"geometry[contains]": "52.388231,48897865"},
-            HTTP_ACCEPT_CRS=4326,
+            HTTP_ACCEPT_CRS="EPSG:4326",
         )
         assert response.status_code == 400, "Outside WGS84 range"
 

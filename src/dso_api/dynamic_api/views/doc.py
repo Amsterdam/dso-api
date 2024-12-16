@@ -282,6 +282,11 @@ LOOKUP_CONTEXT = {
             "contains", "Kommagescheiden lijst", "Test of er een intersectie is met de waarde."
         ),
         lookup_context(
+            "intersects",
+            "GeoJSON of <code>POLYGON(x y ...)</code>",
+            "Test of er een intersectie is met de waarde.",
+        ),
+        lookup_context(
             "isnull",
             "<code>true</code> of <code>false</code>",
             "Test op ontbrekende waarden (<code>IS NULL</code> / <code>IS NOT NULL</code>).",
@@ -446,7 +451,9 @@ def _field_data(field: DatasetFieldSchema):
         # Catch-all for other geometry types
         type = type[len("https://geojson.org/schema/") : -5]
         value_example = f"GeoJSON of <code>{type.upper()}(x y ...)<code>"
-        lookups = []
+        # Keep the lookups from get_allowed_lookups for geometry fields
+        if not lookups:
+            lookups = QueryFilterEngine.get_allowed_lookups(field) - {""}
     elif field.relation or "://" in type:
         lookups = _identifier_lookups
         if field.type == "string":

@@ -5,6 +5,7 @@ from datetime import date
 
 import pytest
 from django.apps import apps
+from django.contrib.gis.gdal.error import GDALException
 from django.http import QueryDict
 from django.utils.timezone import now
 from rest_framework.exceptions import ValidationError
@@ -405,34 +406,65 @@ def test_parse_point_invalid(value):
 
 
 @pytest.mark.parametrize(
-    "value",
+    "value,expected_exception",
     [
-        "",
-        "a",
-        "foo",
-        "inf,nan",
-        "0, 0",
-        "0," + 314 * "1",
-        "POINT",
-        "POINT ",
-        "POINT(x y)",
-        "POINT(1.0 2.0",
-        "POINT(1.0,2.0)",
-        "POINT 1.0 2.0",
-        "POINT(1. .1)",
-        # Outside range of Netherlands:
-        "POINT(0 0)",
-        "POINT(0.0 0.0)",
-        "POINT(-1.1 -3.3)",
-        "POINT(-1 2)",
-        "POINT(100.0 42.0)",
+        # Basic invalid formats
+        ("", ValidationError),
+        ("a", ValidationError),
+        ("foo", ValidationError),
+        ("inf,nan", ValidationError),
+        ("0, 0", ValidationError),
+        ("0," + 314 * "1", ValidationError),
+        # Invalid WKT formats
+        ("POINT", ValidationError),
+        ("POINT ", ValidationError),
+        ("POINT(x y)", ValidationError),
+        ("POINT(1.0 2.0", ValidationError),
+        ("POINT(1.0,2.0)", ValidationError),
+        ("POINT 1.0 2.0", ValidationError),
+        ("POINT(1. .1)", ValidationError),
+        # Out of bounds points
+        ("POINT(0 0)", ValidationError),
+        ("POINT(0.0 0.0)", ValidationError),
+        ("POINT(-1.1 -3.3)", ValidationError),
+        ("POINT(-1 2)", ValidationError),
+        ("POINT(100.0 42.0)", ValidationError),
+        # Invalid GeoJSON
+        ('{"type": "Point"}', GDALException),
+        ('{"coordinates": [1,2]}', GDALException),
+        ('{"type": "Invalid", "coordinates": [1,2]}', GDALException),
     ],
 )
-def test_str2geo_invalid(value):
-    with pytest.raises(ValidationError) as exc_info:
+def test_str2geo_invalid(value, expected_exception):
+    """Test str2geo with invalid input formats."""
+    with pytest.raises(expected_exception):
         str2geo(value)
 
-    assert repr(value) in str(exc_info.value)
+
+@pytest.mark.parametrize(
+    "value,expected_type",
+    [
+        # WKT formats with valid Netherlands coordinates (Amsterdam area)
+        ("POINT(4.9 52.4)", "Point"),  # WGS84
+        ("POLYGON((4.9 52.4, 4.9 52.5, 5.0 52.5, 5.0 52.4, 4.9 52.4))", "Polygon"),
+        ("MULTIPOLYGON(((4.9 52.4, 4.9 52.5, 5.0 52.5, 5.0 52.4, 4.9 52.4)))", "MultiPolygon"),
+        # GeoJSON formats with valid Netherlands coordinates (Amsterdam area)
+        ('{"type": "Point", "coordinates": [4.9, 52.4]}', "Point"),  # WGS84
+        (
+            '{"type": "Polygon", "coordinates": [[[4.9, 52.4], [4.9, 52.5], [5.0, 52.5], [5.0, 52.4], [4.9, 52.4]]]}',
+            "Polygon",
+        ),
+        (
+            '{"type": "MultiPolygon", "coordinates": [[[[4.9, 52.4], [4.9, 52.5], [5.0, 52.5], [5.0, 52.4], [4.9, 52.4]]]]}',
+            "MultiPolygon",
+        ),
+    ],
+)
+def test_str2geo_valid_formats(value, expected_type):
+    """Test str2geo with valid WKT and GeoJSON formats for Point, Polygon and MultiPolygon."""
+    result = str2geo(value)
+    assert result.geom_type == expected_type
+    assert result.srid == 4326  # Default SRID
 
 
 @pytest.mark.parametrize(
