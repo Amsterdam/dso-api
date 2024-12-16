@@ -451,11 +451,11 @@ def test_str2geo_invalid(value, expected_exception):
         # GeoJSON formats with valid Netherlands coordinates (Amsterdam area)
         ('{"type": "Point", "coordinates": [4.9, 52.4]}', "Point"),  # WGS84
         (
-            '{"type": "Polygon", "coordinates": [[[4.9, 52.4], [4.9, 52.5], [5.0, 52.5], [5.0, 52.4], [4.9, 52.4]]]}',
+            '{"type": "Polygon", "coordinates": [[[4.9, 52.4], [4.9, 52.5], [5.0, 52.5], [5.0, 52.4], [4.9, 52.4]]]}',  # noqa: E501
             "Polygon",
         ),
         (
-            '{"type": "MultiPolygon", "coordinates": [[[[4.9, 52.4], [4.9, 52.5], [5.0, 52.5], [5.0, 52.4], [4.9, 52.4]]]]}',
+            '{"type": "MultiPolygon", "coordinates": [[[[4.9, 52.4], [4.9, 52.5], [5.0, 52.5], [5.0, 52.4], [4.9, 52.4]]]]}',  # noqa: E501
             "MultiPolygon",
         ),
     ],
