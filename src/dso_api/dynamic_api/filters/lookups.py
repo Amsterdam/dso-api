@@ -71,9 +71,10 @@ class Wildcard(lookups.Lookup):
         # rhs = %s
         # lhs_params = []
         # lhs_params = ["prep-value"]
+
         lhs, lhs_params = self.process_lhs(compiler, connection)
         rhs, rhs_params = self.process_rhs(compiler, connection)
-        return f"{lhs} LIKE {rhs}", lhs_params + rhs_params
+        return f"LOWER({lhs}) LIKE {rhs}", lhs_params + [rhs.lower() for rhs in rhs_params]
 
     def get_db_prep_lookup(self, value, connection):
         """Apply the wildcard logic to the right-hand-side value"""
