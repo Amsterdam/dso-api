@@ -155,8 +155,8 @@ def _parse_wkt_geometry(value: str, srid: int | None) -> GEOSGeometry:
         )
 
     # check if the geometry is within the Netherlands, only warn if not
-    if geom.geom_type in ("Polygon", "MultiPolygon"):
-        _validate_bounds(geom, srid)
+    if geom.geom_type in ("Polygon", "MultiPolygon") and not _validate_bounds(geom, srid):
+        logger.warning("Geometry bounds outside Netherlands")
 
     # Try parsing as point
     if geom.geom_type == "Point":
@@ -229,21 +229,25 @@ def _parse_point(value: str) -> tuple[float, float]:
     return x, y
 
 
-def _validate_bounds(geom: GEOSGeometry, srid: int | None) -> None:  # noqa: F811
+def _validate_bounds(geom: GEOSGeometry, srid: int | None) -> bool:  # noqa: F811
     """Validate if geometry bounds are within Netherlands extent.
-    Logs warning if bounds are outside the valid range.
+    Returns True if geometry is within bounds, False otherwise.
 
     Args:
         geom: GEOSGeometry object to validate
         srid: Spatial reference system identifier
+
+    Returns:
+        bool: True if geometry is within Netherlands bounds, False otherwise
     """
     bounds = geom.extent  # (xmin, ymin, xmax, ymax)
     corners = [(bounds[0], bounds[1]), (bounds[2], bounds[3])]  # SW, NE corners
 
-    if srid == 4326 and not _validate_wgs84_bounds(corners):
-        logger.warning("WGS84 geometry bounds ", corners, " outside Netherlands")
-    elif srid == 28992 and not _validate_rd_bounds(corners):
-        logger.warning("RD geometry bounds ", corners, " outside Netherlands")
+    if srid == 4326:
+        return _validate_wgs84_bounds(corners)
+    elif srid == 28992:
+        return _validate_rd_bounds(corners)
+    return True  # If srid is not 4326 or 28992, assume valid
 
 
 def _validate_wgs84_bounds(corners: list[tuple[float, float]]) -> bool:
