@@ -136,10 +136,14 @@ als `exact`. Er is geen *escaping* van de jokertekens mogelijk.
 
 ### Bij waarden met een geometrie
 
-| Operator                          | Werking                                            | SQL Equivalent                             |
-| --------------------------------- | -------------------------------------------------- | ------------------------------------------ |
-| `?{geoveld}[contains]={x},{y}`    | Geometrie moet voorkomen op een punt (intersectie) | `ST_Intersects({geoveld}, POINT({x} {y}))` |
-| `?{geoveld}[contains]=POINT(x y)` | Idem, nu in de WKT (well-known text) notatie.      | `ST_Intersects({geoveld}, POINT({x} {y}))` |
+| Operator                                            | Werking                                                | SQL Equivalent                                       |
+| --------------------------------------------------- | ------------------------------------------------------ | -----------------------------------------------------|
+| `?{geoveld}[contains]={x},{y}`                      | Geometrie moet voorkomen op een punt (intersectie)     | `ST_Intersects({geoveld}, POINT({x} {y}))`           |
+| `?{geoveld}[contains]=POINT(x y)`                   | Idem, nu in de WKT (well-known text) notatie.          | `ST_Intersects({geoveld}, POINT({x} {y}))`           |
+| `?{geoveld}[intersects]={x},{y}`                    | Geometrie moet voorkomen op een punt (intersectie)     | `ST_Intersects({geoveld}, POINT({x} {y}))`           |
+| `?{geoveld}[intersects]=POINT(x y)`                 | Idem, nu in de WKT (well-known text) notatie.          | `ST_Intersects({geoveld}, POINT({x} {y}))`           |
+| `?{geoveld}[intersects]=POLYGON ((4.89...))`        | Geometry moet overlappen met een polygon (intersectie).| `ST_Intersects({geoveld}, POLYGON ((4.89...)))`      |
+| `?{geoveld}[intersects]=MULTIPOLYGON (((4.89...)))` | Geometry moet overlappen met een MULTIPOLYGON          | `ST_Intersects({geoveld}, MULTIPOLYGON ((4.89...)))` |
 
 Bij het doorzoeken van geometrievelden wordt gebruik gemaakt van de
 projectie opgegeven in de header `Accept-CRS`. Afhankelijk van de
