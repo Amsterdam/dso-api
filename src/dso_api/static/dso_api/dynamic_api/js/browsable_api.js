@@ -872,7 +872,6 @@ function setInfoBubble(element) {
     expiredText = `Exp:${minutesRemaining}min`;
     summary = `${token.preferred_username} ${isExpired?"Expired":expiredText} `;
     infoEl.innerHTML = `<div class="summary">${summary}</div>`
-    infoEl.innerHTML += `<div title="copy token to clipboard" class="copy-to-clipboard" onclick="navigator.clipboard.writeText('${valueEl.value.substr(7)}')">&#x1F4CB;</div>`
     infoEl.innerHTML += `<pre>${syntaxHighlight(JSON.stringify(token,null,4))}</pre>`;
     infoEl.classList.remove("hidden");
   } else {
