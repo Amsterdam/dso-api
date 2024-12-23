@@ -1435,9 +1435,9 @@ python-dateutil==2.9.0.post0 \
     #   amsterdam-schema-tools
     #   arrow
     #   faker
-python-json-logger==2.0.7 \
-    --hash=sha256:23e7ec02d34237c5aa1e29a070193a4ea87583bb4e7f8fd06d3de8264c4b2e1c \
-    --hash=sha256:f380b826a991ebbe3de4d897aeec42760035ac760345e57b812938dc8b35e2bd
+python-json-logger==3.2.1 \
+    --hash=sha256:8eb0554ea17cb75b05d2848bc14fb02fbdbd9d6972120781b974380bfa162008 \
+    --hash=sha256:cdc17047eb5374bd311e748b42f99d71223f3b0e186f4206cc5d52aefe85b090
     # via -r ./requirements.in
 python-owasp-zap-v2-4==0.1.0 \
     --hash=sha256:2af4252320b3b77a38712081422688e676e038306cf1f2792feed811235afa8b \
