@@ -23,13 +23,13 @@ Markdown == 3.7
 more-ds == 0.0.6
 more-itertools == 10.5.0
 openapi-spec-validator == 0.7.1
-orjson == 3.10.12
+orjson == 3.10.13
 pygments == 2.18.0
 python-json-logger==2.0.7
 python-string-utils == 1.0.0
 requests == 2.32.3
 sentry-sdk == 2.19.2
-urllib3 == 2.2.3
+urllib3 == 2.3.0
 urllib3-mock == 0.3.3
 whitenoise == 6.8.2
 zipp == 3.21.0
