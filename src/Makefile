@@ -22,15 +22,15 @@ sync:                                  ## Install packages, remove unmentioned p
 
 .PHONY: requirements
 requirements: requirements.in requirements_dev.in  ## Re-generate the requirements/base.txt file for pip.
-	pip-compile -v --generate-hashes --resolver=legacy --output-file requirements.txt requirements.in
-	pip-compile -v --generate-hashes --resolver=legacy --output-file requirements_dev.txt requirements_dev.in
+	pip-compile -v --generate-hashes --allow-unsafe --output-file requirements.txt requirements.in
+	pip-compile -v --generate-hashes --allow-unsafe --output-file requirements_dev.txt requirements_dev.in
 
 .PHONY: upgrade
 upgrade:                               ## Tool to upgrade the backend dependencies.
 	pur --patch=Django -r requirements.in
 	pur --no-recursive -r requirements_dev.in
-	pip-compile -v --generate-hashes --upgrade --output-file requirements.txt requirements.in
-	pip-compile -v --generate-hashes --upgrade --output-file requirements_dev.txt requirements_dev.in
+	pip-compile -v --generate-hashes --allow-unsafe --upgrade --output-file requirements.txt requirements.in
+	pip-compile -v --generate-hashes --allow-unsafe --upgrade --output-file requirements_dev.txt requirements_dev.in
 
 ##
 ## Testing:
