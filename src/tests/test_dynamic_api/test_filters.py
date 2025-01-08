@@ -406,38 +406,38 @@ def test_parse_point_invalid(value):
 
 
 @pytest.mark.parametrize(
-    "value,expected_exception",
+    "value",
     [
         # Basic invalid formats
-        ("", ValidationError),
-        ("a", ValidationError),
-        ("foo", ValidationError),
-        ("inf,nan", ValidationError),
-        ("0, 0", ValidationError),
-        ("0," + 314 * "1", ValidationError),
+        "",
+        "a",
+        "foo", 
+        "inf,nan",
+        "0, 0",
+        "0," + 314 * "1",
         # Invalid WKT formats
-        ("POINT", ValidationError),
-        ("POINT ", ValidationError),
-        ("POINT(x y)", ValidationError),
-        ("POINT(1.0 2.0", ValidationError),
-        ("POINT(1.0,2.0)", ValidationError),
-        ("POINT 1.0 2.0", ValidationError),
-        ("POINT(1. .1)", ValidationError),
+        "POINT",
+        "POINT ",
+        "POINT(x y)",
+        "POINT(1.0 2.0",
+        "POINT(1.0,2.0)",
+        "POINT 1.0 2.0",
+        "POINT(1. .1)",
         # Out of bounds points
-        ("POINT(0 0)", ValidationError),
-        ("POINT(0.0 0.0)", ValidationError),
-        ("POINT(-1.1 -3.3)", ValidationError),
-        ("POINT(-1 2)", ValidationError),
-        ("POINT(100.0 42.0)", ValidationError),
+        "POINT(0 0)",
+        "POINT(0.0 0.0)",
+        "POINT(-1.1 -3.3)",
+        "POINT(-1 2)",
+        "POINT(100.0 42.0)",
         # Invalid GeoJSON
-        ('{"type": "Point"}', GDALException),
-        ('{"coordinates": [1,2]}', GDALException),
-        ('{"type": "Invalid", "coordinates": [1,2]}', GDALException),
-    ],
+        '{"type": "Point"}',
+        '{"coordinates": [1,2]}',
+        '{"type": "Invalid", "coordinates": [1,2]}'
+    ]
 )
-def test_str2geo_invalid(value, expected_exception):
+def test_str2geo_invalid(value):
     """Test str2geo with invalid input formats."""
-    with pytest.raises(expected_exception):
+    with pytest.raises(ValidationError):
         str2geo(value)
 
 

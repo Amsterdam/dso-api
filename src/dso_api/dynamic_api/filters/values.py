@@ -8,6 +8,7 @@ import re
 from datetime import date, datetime, time
 from decimal import Decimal
 
+from django.contrib.gis.gdal.error import GDALException
 from django.contrib.gis.geos import GEOSException, GEOSGeometry, Point
 from django.contrib.gis.geos.prototypes import geom  # noqa: F401
 from django.utils.dateparse import parse_datetime
@@ -84,31 +85,18 @@ def str2geo(value: str, crs: CRS | None = None) -> GEOSGeometry:
 
     Returns:
         GEOSGeometry object
-
-    Raises:
-        ValidationError: If geometry format is invalid or type not supported
     """
     srid = crs.srid if crs else 4326
+    stripped_value = value.lstrip()
     # Try parsing as GeoJSON first
-    if value.lstrip().startswith(("{", "[")):
-        try:
-            return _parse_geojson(value, srid)
-        except ValidationError as e:
-            # If it looks like JSON but isn't valid GeoJSON,
-            # raise the error instead of trying other formats
-            raise ValidationError(e) from e
+    if stripped_value.startswith(("{", "[")):
+        return _parse_geojson(stripped_value, srid)
 
     # Try x,y format if it looks like two numbers separated by a comma
-    if value.lstrip().startswith(("POINT", "POLYGON", "MULTIPOLYGON")):
-        try:
-            return _parse_wkt_geometry(value, srid)
-        except (GEOSException, ValueError):
-            raise ValidationError(f"Invalid geometry format: {value!r}") from None
+    if stripped_value.startswith(("POINT", "POLYGON", "MULTIPOLYGON")):
+        return _parse_wkt_geometry(stripped_value, srid)
     else:
-        try:
-            return _parse_point_geometry(value, srid)
-        except (ValidationError, ValueError) as e:
-            raise ValidationError(f"Unknown geometry format: {value!r}") from e
+        return _parse_point_geometry(stripped_value, srid)
 
 
 def _parse_geojson(value: str, srid: int | None) -> GEOSGeometry:
@@ -123,10 +111,9 @@ def _parse_geojson(value: str, srid: int | None) -> GEOSGeometry:
     Raises:
         ValidationError: If GeoJSON is invalid
     """
-
     try:
         return GEOSGeometry(value, srid)
-    except (GEOSException, ValueError) as e:
+    except (GEOSException, ValueError, GDALException) as e:
         raise ValidationError(f"Invalid GeoJSON: {e}") from e
 
 
