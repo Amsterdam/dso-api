@@ -2,16 +2,21 @@
 
 from __future__ import annotations
 
+import logging
 import math
 import re
 from datetime import date, datetime, time
 from decimal import Decimal
 
+from django.contrib.gis.gdal.error import GDALException
 from django.contrib.gis.geos import GEOSException, GEOSGeometry, Point
+from django.contrib.gis.geos.prototypes import geom  # noqa: F401
 from django.utils.dateparse import parse_datetime
 from django.utils.translation import gettext_lazy as _
 from gisserver.geometries import CRS
 from rest_framework.exceptions import ValidationError
+
+logger = logging.getLogger(__name__)
 
 # Don't want Decimal("NaN"), Decimal("-inf") or '0.321000e+2' to be accepted.
 RE_DECIMAL = re.compile(r"^[0-9]+(\.[0-9]+)?$")
@@ -72,17 +77,122 @@ def str2time(value: str) -> time:
 
 def str2geo(value: str, crs: CRS | None = None) -> GEOSGeometry:
     """Convert a string to a geometry object.
-    Currently only parses point objects.
-    """
-    srid = crs.srid if crs else None
-    x, y = _parse_point(value)
+    Supports Point, Polygon and MultiPolygon objects in WKT or GeoJSON format.
 
+    Args:
+        value: String representation of geometry (WKT, GeoJSON, or x,y format)
+        crs: Optional coordinate reference system
+
+    Returns:
+        GEOSGeometry object
+    """
+    srid = crs.srid if crs else 4326
+    stripped_value = value.lstrip()
+    # Try parsing as GeoJSON first
+    if stripped_value.startswith(("{", "[")):
+        return _parse_geojson(stripped_value, srid)
+
+    # Try x,y format if it looks like two numbers separated by a comma
+    if stripped_value.startswith(("POINT", "POLYGON", "MULTIPOLYGON")):
+        return _parse_wkt_geometry(stripped_value, srid)
+    else:
+        return _parse_point_geometry(stripped_value, srid)
+
+
+def _parse_geojson(value: str, srid: int | None) -> GEOSGeometry:
+    """Parse GeoJSON string and validate basic structure.
+
+    Args:
+        value: GeoJSON string
+
+    Returns:
+        GEOSGeometry object
+
+    Raises:
+        ValidationError: If GeoJSON is invalid
+    """
     try:
+        return GEOSGeometry(value, srid)
+    except (GEOSException, ValueError, GDALException) as e:
+        raise ValidationError(f"Invalid GeoJSON: {e}") from e
+
+
+def _parse_wkt_geometry(value: str, srid: int | None) -> GEOSGeometry:
+    """Parse and validate a WKT geometry string.
+
+    Args:
+        value: WKT geometry string
+        srid: Optional spatial reference identifier
+
+    Returns:
+        Validated GEOSGeometry object
+
+    Raises:
+        ValidationError: If geometry is invalid or unsupported type
+    """
+    try:
+        geom = GEOSGeometry(value, srid)
+    except (GEOSException, ValueError) as e:
+        raise ValidationError(f"Invalid WKT format in {value}. Error: {e}") from e
+
+    if geom.geom_type not in ("Point", "Polygon", "MultiPolygon"):
+        raise ValidationError(
+            f"Unsupported geometry type: {geom.geom_type}. "
+            "Only Point, Polygon and MultiPolygon are supported."
+        )
+
+    # check if the geometry is within the Netherlands, only warn if not
+    if geom.geom_type in ("Polygon", "MultiPolygon") and not _validate_bounds(geom, srid):
+        logger.warning("Geometry bounds outside Netherlands")
+
+    # Try parsing as point
+    if geom.geom_type == "Point":
+        try:
+            return _validate_point_geometry(geom, srid)
+        except ValidationError as e:
+            raise ValidationError(f"Invalid point format in {value}. Error: {e}") from e
+
+    return geom
+
+
+def _parse_point_geometry(value: str, srid: int | None) -> GEOSGeometry:
+    """Parse and validate a point in x,y format.
+
+    Args:
+        value: String in "x,y" format
+        srid: Optional spatial reference identifier
+
+    Returns:
+        Validated Point geometry
+
+    Raises:
+        ValidationError: If point format or coordinates are invalid
+    """
+    try:
+        x, y = _parse_point(value)
         return _validate_correct_x_y(x, y, srid)
     except ValueError as e:
-        raise ValidationError(f"{e} in {value!r}") from None
-    except GEOSException as e:
-        raise ValidationError(f"Invalid x,y values {x},{y} with SRID {srid}") from e
+        raise ValidationError(f"Invalid point format in {value!r}. Error: {e}") from e
+
+
+def _validate_point_geometry(point: GEOSGeometry, srid: int | None) -> GEOSGeometry:
+    """Validate a point geometry's coordinates.
+
+    Args:
+        point: Point geometry to validate
+        srid: Optional spatial reference identifier
+
+    Returns:
+        Validated point geometry
+
+    Raises:
+        ValidationError: If coordinates are invalid
+    """
+    try:
+        x, y = point.coords
+        return _validate_correct_x_y(x, y, srid)
+    except (ValueError, GEOSException) as e:
+        raise ValidationError(f"Invalid point coordinates {point.coords} with SRID {srid}") from e
 
 
 def _parse_point(value: str) -> tuple[float, float]:
@@ -104,6 +214,39 @@ def _parse_point(value: str) -> tuple[float, float]:
         raise ValidationError(f"not a valid point: {value!r}")
 
     return x, y
+
+
+def _validate_bounds(geom: GEOSGeometry, srid: int | None) -> bool:  # noqa: F811
+    """Validate if geometry bounds are within Netherlands extent.
+    Returns True if geometry is within bounds, False otherwise.
+
+    Args:
+        geom: GEOSGeometry object to validate
+        srid: Spatial reference system identifier
+
+    Returns:
+        bool: True if geometry is within Netherlands bounds, False otherwise
+    """
+    bounds = geom.extent  # (xmin, ymin, xmax, ymax)
+    corners = [(bounds[0], bounds[1]), (bounds[2], bounds[3])]  # SW, NE corners
+
+    if srid == 4326:
+        return _validate_wgs84_bounds(corners)
+    elif srid == 28992:
+        return _validate_rd_bounds(corners)
+    return True  # If srid is not 4326 or 28992, assume valid
+
+
+def _validate_wgs84_bounds(corners: list[tuple[float, float]]) -> bool:
+    """Check if WGS84 coordinates are within Netherlands bounds.
+    Note: Expects (x,y) format, will swap to (lat,lon) internally.
+    """
+    return all(_valid_nl_wgs84(y, x) for x, y in corners)
+
+
+def _validate_rd_bounds(corners: list[tuple[float, float]]) -> bool:
+    """Check if RD coordinates are within Netherlands bounds."""
+    return all(_valid_rd(x, y) for x, y in corners)
 
 
 def _validate_correct_x_y(x: float, y: float, srid: int | None) -> Point:

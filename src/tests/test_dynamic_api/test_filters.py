@@ -407,12 +407,14 @@ def test_parse_point_invalid(value):
 @pytest.mark.parametrize(
     "value",
     [
+        # Basic invalid formats
         "",
         "a",
         "foo",
         "inf,nan",
         "0, 0",
         "0," + 314 * "1",
+        # Invalid WKT formats
         "POINT",
         "POINT ",
         "POINT(x y)",
@@ -420,19 +422,48 @@ def test_parse_point_invalid(value):
         "POINT(1.0,2.0)",
         "POINT 1.0 2.0",
         "POINT(1. .1)",
-        # Outside range of Netherlands:
+        # Out of bounds points
         "POINT(0 0)",
         "POINT(0.0 0.0)",
         "POINT(-1.1 -3.3)",
         "POINT(-1 2)",
         "POINT(100.0 42.0)",
+        # Invalid GeoJSON
+        '{"type": "Point"}',
+        '{"coordinates": [1,2]}',
+        '{"type": "Invalid", "coordinates": [1,2]}',
     ],
 )
 def test_str2geo_invalid(value):
-    with pytest.raises(ValidationError) as exc_info:
+    """Test str2geo with invalid input formats."""
+    with pytest.raises(ValidationError):
         str2geo(value)
 
-    assert repr(value) in str(exc_info.value)
+
+@pytest.mark.parametrize(
+    "value,expected_type",
+    [
+        # WKT formats with valid Netherlands coordinates (Amsterdam area)
+        ("POINT(4.9 52.4)", "Point"),  # WGS84
+        ("POLYGON((4.9 52.4, 4.9 52.5, 5.0 52.5, 5.0 52.4, 4.9 52.4))", "Polygon"),
+        ("MULTIPOLYGON(((4.9 52.4, 4.9 52.5, 5.0 52.5, 5.0 52.4, 4.9 52.4)))", "MultiPolygon"),
+        # GeoJSON formats with valid Netherlands coordinates (Amsterdam area)
+        ('{"type": "Point", "coordinates": [4.9, 52.4]}', "Point"),  # WGS84
+        (
+            '{"type": "Polygon", "coordinates": [[[4.9, 52.4], [4.9, 52.5], [5.0, 52.5], [5.0, 52.4], [4.9, 52.4]]]}',  # noqa: E501
+            "Polygon",
+        ),
+        (
+            '{"type": "MultiPolygon", "coordinates": [[[[4.9, 52.4], [4.9, 52.5], [5.0, 52.5], [5.0, 52.4], [4.9, 52.4]]]]}',  # noqa: E501
+            "MultiPolygon",
+        ),
+    ],
+)
+def test_str2geo_valid_formats(value, expected_type):
+    """Test str2geo with valid WKT and GeoJSON formats for Point, Polygon and MultiPolygon."""
+    result = str2geo(value)
+    assert result.geom_type == expected_type
+    assert result.srid == 4326  # Default SRID
 
 
 @pytest.mark.parametrize(

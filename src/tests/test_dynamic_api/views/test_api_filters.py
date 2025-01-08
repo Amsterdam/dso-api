@@ -212,7 +212,7 @@ class TestFilterFieldTypes:
         response = api_client.get(
             "/v1/parkeervakken/parkeervakken/",
             data={"geometry[contains]": "121137.7,489046.9"},
-            HTTP_ACCEPT_CRS=28992,
+            HTTP_ACCEPT_CRS="EPSG:28992",
         )
         data = read_response_json(response)
         assert len(data["_embedded"]["parkeervakken"]) == 1, "inside with R/D"
@@ -221,7 +221,7 @@ class TestFilterFieldTypes:
         response = api_client.get(
             "/v1/parkeervakken/parkeervakken/",
             data={"geometry[contains]": "52.388231,4.8897865"},
-            HTTP_ACCEPT_CRS=4326,
+            HTTP_ACCEPT_CRS="EPSG:4326",
         )
         data = read_response_json(response)
         assert response.status_code == 200, data
@@ -231,7 +231,7 @@ class TestFilterFieldTypes:
         response = api_client.get(
             "/v1/parkeervakken/parkeervakken/",
             data={"geometry[contains]": "52.3883019,4.8900356"},
-            HTTP_ACCEPT_CRS=4326,
+            HTTP_ACCEPT_CRS="EPSG:4326",
         )
         data = read_response_json(response)
         assert len(data["_embedded"]["parkeervakken"]) == 0, "Outside using WGS84"
@@ -240,7 +240,112 @@ class TestFilterFieldTypes:
         response = api_client.get(
             "/v1/parkeervakken/parkeervakken/",
             data={"geometry[contains]": "52.388231,48897865"},
-            HTTP_ACCEPT_CRS=4326,
+            HTTP_ACCEPT_CRS="EPSG:4326",
+        )
+        assert response.status_code == 400, "Outside WGS84 range"
+
+    @staticmethod
+    def test_geofilter_intersects(api_client, parkeervakken_parkeervak_model, filled_router):
+        """
+        Prove that geofilter intersects filters work as expected.
+        """
+        parkeervakken_parkeervak_model.objects.create(
+            id="121138489006",
+            type="File",
+            soort="MULDER",
+            aantal=1.0,
+            e_type="E6b",
+            buurtcode="A05d",
+            straatnaam="Zoutkeetsgracht",
+            geometry=GEOSGeometry(
+                "POLYGON((121140.66 489048.21, 121140.72 489047.1, 121140.8 489046.9, 121140.94 "
+                "489046.74,121141.11 489046.62, 121141.31 489046.55, 121141.52 489046.53, "
+                "121134.67 489045.85, 121134.47 489047.87, 121140.66 489048.21))",
+                28992,
+            ),
+        )
+
+        # Inside using RD
+        response = api_client.get(
+            "/v1/parkeervakken/parkeervakken/",
+            data={"geometry[intersects]": "121137.7,489046.9"},
+            HTTP_ACCEPT_CRS="EPSG:28992",
+        )
+        data = read_response_json(response)
+        assert len(data["_embedded"]["parkeervakken"]) == 1, "inside with R/D"
+
+        # Inside using WGS84 x,y
+        response = api_client.get(
+            "/v1/parkeervakken/parkeervakken/",
+            data={"geometry[intersects]": "52.388231,4.8897865"},
+            HTTP_ACCEPT_CRS="EPSG:4326",
+        )
+        data = read_response_json(response)
+        assert response.status_code == 200, data
+        assert len(data["_embedded"]["parkeervakken"]) == 1, "inside with WGS84"
+
+        # Inside using WGS84 POLYGON
+        response = api_client.get(
+            "/v1/parkeervakken/parkeervakken/",
+            data={
+                "geometry[intersects]": "POLYGON ((4.8982259 52.3748037, 4.8989231 52.3744369, 4.9008431 52.3739718, 4.9011541 52.3751508, 4.899985 52.3761922, 4.8982367 52.3748037, 4.8982259 52.3748037))"  # noqa: E501
+            },
+            HTTP_ACCEPT_CRS="EPSG:4326",
+        )
+        data = read_response_json(response)
+        assert response.status_code == 200, data
+
+        # Inside using WGS84 MULTIPOLYGON
+        response = api_client.get(
+            "/v1/parkeervakken/parkeervakken/",
+            data={
+                "geometry[intersects]": "MULTIPOLYGON (((5.639762878417969 51.70404205550062, 5.47222137451172 51.54050328936586, 5.984265804290771 51.445328182347936, 6.050591468811035 51.57152179108081, 5.639762878417969 51.70404205550062)), ((5.268545150756836 51.8780408523543, 5.039935111999512 51.700837165629764, 5.2266597747802725 51.65603805162954, 5.515286922454835 51.827171560252935, 5.268545150756836 51.8780408523543)))"  # noqa: E501
+            },
+            HTTP_ACCEPT_CRS="EPSG:4326",
+        )
+        data = read_response_json(response)
+        print("Response data:", data)  # Debug print
+        assert response.status_code == 200, data
+        assert len(data["_embedded"]["parkeervakken"]) == 0, "Outside using WGS84"
+
+        # Outside using WGS84
+        response = api_client.get(
+            "/v1/parkeervakken/parkeervakken/",
+            data={"geometry[intersects]": "52.3883019,4.8900356"},
+            HTTP_ACCEPT_CRS="EPSG:4326",
+        )
+        data = read_response_json(response)
+        assert len(data["_embedded"]["parkeervakken"]) == 0, "Outside using WGS84"
+
+        # Outside using WGS84 Polygons
+        response = api_client.get(
+            "/v1/parkeervakken/parkeervakken/",
+            data={
+                "geometry[intersects]": "POLYGON ((4.894892 52.5949621, 4.8935187 52.5957963, 4.9772894 52.6262334, 4.9395239 52.6982808, 4.8070014 52.6762211, 4.894892 52.5949621))"  # noqa: E501
+            },
+            HTTP_ACCEPT_CRS="EPSG:4326",
+        )
+        data = read_response_json(response)
+        assert len(data["_embedded"]["parkeervakken"]) == 0, "Outside using WGS84"
+
+        # Outside using WGS84 Multipolygons
+        response = api_client.get(
+            "/v1/parkeervakken/parkeervakken/",
+            data={
+                "geometry[intersects]": "MULTIPOLYGON (((5.639762878417969 51.70404205550062, 5.47222137451172 51.54050328936586, 5.984265804290771 51.445328182347936, 6.050591468811035 51.57152179108081, 5.639762878417969 51.70404205550062)), ((5.268545150756836 51.8780408523543, 5.039935111999512 51.700837165629764, 5.2266597747802725 51.65603805162954, 5.515286922454835 51.827171560252935, 5.268545150756836 51.8780408523543)))"  # noqa: E501
+            },
+            HTTP_ACCEPT_CRS="EPSG:4326",
+        )
+        data = read_response_json(response)
+        print("Response data:", data)  # Debug print
+        assert response.status_code == 200, data
+        assert len(data["_embedded"]["parkeervakken"]) == 0, "Outside using WGS84"
+
+        # Invalid WGS84 coords
+        response = api_client.get(
+            "/v1/parkeervakken/parkeervakken/",
+            data={"geometry[intersects]": "52.388231,48897865"},
+            HTTP_ACCEPT_CRS="EPSG:4326",
         )
         assert response.status_code == 400, "Outside WGS84 range"
 

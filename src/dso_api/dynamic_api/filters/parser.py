@@ -54,7 +54,7 @@ SCALAR_PARSERS = {
 # The empty value is there to indicate the field also supports no lookup operator.
 # This is mostly used by the OpenAPI generator.
 _comparison_lookups = {"", "gte", "gt", "lt", "lte", "in", "not", "isnull"}
-_polygon_lookups = {"", "contains", "isnull", "not"}
+_polygon_lookups = {"", "contains", "isnull", "not", "intersects"}
 _string_lookups = {"", "in", "isnull", "not", "isempty", "like"}
 
 ALLOWED_IDENTIFIER_LOOKUPS = {"", "in", "not", "isnull"}
@@ -69,7 +69,7 @@ ALLOWED_SCALAR_LOOKUPS = {
     "array": {"", "contains"},
     "object": set(),
     "https://geojson.org/schema/Geometry.json": _polygon_lookups,  # Assume it works.
-    "https://geojson.org/schema/Point.json": {"", "isnull", "not"},
+    "https://geojson.org/schema/Point.json": {"", "isnull", "not", "intersects"},
     "https://geojson.org/schema/Polygon.json": _polygon_lookups,
     "https://geojson.org/schema/MultiPolygon.json": _polygon_lookups,
     # Format variants for type string:
