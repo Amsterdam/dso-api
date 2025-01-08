@@ -5,7 +5,6 @@ from datetime import date
 
 import pytest
 from django.apps import apps
-from django.contrib.gis.gdal.error import GDALException
 from django.http import QueryDict
 from django.utils.timezone import now
 from rest_framework.exceptions import ValidationError
@@ -411,7 +410,7 @@ def test_parse_point_invalid(value):
         # Basic invalid formats
         "",
         "a",
-        "foo", 
+        "foo",
         "inf,nan",
         "0, 0",
         "0," + 314 * "1",
@@ -432,8 +431,8 @@ def test_parse_point_invalid(value):
         # Invalid GeoJSON
         '{"type": "Point"}',
         '{"coordinates": [1,2]}',
-        '{"type": "Invalid", "coordinates": [1,2]}'
-    ]
+        '{"type": "Invalid", "coordinates": [1,2]}',
+    ],
 )
 def test_str2geo_invalid(value):
     """Test str2geo with invalid input formats."""
