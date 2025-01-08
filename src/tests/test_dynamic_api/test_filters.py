@@ -26,7 +26,7 @@ class TestWildcard:
             list(Dataset.objects.filter(name__like="foo*bar?"))
 
         sql = context.captured_queries[0]["sql"]
-        assert r"""."name" LIKE 'foo%bar_'""" in sql
+        assert r"""."name") LIKE 'foo%bar_'""" in sql
 
 
 def test_sql_wildcards():
@@ -96,6 +96,11 @@ class TestFilterEngine:
             ("url[in]=foobar,http://example.com/someurl", {"movie2"}),
             ("url[like]=http:*", {"movie2"}),
             ("url[isnull]=true", {"movie1"}),
+            # Case insensitive match
+            ("name=movie1", {"movie1"}),
+            ("name=Movie1", {"movie1"}),
+            ("name[like]=movie1", {"movie1"}),
+            ("name[like]=Movie1", {"movie1"}),
         ],
     )
     def test_filter_logic(self, movies_model, movie1, movie2, query, expect):
