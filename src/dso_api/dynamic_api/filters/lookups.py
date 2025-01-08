@@ -57,8 +57,7 @@ class NotEqual(lookups.Lookup):
             else:
                 return (
                     f"({lhs} IS NULL OR {lhs} != {rhs})",
-                    list(lhs_params + lhs_params)
-                    + [rhs.lower() if isinstance(rhs, str) else rhs for rhs in rhs_params],
+                    list(lhs_params + lhs_params) + rhs_params,
                 )
 
         elif rhs_params and rhs_params[0] is None:
@@ -70,9 +69,7 @@ class NotEqual(lookups.Lookup):
                     rhs.lower() if isinstance(rhs, str) else rhs for rhs in rhs_params
                 ]
             else:
-                return f"{lhs} != {rhs}", list(lhs_params) + [
-                    rhs.lower() if isinstance(rhs, str) else rhs for rhs in rhs_params
-                ]
+                return f"{lhs} != {rhs}", list(lhs_params) + rhs_params
 
 
 @models.CharField.register_lookup
