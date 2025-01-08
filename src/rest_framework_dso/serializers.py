@@ -297,7 +297,7 @@ class DSOModelListSerializer(DSOListSerializer):
         else:
             return queryset.iterator()
 
-    def _as_generator(self, data: models.QuerySet) -> Generator[models.Model, None, None]:
+    def _as_generator(self, data: models.QuerySet) -> Generator[models.Model]:
         """The list output as a plain generator."""
         # When the output format needs a plain list (a non-JSON format), give it just that.
         # The generator syntax still tricks DRF into reading the source bit by bit,
