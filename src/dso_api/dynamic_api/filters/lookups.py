@@ -114,6 +114,10 @@ class CaseInsensitiveExact(lookups.Lookup):
     lookup_name = "iexact"
 
     def as_sql(self, compiler, connection):
-        lhs, lhs_params = self.process_lhs(compiler, connection)
-        rhs, rhs_params = self.process_rhs(compiler, connection)
-        return f"LOWER({lhs}) = LOWER({rhs})", lhs_params + rhs_params
+        field_type = self.lhs.output_field.get_internal_type()
+        if field_type in ["CharField", "TextField"]:
+            lhs, lhs_params = self.process_lhs(compiler, connection)
+            rhs, rhs_params = self.process_rhs(compiler, connection)
+            return f"LOWER({lhs}) = LOWER({rhs})", lhs_params + rhs_params
+        else:
+            return f"{lhs} = {rhs}", lhs_params + rhs_params
