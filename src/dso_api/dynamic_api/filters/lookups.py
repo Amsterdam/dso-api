@@ -114,10 +114,37 @@ class CaseInsensitiveExact(lookups.Lookup):
     lookup_name = "iexact"
 
     def as_sql(self, compiler, connection):
+        """Generate the required SQL."""
+        # Need to extract metadata from lhs, so parsing happens inline
+        lhs = self.lhs  # typically a Col(alias, target) object
+        if hasattr(lhs, "resolve_expression"):
+            lhs = lhs.resolve_expression(compiler.query)
+
+        lhs_field = lhs
+        lhs_nullable = lhs_field.target.null
+
+        # Generate the SQL-prepared values
+        lhs, lhs_params = self.process_lhs(compiler, connection, lhs=lhs)  # (field, [])
+        rhs, rhs_params = self.process_rhs(compiler, connection)  # ("%s", [value])
+
         field_type = self.lhs.output_field.get_internal_type()
-        if field_type in ["CharField", "TextField"]:
-            lhs, lhs_params = self.process_lhs(compiler, connection)
-            rhs, rhs_params = self.process_rhs(compiler, connection)
-            return f"LOWER({lhs}) = LOWER({rhs})", lhs_params + rhs_params
+        if lhs_nullable and rhs is not None:
+            # Allow of return NULL fields too.
+            if field_type in ["CharField", "TextField"]:
+                return (
+                    f"({lhs}) IS NULL OR LOWER({lhs}) = LOWER({rhs}))",
+                    list(lhs_params + lhs_params)
+                    + [rhs.lower() if isinstance(rhs, str) else rhs for rhs in rhs_params],
+                )
+            else:
+                return (
+                    f"({lhs} IS NULL OR {lhs} = {rhs})",
+                    list(lhs_params + lhs_params) + rhs_params,
+                )
         else:
-            return f"{lhs} = {rhs}", lhs_params + rhs_params
+            if field_type in ["CharField", "TextField"]:
+                return f"LOWER({lhs}) = LOWER({rhs})", list(lhs_params) + [
+                    rhs.lower() if isinstance(rhs, str) else rhs for rhs in rhs_params
+                ]
+            else:
+                return f"{lhs} = {rhs}", list(lhs_params) + rhs_params

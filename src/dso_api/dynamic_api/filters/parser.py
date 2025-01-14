@@ -333,9 +333,9 @@ class QueryFilterEngine:
         if (
             not lookup
             and filter_part.field.type == "string"
-            and filter_part.field.format
-            not in ["date-time", "time", "date"]  # Exclude formatted fields like date-time
-        ):  # Only for direct field access, not relation paths
+            and filter_part.field.format not in ["date-time", "time", "date"]
+            and not filter_part.field.is_relation
+        ):
             return "iexact"
 
         return lookup or "exact"
