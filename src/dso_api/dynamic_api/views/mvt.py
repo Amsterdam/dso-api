@@ -10,6 +10,7 @@ from django.urls.base import reverse
 from django.views.generic import TemplateView
 from schematools.contrib.django.models import Dataset
 from schematools.naming import toCamelCase
+from schematools.permissions import UserScopes
 from schematools.types import DatasetTableSchema
 from vectortiles import VectorLayer
 from vectortiles.backends import BaseVectorLayerMixin
@@ -116,33 +117,12 @@ class DatasetMVTView(CheckPermissionsMixin, MVTView):
         self.model = model
         self.check_permissions(request, [self.model])
 
-    def get_layers(self):
+    def get_layers(self) -> list[BaseVectorLayerMixin]:
         """Provide all layer definitions for this rendering."""
-        schema: DatasetTableSchema = self.model.table_schema()
         layer: BaseVectorLayerMixin = VectorLayer()
         layer.id = "default"
         layer.model = self.model
-        layer.queryset = self.get_queryset()
-        layer.geom_field = schema.main_geometry_field.python_name
-
-        # If we are zoomed far out (low z), only fetch the geometry field for a smaller payload.
-        # The cutoff is arbitrary. Play around with
-        # https://www.maptiler.com/google-maps-coordinates-tile-bounds-projection/#14/4.92/52.37
-        # to get a feel for the MVT zoom levels and how much detail a single tile should contain.
-        if self.z >= 15:
-            user_scopes = self.request.user_scopes
-            layer.tile_fields = tuple(
-                f.name
-                for f in schema.fields
-                if f.db_name != layer.geom_field
-                and f.name != "schema"
-                and not f.is_relation
-                and user_scopes.has_field_access(f)
-            ) + tuple(
-                toCamelCase(f.db_name)
-                for f in schema.fields
-                if f.name != layer.geom_field and f.is_relation and user_scopes.has_field_access(f)
-            )
+        self._schemafy_layer(layer)
         return [layer]
 
     def get(self, request, *args, **kwargs):
@@ -160,19 +140,41 @@ class DatasetMVTView(CheckPermissionsMixin, MVTView):
         )
         return result
 
-    def get_queryset(self):
-        """Get the queryset to use for this view."""
+    def _schemafy_layer(self, layer: BaseVectorLayerMixin) -> None:
+        schema: DatasetTableSchema = self.model.table_schema()
+        user_scopes: UserScopes = self.request.user_scopes
+
+        layer.geom_field = schema.main_geometry_field.python_name
+
         queryset = self.model.objects.all()
-        schema = self.model.table_schema()
+        tile_fields = ()
+
         for field in schema.fields:
-            if field.name != field.db_name:
-                if any(char.isupper() for char in field.name):
-                    queryset = queryset.annotate(**{field.name: F(field.db_name)})
-                if field.is_relation:
-                    # TODO explain
-                    field_name = toCamelCase(field.db_name)
-                    queryset = queryset.annotate(**{field_name: F(field.db_name)})
-        return queryset
+            if not user_scopes.has_field_access(field):
+                # 403
+                continue
+            if field.is_relation:
+                # Here we have to use the db_name, because that has the suffix _id.
+                # We want the result to be something like `relatedInstanceId` rather than
+                # `relatedInstance`.
+                field_name = toCamelCase(field.db_name)
+                queryset = queryset.annotate(**{field_name: F(field.db_name)})
+                if self.z >= 15:
+                    # If we are zoomed far out (low z), only fetch the geometry field for a
+                    # smaller payload. The cutoff is arbitrary. Play around with
+                    # https://www.maptiler.com/google-maps-coordinates-tile-bounds-projection/
+                    # to get a feel for the MVT zoom levels and how much detail a single tile
+                    # should contain.
+                    tile_fields += (field_name,)
+                continue
+            if field.name != field.db_name and any(char.isupper() for char in field.name):
+                # Annotate camelCased field names so they can be found.
+                queryset = queryset.annotate(**{field.name: F(field.db_name)})
+            if self.z >= 15 and field.db_name != layer.geom_field and field.name != "schema":
+                # We exclude the main geometry field and the `schema` props.
+                tile_fields += (field.name,)
+        layer.queryset = queryset
+        layer.tile_fields = tile_fields
 
     def check_permissions(self, request, models) -> None:
         """Override CheckPermissionsMixin to add extra checks"""
