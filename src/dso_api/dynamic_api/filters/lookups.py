@@ -50,7 +50,7 @@ class NotEqual(lookups.Lookup):
             # Allow field__not=value to return NULL fields too.
             if field_type in ["CharField", "TextField"]:
                 return (
-                    f"(LOWER({lhs}) IS NULL OR LOWER({lhs}) != LOWER({rhs}))",
+                    f"({lhs}) IS NULL OR LOWER({lhs}) != LOWER({rhs}))",
                     list(lhs_params + lhs_params)
                     + [rhs.lower() if isinstance(rhs, str) else rhs for rhs in rhs_params],
                 )
@@ -107,3 +107,13 @@ def _sql_wildcards(value: str) -> str:
         .replace("*", "%")
         .replace("?", "_")
     )
+
+
+@models.ForeignKey.register_lookup
+class CaseInsensitiveExact(lookups.Lookup):
+    lookup_name = "iexact"
+
+    def as_sql(self, compiler, connection):
+        lhs, lhs_params = self.process_lhs(compiler, connection)
+        rhs, rhs_params = self.process_rhs(compiler, connection)
+        return f"LOWER({lhs}) = LOWER({rhs})", lhs_params + rhs_params
