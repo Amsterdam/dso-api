@@ -150,29 +150,24 @@ class DatasetMVTView(CheckPermissionsMixin, MVTView):
         tile_fields = ()
 
         for field in schema.fields:
+            field_name = field.name
             if not user_scopes.has_field_access(field):
                 # 403
                 continue
             if field.is_relation:
-                # Here we have to use the db_name, because that has the suffix _id.
-                # We want the result to be something like `relatedInstanceId` rather than
-                # `relatedInstance`.
+                # Here we have to use the db_name, because that usually has a suffix not
+                # available on field.name.
                 field_name = toCamelCase(field.db_name)
-                queryset = queryset.annotate(**{field_name: F(field.db_name)})
-                if self.z >= 15:
-                    # If we are zoomed far out (low z), only fetch the geometry field for a
-                    # smaller payload. The cutoff is arbitrary. Play around with
-                    # https://www.maptiler.com/google-maps-coordinates-tile-bounds-projection/
-                    # to get a feel for the MVT zoom levels and how much detail a single tile
-                    # should contain.
-                    tile_fields += (field_name,)
-                continue
-            if field.name != field.db_name and any(char.isupper() for char in field.name):
+            if field_name != field.db_name and any(char.isupper() for char in field_name):
                 # Annotate camelCased field names so they can be found.
-                queryset = queryset.annotate(**{field.name: F(field.db_name)})
+                queryset = queryset.annotate(**{field_name: F(field.db_name)})
             if self.z >= 15 and field.db_name != layer.geom_field and field.name != "schema":
-                # We exclude the main geometry field and the `schema` props.
-                tile_fields += (field.name,)
+                # If we are zoomed far out (low z), only fetch the geometry field for a
+                # smaller payload. The cutoff is arbitrary. Play around with
+                # https://www.maptiler.com/google-maps-coordinates-tile-bounds-projection/
+                # to get a feel for the MVT zoom levels and how much detail a single tile
+                # should contain. We exclude the main geometry and `schema` fields.
+                tile_fields += (field_name,)
         layer.queryset = queryset
         layer.tile_fields = tile_fields
 
