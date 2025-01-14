@@ -4,10 +4,12 @@ import logging
 import time
 
 from django.core.exceptions import PermissionDenied
+from django.db.models import F
 from django.http import Http404
 from django.urls.base import reverse
 from django.views.generic import TemplateView
 from schematools.contrib.django.models import Dataset
+from schematools.naming import toCamelCase
 from schematools.types import DatasetTableSchema
 from vectortiles import VectorLayer
 from vectortiles.backends import BaseVectorLayerMixin
@@ -120,7 +122,7 @@ class DatasetMVTView(CheckPermissionsMixin, MVTView):
         layer: BaseVectorLayerMixin = VectorLayer()
         layer.id = "default"
         layer.model = self.model
-        layer.queryset = self.model.objects.all()
+        layer.queryset = self.get_queryset()
         layer.geom_field = schema.main_geometry_field.python_name
 
         # If we are zoomed far out (low z), only fetch the geometry field for a smaller payload.
@@ -131,9 +133,15 @@ class DatasetMVTView(CheckPermissionsMixin, MVTView):
             user_scopes = self.request.user_scopes
             layer.tile_fields = tuple(
                 f.name
-                for f in self.model._meta.get_fields()
-                if f.name != layer.geom_field
-                and user_scopes.has_field_access(self.model.get_field_schema(f))
+                for f in schema.fields
+                if f.db_name != layer.geom_field
+                and f.name != "schema"
+                and not f.is_relation
+                and user_scopes.has_field_access(f)
+            ) + tuple(
+                toCamelCase(f.db_name)
+                for f in schema.fields
+                if f.name != layer.geom_field and f.is_relation and user_scopes.has_field_access(f)
             )
         return [layer]
 
@@ -151,6 +159,20 @@ class DatasetMVTView(CheckPermissionsMixin, MVTView):
             (time.perf_counter_ns() - t0) * 1e-9,
         )
         return result
+
+    def get_queryset(self):
+        """Get the queryset to use for this view."""
+        queryset = self.model.objects.all()
+        schema = self.model.table_schema()
+        for field in schema.fields:
+            if field.name != field.db_name:
+                if any(char.isupper() for char in field.name):
+                    queryset = queryset.annotate(**{field.name: F(field.db_name)})
+                if field.is_relation:
+                    # TODO explain
+                    field_name = toCamelCase(field.db_name)
+                    queryset = queryset.annotate(**{field_name: F(field.db_name)})
+        return queryset
 
     def check_permissions(self, request, models) -> None:
         """Override CheckPermissionsMixin to add extra checks"""
