@@ -1,0 +1,6 @@
+services:
+  web:
+    ports:
+      - "8090:8000"
+      - "5678:5678"
+    command: ["/bin/bash", "-c", "python -m debugpy --wait-for-client --listen 0.0.0.0:5678 manage.py runserver 0.0.0.0:8000"]
