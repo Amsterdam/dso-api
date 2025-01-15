@@ -158,7 +158,7 @@ class DatasetMVTView(CheckPermissionsMixin, MVTView):
                 # Here we have to use the db_name, because that usually has a suffix not
                 # available on field.name.
                 field_name = toCamelCase(field.db_name)
-            if field_name != field.db_name and any(char.isupper() for char in field_name):
+            if field_name != field.db_name and field_name.lower() != field_name:
                 # Annotate camelCased field names so they can be found.
                 queryset = queryset.annotate(**{field_name: F(field.db_name)})
             if self.z >= 15 and field.db_name != layer.geom_field and field.name != "schema":
