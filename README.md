@@ -50,6 +50,18 @@ A local setup using the production dataset schema's with mock data:
     compose up
 ```
 
+### Debugging containerized code in VSCode
+Run docker compose with the extra file.
+```
+    docker compose -f docker-compose.yml -f docker-compose.debug.yml up -d
+```
+
+Start the debugger through the Run and Debug menu. The debugger is called "Python Debugger:
+Remote Attach". You can now add breakpoints.
+
+Note: this currently does not work with pytest in the container. It does work from the browser
+or through `curl`.
+
 ## Without Docker Compose
 See the instructions at: <https://dso-api.readthedocs.io/en/latest/howto/install.html>
 
