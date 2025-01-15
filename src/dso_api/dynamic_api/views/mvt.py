@@ -158,9 +158,6 @@ class DatasetMVTView(CheckPermissionsMixin, MVTView):
                 # Here we have to use the db_name, because that usually has a suffix not
                 # available on field.name.
                 field_name = toCamelCase(field.db_name)
-            if field_name != field.db_name and field_name.lower() != field_name:
-                # Annotate camelCased field names so they can be found.
-                queryset = queryset.annotate(**{field_name: F(field.db_name)})
             if self.z >= 15 and field.db_name != layer.geom_field and field.name != "schema":
                 # If we are zoomed far out (low z), only fetch the geometry field for a
                 # smaller payload. The cutoff is arbitrary. Play around with
@@ -168,6 +165,10 @@ class DatasetMVTView(CheckPermissionsMixin, MVTView):
                 # to get a feel for the MVT zoom levels and how much detail a single tile
                 # should contain. We exclude the main geometry and `schema` fields.
                 tile_fields += (field_name,)
+
+                if field_name != field.db_name and field_name.lower() != field_name:
+                    # Annotate camelCased field names so they can be found.
+                    queryset = queryset.annotate(**{field_name: F(field.db_name)})
         layer.queryset = queryset
         layer.tile_fields = tile_fields
 
