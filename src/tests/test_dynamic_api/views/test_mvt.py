@@ -11,7 +11,12 @@ CONTENT_TYPE = "application/vnd.mapbox-vector-tile"
 @pytest.mark.django_db
 class TestDatasetMVTIndexView:
     def test_mvt_index(
-        self, api_client, afval_dataset, fietspaaltjes_dataset, filled_router, drf_request
+        self,
+        api_client,
+        afval_dataset,
+        fietspaaltjes_dataset,
+        filled_router,
+        drf_request,
     ):
         """Prove that the MVT index view works."""
         response = api_client.get("/v1/mvt/")
@@ -108,7 +113,9 @@ def test_mvt_single(api_client, afval_container, filled_router):
 
 
 @pytest.mark.django_db
-def test_mvt_content(api_client, afval_container_model, afval_cluster, filled_router):
+def test_mvt_content(
+    api_client, afval_dataset, filled_router, afval_container_model, afval_cluster
+):
     """Prove that the MVT view produces vector tiles."""
 
     # Coordinates below have been calculated using https://oms.wff.ch/calc.htm
@@ -141,15 +148,12 @@ def test_mvt_content(api_client, afval_container_model, afval_cluster, filled_ro
                 {
                     "geometry": {"type": "Point", "coordinates": [1928, 2558]},
                     "properties": {
-                        # TODO These are snake-cased database field names.
-                        # We should return schema field names instead.
-                        # Also, what happens in the case of relations?
                         "id": 1,
-                        "cluster_id": "c1",
+                        "clusterId": "c1",  # relation
                         "serienummer": "foobar-123",
-                        "datum_creatie": "2021-01-03",
-                        "eigenaar_naam": "Dataservices",
-                        "datum_leegmaken": "2021-01-03 12:13:14+01",
+                        "datumCreatie": "2021-01-03",
+                        "eigenaarNaam": "Dataservices",
+                        "datumLeegmaken": "2021-01-03 12:13:14+01",
                     },
                     "id": 0,
                     "type": "Feature",
@@ -199,7 +203,6 @@ def test_mvt_forbidden(api_client, geometry_auth_thing, fetch_auth_token, filled
 @pytest.mark.django_db
 def test_mvt_model_auth(api_client, geometry_auth_model, fetch_auth_token, filled_router):
     """Prove that unauthorized fields are excluded from vector tiles"""
-
     # See test_mvt_content for how to compute the coordinates.
     geometry_auth_model.objects.create(
         id=1,
