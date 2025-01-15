@@ -82,6 +82,8 @@ datadiensten-apikeyclient==0.6.0
     # via -r ./requirements.in
 datapunt-authorization-django==1.6.1
     # via -r ./requirements.in
+debugpy==1.8.14
+    # via -r requirements_dev.in
 decorator==5.2.1
     # via jsonpath-rw
 deepdiff==8.5.0
