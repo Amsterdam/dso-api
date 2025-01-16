@@ -104,8 +104,8 @@ ENV/
 *.swp
 
 # VSCode
-.vscode
-!.vscode/*.example
+.vscode/*
+!./.vscode/*.example.json
 
 # Project specific
 .DS_Store

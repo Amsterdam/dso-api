@@ -66,6 +66,10 @@ Run docker compose with the extra file.
     docker compose -f docker-compose.yml -f docker-compose.debug.yml up -d
 ```
 
+In your `.vscode` folder, copy the `launch.example.json` to `launch.json` and the
+`tasks.example.json` to `tasks.json`. Ensure that the paths are matching with what you
+have (especially packages in your virtualenv).
+
 Start the debugger through the Run and Debug menu. The debugger is called "Python Debugger:
 Remote Attach". You can now add breakpoints.
 
