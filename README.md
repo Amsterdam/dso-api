@@ -24,6 +24,11 @@ Navigate to `localhost:8090`.
 By default a collection of example datasets is loaded, and a local database is setup and initialized.
 This behaviour can be changed with environment variables as described below.
 
+Running tests inside the container can be done as follows:
+```
+    docker compose exec web pytest <file/dir>
+```
+
 ### Environment
 
 The following environment variables are useful for configuring a local development environment.
