@@ -104,7 +104,8 @@ ENV/
 *.swp
 
 # VSCode
-.vscode/
+.vscode/*
+!./.vscode/*.example.json
 
 # Project specific
 .DS_Store
@@ -122,3 +123,4 @@ ENV/
 
 # Docker
 docker-compose.override.*.y*ml
+docker-compose.override.y*ml
