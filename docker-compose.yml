@@ -55,7 +55,7 @@ services:
       APIKEY_ENABLED: "${APIKEY_ENABLED}"
       INITIALIZE_DB: "${INITIALIZE_DB:-true}"
       MOCK_DATA: "${MOCK_DATA:-false}"
-      SCHEMA_URL: "https://schemas.data.amsterdam.nl/datasets/"
+      SCHEMA_URL: "${SCHEMA_URL:-https://schemas.data.amsterdam.nl/datasets/}"
       DATASETS_LIST: "${DATASETS_LIST}"
       DATASETS_EXCLUDE: "${DATASETS_EXCLUDE}"
     volumes:

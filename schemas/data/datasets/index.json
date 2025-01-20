@@ -1,8 +1,7 @@
 {
   "bag": "bag",
-  "bommen": "bommen",
-  "sportparken": "sportparken",
-  "reclame": "belastingen",
-  "terrassen": "belastingen/precario/terrassen",
-  "woonschepen": "belastingen/precario/woonschepen"
+  "brk2": "brk2",
+  "gebieden": "gebieden",
+  "precariobelasting": "precariobelasting",
+  "sport": "sport"
 }

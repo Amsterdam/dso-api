@@ -1,0 +1,35 @@
+{
+  "type": "dataset",
+  "id": "sport",
+  "title": "Sport: Faciliteiten en aanbieders",
+  "description": "Locaties en context ten aanzien van sportfaciliteiten en aanbieders.",
+  "license": "public",
+  "status": "beschikbaar",
+  "version": "2.0.0",
+  "owner": "Gemeente Amsterdam",
+  "auth": "OPENBAAR",
+  "authorizationGrantor": "OIS",
+  "creator": "Sport en Bos",
+  "publisher": {
+    "$ref": "publishers/MOSS"
+  },
+  "theme": [
+    "sportfaciliteiten en -aanbieders",
+    "Ruimte en Topografie"
+  ],
+  "keywords": [
+    "Sport",
+    "Sport en Bos",
+    "Ruimte en Topografie"
+  ],
+  "crs": "EPSG:28992",
+  "tables": [
+    {
+      "id": "park",
+      "$ref": "park/v2.0.0",
+      "activeVersions": {
+        "2.0.0": "park/v2.0.0"
+      }
+    }
+  ]
+}
