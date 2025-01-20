@@ -27,7 +27,6 @@ services:
       - "8090:8000"
     links:
       - database
-      - schemas
     depends_on:
       database:
         condition: service_healthy
@@ -56,7 +55,9 @@ services:
       APIKEY_ENABLED: "${APIKEY_ENABLED}"
       INITIALIZE_DB: "${INITIALIZE_DB:-true}"
       MOCK_DATA: "${MOCK_DATA:-false}"
-      SCHEMA_URL: "http://schemas/datasets/" # "https://schemas.data.amsterdam.nl/datasets/"
+      SCHEMA_URL: "https://schemas.data.amsterdam.nl/datasets/"
+      DATASETS_LIST: "${DATASETS_LIST}"
+      DATASETS_EXCLUDE: "${DATASETS_EXCLUDE}"
     volumes:
       - ./src:/app
       - ./docs/build/html:/docs-static
@@ -71,12 +72,3 @@ services:
       - ALLOW_EMPTY_PASSWORD=yes
     ports:
       - '6379:6379'
-
-  schemas:
-    image: nginx
-    ports:
-      - "8080:80"
-    volumes:
-      - "./schemas/data/datasets:/usr/share/nginx/html/datasets"
-      - "./schemas/data/publishers:/usr/share/nginx/html/publishers"
-      - "./schemas/conf/default.conf:/etc/nginx/conf.d/default.conf"

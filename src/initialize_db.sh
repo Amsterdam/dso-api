@@ -9,7 +9,7 @@ then
     # Fill tables with mock data if MOCK_DATA is set. Continue on errors.
     if "$MOCK_DATA" = "true";
     then
-        django create_mock_data --size 20 --exclude None || true;
-        django relate_mock_data --exclude None || true;
+        ./manage.py create_mock_data --size 20 --exclude None || true;
+        ./manage.py relate_mock_data --exclude None || true;
     fi
 fi
