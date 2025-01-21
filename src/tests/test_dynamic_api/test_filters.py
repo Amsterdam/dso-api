@@ -24,9 +24,8 @@ class TestWildcard:
             # using str(qs.query) doesn't apply database-level escaping,
             # so running the query instead to get the actual executed query.
             list(Dataset.objects.filter(name__like="foo*bar?"))
-
         sql = context.captured_queries[0]["sql"]
-        assert r"""."name") LIKE 'foo%bar_'""" in sql
+        assert r"""."name") LIKE 'FOO%BAR_'""" in sql
 
 
 def test_sql_wildcards():
