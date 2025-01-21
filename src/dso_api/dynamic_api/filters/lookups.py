@@ -50,9 +50,9 @@ class NotEqual(lookups.Lookup):
             # Allow field__not=value to return NULL fields too.
             if field_type in ["CharField", "TextField"]:
                 return (
-                    f"({lhs}) IS NULL OR LOWER({lhs}) != LOWER({rhs}))",
+                    f"({lhs}) IS NULL OR UPPER({lhs}) != UPPER({rhs}))",
                     list(lhs_params + lhs_params)
-                    + [rhs.lower() if isinstance(rhs, str) else rhs for rhs in rhs_params],
+                    + [rhs.upper() if isinstance(rhs, str) else rhs for rhs in rhs_params],
                 )
             else:
                 return (
@@ -65,8 +65,8 @@ class NotEqual(lookups.Lookup):
             return f"{lhs} IS NOT NULL", lhs_params
         else:
             if field_type in ["CharField", "TextField"]:
-                return f"LOWER({lhs}) != LOWER({rhs})", list(lhs_params) + [
-                    rhs.lower() if isinstance(rhs, str) else rhs for rhs in rhs_params
+                return f"UPPER({lhs}) != UPPER({rhs})", list(lhs_params) + [
+                    rhs.upper() if isinstance(rhs, str) else rhs for rhs in rhs_params
                 ]
             else:
                 return f"{lhs} != {rhs}", list(lhs_params) + rhs_params
@@ -88,7 +88,7 @@ class Wildcard(lookups.Lookup):
 
         lhs, lhs_params = self.process_lhs(compiler, connection)
         rhs, rhs_params = self.process_rhs(compiler, connection)
-        return f"LOWER({lhs}) LIKE {rhs}", lhs_params + [rhs.lower() for rhs in rhs_params]
+        return f"UPPER({lhs}) LIKE {rhs}", lhs_params + [rhs.upper() for rhs in rhs_params]
 
     def get_db_prep_lookup(self, value, connection):
         """Apply the wildcard logic to the right-hand-side value"""
@@ -117,4 +117,4 @@ class CaseInsensitiveExact(lookups.Lookup):
         """Generate the required SQL."""
         lhs, lhs_params = self.process_lhs(compiler, connection)
         rhs, rhs_params = self.process_rhs(compiler, connection)
-        return f"LOWER({lhs}) = LOWER({rhs})", lhs_params + rhs_params
+        return f"UPPER({lhs}) = UPPER({rhs})", lhs_params + rhs_params
