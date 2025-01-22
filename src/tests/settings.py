@@ -45,6 +45,11 @@ PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
 # Make sure the router is empty on start
 INITIALIZE_DYNAMIC_VIEWSETS = False
 
+# Clear DATASETS_LIST or DATASETS_EXCLUDE to prevent tests from failing caused
+# by an environment variable
+DATASETS_LIST = None
+DATASETS_EXCLUDE = None
+
 # Prevent tests to crash because of missing staticfiles manifests
 WHITENOISE_MANIFEST_STRICT = False
 STORAGES = {

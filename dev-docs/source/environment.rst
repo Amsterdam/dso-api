@@ -25,13 +25,13 @@ By default, all datasets are hosted by the application.
 When a custom instance is deployed for a particular dataset (e.g. the BRP),
 this instance can host only a subset using::
 
-    DATASETS_LISTS = ...
+    DATASETS_LIST = ...
     DATASETS_EXCLUDE = ...
 
 To expose only a subset of the datasets, use ``DATASETS_LIST``.
 To expose all datasets with some exceptions, use ``DATASETS_EXCLUDE``.
 
-Both entries accept a comma separated list, e.g. ``DATASETS_LISTS=bommen,gebieden,meldingen``.
+Both entries accept a comma separated list, e.g. ``DATASETS_LIST=bommen,gebieden,meldingen``.
 
 .. warning::
 

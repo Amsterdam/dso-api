@@ -35,8 +35,12 @@ The following environment variables are useful for configuring a local developme
 * `SCHEMA_URL`: URL of the dataset schemas. To use the production schemas set this to:
     "https://schemas.data.amsterdam.nl/datasets/"
     Default is the `schemas` container in the compose file.
+* `DATASETS_INCLUDE`: A comma separated lists of datasets to expose using the API or to generate mock data for.
+    Default: `None` (expose all loaded datasets).
+* `DATASETS_INCLUDE`: A comma separated lists of datasets to expose using the API or to generate mock data for.
+    Default: `None` (expose all loaded datasets).
 
-To connect to an authentication provider, setup the following environment variables:
+To connect to an authentication provider, set up the following environment variables:
 * `OAUTH_CLIENT_ID`: The client id of the application
 * `OAUTH_JWKS_URL`: The JWKS URL of the authentication provider.
 * `OAUTH_URL`:  The auth URL of the authentication provider.
@@ -46,8 +50,9 @@ A local setup using the production dataset schema's with mock data:
 ```
     export INITIALIZE_DB=true
     export MOCK_DATA=true
+    export DATASETS_LIST=bag,gebieden,brk_2,sport,precariobelasting
     export SCHEMA_URL="https://schemas.data.amsterdam.nl/datasets/"
-    compose up
+    docker compose up
 ```
 
 ## Without Docker Compose

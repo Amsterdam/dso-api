@@ -1,0 +1,17 @@
+services:
+  web:
+    links:
+      - database
+      - schemas
+    environment:
+      SCHEMA_URL: "${SCHEMA_URL:-http://schemas/datasets/}"
+      DATASETS_LIST: "bag,brk_2,gebieden,sportparken,precariobelasting"
+
+  schemas:
+    image: nginx
+    ports:
+      - "8080:80"
+    volumes:
+      - "./schemas/data/datasets:/usr/share/nginx/html/datasets"
+      - "./schemas/data/publishers:/usr/share/nginx/html/publishers"
+      - "./schemas/conf/default.conf:/etc/nginx/conf.d/default.conf"
