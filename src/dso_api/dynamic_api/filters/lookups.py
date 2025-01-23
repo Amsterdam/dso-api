@@ -45,17 +45,31 @@ class NotEqual(lookups.Lookup):
         lhs, lhs_params = self.process_lhs(compiler, connection, lhs=lhs)  # (field, [])
         rhs, rhs_params = self.process_rhs(compiler, connection)  # ("%s", [value])
 
+        field_type = self.lhs.output_field.get_internal_type()
         if lhs_nullable and rhs is not None:
             # Allow field__not=value to return NULL fields too.
-            return (
-                f"({lhs} IS NULL OR {lhs} != {rhs})",
-                list(lhs_params + lhs_params) + rhs_params,
-            )
+            if field_type in ["CharField", "TextField"]:
+                return (
+                    f"({lhs}) IS NULL OR UPPER({lhs}) != UPPER({rhs}))",
+                    list(lhs_params + lhs_params)
+                    + [rhs.upper() if isinstance(rhs, str) else rhs for rhs in rhs_params],
+                )
+            else:
+                return (
+                    f"({lhs} IS NULL OR {lhs} != {rhs})",
+                    list(lhs_params + lhs_params) + rhs_params,
+                )
+
         elif rhs_params and rhs_params[0] is None:
             # Allow field__not=None to work.
             return f"{lhs} IS NOT NULL", lhs_params
         else:
-            return f"{lhs} != {rhs}", list(lhs_params) + rhs_params
+            if field_type in ["CharField", "TextField"]:
+                return f"UPPER({lhs}) != UPPER({rhs})", list(lhs_params) + [
+                    rhs.upper() if isinstance(rhs, str) else rhs for rhs in rhs_params
+                ]
+            else:
+                return f"{lhs} != {rhs}", list(lhs_params) + rhs_params
 
 
 @models.CharField.register_lookup
@@ -71,9 +85,10 @@ class Wildcard(lookups.Lookup):
         # rhs = %s
         # lhs_params = []
         # lhs_params = ["prep-value"]
+
         lhs, lhs_params = self.process_lhs(compiler, connection)
         rhs, rhs_params = self.process_rhs(compiler, connection)
-        return f"{lhs} LIKE {rhs}", lhs_params + rhs_params
+        return f"UPPER({lhs}) LIKE {rhs}", lhs_params + [rhs.upper() for rhs in rhs_params]
 
     def get_db_prep_lookup(self, value, connection):
         """Apply the wildcard logic to the right-hand-side value"""
@@ -92,3 +107,14 @@ def _sql_wildcards(value: str) -> str:
         .replace("*", "%")
         .replace("?", "_")
     )
+
+
+@models.ForeignKey.register_lookup
+class CaseInsensitiveExact(lookups.Lookup):
+    lookup_name = "iexact"
+
+    def as_sql(self, compiler, connection):
+        """Generate the required SQL."""
+        lhs, lhs_params = self.process_lhs(compiler, connection)
+        rhs, rhs_params = self.process_rhs(compiler, connection)
+        return f"UPPER({lhs}) = UPPER({rhs})", lhs_params + rhs_params
