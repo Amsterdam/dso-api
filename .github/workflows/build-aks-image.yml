@@ -18,4 +18,4 @@ jobs:
             organisation: CloudCompetenceCenter
             project: 'Data Diensten'
             pat-token: ${{ secrets.AZURE_DEVOPS_TOKEN }}
-            template-params: '{"environments": "["dev", "prd"]", "branch": "master", "akscluster": "blue"}'
+            template-params: '{"environments": "- dev\n- prd", "branch": "master", "akscluster": "blue"}'
