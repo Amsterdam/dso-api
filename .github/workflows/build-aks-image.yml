@@ -1,10 +1,13 @@
 name: CI
 
 # Run this workflow every time a commit is pushed to main or a pull request is opened against main
+# The `workflow_dispatch` had been added to be able to run the
+# workflow manually (for testing purposes).
 on:
   push:
     branches:
       - master
+  workflow_dispatch:
 
 jobs:
     build:
