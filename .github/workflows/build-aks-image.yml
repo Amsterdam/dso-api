@@ -1,10 +1,13 @@
 name: CI
 
 # Run this workflow every time a commit is pushed to main or a pull request is opened against main
+# The `workflow_dispatch` had been added to be able to run the
+# workflow manually (for testing purposes).
 on:
   push:
     branches:
       - master
+  workflow_dispatch:
 
 jobs:
     build:
@@ -12,8 +15,10 @@ jobs:
         runs-on: ubuntu-latest
         steps:
         - name: Call Azure
-          uses: Azure/pipelines@v1
+          uses: amsterdam/trigger-ado-pipeline@v1
           with:
-            azure-devops-project-url: ${{ secrets.AZURE_DEVOPS_URL }}
-            azure-pipeline-name: ${{ secrets.AZURE_DEVOPS_PIPELINE }}
-            azure-devops-token: ${{ secrets.AZURE_DEVOPS_TOKEN }}
+            pipeline-id: ${{ secrets.AZURE_DEVOPS_PIPELINE_ID }}
+            organisation: ${{ secrets.AZURE_DEVOPS_ORG }}
+            project: ${{ secrets.AZURE_DEVOPS_PROJECT }}
+            pat-token: ${{ secrets.AZURE_DEVOPS_TOKEN }}
+            template-params: '{"environments": "- dev\n- prd", "branch": "master", "akscluster": "blue"}'
