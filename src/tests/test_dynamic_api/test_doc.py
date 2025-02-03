@@ -61,7 +61,7 @@ def test_dataset(api_client, filled_router, gebieden_dataset):
 @pytest.mark.django_db
 def test_table_for_export_links(api_client, filled_router, gebieden_dataset):
     """Tests documentation for a single dataset."""
-    table = gebieden_dataset.tables.get(name='bouwblokken')
+    table = gebieden_dataset.tables.get(name="bouwblokken")
     table.enable_export = True
     table.save()
     gebieden_doc = reverse(
@@ -81,6 +81,7 @@ def test_table_for_export_links(api_client, filled_router, gebieden_dataset):
     assert "gebieden_buurten.csv.zip" not in content
     assert "gebieden_buurten.jsonl.zip" not in content
     assert "gebieden_buurten.gpkg.zip" not in content
+
 
 @pytest.mark.django_db
 def test_dataset_casing(api_client, filled_router, hoofdroutes_dataset):
