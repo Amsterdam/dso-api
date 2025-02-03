@@ -289,7 +289,7 @@ def _table_context(ds: Dataset, table: DatasetTableSchema):
     filters = _get_filters(table.fields)
     exports = []
     # if dataset_name in settings.EXPORTED_DATASETS.split(","):
-    if ds.enable_export:
+    if ds.tables.get(name=table_name).enable_export:
         export_info = []
         for type_, extension in (
             ("csv", "csv"),
