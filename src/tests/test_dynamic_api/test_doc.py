@@ -59,10 +59,11 @@ def test_dataset(api_client, filled_router, gebieden_dataset):
 
 
 @pytest.mark.django_db
-def test_dataset_for_export_links(api_client, filled_router, gebieden_dataset):
+def test_table_for_export_links(api_client, filled_router, gebieden_dataset):
     """Tests documentation for a single dataset."""
-    gebieden_dataset.enable_export = True
-    gebieden_dataset.save()
+    table = gebieden_dataset.tables.get(name="bouwblokken")
+    table.enable_export = True
+    table.save()
     gebieden_doc = reverse(
         "dynamic_api:doc-gebieden"
     )  # Gebieden has relationships between its tables.
@@ -73,9 +74,13 @@ def test_dataset_for_export_links(api_client, filled_router, gebieden_dataset):
     content = response.rendered_content
     # Extensions for exported format followed by ".zip"
     # are signalling links to the generated exports.
-    assert "gpkg.zip" in content
-    assert "jsonl.zip" in content
-    assert "csv.zip" in content
+    assert "gebieden_bouwblokken.gpkg.zip" in content
+    assert "gebieden_bouwblokken.jsonl.zip" in content
+    assert "gebieden_bouwblokken.csv.zip" in content
+
+    assert "gebieden_buurten.csv.zip" not in content
+    assert "gebieden_buurten.jsonl.zip" not in content
+    assert "gebieden_buurten.gpkg.zip" not in content
 
 
 @pytest.mark.django_db
