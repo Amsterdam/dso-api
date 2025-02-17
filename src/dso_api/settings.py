@@ -510,6 +510,7 @@ DATAPUNT_AUTHZ = {
     # To verify JWT tokens, either the PUB_JWKS or a OAUTH_JWKS_URL needs to be set.
     "JWKS": os.getenv("PUB_JWKS"),
     "JWKS_URL": os.getenv("OAUTH_JWKS_URL"),
+    "JWKS_URLS": env.list("OAUTH_JWKS_URLS", default=[]),  # To support both keyclock and Entra ID
     # "ALWAYS_OK": True if DEBUG else False,
     "ALWAYS_OK": False,
     "MIN_INTERVAL_KEYSET_UPDATE": 30 * 60,  # 30 minutes
