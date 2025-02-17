@@ -20,18 +20,21 @@ sync:                                  ## Install packages, remove unmentioned p
 ## Package management:
 ##
 
+# The --generate-hashes option is disabled for the dev-file,
+# because pip-tools brings in setuptools which requires --allow-unsafe.
+# The --allow-unsafe option then brings in a pinned version of pip in the file.
 .PHONY: requirements
 requirements: requirements.in requirements_dev.in  ## Re-generate the requirements/base.txt file for pip.
-	pip-compile -v --generate-hashes --allow-unsafe --output-file requirements.txt requirements.in
-	pip-compile -v --generate-hashes --allow-unsafe --output-file requirements_dev.txt requirements_dev.in
+	pip-compile -v --generate-hashes --output-file requirements.txt requirements.in
+	pip-compile -v --output-file requirements_dev.txt requirements_dev.in
 	perl -pi -e "s!$$(pwd)!.!" requirements*.txt
 
 .PHONY: upgrade
 upgrade:                               ## Tool to upgrade the backend dependencies.
 	pur --patch=Django -r requirements.in
 	pur --no-recursive -r requirements_dev.in
-	pip-compile -v --generate-hashes --allow-unsafe --upgrade --output-file requirements.txt requirements.in
-	pip-compile -v --generate-hashes --allow-unsafe --upgrade --output-file requirements_dev.txt requirements_dev.in
+	pip-compile -v --generate-hashes --upgrade --output-file requirements.txt requirements.in
+	pip-compile -v --upgrade --output-file requirements_dev.txt requirements_dev.in
 	perl -pi -e "s!$$(pwd)!.!" requirements*.txt
 
 ##
