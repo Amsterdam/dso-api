@@ -4,7 +4,8 @@ LABEL org.opencontainers.image.authors="datapunt@amsterdam.nl"
 RUN apt update && apt install --no-install-recommends -y \
     build-essential \
     libgeos-dev \
-    libpq-dev
+    libpq-dev \
+    git
 COPY requirements* ./
 ARG PIP_REQUIREMENTS=requirements.txt
 RUN python -m pip install uwsgi
@@ -12,6 +13,7 @@ RUN python -m pip install uwsgi
 # The dependencies have already been resolved during the generation of
 # the requirements.txt, so adding `--no-deps` can safely be done.
 RUN python -m pip install --no-cache-dir --no-deps -r $PIP_REQUIREMENTS
+RUN python -m pip install git+https://github.com/Amsterdam/schema-tools.git@0535a0d
 
 # Start runtime image,
 FROM python:3.13-slim-bullseye
