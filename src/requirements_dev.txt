@@ -4,9 +4,9 @@
 #
 #    pip-compile --allow-unsafe --generate-hashes --output-file=requirements_dev.txt requirements_dev.in
 #
-amsterdam-schema-tools[django]==6.5 \
-    --hash=sha256:60562588d2f64134481bd748e6f3afa02b84786e7ead445e78f55f76d46d26d2 \
-    --hash=sha256:aaef66b9e5f2aecb00019ab87a2169a5e44c48d98ac3ba65f6dcaa555f2c9733
+# WARNING: pip install will require the following package to be hashed.
+# Consider using a hashable URL like https://github.com/jazzband/pip-tools/archive/SOMECOMMIT.zip
+amsterdam-schema-tools[django] @ git+https://github.com/Amsterdam/schema-tools@pieter/bugfix-scopes-property-for-dso
     # via -r ./requirements.in
 argparse==1.4.0 \
     --hash=sha256:62b089a55be1d8949cd2bc7e0df0bddb9e028faefc8c32038cc84862aefdd6e4 \
