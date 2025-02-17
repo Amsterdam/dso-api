@@ -24,6 +24,7 @@ sync:                                  ## Install packages, remove unmentioned p
 requirements: requirements.in requirements_dev.in  ## Re-generate the requirements/base.txt file for pip.
 	pip-compile -v --generate-hashes --allow-unsafe --output-file requirements.txt requirements.in
 	pip-compile -v --generate-hashes --allow-unsafe --output-file requirements_dev.txt requirements_dev.in
+	perl -pi -e "s!$$(pwd)!.!" requirements*.txt
 
 .PHONY: upgrade
 upgrade:                               ## Tool to upgrade the backend dependencies.
@@ -31,6 +32,7 @@ upgrade:                               ## Tool to upgrade the backend dependenci
 	pur --no-recursive -r requirements_dev.in
 	pip-compile -v --generate-hashes --allow-unsafe --upgrade --output-file requirements.txt requirements.in
 	pip-compile -v --generate-hashes --allow-unsafe --upgrade --output-file requirements_dev.txt requirements_dev.in
+	perl -pi -e "s!$$(pwd)!.!" requirements*.txt
 
 ##
 ## Testing:
