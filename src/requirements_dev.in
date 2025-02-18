@@ -9,3 +9,4 @@ django-debug-toolbar==5.0.1
 django-extensions==3.2.3
 pip-tools==7.4.1
 tomli==2.2.1
+debugpy==1.8.11
