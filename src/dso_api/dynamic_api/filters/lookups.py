@@ -160,7 +160,7 @@ class ArrayContainsCaseInsensitive(lookups.Lookup):
 
         # Transform the values in the array column to uppercase; this is done by unnesting the
         # array, applying UPPER() to each element, and reconstructing an array.
-        lhs_sql = f"(ARRAY(SELECT UPPER(x) FROM unnest({lhs}) AS x))" # noqa: S608
+        lhs_sql = f"(ARRAY(SELECT UPPER(x) FROM unnest({lhs}) AS x))"  # noqa: S608
 
         # Build a comma-separated set of placeholders for each search value.
         placeholders = ", ".join(["%s"] * len(values))
