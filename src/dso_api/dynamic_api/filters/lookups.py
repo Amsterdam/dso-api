@@ -1,8 +1,9 @@
 """Additional ORM lookups to implement the various DSO filter operators."""
 
+from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.db.models import expressions, lookups
-from django.contrib.postgres.fields import ArrayField
+
 
 @models.CharField.register_lookup
 @models.TextField.register_lookup
@@ -131,9 +132,10 @@ class CaseInsensitiveExact(lookups.Lookup):
 class ArrayContainsCaseInsensitive(lookups.Lookup):
     """
     Override the default "contains" lookup for ArrayFields such that it does a case-insensitive
-    search. It also supports passing a comma separated string of values (or an iterable) 
+    search. It also supports passing a comma separated string of values (or an iterable)
     and returns matches only when the array field contains ALL of these values.
     """
+
     lookup_name = "contains"
 
     def as_sql(self, compiler, connection):
@@ -158,7 +160,7 @@ class ArrayContainsCaseInsensitive(lookups.Lookup):
 
         # Transform the values in the array column to uppercase; this is done by unnesting the
         # array, applying UPPER() to each element, and reconstructing an array.
-        lhs_sql = f"(ARRAY(SELECT UPPER(x) FROM unnest({lhs}) AS x))"
+        lhs_sql = f"(ARRAY(SELECT UPPER(x) FROM unnest({lhs}) AS x))" # noqa: S608
 
         # Build a comma-separated set of placeholders for each search value.
         placeholders = ", ".join(["%s"] * len(values))
