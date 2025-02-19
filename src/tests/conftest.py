@@ -548,10 +548,9 @@ def movie(category) -> Movie:
 
 
 @pytest.fixture()
-def movies_dataset() -> Dataset:
-    j = json.loads((HERE / "files/datasets/movies.json").read_text())
-    s = DatasetSchema.from_dict(j)
-    return Dataset.create_for_schema(s)
+def movies_dataset(schema_loader) -> Dataset:
+    schema = schema_loader.get_dataset_from_file("movies.json")
+    return Dataset.create_for_schema(schema)
 
 
 @pytest.fixture
