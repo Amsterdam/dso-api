@@ -303,6 +303,7 @@ class QueryFilterEngine:
         lookup = filter_input.lookup
 
         # Find whether the lookup is allowed at all.
+        # This prevents doing a "like" lookup on an integer/date-time field for example.
         allowed_lookups = self.get_allowed_lookups(filter_part.field)
         if lookup not in allowed_lookups:
             if not allowed_lookups:
