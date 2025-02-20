@@ -51,7 +51,7 @@ class NotEqual(lookups.Lookup):
             # Allow field__not=value to return NULL fields too.
             if field_type in ["CharField", "TextField"] and not self.lhs.field.primary_key:
                 return (
-                    f"{lhs} IS NULL OR UPPER({lhs}) != UPPER({rhs})",
+                    f"({lhs} IS NULL OR UPPER({lhs}) != UPPER({rhs}))",
                     list(lhs_params + lhs_params)
                     + [rhs.upper() if isinstance(rhs, str) else rhs for rhs in rhs_params],
                 )
