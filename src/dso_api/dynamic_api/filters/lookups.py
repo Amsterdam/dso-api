@@ -57,7 +57,7 @@ class NotEqual(lookups.Lookup):
                 )
             else:
                 return (
-                    f"{lhs} IS NULL OR {lhs} != {rhs}",
+                    f"({lhs} IS NULL OR {lhs} != {rhs})",
                     list(lhs_params + lhs_params) + rhs_params,
                 )
 
