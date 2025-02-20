@@ -251,11 +251,9 @@ class QueryFilterEngine:
         """Build the Q() object for a single filter"""
         parts = _parse_filter_path(filter_input.path, table_schema, self.user_scopes)
         orm_path = _to_orm_path(parts)
-
         value = self._translate_raw_value(filter_input, parts[-1])
         lookup = self._translate_lookup(filter_input, parts[-1], value)
         q_path = f"{orm_path}__{lookup}"
-
         if filter_input.lookup == "not":
             # for [not] lookup: field != 1 AND field != 2
             q_object = reduce(operator.and_, (Q(**{q_path: v}) for v in value))
@@ -323,11 +321,23 @@ class QueryFilterEngine:
                     }
                 ) from None
 
+        # Handle case-insensitive exact matches for string fields only,
+        # but not for relations or formatted fields
         if filter_part.field.format == "date-time" and not isinstance(value, datetime):
             # When something different then a full datetime is given, only compare dates.
             # Otherwise, the "lte" comparison happens against 00:00:00.000 of that date,
             # instead of anything that includes that day itself.
-            lookup = f"date__{lookup or 'exact'}"
+            return f"date__{lookup or 'exact'}"
+
+        # Only apply iexact for direct string field lookups (not through relations)
+        if (
+            not lookup
+            and filter_part.field.type == "string"
+            and filter_part.field.format not in ["date-time", "time", "date"]
+            and not filter_part.field.is_relation
+            and not filter_part.field.is_primary
+        ):
+            return "iexact"
 
         return lookup or "exact"
 
