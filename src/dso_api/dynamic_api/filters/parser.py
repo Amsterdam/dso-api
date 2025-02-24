@@ -321,23 +321,11 @@ class QueryFilterEngine:
                     }
                 ) from None
 
-        # Handle case-insensitive exact matches for string fields only,
-        # but not for relations or formatted fields
         if filter_part.field.format == "date-time" and not isinstance(value, datetime):
             # When something different then a full datetime is given, only compare dates.
             # Otherwise, the "lte" comparison happens against 00:00:00.000 of that date,
             # instead of anything that includes that day itself.
-            return f"date__{lookup or 'exact'}"
-
-        # Only apply iexact for direct string field lookups (not through relations)
-        if (
-            not lookup
-            and filter_part.field.type == "string"
-            and filter_part.field.format not in ["date-time", "time", "date"]
-            and not filter_part.field.is_relation
-            and not filter_part.field.is_primary
-        ):
-            return "iexact"
+            lookup = f"date__{lookup or 'exact'}"
 
         return lookup or "exact"
 
