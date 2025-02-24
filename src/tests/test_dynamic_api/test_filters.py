@@ -26,7 +26,7 @@ class TestWildcard:
             list(Dataset.objects.filter(name__like="foo*bar?"))
 
         sql = context.captured_queries[0]["sql"]
-        assert r"""."name") LIKE 'foo%bar_'""" in sql
+        assert r"""."name" LIKE 'foo%bar_'""" in sql
 
 
 def test_sql_wildcards():
