@@ -19,7 +19,7 @@ from rest_framework.request import Request
 from rest_framework.test import APIClient, APIRequestFactory
 from schematools.contrib.django.models import Dataset, DynamicModel, Profile
 from schematools.loaders import FileSystemProfileLoader, FileSystemSchemaLoader
-from schematools.types import DatasetSchema
+from schematools.types import DatasetSchema, Scope
 
 from rest_framework_dso.crs import RD_NEW
 from tests.test_rest_framework_dso.models import Actor, Category, Location, Movie, MovieUser
@@ -28,6 +28,13 @@ from tests.utils import api_request_with_scopes, to_drf_request
 HERE = Path(__file__).parent
 DATE_2021_FEB = datetime(2021, 2, 28, 10, 0, tzinfo=get_current_timezone())
 DATE_2021_JUNE = datetime(2021, 6, 11, 10, 0, tzinfo=get_current_timezone())
+
+
+# In test files we use a lot of non-existent scopes, so instead of writing scope
+# json files we monkeypatch this method.
+@pytest.fixture(autouse=True)
+def patch_find_scope_by_id(monkeypatch):
+    monkeypatch.setattr(DatasetSchema, "_find_scope_by_id", Scope.from_string)
 
 
 @pytest.fixture()
