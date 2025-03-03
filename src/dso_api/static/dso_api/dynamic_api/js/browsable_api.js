@@ -833,7 +833,11 @@ function createParamEl(key = null, value = null, op = "eq", active = true, insid
 
   let opEl = document.createElement('select');
   opEl.className = "param-op";
-  opEl.innerHTML = `<option value="${op}" selected>${OPERATORS[op] || op}</option>`;
+  let option = document.createElement("option");
+  option.value = op;
+  option.textContent = OPERATORS[op] || op;
+  opEl.innerHTML = "";
+  opEl.appendChild(option);
   opEl.addEventListener('change', onParamOpSet);
   paramEl.appendChild(opEl);
 
