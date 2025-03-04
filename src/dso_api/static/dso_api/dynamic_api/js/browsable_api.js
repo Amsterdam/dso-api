@@ -836,6 +836,7 @@ function createParamEl(key = null, value = null, op = "eq", active = true, insid
   let option = document.createElement("option");
   option.value = op;
   option.textContent = OPERATORS[op] || op;
+  option.setAttribute('selected', 'selected');
   opEl.innerHTML = "";
   opEl.appendChild(option);
   opEl.addEventListener('change', onParamOpSet);
