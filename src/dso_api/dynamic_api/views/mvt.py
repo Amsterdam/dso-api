@@ -161,7 +161,12 @@ class DatasetMVTView(CheckPermissionsMixin, MVTView):
                 # Here we have to use the db_name, because that usually has a suffix not
                 # available on field.name.
                 field_name = toCamelCase(field.db_name)
-            if self.z >= 15 and field.db_name != layer.geom_field and field.name != "schema":
+            if (
+                self.z >= 15
+                and field.db_name != layer.geom_field
+                and field.name != "schema"
+                and field_name not in tile_fields
+            ):
                 # If we are zoomed far out (low z), only fetch the geometry field for a
                 # smaller payload. The cutoff is arbitrary. Play around with
                 # https://www.maptiler.com/google-maps-coordinates-tile-bounds-projection/
