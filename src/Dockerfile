@@ -1,4 +1,4 @@
-FROM python:3.12-slim-bookworm AS builder
+FROM python:3.13-slim-bookworm AS builder
 LABEL org.opencontainers.image.authors="datapunt@amsterdam.nl"
 
 RUN apt update && apt install --no-install-recommends -y \
@@ -14,7 +14,7 @@ RUN python -m pip install uwsgi
 RUN python -m pip install --no-cache-dir --no-deps -r $PIP_REQUIREMENTS
 
 # Start runtime image,
-FROM python:3.12-slim-bookworm
+FROM python:3.13-slim-bookworm
 RUN useradd -U -r dsoapi
 RUN apt update && apt install --no-install-recommends -y \
     curl \
