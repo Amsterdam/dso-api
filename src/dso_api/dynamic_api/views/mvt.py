@@ -147,7 +147,10 @@ class DatasetMVTView(CheckPermissionsMixin, MVTView):
         layer.geom_field = schema.main_geometry_field.python_name
 
         queryset = self.model.objects.all()
-        tile_fields = ()
+
+        # We always include the identifier fields
+        identifiers = schema.identifier_fields
+        tile_fields = tuple(id.name for id in identifiers)
 
         for field in schema.fields:
             field_name = field.name

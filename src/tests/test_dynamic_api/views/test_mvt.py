@@ -162,7 +162,7 @@ def test_mvt_content(
         }
     }
 
-    # Try again at a higher zoom level. We should get the same features, but with no properties.
+    # Try again at a higher zoom level. We should get the same features and only the "id" property.
     url = "/v1/mvt/afvalwegingen/containers/14/8415/5384.pbf"
     response = api_client.get(url)
     # MVT view returns 204 when the tile is empty.
@@ -179,7 +179,9 @@ def test_mvt_content(
             "features": [
                 {
                     "geometry": {"type": "Point", "coordinates": [3825, 1344]},
-                    "properties": {},
+                    "properties": {
+                        "id": 1,
+                    },
                     "id": 0,
                     "type": "Feature",
                 }
