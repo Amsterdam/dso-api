@@ -26,7 +26,7 @@ RUN apt update && apt install --no-install-recommends -y \
 
 # Copy python build artifacts from builder image
 COPY --from=builder /usr/local/bin/ /usr/local/bin/
-COPY --from=builder /usr/local/lib/python3.12/site-packages/ /usr/local/lib/python3.12/site-packages/
+COPY --from=builder /usr/local/lib/python3.13/site-packages/ /usr/local/lib/python3.13/site-packages/
 
 WORKDIR /app
 COPY . ./
