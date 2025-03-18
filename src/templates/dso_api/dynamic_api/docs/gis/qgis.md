@@ -60,7 +60,9 @@ laden:
     op 1.
 
 Een lijst van datasets die vector tiles ondersteunen is beschikbaar op:
-<https://api.data.amsterdam.nl/v1/mvt/>.
+<https://api.data.amsterdam.nl/v1/mvt/>. Op
+<https://api.data.amsterdam.nl/v1/mvt/<dataset>/tilejson.json> vind je URLs
+voor alle tabellen met geo-velden.
 
 ## Autorisatie
 
