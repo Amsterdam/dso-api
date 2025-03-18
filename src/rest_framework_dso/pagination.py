@@ -49,6 +49,7 @@ class DSOHTTPHeaderPageNumberPagination(pagination.PageNumberPagination):
         page_number = request.query_params.get(self.page_query_param, 1)
 
         try:
+            page_number = int(page_number)
             if page_number > 100:
                 msg = "Page number cannot exceed 100. Please use a page number between 1 and 100."
                 raise NotFound(msg)
