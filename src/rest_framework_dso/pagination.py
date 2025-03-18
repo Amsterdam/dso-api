@@ -49,14 +49,22 @@ class DSOHTTPHeaderPageNumberPagination(pagination.PageNumberPagination):
         page_number = request.query_params.get(self.page_query_param, 1)
 
         try:
+            if page_number > 100:
+                msg = "Page number cannot exceed 100. Please use a page number between 1 and 100."
+                raise NotFound(msg)
             self.page = paginator.page(page_number)
         except InvalidPage as exc:
-            msg = self.invalid_page_message.format(page_number=page_number, message=str(exc))
+            msg = self.invalid_page_message.format(
+                page_number=page_number, total_pages=paginator.num_pages
+            )
+            raise NotFound(msg) from exc
+        except ValueError as exc:
+            msg = f"Invalid page number: {page_number}. Page number must be a positive integer."
             raise NotFound(msg) from exc
 
         self.request = request
         self.include_count = self.request.query_params.get("_count") == "true"
-        return self.page.object_list  # original: list(self.page)
+        return self.page.object_list
 
     def get_page_size(self, request):
         """Allow the ``page_size`` parameter was fallback."""
