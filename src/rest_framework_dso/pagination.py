@@ -53,7 +53,8 @@ class DSOHTTPHeaderPageNumberPagination(pagination.PageNumberPagination):
             if page_number > 100:
                 msg = (
                     "Page number cannot exceed 100. Please use a page number between 1 and 100. "
-                    "If you need to retrieve all data, please download one of the provided dump files instead."
+                    "If you need to retrieve all data, please download one of the provided dump "
+                    "files instead."
                 )
                 raise NotFound(msg)
             self.page = paginator.page(page_number)
@@ -68,7 +69,7 @@ class DSOHTTPHeaderPageNumberPagination(pagination.PageNumberPagination):
 
         self.request = request
         self.include_count = self.request.query_params.get("_count") == "true"
-        return self.page.object_list
+        return self.page.object_list  # original: list(self.page)
 
     def get_page_size(self, request):
         """Allow the ``page_size`` parameter was fallback."""
