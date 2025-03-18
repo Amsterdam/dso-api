@@ -51,7 +51,10 @@ class DSOHTTPHeaderPageNumberPagination(pagination.PageNumberPagination):
         try:
             page_number = int(page_number)
             if page_number > 100:
-                msg = "Page number cannot exceed 100. Please use a page number between 1 and 100."
+                msg = (
+                    "Page number cannot exceed 100. Please use a page number between 1 and 100. "
+                    "If you need to retrieve all data, please download one of the provided dump files instead."
+                )
                 raise NotFound(msg)
             self.page = paginator.page(page_number)
         except InvalidPage as exc:
