@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from django.core.paginator import InvalidPage
 from rest_framework import pagination
-from rest_framework.exceptions import NotFound
+from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework.response import Response
 from rest_framework.serializers import ListSerializer
 from rest_framework.utils.serializer_helpers import ReturnDict, ReturnList
@@ -56,7 +56,7 @@ class DSOHTTPHeaderPageNumberPagination(pagination.PageNumberPagination):
                     "If you need to retrieve all data, please download one of the provided dump "
                     "files instead."
                 )
-                raise NotFound(msg)
+                raise PermissionDenied(msg)
             self.page = paginator.page(page_number)
         except InvalidPage as exc:
             msg = self.invalid_page_message.format(
