@@ -52,7 +52,7 @@ def is_internal(user_email: str) -> bool:
             "f-ernstyoung03@hoofdstad.onmicrosoft.com",
             "f-ernstyoung04@hoofdstad.onmicrosoft.com",
             "f-ernstyoung05@hoofdstad.onmicrosoft.com",
-            "f-ernstyoung06@hoofdstad.onmicrosoft.com"
+            "f-ernstyoung06@hoofdstad.onmicrosoft.com",
         ]:
             return True
     return None
