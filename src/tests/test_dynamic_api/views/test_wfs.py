@@ -249,6 +249,16 @@ class TestDatasetWFSViewAuth:
         response = self.request(api_client, fetch_auth_token, "geometry_authdataset", [])
         assert response.status_code == 403
 
+    def test_wfs_model_unauthorized_index_page_works(
+        self, api_client, geometry_authdataset_thing, filled_router
+    ):
+        response = api_client.get("/v1/wfs/geometry_authdataset/")
+        assert response.status_code == 200
+        content = str(response.content)
+        for field in ["id", "metadata", "geometry"]:
+            # all fields should be available on the index page, even though auth is present
+            assert f"<th><code>{field}</code></th>" in content
+
     def test_wfs_model_authorized(
         self, api_client, geometry_authdataset_thing, fetch_auth_token, filled_router
     ):

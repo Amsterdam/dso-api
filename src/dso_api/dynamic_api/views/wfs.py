@@ -281,8 +281,11 @@ class DatasetWFSView(CheckPermissionsMixin, WFSView):
         """
         fields = []
         other_geo_fields = []
+        is_index_view = self.is_index_request()
         for model_field in model._meta.get_fields():
-            if not self.request.user_scopes.has_field_access(model.get_field_schema(model_field)):
+            if not is_index_view and not self.request.user_scopes.has_field_access(
+                model.get_field_schema(model_field)
+            ):
                 continue
 
             if isinstance(model_field, models.ForeignKey):
