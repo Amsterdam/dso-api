@@ -42,6 +42,19 @@ def is_internal(user_email: str) -> bool:
     """Tell whether a user is an internal user."""
     if re.search(r"([@\.]amsterdam\.nl)$", user_email):
         return True
+    else:
+        # TEMPORARY SOLUTION:
+        # Allow access to the database for the Ernst & Young team
+        # Can be removed after 2025-05-20
+        if user_email in [
+            "f-ernstyoung01@hoofdstad.onmicrosoft.com",
+            "f-ernstyoung02@hoofdstad.onmicrosoft.com",
+            "f-ernstyoung03@hoofdstad.onmicrosoft.com",
+            "f-ernstyoung04@hoofdstad.onmicrosoft.com",
+            "f-ernstyoung05@hoofdstad.onmicrosoft.com",
+            "f-ernstyoung06@hoofdstad.onmicrosoft.com",
+        ]:
+            return True
     return None
 
 
