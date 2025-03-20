@@ -5,6 +5,8 @@ import pytest
 from django.contrib.gis.geos import Point
 from django.utils.timezone import get_current_timezone
 
+from dso_api.dynamic_api.filters.values import AMSTERDAM_BOUNDS, DAM_SQUARE
+
 CONTENT_TYPE = "application/vnd.mapbox-vector-tile"
 
 
@@ -110,6 +112,68 @@ def test_mvt_single(api_client, afval_container, filled_router):
     response = api_client.get("/v1/mvt/afvalwegingen/")
     assert response.status_code == 200
     assert b"/v1/mvt/afvalwegingen/containers/{z}/{x}/{y}.pbf" in response.content
+
+
+@pytest.mark.django_db
+def test_mvt_tilejson(api_client, afval_container, filled_router):
+    """Prove that the MVT single view works."""
+    response = api_client.get("/v1/mvt/afvalwegingen/tilejson.json")
+    assert response.status_code == 200
+
+    tilejson = response.json()
+    assert tilejson == {
+        "attribution": '(c) Gemeente <a href="https://amsterdam.nl">Amsterdam</a>',
+        "bounds": AMSTERDAM_BOUNDS,
+        "center": DAM_SQUARE,
+        "description": "unit testing version of afvalwegingen",
+        "fillzoom": None,
+        "legend": None,
+        "maxzoom": 15,
+        "minzoom": 7,
+        "name": "Afvalwegingen",
+        "scheme": "xyz",
+        "tilejson": "3.0.0",
+        "tiles": [
+            "http://testserver/v1/mvt/afvalwegingen/adres_loopafstand/{z}/{x}/{y}.pbf",
+            "http://testserver/v1/mvt/afvalwegingen/containers/{z}/{x}/{y}.pbf",
+        ],
+        "vector_layers": [
+            {
+                "description": None,
+                "fields": {
+                    "geometry": "https://geojson.org/schema/Point.json",
+                    "id": "integer",
+                    "serienummer": "string",
+                },
+                "id": "adres_loopafstand",
+                "maxzoom": 15,
+                "minzoom": 7,
+            },
+            {
+                "description": None,
+                "fields": {
+                    "clusterId": "string",
+                    "datumCreatie": "string",
+                    "datumLeegmaken": "string",
+                    "eigenaarNaam": "string",
+                    "geometry": "https://geojson.org/schema/Point.json",
+                    "id": "integer",
+                    "serienummer": "string",
+                },
+                "id": "containers",
+                "maxzoom": 15,
+                "minzoom": 7,
+            },
+        ],
+        "version": "1.0.0",
+    }
+
+
+@pytest.mark.django_db
+def test_mvt_tilejson_without_geo_fields_404s(api_client, aardgasverbruik_dataset, filled_router):
+    """Prove that the MVT single view works."""
+    response = api_client.get("/v1/mvt/aardgasverbruik/tilejson.json")
+    assert response.status_code == 404
 
 
 @pytest.mark.django_db

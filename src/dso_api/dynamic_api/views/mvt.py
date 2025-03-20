@@ -2,9 +2,10 @@
 
 import logging
 import time
+from urllib.parse import unquote
 
 from django.core.exceptions import PermissionDenied
-from django.db.models import F
+from django.db.models import F, Model
 from django.http import Http404
 from django.urls.base import reverse
 from django.views.generic import TemplateView
@@ -14,9 +15,10 @@ from schematools.permissions import UserScopes
 from schematools.types import DatasetTableSchema
 from vectortiles import VectorLayer
 from vectortiles.backends import BaseVectorLayerMixin
-from vectortiles.views import MVTView
+from vectortiles.views import MVTView, TileJSONView
 
 from dso_api.dynamic_api.datasets import get_active_datasets
+from dso_api.dynamic_api.filters.values import AMSTERDAM_BOUNDS, DAM_SQUARE
 from dso_api.dynamic_api.permissions import CheckPermissionsMixin
 
 from .index import APIIndexView
@@ -189,3 +191,97 @@ class DatasetMVTView(CheckPermissionsMixin, MVTView):
             self.model.table_schema().main_geometry_field
         ):
             raise PermissionDenied()
+
+
+class DatasetTileJSONView(TileJSONView):
+    """View to serve a tilejson.json file.
+
+    Some values are hardcoded for our usecase.
+    """
+
+    attribution = '(c) Gemeente <a href="https://amsterdam.nl">Amsterdam</a>'
+    tile_url = "{z}/{x}/{y}.pbf"
+    bounds = AMSTERDAM_BOUNDS
+    center = DAM_SQUARE
+    min_zoom = 7
+    max_zoom = 15
+
+    def setup(self, request, *args, **kwargs):
+        super().setup(request, *args, **kwargs)
+        from dso_api.dynamic_api.urls import router
+
+        dataset_name = self.kwargs["dataset_name"]
+        self.name = dataset_name
+
+        try:
+            models = router.all_models[dataset_name]
+        except KeyError:
+            raise Http404(f"Invalid dataset: {dataset_name}") from None
+
+        # Filter models to the ones that have a geo field.
+        self.models = list(
+            filter(
+                lambda model: any(field.is_geo for field in model.table_schema().fields),
+                models.values(),
+            )
+        )
+        if len(self.models) == 0:
+            raise Http404(f"Dataset {dataset_name} does not have tables with geometry")
+
+        schema = self.models[0].table_schema().schema
+        self.description = schema.description
+        self.name = schema.title
+
+    def get_layers(self) -> list[BaseVectorLayerMixin]:
+        "Override to get all the layer metadata out of the models."
+        layers = []
+        # models are present after setup(), but BaseTileJSONView accesses get_layers() on init
+        if hasattr(self, "models"):
+            for model in self.models:
+                layer = self._create_layer(model)
+                layers.append(layer)
+
+        return sorted(layers, key=lambda layer: layer.id)
+
+    def _create_layer(self, model: Model) -> BaseVectorLayerMixin:
+        "Create a layer with all necessary metadata."
+        layer: BaseVectorLayerMixin = VectorLayer()
+        schema: DatasetTableSchema = model.table_schema()
+        layer.id = model.__name__
+        layer.min_zoom = self.min_zoom
+        layer.max_zoom = self.max_zoom
+        layer.description = schema.description
+
+        layer_fields = {}
+        for field in schema.fields:
+            field_name = field.name
+            if field.is_relation:
+                # Here we have to use the db_name, because that usually has a suffix not
+                # available on field.name.
+                field_name = toCamelCase(field.db_name)
+            if field_name != "schema":
+                # We exclude the main geometry and `schema` fields.
+                layer_fields[field_name] = field.type
+        layer.layer_fields = layer_fields
+        return layer
+
+    def get_tile_urls(self, tile_url):
+        "Override to compose tile urls for each model in the dataset."
+        urls = []
+        for model in self.models:
+            url = unquote(self.request.build_absolute_uri(model.__name__ + "/" + self.tile_url))
+            urls.append(url)
+        return sorted(urls)
+
+    def get(self, request, *args, **kwargs):
+        kwargs.pop("dataset_name")
+
+        t0 = time.perf_counter_ns()
+        result = super().get(request, *args, **kwargs)
+        logging.info(
+            "retrieved tileJSON for %s (%d bytes) in %.3fs",
+            request.path,
+            len(result.content),
+            (time.perf_counter_ns() - t0) * 1e-9,
+        )
+        return result

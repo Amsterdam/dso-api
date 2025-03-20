@@ -3,7 +3,7 @@
 from .api import DynamicApiViewSet, viewset_factory
 from .doc import DatasetDocView, DatasetWFSDocView, DocsOverview
 from .index import APIIndexView
-from .mvt import DatasetMVTIndexView, DatasetMVTSingleView, DatasetMVTView
+from .mvt import DatasetMVTIndexView, DatasetMVTSingleView, DatasetMVTView, DatasetTileJSONView
 from .oauth import oauth2_redirect
 from .wfs import DatasetWFSIndexView, DatasetWFSView
 
@@ -14,6 +14,7 @@ __all__ = (
     "DatasetMVTView",
     "DatasetMVTIndexView",
     "DatasetMVTSingleView",
+    "DatasetTileJSONView",
     "DatasetWFSDocView",
     "DatasetWFSView",
     "DatasetWFSIndexView",
