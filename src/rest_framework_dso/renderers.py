@@ -258,9 +258,14 @@ class CSVRenderer(RendererMixin, CSVStreamingRenderer):
         labels = {}
         extra_headers = []  # separate list to append at the end.
         extra_labels = {}
-        _fields = request.GET.get("_fields") if request else None
         requested_fields = (
-            [f for f in _fields.split(",") if not f.startswith("-")] if _fields else None
+            [
+                f
+                for f in request.GET.get("_fields", "").split(",")
+                if not f.startswith("-") and f != ""
+            ]
+            if request
+            else None
         )
         for name, field in serializer.fields.items():
             if isinstance(field, Serializer):
@@ -276,8 +281,10 @@ class CSVRenderer(RendererMixin, CSVStreamingRenderer):
                 header.append(name)
                 labels[name] = field.label
         if requested_fields:
+            # Only at the top-level of the recursion, field ordering can be redefined
             return requested_fields, labels | extra_labels
-        return header + extra_headers, labels | extra_labels
+        else:
+            return header + extra_headers, labels | extra_labels
 
     def render(self, data, media_type=None, renderer_context=None):
         if (serializer := get_data_serializer(data)) is not None:

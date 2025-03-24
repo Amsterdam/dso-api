@@ -248,11 +248,12 @@ class FieldsToDisplay:
             return display_fields
 
         # Python 3.6+ dicts are already ordered, so there is no need to use DRF's OrderedDict
-        return {
-            field_name: field
-            for field_name, field in fields.items()
-            if field_name in fields_to_keep
-        }
+        else:
+            return {
+                field_name: field
+                for field_name, field in fields.items()
+                if field_name in fields_to_keep
+            }
 
 
 ALLOW_ALL_FIELDS_TO_DISPLAY = FieldsToDisplay()
