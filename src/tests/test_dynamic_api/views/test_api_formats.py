@@ -501,3 +501,105 @@ class TestFormats:
         assert response.status_code == 200, response.getvalue()
         assert "X-Total-Count" not in response
         assert "X-Pagination-Count" not in response
+
+    def test_csv_exclude_field(self, api_client, gebieden_dataset, filled_router):
+        url = reverse("dynamic_api:gebieden-stadsdelen-list")
+        response = api_client.get(
+            url, {"_format": "csv", "_fields": "-code,-naam,-documentdatum,-documentnummer"}
+        )
+        assert response.status_code == 200
+        response_data = [row.decode("utf-8") for row in response.streaming_content]
+        assert response_data == [
+            "Identificatie,Volgnummer,Registratiedatum,Begingeldigheid,Eindgeldigheid,"
+            "Ligtingemeenteidentificatie,Geometrie\r\n"
+        ]
+
+    def test_csv_exclude_include_400(self, api_client, gebieden_dataset, filled_router):
+        url = reverse("dynamic_api:gebieden-stadsdelen-list")
+        response = api_client.get(url, {"_format": "csv", "_fields": "-code,naam"})
+        assert response.status_code == 400
+        assert "invalid-params" in response.data
+        assert (
+            response.data["invalid-params"][0]["reason"]
+            == "It's not possible to combine inclusions and exclusions in the _fields parameter"
+        )
+
+    @pytest.mark.parametrize(
+        "fields,data",
+        [
+            ("naam,volgnummer,code", ["Naam,Volgnummer,Code\r\n"]),
+            ("volgnummer,code,naam", ["Volgnummer,Code,Naam\r\n"]),
+        ],
+    )
+    def test_csv_ordered_fields(self, api_client, gebieden_dataset, filled_router, fields, data):
+        url = reverse("dynamic_api:gebieden-stadsdelen-list")
+        response = api_client.get(url, {"_format": "csv", "_fields": fields})
+        assert response.status_code == 200
+        response_data = [row.decode("utf-8") for row in response.streaming_content]
+        assert response_data == data
+
+    @pytest.mark.parametrize(
+        "fields,data",
+        [
+            ("naam,volgnummer,code", ["Naam,Volgnummer,Code\r\nCentrum,1,A\r\n"]),
+            ("volgnummer,code,naam", ["Volgnummer,Code,Naam\r\n1,A,Centrum\r\n"]),
+        ],
+    )
+    def test_csv_ordered_fields_with_data(
+        self, api_client, stadsdelen_data, filled_router, fields, data
+    ):
+        url = reverse("dynamic_api:gebieden-stadsdelen-list")
+        response = api_client.get(url, {"_format": "csv", "_fields": fields})
+        assert response.status_code == 200
+        response_data = [row.decode("utf-8") for row in response.streaming_content]
+        assert response_data == data
+
+    @pytest.mark.parametrize(
+        "fields,data",
+        [
+            (
+                "naam,ligtInGemeente.identificatie,code",
+                ["Naam,ligtInGemeente.identificatie,Code\r\n"],
+            ),
+            (
+                "ligtInGemeente.identificatie,code,naam",
+                ["ligtInGemeente.identificatie,Code,Naam\r\n"],
+            ),
+        ],
+    )
+    def test_csv_ordered_fields_embedded(
+        self, api_client, gebieden_dataset, filled_router, fields, data
+    ):
+        url = reverse("dynamic_api:gebieden-stadsdelen-list")
+        response = api_client.get(url, {"_format": "csv", "_fields": fields, "_expand": "true"})
+        assert response.status_code == 200
+        response_data = [row.decode("utf-8") for row in response.streaming_content]
+        assert response_data == data
+
+    @pytest.mark.parametrize(
+        "fields,data",
+        [
+            (
+                "naam,ligtInStadsdeel.naam,volgnummer",
+                ["Naam,Ligtinstadsdeel.Naam,Volgnummer\r\nBurgwallen-Nieuwe Zijde,Centrum,1\r\n"],
+            ),
+            (
+                "ligtInStadsdeel.naam,volgnummer,naam",
+                ["Ligtinstadsdeel.Naam,Volgnummer,Naam\r\nCentrum,1,Burgwallen-Nieuwe Zijde\r\n"],
+            ),
+        ],
+    )
+    def test_csv_ordered_fields_embedded_with_data(
+        self,
+        api_client,
+        stadsdelen_data,
+        wijken_data,
+        filled_router,
+        fields,
+        data,
+    ):
+        url = reverse("dynamic_api:gebieden-wijken-list")
+        response = api_client.get(url, {"_format": "csv", "_fields": fields, "_expand": "true"})
+        assert response.status_code == 200
+        response_data = [row.decode("utf-8") for row in response.streaming_content]
+        assert response_data == data
