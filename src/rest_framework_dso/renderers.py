@@ -9,6 +9,7 @@ from types import GeneratorType
 
 import orjson
 from django.conf import settings
+from django.http import HttpRequest
 from django.urls import reverse
 from django.utils.timezone import get_current_timezone
 from rest_framework import renderers
@@ -246,13 +247,21 @@ class CSVRenderer(RendererMixin, CSVStreamingRenderer):
 
         serializer.fields = csv_fields
 
-    def _get_csv_header(self, serializer: Serializer):
-        """Build the CSV header, including fields from sub-resources."""
+    def _get_csv_header(self, serializer: Serializer, request: HttpRequest | None = None):
+        """Build the CSV header, including fields from sub-resources.
+
+        If a _fields parameter is present on the request and it doesn't exclude a field,
+        we use that as the header, but still loop over the serializer fields to get the
+        labels.
+        """
         header = []
         labels = {}
         extra_headers = []  # separate list to append at the end.
         extra_labels = {}
-
+        _fields = request.GET.get("_fields") if request else None
+        requested_fields = (
+            [f for f in _fields.split(",") if not f.startswith("-")] if _fields else None
+        )
         for name, field in serializer.fields.items():
             if isinstance(field, Serializer):
                 sub_header, sub_labels = self._get_csv_header(field)
@@ -266,12 +275,15 @@ class CSVRenderer(RendererMixin, CSVStreamingRenderer):
             else:
                 header.append(name)
                 labels[name] = field.label
-
+        if requested_fields:
+            return requested_fields, labels | extra_labels
         return header + extra_headers, labels | extra_labels
 
     def render(self, data, media_type=None, renderer_context=None):
         if (serializer := get_data_serializer(data)) is not None:
-            header, labels = self._get_csv_header(serializer)
+            request = renderer_context.get("request")
+            header, labels = self._get_csv_header(serializer, request)
+
             renderer_context = {**(renderer_context or {}), "header": header, "labels": labels}
 
         output = super().render(data, media_type=media_type, renderer_context=renderer_context)
