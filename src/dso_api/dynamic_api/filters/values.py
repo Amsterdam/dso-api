@@ -20,6 +20,8 @@ logger = logging.getLogger(__name__)
 
 # Don't want Decimal("NaN"), Decimal("-inf") or '0.321000e+2' to be accepted.
 RE_DECIMAL = re.compile(r"^[0-9]+(\.[0-9]+)?$")
+AMSTERDAM_BOUNDS = [4.72876, 52.2782, 5.07916, 52.4311]
+DAM_SQUARE = [4.8925627, 52.3731139, 14]  # Zoom = 14
 
 
 def str2bool(value: str) -> bool:

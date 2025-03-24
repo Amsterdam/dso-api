@@ -55,6 +55,10 @@ MVT API
    :show-inheritance:
    :members:
 
+.. autoclass:: dso_api.dynamic_api.views.DatasetTileJSONView
+   :show-inheritance:
+   :members:
+
 
 Documentation
 -------------

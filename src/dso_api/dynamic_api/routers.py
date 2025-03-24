@@ -50,6 +50,7 @@ from .views import (
     DatasetDocView,
     DatasetMVTSingleView,
     DatasetMVTView,
+    DatasetTileJSONView,
     DatasetWFSDocView,
     DatasetWFSView,
     viewset_factory,
@@ -384,6 +385,14 @@ class DynamicRouter(routers.DefaultRouter):
                     "mvt/" + dataset.path + "/",
                     DatasetMVTSingleView.as_view(),
                     name="mvt-single-dataset",
+                    kwargs={"dataset_name": dataset_id},
+                )
+            )
+            results.append(
+                path(
+                    "mvt/" + dataset.path + "/tilejson.json",
+                    DatasetTileJSONView.as_view(),
+                    name="mvt-tilejson",
                     kwargs={"dataset_name": dataset_id},
                 )
             )
