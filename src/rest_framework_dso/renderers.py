@@ -9,6 +9,7 @@ from types import GeneratorType
 
 import orjson
 from django.conf import settings
+from django.http import HttpRequest
 from django.urls import reverse
 from django.utils.timezone import get_current_timezone
 from rest_framework import renderers
@@ -246,13 +247,26 @@ class CSVRenderer(RendererMixin, CSVStreamingRenderer):
 
         serializer.fields = csv_fields
 
-    def _get_csv_header(self, serializer: Serializer):
-        """Build the CSV header, including fields from sub-resources."""
+    def _get_csv_header(self, serializer: Serializer, request: HttpRequest | None = None):
+        """Build the CSV header, including fields from sub-resources.
+
+        If a _fields parameter is present on the request and it doesn't exclude a field,
+        we use that as the header, but still loop over the serializer fields to get the
+        labels.
+        """
         header = []
         labels = {}
         extra_headers = []  # separate list to append at the end.
         extra_labels = {}
-
+        requested_fields = (
+            [
+                f
+                for f in request.GET.get("_fields", "").split(",")
+                if not f.startswith("-") and f != ""
+            ]
+            if request
+            else None
+        )
         for name, field in serializer.fields.items():
             if isinstance(field, Serializer):
                 sub_header, sub_labels = self._get_csv_header(field)
@@ -266,12 +280,17 @@ class CSVRenderer(RendererMixin, CSVStreamingRenderer):
             else:
                 header.append(name)
                 labels[name] = field.label
-
-        return header + extra_headers, labels | extra_labels
+        if requested_fields:
+            # Only at the top-level of the recursion, field ordering can be redefined
+            return requested_fields, labels | extra_labels
+        else:
+            return header + extra_headers, labels | extra_labels
 
     def render(self, data, media_type=None, renderer_context=None):
         if (serializer := get_data_serializer(data)) is not None:
-            header, labels = self._get_csv_header(serializer)
+            request = renderer_context.get("request")
+            header, labels = self._get_csv_header(serializer, request)
+
             renderer_context = {**(renderer_context or {}), "header": header, "labels": labels}
 
         output = super().render(data, media_type=media_type, renderer_context=renderer_context)

@@ -42,8 +42,10 @@ class FieldsToDisplay:
         self._children: dict[str, FieldsToDisplay] = {}
         self._allow_all = True
         self.prefix = prefix
+        self._ordered_fields: list[str] = []
 
         if fields:
+            self._ordered_fields = [f for f in fields if not f.startswith("-") and "." not in f]
             # Parse request string into nested format
             fields = group_dotted_names(fields)
 
@@ -231,12 +233,27 @@ class FieldsToDisplay:
                 code="fields",
             )
 
+        # We keep the order of the _fields parameter that has been passed in.
+        # When we only exclude fields, this will be False, and we fall back on the
+        # regular order.
+        if self._ordered_fields:
+            display_fields = {}
+            for field_name in self._ordered_fields:
+                if field_name in fields_to_keep:
+                    display_fields[field_name] = fields[field_name]
+            for field_name in always_keep:
+                if (field := fields.get(field_name)) is not None:
+                    display_fields[field_name] = field
+
+            return display_fields
+
         # Python 3.6+ dicts are already ordered, so there is no need to use DRF's OrderedDict
-        return {
-            field_name: field
-            for field_name, field in fields.items()
-            if field_name in fields_to_keep
-        }
+        else:
+            return {
+                field_name: field
+                for field_name, field in fields.items()
+                if field_name in fields_to_keep
+            }
 
 
 ALLOW_ALL_FIELDS_TO_DISPLAY = FieldsToDisplay()
