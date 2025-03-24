@@ -3,19 +3,19 @@
 import itertools
 import logging
 import time
+from collections.abc import Generator
 from urllib.parse import unquote
 
 import mercantile
-from django.contrib.gis.db.models import functions
-from django.core.exceptions import FieldDoesNotExist, PermissionDenied
+from django.contrib.gis.db.models.functions import Transform
+from django.core.exceptions import PermissionDenied
 from django.db import connection
-from django.db.models import F, Model
+from django.db.models import F, Model, QuerySet
 from django.http import Http404, HttpResponse, StreamingHttpResponse
 from django.urls.base import reverse
 from django.views import View
 from django.views.generic import TemplateView
 from schematools.contrib.django.models import Dataset
-from schematools.exceptions import SchemaObjectNotFound
 from schematools.naming import toCamelCase
 from schematools.permissions import UserScopes
 from schematools.types import DatasetTableSchema
@@ -129,22 +129,9 @@ class DatasetMVTView(CheckPermissionsMixin, View):
         except KeyError:
             raise Http404(f"Invalid table: {dataset_name}.{table_name}") from None
 
-        schema: DatasetTableSchema = model.table_schema()
-        try:
-            self._main_geo = schema.main_geometry_field.python_name
-        except SchemaObjectNotFound as e:
-            raise FieldDoesNotExist(f"No field named '{schema.main_geometry}'") from e
-
+        self._main_geo = model.table_schema().main_geometry_field
         self.model = model
         self.check_permissions(request, [self.model])
-
-    def get_layers(self) -> list[BaseVectorLayerMixin]:
-        """Provide all layer definitions for this rendering."""
-        layer: BaseVectorLayerMixin = VectorLayer()
-        layer.id = "default"
-        layer.model = self.model
-        self._schemafy_layer(layer)
-        return [layer]
 
     def get(self, request, *args, **kwargs):
         x, y, z = kwargs["x"], kwargs["y"], kwargs["z"]
@@ -160,60 +147,8 @@ class DatasetMVTView(CheckPermissionsMixin, View):
             streaming_content=tile, content_type=self._CONTENT_TYPE, status=200
         )
 
-    def _schemafy_layer(self, layer: BaseVectorLayerMixin) -> None:
-        schema: DatasetTableSchema = self.model.table_schema()
-        user_scopes: UserScopes = self.request.user_scopes
-
-        layer.geom_field = schema.main_geometry_field.python_name
-
-        queryset = self.model.objects.all()
-
-        # We always include the identifier fields
-        identifiers = schema.identifier_fields
-        tile_fields = tuple(id.name for id in identifiers)
-
-        for field in schema.fields:
-            field_name = field.name
-            if not user_scopes.has_field_access(field):
-                # 403
-                continue
-            if field.is_relation:
-                # Here we have to use the db_name, because that usually has a suffix not
-                # available on field.name.
-                field_name = toCamelCase(field.db_name)
-            if (
-                self.z >= 15
-                and field.db_name != layer.geom_field
-                and field.name != "schema"
-                and field_name not in tile_fields
-            ):
-                # If we are zoomed far out (low z), only fetch the geometry field for a
-                # smaller payload. The cutoff is arbitrary. Play around with
-                # https://www.maptiler.com/google-maps-coordinates-tile-bounds-projection/
-                # to get a feel for the MVT zoom levels and how much detail a single tile
-                # should contain. We exclude the main geometry and `schema` fields.
-                tile_fields += (field_name,)
-
-                if field_name != field.db_name and field_name.lower() != field_name:
-                    # Annotate camelCased field names so they can be found.
-                    queryset = queryset.annotate(**{field_name: F(field.db_name)})
-        layer.queryset = queryset
-        layer.tile_fields = tile_fields
-
-    def _stream_tile(self, x: int, y: int, z: int):
-        qs = self.model.objects.all()
-        bbox = MakeEnvelope(*mercantile.xy_bounds(x, y, z), 3857)
-        qs = qs.filter(
-            **{
-                f"{self._main_geo}__intersects": bbox,
-            }
-        )
-        # Add MVT row and restrict to the fields we want in the response.
-        qs = qs.annotate(
-            **{self._MVT_ROW: AsMVTGeom(functions.Transform(self._main_geo, 3857), bbox)}
-        )
-        qs = qs.values(self._MVT_ROW, *self._property_fields(z))
-
+    def _stream_tile(self, x: int, y: int, z: int) -> Generator[memoryview]:
+        qs = self._prepare_queryset(x, y, z)
         sql, params = qs.query.sql_with_params()
         with connection.cursor() as cursor:
             # This hairy query generates the MVT tile using ST_AsMVT, then breaks it up into rows
@@ -251,31 +186,63 @@ class DatasetMVTView(CheckPermissionsMixin, View):
             for chunk in cursor:
                 yield chunk[0]
 
-    def _property_fields(self, z) -> tuple:
-        """Returns fields to include in the tile as MVT properties alongside the geometry."""
-        # If we are zoomed far out (low z), only fetch the geometry field for a smaller payload.
-        # The cutoff is arbitrary. Play around with
-        # https://www.maptiler.com/google-maps-coordinates-tile-bounds-projection/#14/4.92/52.37
-        # to get a feel for the MVT zoom levels and how much detail a single tile should contain.
-        if z < 15:
-            return ()
+    def _prepare_queryset(self, x: int, y: int, z: int) -> QuerySet:
+        """Returns Queryset with the correct filtering, annotations and fields to include
+        in the tile as MVT properties alongside the geometry.
+        """
+        bbox = MakeEnvelope(*mercantile.xy_bounds(x, y, z), 3857)
+        schema: DatasetTableSchema = self.model.table_schema()
+        user_scopes: UserScopes = self.request.user_scopes
 
-        user_scopes = self.request.user_scopes
-        return tuple(
-            f.name
-            for f in self.model._meta.get_fields()
-            if f.name != self._main_geo
-            and user_scopes.has_field_access(self.model.get_field_schema(f))
+        qs = self.model.objects.all()
+        qs = qs.filter(
+            **{
+                f"{self._main_geo.python_name}__intersects": bbox,
+            }
         )
+        # Add MVT row.
+        qs = qs.annotate(
+            **{self._MVT_ROW: AsMVTGeom(Transform(self._main_geo.python_name, 3857), bbox)}
+        )
+
+        # We always include the identifier fields.
+        identifiers = schema.identifier_fields
+        tile_fields = tuple(id.name for id in identifiers)
+
+        for field in schema.fields:
+            if not user_scopes.has_field_access(field) or z < 15:
+                # 403 or too zoomed out to include the field.
+                # The cutoff is arbitrary. Play around with
+                # https://www.maptiler.com/google-maps-coordinates-tile-bounds-projection/
+                # to get a feel for the MVT zoom levels and how much detail a single tile
+                # should contain.
+                continue
+
+            # We may have to use the db_name, because that usually has a suffix not
+            # available on field.name.
+            field_name = toCamelCase(field.db_name) if field.is_relation else field.name
+
+            # We exclude the main geometry and `schema` fields.
+            if (
+                field_name not in tile_fields
+                and field.name != "schema"
+                and field != self._main_geo
+            ):
+                tile_fields += (field_name,)
+
+                if field_name != field.db_name and field_name.lower() != field_name:
+                    # Annotate camelCased field names so they can be found.
+                    qs = qs.annotate(**{field_name: F(field.db_name)})
+
+        # Restrict to the fields we want in the response
+        return qs.values(self._MVT_ROW, *tile_fields)
 
     def check_permissions(self, request, models) -> None:
         """Override CheckPermissionsMixin to add extra checks"""
         super().check_permissions(request, models)
 
         # Check whether the geometry field can be accessed, otherwise reading MVT is pointless.
-        if not self.request.user_scopes.has_field_access(
-            self.model.table_schema().main_geometry_field
-        ):
+        if not self.request.user_scopes.has_field_access(self._main_geo):
             raise PermissionDenied()
 
 
