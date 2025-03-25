@@ -1,19 +1,13 @@
 """Mapbox Vector Tiles (MVT) views of geographic datasets."""
 
-import itertools
 import logging
 import time
-from collections.abc import Generator
 from urllib.parse import unquote
 
-import mercantile
-from django.contrib.gis.db.models.functions import Transform
 from django.core.exceptions import PermissionDenied
-from django.db import connection
-from django.db.models import F, Model, QuerySet
-from django.http import Http404, HttpResponse, StreamingHttpResponse
+from django.db.models import F, Model
+from django.http import Http404
 from django.urls.base import reverse
-from django.views import View
 from django.views.generic import TemplateView
 from schematools.contrib.django.models import Dataset
 from schematools.naming import toCamelCase
@@ -21,12 +15,12 @@ from schematools.permissions import UserScopes
 from schematools.types import DatasetTableSchema
 from vectortiles import VectorLayer
 from vectortiles.backends import BaseVectorLayerMixin
-from vectortiles.backends.postgis.functions import AsMVTGeom, MakeEnvelope
 from vectortiles.views import TileJSONView
 
 from dso_api.dynamic_api.datasets import get_active_datasets
 from dso_api.dynamic_api.filters.values import AMSTERDAM_BOUNDS, DAM_SQUARE
 from dso_api.dynamic_api.permissions import CheckPermissionsMixin
+from dso_api.dynamic_api.views.mvt_base import StreamingMVTView, StreamingVectorLayer
 
 from .index import APIIndexView
 
@@ -106,16 +100,10 @@ class DatasetMVTSingleView(TemplateView):
         return context
 
 
-class DatasetMVTView(CheckPermissionsMixin, View):
+class DatasetMVTView(CheckPermissionsMixin, StreamingMVTView):
     """An MVT view for a single table.
-    This view generates the Mapbox Vector Tile format as output.
+    This view streams the Mapbox Vector Tile format as output.
     """
-
-    _CONTENT_TYPE = "application/vnd.mapbox-vector-tile"
-    _EXTENT = 4096  # Default extent for MVT.
-    # Name of temporary MVT row that we add to our queryset.
-    # No field name starting with an underscore ever occurs in our datasets.
-    _MVT_ROW = "_geom_prepared_for_mvt"
 
     def setup(self, request, *args, **kwargs):
         super().setup(request, *args, **kwargs)
@@ -134,87 +122,32 @@ class DatasetMVTView(CheckPermissionsMixin, View):
         self.check_permissions(request, [self.model])
 
     def get(self, request, *args, **kwargs):
-        x, y, z = kwargs["x"], kwargs["y"], kwargs["z"]
-        t0 = time.perf_counter_ns()
-        tile = self._stream_tile(x, y, z)
-        try:
-            chunk = next(tile)
-        except StopIteration:
-            return HttpResponse(content=b"", content_type=self._CONTENT_TYPE, status=204)
-        tile = itertools.chain((chunk,), tile)
-        logging.info(
-            "retrieved tile for %s in %.3fs",
-            request.path,
-            (time.perf_counter_ns() - t0) * 1e-9,
-        )
-        return StreamingHttpResponse(
-            streaming_content=tile, content_type=self._CONTENT_TYPE, status=200
-        )
+        self.zoom = kwargs["z"]
+        return super().get(request, *args, **kwargs)
 
-    def _stream_tile(self, x: int, y: int, z: int) -> Generator[memoryview]:
-        qs = self._prepare_queryset(x, y, z)
-        sql, params = qs.query.sql_with_params()
-        with connection.cursor() as cursor:
-            # This hairy query generates the MVT tile using ST_AsMVT, then breaks it up into rows
-            # that we can stream to the client. We do this because the tile is a potentially very
-            # large bytea in PostgreSQL, which psycopg would otherwise consume in its entirety
-            # before passing it on to us. Since psycopg also needs to keep the hex-encoded
-            # PostgreSQL wire format representation of the tile in memory while decoding it, it
-            # needs 3*n memory to decode an n-byte tile, and tiles can be up to hundreds of
-            # megabytes.
-            #
-            # To make matters worse, what psycopg returns is a memoryview, and Django accepts
-            # memoryviews just fine but casts them to bytes objects, meaning the entire tile gets
-            # copied again. That happens after the hex version has been decoded, but it still
-            # means a slow client can keep our memory use at 2*n for the duration of the request.
-            CHUNK_SIZE = 8192
-            cursor.execute(
-                f"""
-                WITH mvt AS (
-                    SELECT ST_AsMVT(_sub.*, %s, %s, %s) FROM ({sql}) as _sub
-                )
-                SELECT * FROM (
-                    /* This is SQL for range(1, len(x), CHUNK_SIZE), sort of. */
-                    WITH RECURSIVE chunk(i) AS (
-                            VALUES (1)
-                        UNION ALL
-                            SELECT chunk.i+{CHUNK_SIZE} FROM chunk, mvt
-                            WHERE i < octet_length(mvt.ST_AsMVT)
-                    ),
-                    sorted AS (SELECT * FROM chunk ORDER BY i)
-                    SELECT substring(mvt.ST_AsMVT FROM sorted.i FOR {CHUNK_SIZE}) FROM mvt, sorted
-                ) AS chunked_mvt WHERE octet_length(substring) > 0
-                """,  # noqa: S608
-                params=["default", self._EXTENT, self._MVT_ROW, *params],
-            )
-            for chunk in cursor:
-                yield chunk[0]
+    def get_layers(self) -> list[StreamingVectorLayer]:
+        """Provide all layer definitions for this rendering."""
+        layer = self._create_layer()
+        return [layer]
 
-    def _prepare_queryset(self, x: int, y: int, z: int) -> QuerySet:
-        """Returns Queryset with the correct filtering, annotations and fields to include
-        in the tile as MVT properties alongside the geometry.
+    def _create_layer(self) -> StreamingVectorLayer:
+        """Creates the layer used for getting the tiles.
+
+        Adds queryset and tile_fields to the layer.
+        Annotates the queryset with some camelCased aliases.
+        Determines the fields to include based on zoom.
         """
-        bbox = MakeEnvelope(*mercantile.xy_bounds(x, y, z), 3857)
+
         schema: DatasetTableSchema = self.model.table_schema()
         user_scopes: UserScopes = self.request.user_scopes
+        queryset = self.model.objects.all()
 
-        qs = self.model.objects.all()
-        qs = qs.filter(
-            **{
-                f"{self._main_geo.python_name}__intersects": bbox,
-            }
-        )
-        # Add MVT row.
-        qs = qs.annotate(
-            **{self._MVT_ROW: AsMVTGeom(Transform(self._main_geo.python_name, 3857), bbox)}
-        )
-
-        # We always include the identifier fields.
+        # We always include the identifier fields
         identifiers = schema.identifier_fields
         tile_fields = tuple(id.name for id in identifiers)
 
         for field in schema.fields:
-            if not user_scopes.has_field_access(field) or z < 15:
+            if not user_scopes.has_field_access(field) or self.zoom < 15:
                 # 403 or too zoomed out to include the field.
                 # The cutoff is arbitrary. Play around with
                 # https://www.maptiler.com/google-maps-coordinates-tile-bounds-projection/
@@ -229,17 +162,22 @@ class DatasetMVTView(CheckPermissionsMixin, View):
             # We exclude the main geometry and `schema` fields.
             if (
                 field_name not in tile_fields
-                and field.name != "schema"
+                and field_name != "schema"
                 and field != self._main_geo
             ):
                 tile_fields += (field_name,)
 
                 if field_name != field.db_name and field_name.lower() != field_name:
                     # Annotate camelCased field names so they can be found.
-                    qs = qs.annotate(**{field_name: F(field.db_name)})
+                    queryset = queryset.annotate(**{field_name: F(field.db_name)})
 
-        # Restrict to the fields we want in the response
-        return qs.values(self._MVT_ROW, *tile_fields)
+        return StreamingVectorLayer(
+            id="default",
+            model=self.model,
+            geom_field=self._main_geo.python_name,
+            queryset=queryset,
+            tile_fields=tile_fields,
+        )
 
     def check_permissions(self, request, models) -> None:
         """Override CheckPermissionsMixin to add extra checks"""
