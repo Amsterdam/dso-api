@@ -135,14 +135,18 @@ class DatasetMVTView(CheckPermissionsMixin, View):
 
     def get(self, request, *args, **kwargs):
         x, y, z = kwargs["x"], kwargs["y"], kwargs["z"]
-
+        t0 = time.perf_counter_ns()
         tile = self._stream_tile(x, y, z)
         try:
             chunk = next(tile)
         except StopIteration:
             return HttpResponse(content=b"", content_type=self._CONTENT_TYPE, status=204)
         tile = itertools.chain((chunk,), tile)
-
+        logging.info(
+            "retrieved tile for %s in %.3fs",
+            request.path,
+            (time.perf_counter_ns() - t0) * 1e-9,
+        )
         return StreamingHttpResponse(
             streaming_content=tile, content_type=self._CONTENT_TYPE, status=200
         )
