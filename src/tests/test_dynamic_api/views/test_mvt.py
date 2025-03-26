@@ -3,6 +3,7 @@ from datetime import date, datetime
 import mapbox_vector_tile
 import pytest
 from django.contrib.gis.geos import Point
+from django.http.response import HttpResponse, HttpResponseBase, StreamingHttpResponse
 from django.utils.timezone import get_current_timezone
 
 from dso_api.dynamic_api.filters.values import AMSTERDAM_BOUNDS, DAM_SQUARE
@@ -201,7 +202,7 @@ def test_mvt_content(
     assert response.status_code == 200
     assert response["Content-Type"] == CONTENT_TYPE
 
-    vt = mapbox_vector_tile.decode(response.content)
+    vt = decode_mvt(response)
 
     assert vt == {
         "default": {
@@ -229,11 +230,10 @@ def test_mvt_content(
     # Try again at a higher zoom level. We should get the same features and only the "id" property.
     url = "/v1/mvt/afvalwegingen/containers/14/8415/5384.pbf"
     response = api_client.get(url)
-    # MVT view returns 204 when the tile is empty.
     assert response.status_code == 200
     assert response["Content-Type"] == CONTENT_TYPE
 
-    vt = mapbox_vector_tile.decode(response.content)
+    vt = decode_mvt(response)
 
     assert vt == {
         "default": {
@@ -252,6 +252,13 @@ def test_mvt_content(
             ],
         }
     }
+
+    # MVT view returns 204 when the tile is empty.
+    url = "/v1/mvt/afvalwegingen/containers/14/0/0.pbf"
+    response = api_client.get(url)
+    assert response.status_code == 204
+    assert response["Content-Type"] == CONTENT_TYPE
+    assert response.content == b""
 
 
 @pytest.mark.django_db
@@ -298,7 +305,7 @@ def test_mvt_model_auth(api_client, geometry_auth_model, fetch_auth_token, fille
     token = fetch_auth_token(["TEST/GEO", "TEST/META"])
     response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
     assert response.status_code == 200
-    assert mapbox_vector_tile.decode(response.content) == content
+    assert decode_mvt(response) == content
 
     # With only the GEO scope, we still get a 200 response
     # but we lose access to the metadata field.
@@ -307,4 +314,14 @@ def test_mvt_model_auth(api_client, geometry_auth_model, fetch_auth_token, fille
     assert response.status_code == 200
 
     del content["default"]["features"][0]["properties"]["metadata"]
-    assert mapbox_vector_tile.decode(response.content) == content
+    assert decode_mvt(response) == content
+
+
+def decode_mvt(response: HttpResponseBase) -> bytes:
+    if isinstance(response, HttpResponse):
+        content = response.content
+    elif isinstance(response, StreamingHttpResponse):
+        content = b"".join(response.streaming_content)
+    else:
+        raise TypeError(f"unexpected {type(response)}")
+    return mapbox_vector_tile.decode(content)
