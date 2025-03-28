@@ -12,8 +12,20 @@ import os
 from django.conf import settings
 from django.core.wsgi import get_wsgi_application
 from whitenoise import WhiteNoise
+import sys
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "dso_api.settings")
 
 application = get_wsgi_application()
 application = WhiteNoise(application, root=settings.STATIC_ROOT)
+
+# Django warm-up ahead of time instead of lazy
+# From: http://uwsgi-docs.readthedocs.org/en/latest/articles/TheArtOfGracefulReloading.html#dealing-with-ultra-lazy-apps-like-django
+#  And: https://github.com/stefantalpalaru/uwsgi_reload/blob/master/examples/wsgi.py#L19
+application({
+    'REQUEST_METHOD': 'GET',
+    'SERVER_NAME': '127.0.0.1',
+    'SERVER_PORT': 80,
+    'PATH_INFO': '/v1/',
+    'wsgi.input': sys.stdin,
+}, lambda x, y: None)
