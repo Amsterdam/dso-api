@@ -937,6 +937,7 @@ opentelemetry-api==1.31.1 \
     #   opentelemetry-instrumentation-django
     #   opentelemetry-instrumentation-fastapi
     #   opentelemetry-instrumentation-flask
+    #   opentelemetry-instrumentation-psycopg
     #   opentelemetry-instrumentation-psycopg2
     #   opentelemetry-instrumentation-requests
     #   opentelemetry-instrumentation-urllib
@@ -953,6 +954,7 @@ opentelemetry-instrumentation==0.52b1 \
     #   opentelemetry-instrumentation-django
     #   opentelemetry-instrumentation-fastapi
     #   opentelemetry-instrumentation-flask
+    #   opentelemetry-instrumentation-psycopg
     #   opentelemetry-instrumentation-psycopg2
     #   opentelemetry-instrumentation-requests
     #   opentelemetry-instrumentation-urllib
@@ -965,7 +967,9 @@ opentelemetry-instrumentation-asgi==0.52b1 \
 opentelemetry-instrumentation-dbapi==0.52b1 \
     --hash=sha256:47e54d26ad39f3951c7f3b4d4fb685a3c75445cfd57fcff2e92c416575c568ab \
     --hash=sha256:62a6c37b659f6aa5476f12fb76c78f4ad27c49fb71a8a2c11609afcbb84f1e1c
-    # via opentelemetry-instrumentation-psycopg2
+    # via
+    #   opentelemetry-instrumentation-psycopg
+    #   opentelemetry-instrumentation-psycopg2
 opentelemetry-instrumentation-django==0.52b1 \
     --hash=sha256:2541819564dae5edb0afd023de25d35761d8943aa88e6344b1e52f4fe036ccb6 \
     --hash=sha256:895dcc551fa9c38c62e23d6b66ef250b20ff0afd7a39f8822ec61a2929dfc7c7
@@ -978,6 +982,10 @@ opentelemetry-instrumentation-flask==0.52b1 \
     --hash=sha256:3c8b83147838bef24aac0182f0d49865321efba4cb1f96629f460330d21d0fa9 \
     --hash=sha256:c8bc64da425ccbadb4a2ee5e8d99045e2282bfbf63bc9be07c386675839d00be
     # via azure-monitor-opentelemetry
+opentelemetry-instrumentation-psycopg==0.52b1 \
+    --hash=sha256:41dc6355a67a98421dfa9e761346e28bdec63e76f5d92eed6a51e84fed0c905c \
+    --hash=sha256:bdf3e781032ce7645693ce5702348e1a257acd2d13f630af216b73e2cf0449b4
+    # via -r requirements.in
 opentelemetry-instrumentation-psycopg2==0.52b1 \
     --hash=sha256:51ac9f3d0b83889a1df2fc1342d86887142c2b70d8532043bc49b36fe95ea9d8 \
     --hash=sha256:5bbdb2a2973aae9402946c995e277b1f76e467faebc40ac0f8da51c701918bb4
@@ -1176,6 +1184,10 @@ psutil==7.0.0 \
     --hash=sha256:a5f098451abc2828f7dc6b58d44b532b22f2088f4999a937557b603ce72b1993 \
     --hash=sha256:ba3fcef7523064a6c9da440fc4d6bd07da93ac726b5733c29027d7dc95b39d99
     # via azure-monitor-opentelemetry-exporter
+psycopg==3.2.6 \
+    --hash=sha256:16fa094efa2698f260f2af74f3710f781e4a6f226efe9d1fd0c37f384639ed8a \
+    --hash=sha256:f3ff5488525890abb0566c429146add66b329e20d6d4835662b920cbbf90ac58
+    # via -r requirements.in
 psycopg2==2.9.10 \
     --hash=sha256:0435034157049f6846e95103bd8f5a668788dd913a7c30162ca9503fdf542cb4 \
     --hash=sha256:12ec0b40b0273f95296233e8750441339298e6a572f7039da5b260e3c8b60e11 \

@@ -16,6 +16,7 @@ DATABASES = {
         engine="django.contrib.gis.db.backends.postgis",
     ),
 }
+DATABASES["default"].setdefault("DISABLE_SERVER_SIDE_CURSORS", True)
 TEST_USER_EMAIL = "test@tester.nl"
 DB_USER = DATABASES["default"]["USER"]
 DATABASE_SET_ROLE = False

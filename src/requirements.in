@@ -23,7 +23,10 @@ Markdown == 3.8
 more-ds == 0.0.6
 more-itertools == 10.7.0
 openapi-spec-validator == 0.7.2
+# Version should match with opentelemetry subdependency:
+opentelemetry-instrumentation-psycopg == 0.52b1
 orjson == 3.10.18
+psycopg == 3.2.6
 pygments == 2.19.1
 python-json-logger==3.3.0
 python-string-utils == 1.0.0

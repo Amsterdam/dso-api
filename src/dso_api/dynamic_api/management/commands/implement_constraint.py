@@ -1,7 +1,7 @@
 from django.apps import apps
 from django.core.management.base import BaseCommand
 from django.db import connection
-from psycopg2 import sql
+from psycopg import sql
 from schematools.contrib.django.models import DynamicModel
 
 
