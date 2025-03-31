@@ -14,7 +14,7 @@ from django.db import connection
 from django.utils.functional import SimpleLazyObject
 from django.utils.timezone import get_current_timezone
 from jwcrypto.jwt import JWT
-from psycopg2.sql import SQL, Identifier
+from psycopg.sql import SQL, Identifier
 from rest_framework.request import Request
 from rest_framework.test import APIClient, APIRequestFactory
 from schematools.contrib.django.models import Dataset, DynamicModel, Profile
