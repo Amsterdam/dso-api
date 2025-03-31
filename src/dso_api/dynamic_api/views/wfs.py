@@ -79,7 +79,7 @@ class AuthenticatedFeatureType(FeatureType):
 
         # If the main geometry is hidden behind an access scope,
         # accessing the WFS feature is moot (and risks exposure through direct model access)
-        if not self.geometry_fields:
+        if not self.main_geometry_element:
             raise PermissionDenied(locator="typeNames")
 
     def get_queryset(self) -> models.QuerySet:
@@ -200,7 +200,7 @@ class DatasetWFSView(CheckPermissionsMixin, WFSView):
         context["expandable_fields"] = sorted(expandable_fields)
         return context
 
-    def get_service_description(self, service: str) -> ServiceDescription:
+    def get_service_description(self, service: str | None = None) -> ServiceDescription:
         some_model: DynamicModel = next(iter(self.models.values()))
         schema = some_model.get_dataset_schema()
 
@@ -232,9 +232,9 @@ class DatasetWFSView(CheckPermissionsMixin, WFSView):
 
             if not subset:
                 raise InvalidParameterValue(
-                    "typename",
                     f"Typename '{typenames}' doesn't exist in this server. "
                     f"Please check the capabilities and reformulate your request.",
+                    "typename",
                 ) from None
 
         features = []

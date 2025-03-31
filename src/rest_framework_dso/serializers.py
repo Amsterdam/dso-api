@@ -13,7 +13,7 @@ There are 2 layers of serializers, just like standard DRF:
 
 The non-model serializers implement the bits that are not dependant on database ORM logic
 like models or querysets. These serializers are therefore more limited in functionality,
-but useful to implement DSO-style responses for other data sources (e.g. remote API responses).
+but useful to implement DSO-style responses for other data sources.
 
 The model-serializers depend on the ORM logic, and support features like object embedding
 and constructing serializer fields based on the model field metadata.
@@ -581,7 +581,7 @@ class DSOSerializer(ExpandableSerializer, serializers.Serializer):
 
     def _apply_crs(self, instance, accept_crs: CRS):
         """Make sure all geofields use the same CRS."""
-        is_dict = isinstance(instance, dict)  # happens with remote API proxy responses
+        is_dict = isinstance(instance, dict)
         for field in self._geometry_fields:
             geo_value = instance[field.source] if is_dict else getattr(instance, field.source)
             if geo_value is not None:

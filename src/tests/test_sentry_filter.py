@@ -12,7 +12,6 @@ def _get_event(request_url):
 @pytest.mark.parametrize(
     "blocked_paths,request_url,is_blocked",
     [
-        (["v1/haalcentraalbrk"], "http://api.example.com/v1/haalcentraalbrk/test", True),
         ([], "http://api.example.com/v1/gebieden/buurten", False),
         (["v1/gebieden"], "http://api.example.com/v1/gebieden/buurten", True),
         (["v1/gebieden", "v1/brk"], "http://api.example.com/v1/gebieden/buurten", True),

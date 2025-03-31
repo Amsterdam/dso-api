@@ -2,7 +2,7 @@
   "type": "dataset",
   "id": "selfref",
   "title": "bag",
-  "status": "niet_beschikbaar",
+  "status": "beschikbaar",
   "publisher": "Nobody",
   "version": "0.0.1",
   "crs": "EPSG:28992",
