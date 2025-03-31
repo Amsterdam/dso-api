@@ -77,3 +77,12 @@ class TestFieldsToDisplay:
         with pytest.raises(ValidationError) as e:
             FieldsToDisplay(["person", "person.name", "-person.address"])
         assert "not possible to combine inclusions and exclusions" in str(e)
+
+    def test_ordered_fields_works_with_unavailable_fields(self):
+        ftd = FieldsToDisplay(["cat", "food", "owner"])
+        fields = {
+            "owner": "Tom",
+            "cat": "Felix",
+        }
+        result = ftd.apply(fields, valid_names={"cat", "food", "owner"}, always_keep={"_links"})
+        assert result == {"cat": "Felix", "owner": "Tom"}

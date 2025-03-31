@@ -239,8 +239,8 @@ class FieldsToDisplay:
         if self._ordered_fields:
             display_fields = {}
             for field_name in self._ordered_fields:
-                if field_name in fields_to_keep:
-                    display_fields[field_name] = fields[field_name]
+                if field_name in fields_to_keep and (field := fields.get(field_name)) is not None:
+                    display_fields[field_name] = field
             for field_name in always_keep:
                 if (field := fields.get(field_name)) is not None:
                     display_fields[field_name] = field
