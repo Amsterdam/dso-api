@@ -536,32 +536,6 @@ INITIALIZE_DYNAMIC_VIEWSETS = env.bool(
 DATASETS_LIST = env.list("DATASETS_LIST", default=None)
 DATASETS_EXCLUDE = env.list("DATASETS_EXCLUDE", default=None)
 
-# TODO the variables without _BAG_ are for BRK. Rename them.
-if _USE_SECRET_STORE or CLOUD_ENV.startswith("azure"):
-    HAAL_CENTRAAL_API_KEY = Path("/mnt/secrets-store/haalcentraal-api-key").read_text()
-    HAAL_CENTRAAL_BAG_API_KEY = Path("/mnt/secrets-store/haalcentraal-bag-api-key").read_text()
-else:
-    HAAL_CENTRAAL_API_KEY = os.getenv("HAAL_CENTRAAL_API_KEY")
-    HAAL_CENTRAAL_BAG_API_KEY = os.getenv("HAAL_CENTRAAL_BAG_API_KEY")
-
-# Defaults to the acceptance endpoint. For production, set
-# HAAL_CENTRAAL_BAG_ENDPOINT=https://api.bag.kadaster.nl/lvbag/individuelebevragingen/v2/
-HAAL_CENTRAAL_BAG_ENDPOINT = os.getenv(
-    "HAAL_CENTRAAL_BAG_ENDPOINT",
-    "https://api.bag.acceptatie.kadaster.nl/lvbag/individuelebevragingen/v2/",
-)
-
-# Defaults to the acceptance endpoint. For production, set
-# HAAL_CENTRAAL_BRK_ENDPOINT=https://api.brk.kadaster.nl/esd/bevragen/v1/
-HAAL_CENTRAAL_BRK_ENDPOINT = os.getenv(
-    "HAAL_CENTRAAL_BRK_ENDPOINT",
-    "https://api.brk.acceptatie.kadaster.nl/esd/bevragen/v1/",
-)
-
-# mTLS client certificate for Haal Centraal BRK.
-HAAL_CENTRAAL_KEYFILE = os.getenv("HC_KEYFILE")
-HAAL_CENTRAAL_CERTFILE = os.getenv("HC_CERTFILE")
-
 SHELL_PLUS_POST_IMPORTS = (
     "from django.apps.registry import apps",
     "from dso_api.dynamic_api.filterset import filterset_factory",

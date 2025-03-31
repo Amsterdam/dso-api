@@ -70,17 +70,6 @@ The following variables define the locations for datasets::
     SCHEMA_DEFS_URL = https://schemas.data.amsterdam.nl/schema  # Prefix for meta schemas
 
 
-Remote API Endpoints
---------------------
-
-::
-
-    # Haalcentraal
-    HAAL_CENTRAAL_API_KEY = ...
-    HC_KEYFILE = ...
-    HC_CERTFILE = ...
-
-
 Cloud environment
 -----------------
 

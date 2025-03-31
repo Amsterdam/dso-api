@@ -429,45 +429,6 @@ def bommen_v2_dataset(bommen_v2_schema) -> Dataset:
 
 
 @pytest.fixture()
-def brp_schema_json() -> dict:
-    """Fixture for the BRP dataset"""
-    path = HERE / "files/datasets/brp.json"
-    return json.loads(path.read_text())
-
-
-@pytest.fixture()
-def brp_schema(schema_loader) -> DatasetSchema:
-    return schema_loader.get_dataset_from_file("brp.json")
-
-
-@pytest.fixture()
-def brp_endpoint_url() -> str:
-    return "http://remote-server/unittest/brp/{table_id}"
-
-
-@pytest.fixture()
-def brp_dataset(brp_schema_json, brp_endpoint_url) -> Dataset:
-    """Create a remote dataset."""
-    return Dataset.objects.create(
-        name="brp",
-        schema_data=json.dumps(brp_schema_json),
-        enable_db=False,
-        endpoint_url=brp_endpoint_url,
-        path="remote/brp",
-    )
-
-
-@pytest.fixture()
-def hcbag_example_list_input():
-    return (HERE / "files/haalcentraalbag/hc_2631cr.json").read_bytes()
-
-
-@pytest.fixture()
-def hcbag_example_list_output():
-    return (HERE / "files/haalcentraalbag/dso_2631cr.json").read_bytes()
-
-
-@pytest.fixture()
 def hoofdroutes_schema(schema_loader):
     return schema_loader.get_dataset_from_file(HERE / "files/datasets/hoofdroutes.json")
 

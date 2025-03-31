@@ -16,9 +16,8 @@ like:
     ]
 
 The :func:`~DynamicRouter.initialize` function is also responsible for calling
-the :func:`~schematools.contrib.django.factories.model_factory`,
-:func:`~dso_api.dynamic_api.views.viewset_factory` and
-:func:`~dso_api.dynamic_api.remote.remote_viewset_factory` functions.
+the :func:`~schematools.contrib.django.factories.model_factory` and
+:func:`~dso_api.dynamic_api.views.viewset_factory`.
 """
 
 from __future__ import annotations
@@ -42,7 +41,6 @@ from schematools.naming import to_snake_case
 from .datasets import get_active_datasets
 from .models import SealedDynamicModel
 from .openapi import get_openapi_json_view
-from .remote import remote_serializer_factory, remote_viewset_factory
 from .serializers import clear_serializer_factory_cache
 from .utils import get_view_name
 from .views import (
@@ -81,27 +79,18 @@ class DynamicAPIIndexView(APIIndexView):
 
     def get_environments(self, ds: Dataset, base: str):
         dataset_id = ds.schema.id
-        if ds.enable_db:
-            api_url = reverse(f"dynamic_api:openapi-{dataset_id}")
-            return [
-                {
-                    "name": "production",
-                    "api_url": base + api_url,
-                    "specification_url": base + api_url,
-                    "documentation_url": f"{base}/v1/docs/datasets/{ds.path}.html",
-                }
-            ]
-        else:
-            # Remote proxies have no index page yet.
-            # NOTE: no views are generated when endpoint_url is also empty.
-            return [
-                {
-                    "name": "production",
-                    "api_url": "",  # f"/v1/{ds.path}{{table_id}}"
-                    "specification_url": "",
-                    "documentation_url": f"{base}/v1/docs/datasets/{ds.path}.html",
-                }
-            ]
+        if not ds.enable_db:
+            return []
+
+        api_url = reverse(f"dynamic_api:openapi-{dataset_id}")
+        return [
+            {
+                "name": "production",
+                "api_url": base + api_url,
+                "specification_url": base + api_url,
+                "documentation_url": f"{base}/v1/docs/datasets/{ds.path}.html",
+            }
+        ]
 
     def get_related_apis(self, ds: Dataset, base: str):
         if ds.enable_db and ds.has_geometry_fields:
@@ -150,9 +139,8 @@ class DynamicRouter(routers.DefaultRouter):
         or when the meta tables are not found in the database (e.g. using a first migrate).
 
         The initialization calls
-        the :func:`~schematools.contrib.django.factories.model_factory`,
-        :func:`~dso_api.dynamic_api.views.viewset_factory` and
-        :func:`~dso_api.dynamic_api.remote.remote_viewset_factory` functions.
+        the :func:`~schematools.contrib.django.factories.model_factory` and
+        :func:`~dso_api.dynamic_api.views.viewset_factory`.
         """
         if not settings.INITIALIZE_DYNAMIC_VIEWSETS:
             return []
@@ -211,29 +199,22 @@ class DynamicRouter(routers.DefaultRouter):
             return []
 
         # Create viewsets only for datasets that have an API enabled
-        db_datasets = [ds for ds in db_datasets if ds.enable_api]
-        dataset_routes = self._build_db_viewsets(db_datasets)
-
-        # Same for remote API's
-        api_datasets = list(get_active_datasets().endpoint_enabled())
-        remote_routes = self._build_remote_viewsets(api_datasets)
-
-        datasets = db_datasets + api_datasets
-
-        doc_urls = self._build_doc_views(datasets)
+        api_datasets = [ds for ds in db_datasets if ds.enable_api]
+        dataset_routes = self._build_db_viewsets(api_datasets)
+        doc_urls = self._build_doc_views(api_datasets)
 
         # OpenAPI views
-        openapi_urls = self._build_openapi_views(datasets)
+        openapi_urls = self._build_openapi_views(api_datasets)
 
         # Sub Index views for sub paths of datasets
-        index_urls = self._build_index_views(datasets)
+        index_urls = self._build_index_views(api_datasets)
 
         # mvt and wfs views
-        mvt_urls = self._build_mvt_views(datasets)
-        wfs_urls = self._build_wfs_views(datasets)
+        mvt_urls = self._build_mvt_views(api_datasets)
+        wfs_urls = self._build_wfs_views(api_datasets)
 
         # Atomically copy the new viewset registrations
-        self.registry = self.static_routes + dataset_routes + remote_routes
+        self.registry = self.static_routes + dataset_routes
         self._doc_urls = doc_urls
         self._openapi_urls = openapi_urls
         self._index_urls = index_urls
@@ -312,32 +293,6 @@ class DynamicRouter(routers.DefaultRouter):
                     prefix=url_prefix,
                     viewset=viewset,
                     basename=f"{dataset_id}-{table_id}",
-                )
-
-        return tmp_router.registry
-
-    def _build_remote_viewsets(self, api_datasets: Iterable[Dataset]):
-        """Initialize viewsets that are proxies for remote URLs"""
-        tmp_router = routers.SimpleRouter()
-
-        for dataset in api_datasets:
-            dataset_id = dataset.schema.id
-
-            for table in dataset.schema.tables:
-                table_id = to_snake_case(table.id)
-
-                # Determine the URL prefix for the model
-                url_prefix = self._make_url(dataset.path, table_id)
-                serializer_class = remote_serializer_factory(table)
-                viewset = remote_viewset_factory(
-                    endpoint_url=dataset.endpoint_url,
-                    serializer_class=serializer_class,
-                    table_schema=table,
-                )
-                tmp_router.register(
-                    prefix=url_prefix,
-                    viewset=viewset,
-                    basename=f"{to_snake_case(dataset_id)}-{table.id}",
                 )
 
         return tmp_router.registry

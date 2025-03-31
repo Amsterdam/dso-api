@@ -86,14 +86,6 @@ Import schemas::
 
     ./manage.py import_schemas
 
-Note: This might results in an error
-``AttributeError: type object 'kadastraalonroerendezaken_adressen' has no attribute 'koppelingswijze'``
-This is because some datasets are :ref:`virtual datasets <remote>`.
-Some schema features are only supported in local or virtual datasets.
-To address the error we need to mark that dataset as a proxy to another URL::
-
- ./manage.py change_dataset brp --endpoint-url='http://example.com/{table_id}/'
-
 
 Run the server
 --------------

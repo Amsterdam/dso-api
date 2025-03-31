@@ -45,9 +45,9 @@ Sometimes it's not possible to remove a field (for example, a geometry field for
 In that case, the endpoints produces a HTTP 403 error to completely deny access.
 
 .. note::
-   The schema validation also require an ``authReason`` to be present when ``auth`` is used.
+   The schema validation also require an ``reasonsNonPublic`` to be present when ``auth`` is used.
    Government data is expected to be public, unless there is a valid reason for it.
-   The ``authReason`` field forces schema authors to consider why data has to be restricted.
+   The ``reasonsNonPublic`` field forces schema authors to consider why data has to be restricted.
 
 Restricting Querying
 ~~~~~~~~~~~~~~~~~~~~

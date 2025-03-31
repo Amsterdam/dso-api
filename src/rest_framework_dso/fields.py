@@ -582,8 +582,7 @@ class DSOGeometryField(GeometryField):
         geom: GEOSGeometry = super().to_internal_value(value)
 
         # Assign the proper SRID value to the geometry, instead of the default EPSG:4326
-        # The 'content_crs' is not parsed from the request, as it may come
-        # from other sources such as a remote API that this serializer is parsing.
+        # The 'content_crs' is passed in the context, to be request agnostic.
         if (content_crs := self.context.get("content_crs")) is not None:
             geom.srid = content_crs.srid
 
