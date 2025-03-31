@@ -15,7 +15,7 @@ asgiref==3.8.1
     #   django
     #   django-cors-headers
     #   opentelemetry-instrumentation-asgi
-attrs==24.3.0
+attrs==25.3.0
     # via
     #   jsonlines
     #   jsonschema
@@ -28,13 +28,13 @@ azure-core==1.32.0
     #   azure-monitor-opentelemetry
     #   azure-monitor-opentelemetry-exporter
     #   msrest
-azure-core-tracing-opentelemetry==1.0.0b11
+azure-core-tracing-opentelemetry==1.0.0b12
     # via azure-monitor-opentelemetry
 azure-identity==1.21.0
     # via -r ./requirements.in
 azure-monitor-opentelemetry==1.6.5
     # via -r ./requirements.in
-azure-monitor-opentelemetry-exporter==1.0.0b33
+azure-monitor-opentelemetry-exporter==1.0.0b35
     # via azure-monitor-opentelemetry
 bandit==1.8.3
     # via -r ./requirements.in
@@ -46,7 +46,7 @@ build==1.2.2.post1
     #   pip-tools
 cachetools==5.5.2
     # via -r ./requirements.in
-certifi==2024.12.14
+certifi==2025.1.31
     # via
     #   django-healthchecks
     #   msrest
@@ -66,7 +66,7 @@ click==8.1.8
     #   mercantile
     #   pip-tools
     #   pur
-coverage[toml]==7.6.10
+coverage[toml]==7.8.0
     # via pytest-cov
 cryptography==44.0.2
     # via
@@ -79,13 +79,13 @@ datadiensten-apikeyclient==0.6.0
     # via -r ./requirements.in
 datapunt-authorization-django==1.4.0
     # via -r ./requirements.in
-decorator==5.1.1
+decorator==5.2.1
     # via jsonpath-rw
-deepdiff==8.1.1
+deepdiff==8.4.2
     # via amsterdam-schema-tools
 defusedxml==0.7.1
     # via django-gisserver
-deprecated==1.2.15
+deprecated==1.2.18
     # via
     #   opentelemetry-api
     #   opentelemetry-semantic-conventions
@@ -145,15 +145,15 @@ djangorestframework-gis==1.1
     # via -r ./requirements.in
 drf-spectacular==0.28.0
     # via -r ./requirements.in
-factory-boy==3.3.1
+factory-boy==3.3.3
     # via amsterdam-schema-tools
-faker==33.3.1
+faker==37.1.0
     # via factory-boy
-filelock==3.16.1
+filelock==3.18.0
     # via virtualenv
 fixedint==0.1.6
     # via azure-monitor-opentelemetry-exporter
-flake8==7.1.2
+flake8==7.2.0
     # via
     #   -r ./requirements.in
     #   flake8-colors
@@ -175,17 +175,17 @@ geoalchemy2==0.17.1
     #   amsterdam-schema-tools
 greenlet==3.1.1
     # via sqlalchemy
-identify==2.6.5
+identify==2.6.9
     # via pre-commit
 idna==3.10
     # via
     #   jsonschema
     #   requests
-importlib-metadata==8.5.0
+importlib-metadata==8.6.1
     # via opentelemetry-api
 inflection==0.5.1
     # via drf-spectacular
-iniconfig==2.0.0
+iniconfig==2.1.0
     # via pytest
 isodate==0.7.2
     # via msrest
@@ -209,7 +209,7 @@ jsonschema[format]==4.23.0
     #   mappyfile
     #   openapi-schema-validator
     #   openapi-spec-validator
-jsonschema-path==0.3.3
+jsonschema-path==0.3.4
     # via openapi-spec-validator
 jsonschema-specifications==2024.10.1
     # via
@@ -249,11 +249,11 @@ more-itertools==10.6.0
     # via
     #   -r ./requirements.in
     #   amsterdam-schema-tools
-msal==1.31.1
+msal==1.32.0
     # via
     #   azure-identity
     #   msal-extensions
-msal-extensions==1.2.0
+msal-extensions==1.3.1
     # via azure-identity
 msrest==0.7.1
     # via azure-monitor-opentelemetry-exporter
@@ -261,7 +261,7 @@ mypy-extensions==1.0.0
     # via black
 nodeenv==1.9.1
     # via pre-commit
-numpy==2.2.2
+numpy==2.2.4
     # via shapely
 oauthlib==3.2.2
     # via requests-oauthlib
@@ -269,7 +269,7 @@ openapi-schema-validator==0.6.3
     # via openapi-spec-validator
 openapi-spec-validator==0.7.1
     # via -r ./requirements.in
-opentelemetry-api==1.29.0
+opentelemetry-api==1.31.1
     # via
     #   azure-core-tracing-opentelemetry
     #   azure-monitor-opentelemetry-exporter
@@ -286,7 +286,7 @@ opentelemetry-api==1.29.0
     #   opentelemetry-instrumentation-wsgi
     #   opentelemetry-sdk
     #   opentelemetry-semantic-conventions
-opentelemetry-instrumentation==0.50b0
+opentelemetry-instrumentation==0.52b1
     # via
     #   opentelemetry-instrumentation-asgi
     #   opentelemetry-instrumentation-dbapi
@@ -298,36 +298,36 @@ opentelemetry-instrumentation==0.50b0
     #   opentelemetry-instrumentation-urllib
     #   opentelemetry-instrumentation-urllib3
     #   opentelemetry-instrumentation-wsgi
-opentelemetry-instrumentation-asgi==0.50b0
+opentelemetry-instrumentation-asgi==0.52b1
     # via opentelemetry-instrumentation-fastapi
-opentelemetry-instrumentation-dbapi==0.50b0
+opentelemetry-instrumentation-dbapi==0.52b1
     # via opentelemetry-instrumentation-psycopg2
-opentelemetry-instrumentation-django==0.50b0
+opentelemetry-instrumentation-django==0.52b1
     # via azure-monitor-opentelemetry
-opentelemetry-instrumentation-fastapi==0.50b0
+opentelemetry-instrumentation-fastapi==0.52b1
     # via azure-monitor-opentelemetry
-opentelemetry-instrumentation-flask==0.50b0
+opentelemetry-instrumentation-flask==0.52b1
     # via azure-monitor-opentelemetry
-opentelemetry-instrumentation-psycopg2==0.50b0
+opentelemetry-instrumentation-psycopg2==0.52b1
     # via azure-monitor-opentelemetry
-opentelemetry-instrumentation-requests==0.50b0
+opentelemetry-instrumentation-requests==0.52b1
     # via azure-monitor-opentelemetry
-opentelemetry-instrumentation-urllib==0.50b0
+opentelemetry-instrumentation-urllib==0.52b1
     # via azure-monitor-opentelemetry
-opentelemetry-instrumentation-urllib3==0.50b0
+opentelemetry-instrumentation-urllib3==0.52b1
     # via azure-monitor-opentelemetry
-opentelemetry-instrumentation-wsgi==0.50b0
+opentelemetry-instrumentation-wsgi==0.52b1
     # via
     #   opentelemetry-instrumentation-django
     #   opentelemetry-instrumentation-flask
 opentelemetry-resource-detector-azure==0.1.5
     # via azure-monitor-opentelemetry
-opentelemetry-sdk==1.29.0
+opentelemetry-sdk==1.31.1
     # via
     #   azure-monitor-opentelemetry
     #   azure-monitor-opentelemetry-exporter
     #   opentelemetry-resource-detector-azure
-opentelemetry-semantic-conventions==0.50b0
+opentelemetry-semantic-conventions==0.52b1
     # via
     #   opentelemetry-instrumentation
     #   opentelemetry-instrumentation-asgi
@@ -340,7 +340,7 @@ opentelemetry-semantic-conventions==0.50b0
     #   opentelemetry-instrumentation-urllib3
     #   opentelemetry-instrumentation-wsgi
     #   opentelemetry-sdk
-opentelemetry-util-http==0.50b0
+opentelemetry-util-http==0.52b1
     # via
     #   opentelemetry-instrumentation-asgi
     #   opentelemetry-instrumentation-django
@@ -350,9 +350,9 @@ opentelemetry-util-http==0.50b0
     #   opentelemetry-instrumentation-urllib
     #   opentelemetry-instrumentation-urllib3
     #   opentelemetry-instrumentation-wsgi
-orderly-set==5.2.3
+orderly-set==5.3.0
     # via deepdiff
-orjson==3.10.15
+orjson==3.10.16
     # via
     #   -r ./requirements.in
     #   amsterdam-schema-tools
@@ -372,13 +372,13 @@ pathspec==0.12.1
     # via black
 pause==0.3
     # via datadiensten-apikeyclient
-pbr==6.1.0
+pbr==6.1.1
     # via stevedore
 pg-grant==0.4.0
     # via amsterdam-schema-tools
 pip-tools==7.4.1
     # via -r requirements_dev.in
-platformdirs==4.3.6
+platformdirs==4.3.7
     # via
     #   black
     #   virtualenv
@@ -386,13 +386,11 @@ pluggy==1.5.0
     # via pytest
 ply==3.11
     # via jsonpath-rw
-portalocker==2.10.1
-    # via msal-extensions
 pre-commit==4.2.0
     # via -r requirements_dev.in
-protobuf==5.29.3
+protobuf==5.29.4
     # via mapbox-vector-tile
-psutil==5.9.8
+psutil==6.1.1
     # via azure-monitor-opentelemetry-exporter
 psycopg2==2.9.10
     # via amsterdam-schema-tools
@@ -400,13 +398,13 @@ pur==7.3.3
     # via -r ./requirements.in
 pyclipper==1.3.0.post6
     # via mapbox-vector-tile
-pycodestyle==2.12.1
+pycodestyle==2.13.0
     # via
     #   flake8
     #   flake8-debugger
 pycparser==2.22
     # via cffi
-pyflakes==3.2.0
+pyflakes==3.3.2
     # via flake8
 pygments==2.19.1
     # via
@@ -437,7 +435,6 @@ python-dateutil==2.9.0.post0
     # via
     #   amsterdam-schema-tools
     #   arrow
-    #   faker
 python-json-logger==3.3.0
     # via -r ./requirements.in
 python-owasp-zap-v2-4==0.1.0
@@ -454,7 +451,7 @@ pyyaml==6.0.2
     #   pre-commit
 redis==5.2.1
     # via django-redis
-referencing==0.35.1
+referencing==0.36.2
     # via
     #   jsonschema
     #   jsonschema-path
@@ -483,17 +480,17 @@ rfc3339-validator==0.1.4
     #   openapi-schema-validator
 rfc3987==1.3.8
     # via jsonschema
-rich==13.9.4
+rich==14.0.0
     # via bandit
-rpds-py==0.22.3
+rpds-py==0.24.0
     # via
     #   jsonschema
     #   referencing
 ruff==0.11.2
     # via -r requirements_dev.in
-sentry-sdk==2.24.1
+sentry-sdk==2.25.0
     # via -r ./requirements.in
-shapely==2.0.6
+shapely==2.0.7
     # via
     #   amsterdam-schema-tools
     #   mapbox-vector-tile
@@ -512,9 +509,9 @@ sqlparse==0.5.3
     # via
     #   django
     #   django-debug-toolbar
-stevedore==5.4.0
+stevedore==5.4.1
     # via bandit
-termcolor==2.5.0
+termcolor==3.0.0
     # via
     #   -r requirements_dev.in
     #   pytest-sugar
@@ -522,13 +519,14 @@ tomli==2.2.1
     # via -r requirements_dev.in
 types-python-dateutil==2.9.0.20241206
     # via arrow
-typing-extensions==4.12.2
+typing-extensions==4.13.0
     # via
     #   azure-core
     #   azure-identity
-    #   faker
     #   jwcrypto
     #   opentelemetry-sdk
+tzdata==2025.2
+    # via faker
 uri-template==1.3.0
     # via jsonschema
 uritemplate==4.1.1
@@ -544,7 +542,7 @@ uwsgi-readiness-check==0.2.0
     # via -r ./requirements.in
 uwsgitop==0.12
     # via -r ./requirements.in
-virtualenv==20.29.1
+virtualenv==20.29.3
     # via pre-commit
 webcolors==24.11.1
     # via jsonschema
@@ -558,7 +556,7 @@ wrapt==1.17.2
     #   opentelemetry-instrumentation
     #   opentelemetry-instrumentation-dbapi
     #   opentelemetry-instrumentation-urllib3
-zaproxy==0.3.2
+zaproxy==0.4.0
     # via python-owasp-zap-v2-4
 zipp==3.21.0
     # via
