@@ -8,6 +8,7 @@ from . import views
 from .remote.views import HaalCentraalBAG, HaalCentraalBRK
 from .routers import DynamicRouter
 from .views.doc import DocsOverview, GenericDocs, search, search_index
+from .openapi import get_openapi_view, get_combined_openapi_view
 
 
 def get_patterns(router_urls):
@@ -40,6 +41,8 @@ def get_patterns(router_urls):
         path("", include(router_urls), name="api-root"),
         # Swagger, OpenAPI and OAuth2 login logic.
         path("oauth2-redirect.html", views.oauth2_redirect, name="oauth2-redirect"),
+        path("openapi.json", get_combined_openapi_view("json"), name="openapi-root-json"),
+        path("openapi.yaml", get_combined_openapi_view("yaml"), name="openapi-root-yaml"),
     ]
 
 

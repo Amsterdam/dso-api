@@ -4,7 +4,7 @@ The main logic can be found in :mod:`rest_framework_dso.openapi`.
 """
 
 from collections.abc import Callable
-from copy import copy
+import copy
 from functools import wraps
 from urllib.parse import urljoin
 
@@ -25,8 +25,10 @@ from schematools.types import DatasetSchema
 from rest_framework_dso.openapi import DSOSchemaGenerator
 from rest_framework_dso.renderers import BrowsableAPIRenderer, HALJSONRenderer
 
+from .datasets import get_active_datasets
+
 __all__ = (
-    "get_openapi_json_view",
+    "get_openapi_view",
     "DynamicApiSchemaGenerator",
 )
 
@@ -96,21 +98,22 @@ class DynamicApiSchemaGenerator(DSOSchemaGenerator):
         schema_overrides["servers"] = [{"url": settings.DATAPUNT_API_URL}]
 
 
-def get_openapi_json_view(dataset: Dataset):
-    # To reduce the OpenAPI endpoints in the view there are 2 possible stategies:
-    # 1. Override the generator_class.get_schema() and set .endpoints manually.
-    #    This requires overriding the inner workings for the generator,
-    #    override EndpointEnumerator.should_include_endpoint() etc..
-    # 2. Provide a new list of URL patterns.
-    #
+def get_openapi_view(dataset, response_format: str = "json"):
+
+    if not isinstance(dataset, Dataset):
+        raise TypeError("Expected Dataset instance, got {type(dataset)}")
     dataset_schema: DatasetSchema = dataset.schema
+
+    renderer_class = (
+        renderers.JSONOpenAPIRenderer if response_format == "json" else renderers.OpenAPIRenderer
+    )
 
     # The second strategy is chosen here to keep the whole endpoint enumeration logic intact.
     # Patterns is a lazy object so it's not evaluated yet while the URLconf is being constructed.
     openapi_view = get_schema_view(
         title=dataset_schema.title or dataset_schema.id,
         description=dataset_schema.description or "",
-        renderer_classes=[renderers.JSONOpenAPIRenderer],
+        renderer_classes=[renderer_class],
         patterns=_lazy_get_dataset_patterns(dataset_schema.id),
         generator_class=DynamicApiSchemaGenerator,
         permission_classes=(permissions.AllowAny,),
@@ -143,13 +146,13 @@ def get_openapi_json_view(dataset: Dataset):
     }
 
     # Wrap the view in a "decorator" that shows the Swagger interface for browsers.
-    return _html_on_browser(openapi_view, dataset_schema)
+    return _html_on_browser(openapi_view, dataset_schema, response_format)
 
 
 CACHE_DURATION = 60 * 60 * 24 * 7  # Seconds.
 
 
-def _html_on_browser(openapi_view, dataset_schema):
+def _html_on_browser(openapi_view, dataset_schema, response_format: str = "json"):
     """A 'decorator' that shows the browsable interface on browser requests.
     This is a separate function to reduce the closure context data.
     """
@@ -161,8 +164,21 @@ def _html_on_browser(openapi_view, dataset_schema):
     def _switching_view(request):
         is_browser = "text/html" in request.headers.get("Accept", "")
         format = request.GET.get("format", "")
-        if not is_browser or format == "json":
-            # Not a browser, give the JSON view.
+        path = request.path
+
+        # Handle file downloads for openapi.json and openapi.yaml
+        if path.endswith("openapi.json") or path.endswith("openapi.yaml"):
+            view = vary_on_headers("Accept", "format")(openapi_view)
+            view = cache_page(CACHE_DURATION)(view)
+            response = view(request)
+
+            # Set content disposition for download
+            filename = "openapi.json" if path.endswith(".json") else "openapi.yaml"
+            response["Content-Disposition"] = f'attachment; filename="{filename}"'
+            return response
+
+        if not is_browser or format == "json" or format == "yaml":
+            # Not a browser, give the JSON/YAML view
             # Add accept and format to the Vary header so cache is
             # triggered on the json response only
             view = vary_on_headers("Accept", "format")(openapi_view)
@@ -194,7 +210,6 @@ def get_dataset_patterns(dataset_id: str) -> list[URLPattern | URLResolver]:
         )
     )
 
-
 _lazy_get_dataset_patterns = lazy(get_dataset_patterns, list)
 
 
@@ -220,10 +235,98 @@ def _get_patterns(matcher: Callable[[APIView], bool], patterns: list | None = No
             sub_patterns = _get_patterns(matcher, patterns=pattern.url_patterns, prefix=path_regex)
             if sub_patterns:
                 # Return a root object, but only include the objects that matched.
-                root = copy(pattern)
+                root = copy.copy(pattern)
                 root.__dict__["url_patterns"] = sub_patterns
                 matches.append(root)
         else:
             raise NotImplementedError(f"Unknown URL pattern type: {pattern!r}")
 
     return matches
+
+def merge_openapi_schemas(schemas: list[dict]) -> dict:
+    """Merge multiple OpenAPI schemas into a single one."""
+    if not schemas:
+        return {}
+
+    combined_schema = copy.deepcopy(schemas[0])
+
+    for schema in schemas[1:]:
+        for path, path_item in schema.get("paths", {}).items():
+            if path not in combined_schema["paths"]:
+                combined_schema["paths"][path] = path_item
+            else:
+                combined_schema["paths"][path].update(path_item)
+
+        for comp_type, components in schema.get("components", {}).items():
+            if comp_type not in combined_schema["components"]:
+                combined_schema["components"][comp_type] = {}
+            combined_schema["components"][comp_type].update(components)
+
+    return combined_schema
+
+
+def get_combined_openapi_view(response_format: str = "json"):
+    """Generate a combined OpenAPI view for all active datasets."""
+
+    renderer_class = (
+        renderers.JSONOpenAPIRenderer if response_format == "json" else renderers.OpenAPIRenderer
+    )
+
+    # Use a placeholder view for schema generation context
+    class CombinedSchemaView(APIView):
+        permission_classes = (permissions.AllowAny,)
+        renderer_classes = [renderer_class]
+
+        def get(self, request):
+            datasets = list(get_active_datasets(api_enabled=True))
+            schemas = []
+
+            for dataset in datasets:
+                dataset_schema = dataset.schema
+                patterns = _lazy_get_dataset_patterns(dataset_schema.id)
+
+                # Generate schema for the dataset
+                generator = DynamicApiSchemaGenerator(patterns=patterns)
+                schema = generator.get_schema(request=request, public=True)
+
+                # Apply dataset-specific overrides manually
+                schema["info"]["license"] = {"name": dataset_schema.get("license", "")}
+                schema["externalDocs"] = {
+                    "url": urljoin(
+                        settings.DATAPUNT_API_URL,
+                        f"/v1/docs/datasets/{dataset.path}.html",
+                    )
+                }
+                schemas.append(schema)
+
+            combined_schema = merge_openapi_schemas(schemas)
+
+            combined_schema["info"] = {
+                "title": "DSO-API",
+                "version": "v1",
+                "description": "OpenAPI specification for all active datasets.",
+                "termsOfService": "https://datapunt.amsterdam.nl/terms/",
+                "contact": {
+                    "name": "Data Services",
+                    "url": "https://datapunt.amsterdam.nl/contact/",
+                },
+                "license": {
+                    "name": "",
+                }
+            }
+            if "components" not in combined_schema:
+                combined_schema["components"] = {}
+            if "securitySchemes" not in combined_schema["components"]:
+                 combined_schema["components"]["securitySchemes"] = {}
+            combined_schema["components"]["securitySchemes"].update(DynamicApiSchemaGenerator.schema_overrides.get("components", {}).get("securitySchemes", {}))
+            if "security" not in combined_schema:
+                 combined_schema["security"] = DynamicApiSchemaGenerator.schema_overrides.get("security", [])
+
+            return Response(combined_schema)
+
+    # Wrap the view with caching and content negotiation
+    view = CombinedSchemaView.as_view()
+    view = vary_on_headers("Accept", "format")(view)
+    view = cache_page(CACHE_DURATION)(view)
+
+    return view
