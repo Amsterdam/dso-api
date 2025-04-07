@@ -6,8 +6,6 @@
 // returns: HTML string
 
 const FORMATTER = (rawJson) => {
-    rawstring = JSON.stringify(rawJson)
-    alert(rawstring)
     let openApiEl = document.createElement('div');
     openApiEl.innerHTML = `
       <h3>OpenAPI ${rawJson.info.title}</h3>
