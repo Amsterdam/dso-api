@@ -6,7 +6,8 @@
 // returns: HTML string
 
 const FORMATTER = (rawJson) => {
-
+    rawstring = JSON.stringify(rawJson)
+    alert(rawstring)
     let openApiEl = document.createElement('div');
     openApiEl.innerHTML = `
       <h3>OpenAPI ${rawJson.info.title}</h3>
@@ -31,7 +32,7 @@ const FORMATTER = (rawJson) => {
         endpointEl.innerHTML = `
           <p>
             <div class='request-method get' style="display:inline-block">${method}</div>
-            <a href="${path}" style="display:inline-block" class='path'>${path}</a>
+            <a href="${window.location.pathname.replace(/.$/, '')}${path}" style="display:inline-block" class='path'>${path}</a>
           </p>
         `
         pathsEl.appendChild(endpointEl);
