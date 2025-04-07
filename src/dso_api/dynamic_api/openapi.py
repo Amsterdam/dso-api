@@ -5,8 +5,9 @@ The main logic can be found in :mod:`rest_framework_dso.openapi`.
 
 from collections.abc import Callable
 import copy
+import os
 from functools import wraps
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 
 import drf_spectacular.plumbing
 from django.conf import settings
@@ -14,6 +15,8 @@ from django.urls import URLPattern, URLResolver, get_resolver, get_urlconf
 from django.utils.functional import lazy
 from django.views.decorators.cache import cache_page
 from django.views.decorators.vary import vary_on_headers
+import logging
+from django.http import JsonResponse
 from rest_framework import permissions, renderers
 from rest_framework.response import Response
 from rest_framework.schemas import get_schema_view
@@ -21,6 +24,7 @@ from rest_framework.views import APIView
 from schematools.contrib.django.models import Dataset
 from schematools.permissions import UserScopes
 from schematools.types import DatasetSchema
+
 
 from rest_framework_dso.openapi import DSOSchemaGenerator
 from rest_framework_dso.renderers import BrowsableAPIRenderer, HALJSONRenderer
@@ -96,6 +100,50 @@ class DynamicApiSchemaGenerator(DSOSchemaGenerator):
 
     if not settings.DEBUG:
         schema_overrides["servers"] = [{"url": settings.DATAPUNT_API_URL}]
+
+    def get_schema(self, request=None, public=False):
+        # Generate schema using parent method first
+        schema = super().get_schema(request=request, public=public)
+
+        if not request or not hasattr(request, 'path') or not request.path:
+             return schema # Cannot process without request context
+
+        if request.path == '/v1/openapi.json' or request.path == '/v1/openapi.yaml':
+            return schema # No need to process further for combined view
+
+        current_doc_dir = os.path.dirname(request.path)
+
+        # Ensure 'servers' field reflects this base path if not already set correctly
+        # This is important for tools consuming the spec to know the base URL.
+        if 'servers' not in schema:
+            base_url = f"{request.scheme}://{request.get_host()}"
+            final_server_url = urljoin(base_url, current_doc_dir)
+            schema['servers'] = [{'url': final_server_url, 'description': 'Dynamically determined server URL for this dataset'}]
+
+
+        # Post-process paths ONLY for single dataset requests to make them relative
+        # This makes the paths within the 'paths' object relative to the server URL.
+        if current_doc_dir != '/' and schema.get('paths'):
+            original_paths = schema.get('paths', {})
+            modified_paths = {}
+            for path, path_item in original_paths.items():
+                # Ensure path starts with '/' for consistent comparison with current_doc_dir
+                absolute_path = path if path.startswith('/') else '/' + path
+
+                # Check if the path starts with the directory of the current OpenAPI doc
+                if absolute_path.startswith(current_doc_dir):
+                    # e.g. /v1/aardgasverbruik/mra_liander/ -> /mra_liander
+                    relative_path = absolute_path[len(current_doc_dir):]
+                    if relative_path.endswith('/'):
+                        relative_path = relative_path[:-1]
+                    modified_paths[relative_path] = path_item
+                else:
+                    # Path doesn't start with the expected base path, keep it as is
+                    # This might happen for paths outside the dataset's scope, though unlikely here.
+                    modified_paths[path] = path_item
+            schema['paths'] = modified_paths
+
+        return schema
 
 
 def get_openapi_view(dataset, response_format: str = "json"):
@@ -268,6 +316,7 @@ def merge_openapi_schemas(schemas: list[dict]) -> dict:
 def get_combined_openapi_view(response_format: str = "json"):
     """Generate a combined OpenAPI view for all active datasets."""
 
+    # Use the appropriate renderer based on the requested format
     renderer_class = (
         renderers.JSONOpenAPIRenderer if response_format == "json" else renderers.OpenAPIRenderer
     )
@@ -278,51 +327,66 @@ def get_combined_openapi_view(response_format: str = "json"):
         renderer_classes = [renderer_class]
 
         def get(self, request):
-            datasets = list(get_active_datasets(api_enabled=True))
-            schemas = []
+            active_datasets = list(get_active_datasets(api_enabled=True))
+            active_dataset_ids = {ds.schema.id for ds in active_datasets}
 
-            for dataset in datasets:
-                dataset_schema = dataset.schema
-                patterns = _lazy_get_dataset_patterns(dataset_schema.id)
+            from .views import DynamicApiViewSet # Keep import local
+            def combined_matcher(view_cls):
+                return (
+                    issubclass(view_cls, DynamicApiViewSet) and
+                    getattr(view_cls, 'dataset_id', None) in active_dataset_ids
+                )
 
-                # Generate schema for the dataset
-                generator = DynamicApiSchemaGenerator(patterns=patterns)
-                schema = generator.get_schema(request=request, public=True)
+            all_patterns = _get_patterns(matcher=combined_matcher)
 
-                # Apply dataset-specific overrides manually
-                schema["info"]["license"] = {"name": dataset_schema.get("license", "")}
-                schema["externalDocs"] = {
-                    "url": urljoin(
-                        settings.DATAPUNT_API_URL,
-                        f"/v1/docs/datasets/{dataset.path}.html",
-                    )
-                }
-                schemas.append(schema)
+            generator = DynamicApiSchemaGenerator(patterns=all_patterns)
 
-            combined_schema = merge_openapi_schemas(schemas)
+            combined_schema = generator.get_schema(request=request, public=True)
 
-            combined_schema["info"] = {
-                "title": "DSO-API",
-                "version": "v1",
-                "description": "OpenAPI specification for all active datasets.",
-                "termsOfService": "https://datapunt.amsterdam.nl/terms/",
-                "contact": {
-                    "name": "Data Services",
-                    "url": "https://datapunt.amsterdam.nl/contact/",
-                },
-                "license": {
-                    "name": "",
-                }
-            }
-            if "components" not in combined_schema:
-                combined_schema["components"] = {}
-            if "securitySchemes" not in combined_schema["components"]:
-                 combined_schema["components"]["securitySchemes"] = {}
-            combined_schema["components"]["securitySchemes"].update(DynamicApiSchemaGenerator.schema_overrides.get("components", {}).get("securitySchemes", {}))
-            if "security" not in combined_schema:
-                 combined_schema["security"] = DynamicApiSchemaGenerator.schema_overrides.get("security", [])
+            if combined_schema:
+                 combined_schema["info"] = {
+                     "title": "DSO-API",
+                     "version": "v1",
+                     "description": "OpenAPI specification for all active datasets.",
+                     "termsOfService": "https://datapunt.amsterdam.nl/terms/",
+                     "contact": {
+                         "name": "Data Services",
+                         "url": "https://datapunt.amsterdam.nl/contact/",
+                     },
+                     "license": {
+                         "name": "Check individual dataset documentation for specific licenses.",
+                     }
+                 }
+                 combined_schema["servers"] = [
+                     {
+                         "url": f"{settings.DATAPUNT_API_URL}v1/",
+                         "description": "DSO-API",
+                     }
+                 ]
 
-            return Response(combined_schema)
+                 combined_schema["externalDocs"] = {"url": f"{settings.DATAPUNT_API_URL}v1/docs/", 
+                                                    "description": "DSO-API Documentation"}
+
+
+            try:
+                response = Response(combined_schema or {})
+
+                # Add Content-Disposition header for download if requested path ends with .json or .yaml
+                if request.path.endswith(".json") or request.path.endswith(".yaml"):
+                    filename = "openapi.json" if request.path.endswith(".json") else "openapi.yaml"
+                    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+
+                return response
+            except Exception as e:
+                # Log the actual error to help diagnose the root cause
+                logger = logging.getLogger(__name__)
+                logger.exception(f"Error rendering/serializing combined OpenAPI JSON: {e}")
+
+                # Return a simple error response to avoid Django's expensive debug page
+                return JsonResponse(
+                    {"error": "Failed to generate or render combined OpenAPI JSON specification.", "details": str(e)},
+                    status=500
+                )
 
     # Wrap the view with caching and content negotiation
     view = CombinedSchemaView.as_view()
