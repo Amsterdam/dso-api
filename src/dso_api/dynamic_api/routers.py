@@ -40,7 +40,8 @@ from schematools.naming import to_snake_case
 
 from .datasets import get_active_datasets
 from .models import SealedDynamicModel
-from .openapi import get_openapi_json_view
+from .openapi import get_openapi_view
+from .remote import remote_serializer_factory, remote_viewset_factory
 from .serializers import clear_serializer_factory_cache
 from .utils import get_view_name
 from .views import (
@@ -324,8 +325,22 @@ class DynamicRouter(routers.DefaultRouter):
             results.append(
                 path(
                     dataset.path + "/",
-                    get_openapi_json_view(dataset),
+                    get_openapi_view(dataset),
                     name=f"openapi-{dataset_id}",
+                )
+            )
+            results.append(
+                path(
+                    dataset.path + "/openapi.yaml",
+                    get_openapi_view(dataset, response_format="yaml"),
+                    name=f"openapi-yaml-{dataset_id}",
+                )
+            )
+            results.append(
+                path(
+                    dataset.path + "/openapi.json",
+                    get_openapi_view(dataset, response_format="json"),
+                    name=f"openapi-json-{dataset_id}",
                 )
             )
         return results
