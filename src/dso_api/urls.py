@@ -13,10 +13,10 @@ def _raise_runtime_error(request):
 
 
 urlpatterns = [
-    path("status/health/", include(django_healthchecks.urls)),
-    path("500-test/", _raise_runtime_error),
+    path("status/health", include(django_healthchecks.urls)),
+    path("500-test", _raise_runtime_error),
     path("v1/", include(dso_api.dynamic_api.urls)),
-    path("", RedirectView.as_view(url="/v1/"), name="root-redirect"),
+    path("", RedirectView.as_view(url="/v1"), name="root-redirect"),
     path("v1/docs/", RedirectView.as_view(url="/v1/docs/index.html", permanent=True)),
     re_path(
         r"^.*/{2,}.*$",
