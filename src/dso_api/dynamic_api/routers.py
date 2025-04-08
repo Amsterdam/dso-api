@@ -41,7 +41,6 @@ from schematools.naming import to_snake_case
 from .datasets import get_active_datasets
 from .models import SealedDynamicModel
 from .openapi import get_openapi_view
-from .remote import remote_serializer_factory, remote_viewset_factory
 from .serializers import clear_serializer_factory_cache
 from .utils import get_view_name
 from .views import (
@@ -83,15 +82,19 @@ class DynamicAPIIndexView(APIIndexView):
         if not ds.enable_db:
             return []
 
-        api_url = reverse(f"dynamic_api:openapi-{dataset_id}-noslash")
-        return [
-            {
-                "name": "production",
-                "api_url": base + api_url,
-                "specification_url": base + api_url,
-                "documentation_url": f"{base}/v1/docs/datasets/{ds.path}.html",
-            }
-        ]
+        try:
+            api_url = reverse(f"dynamic_api:openapi-{dataset_id}-noslash")
+            return [
+                {
+                    "name": "production",
+                    "api_url": base + api_url,
+                    "specification_url": base + api_url,
+                    "documentation_url": f"{base}/v1/docs/datasets/{ds.path}.html",
+                }
+            ]
+        except NoReverseMatch as e:
+            logger.warning("dataset %s: %s", dataset_id, e)
+            return []
 
     def get_related_apis(self, ds: Dataset, base: str):
         if ds.enable_db and ds.has_geometry_fields:
@@ -273,7 +276,7 @@ class DynamicRouter(routers.DefaultRouter):
             Route(
                 url=r'^{prefix}$',
                 mapping={'get': 'list'},
-                name='{basename}-list',
+                name='{basename}-list-noslash',
                 detail=False,
                 initkwargs={'suffix': 'List'}
             ),
@@ -281,7 +284,7 @@ class DynamicRouter(routers.DefaultRouter):
             Route(
                 url=r'^{prefix}/$',
                 mapping={'get': 'list'},
-                name='{basename}-list-slash',
+                name='{basename}-list',
                 detail=False,
                 initkwargs={'suffix': 'List'}
             ),
@@ -289,7 +292,7 @@ class DynamicRouter(routers.DefaultRouter):
             Route(
                 url=r'^{prefix}/(?P<pk>[^/.]+)$',
                 mapping={'get': 'retrieve'},
-                name='{basename}-detail',
+                name='{basename}-detail-noslash',
                 detail=True,
                 initkwargs={'suffix': 'Instance'}
             ),
@@ -297,7 +300,7 @@ class DynamicRouter(routers.DefaultRouter):
             Route(
                 url=r'^{prefix}/(?P<pk>[^/.]+)/$',
                 mapping={'get': 'retrieve'},
-                name='{basename}-detail-slash',
+                name='{basename}-detail',
                 detail=True,
                 initkwargs={'suffix': 'Instance'}
             ),
@@ -364,6 +367,13 @@ class DynamicRouter(routers.DefaultRouter):
                     dataset.path + "/",
                     get_openapi_view(dataset),
                     name=f"openapi-{dataset_id}",
+                )
+            )
+            results.append(
+                path(
+                    dataset.path,
+                    get_openapi_view(dataset),
+                    name=f"openapi-{dataset_id}-noslash",
                 )
             )
             results.append(
