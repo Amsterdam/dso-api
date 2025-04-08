@@ -83,7 +83,7 @@ class DynamicAPIIndexView(APIIndexView):
         if not ds.enable_db:
             return []
 
-        api_url = reverse(f"dynamic_api:openapi-{dataset_id}")
+        api_url = reverse(f"dynamic_api:openapi-{dataset_id}-noslash")
         return [
             {
                 "name": "production",
@@ -110,11 +110,10 @@ class DynamicAPIIndexView(APIIndexView):
 
 class DynamicRouter(routers.DefaultRouter):
     """Router that dynamically creates all views and viewsets based on the Dataset models."""
-
-    include_format_suffixes = False
-
+    
     def __init__(self):
-        super().__init__(trailing_slash=True)
+        super().__init__(trailing_slash=False)
+        self.include_format_suffixes = False
         self.all_models: dict[str, dict[str, type[DynamicModel]]] = {}
         self.static_routes = []
         self._doc_urls = []
@@ -266,7 +265,47 @@ class DynamicRouter(routers.DefaultRouter):
 
     def _build_db_viewsets(self, db_datasets: Iterable[Dataset]):
         """Initialize viewsets that are linked to Django database models."""
-        tmp_router = routers.SimpleRouter()
+        from rest_framework.routers import Route, DynamicRoute
+
+        # Define custom routes that support both slash and no-slash
+        self.routes = [
+            # List route
+            Route(
+                url=r'^{prefix}$',
+                mapping={'get': 'list'},
+                name='{basename}-list',
+                detail=False,
+                initkwargs={'suffix': 'List'}
+            ),
+            # List route with trailing slash
+            Route(
+                url=r'^{prefix}/$',
+                mapping={'get': 'list'},
+                name='{basename}-list-slash',
+                detail=False,
+                initkwargs={'suffix': 'List'}
+            ),
+            # Detail route
+            Route(
+                url=r'^{prefix}/(?P<pk>[^/.]+)$',
+                mapping={'get': 'retrieve'},
+                name='{basename}-detail',
+                detail=True,
+                initkwargs={'suffix': 'Instance'}
+            ),
+            # Detail route with trailing slash
+            Route(
+                url=r'^{prefix}/(?P<pk>[^/.]+)/$',
+                mapping={'get': 'retrieve'},
+                name='{basename}-detail-slash',
+                detail=True,
+                initkwargs={'suffix': 'Instance'}
+            ),
+        ]
+
+        tmp_router = routers.DefaultRouter()
+        tmp_router.routes = self.routes
+        
         db_datasets = {dataset.schema.id: dataset for dataset in db_datasets}
 
         # Generate views now that all models have been created.
@@ -290,11 +329,9 @@ class DynamicRouter(routers.DefaultRouter):
 
                 logger.debug("Created viewset %s", url_prefix)
                 viewset = viewset_factory(model)
-                tmp_router.register(
-                    prefix=url_prefix,
-                    viewset=viewset,
-                    basename=f"{dataset_id}-{table_id}",
-                )
+                tmp_router.register(url_prefix, 
+                                    viewset, 
+                                    basename=f"{dataset_id}-{table_id}")
 
         return tmp_router.registry
 
@@ -357,6 +394,14 @@ class DynamicRouter(routers.DefaultRouter):
                     name="mvt-single-dataset",
                     kwargs={"dataset_name": dataset_id},
                 )
+            ),
+            results.append(
+                path(
+                    "mvt/" + dataset.path,
+                    DatasetMVTSingleView.as_view(),
+                    name="mvt-single-dataset-noslash",
+                    kwargs={"dataset_name": dataset_id},
+                )
             )
             results.append(
                 path(
@@ -365,7 +410,23 @@ class DynamicRouter(routers.DefaultRouter):
                     name="mvt-tilejson",
                     kwargs={"dataset_name": dataset_id},
                 )
-            )
+            ),
+            results.append(
+                path(
+                    "mvt/" + dataset.path + "/<table_name>/",
+                    DatasetTileJSONView.as_view(),
+                    name="mvt-tilejson-table",
+                    kwargs={"dataset_name": dataset_id},
+                )
+            ),
+            results.append(
+                path(
+                    "mvt/" + dataset.path + "/<table_name>",
+                    DatasetTileJSONView.as_view(),
+                    name="mvt-tilejson-table",
+                    kwargs={"dataset_name": dataset_id},
+                )
+            ),
             results.append(
                 path(
                     "mvt/" + dataset.path + "/<table_name>/<int:z>/<int:x>/<int:y>.pbf",
@@ -384,6 +445,14 @@ class DynamicRouter(routers.DefaultRouter):
             results.append(
                 path(
                     "wfs/" + dataset.path + "/",
+                    DatasetWFSView.as_view(),
+                    name="wfs",
+                    kwargs={"dataset_name": dataset_id},
+                )
+            ),
+            results.append(
+                path(
+                    "wfs/" + dataset.path,
                     DatasetWFSView.as_view(),
                     name="wfs",
                     kwargs={"dataset_name": dataset_id},
@@ -416,6 +485,13 @@ class DynamicRouter(routers.DefaultRouter):
                     p + "/",
                     DynamicAPIIndexView.as_view(path=p, name=name),
                     name=f"{p}-index",
+                )
+            )
+            results.append(
+                path(
+                    p,
+                    DynamicAPIIndexView.as_view(path=p, name=name),
+                    name=f"{p}-index-noslash",
                 )
             )
         return results
