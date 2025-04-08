@@ -35,5 +35,5 @@ ENV DJANGO_SETTINGS_MODULE=dso_api.settings DJANGO_DEBUG=false DSO_STATIC_DIR=/s
 RUN python manage.py collectstatic --noinput
 
 EXPOSE 8000
-USER dsoapi
+USER root
 CMD ["uwsgi"]
