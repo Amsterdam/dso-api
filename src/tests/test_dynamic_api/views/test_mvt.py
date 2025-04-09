@@ -262,6 +262,80 @@ def test_mvt_content(
 
 
 @pytest.mark.django_db
+def test_mvt_content_zoom(api_client, gebieden_dataset, buurten_model, filled_router):
+    """Prove that the MVT view produces vector tiles with properties at the right zoom
+    level."""
+
+    buurten_model.objects.create(
+        id="03630000000078",
+        identificatie="03630000000078",
+        volgnummer=2,
+        naam="AAA v2",
+        ligt_in_wijk_id="03630012052035.1",
+        ligt_in_wijk_identificatie="03630012052035",
+        ligt_in_wijk_volgnummer="1",
+        geometrie=Point(123207.6558130105, 486624.6399002579),
+    )
+    # buurten has zoom { min: 12, max: 16 }, so zoom 17 should not show details.
+    url = "/v1/mvt/gebieden/buurten/17/67327/43077.pbf"
+    response = api_client.get(url)
+    # MVT view returns 204 when the tile is empty.
+    assert response.status_code == 200
+    assert response["Content-Type"] == CONTENT_TYPE
+
+    vt = decode_mvt(response)
+
+    assert vt == {
+        "default": {
+            "extent": 4096,
+            "version": 2,
+            "type": "FeatureCollection",
+            "features": [
+                {
+                    "geometry": {"type": "Point", "coordinates": [1928, 2558]},
+                    "properties": {
+                        "identificatie": "03630000000078",
+                        "volgnummer": 2,
+                    },
+                    "id": 0,
+                    "type": "Feature",
+                }
+            ],
+        }
+    }
+
+    # Try again at a lower zoom level. We should now get the details.
+    url = "/v1/mvt/gebieden/buurten/14/8415/5384.pbf"
+    response = api_client.get(url)
+    assert response.status_code == 200
+    assert response["Content-Type"] == CONTENT_TYPE
+
+    vt = decode_mvt(response)
+
+    assert vt == {
+        "default": {
+            "extent": 4096,
+            "version": 2,
+            "type": "FeatureCollection",
+            "features": [
+                {
+                    "geometry": {"type": "Point", "coordinates": [3825, 1344]},
+                    "properties": {
+                        "id": "03630000000078",
+                        "identificatie": "03630000000078",
+                        "volgnummer": 2,
+                        "ligtInWijkId": "03630012052035.1",
+                        "naam": "AAA v2",
+                    },
+                    "id": 0,
+                    "type": "Feature",
+                }
+            ],
+        }
+    }
+
+
+@pytest.mark.django_db
 def test_mvt_forbidden(api_client, geometry_auth_thing, fetch_auth_token, filled_router):
     """Prove that an unauthorized geometry field gives 403 Forbidden"""
 
