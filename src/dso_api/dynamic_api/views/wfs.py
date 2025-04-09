@@ -32,6 +32,7 @@ from typing import Union
 
 from django.conf import settings
 from django.contrib.gis.db.models import GeometryField
+from django.core.exceptions import ImproperlyConfigured
 from django.db import models
 from django.http import Http404
 from django.urls import reverse
@@ -79,8 +80,11 @@ class AuthenticatedFeatureType(FeatureType):
 
         # If the main geometry is hidden behind an access scope,
         # accessing the WFS feature is moot (and risks exposure through direct model access)
-        if not self.main_geometry_element:
-            raise PermissionDenied(locator="typeNames")
+        try:
+            if not self.main_geometry_element:
+                raise PermissionDenied(locator="typeNames")
+        except ImproperlyConfigured as err:
+            raise PermissionDenied(locator="typeNames") from err
 
     def get_queryset(self) -> models.QuerySet:
         # Only return active objects for now.
@@ -257,7 +261,6 @@ class DatasetWFSView(CheckPermissionsMixin, WFSView):
                 else:
                     name = f"{base_name}-{geo_field.name}"
                     title = f"{base_title} ({geo_field.verbose_name})"
-
                 feature = AuthenticatedFeatureType(
                     model,
                     name=name,
@@ -374,7 +377,16 @@ class DatasetWFSView(CheckPermissionsMixin, WFSView):
         ]
 
     def _get_geometry_fields(self, model) -> list[GeometryField]:
-        return [f for f in model._meta.get_fields() if isinstance(f, GeometryField)]
+        # Return the geometry field with the mainGeometry field as the first item
+        table_schema: DatasetTableSchema = model.table_schema()
+        geometry_fields = []
+        for f in model._meta.get_fields():
+            if isinstance(f, GeometryField):
+                if f.name == table_schema.main_geometry_field.db_name:
+                    geometry_fields.insert(0, f)
+                else:
+                    geometry_fields.append(f)
+        return geometry_fields
 
 
 class LazyList(UserList):
