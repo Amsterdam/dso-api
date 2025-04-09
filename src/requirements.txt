@@ -358,9 +358,9 @@ datadiensten-apikeyclient==0.6.0 \
     --hash=sha256:4988b82e27886b31ed1d935d00e814cc9cfca4d4df5dc589c598f22433c010e0 \
     --hash=sha256:6dab4a24c5c72028d57feb4d259b0a7df29da66e7709c7e68fd9ebace8959cb7
     # via -r requirements.in
-datapunt-authorization-django==1.4.0 \
-    --hash=sha256:275038acca712139d68041cfd987c9e6d2aa1bcfb7e73d37d27abed64b8f2386 \
-    --hash=sha256:dd51ccdaf6a7b330cca7826d9570c11f97af3853e8ff184bb9c8345d52f847df
+datapunt-authorization-django==1.5.0 \
+    --hash=sha256:24f7af06d1001a717ed8d60e3e83f42576b9022ee11edec436988bf126e8e164 \
+    --hash=sha256:3d64d6809ce457461301a5f94a8037f2703fdc61dc45e2f5caccefbf6b2ea2ec
     # via -r requirements.in
 decorator==5.2.1 \
     --hash=sha256:65f266143752f734b0a7cc83c46f4618af75b8c5911b00ccb61d0ac9b6da0360 \
@@ -1319,13 +1319,13 @@ pytest==8.3.5 \
     #   -r requirements.in
     #   pytest-cov
     #   pytest-django
-pytest-cov==6.0.0 \
-    --hash=sha256:eee6f1b9e61008bd34975a4d5bab25801eb31898b032dd55addc93e96fcaaa35 \
-    --hash=sha256:fde0b595ca248bb8e2d76f020b465f3b107c9632e6a1d1705f17834c89dcadc0
+pytest-cov==6.1.1 \
+    --hash=sha256:46935f7aaefba760e716c2ebfbe1c216240b9592966e7da99ea8292d4d3e2a0a \
+    --hash=sha256:bddf29ed2d0ab6f4df17b4c55b0a657287db8684af9c42ea546b21b1041b3dde
     # via -r requirements.in
-pytest-django==4.10.0 \
-    --hash=sha256:1091b20ea1491fd04a310fc9aaff4c01b4e8450e3b157687625e16a6b5f3a366 \
-    --hash=sha256:57c74ef3aa9d89cae5a5d73fbb69a720a62673ade7ff13b9491872409a3f5918
+pytest-django==4.11.1 \
+    --hash=sha256:1b63773f648aa3d8541000c26929c1ea63934be1cfa674c76436966d73fe6a10 \
+    --hash=sha256:a949141a1ee103cb0e7a20f1451d355f83f5e4a5d07bdd4dcfdd1fd0ff227991
     # via -r requirements.in
 python-dateutil==2.9.0.post0 \
     --hash=sha256:37dd54208da7e1cd875388217d5e00ebd4179249f90fb72437e91a35459a0ad3 \
@@ -1572,9 +1572,9 @@ rpds-py==0.24.0 \
     # via
     #   jsonschema
     #   referencing
-sentry-sdk==2.25.0 \
-    --hash=sha256:a6e623691ff03d1758f940fe421e5b65f313f4ac37638079ab94d1b6f052eb15 \
-    --hash=sha256:aa0f558209c1819391421d65e25b1c4000f49580e6ecf5c05ff0c6e74f74470b
+sentry-sdk==2.25.1 \
+    --hash=sha256:60b016d0772789454dc55a284a6a44212044d4a16d9f8448725effee97aaf7f6 \
+    --hash=sha256:f9041b7054a7cf12d41eadabe6458ce7c6d6eea7a97cfe1b760b6692e9562cf0
     # via -r requirements.in
 shapely==2.0.7 \
     --hash=sha256:0145387565fcf8f7c028b073c802956431308da933ef41d08b1693de49990d27 \
