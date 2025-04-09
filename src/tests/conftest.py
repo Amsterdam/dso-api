@@ -492,6 +492,34 @@ def geometry_authdataset_thing(geometry_authdataset_model):
     )
 
 
+# Dataset with multiple geometries.
+
+
+@pytest.fixture()
+def geometry_multiple_schema(schema_loader) -> DatasetSchema:
+    return schema_loader.get_dataset_from_file("geometry_multiple.json")
+
+
+@pytest.fixture()
+def geometry_multiple_dataset(geometry_multiple_schema):
+    return Dataset.create_for_schema(schema=geometry_multiple_schema)
+
+
+@pytest.fixture()
+def geometry_multiple_model(geometry_multiple_dataset, dynamic_models):
+    return dynamic_models["geometry_multiple"]["things"]
+
+
+@pytest.fixture()
+def geometry_multiple_thing(geometry_multiple_model):
+    return geometry_multiple_model.objects.create(
+        id=1,
+        metadata="secret",
+        geometrie=Point(10, 10),
+        main_geometrie=Point(10, 10),
+    )
+
+
 @pytest.fixture
 def category() -> Category:
     """A dummy model to test our API with"""

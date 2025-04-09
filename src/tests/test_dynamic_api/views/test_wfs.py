@@ -349,3 +349,22 @@ class TestDatasetWFSViewAuth:
             "id": "1",
             "metadata": "secret",
         }
+
+    def test_wfs_model_multiple_geometries(
+        self, api_client, geometry_multiple_thing, fetch_auth_token, filled_router
+    ):
+        """
+        When having multiple geometries, expect the main geometry to be accessible by default.
+        This test will validate that the mainGeometry is added first.
+        """
+        response = self.request(api_client, fetch_auth_token, "geometry_multiple", [])
+        assert response.status_code == 200
+
+        # Expect other geometrie to be available as well
+        wfs_url = (
+            "/v1/wfs/geometry_multiple/"
+            "?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=things-geometrie"
+            "&OUTPUTFORMAT=application/gml+xml"
+        )
+        response = api_client.get(wfs_url)
+        assert response.status_code == 200
