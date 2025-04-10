@@ -105,7 +105,7 @@ class DynamicApiViewSet(DSOViewMixin, viewsets.ReadOnlyModelViewSet):
         """Overwritten from GenericAPIView to filter on temporal identifier instead."""
         if self.temporal.is_versioned:
             # Take the first field as grouper from ["identificatie", "volgnummer"]
-            return self.model.table_schema().identifier_fields[0].db_name
+            return self.model.table_schema().identifier_fields[0].python_name
         else:
             return "pk"
 
