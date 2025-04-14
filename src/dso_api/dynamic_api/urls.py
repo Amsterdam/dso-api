@@ -33,8 +33,8 @@ def get_patterns(router_urls):
         path("", include(router_urls), name="api-root"),
         # Swagger, OpenAPI and OAuth2 login logic.
         path("oauth2-redirect.html", views.oauth2_redirect, name="oauth2-redirect"),
-        path('openapi.json', CombinedSchemaView.as_view(format='json'), name='schema-json'),
-        path('openapi.yaml', CombinedSchemaView.as_view(format='yaml'), name='schema-yaml'),
+        path('/openapi.json', CombinedSchemaView.as_view(format='json'), name='schema-json'),
+        path('/openapi.yaml', CombinedSchemaView.as_view(format='yaml'), name='schema-yaml'),
     ]
 
 

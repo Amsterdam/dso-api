@@ -35,6 +35,9 @@ from rest_framework_dso.renderers import BrowsableAPIRenderer, HALJSONRenderer
 
 from .datasets import get_active_datasets
 
+import logging
+logger = logging.getLogger(__name__)
+
 __all__ = (
     "get_openapi_view",
     "DynamicApiSchemaGenerator",
@@ -112,33 +115,38 @@ class DynamicApiSchemaGenerator(DSOSchemaGenerator):
              return schema # Cannot process without request context
 
         # Skip processing for the root openapi.json and openapi.yaml requests
-        if request.path == '/v1/openapi.json' or request.path == '/v1/openapi.yaml':
-            return schema
+        #if request.path == '/v1/openapi.json/' or request.path == '/v1/openapi.yaml/':
+        #     return schema
         
-        if not request.path.endswith('/'):
-            request.path += '/'
+        # modify request.path to ensure it ends with a slash and removes openapi.json and openapi.yaml
+        cleaned_path = request.path.replace('/openapi.json','').replace('/openapi.yaml','')
+        if not cleaned_path.endswith('/') and cleaned_path != '/v1':
+            cleaned_path += '/'
         
-        current_doc_dir = os.path.dirname(request.path)
+        current_doc_dir = os.path.dirname(cleaned_path)
+        logging.info(f"Current doc dir: {current_doc_dir}")
+        logging.info(f"Current request path: {cleaned_path}")
+        
 
         # Ensure 'servers' field reflects this base path if not already set correctly
         if 'servers' not in schema:
             base_url = f"{request.scheme}://{request.get_host()}"
             final_server_url = urljoin(base_url, current_doc_dir)
             schema['servers'] = [{'url': final_server_url, 'description': 'Dynamically determined server URL for this dataset'}]
+        
 
         # Make the paths within the 'paths' object relative to the server URL.
-        if current_doc_dir != '/' and schema.get('paths'):
+        if schema.get('paths'):
             original_paths = schema.get('paths', {})
             modified_paths = {}
             for path, path_item in original_paths.items():
                 # Ensure path starts with '/' and remove trailing slash for consistent comparison with current_doc_dir
                 absolute_path = path if path.startswith('/') else '/' + path
                 absolute_path = absolute_path.rstrip('/')
-
                 # Check if the path starts with the directory of the current doc
                 if absolute_path.startswith(current_doc_dir):
                     # e.g. /v1/aardgasverbruik/mra_liander/ -> /mra_liander
-                    relative_path = absolute_path.replace(request.path, "")
+                    relative_path = absolute_path.replace(cleaned_path, "")
                     if relative_path.endswith('/'):
                         relative_path = relative_path[:-1]
                     if not relative_path.startswith('/'):
@@ -146,9 +154,9 @@ class DynamicApiSchemaGenerator(DSOSchemaGenerator):
                     modified_paths[relative_path] = path_item
                 else:
                     # Path doesn't start with the expected base path, keep it as is
+                    logging.info(f"Path {path} does not start with {current_doc_dir}, keeping it as is.")
                     modified_paths[path] = path_item
             schema['paths'] = modified_paths
-
         return schema
 
 
@@ -328,16 +336,18 @@ class CombinedSchemaView(APIView):
     renderer_classes = None  # Will be determined dynamically
 
     def __init__(self, *args, **kwargs):
+        self.format = kwargs.pop('format', 'json')
         super().__init__(*args, **kwargs)
-        # Set renderer classes based on format
         self.renderer_classes = [
             renderers.JSONOpenAPIRenderer if self.format == 'json' 
             else renderers.OpenAPIRenderer
         ]
+        logger.info(f"CombinedSchemaView initialized with format: {self.format}")
+        logger.info(f"Renderer classes: {self.renderer_classes}")
 
     def get_schema_generator(self, request):
         """Get the schema generator instance with proper patterns"""
-        active_datasets = list(get_active_datasets(api_enabled=True))
+        active_datasets = list(get_active_datasets())
         active_dataset_ids = {ds.schema.id for ds in active_datasets}
 
         def combined_matcher(view_cls):
@@ -370,7 +380,11 @@ class CombinedSchemaView(APIView):
                     }],
                 })
 
-            response = JsonResponse(schema or {})
+            # Use the appropriate renderer based on format
+            if self.format == 'yaml':
+                response = Response(schema or {}, content_type='application/yaml')
+            else:
+                response = Response(schema or {}, content_type='application/json')
 
             if request.path.endswith(('.json', '.yaml')):
                 ext = 'json' if request.path.endswith('.json') else 'yaml'
