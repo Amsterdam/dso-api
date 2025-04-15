@@ -13,12 +13,12 @@ movie_data = {
                 "_links": {
                     "schema": "https://schemas.data.amsterdam.nl/datasets/movies/dataset#movie",
                     "self": {
-                        "href": "http://testserver/v1/movies/movie/3/",
+                        "href": "http://testserver/v1/movies/movie/3",
                         "title": "foo123",
                         "id": 3,
                     },
                     "category": {
-                        "href": "http://testserver/v1/movies/category/1/",
+                        "href": "http://testserver/v1/movies/category/1",
                         "title": "bar",
                         "id": 1,
                     },
@@ -35,12 +35,12 @@ movie_data = {
                 "_links": {
                     "schema": "https://schemas.data.amsterdam.nl/datasets/movies/dataset#movie",
                     "self": {
-                        "href": "http://testserver/v1/movies/movie/4/",
+                        "href": "http://testserver/v1/movies/movie/4",
                         "title": "test",
                         "id": 4,
                     },
                     "category": {
-                        "href": "http://testserver/v1/movies/category/1/",
+                        "href": "http://testserver/v1/movies/category/1",
                         "title": "bar",
                         "id": 1,
                     },
@@ -66,7 +66,7 @@ director_data = {
                 "_links": {
                     "schema": "https://schemas.data.amsterdam.nl/datasets/movies/dataset#director",
                     "self": {
-                        "href": "http://testserver/v1/movies/director/66/",
+                        "href": "http://testserver/v1/movies/director/66",
                         "title": "Sjaak Fellini",
                         "id": 66,
                     },

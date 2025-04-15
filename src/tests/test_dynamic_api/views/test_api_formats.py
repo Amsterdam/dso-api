@@ -138,7 +138,7 @@ class TestFormats:
         end = start + self.PAGE_SIZE
 
         cluster = {
-            "href": ("http://testserver/v1/afvalwegingen/clusters/c1/?_format=json"),
+            "href": ("http://testserver/v1/afvalwegingen/clusters/c1?_format=json"),
             "id": "c1",
             "title": "c1",
         }
@@ -152,8 +152,7 @@ class TestFormats:
                             "cluster": cluster,
                             "schema": schema,
                             "self": {
-                                "href": "http://testserver/v1/afvalwegingen/containers"
-                                f"/{i}/?_format=json",
+                                "href": f"http://testserver/v1/afvalwegingen/containers/{i}?_format=json",  # Remove trailing slash
                                 "id": i,
                                 "title": str(i),
                             },
@@ -178,8 +177,7 @@ class TestFormats:
                     )
                 },
                 "self": {
-                    "href": "http://testserver/v1/afvalwegingen/containers"
-                    f"/?_format=json&{page_size_param}={self.PAGE_SIZE}&page={page_num}"
+                    "href": f"http://testserver/v1/afvalwegingen/containers/?_format=json&{page_size_param}={self.PAGE_SIZE}&page={page_num}"
                 },
             },
             "page": {"number": page_num, "size": self.PAGE_SIZE},
@@ -187,8 +185,7 @@ class TestFormats:
 
         if page_num > 1:
             page["_links"]["previous"] = {
-                "href": f"http://testserver/v1/afvalwegingen/containers"
-                f"/?_format=json&{page_size_param}={self.PAGE_SIZE}"
+                "href": f"http://testserver/v1/afvalwegingen/containers/?_format=json&{page_size_param}={self.PAGE_SIZE}"
             }
 
         return page

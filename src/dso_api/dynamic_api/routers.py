@@ -289,7 +289,7 @@ class DynamicRouter(routers.DefaultRouter):
             ),
             # Detail route
             Route(
-                url=r'^{prefix}/(?P<pk>[^/.]+)$',
+                url=r'^{prefix}/(?P<pk>[^/]+)$',
                 mapping={'get': 'retrieve'},
                 name='{basename}-detail-noslash',
                 detail=True,
@@ -297,7 +297,7 @@ class DynamicRouter(routers.DefaultRouter):
             ),
             # Detail route with trailing slash
             Route(
-                url=r'^{prefix}/(?P<pk>[^/.]+)/$',
+                url=r'^{prefix}/(?P<pk>[^/]+)/?$',
                 mapping={'get': 'retrieve'},
                 name='{basename}-detail',
                 detail=True,
@@ -340,7 +340,7 @@ class DynamicRouter(routers.DefaultRouter):
     def _build_doc_views(self, datasets: Iterable[Dataset]) -> Iterator[URLPattern]:
         for dataset in datasets:
             yield path(
-                f"docs/datasets/{dataset.path}.html",
+                f"/docs/datasets/{dataset.path}.html",
                 DatasetDocView.as_view(),
                 name=f"doc-{dataset.schema.id}",
                 kwargs={"dataset_name": dataset.schema.id},
@@ -350,7 +350,7 @@ class DynamicRouter(routers.DefaultRouter):
                 continue
 
             yield path(
-                f"docs/wfs-datasets/{dataset.path}.html",
+                f"/docs/wfs-datasets/{dataset.path}.html",
                 DatasetWFSDocView.as_view(),
                 name=f"doc-wfs-{dataset.schema.id}",
                 kwargs={"dataset_name": dataset.schema.id},

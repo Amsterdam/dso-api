@@ -90,7 +90,7 @@ class TestMandatoryFilterSet:
         assert response.status_code == 200, data
         assert data == {
             "_links": {
-                "self": {"href": "http://testserver/v1/parkeervakken/parkeervakken/1/", "id": "1"},
+                "self": {"href": "http://testserver/v1/parkeervakken/parkeervakken/1", "id": "1"},
             },
             # no ID field (not authorized)
             "soort": "N",  # letters:1
@@ -122,7 +122,7 @@ class TestMandatoryFilterSet:
                     "https://schemas.data.amsterdam.nl"
                     "/datasets/parkeervakken/dataset#parkeervakken"
                 ),
-                "self": {"href": "http://testserver/v1/parkeervakken/parkeervakken/1/", "id": "1"},
+                "self": {"href": "http://testserver/v1/parkeervakken/parkeervakken/1", "id": "1"},
             },
             # Full data!
             "id": "1",
@@ -157,7 +157,7 @@ class TestMandatoryFilterSet:
         data = read_response_json(response)
         assert data == {
             "_links": {
-                "self": {"href": "http://testserver/v1/parkeervakken/parkeervakken/1/", "id": "1"},
+                "self": {"href": "http://testserver/v1/parkeervakken/parkeervakken/1", "id": "1"},
             },
             "soort": "N",  # letters:1
             "type": "Langs",  # read permission
@@ -183,7 +183,7 @@ class TestMandatoryFilterSet:
         assert response.status_code == 200, data
         assert data == {
             "_links": {
-                "self": {"href": "http://testserver/v1/parkeervakken/parkeervakken/1/", "id": "1"},
+                "self": {"href": "http://testserver/v1/parkeervakken/parkeervakken/1", "id": "1"},
             },
             "type": "Langs",  # read permission
             "soort": "NIET FISCA",  # read permission
