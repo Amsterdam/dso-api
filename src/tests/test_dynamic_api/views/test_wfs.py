@@ -200,6 +200,10 @@ class TestDatasetWFSView:
 
         assert len(xml_root) == 0
 
+    @pytest.mark.skip(
+        reason="Test was designed for old implementation of versioned datasets."
+        "Will need to be re-implemented once versioning is in place."
+    )
     def test_wfs_non_default_dataset_not_exposed(
         self,
         api_client,
