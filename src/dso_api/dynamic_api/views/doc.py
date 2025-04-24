@@ -295,6 +295,7 @@ def _table_context(ds: Dataset, table: DatasetTableSchema):
             ("csv", "csv", "CSV"),
             ("geopackage", "gpkg", "geopackage"),
             ("jsonlines", "jsonl", "JSONlines"),
+            ("geojson", "geojson", "GeoJSON"),
         ):
             ext_info = {
                 "extension": extension,
