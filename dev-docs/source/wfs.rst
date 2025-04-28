@@ -48,6 +48,19 @@ The authorization rules for data are handled in 2 ways:
   implements the :func:`check_permissions` hook that django-gisserver_ provides.
   It checks against the dataset/table-level permissions.
 
+Datasets With Multiple Geometries
+---------------------------------
+
+If a table contains multiple geometries, multiple variations fo the feature type
+will be included separately in the WFS server. Each variation has a different primary geometry field.
+
+This way, GIS packages can display both geometries on the map.
+
+This can be seen, for example, with "Horeca-exploitatievergunningen" (catering exploitation permits):
+a separate layer is made available for the building and the associated terraces.
+This way, both geometries can be read. The data of both layers is identical;
+only the order of geometry fields has been adjusted.
+
 Expand Logic
 ------------
 
