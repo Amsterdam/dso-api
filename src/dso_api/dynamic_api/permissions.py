@@ -143,20 +143,20 @@ class HasOAuth2Scopes(permissions.BasePermission):
         return access
 
 
-class CheckPermissionsMixin:
-    """Mixin that adds a ``check_permissions()`` function to the view,
+class CheckModelPermissionsMixin:
+    """Mixin that adds a ``check_model_permissions()`` function to the view,
     which supports the DRF-plugins for permission checks on a non-DRF view (e.g. WFS/MVT).
     """
 
     #: Custom permission that checks amsterdam schema auth settings
     permission_classes = [HasOAuth2Scopes]
 
-    def check_permissions(self, request, models):
+    def check_model_permissions(self, models):
         """
         Check if the request should be permitted.
         """
         for permission in self.get_permissions():
-            if not permission.has_permission_for_models(request, self, models):
+            if not permission.has_permission_for_models(self.request, self, models):
                 # Is Django's PermissionDenied so non-DRF views can handle this.
                 raise PermissionDenied()
 
