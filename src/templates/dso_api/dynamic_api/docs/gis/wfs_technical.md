@@ -16,6 +16,17 @@ gebruiker toegang toe heeft. Het is daardoor niet mogelijk om te
 filteren op afgeschermde velden, simpelweg omdat de server deze velden
 niet herkent.
 
+## Datasets met meerdere geometrieëen
+
+Indien een tabel meerdere geometrieën bevat, worden meerdere variaties van deze tabel
+afzonderlijk opgenomen in de WFS-server. Elke variatie heeft een ander primair geometrieveld.
+Zodoende kunnen GIS-pakketten op beide geometriën weergeven op de kaart.
+
+Dit is bijvoorbeeld te zien bij "Horeca-exploitatievergunningen":
+er wordt een aparte laag voor het pand, en de bijbehorende terassen beschikbaar gesteld.
+Zodoende kunnen beide geometriën uitgelezen worden.
+De data van beide lagen is identiek; alleen de volgorde van geometrie-velden is aangepast.
+
 ## Embedding
 
 De XML uitvoer van de WFS server verschilt bij het gebruik van
