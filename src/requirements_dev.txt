@@ -4,7 +4,7 @@
 #
 #    pip-compile --output-file=requirements_dev.txt requirements_dev.in
 #
-amsterdam-schema-tools[django]==7.5.1
+amsterdam-schema-tools[django]==7.6.0
     # via -r ./requirements.in
 argparse==1.4.0
     # via uwsgi-readiness-check
@@ -243,7 +243,7 @@ more-ds==0.0.6
     # via
     #   -r ./requirements.in
     #   amsterdam-schema-tools
-more-itertools==10.6.0
+more-itertools==10.7.0
     # via
     #   -r ./requirements.in
     #   amsterdam-schema-tools
@@ -484,9 +484,9 @@ rpds-py==0.24.0
     # via
     #   jsonschema
     #   referencing
-ruff==0.11.6
+ruff==0.11.7
     # via -r requirements_dev.in
-sentry-sdk==2.26.1
+sentry-sdk==2.27.0
     # via -r ./requirements.in
 shapely==2.0.7
     # via
