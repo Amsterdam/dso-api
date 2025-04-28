@@ -21,7 +21,6 @@ from schematools.contrib.django.models import Dataset, DynamicModel, Profile
 from schematools.loaders import FileSystemProfileLoader, FileSystemSchemaLoader
 from schematools.types import DatasetSchema, Scope
 
-from rest_framework_dso.crs import RD_NEW
 from tests.test_rest_framework_dso.models import Actor, Category, Location, Movie, MovieUser
 from tests.utils import api_request_with_scopes, to_drf_request
 
@@ -616,7 +615,7 @@ def movies_data_with_actors(movies_data, dynamic_models):
 @pytest.fixture
 def location() -> Location:
     """A dummy model to test our API with"""
-    return Location.objects.create(geometry=GEOSGeometry("Point(10 10)", srid=RD_NEW))
+    return Location.objects.create(geometry=GEOSGeometry("SRID=28992;Point (121400 487400)"))
 
 
 @pytest.fixture()
