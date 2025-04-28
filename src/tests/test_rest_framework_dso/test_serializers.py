@@ -3,7 +3,7 @@ from django.db import connection
 from rest_framework.exceptions import ValidationError
 from rest_framework.request import Request
 
-from rest_framework_dso.crs import RD_NEW, WGS84
+from rest_framework_dso.crs import CRS84, RD_NEW
 from rest_framework_dso.pagination import DSOPageNumberPagination
 from rest_framework_dso.renderers import HALJSONRenderer
 from tests.utils import normalize_data, read_response_json
@@ -259,7 +259,7 @@ def test_location(drf_request, location):
         context={"request": drf_request},
     )
     data = normalize_data(serializer.data)
-    assert data["geometry"]["coordinates"] == [10.0, 10.0]
+    assert data["geometry"]["coordinates"] == [121400, 487400]
 
     # Serializer assigned 'response_content_crs' (auto detected)
     assert drf_request.response_content_crs == RD_NEW
@@ -269,7 +269,7 @@ def test_location(drf_request, location):
 def test_location_transform(drf_request, location):
     """Prove that the serializer transforms crs"""
 
-    drf_request.accept_crs = WGS84
+    drf_request.accept_crs = CRS84
     serializer = LocationSerializer(
         instance=location,
         fields_to_expand=[],
@@ -288,20 +288,20 @@ def test_location_transform(drf_request, location):
     def rounder(p):
         return [round(c, 6) for c in p]
 
-    assert rounder(data["geometry"]["coordinates"]) == [3.313688, 47.974858]
+    assert rounder(data["geometry"]["coordinates"]) == [4.893804, 52.373446]
 
     # Serializer assigned 'response_content_crs' (used accept_crs)
-    assert drf_request.response_content_crs == WGS84
+    assert drf_request.response_content_crs == CRS84
 
 
 @pytest.mark.django_db
 def test_location_transform_input(drf_request, location):
     """Prove that the serializer transforms crs, even when it's (remote) dictionary input."""
 
-    drf_request.accept_crs = WGS84  # Force WGS84
+    drf_request.accept_crs = CRS84  # Force CRS84
     serializer = LocationSerializer(
         data={
-            "geometry": {"type": "Point", "coordinates": [10, 10]},  # GeoJSON data
+            "geometry": {"type": "Point", "coordinates": [121400, 487400]},  # GeoJSON data
         },
         context={
             "request": drf_request,
@@ -317,7 +317,7 @@ def test_location_transform_input(drf_request, location):
     def rounder(p):
         return [round(c, 6) for c in p]
 
-    assert rounder(data["geometry"]["coordinates"]) == [3.313688, 47.974858]
+    assert rounder(data["geometry"]["coordinates"]) == [4.893804, 52.373446]
 
     # Serializer assigned 'response_content_crs' (used accept_crs)
-    assert drf_request.response_content_crs == WGS84
+    assert drf_request.response_content_crs == CRS84

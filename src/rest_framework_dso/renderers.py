@@ -21,7 +21,7 @@ from rest_framework_csv.renderers import CSVStreamingRenderer
 from rest_framework_gis.fields import GeoJsonDict
 
 from rest_framework_dso import pagination
-from rest_framework_dso.crs import WGS84
+from rest_framework_dso.crs import CRS84, WGS84
 from rest_framework_dso.exceptions import HumanReadableException
 from rest_framework_dso.fields import GeoJSONIdentifierField
 from rest_framework_dso.serializer_helpers import ReturnGenerator
@@ -324,7 +324,7 @@ class GeoJSONRenderer(RendererMixin, renderers.JSONRenderer):
     format = "geojson"
     charset = "utf-8"
 
-    default_crs = WGS84  # GeoJSON always defaults to WGS84 (EPSG:4326).
+    default_crs = CRS84  # GeoJSON default is urn:ogc:def:crs:OGC::CRS84; axis longitude/latitude
     compatible_paginator_classes = [pagination.DelegatedPageNumberPagination]
     content_disposition = 'attachment; filename="{filename}.json"'
 
@@ -442,6 +442,12 @@ class GeoJSONRenderer(RendererMixin, renderers.JSONRenderer):
             content_crs = getattr(request, "response_content_crs", None) or accept_crs
 
             if content_crs is not None:
+                # The GeoJSON standard mandates coordinates are always in x/y ordering.
+                # Thus, it makes sense GEOSGeometry.json always returns coordinates like that.
+                # Make sure the crs value reflects that; WGS84 uses (y/x) and CRS84 uses (x/y).
+                if content_crs == WGS84:
+                    content_crs = CRS84
+
                 return {
                     "crs": {
                         "type": "name",
