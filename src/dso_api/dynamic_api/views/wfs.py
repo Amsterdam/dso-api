@@ -28,7 +28,6 @@ from __future__ import annotations
 
 import re
 from collections import UserList
-from typing import Union
 
 from django.conf import settings
 from django.contrib.gis.db.models import GeometryField
@@ -39,25 +38,29 @@ from django.urls import reverse
 from django.utils.functional import cached_property
 from gisserver.exceptions import InvalidParameterValue, PermissionDenied
 from gisserver.features import ComplexFeatureField, FeatureField, FeatureType, ServiceDescription
+from gisserver.parsers import wfs20
 from gisserver.views import WFSView
 from schematools.contrib.django.models import Dataset, DynamicModel
 from schematools.types import DatasetTableSchema
 
 from dso_api.dynamic_api.datasets import get_active_datasets
-from dso_api.dynamic_api.permissions import CheckPermissionsMixin
+from dso_api.dynamic_api.permissions import CheckModelPermissionsMixin
 from dso_api.dynamic_api.temporal import filter_temporal_slice
 from rest_framework_dso import crs
 
 from .index import APIIndexView
 
-FieldDef = Union[str, FeatureField]
 RE_SIMPLE_NAME = re.compile(
-    r"^(?P<ns>[a-z0-9_]+:)?(?P<name>[a-z0-9_]+)(?P<variant>-[a-z0-9_]+)?$", re.I
+    # Strip XML prefix and our custom -variant name.
+    r"^(?P<ns>\{[^}]+})?(?P<name>[a-z0-9_]+)(?P<variant>-[a-z0-9_]+)?$",
+    re.I,
 )
 
 
 class AuthenticatedFeatureType(FeatureType):
-    """Extended WFS feature type definition that also performs authentication."""
+    """Extended WFS feature type definition that also performs authentication.
+    This class tells django-gisserver how to render a model as WFS Feature.
+    """
 
     def __init__(self, queryset, *, wfs_view: DatasetWFSView, **kwargs):
         super().__init__(queryset, **kwargs)
@@ -67,24 +70,16 @@ class AuthenticatedFeatureType(FeatureType):
         """Perform the access check for a particular request.
         This retrieves the accessed models, and relays further processing in the view.
         """
-        models = [self.model]
-
-        # If the ?expand=.. parameter is used, check the type definition for
-        # any expanded elements. These models are also checked for permission.
-        for xsd_element in self.xsd_type.complex_elements:
-            related_model = xsd_element.type.source
-            if related_model is not None:
-                models.append(related_model)
-
-        self.wfs_view.check_permissions(request, models)
-
         # If the main geometry is hidden behind an access scope,
         # accessing the WFS feature is moot (and risks exposure through direct model access)
         try:
-            if not self.main_geometry_element:
-                raise PermissionDenied(locator="typeNames")
+            self.main_geometry_element  # noqa: B018
         except ImproperlyConfigured as err:
-            raise PermissionDenied(locator="typeNames") from err
+            raise PermissionDenied(
+                "You do not have permission to perform this action, "
+                "because you don't have permission to access the geometry element.",
+                locator="typeNames",
+            ) from err
 
     def get_queryset(self) -> models.QuerySet:
         # Only return active objects for now.
@@ -139,7 +134,7 @@ class DatasetWFSIndexView(APIIndexView):
         ]
 
 
-class DatasetWFSView(CheckPermissionsMixin, WFSView):
+class DatasetWFSView(CheckModelPermissionsMixin, WFSView):
     """A WFS view for a single dataset.
 
     This extends the logic of django-gisserver to expose the dynamically generated
@@ -180,6 +175,20 @@ class DatasetWFSView(CheckPermissionsMixin, WFSView):
         embed = request.GET.get("embed", "")
         self.embed_fields = set(embed.split(",")) if embed else set()
 
+    def check_permissions(self, feature_type: AuthenticatedFeatureType):
+        """Implement permission check for accessing a feature."""
+        # See which models the feature will touch
+        accessed_models = [feature_type.model]
+
+        # If the ?expand=.. parameter is used, check the type definition for
+        # any expanded elements. These models are also checked for permission.
+        for xsd_element in feature_type.xsd_type.all_complex_elements:
+            related_model = xsd_element.type.source
+            if related_model is not None:
+                accessed_models.append(related_model)
+
+        self.check_model_permissions(accessed_models)
+
     def get_index_context_data(self, **kwargs):
         """Context data for the HTML root page"""
         expandable_fields = set()
@@ -219,30 +228,9 @@ class DatasetWFSView(CheckPermissionsMixin, WFSView):
 
     def get_feature_types(self) -> list[FeatureType]:
         """Generate map feature layers for all models that have geometry data."""
-        typenames = self.KVP.get("TYPENAMES")
-        if not typenames:
-            # Need to parse all models (e.g. GetCapabilities)
-            subset = self.models
-        else:
-            # Already filter the number of exported features, to avoid intense database queries.
-            # The dash is used as variants of the same feature. The xmlns: prefix is also removed
-            # since it can differ depending on the NAMESPACES parameter.
-            requested_names = {
-                RE_SIMPLE_NAME.sub(r"\g<name>", name) for name in typenames.split(",")
-            }
-            subset = {
-                name: model for name, model in self.models.items() if name in requested_names
-            }
-
-            if not subset:
-                raise InvalidParameterValue(
-                    f"Typename '{typenames}' doesn't exist in this server. "
-                    f"Please check the capabilities and reformulate your request.",
-                    "typename",
-                ) from None
-
         features = []
-        for model in subset.values():
+        # For performance, only the feature types are generated that are accessed by this request
+        for model in self._get_requested_models():
             geo_fields = self._get_geometry_fields(model)
             base_name = model._meta.model_name
             base_title = model._meta.verbose_name
@@ -262,7 +250,7 @@ class DatasetWFSView(CheckPermissionsMixin, WFSView):
                     name = f"{base_name}-{geo_field.name}"
                     title = f"{base_title} ({geo_field.verbose_name})"
                 feature = AuthenticatedFeatureType(
-                    model,
+                    model.objects.all(),
                     name=name,
                     title=title,
                     fields=fields,
@@ -276,7 +264,7 @@ class DatasetWFSView(CheckPermissionsMixin, WFSView):
                 features.append(feature)
         return features
 
-    def get_feature_fields(self, model, main_geometry_field_name) -> list[FieldDef]:
+    def get_feature_fields(self, model, main_geometry_field_name) -> list[FeatureField]:
         """Define which fields should be exposed with the model.
 
         Instead of opting for the "__all__" value of django-gisserver,
@@ -300,14 +288,14 @@ class DatasetWFSView(CheckPermissionsMixin, WFSView):
                     fields.append(
                         ComplexFeatureField(
                             model_field.name,
-                            fields=self.get_expanded_fields(model_field.related_model),
+                            fields=self._get_expanded_fields(model_field.related_model),
                             abstract=model_field.help_text,
                         )
                     )
                 if model_field.name in self.embed_fields:
                     # The "Model.id" field is added
                     fields.extend(
-                        self.get_embedded_fields(
+                        self._get_embedded_fields(
                             model_field.name,
                             model_field.related_model,
                             pk_attr=field_name,
@@ -340,7 +328,37 @@ class DatasetWFSView(CheckPermissionsMixin, WFSView):
 
         return fields + other_geo_fields
 
-    def get_expanded_fields(self, model) -> list[FieldDef]:
+    def _get_requested_models(self) -> list[type[DynamicModel]]:
+        """Tell which models are accessed by the request.
+        This allows for a more efficient call of get_feature_types(),
+        as it doesn't dynamically have to generate the features which aren't accessed.
+        """
+        typenames = []
+        if isinstance(self.ows_request, wfs20.DescribeFeatureType):
+            typenames = self.ows_request.typeNames  # can be empty
+        elif isinstance(self.ows_request, (wfs20.GetPropertyValue, wfs20.DescribeFeatureType)):
+            for query in self.ows_request.queries:
+                typenames.extend(query.get_type_names())
+
+        if not typenames:
+            # Need to parse all models, this is a request such as GetCapabilities,
+            # or DescribeFeatureType without providing typeNames.
+            return self.models.values()
+        else:
+            # Already filter the number of exported features, to avoid the costs of building them.
+            # The dash is used as variants of the same feature. The xml namespace is also removed.
+            requested_names = {RE_SIMPLE_NAME.sub(r"\g<name>", name) for name in typenames}
+            models = [model for name, model in self.models.items() if name in requested_names]
+
+            if not models:
+                raise InvalidParameterValue(
+                    f"Typename '{requested_names}' doesn't exist in this server. "
+                    f"Please check the capabilities and reformulate your request.",
+                    locator="typeNames",
+                ) from None
+            return models
+
+    def _get_expanded_fields(self, model) -> list[FeatureField]:
         """Define which fields to include in an expanded relation.
         This is a shorter list, as including a geometry has no use here.
         Relations are also avoided as these won't be expanded anyway.
@@ -357,7 +375,7 @@ class DatasetWFSView(CheckPermissionsMixin, WFSView):
             and user_scopes.has_field_access(model.get_field_schema(model_field))
         ]
 
-    def get_embedded_fields(self, relation_name, model, pk_attr=None) -> list[FieldDef]:
+    def _get_embedded_fields(self, relation_name, model, pk_attr=None) -> list[FeatureField]:
         """Define which fields to embed as flattened fields."""
         user_scopes = self.request.user_scopes
         return [

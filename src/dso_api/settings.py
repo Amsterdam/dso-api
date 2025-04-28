@@ -334,11 +334,16 @@ LOGGING = {
 
 if DEBUG:
     # Print tracebacks without JSON formatting.
-    LOGGING["loggers"]["django.request"] = {
-        "handlers": ["console_print"],
-        "level": "ERROR",
-        "propagate": False,
-    }
+    LOGGING["loggers"].update(
+        {
+            "django.request": {
+                "handlers": ["console_print"],
+                "level": "ERROR",
+                "propagate": False,
+            },
+            "gisserver": {"level": "DEBUG", "handlers": ["console"], "propagate": False},
+        }
+    )
 
 # -- Azure specific settings
 if CLOUD_ENV.startswith("azure"):

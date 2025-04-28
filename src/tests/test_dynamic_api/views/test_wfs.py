@@ -332,7 +332,10 @@ class TestDatasetWFSViewAuth:
         assert response.status_code == 403, response
         root = read_response_xml(response)
         assert root[0].attrib == {"exceptionCode": "PermissionDenied", "locator": "typeNames"}
-        assert root[0][0].text == "You do not have permission to perform this action."
+        assert root[0][0].text == (
+            "You do not have permission to perform this action, "
+            "because you don't have permission to access the geometry element."
+        )
 
         # With the proper scopes, we should get a result, but still can't filter on unauth fields.
         token = fetch_auth_token(["TEST/GEO"])
