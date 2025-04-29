@@ -63,8 +63,7 @@ function onPageLoad() {
   let page = PAGEURL.searchParams.get("page");
 
   // Check if the URL has a trailing slash and we want to remove it
-  if (PAGEURL.pathname.endsWith('/') && PAGEURL.pathname.includes('/v1/afvalwijzer/acc_afvalwijzer')) {
-    // Remove the trailing slash
+  if (PAGEURL.pathname.endsWith('/')) {
     let newPath = PAGEURL.pathname.slice(0, -1);
     let newUrl = new URL(PAGEURL);
     newUrl.pathname = newPath;
@@ -180,8 +179,7 @@ function updatePageRequest(url, method = "GET", pushHistory = true, headerSettin
 
   // Check if the URL is without a trailing slash and we want to preserve it
   let urlObj = new URL(url);
-  let preserveNoTrailingSlash = !urlObj.pathname.endsWith('/') &&
-                               urlObj.pathname.includes('/v1/afvalwijzer/acc_afvalwijzer');
+  let preserveNoTrailingSlash = !urlObj.pathname.endsWith('/');
 
   setURL(url);
 
