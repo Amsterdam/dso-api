@@ -291,15 +291,16 @@ def _table_context(ds: Dataset, table: DatasetTableSchema):
     # if dataset_name in settings.EXPORTED_DATASETS.split(","):
     if ds.tables.get(name=table_name).enable_export:
         export_info = []
-        for type_, extension in (
-            ("csv", "csv"),
-            ("geopackage", "gpkg"),
-            ("jsonlines", "jsonl"),
-            ("geojson", "geojson"),
+        for type_, extension, description in (
+            ("csv", "csv", "CSV"),
+            ("geopackage", "gpkg", "geopackage"),
+            ("jsonlines", "jsonl", "JSONlines"),
+            ("geojson", "geojson", "GeoJSON"),
         ):
             ext_info = {
                 "extension": extension,
                 "type": type_,
+                "description": description,
                 "url": f"{settings.EXPORT_BASE_URI}/{type_}/"
                 f"{dataset_name}_{table_name}.{extension}.zip",
             }
