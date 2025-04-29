@@ -109,7 +109,7 @@ django==4.2.20
     #   drf-spectacular
 django-cors-headers==4.7.0
     # via -r ./requirements.in
-django-debug-toolbar==5.1.0
+django-debug-toolbar==5.2.0
     # via -r requirements_dev.in
 django-environ==0.12.0
     # via
@@ -243,7 +243,7 @@ more-ds==0.0.6
     # via
     #   -r ./requirements.in
     #   amsterdam-schema-tools
-more-itertools==10.6.0
+more-itertools==10.7.0
     # via
     #   -r ./requirements.in
     #   amsterdam-schema-tools
@@ -484,9 +484,9 @@ rpds-py==0.24.0
     # via
     #   jsonschema
     #   referencing
-ruff==0.11.6
+ruff==0.11.7
     # via -r requirements_dev.in
-sentry-sdk==2.26.1
+sentry-sdk==2.27.0
     # via -r ./requirements.in
 shapely==2.0.7
     # via
