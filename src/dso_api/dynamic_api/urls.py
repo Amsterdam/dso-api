@@ -27,11 +27,6 @@ def get_patterns(router_urls):
         path("docs/index.html", DocsOverview.as_view(), name="docs-index"),
         path("docs/search.html", search),
         path("docs/searchindex.json", search_index),
-        # All API types:
-        # path("/mvt/", views.DatasetMVTIndexView.as_view(), name="mvt-index"),
-        # path("/mvt", views.DatasetMVTIndexView.as_view(), name="mvt-index-noslash"),
-        # path("/wfs/", views.DatasetWFSIndexView.as_view(), name="wfs-index"),
-        # path("/wfs", views.DatasetWFSIndexView.as_view(), name="wfs-index-noslash"),
         re_path(r"/mvt/?$", views.DatasetMVTIndexView.as_view(), name="mvt-index"),
         re_path(r"/wfs/?$", views.DatasetWFSIndexView.as_view(), name="wfs-index"),
         path("", include(router_urls), name="api-root"),

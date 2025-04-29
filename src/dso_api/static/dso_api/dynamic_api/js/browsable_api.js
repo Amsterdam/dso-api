@@ -41,7 +41,6 @@ function setURL(url) {
 
   // Preserve URLs without trailing slashes
   if (!PAGEURL.pathname.endsWith('/') && window.location.pathname === PAGEURL.pathname) {
-    console.log("Preserving URL without trailing slash: " + PAGEURL.pathname);
   }
 
   for (let paramkey of PAGEURL.searchParams.keys()) {
@@ -206,7 +205,6 @@ function updatePageRequest(url, method = "GET", pushHistory = true, headerSettin
   // but keep the original URL for display and history
   let requestUrl = url;
   if (preserveNoTrailingSlash) {
-    console.log("Making request with trailing slash but preserving URL without it");
     requestUrl = urlObj.pathname + '/' + urlObj.search;
   }
 
