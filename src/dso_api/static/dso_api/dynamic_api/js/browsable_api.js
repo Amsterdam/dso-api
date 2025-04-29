@@ -649,8 +649,7 @@ function addParamExampleDatalist(param, name = null) {
 
 function findOAPath(searchPath, paths) {
   // Find the Open API path template that matches the searchPath.
-  
-  // Only get the last parth of the searchPath
+  // Only get the last part of the searchPath
   searchPath = "/" + searchPath.split("/").pop();
 
   if (paths.hasOwnProperty(searchPath)) {
