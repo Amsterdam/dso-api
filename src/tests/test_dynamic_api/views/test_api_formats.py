@@ -153,7 +153,7 @@ class TestFormats:
                             "cluster": cluster,
                             "schema": schema,
                             "self": {
-                                "href": f"http://testserver/v1/afvalwegingen/containers/{i}?_format=json",  # Remove trailing slash
+                                "href": f"http://testserver/v1/afvalwegingen/containers/{i}?_format=json",
                                 "id": i,
                                 "title": str(i),
                             },

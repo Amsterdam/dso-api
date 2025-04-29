@@ -114,14 +114,13 @@ class DynamicApiSchemaGenerator(DSOSchemaGenerator):
         # if request.path == '/v1/openapi.json/' or request.path == '/v1/openapi.yaml/':
         #     return schema
 
-        # modify request.path to ensure it ends with a slash and removes openapi.json and openapi.yaml
+        # modify request.path to ensure it ends with a slash and removes
+        # openapi.json and openapi.yaml
         cleaned_path = request.path.replace("/openapi.json", "").replace("/openapi.yaml", "")
         if not cleaned_path.endswith("/") and cleaned_path != "/v1":
             cleaned_path += "/"
 
         current_doc_dir = os.path.dirname(cleaned_path)
-        logging.info(f"Current doc dir: {current_doc_dir}")
-        logging.info(f"Current request path: {cleaned_path}")
 
         # Ensure 'servers' field reflects this base path if not already set correctly
         if "servers" not in schema:
@@ -139,7 +138,8 @@ class DynamicApiSchemaGenerator(DSOSchemaGenerator):
             original_paths = schema.get("paths", {})
             modified_paths = {}
             for path, path_item in original_paths.items():
-                # Ensure path starts with '/' and remove trailing slash for consistent comparison with current_doc_dir
+                # Ensure path starts with '/' and remove trailing slash for consistent
+                # comparison with current_doc_dir
                 absolute_path = path if path.startswith("/") else "/" + path
                 absolute_path = absolute_path.rstrip("/")
                 # Check if the path starts with the directory of the current doc
@@ -153,9 +153,6 @@ class DynamicApiSchemaGenerator(DSOSchemaGenerator):
                     modified_paths[relative_path] = path_item
                 else:
                     # Path doesn't start with the expected base path, keep it as is
-                    logging.info(
-                        f"Path {path} does not start with {current_doc_dir}, keeping it as is."
-                    )
                     modified_paths[path] = path_item
             schema["paths"] = modified_paths
         return schema
@@ -229,7 +226,7 @@ def _html_on_browser(openapi_view, dataset_schema, response_format: str = "json"
         path = request.path
 
         # Handle file downloads for openapi.json and openapi.yaml
-        if path.endswith("openapi.json") or path.endswith("openapi.yaml"):
+        if path.endswith(("openapi.json", "openapi.yaml")):
             view = vary_on_headers("Accept", "format")(openapi_view)
             view = cache_page(CACHE_DURATION)(view)
             response = view(request)
@@ -345,8 +342,6 @@ class CombinedSchemaView(APIView):
         self.renderer_classes = [
             renderers.JSONOpenAPIRenderer if self.format == "json" else renderers.OpenAPIRenderer
         ]
-        logger.info(f"CombinedSchemaView initialized with format: {self.format}")
-        logger.info(f"Renderer classes: {self.renderer_classes}")
 
     def get_schema_generator(self, request):
         """Get the schema generator instance with proper patterns"""
@@ -400,7 +395,7 @@ class CombinedSchemaView(APIView):
 
             return response
 
-        except Exception as e:
+        except (ValueError, TypeError, AttributeError, KeyError) as e:
             return JsonResponse(
                 {"error": "Failed to generate OpenAPI specification", "detail": str(e)}, status=500
             )
