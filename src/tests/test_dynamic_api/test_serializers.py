@@ -97,7 +97,7 @@ class TestDynamicSerializer:
             context={"request": drf_request, "view": to_serializer_view(afval_container_model)},
         )
         data = normalize_data(container_serializer.data)
-        
+
         assert data == {
             "_links": {
                 "cluster": {

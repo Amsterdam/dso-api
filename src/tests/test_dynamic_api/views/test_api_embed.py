@@ -383,7 +383,7 @@ class TestEmbedTemporalTables:
                     }
                 ],
             },
-            "_links": {                                                                                                                                                                                                                                                                                             
+            "_links": {
                 "self": {
                     "href": (
                         "http://testserver/v1/bag/panden/?_expand=true"
@@ -585,9 +585,9 @@ class TestEmbedTemporalTables:
         url = reverse("dynamic_api:gebieden-ggwgebieden-detail", args=["03630950000000.1"])
         response = api_client.get(url, data={"_expand": "true"})
         data = read_response_json(response)
-        
+
         assert response.status_code == 200, data
-        
+
         assert data["_links"] == {
             "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/dataset#ggwgebieden",
             "self": {

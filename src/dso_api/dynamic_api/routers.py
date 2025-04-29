@@ -112,7 +112,7 @@ class DynamicAPIIndexView(APIIndexView):
 
 class DynamicRouter(routers.DefaultRouter):
     """Router that dynamically creates all views and viewsets based on the Dataset models."""
-    
+
     def __init__(self):
         super().__init__(trailing_slash=False)
         self.include_format_suffixes = False
@@ -267,47 +267,47 @@ class DynamicRouter(routers.DefaultRouter):
 
     def _build_db_viewsets(self, db_datasets: Iterable[Dataset]):
         """Initialize viewsets that are linked to Django database models."""
-        from rest_framework.routers import Route, DynamicRoute
+        from rest_framework.routers import Route
 
         # Define custom routes that support both slash and no-slash
         self.routes = [
             # List route
             Route(
-                url=r'^{prefix}$',
-                mapping={'get': 'list'},
-                name='{basename}-list-noslash',
+                url=r"^{prefix}$",
+                mapping={"get": "list"},
+                name="{basename}-list-noslash",
                 detail=False,
-                initkwargs={'suffix': 'List'}
+                initkwargs={"suffix": "List"},
             ),
             # List route with trailing slash
             Route(
-                url=r'^{prefix}/$',
-                mapping={'get': 'list'},
-                name='{basename}-list',
+                url=r"^{prefix}/$",
+                mapping={"get": "list"},
+                name="{basename}-list",
                 detail=False,
-                initkwargs={'suffix': 'List'}
+                initkwargs={"suffix": "List"},
             ),
             # Detail route
             Route(
-                url=r'^{prefix}/(?P<pk>[^/]+)$',
-                mapping={'get': 'retrieve'},
-                name='{basename}-detail-noslash',
+                url=r"^{prefix}/(?P<pk>[^/]+)$",
+                mapping={"get": "retrieve"},
+                name="{basename}-detail-noslash",
                 detail=True,
-                initkwargs={'suffix': 'Instance'}
+                initkwargs={"suffix": "Instance"},
             ),
             # Detail route with trailing slash
             Route(
-                url=r'^{prefix}/(?P<pk>[^/]+)/?$',
-                mapping={'get': 'retrieve'},
-                name='{basename}-detail',
+                url=r"^{prefix}/(?P<pk>[^/]+)/?$",
+                mapping={"get": "retrieve"},
+                name="{basename}-detail",
                 detail=True,
-                initkwargs={'suffix': 'Instance'}
+                initkwargs={"suffix": "Instance"},
             ),
         ]
 
         tmp_router = routers.DefaultRouter()
         tmp_router.routes = self.routes
-        
+
         db_datasets = {dataset.schema.id: dataset for dataset in db_datasets}
 
         # Generate views now that all models have been created.
@@ -331,9 +331,7 @@ class DynamicRouter(routers.DefaultRouter):
 
                 logger.debug("Created viewset %s", url_prefix)
                 viewset = viewset_factory(model)
-                tmp_router.register(url_prefix, 
-                                    viewset, 
-                                    basename=f"{dataset_id}-{table_id}")
+                tmp_router.register(url_prefix, viewset, basename=f"{dataset_id}-{table_id}")
 
         return tmp_router.registry
 
@@ -476,7 +474,7 @@ class DynamicRouter(routers.DefaultRouter):
         """
 
         # List unique sub paths in all datasets
-        
+
         paths = []
         for ds in datasets:
             path_components = ds.path.split("/")
@@ -491,7 +489,7 @@ class DynamicRouter(routers.DefaultRouter):
             name = p.split("/")[-1].capitalize() + " Datasets"
             results.append(
                 path(
-                "/" + p + "/",
+                    "/" + p + "/",
                     DynamicAPIIndexView.as_view(path=p, name=name),
                     name=f"{p}-index",
                 )
