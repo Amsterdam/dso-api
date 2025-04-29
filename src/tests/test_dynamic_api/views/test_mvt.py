@@ -22,7 +22,7 @@ class TestDatasetMVTIndexView:
         drf_request,
     ):
         """Prove that the MVT index view works."""
-        response = api_client.get("/v1/mvt/")
+        response = api_client.get("/v1/mvt")
         assert response.status_code == 200
 
         # Prove that response contains the correct data
@@ -44,14 +44,14 @@ class TestDatasetMVTIndexView:
                     "environments": [
                         {
                             "name": "production",
-                            "api_url": f"{base}/v1/mvt/afvalwegingen/",
-                            "specification_url": f"{base}/v1/mvt/afvalwegingen/",
+                            "api_url": f"{base}/v1/mvt/afvalwegingen",
+                            "specification_url": f"{base}/v1/mvt/afvalwegingen",
                             "documentation_url": f"{base}/v1/docs/generic/gis.html",
                         }
                     ],
                     "related_apis": [
-                        {"type": "rest_json", "url": f"{base}/v1/afvalwegingen/"},
-                        {"type": "WFS", "url": f"{base}/v1/wfs/afvalwegingen/"},
+                        {"type": "rest_json", "url": f"{base}/v1/afvalwegingen"},
+                        {"type": "WFS", "url": f"{base}/v1/wfs/afvalwegingen"},
                     ],
                     "api_authentication": ["OPENBAAR"],
                     "api_type": "MVT",
@@ -77,14 +77,14 @@ class TestDatasetMVTIndexView:
                     "environments": [
                         {
                             "name": "production",
-                            "api_url": f"{base}/v1/mvt/fietspaaltjes/",
-                            "specification_url": f"{base}/v1/mvt/fietspaaltjes/",
+                            "api_url": f"{base}/v1/mvt/fietspaaltjes",
+                            "specification_url": f"{base}/v1/mvt/fietspaaltjes",
                             "documentation_url": f"{base}/v1/docs/generic/gis.html",
                         }
                     ],
                     "related_apis": [
-                        {"type": "rest_json", "url": f"{base}/v1/fietspaaltjes/"},
-                        {"type": "WFS", "url": f"{base}/v1/wfs/fietspaaltjes/"},
+                        {"type": "rest_json", "url": f"{base}/v1/fietspaaltjes"},
+                        {"type": "WFS", "url": f"{base}/v1/wfs/fietspaaltjes"},
                     ],
                     "api_authentication": ["OPENBAAR"],
                     "api_type": "MVT",
@@ -102,7 +102,7 @@ class TestDatasetMVTIndexView:
         self, api_client, disabled_afval_dataset, fietspaaltjes_dataset, filled_router
     ):
         """Prove that disabled API's are not listed."""
-        response = api_client.get("/v1/mvt/")
+        response = api_client.get("/v1/mvt")
         assert response.status_code == 200
         assert set(response.data["datasets"].keys()) == {"fietspaaltjes"}
 

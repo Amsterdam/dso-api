@@ -12,7 +12,7 @@ class TestDatasetWFSIndexView:
         self, api_client, afval_dataset, fietspaaltjes_dataset, filled_router, drf_request
     ):
         """Prove that the WFS index view works."""
-        response = api_client.get("/v1/wfs/")
+        response = api_client.get("/v1/wfs")
         assert response.status_code == 200
 
         # Prove that response contains the correct data
@@ -34,16 +34,16 @@ class TestDatasetWFSIndexView:
                     "environments": [
                         {
                             "name": "production",
-                            "api_url": f"{base}/v1/wfs/afvalwegingen/",
+                            "api_url": f"{base}/v1/wfs/afvalwegingen",
                             "specification_url": (
-                                f"{base}/v1/wfs/afvalwegingen/?SERVICE=WFS&REQUEST=GetCapabilities"
+                                f"{base}/v1/wfs/afvalwegingen?SERVICE=WFS&REQUEST=GetCapabilities"
                             ),
                             "documentation_url": f"{base}/v1/docs/wfs-datasets/afvalwegingen.html",
                         }
                     ],
                     "related_apis": [
-                        {"type": "rest_json", "url": f"{base}/v1/afvalwegingen/"},
-                        {"type": "MVT", "url": f"{base}/v1/mvt/afvalwegingen/"},
+                        {"type": "rest_json", "url": f"{base}/v1/afvalwegingen"},
+                        {"type": "MVT", "url": f"{base}/v1/mvt/afvalwegingen"},
                     ],
                     "api_authentication": ["OPENBAAR"],
                     "api_type": "WFS",
@@ -69,16 +69,16 @@ class TestDatasetWFSIndexView:
                     "environments": [
                         {
                             "name": "production",
-                            "api_url": f"{base}/v1/wfs/fietspaaltjes/",
+                            "api_url": f"{base}/v1/wfs/fietspaaltjes",
                             "specification_url": (
-                                f"{base}/v1/wfs/fietspaaltjes/?SERVICE=WFS&REQUEST=GetCapabilities"
+                                f"{base}/v1/wfs/fietspaaltjes?SERVICE=WFS&REQUEST=GetCapabilities"
                             ),
                             "documentation_url": f"{base}/v1/docs/wfs-datasets/fietspaaltjes.html",
                         }
                     ],
                     "related_apis": [
-                        {"type": "rest_json", "url": f"{base}/v1/fietspaaltjes/"},
-                        {"type": "MVT", "url": f"{base}/v1/mvt/fietspaaltjes/"},
+                        {"type": "rest_json", "url": f"{base}/v1/fietspaaltjes"},
+                        {"type": "MVT", "url": f"{base}/v1/mvt/fietspaaltjes"},
                     ],
                     "api_authentication": ["OPENBAAR"],
                     "api_type": "WFS",
@@ -96,7 +96,7 @@ class TestDatasetWFSIndexView:
         self, api_client, disabled_afval_dataset, fietspaaltjes_dataset, filled_router
     ):
         """Prove that disabled API's are not listed."""
-        response = api_client.get("/v1/wfs/")
+        response = api_client.get("/v1/wfs")
         assert response.status_code == 200
         assert set(response.data["datasets"].keys()) == {"fietspaaltjes"}
 
@@ -107,7 +107,7 @@ class TestDatasetWFSView:
 
     def test_wfs_view(self, api_client, afval_dataset, afval_container):
         wfs_url = (
-            "/v1/wfs/afvalwegingen/"
+            "/v1/wfs/afvalwegingen"
             "?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=app:containers"
             "&OUTPUTFORMAT=application/gml+xml"
         )
@@ -116,7 +116,7 @@ class TestDatasetWFSView:
 
     def test_wfs_view_disabled(self, api_client, disabled_afval_dataset, afval_container):
         wfs_url = (
-            "/v1/wfs/afvalwegingen/"
+            "/v1/wfs/afvalwegingen"
             "?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=app:containers"
             "&OUTPUTFORMAT=application/gml+xml"
         )
@@ -135,7 +135,7 @@ class TestDatasetWFSView:
         )
 
         wfs_url = (
-            "/v1/wfs/parkeervakken/"
+            "/v1/wfs/parkeervakken"
             "?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=parkeervakken"
             "&OUTPUTFORMAT=application/gml+xml"
         )
@@ -162,7 +162,7 @@ class TestDatasetWFSView:
         it can be useds find the correct table name and data
         """
         wfs_url = (
-            "/v1/wfs/afvalwegingen/"
+            "/v1/wfs/afvalwegingen"
             "?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=app:adres_loopafstand"
             "&OUTPUTFORMAT=application/gml+xml"
         )
@@ -190,7 +190,7 @@ class TestDatasetWFSView:
         # manually creating tables, as we do not want to use `filled_router` here.
         create_tables(bommen_dataset)
         wfs_url = (
-            f"/v1/wfs/{bommen_dataset.name}/"
+            f"/v1/wfs/{bommen_dataset.name}"
             "?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=app:bommen"
             "&OUTPUTFORMAT=application/gml+xml"
         )
@@ -234,7 +234,7 @@ class TestDatasetWFSViewAuth:
     @staticmethod
     def request(client, fetch_auth_token, dataset: str, scopes: list[str]) -> str:
         url = (
-            f"/v1/wfs/{dataset}/"
+            f"/v1/wfs/{dataset}"
             "?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=things"
             "&OUTPUTFORMAT=application/gml+xml"
         )
@@ -256,7 +256,7 @@ class TestDatasetWFSViewAuth:
     def test_wfs_model_unauthorized_index_page_works(
         self, api_client, geometry_authdataset_thing, filled_router
     ):
-        response = api_client.get("/v1/wfs/geometry_authdataset/")
+        response = api_client.get("/v1/wfs/geometry_authdataset")
         assert response.status_code == 200
         content = str(response.content)
         for field in ["id", "metadata", "geometry"]:
@@ -322,7 +322,7 @@ class TestDatasetWFSViewAuth:
             }
         )
         url = (
-            "/v1/wfs/geometry_auth/"
+            "/v1/wfs/geometry_auth"
             "?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=things"
             f"&OUTPUTFORMAT=application/gml+xml&{filter}"
         )
@@ -369,7 +369,7 @@ class TestDatasetWFSViewAuth:
 
         # Expect other geometrie to be available as well
         wfs_url = (
-            "/v1/wfs/geometry_multiple/"
+            "/v1/wfs/geometry_multiple"
             "?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=things-geometrie"
             "&OUTPUTFORMAT=application/gml+xml"
         )
