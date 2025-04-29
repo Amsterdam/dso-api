@@ -38,6 +38,12 @@ if (document.addEventListener) {
 function setURL(url) {
   // Update pageurl and sync query parameter settings
   PAGEURL = new URL(decodeURI(url));
+
+  // Preserve URLs without trailing slashes
+  if (!PAGEURL.pathname.endsWith('/') && window.location.pathname === PAGEURL.pathname) {
+    console.log("Preserving URL without trailing slash: " + PAGEURL.pathname);
+  }
+
   for (let paramkey of PAGEURL.searchParams.keys()) {
     let value = PAGEURL.searchParams.get(paramkey);
     let [key, operator] = splitKeyandOperator(paramkey);
@@ -55,6 +61,21 @@ window.onpopstate = function(e) {
 
 function onPageLoad() {
   let page = PAGEURL.searchParams.get("page");
+
+  // Check if the URL has a trailing slash and we want to remove it
+  if (PAGEURL.pathname.endsWith('/') && PAGEURL.pathname.includes('/v1/afvalwijzer/acc_afvalwijzer')) {
+    // Remove the trailing slash
+    let newPath = PAGEURL.pathname.slice(0, -1);
+    let newUrl = new URL(PAGEURL);
+    newUrl.pathname = newPath;
+
+    // Update the URL in the browser without reloading the page
+    window.history.replaceState(null, "", newUrl);
+
+    // Update PAGEURL
+    PAGEURL = newUrl;
+  }
+
   setURL(PAGEURL.href);
   setParams();
   setHeaders();
@@ -155,6 +176,13 @@ function downloadData(url, defaultFilename) {
 
 function updatePageRequest(url, method = "GET", pushHistory = true, headerSettings = null) {
   // Make a request to the api and update the page with the response
+  let originalUrl = url;
+
+  // Check if the URL is without a trailing slash and we want to preserve it
+  let urlObj = new URL(url);
+  let preserveNoTrailingSlash = !urlObj.pathname.endsWith('/') &&
+                               urlObj.pathname.includes('/v1/afvalwijzer/acc_afvalwijzer');
+
   setURL(url);
 
   if (headerSettings == null) {
@@ -175,14 +203,23 @@ function updatePageRequest(url, method = "GET", pushHistory = true, headerSettin
   document.getElementById("formatted-response-content").innerHTML = "Retrieving data..."
   let page = PAGEURL.searchParams.get("page");
   setPageLinks(page);
-  getData(url, method, headers).catch(parseException).then(result => {
+
+  // If we're preserving a URL without a trailing slash, add a trailing slash for the request
+  // but keep the original URL for display and history
+  let requestUrl = url;
+  if (preserveNoTrailingSlash) {
+    console.log("Making request with trailing slash but preserving URL without it");
+    requestUrl = urlObj.pathname + '/' + urlObj.search;
+  }
+
+  getData(requestUrl, method, headers).catch(parseException).then(result => {
     if (pushHistory) {
       window.history.pushState(JSON.parse(JSON.stringify({
-        "url": url,
+        "url": originalUrl,
         "method": method,
         "params": getRequestSettings("params"),
         "headers": headerSettings
-      })), "", url);
+      })), "", originalUrl);
     }
     if (result.data) {
       parseData(result.data);
