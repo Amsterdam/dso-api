@@ -72,7 +72,7 @@
       <li><strong>GeoJSON-export:</strong> <a href="{{ table.uri }}?_format=geojson">{{ table.uri }}?_format=geojson</a></li>
       {% for export_info in table.exports %}
         {% for ext_info in export_info %}
-            <li><strong>Downloadable {{ ext_info.type }} export:</strong>
+            <li><strong>Downloadable {{ ext_info.description }}-export:</strong>
                     <a href="{{ ext_info.url }}">{{ ext_info.url }}</a></li>
         {% endfor %}
       {% endfor %}

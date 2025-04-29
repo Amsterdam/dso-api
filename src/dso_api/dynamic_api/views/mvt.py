@@ -147,12 +147,12 @@ class DatasetMVTView(CheckPermissionsMixin, StreamingMVTView):
         tile_fields = tuple(id.name for id in identifiers)
 
         for field in schema.fields:
-            if not user_scopes.has_field_access(field) or self.zoom < 15:
-                # 403 or too zoomed out to include the field.
-                # The cutoff is arbitrary. Play around with
-                # https://www.maptiler.com/google-maps-coordinates-tile-bounds-projection/
-                # to get a feel for the MVT zoom levels and how much detail a single tile
-                # should contain.
+            if (
+                not user_scopes.has_field_access(field)
+                or self.zoom < schema.min_zoom
+                or self.zoom > schema.max_zoom
+            ):
+                # 403 or not within zoom range to include the field.
                 continue
 
             # We may have to use the db_name, because that usually has a suffix not

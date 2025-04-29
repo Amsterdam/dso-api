@@ -29,7 +29,7 @@ def test_save_schema_tables_add(bommen_schema_json):
     assert dataset.tables.count() == 1, dataset.tables.all()
     table = dataset.tables.get()
     assert table.name == "bommen"
-    assert table.db_table == "bommen_bommen"
+    assert table.db_table == "bommen_bommen_v1"
     assert table.enable_geosearch is True
 
 
@@ -43,7 +43,7 @@ def test_save_schema_tables_with_disabled_geosearch(settings, bommen_schema_json
     assert dataset.tables.count() == 1, dataset.tables.all()
     table = dataset.tables.get()
     assert table.name == "bommen"
-    assert table.db_table == "bommen_bommen"
+    assert table.db_table == "bommen_bommen_v1"
     assert table.enable_geosearch is False
 
 
@@ -58,7 +58,7 @@ def test_save_schema_tables_with_geometry_type(bommen_schema_json):
     assert dataset.tables.count() == 1, dataset.tables.all()
     table = dataset.tables.get()
     assert table.name == "bommen"
-    assert table.db_table == "bommen_bommen"
+    assert table.db_table == "bommen_bommen_v1"
     assert table.geometry_field == "geometry"
     assert table.geometry_field_type == "Point"
 
