@@ -165,7 +165,7 @@ class DatasetDocView(TemplateView):
                 main_title=main_title,
                 publisher=publisher,
                 tables=tables,
-                swagger_url=reverse(f"dynamic_api:openapi-{ds_schema.id}"),
+                swagger_url=reverse(f"dynamic_api:openapi-{ds_schema.id}-noslash"),
             )
         )
 
@@ -197,7 +197,7 @@ class DatasetWFSDocView(TemplateView):
                 dataset_has_auth=bool(_fix_auth(ds.auth)),
                 main_title=main_title,
                 tables=tables,
-                swagger_url=reverse(f"dynamic_api:openapi-{ds.id}"),
+                swagger_url=reverse(f"dynamic_api:openapi-{ds.id}-noslash"),
             )
         )
 
@@ -284,7 +284,7 @@ def _table_context(ds: Dataset, table: DatasetTableSchema):
     """Collect all table data for the REST API spec."""
     dataset_name = to_snake_case(table.dataset.id)
     table_name = to_snake_case(table.id)
-    uri = reverse(f"dynamic_api:{dataset_name}-{table_name}-list")
+    uri = reverse(f"dynamic_api:{dataset_name}-{table_name}-list-noslash")
     fields = _list_fields(table.fields)
     filters = _get_filters(table.fields)
     exports = []
