@@ -109,7 +109,7 @@ def test_api_index_subpath_view(
     url_subpath = reverse("dynamic_api:sub/path-index")
     assert url_sub == "/v1/sub/"
     assert url_subpath == "/v1/sub/path/"
-    
+
     response_sub = api_client.get(url_sub)
     assert response_sub.status_code == 200, response_sub.data
 

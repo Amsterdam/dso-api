@@ -110,8 +110,7 @@ def test_openapi_json(api_client, afval_dataset, fietspaaltjes_dataset, filled_r
 
     # Prove that various filters are properly exposed.
     afval_parameters = {
-        param["name"]: param
-        for param in schema["paths"]["/containers"]["get"]["parameters"]
+        param["name"]: param for param in schema["paths"]["/containers"]["get"]["parameters"]
     }
     assert set(afval_parameters) == {
         "Accept-Crs",
@@ -279,8 +278,7 @@ def test_openapi_parkeren_json(api_client, parkeervakken_dataset, filled_router,
 
     # Prove that various filters are properly exposed.
     parkeervak_parameters = {
-        param["name"]: param
-        for param in schema["paths"]["/parkeervakken"]["get"]["parameters"]
+        param["name"]: param for param in schema["paths"]["/parkeervakken"]["get"]["parameters"]
     }
     assert parkeervak_parameters["regimes.dagen"] == {
         "name": "regimes.dagen",
