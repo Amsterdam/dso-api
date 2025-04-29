@@ -396,6 +396,7 @@ class CombinedSchemaView(APIView):
             return response
 
         except (ValueError, TypeError, AttributeError, KeyError) as e:
+            logger.exception("Failed to generate OpenAPI specification: %s", e)
             return JsonResponse(
-                {"error": "Failed to generate OpenAPI specification", "detail": str(e)}, status=500
+                {"error": "Failed to generate OpenAPI specification"}, status=500
             )
