@@ -23,7 +23,8 @@ class AproxFloat(float):
 
 
 GEOJSON_POINT = [
-    AproxFloat(c) for c in Point(10, 10, srid=RD_NEW.srid).transform("EPSG:4326", clone=True)
+    AproxFloat(c)
+    for c in Point(10, 10, srid=RD_NEW.srid).transform("urn:ogc:def:crs:OGC::CRS84", clone=True)
 ]
 
 
@@ -35,16 +36,16 @@ def as_is(data):
 class TestFormats:
     """Prove that common rendering formats work as expected"""
 
-    def test_point_wgs84(self):
-        """See that our WGS84_POINT is indeed a lon/lat coordinate.
+    def test_point_crs84(self):
+        """See that our GEOJSON_POINT uses the correct axis ordering.
         This only compares a rounded version, as there can be subtle differences
         in the actual value depending on your GDAL/libproj version.
         """
-        wgs84_point = [round(GEOJSON_POINT[0], 2), round(GEOJSON_POINT[1], 2)]
+        crs84_point = [round(GEOJSON_POINT[0], 2), round(GEOJSON_POINT[1], 2)]
         # GeoJSON should always be longitude and latitude,
         # even though GDAL 2 vs 3 have different behavior:
         # https://gdal.org/tutorials/osr_api_tut.html#crs-and-axis-order
-        assert wgs84_point == [3.31, 47.97]
+        assert crs84_point == [3.31, 47.97]
 
     UNPAGINATED_FORMATS = {
         "csv": (
@@ -60,7 +61,7 @@ class TestFormats:
             {
                 "type": "FeatureCollection",
                 "crs": {
-                    "properties": {"name": "urn:ogc:def:crs:EPSG::4326"},
+                    "properties": {"name": "urn:ogc:def:crs:OGC::CRS84"},
                     "type": "name",
                 },
                 "features": [
@@ -197,7 +198,7 @@ class TestFormats:
         page = {
             "type": "FeatureCollection",
             "crs": {
-                "properties": {"name": "urn:ogc:def:crs:EPSG::4326"},
+                "properties": {"name": "urn:ogc:def:crs:OGC::CRS84"},
                 "type": "name",
             },
             "features": [
@@ -312,7 +313,7 @@ class TestFormats:
             {
                 "type": "FeatureCollection",
                 "crs": {
-                    "properties": {"name": "urn:ogc:def:crs:EPSG::4326"},
+                    "properties": {"name": "urn:ogc:def:crs:OGC::CRS84"},
                     "type": "name",
                 },
                 "features": [],
@@ -421,7 +422,7 @@ class TestFormats:
                     "datumLeegmaken": "2021-01-03T12:13:14",
                 },
                 "crs": {
-                    "properties": {"name": "urn:ogc:def:crs:EPSG::4326"},
+                    "properties": {"name": "urn:ogc:def:crs:OGC::CRS84"},
                     "type": "name",
                 },
             },

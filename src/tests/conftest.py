@@ -21,7 +21,6 @@ from schematools.contrib.django.models import Dataset, DynamicModel, Profile
 from schematools.loaders import FileSystemProfileLoader, FileSystemSchemaLoader
 from schematools.types import DatasetSchema, Scope
 
-from rest_framework_dso.crs import RD_NEW
 from tests.test_rest_framework_dso.models import Actor, Category, Location, Movie, MovieUser
 from tests.utils import api_request_with_scopes, to_drf_request
 
@@ -492,6 +491,34 @@ def geometry_authdataset_thing(geometry_authdataset_model):
     )
 
 
+# Dataset with multiple geometries.
+
+
+@pytest.fixture()
+def geometry_multiple_schema(schema_loader) -> DatasetSchema:
+    return schema_loader.get_dataset_from_file("geometry_multiple.json")
+
+
+@pytest.fixture()
+def geometry_multiple_dataset(geometry_multiple_schema):
+    return Dataset.create_for_schema(schema=geometry_multiple_schema)
+
+
+@pytest.fixture()
+def geometry_multiple_model(geometry_multiple_dataset, dynamic_models):
+    return dynamic_models["geometry_multiple"]["things"]
+
+
+@pytest.fixture()
+def geometry_multiple_thing(geometry_multiple_model):
+    return geometry_multiple_model.objects.create(
+        id=1,
+        metadata="secret",
+        geometrie=Point(10, 10),
+        main_geometrie=Point(10, 10),
+    )
+
+
 @pytest.fixture
 def category() -> Category:
     """A dummy model to test our API with"""
@@ -588,7 +615,7 @@ def movies_data_with_actors(movies_data, dynamic_models):
 @pytest.fixture
 def location() -> Location:
     """A dummy model to test our API with"""
-    return Location.objects.create(geometry=GEOSGeometry("Point(10 10)", srid=RD_NEW))
+    return Location.objects.create(geometry=GEOSGeometry("SRID=28992;Point (121400 487400)"))
 
 
 @pytest.fixture()

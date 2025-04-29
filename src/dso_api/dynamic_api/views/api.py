@@ -105,7 +105,7 @@ class DynamicApiViewSet(DSOViewMixin, viewsets.ReadOnlyModelViewSet):
         """Overwritten from GenericAPIView to filter on temporal identifier instead."""
         if self.temporal.is_versioned:
             # Take the first field as grouper from ["identificatie", "volgnummer"]
-            return self.model.table_schema().identifier[0]
+            return self.model.table_schema().identifier_fields[0].python_name
         else:
             return "pk"
 
@@ -141,7 +141,13 @@ class DynamicApiViewSet(DSOViewMixin, viewsets.ReadOnlyModelViewSet):
             # Allow fallback to old full id search (note this may need ?geldigOp=* to work)
             queryset = queryset.filter(models.Q(**{self.lookup_field: pk}) | models.Q(pk=pk))
         else:
-            queryset = queryset.filter(pk=pk)
+            try:
+                queryset = queryset.filter(pk=pk)
+            except ValueError as err:
+                raise NotFound(
+                    _("No %(verbose_name)s found matching the query")
+                    % {"verbose_name": queryset.model._meta.verbose_name}
+                ) from err
 
         # Only retrieve the correct temporal object, unless filters change this
         obj = queryset.order_by().first()  # reverse ordering already applied

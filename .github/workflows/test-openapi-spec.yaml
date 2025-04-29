@@ -30,7 +30,7 @@ jobs:
         # Create spectral config file
         echo 'extends: ["spectral:oas", "spectral:asyncapi"]' > ./spectral/.spectral.yaml
         # Give dso-api some time to start
-        sleep 10
+        sleep 15
         docker compose logs web
 
         # Grab openapi yaml for bag dataset

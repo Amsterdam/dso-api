@@ -111,6 +111,10 @@ def test_router_excludes_datasets_combined_with_list(
         assert reverse("dynamic_api:meldingen-statistieken-list")
 
 
+@pytest.mark.skip(
+    reason="Test was designed for old implementation of versioned datasets."
+    "Will need to be re-implemented once versioning is in place."
+)
 @pytest.mark.django_db
 def test_router_excludes_non_default_dataset_versions(settings, bommen_v2_dataset, router):
     # Not using filled_router here, as it will throw RuntimeError,

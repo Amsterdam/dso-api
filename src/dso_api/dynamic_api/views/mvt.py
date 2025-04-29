@@ -19,7 +19,7 @@ from vectortiles.views import TileJSONView
 
 from dso_api.dynamic_api.datasets import get_active_datasets
 from dso_api.dynamic_api.filters.values import AMSTERDAM_BOUNDS, DAM_SQUARE
-from dso_api.dynamic_api.permissions import CheckPermissionsMixin
+from dso_api.dynamic_api.permissions import CheckModelPermissionsMixin
 from dso_api.dynamic_api.views.mvt_base import StreamingMVTView, StreamingVectorLayer
 
 from .index import APIIndexView
@@ -100,7 +100,7 @@ class DatasetMVTSingleView(TemplateView):
         return context
 
 
-class DatasetMVTView(CheckPermissionsMixin, StreamingMVTView):
+class DatasetMVTView(CheckModelPermissionsMixin, StreamingMVTView):
     """An MVT view for a single table.
     This view streams the Mapbox Vector Tile format as output.
     """
@@ -119,7 +119,7 @@ class DatasetMVTView(CheckPermissionsMixin, StreamingMVTView):
 
         self._main_geo = model.table_schema().main_geometry_field
         self.model = model
-        self.check_permissions(request, [self.model])
+        self.check_model_permissions([self.model])
 
     def get(self, request, *args, **kwargs):
         self.zoom = kwargs["z"]
@@ -147,12 +147,12 @@ class DatasetMVTView(CheckPermissionsMixin, StreamingMVTView):
         tile_fields = tuple(id.name for id in identifiers)
 
         for field in schema.fields:
-            if not user_scopes.has_field_access(field) or self.zoom < 15:
-                # 403 or too zoomed out to include the field.
-                # The cutoff is arbitrary. Play around with
-                # https://www.maptiler.com/google-maps-coordinates-tile-bounds-projection/
-                # to get a feel for the MVT zoom levels and how much detail a single tile
-                # should contain.
+            if (
+                not user_scopes.has_field_access(field)
+                or self.zoom < schema.min_zoom
+                or self.zoom > schema.max_zoom
+            ):
+                # 403 or not within zoom range to include the field.
                 continue
 
             # We may have to use the db_name, because that usually has a suffix not
@@ -179,9 +179,9 @@ class DatasetMVTView(CheckPermissionsMixin, StreamingMVTView):
             tile_fields=tile_fields,
         )
 
-    def check_permissions(self, request, models) -> None:
+    def check_model_permissions(self, models) -> None:
         """Override CheckPermissionsMixin to add extra checks"""
-        super().check_permissions(request, models)
+        super().check_model_permissions(models)
 
         # Check whether the geometry field can be accessed, otherwise reading MVT is pointless.
         if not self.request.user_scopes.has_field_access(self._main_geo):
