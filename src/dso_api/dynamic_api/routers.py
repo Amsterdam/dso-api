@@ -82,7 +82,7 @@ class DynamicAPIIndexView(APIIndexView):
         if not ds.enable_db:
             return []
         try:
-            api_url = reverse(f"dynamic_api:openapi-{dataset_id}-noslash")
+            api_url = reverse(f"dynamic_api:openapi-{dataset_id}")
             return [
                 {
                     "name": "production",
@@ -275,7 +275,7 @@ class DynamicRouter(routers.DefaultRouter):
             Route(
                 url=r"^{prefix}$",
                 mapping={"get": "list"},
-                name="{basename}-list-noslash",
+                name="{basename}-list",
                 detail=False,
                 initkwargs={"suffix": "List"},
             ),
@@ -283,7 +283,7 @@ class DynamicRouter(routers.DefaultRouter):
             Route(
                 url=r"^{prefix}/$",
                 mapping={"get": "list"},
-                name="{basename}-list",
+                name="{basename}-list-slash",
                 detail=False,
                 initkwargs={"suffix": "List"},
             ),
@@ -291,7 +291,7 @@ class DynamicRouter(routers.DefaultRouter):
             Route(
                 url=r"^{prefix}/(?P<pk>[^/]+)$",
                 mapping={"get": "retrieve"},
-                name="{basename}-detail-noslash",
+                name="{basename}-detail",
                 detail=True,
                 initkwargs={"suffix": "Instance"},
             ),
@@ -299,7 +299,7 @@ class DynamicRouter(routers.DefaultRouter):
             Route(
                 url=r"^{prefix}/(?P<pk>[^/]+)/?$",
                 mapping={"get": "retrieve"},
-                name="{basename}-detail",
+                name="{basename}-detail-slash",
                 detail=True,
                 initkwargs={"suffix": "Instance"},
             ),
@@ -361,16 +361,9 @@ class DynamicRouter(routers.DefaultRouter):
             dataset_id = dataset.schema.id
             results.append(
                 path(
-                    "/" + dataset.path + "/",
+                    f"/{dataset.path}",
                     get_openapi_view(dataset),
                     name=f"openapi-{dataset_id}",
-                )
-            )
-            results.append(
-                path(
-                    "/" + dataset.path,
-                    get_openapi_view(dataset),
-                    name=f"openapi-{dataset_id}-noslash",
                 )
             )
             results.append(
@@ -398,7 +391,7 @@ class DynamicRouter(routers.DefaultRouter):
                 path(
                     "/mvt/" + dataset.path + "/",
                     DatasetMVTSingleView.as_view(),
-                    name="mvt-single-dataset",
+                    name="mvt-single-dataset-slash",
                     kwargs={"dataset_name": dataset_id},
                 )
             ),
@@ -406,7 +399,7 @@ class DynamicRouter(routers.DefaultRouter):
                 path(
                     "/mvt/" + dataset.path,
                     DatasetMVTSingleView.as_view(),
-                    name="mvt-single-dataset-noslash",
+                    name="mvt-single-dataset",
                     kwargs={"dataset_name": dataset_id},
                 )
             )
@@ -422,7 +415,7 @@ class DynamicRouter(routers.DefaultRouter):
                 path(
                     "/mvt/" + dataset.path + "/<table_name>/",
                     DatasetTileJSONView.as_view(),
-                    name="mvt-tilejson-table",
+                    name="mvt-tilejson-table-slash",
                     kwargs={"dataset_name": dataset_id},
                 )
             ),
@@ -430,7 +423,7 @@ class DynamicRouter(routers.DefaultRouter):
                 path(
                     "/mvt/" + dataset.path + "/<table_name>",
                     DatasetTileJSONView.as_view(),
-                    name="mvt-tilejson-table-noslash",
+                    name="mvt-tilejson-table",
                     kwargs={"dataset_name": dataset_id},
                 )
             ),
@@ -453,7 +446,7 @@ class DynamicRouter(routers.DefaultRouter):
                 path(
                     "/wfs/" + dataset.path + "/",
                     DatasetWFSView.as_view(),
-                    name="wfs",
+                    name="wfs-slash",
                     kwargs={"dataset_name": dataset_id},
                 )
             ),
@@ -461,7 +454,7 @@ class DynamicRouter(routers.DefaultRouter):
                 path(
                     "/wfs/" + dataset.path,
                     DatasetWFSView.as_view(),
-                    name="wfs-noslash",
+                    name="wfs",
                     kwargs={"dataset_name": dataset_id},
                 )
             )
@@ -491,14 +484,14 @@ class DynamicRouter(routers.DefaultRouter):
                 path(
                     "/" + p + "/",
                     DynamicAPIIndexView.as_view(path=p, name=name),
-                    name=f"{p}-index",
+                    name=f"{p}-index-slash",
                 )
             )
             results.append(
                 path(
                     "/" + p,
                     DynamicAPIIndexView.as_view(path=p, name=name),
-                    name=f"{p}-index-noslash",
+                    name=f"{p}-index",
                 )
             )
         return results

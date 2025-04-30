@@ -161,7 +161,7 @@ class DynamicApiSchemaGenerator(DSOSchemaGenerator):
 def get_openapi_view(dataset, response_format: str = "json"):
 
     if not isinstance(dataset, Dataset):
-        raise TypeError("Expected Dataset instance, got {type(dataset)}")
+        raise TypeError(f"Expected Dataset instance, got {type(dataset)}")
     dataset_schema: DatasetSchema = dataset.schema
 
     renderer_class = (
