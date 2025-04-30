@@ -39,9 +39,6 @@ function setURL(url) {
   // Update pageurl and sync query parameter settings
   PAGEURL = new URL(decodeURI(url));
 
-  // Preserve URLs without trailing slashes
-  if (!PAGEURL.pathname.endsWith('/') && window.location.pathname === PAGEURL.pathname) {
-  }
 
   for (let paramkey of PAGEURL.searchParams.keys()) {
     let value = PAGEURL.searchParams.get(paramkey);

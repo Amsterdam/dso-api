@@ -114,7 +114,7 @@ class DatasetWFSIndexView(APIIndexView):
 
     def get_environments(self, ds: Dataset, base: str):
         dataset_id = ds.schema.id
-        wfs_url = reverse("dynamic_api:wfs-noslash", kwargs={"dataset_name": dataset_id})
+        wfs_url = reverse("dynamic_api:wfs", kwargs={"dataset_name": dataset_id})
         return [
             {
                 "name": "production",
@@ -126,9 +126,9 @@ class DatasetWFSIndexView(APIIndexView):
 
     def get_related_apis(self, ds: Dataset, base: str):
         dataset_id = ds.schema.id
-        json_url = reverse(f"dynamic_api:openapi-{dataset_id}-noslash")
+        json_url = reverse(f"dynamic_api:openapi-{dataset_id}")
         mvt_url = reverse(
-            "dynamic_api:mvt-single-dataset-noslash", kwargs={"dataset_name": dataset_id}
+            "dynamic_api:mvt-single-dataset", kwargs={"dataset_name": dataset_id}
         )
         return [
             {"type": "rest_json", "url": base + json_url},
