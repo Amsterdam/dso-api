@@ -39,8 +39,8 @@ def test_api_index_view(
                     }
                 ],
                 "related_apis": [
-                    {"type": "WFS", "url": BASE / "v1/wfs/afvalwegingen/"},
-                    {"type": "MVT", "url": BASE / "v1/mvt/afvalwegingen/"},
+                    {"type": "WFS", "url": BASE / "v1/wfs/afvalwegingen"},
+                    {"type": "MVT", "url": BASE / "v1/mvt/afvalwegingen"},
                 ],
                 "api_authentication": ["OPENBAAR"],
                 "api_type": "rest_json",
@@ -72,8 +72,8 @@ def test_api_index_view(
                     }
                 ],
                 "related_apis": [
-                    {"type": "WFS", "url": BASE / "v1/wfs/fietspaaltjes/"},
-                    {"type": "MVT", "url": BASE / "v1/mvt/fietspaaltjes/"},
+                    {"type": "WFS", "url": BASE / "v1/wfs/fietspaaltjes"},
+                    {"type": "MVT", "url": BASE / "v1/mvt/fietspaaltjes"},
                 ],
                 "api_authentication": ["OPENBAAR"],
                 "api_type": "rest_json",
@@ -107,8 +107,8 @@ def test_api_index_subpath_view(
     """
     url_sub = reverse("dynamic_api:sub-index")
     url_subpath = reverse("dynamic_api:sub/path-index")
-    assert url_sub == "/v1/sub/"
-    assert url_subpath == "/v1/sub/path/"
+    assert url_sub == "/v1/sub"
+    assert url_subpath == "/v1/sub/path"
 
     response_sub = api_client.get(url_sub)
     assert response_sub.status_code == 200, response_sub.data
@@ -141,8 +141,8 @@ def test_api_index_subpath_view(
                     }
                 ],
                 "related_apis": [
-                    {"type": "WFS", "url": BASE / "v1/wfs/sub/path/afvalwegingen/"},
-                    {"type": "MVT", "url": BASE / "v1/mvt/sub/path/afvalwegingen/"},
+                    {"type": "WFS", "url": BASE / "v1/wfs/sub/path/afvalwegingen"},
+                    {"type": "MVT", "url": BASE / "v1/mvt/sub/path/afvalwegingen"},
                 ],
                 "api_authentication": ["OPENBAAR"],
                 "api_type": "rest_json",
@@ -170,8 +170,8 @@ def test_api_index_subpath_view(
                     }
                 ],
                 "related_apis": [
-                    {"type": "WFS", "url": BASE / "v1/wfs/sub/fietspaaltjes/"},
-                    {"type": "MVT", "url": BASE / "v1/mvt/sub/fietspaaltjes/"},
+                    {"type": "WFS", "url": BASE / "v1/wfs/sub/fietspaaltjes"},
+                    {"type": "MVT", "url": BASE / "v1/mvt/sub/fietspaaltjes"},
                 ],
                 "api_authentication": ["OPENBAAR"],
                 "api_type": "rest_json",
@@ -209,8 +209,8 @@ def test_api_index_subpath_view(
                     }
                 ],
                 "related_apis": [
-                    {"type": "WFS", "url": BASE / "v1/wfs/sub/path/afvalwegingen/"},
-                    {"type": "MVT", "url": BASE / "v1/mvt/sub/path/afvalwegingen/"},
+                    {"type": "WFS", "url": BASE / "v1/wfs/sub/path/afvalwegingen"},
+                    {"type": "MVT", "url": BASE / "v1/mvt/sub/path/afvalwegingen"},
                 ],
                 "api_authentication": ["OPENBAAR"],
                 "api_type": "rest_json",

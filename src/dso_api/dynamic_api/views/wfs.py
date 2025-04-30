@@ -127,9 +127,7 @@ class DatasetWFSIndexView(APIIndexView):
     def get_related_apis(self, ds: Dataset, base: str):
         dataset_id = ds.schema.id
         json_url = reverse(f"dynamic_api:openapi-{dataset_id}")
-        mvt_url = reverse(
-            "dynamic_api:mvt-single-dataset", kwargs={"dataset_name": dataset_id}
-        )
+        mvt_url = reverse("dynamic_api:mvt-single-dataset", kwargs={"dataset_name": dataset_id})
         return [
             {"type": "rest_json", "url": base + json_url},
             {"type": "MVT", "url": base + mvt_url},

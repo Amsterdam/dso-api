@@ -55,7 +55,7 @@ movie_data = {
             },
         ]
     },
-    "_links": {"self": {"href": "http://testserver/v1/movies/movie/"}},
+    "_links": {"self": {"href": "http://testserver/v1/movies/movie"}},
     "page": {"number": 1, "size": 20},
 }
 
@@ -76,7 +76,7 @@ director_data = {
             }
         ]
     },
-    "_links": {"self": {"href": "http://testserver/v1/movies/director/"}},
+    "_links": {"self": {"href": "http://testserver/v1/movies/director"}},
     "page": {"number": 1, "size": 20},
 }
 
