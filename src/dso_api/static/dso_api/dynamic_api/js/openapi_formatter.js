@@ -7,7 +7,7 @@
 
 const FORMATTER = (rawJson) => {
     let openApiEl = document.createElement('div');
-    var requestPath = window.location.pathname;
+    let requestPath = window.location.pathname;
     if (requestPath.endsWith('/')) {
       requestPath = requestPath.slice(0, -1);
     }
