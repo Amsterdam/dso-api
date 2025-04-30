@@ -551,9 +551,7 @@ class TestEmbedTemporalTables:
                 "onderdeelVanGGWGebieden": [],
             },
             "_links": {
-                "self": {
-                    "href": "http://testserver/v1/gebieden/buurten?_format=json&_expand=true"
-                }
+                "self": {"href": "http://testserver/v1/gebieden/buurten?_format=json&_expand=true"}
             },
             "page": {"number": 1, "size": 20},
         }
