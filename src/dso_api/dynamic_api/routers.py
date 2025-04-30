@@ -372,7 +372,7 @@ class DynamicRouter(routers.DefaultRouter):
                     get_openapi_view(dataset),
                     name=f"openapi-{dataset_id}-slash",
                 )
-            )            
+            )
             results.append(
                 path(
                     "/" + dataset.path + "/openapi.yaml",
