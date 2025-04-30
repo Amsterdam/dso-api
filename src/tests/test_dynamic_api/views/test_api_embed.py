@@ -20,7 +20,7 @@ class TestEmbedTemporalTables:
         assert data["_embedded"]["ligtInWijk"]["identificatie"] == "03630012052035"
         assert data["_embedded"]["ligtInWijk"]["_links"]["buurt"] == {
             "count": 1,
-            "href": "http://testserver/v1/gebieden/buurten/?ligtInWijkId=03630012052035.1",
+            "href": "http://testserver/v1/gebieden/buurten?ligtInWijkId=03630012052035.1",
         }
         assert data == {
             "_links": {
@@ -66,7 +66,7 @@ class TestEmbedTemporalTables:
                             # See that the link is properly added
                             "count": 1,
                             "href": (
-                                "http://testserver/v1/gebieden/buurten/"
+                                "http://testserver/v1/gebieden/buurten"
                                 "?ligtInWijkId=03630012052035.1"
                             ),
                         },
@@ -167,7 +167,7 @@ class TestEmbedTemporalTables:
                         "_links": {
                             "buurt": {
                                 "count": 0,
-                                "href": "http://testserver/v1/gebieden/buurten/?ligtInWijkId=03630012052035.1",  # noqa: E501
+                                "href": "http://testserver/v1/gebieden/buurten?ligtInWijkId=03630012052035.1",  # noqa: E501
                             },
                             "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/dataset#wijken",  # noqa: E501
                             "self": {
@@ -357,7 +357,7 @@ class TestEmbedTemporalTables:
                                             "buurt": {
                                                 "count": 1,
                                                 "href": (
-                                                    "http://testserver/v1/gebieden/buurten/?ligtInWijkId=03630012052035.1"
+                                                    "http://testserver/v1/gebieden/buurten?ligtInWijkId=03630012052035.1"
                                                 ),
                                             },
                                             "ligtInStadsdeel": {
@@ -386,7 +386,7 @@ class TestEmbedTemporalTables:
             "_links": {
                 "self": {
                     "href": (
-                        "http://testserver/v1/bag/panden/?_expand=true"
+                        "http://testserver/v1/bag/panden?_expand=true"
                         "&_expandScope=ligtInBouwblok.ligtInBuurt.ligtInWijk.ligtInStadsdeel"
                         "&naam=Voorbeeldpand"
                     )
@@ -456,7 +456,7 @@ class TestEmbedTemporalTables:
         assert data["_embedded"]["ligtInWijk"][0]["_links"]["buurt"] == {
             "count": 1,
             "href": (
-                "http://testserver/v1/gebieden/buurten/?_format=json&ligtInWijkId=03630012052035.1"
+                "http://testserver/v1/gebieden/buurten?_format=json&ligtInWijkId=03630012052035.1"
             ),
         }
         assert len(data["_embedded"]["buurten"]) == 1  # no historical records
@@ -504,7 +504,7 @@ class TestEmbedTemporalTables:
                             },
                             "buurt": {
                                 "count": 1,
-                                "href": "http://testserver/v1/gebieden/buurten/?_format=json&ligtInWijkId=03630012052035.1",  # noqa: E501
+                                "href": "http://testserver/v1/gebieden/buurten?_format=json&ligtInWijkId=03630012052035.1",  # noqa: E501
                             },
                             "ligtInStadsdeel": {
                                 "href": "http://testserver/v1/gebieden/stadsdelen/03630000000018?_format=json&volgnummer=1",  # noqa: E501
@@ -552,7 +552,7 @@ class TestEmbedTemporalTables:
             },
             "_links": {
                 "self": {
-                    "href": "http://testserver/v1/gebieden/buurten/?_format=json&_expand=true"
+                    "href": "http://testserver/v1/gebieden/buurten?_format=json&_expand=true"
                 }
             },
             "page": {"number": 1, "size": 20},

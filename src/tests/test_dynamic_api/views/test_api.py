@@ -35,7 +35,7 @@ def test_list_dynamic_view_reload(api_client, api_rf, router, bommen_dataset):
     assert response.status_code == 200, data
     assert data == {
         "_links": {
-            "self": {"href": "http://testserver/v1/bommen/bommen/"},
+            "self": {"href": "http://testserver/v1/bommen/bommen"},
         },
         "_embedded": {"bommen": []},
         "page": {"number": 1, "size": 20},

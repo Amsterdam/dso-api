@@ -27,7 +27,7 @@ def test_get_patterns(afval_dataset, fietspaaltjes_dataset, filled_router):
 def test_openapi_frontend(api_client, afval_dataset, filled_router):
     """Prove that the OpenAPI page can be rendered."""
     url = reverse("dynamic_api:openapi-afvalwegingen")
-    assert url == "/v1/afvalwegingen/"
+    assert url == "/v1/afvalwegingen"
 
     response = api_client.get(url, HTTP_ACCEPT="text/html")
     assert response.status_code == 200
@@ -67,7 +67,7 @@ def test_openapi_json(api_client, afval_dataset, fietspaaltjes_dataset, filled_r
 
     # Prove the that OpenAPI view can be found at the endpoint
     url = reverse("dynamic_api:openapi-afvalwegingen")
-    assert url == "/v1/afvalwegingen/"
+    assert url == "/v1/afvalwegingen"
 
     response = api_client.get(url)
     assert response.status_code == 200, response.data
@@ -269,7 +269,7 @@ def test_openapi_parkeren_json(api_client, parkeervakken_dataset, filled_router,
     caplog.set_level(logging.WARNING)
     # Prove the that OpenAPI view can be found at the endpoint
     url = reverse("dynamic_api:openapi-parkeervakken")
-    assert url == "/v1/parkeervakken/"
+    assert url == "/v1/parkeervakken"
 
     response = api_client.get(url)
     assert response.status_code == 200, response.data
