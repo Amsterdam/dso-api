@@ -68,7 +68,7 @@ click==8.1.8
     #   pur
 coverage[toml]==7.8.0
     # via pytest-cov
-cryptography==44.0.2
+cryptography==44.0.3
     # via
     #   -r ./requirements.in
     #   azure-identity
@@ -77,7 +77,7 @@ cryptography==44.0.2
     #   pyjwt
 datadiensten-apikeyclient==0.6.0
     # via -r ./requirements.in
-datapunt-authorization-django==1.5.0
+datapunt-authorization-django==1.6.1
     # via -r ./requirements.in
 decorator==5.2.1
     # via jsonpath-rw
@@ -350,7 +350,7 @@ opentelemetry-util-http==0.52b1
     #   opentelemetry-instrumentation-wsgi
 orderly-set==5.3.0
     # via deepdiff
-orjson==3.10.16
+orjson==3.10.18
     # via
     #   -r ./requirements.in
     #   amsterdam-schema-tools
@@ -484,7 +484,7 @@ rpds-py==0.24.0
     # via
     #   jsonschema
     #   referencing
-ruff==0.11.7
+ruff==0.11.8
     # via -r requirements_dev.in
 sentry-sdk==2.27.0
     # via -r ./requirements.in
@@ -509,7 +509,7 @@ sqlparse==0.5.3
     #   django-debug-toolbar
 stevedore==5.4.1
     # via bandit
-termcolor==3.0.1
+termcolor==3.1.0
     # via
     #   -r requirements_dev.in
     #   pytest-sugar
