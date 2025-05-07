@@ -419,25 +419,25 @@ class TestFilterFieldTypes:
                             "https://schemas.data.amsterdam.nl/datasets/movies/dataset#movie"
                         ),
                         "self": {
-                            "href": "http://testserver/v1/movies/movie/3/",
+                            "href": "http://testserver/v1/movies/movie/3",
                             "id": 3,
                             "title": "foo123",
                         },
                         "actors": [
                             # Both shown, even if filtered on existence of one.
                             {
-                                "href": "http://testserver/v1/movies/actor/1/",
+                                "href": "http://testserver/v1/movies/actor/1",
                                 "id": "1",
                                 "title": "John Doe",
                             },
                             {
-                                "href": "http://testserver/v1/movies/actor/2/",
+                                "href": "http://testserver/v1/movies/actor/2",
                                 "id": "2",
                                 "title": "Jane Doe",
                             },
                         ],
                         "category": {
-                            "href": "http://testserver/v1/movies/category/1/",
+                            "href": "http://testserver/v1/movies/category/1",
                             "id": 1,
                             "title": "bar",
                         },

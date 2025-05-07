@@ -194,7 +194,7 @@ class TestTemporalViews:
         assert data["_links"]["bestaatUitBuurten"] == [
             {
                 "href": (
-                    "http://testserver/v1/gebieden/buurten/03630000000078/?geldigOp=2014-05-01"
+                    "http://testserver/v1/gebieden/buurten/03630000000078?geldigOp=2014-05-01"
                 ),
                 "identificatie": None,
                 "title": "03630000000078.1",

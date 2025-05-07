@@ -9,7 +9,7 @@ def test_api_index_view(
 ):
     """Prove that the API index page can be rendered."""
     url = reverse("dynamic_api:api-root")
-    assert url == "/v1/"
+    assert url == "/v1"
 
     response = api_client.get(url)
     assert response.status_code == 200, response.data
@@ -33,14 +33,14 @@ def test_api_index_view(
                 "environments": [
                     {
                         "name": "production",
-                        "api_url": BASE / "v1/afvalwegingen/",
-                        "specification_url": BASE / "v1/afvalwegingen/",
+                        "api_url": BASE / "v1/afvalwegingen",
+                        "specification_url": BASE / "v1/afvalwegingen",
                         "documentation_url": BASE / "v1/docs/datasets/afvalwegingen.html",
                     }
                 ],
                 "related_apis": [
-                    {"type": "WFS", "url": BASE / "v1/wfs/afvalwegingen/"},
-                    {"type": "MVT", "url": BASE / "v1/mvt/afvalwegingen/"},
+                    {"type": "WFS", "url": BASE / "v1/wfs/afvalwegingen"},
+                    {"type": "MVT", "url": BASE / "v1/mvt/afvalwegingen"},
                 ],
                 "api_authentication": ["OPENBAAR"],
                 "api_type": "rest_json",
@@ -66,14 +66,14 @@ def test_api_index_view(
                 "environments": [
                     {
                         "name": "production",
-                        "api_url": BASE / "v1/fietspaaltjes/",
-                        "specification_url": BASE / "v1/fietspaaltjes/",
+                        "api_url": BASE / "v1/fietspaaltjes",
+                        "specification_url": BASE / "v1/fietspaaltjes",
                         "documentation_url": BASE / "v1/docs/datasets/fietspaaltjes.html",
                     }
                 ],
                 "related_apis": [
-                    {"type": "WFS", "url": BASE / "v1/wfs/fietspaaltjes/"},
-                    {"type": "MVT", "url": BASE / "v1/mvt/fietspaaltjes/"},
+                    {"type": "WFS", "url": BASE / "v1/wfs/fietspaaltjes"},
+                    {"type": "MVT", "url": BASE / "v1/mvt/fietspaaltjes"},
                 ],
                 "api_authentication": ["OPENBAAR"],
                 "api_type": "rest_json",
@@ -93,7 +93,7 @@ def test_api_index_view_disabled(
     api_client, disabled_afval_dataset, fietspaaltjes_dataset, filled_router
 ):
     """Prove that disabled API's are not listed."""
-    response = api_client.get("/v1/")
+    response = api_client.get("/v1")
     assert response.status_code == 200, response.data
     assert set(response.data["datasets"].keys()) == {"fietspaaltjes"}
 
@@ -107,8 +107,8 @@ def test_api_index_subpath_view(
     """
     url_sub = reverse("dynamic_api:sub-index")
     url_subpath = reverse("dynamic_api:sub/path-index")
-    assert url_sub == "/v1/sub/"
-    assert url_subpath == "/v1/sub/path/"
+    assert url_sub == "/v1/sub"
+    assert url_subpath == "/v1/sub/path"
 
     response_sub = api_client.get(url_sub)
     assert response_sub.status_code == 200, response_sub.data
@@ -135,14 +135,14 @@ def test_api_index_subpath_view(
                 "environments": [
                     {
                         "name": "production",
-                        "api_url": BASE / "v1/sub/path/afvalwegingen/",
-                        "specification_url": BASE / "v1/sub/path/afvalwegingen/",
+                        "api_url": BASE / "v1/sub/path/afvalwegingen",
+                        "specification_url": BASE / "v1/sub/path/afvalwegingen",
                         "documentation_url": BASE / "v1/docs/datasets/sub/path/afvalwegingen.html",
                     }
                 ],
                 "related_apis": [
-                    {"type": "WFS", "url": BASE / "v1/wfs/sub/path/afvalwegingen/"},
-                    {"type": "MVT", "url": BASE / "v1/mvt/sub/path/afvalwegingen/"},
+                    {"type": "WFS", "url": BASE / "v1/wfs/sub/path/afvalwegingen"},
+                    {"type": "MVT", "url": BASE / "v1/mvt/sub/path/afvalwegingen"},
                 ],
                 "api_authentication": ["OPENBAAR"],
                 "api_type": "rest_json",
@@ -164,14 +164,14 @@ def test_api_index_subpath_view(
                 "environments": [
                     {
                         "name": "production",
-                        "api_url": BASE / "v1/sub/fietspaaltjes/",
-                        "specification_url": BASE / "v1/sub/fietspaaltjes/",
+                        "api_url": BASE / "v1/sub/fietspaaltjes",
+                        "specification_url": BASE / "v1/sub/fietspaaltjes",
                         "documentation_url": BASE / "v1/docs/datasets/sub/fietspaaltjes.html",
                     }
                 ],
                 "related_apis": [
-                    {"type": "WFS", "url": BASE / "v1/wfs/sub/fietspaaltjes/"},
-                    {"type": "MVT", "url": BASE / "v1/mvt/sub/fietspaaltjes/"},
+                    {"type": "WFS", "url": BASE / "v1/wfs/sub/fietspaaltjes"},
+                    {"type": "MVT", "url": BASE / "v1/mvt/sub/fietspaaltjes"},
                 ],
                 "api_authentication": ["OPENBAAR"],
                 "api_type": "rest_json",
@@ -203,14 +203,14 @@ def test_api_index_subpath_view(
                 "environments": [
                     {
                         "name": "production",
-                        "api_url": BASE / "v1/sub/path/afvalwegingen/",
-                        "specification_url": BASE / "v1/sub/path/afvalwegingen/",
+                        "api_url": BASE / "v1/sub/path/afvalwegingen",
+                        "specification_url": BASE / "v1/sub/path/afvalwegingen",
                         "documentation_url": BASE / "v1/docs/datasets/sub/path/afvalwegingen.html",
                     }
                 ],
                 "related_apis": [
-                    {"type": "WFS", "url": BASE / "v1/wfs/sub/path/afvalwegingen/"},
-                    {"type": "MVT", "url": BASE / "v1/mvt/sub/path/afvalwegingen/"},
+                    {"type": "WFS", "url": BASE / "v1/wfs/sub/path/afvalwegingen"},
+                    {"type": "MVT", "url": BASE / "v1/mvt/sub/path/afvalwegingen"},
                 ],
                 "api_authentication": ["OPENBAAR"],
                 "api_type": "rest_json",

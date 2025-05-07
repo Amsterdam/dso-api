@@ -2,9 +2,10 @@ import sys
 from importlib import import_module, reload
 
 from django.conf import settings
-from django.urls import clear_url_caches, get_urlconf, include, path
+from django.urls import clear_url_caches, get_urlconf, include, path, re_path
 
 from . import views
+from .openapi import CombinedSchemaView
 from .routers import DynamicRouter
 from .views.doc import DocsOverview, GenericDocs, search, search_index
 
@@ -26,12 +27,13 @@ def get_patterns(router_urls):
         path("docs/index.html", DocsOverview.as_view(), name="docs-index"),
         path("docs/search.html", search),
         path("docs/searchindex.json", search_index),
-        # All API types:
-        path("mvt/", views.DatasetMVTIndexView.as_view(), name="mvt-index"),
-        path("wfs/", views.DatasetWFSIndexView.as_view()),
+        re_path(r"/mvt/?$", views.DatasetMVTIndexView.as_view(), name="mvt-index"),
+        re_path(r"/wfs/?$", views.DatasetWFSIndexView.as_view(), name="wfs-index"),
         path("", include(router_urls), name="api-root"),
         # Swagger, OpenAPI and OAuth2 login logic.
-        path("oauth2-redirect.html", views.oauth2_redirect, name="oauth2-redirect"),
+        path("/oauth2-redirect.html", views.oauth2_redirect, name="oauth2-redirect"),
+        path("/openapi.json", CombinedSchemaView.as_view(format="json"), name="schema-json"),
+        path("/openapi.yaml", CombinedSchemaView.as_view(format="yaml"), name="schema-yaml"),
     ]
 
 
