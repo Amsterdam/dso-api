@@ -4,7 +4,7 @@
 #
 #    pip-compile --output-file=requirements_dev.txt requirements_dev.in
 #
-amsterdam-schema-tools[django]==7.6.4
+amsterdam-schema-tools[django]==7.7.1
     # via -r ./requirements.in
 argparse==1.4.0
     # via uwsgi-readiness-check
