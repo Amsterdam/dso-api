@@ -2,150 +2,210 @@
   "type": "dataset",
   "id": "movies",
   "title": "Movies",
-  "status": "beschikbaar",
   "publisher": "Nobody",
-  "version": "0.0.0",
   "identifier": "id",
-  "tables": [
-    {
-      "id": "movie",
-      "type": "table",
+  "defaultVersion": "v1",
+  "versions": {
+    "v1": {
+      "status": "beschikbaar",
+      "lifecycleStatus": "stable",
       "version": "0.0.0",
-      "schema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "type": "object",
-        "additionalProperties": false,
-        "identifier": "id",
-        "required": ["schema", "name"],
-        "display": "name",
-        "properties": {
+      "tables": [
+        {
+          "id": "movie",
+          "type": "table",
+          "version": "0.0.0",
           "schema": {
-            "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.2#/definitions/schema"
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "type": "object",
+            "additionalProperties": false,
+            "identifier": "id",
+            "required": [
+              "schema",
+              "name"
+            ],
+            "display": "name",
+            "properties": {
+              "schema": {
+                "$ref": "https://schemas.data.amsterdam.nl/schema@v3.1.0#/definitions/schema"
+              },
+              "id": {
+                "type": "integer"
+              },
+              "name": {
+                "type": "string",
+                "description": ""
+              },
+              "dateAdded": {
+                "type": "string",
+                "format": "date-time",
+                "description": ""
+              },
+              "enjoyable": {
+                "type": "boolean",
+                "description": "Is it any good?"
+              },
+              "url": {
+                "type": "string",
+                "format": "uri",
+                "description": ""
+              },
+              "category": {
+                "type": "string",
+                "relation": "movies:category",
+                "description": ""
+              },
+              "actors": {
+                "type": "array",
+                "relation": "movies:actor",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "identificatie": {
+                      "type": "integer"
+                    }
+                  }
+                },
+                "description": ""
+              }
+            }
           },
-          "id": {"type": "integer"},
-          "name": {"type": "string", "description": ""},
-          "dateAdded": {"type": "string", "format": "date-time", "description": ""},
-          "enjoyable": {"type":  "boolean", "description":  "Is it any good?"},
-          "url": {"type": "string", "format": "uri", "description": ""},
-          "category": {
-            "type": "string",
-            "relation": "movies:category",
-            "description": ""
-          },
-          "actors": {
-            "type": "array",
-            "relation": "movies:actor",
-            "items": {
-              "type": "object",
-              "properties": {
-                "identificatie": {
-                  "type": "integer"
-                }
+          "lifecycleStatus": "stable"
+        },
+        {
+          "id": "actor",
+          "type": "table",
+          "version": "0.0.0",
+          "schema": {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "identifier": "id",
+            "required": [
+              "name"
+            ],
+            "display": "name",
+            "additionalRelations": {
+              "movies": {
+                "table": "movie",
+                "field": "actors",
+                "format": "embedded",
+                "$comment": "Reverse M2M back to movies"
               }
             },
-            "description": ""
-          }
-        }
-      }
-    },
-    {
-      "id": "actor",
-      "type": "table",
-      "version": "0.0.0",
-      "schema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "identifier": "id",
-        "required": ["name"],
-        "display": "name",
-        "additionalRelations": {
-          "movies": {
-            "table": "movie",
-            "field": "actors",
-            "format": "embedded",
-            "$comment": "Reverse M2M back to movies"
-          }
+            "properties": {
+              "schema": {
+                "$ref": "https://schemas.data.amsterdam.nl/schema@v3.1.0#/definitions/schema"
+              },
+              "id": {
+                "type": "integer"
+              },
+              "name": {
+                "type": "string",
+                "description": ""
+              },
+              "lastUpdatedBy": {
+                "type": "string",
+                "relation": "movies:user",
+                "description": ""
+              }
+            }
+          },
+          "lifecycleStatus": "stable"
         },
-        "properties": {
+        {
+          "id": "category",
+          "type": "table",
+          "version": "0.0.0",
           "schema": {
-            "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.2#/definitions/schema"
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "identifier": "id",
+            "required": [
+              "name"
+            ],
+            "display": "name",
+            "additionalRelations": {
+              "movies": {
+                "table": "movie",
+                "field": "category",
+                "format": "embedded",
+                "$comment": "Reverse FK back to movies"
+              }
+            },
+            "properties": {
+              "schema": {
+                "$ref": "https://schemas.data.amsterdam.nl/schema@v3.1.0#/definitions/schema"
+              },
+              "id": {
+                "type": "integer"
+              },
+              "name": {
+                "type": "string",
+                "description": ""
+              },
+              "lastUpdatedBy": {
+                "type": "string",
+                "relation": "movies:user",
+                "description": ""
+              }
+            }
           },
-          "id": {"type": "integer"},
-          "name": {"type": "string", "description": ""},
-          "lastUpdatedBy": {
-            "type": "string",
-            "relation": "movies:user",
-            "description": ""
-          }
-        }
-      }
-    },
-    {
-      "id": "category",
-      "type": "table",
-      "version": "0.0.0",
-      "schema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "identifier": "id",
-        "required": ["name"],
-        "display": "name",
-        "additionalRelations": {
-          "movies": {
-            "table": "movie",
-            "field": "category",
-            "format": "embedded",
-            "$comment": "Reverse FK back to movies"
-          }
+          "lifecycleStatus": "stable"
         },
-        "properties": {
+        {
+          "id": "user",
+          "type": "table",
+          "version": "0.0.0",
           "schema": {
-            "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.2#/definitions/schema"
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "identifier": "id",
+            "required": [
+              "name"
+            ],
+            "display": "name",
+            "properties": {
+              "schema": {
+                "$ref": "https://schemas.data.amsterdam.nl/schema@v3.1.0#/definitions/schema"
+              },
+              "id": {
+                "type": "integer"
+              },
+              "name": {
+                "type": "string",
+                "description": ""
+              }
+            }
           },
-          "id": {"type": "integer"},
-          "name": {"type": "string", "description": ""},
-          "lastUpdatedBy": {
-            "type": "string",
-            "relation": "movies:user",
-            "description": ""
-          }
-        }
-      }
-    },
-    {
-      "id": "user",
-      "type": "table",
-      "version": "0.0.0",
-      "schema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "identifier": "id",
-        "required": ["name"],
-        "display": "name",
-        "properties": {
+          "lifecycleStatus": "stable"
+        },
+        {
+          "id": "director",
+          "type": "table",
+          "auth": [
+            "TEST_DIRECTOR"
+          ],
+          "version": "0.0.0",
           "schema": {
-            "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.2#/definitions/schema"
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "identifier": "id",
+            "required": [
+              "name"
+            ],
+            "display": "name",
+            "properties": {
+              "schema": {
+                "$ref": "https://schemas.data.amsterdam.nl/schema@v3.1.0#/definitions/schema"
+              },
+              "id": {
+                "type": "integer"
+              },
+              "name": {
+                "type": "string",
+                "description": ""
+              }
+            }
           },
-          "id": {"type": "integer"},
-          "name": {"type": "string", "description": ""}
+          "lifecycleStatus": "stable"
         }
-      }
-    },
-    {
-      "id": "director",
-      "type": "table",
-      "auth": ["TEST_DIRECTOR"],
-      "version": "0.0.0",
-      "schema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "identifier": "id",
-        "required": ["name"],
-        "display": "name",
-        "properties": {
-          "schema": {
-            "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.2#/definitions/schema"
-          },
-          "id": {"type": "integer"},
-          "name": {"type": "string", "description": ""}
-        }
-      }
+      ]
     }
-  ]
+  }
 }
