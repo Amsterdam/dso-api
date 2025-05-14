@@ -33,7 +33,12 @@ def patch_table_auth(schema: DatasetSchema, table_id, *, auth: list[str]):
     # This updates the low-level dict data so all high-level objects get it.
     schema.get_table_by_id(table_id)  # checks errors
 
-    raw_table = next(t for t in schema["tables"] if t["id"] == table_id)
+    raw_table = next(
+        t
+        for version in schema["versions"].values()
+        for t in version["tables"]
+        if t["id"] == table_id
+    )
     raw_table["auth"] = auth
 
     # Also patch the active model, as that's already loaded and has a copy of the table schema
@@ -54,7 +59,12 @@ def patch_field_auth(
 
     # Patch underlying data that gave rise to it all
     # (needed for fields that read schema data, like DynamicOrderingFilter)
-    raw_table: dict = next(t for t in schema["tables"] if t["id"] == table_id)
+    raw_table: dict = next(
+        t
+        for version in schema["versions"].values()
+        for t in version["tables"]
+        if t["id"] == table_id
+    )
     patch_raw_field_auth(raw_table, field_id, *subfields, **update_fields)
 
     # table.fields / field.subfields becomes cached property, also update that.
