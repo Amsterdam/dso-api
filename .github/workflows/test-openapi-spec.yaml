@@ -34,7 +34,7 @@ jobs:
         docker compose logs web
 
         # Grab openapi yaml for bag dataset
-        docker compose exec web curl 'http://web:8000/v1/bag/?format=json'  > ./spectral/openapi.yaml
+        docker compose exec web curl 'http://web:8000/v1/bag/openapi.yaml'  > ./spectral/openapi.yaml
 
     - name: Run spectral tests
       run: docker run -v ./spectral:/mnt/spectral stoplight/spectral lint /mnt/spectral/openapi.yaml --ruleset /mnt/spectral/.spectral.yaml

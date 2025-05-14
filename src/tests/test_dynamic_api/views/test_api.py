@@ -35,7 +35,7 @@ def test_list_dynamic_view_reload(api_client, api_rf, router, bommen_dataset):
     assert response.status_code == 200, data
     assert data == {
         "_links": {
-            "self": {"href": "http://testserver/v1/bommen/bommen/"},
+            "self": {"href": "http://testserver/v1/bommen/bommen"},
         },
         "_embedded": {"bommen": []},
         "page": {"number": 1, "size": 20},
@@ -127,7 +127,7 @@ class TestLimitFields:
                     "_links": {
                         # _links block still exists with self link:
                         "self": {
-                            "href": "http://testserver/v1/afvalwegingen/containers/1/",
+                            "href": "http://testserver/v1/afvalwegingen/containers/1",
                             "id": 1,
                             "title": "1",
                         },
