@@ -50,7 +50,7 @@ def test_save_schema_tables_with_disabled_geosearch(settings, bommen_schema_json
 @pytest.mark.django_db
 def test_save_schema_tables_with_geometry_type(bommen_schema_json):
     """Prove that the dataset table models are created with geosearch field type set to schema."""
-    bommen_schema_json["tables"][0]["schema"]["properties"]["geometry"][
+    bommen_schema_json["versions"]["v1"]["tables"][0]["schema"]["properties"]["geometry"][
         "$ref"
     ] = "https://geojson.org/schema/Point.json"
     dataset = Dataset(name="testing", schema_data=json.dumps(bommen_schema_json))
