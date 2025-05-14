@@ -176,7 +176,7 @@ def get_openapi_view(dataset, response_format: str = "json"):
         patterns=_lazy_get_dataset_patterns(dataset_schema.id),
         generator_class=DynamicApiSchemaGenerator,
         permission_classes=(permissions.AllowAny,),
-        version=dataset_schema.version,
+        version=dataset_schema.get_version(dataset_schema.default_version)["version"],
     )
 
     # Specific data to override in the OpenAPI
