@@ -34,7 +34,7 @@ from django.core.exceptions import ImproperlyConfigured
 from django.db import connection
 from django.urls import NoReverseMatch, URLPattern, path, reverse
 from django.views.generic import RedirectView
-from rest_framework import routers
+from rest_framework.routers import DefaultRouter, Route
 from schematools.contrib.django.factories import remove_dynamic_models
 from schematools.contrib.django.models import Dataset
 from schematools.naming import to_snake_case
@@ -111,7 +111,7 @@ class DynamicAPIIndexView(APIIndexView):
             return []
 
 
-class DynamicRouter(routers.DefaultRouter):
+class DynamicRouter(DefaultRouter):
     """Router that dynamically creates all views and viewsets based on the Dataset models."""
 
     def __init__(self):
@@ -187,7 +187,7 @@ class DynamicRouter(routers.DefaultRouter):
         clear_serializer_factory_cache()
 
         # Create all models, including those with no API enabled.
-        db_datasets = list(get_active_datasets(api_enabled=None).db_enabled())
+        db_datasets: list[Dataset] = list(get_active_datasets(api_enabled=None).db_enabled())
         generated_models = self._build_db_models(db_datasets)
 
         if settings.DEBUG and self._has_model_errors():
@@ -246,13 +246,13 @@ class DynamicRouter(routers.DefaultRouter):
         for dataset in db_datasets:
             dataset.schema  # noqa: B018 (load data early)
 
-        for dataset in db_datasets:  # type: Dataset
+        for dataset in db_datasets:
             dataset_id = dataset.schema.id  # not dataset.name which is mangled.
             new_models = {}
-
             models = dataset.create_models(
                 base_app_name="dso_api.dynamic_api",
                 base_model=SealedDynamicModel,
+                include_versioned_tables=True,
             )
 
             for model in models:
@@ -263,13 +263,10 @@ class DynamicRouter(routers.DefaultRouter):
 
             generated_models.extend(new_models.values())
 
-        # Perform system checks on the late generated models:
         return generated_models
 
     def _build_db_viewsets(self, db_datasets: Iterable[Dataset]):
         """Initialize viewsets that are linked to Django database models."""
-        from rest_framework.routers import Route
-
         # Define custom routes that support both slash and no-slash
         self.routes = [
             # List route
@@ -306,7 +303,7 @@ class DynamicRouter(routers.DefaultRouter):
             ),
         ]
 
-        tmp_router = routers.DefaultRouter()
+        tmp_router = DefaultRouter()
         tmp_router.routes = self.routes
 
         db_datasets = {dataset.schema.id: dataset for dataset in db_datasets}
@@ -318,6 +315,7 @@ class DynamicRouter(routers.DefaultRouter):
                 logger.debug("Skipping API creation for dataset: %s", app_label)
                 continue
 
+            dataset: Dataset = db_datasets[app_label]
             for model in models_by_name.values():
                 _validate_model(model)
                 if model.has_parent_table():
@@ -327,12 +325,21 @@ class DynamicRouter(routers.DefaultRouter):
                 dataset_id = to_snake_case(model.get_dataset_id())
                 table_id = to_snake_case(model.get_table_id())
 
-                # Determine the URL prefix for the model
-                url_prefix = self._make_url(model.get_dataset_path(), table_id)
+                for vmajor in dataset.schema.versions:
+                    # Determine the URL prefix for the versioned model
+                    url_prefix = self._make_url(model.get_dataset_path(), table_id, vmajor)
 
-                logger.debug("Created viewset %s", url_prefix)
-                viewset = viewset_factory(model)
-                tmp_router.register(url_prefix, viewset, basename=f"{dataset_id}-{table_id}")
+                    logger.debug("Created viewset %s", url_prefix)
+                    viewset = viewset_factory(model)
+                    tmp_router.register(
+                        url_prefix, viewset, basename=f"{dataset_id}-{vmajor}-{table_id}"
+                    )
+                    if vmajor == dataset.default_version:
+                        # Default version accessible without version number.
+                        url_prefix = self._make_url(model.get_dataset_path(), table_id)
+                        tmp_router.register(
+                            url_prefix, viewset, basename=f"{dataset_id}-{table_id}"
+                        )
 
         return tmp_router.registry
 
@@ -512,10 +519,10 @@ class DynamicRouter(routers.DefaultRouter):
             )
         return results
 
-    def _make_url(self, prefix, url_path):
+    def _make_url(self, prefix, url_path, vmajor: str | None = None):
         """Generate the URL for the viewset"""
         if prefix:
-            url_path = f"/{prefix}/{url_path}"
+            url_path = f"/{prefix}/{vmajor}/{url_path}" if vmajor else f"/{prefix}/{url_path}"
         return url_path
 
     def reload(self) -> dict[type[DynamicModel], str]:
