@@ -2,43 +2,53 @@
   "id": "geometry_multiple",
   "type": "dataset",
   "title": "Geometry mulitple geometry fields test",
-  "status": "beschikbaar",
   "publisher": "Nobody",
-  "version": "0.0.1",
   "crs": "EPSG:28992",
-  "tables": [
-    {
-      "id": "things",
-      "type": "table",
-      "version": "1.0.0",
-      "schema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "type": "object",
-        "required": ["id", "schema"],
-        "mainGeometry": "mainGeometrie",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "description": "Identifier"
-          },
+  "defaultVersion": "v1",
+  "versions": {
+    "v1": {
+      "status": "beschikbaar",
+      "lifecycleStatus": "stable",
+      "version": "0.0.1",
+      "tables": [
+        {
+          "id": "things",
+          "type": "table",
+          "version": "1.0.0",
           "schema": {
-            "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.0#/definitions/schema"
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "type": "object",
+            "required": [
+              "id",
+              "schema"
+            ],
+            "mainGeometry": "mainGeometrie",
+            "properties": {
+              "id": {
+                "type": "integer",
+                "description": "Identifier"
+              },
+              "schema": {
+                "$ref": "https://schemas.data.amsterdam.nl/schema@v3.1.0#/definitions/schema"
+              },
+              "metadata": {
+                "type": "string",
+                "auth": "TEST/META",
+                "description": ""
+              },
+              "geometrie": {
+                "$ref": "https://geojson.org/schema/Point.json",
+                "description": "Geometrie"
+              },
+              "mainGeometrie": {
+                "$ref": "https://geojson.org/schema/Point.json",
+                "description": "Main geometrie"
+              }
+            }
           },
-          "metadata": {
-            "type": "string",
-            "auth": "TEST/META",
-            "description": ""
-          },
-          "geometrie": {
-            "$ref": "https://geojson.org/schema/Point.json",
-            "description": "Geometrie"
-          },
-          "mainGeometrie": {
-            "$ref": "https://geojson.org/schema/Point.json",
-            "description": "Main geometrie"
-          }
+          "lifecycleStatus": "stable"
         }
-      }
+      ]
     }
-  ]
+  }
 }

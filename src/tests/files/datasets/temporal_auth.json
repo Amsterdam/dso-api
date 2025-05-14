@@ -2,53 +2,76 @@
   "type": "dataset",
   "id": "temporalauth",
   "title": "Dataset with authorization on temporal dimensions",
-  "status": "beschikbaar",
   "publisher": "Nobody",
-  "version": "0.0.0",
   "identifier": "id",
-  "tables": [
-    {
-      "id": "things",
-      "type": "table",
-      "version": "1.0.0",
-      "temporal": {
-        "identifier": "seqno",
-        "dimensions": {
-          "valid": ["start", "stop"]
-        }
-      },
-      "schema": {
-        "$id": "https://example.com/schema/temporal_auth.json",
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "type": "object",
-        "additionalProperties": false,
-        "identifier": ["id", "seqno"],
-        "required": ["schema", "id", "seqno"],
-        "display": "id",
-        "properties": {
+  "defaultVersion": "v1",
+  "versions": {
+    "v1": {
+      "status": "beschikbaar",
+      "lifecycleStatus": "stable",
+      "version": "0.0.0",
+      "tables": [
+        {
+          "id": "things",
+          "type": "table",
+          "version": "1.0.0",
+          "temporal": {
+            "identifier": "seqno",
+            "dimensions": {
+              "valid": [
+                "start",
+                "stop"
+              ]
+            }
+          },
           "schema": {
-            "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.1#/definitions/schema"
+            "$id": "https://example.com/schema/temporal_auth.json",
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "type": "object",
+            "additionalProperties": false,
+            "identifier": [
+              "id",
+              "seqno"
+            ],
+            "required": [
+              "schema",
+              "id",
+              "seqno"
+            ],
+            "display": "id",
+            "properties": {
+              "schema": {
+                "$ref": "https://schemas.data.amsterdam.nl/schema@v3.1.0#/definitions/schema"
+              },
+              "id": {
+                "type": "string",
+                "description": ""
+              },
+              "seqno": {
+                "type": "integer",
+                "description": ""
+              },
+              "start": {
+                "type": "string",
+                "format": "date",
+                "description": ""
+              },
+              "stop": {
+                "type": "string",
+                "format": "date",
+                "auth": "SCOPE/HAMMERTIME",
+                "description": "U can't touch this."
+              },
+              "secret": {
+                "type": "string",
+                "auth": "SCOPE/COOKIE",
+                "description": "Hidden field with a different scope than stop"
+              }
+            }
           },
-          "id": {"type": "string", "description": ""},
-          "seqno": {"type": "integer", "description": ""},
-          "start": {
-            "type": "string",
-            "format": "date",
-            "description": ""
-          },
-          "stop": {
-            "type": "string",
-            "format": "date",
-            "auth": "SCOPE/HAMMERTIME",
-            "description": "U can't touch this."
-          },
-          "secret": {
-            "type": "string",
-            "auth": "SCOPE/COOKIE",
-            "description": "Hidden field with a different scope than stop"
-          }
+          "lifecycleStatus": "stable"
         }
-      }
+      ]
     }
-  ]
+  }
 }

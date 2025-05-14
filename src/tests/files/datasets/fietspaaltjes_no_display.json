@@ -1,117 +1,127 @@
 {
-    "type": "dataset",
-    "id": "fietspaaltjesnodisplay",
-    "title": "fietspaaltjesnodisplay",
-    "status": "beschikbaar",
-    "publisher": "Nobody",
-    "version": "0.0.1",
-    "crs": "EPSG:28992",
-    "tables": [
-      {
-        "id": "fietspaaltjesnodisplay",
-        "type": "table",
-        "version": "1.0.0",
-        "schema": {
-          "$schema": "http://json-schema.org/draft-07/schema#",
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["schema", "id"],
-          "properties": {
-            "schema": {
-              "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.1#/definitions/schema"
-            },
-            "id": {
-              "type": "string"
-            },
-            "geometry": {
-              "$ref": "https://geojson.org/schema/Geometry.json"
-            },
-            "street": {
-              "type": "string"
-            },
-            "at": {
-              "type": "string"
-            },
-            "area": {
-              "type": "string"
-            },
-            "score_2013": {
-              "type": "string"
-            },
-            "score_current": {
-              "type": "string"
-            },
-            "count": {
-              "type": "integer"
-            },
-            "paaltjesWeg": {
-              "type": "array",
-              "items": {
+  "type": "dataset",
+  "id": "fietspaaltjesnodisplay",
+  "title": "fietspaaltjesnodisplay",
+  "publisher": "Nobody",
+  "crs": "EPSG:28992",
+  "defaultVersion": "v1",
+  "versions": {
+    "v1": {
+      "status": "beschikbaar",
+      "lifecycleStatus": "stable",
+      "version": "0.0.1",
+      "tables": [
+        {
+          "id": "fietspaaltjesnodisplay",
+          "type": "table",
+          "version": "1.0.0",
+          "schema": {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "schema",
+              "id"
+            ],
+            "properties": {
+              "schema": {
+                "$ref": "https://schemas.data.amsterdam.nl/schema@v3.1.0#/definitions/schema"
+              },
+              "id": {
                 "type": "string"
-              }
-            },
-            "soortPaaltje": {
-              "type": "array",
-              "items": {
+              },
+              "geometry": {
+                "$ref": "https://geojson.org/schema/Geometry.json"
+              },
+              "street": {
                 "type": "string"
-              }
-            },
-            "uiterlijk": {
-              "type": "array",
-              "items": {
+              },
+              "at": {
                 "type": "string"
-              }
-            },
-            "type": {
-              "type": "array",
-              "items": {
+              },
+              "area": {
                 "type": "string"
-              }
-            },
-            "ruimte": {
-              "type": "array",
-              "items": {
+              },
+              "score_2013": {
                 "type": "string"
-              }
-            },
-            "markering": {
-              "type": "array",
-              "items": {
+              },
+              "score_current": {
                 "type": "string"
-              }
-            },
-            "beschadigingen": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            "veiligheid": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            "zichtInDonker": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            "soortWeg": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            "noodzaak": {
-              "type": "array",
-              "items": {
-                "type": "string"
+              },
+              "count": {
+                "type": "integer"
+              },
+              "paaltjesWeg": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "soortPaaltje": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "uiterlijk": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "type": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "ruimte": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "markering": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "beschadigingen": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "veiligheid": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "zichtInDonker": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "soortWeg": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "noodzaak": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
               }
             }
-          }
+          },
+          "lifecycleStatus": "stable"
         }
-      }
-    ]
+      ]
+    }
   }
+}
