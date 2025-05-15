@@ -125,8 +125,12 @@ class BrowsableAPIRenderer(RendererMixin, renderers.BrowsableAPIRenderer):
             context["response_formatter"] = "dso_api/dynamic_api/js/" + response_formatter + ".js"
 
         if dataset_id := getattr(context["view"], "dataset_id", False):
-            context["dataset_url"] = reverse(f"dynamic_api:openapi-{dataset_id}")
-
+            context["dataset_url"] = reverse(
+                "dynamic_api:openapi", kwargs={"dataset_name": dataset_id}
+            )
+            context["docs_url"] = reverse(
+                "dynamic_api:docs-dataset", kwargs={"dataset_name": dataset_id}
+            )
         # Fix response content-type when it's filled in by the exception_handler
         response = renderer_context["response"]
         if response.content_type:

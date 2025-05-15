@@ -62,11 +62,11 @@ class OpenAPIBrowserView(APIView):
     # Restrict available formats browsable API
     renderer_classes = [BrowsableAPIRenderer]
 
-    name = "DSO-API"
-    description = (
-        "To use the DSO-API, see the documentation at <https://api.data.amsterdam.nl/v1/docs/>. "
-    )
+    # Overwritten by as_view():
+    name = None
+    description = None
     authorization_grantor = None
+    dataset_id = None
     response_formatter = "openapi_formatter"
 
     def get(self, request, *args, **kwargs):
@@ -220,7 +220,7 @@ def _html_on_browser(openapi_view, dataset_schema, response_format: str = "json"
     browsable_view = OpenAPIBrowserView
 
     @wraps(openapi_view)
-    def _switching_view(request):
+    def _switching_view(request, *args, **kwargs):
         is_browser = "text/html" in request.headers.get("Accept", "")
         format = request.GET.get("format", "")
         path = request.path
@@ -242,15 +242,16 @@ def _html_on_browser(openapi_view, dataset_schema, response_format: str = "json"
             # triggered on the json response only
             view = vary_on_headers("Accept", "format")(openapi_view)
             view = cache_page(CACHE_DURATION)(view)
-            return view(request)
+            return view(request, *args, **kwargs)
         else:
             # Browser that accepts HTML, showing the browsable view.
             # Using the view so the addressbar path remains the same.
-            return browsable_view().as_view(
+            return browsable_view.as_view(
                 name=dataset_schema.title or dataset_schema.id,
                 description=dataset_schema.description or "",
                 authorization_grantor=dataset_schema.data.get("authorizationGrantor", None),
-            )(request)
+                dataset_id=dataset_schema.id,
+            )(request, *args, **kwargs)
 
     return _switching_view
 

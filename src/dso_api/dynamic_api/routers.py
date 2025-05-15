@@ -82,7 +82,7 @@ class DynamicAPIIndexView(APIIndexView):
         if not ds.enable_db:
             return []
         try:
-            api_url = reverse(f"dynamic_api:openapi-{dataset_id}")
+            api_url = reverse("dynamic_api:openapi", kwargs={"dataset_name": dataset_id})
             return [
                 {
                     "name": "production",
@@ -101,7 +101,7 @@ class DynamicAPIIndexView(APIIndexView):
             # that are directly backed by a local database.
             ds_id = ds.schema.id
             wfs_url = reverse("dynamic_api:wfs", kwargs={"dataset_name": ds_id})
-            mvt_url = reverse("dynamic_api:mvt-single-dataset", kwargs={"dataset_name": ds_id})
+            mvt_url = reverse("dynamic_api:mvt", kwargs={"dataset_name": ds_id})
             return [
                 {"type": "WFS", "url": base + wfs_url},
                 {"type": "MVT", "url": base + mvt_url},
@@ -337,11 +337,12 @@ class DynamicRouter(routers.DefaultRouter):
 
     def _build_doc_views(self, datasets: Iterable[Dataset]) -> Iterator[URLPattern]:
         for dataset in datasets:
+            dataset_id = dataset.schema.id  # not dataset.name which is mangled.
             yield path(
                 f"/docs/datasets/{dataset.path}.html",
                 DatasetDocView.as_view(),
-                name=f"doc-{dataset.schema.id}",
-                kwargs={"dataset_name": dataset.schema.id},
+                name="docs-dataset",
+                kwargs={"dataset_name": dataset_id},
             )
 
             if not dataset.has_geometry_fields:
@@ -366,28 +367,32 @@ class DynamicRouter(routers.DefaultRouter):
                 path(
                     f"/{dataset.path}",
                     get_openapi_view(dataset),
-                    name=f"openapi-{dataset_id}",
+                    name="openapi",
+                    kwargs={"dataset_name": dataset_id},
                 )
             )
             results.append(
                 path(
                     f"/{dataset.path}/",
                     get_openapi_view(dataset),
-                    name=f"openapi-{dataset_id}-slash",
+                    name="openapi-slash",
+                    kwargs={"dataset_name": dataset_id},
                 )
             )
             results.append(
                 path(
                     f"/{dataset.path}/openapi.yaml",
                     get_openapi_view(dataset, response_format="yaml"),
-                    name=f"openapi-yaml-{dataset_id}",
+                    name="openapi-yaml",
+                    kwargs={"dataset_name": dataset_id},
                 )
             )
             results.append(
                 path(
                     f"/{dataset.path}/openapi.json",
                     get_openapi_view(dataset, response_format="json"),
-                    name=f"openapi-json-{dataset_id}",
+                    name="openapi-json",
+                    kwargs={"dataset_name": dataset_id},
                 )
             )
         return results
@@ -401,7 +406,7 @@ class DynamicRouter(routers.DefaultRouter):
                 path(
                     f"/mvt/{dataset.path}/",
                     DatasetMVTSingleView.as_view(),
-                    name="mvt-single-dataset-slash",
+                    name="mvt-slash",
                     kwargs={"dataset_name": dataset_id},
                 )
             ),
@@ -409,7 +414,7 @@ class DynamicRouter(routers.DefaultRouter):
                 path(
                     f"/mvt/{dataset.path}",
                     DatasetMVTSingleView.as_view(),
-                    name="mvt-single-dataset",
+                    name="mvt",
                     kwargs={"dataset_name": dataset_id},
                 )
             )
