@@ -33,6 +33,7 @@ from django.core import checks
 from django.core.exceptions import ImproperlyConfigured
 from django.db import connection
 from django.urls import NoReverseMatch, URLPattern, path, reverse
+from django.views.generic import RedirectView
 from rest_framework import routers
 from schematools.contrib.django.factories import remove_dynamic_models
 from schematools.contrib.django.models import Dataset
@@ -49,7 +50,6 @@ from .views import (
     DatasetMVTSingleView,
     DatasetMVTView,
     DatasetTileJSONView,
-    DatasetWFSDocView,
     DatasetWFSView,
     viewset_factory,
 )
@@ -347,11 +347,14 @@ class DynamicRouter(routers.DefaultRouter):
             if not dataset.has_geometry_fields:
                 continue
 
+            # The old WFS-documentation pages (``/v1/docs/wfs-datasets/...``) have been merged with
+            # the index page that django-gisserver already provides.
+            # It has a more accurate overview, as that documentation is generated
+            # from the FeatureType definition, and not re-generated from Amsterdam Schema.
             yield path(
                 f"/docs/wfs-datasets/{dataset.path}.html",
-                DatasetWFSDocView.as_view(),
-                name=f"doc-wfs-{dataset.schema.id}",
-                kwargs={"dataset_name": dataset.schema.id},
+                RedirectView.as_view(pattern_name="wfs"),
+                kwargs={"dataset_name": dataset.id},
             )
 
     def _build_openapi_views(self, datasets: Iterable[Dataset]) -> list[URLPattern]:

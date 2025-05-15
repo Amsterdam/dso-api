@@ -1,6 +1,8 @@
+import re
 import urllib.parse
 
 import pytest
+from django.urls import reverse
 from schematools.contrib.django.db import create_tables
 
 from tests.utils import read_response, read_response_xml, xml_element_to_dict
@@ -38,7 +40,7 @@ class TestDatasetWFSIndexView:
                             "specification_url": (
                                 f"{base}/v1/wfs/afvalwegingen?SERVICE=WFS&REQUEST=GetCapabilities"
                             ),
-                            "documentation_url": f"{base}/v1/docs/wfs-datasets/afvalwegingen.html",
+                            "documentation_url": f"{base}/v1/wfs/afvalwegingen",
                         }
                     ],
                     "related_apis": [
@@ -73,7 +75,7 @@ class TestDatasetWFSIndexView:
                             "specification_url": (
                                 f"{base}/v1/wfs/fietspaaltjes?SERVICE=WFS&REQUEST=GetCapabilities"
                             ),
-                            "documentation_url": f"{base}/v1/docs/wfs-datasets/fietspaaltjes.html",
+                            "documentation_url": f"{base}/v1/wfs/fietspaaltjes",
                         }
                     ],
                     "related_apis": [
@@ -104,6 +106,20 @@ class TestDatasetWFSIndexView:
 @pytest.mark.django_db
 class TestDatasetWFSView:
     """Prove that the WFS server logic is properly integrated in the dynamic models."""
+
+    def test_html_view(self, client, filled_router, fietspaaltjes_dataset):
+        """Assert that fietspaaltjes has WFS docs."""
+        fietspaaltjes_doc = reverse("dynamic_api:wfs", kwargs={"dataset_name": "fietspaaltjes"})
+        assert fietspaaltjes_doc
+
+        response = client.get(fietspaaltjes_doc, headers={"Accept": "text/html"})
+        assert response.status_code == 200
+        content = response.content.decode("utf-8")
+
+        # Check for the CSV and GeoJSON download links.
+        assert "<h2>" in content
+        assert re.search(r'href=".*OUTPUTFORMAT=CSV">', content, re.I)
+        assert re.search(r'href=".*OUTPUTFORMAT=geojson">', content, re.I)
 
     def test_wfs_view(self, api_client, afval_dataset, afval_container):
         wfs_url = (

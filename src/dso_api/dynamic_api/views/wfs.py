@@ -120,7 +120,7 @@ class DatasetWFSIndexView(APIIndexView):
                 "name": "production",
                 "api_url": base + wfs_url,
                 "specification_url": f"{base}{wfs_url}?SERVICE=WFS&REQUEST=GetCapabilities",
-                "documentation_url": f"{base}/v1/docs/wfs-datasets/{ds.path}.html",
+                "documentation_url": f"{base}/v1/wfs/{ds.path}",
             }
         ]
 
