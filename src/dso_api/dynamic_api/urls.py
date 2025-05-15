@@ -3,6 +3,7 @@ from importlib import import_module, reload
 
 from django.conf import settings
 from django.urls import clear_url_caches, get_urlconf, include, path, re_path
+from django.views.generic import RedirectView
 
 from . import views
 from .openapi import CombinedSchemaView
@@ -15,9 +16,16 @@ def get_patterns(router_urls):
     return [
         # Doc endpoints
         path(
+            # No longer support the old generic/rest.html but redirect to generic/rest/index.html.
+            # This fixes relative links and maintains a canonical path.
             "/docs/generic/<slug:category>.html",
-            GenericDocs.as_view(),
-            name="docs-generic",
+            RedirectView.as_view(pattern_name="dynamic_api:docs-generic", permanent=True),
+            kwargs={"topic": "index"},
+        ),
+        path(
+            "/docs/generic/<slug:category>/",
+            RedirectView.as_view(pattern_name="dynamic_api:docs-generic", permanent=True),
+            kwargs={"topic": "index"},
         ),
         path(
             "/docs/generic/<slug:category>/<slug:topic>.html",

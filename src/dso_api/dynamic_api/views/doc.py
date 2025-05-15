@@ -82,7 +82,7 @@ class GenericDocs(TemplateView):
 
     def get_context_data(self, **kwargs):
         category = self.kwargs["category"]
-        topic = self.kwargs.get("topic", "index")
+        topic = self.kwargs["topic"]
         uri = self.request.build_absolute_uri(reverse("dynamic_api:api-root"))
         template = f"dso_api/dynamic_api/docs/{category}/{topic}.md"
         try:
