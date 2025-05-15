@@ -15,18 +15,18 @@ def get_patterns(router_urls):
     return [
         # Doc endpoints
         path(
-            "docs/generic/<slug:category>.html",
+            "/docs/generic/<slug:category>.html",
             GenericDocs.as_view(),
             name="docs-generic",
         ),
         path(
-            "docs/generic/<slug:category>/<slug:topic>.html",
+            "/docs/generic/<slug:category>/<slug:topic>.html",
             GenericDocs.as_view(),
             name="docs-generic",
         ),
-        path("docs/index.html", DocsOverview.as_view(), name="docs-index"),
-        path("docs/search.html", search),
-        path("docs/searchindex.json", search_index),
+        path("/docs/index.html", DocsOverview.as_view(), name="docs-index"),
+        path("/docs/search.html", search),
+        path("/docs/searchindex.json", search_index),
         re_path(r"/mvt/?$", views.DatasetMVTIndexView.as_view(), name="mvt-index"),
         re_path(r"/wfs/?$", views.DatasetWFSIndexView.as_view(), name="wfs-index"),
         path("", include(router_urls), name="api-root"),
