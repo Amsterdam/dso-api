@@ -38,6 +38,7 @@ from django.urls import reverse
 from django.utils.functional import cached_property
 from gisserver.exceptions import InvalidParameterValue, PermissionDenied
 from gisserver.features import ComplexFeatureField, FeatureField, FeatureType, ServiceDescription
+from gisserver.geometries import CRS
 from gisserver.parsers import wfs20
 from gisserver.views import WFSView
 from schematools.contrib.django.models import Dataset, DynamicModel
@@ -242,6 +243,10 @@ class DatasetWFSView(CheckModelPermissionsMixin, WFSView):
                 # expensive operation, hence this is only read when needed.
                 fields = LazyList(self.get_feature_fields, model, geo_field.name)
 
+                # Make default WFS projection identical to the field.
+                field_crs = CRS.from_srid(geo_field.srid)
+                other_crs = [c for c in crs.ALL_CRS if c.srid != field_crs.srid]
+
                 if i == 0:
                     name = base_name
                     title = base_title
@@ -255,8 +260,8 @@ class DatasetWFSView(CheckModelPermissionsMixin, WFSView):
                     fields=fields,
                     display_field_name=model.get_display_field(),
                     geometry_field_name=geo_field.name,
-                    crs=crs.DEFAULT_CRS,
-                    other_crs=crs.OTHER_CRS,
+                    crs=field_crs,
+                    other_crs=other_crs,
                     wfs_view=self,
                     show_name_field=model.has_display_field(),
                 )
