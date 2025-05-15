@@ -250,13 +250,15 @@ class DatasetTileJSONView(TileJSONView):
         layer_fields = {}
         for field in schema.fields:
             field_name = field.name
+            if field_name == "schema":
+                continue
+
             if field.is_relation:
                 # Here we have to use the db_name, because that usually has a suffix not
                 # available on field.name.
                 field_name = toCamelCase(field.db_name)
-            if field_name != "schema":
-                # We exclude the main geometry and `schema` fields.
-                layer_fields[field_name] = field.type
+
+            layer_fields[field_name] = field.description or field.type
         layer.layer_fields = layer_fields
         return layer
 
