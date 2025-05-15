@@ -152,8 +152,6 @@ class DatasetWFSView(CheckModelPermissionsMixin, WFSView):
 
     xml_namespace = f"{settings.DATAPUNT_API_URL}v1/wfs/"
 
-    index_template_name = "dso_api/dynamic_api/wfs_dataset.html"
-
     def setup(self, request, *args, **kwargs):
         """Initial setup logic before request handling:
 

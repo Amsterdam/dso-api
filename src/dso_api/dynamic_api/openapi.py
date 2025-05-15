@@ -56,7 +56,7 @@ def build_mock_request(method, path, view, original_request, **kwargs):
     return request
 
 
-class openAPIBrowserView(APIView):
+class OpenAPIBrowserView(APIView):
     """Browsable API View."""
 
     # Restrict available formats browsable API
@@ -217,7 +217,7 @@ def _html_on_browser(openapi_view, dataset_schema, response_format: str = "json"
     """
     # The ?format=json isn't really needed, but makes the fetch/XMLHttpRequest explicit
     # to request the OpenAPI JSON and avoids any possible browser-interaction.
-    browsable_view = openAPIBrowserView
+    browsable_view = OpenAPIBrowserView
 
     @wraps(openapi_view)
     def _switching_view(request):
