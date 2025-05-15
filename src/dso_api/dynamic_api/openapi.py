@@ -14,6 +14,7 @@ from urllib.parse import urljoin
 import drf_spectacular.plumbing
 from django.conf import settings
 from django.http import JsonResponse
+from django.shortcuts import redirect
 from django.urls import URLPattern, URLResolver, get_resolver, get_urlconf
 from django.utils.decorators import method_decorator
 from django.utils.functional import lazy
@@ -238,6 +239,10 @@ def _html_on_browser(openapi_view, dataset_schema, response_format: str = "json"
         is_browser = "text/html" in request.headers.get("Accept", "")
         format = request.GET.get("format", "")
         path = request.path
+
+        # Redirect browsers to the urls without slash
+        if is_browser and path.endswith("/"):
+            return redirect(path[:-1], permanent=True)
 
         # Handle file downloads for openapi.json and openapi.yaml
         if path.endswith(("openapi.json", "openapi.yaml")):
