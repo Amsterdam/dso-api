@@ -25,7 +25,7 @@
 
   <p>Voor de gebruikshandleiding, zie <a href="/v1/docs/generic/gis.html">Datasets laden in GIS-pakketten</a>.</p>
 
-  {% if embeddable_fields %}
+  {% if embeddable_fields or expand_only_fields %}
     <p>
         <strong>Tip:</strong>
         Je kan met <code>?embed=...</code> or <code>?expand=...</code> het WFS schema aanpassen,
@@ -44,7 +44,7 @@
 {{ block.super }}
 
   <hr style="margin: 6rem 0 4rem 0;" />
-  {% if embeddable_fields %}
+  {% if embeddable_fields or expand_only_fields %}
     <h2><a id="expandable-fields"></a>Aanvullende data met embedding</h2>
     <p>
         Deze WFS ondersteund dynamisch invoegen van gerelateerde data.
@@ -52,6 +52,7 @@
         Mogelijke waarden:
     </p>
 
+    {% if embeddable_fields %}
     <table class="table table-condensed">
       <thead><tr><th>Relatie</th><th>Tabel</th><th>Omschrijving</th></tr></thead>
       <tbody>
@@ -64,13 +65,30 @@
       {% endfor %}
       </tbody>
     </table>
-  {% endif %}
+    {% endif %}
 
-  {% if embeddable_fields|length > 1 %}
-  <p>Je kan meerdere waarden met een comma scheiden, bijvoorbeeld:</p>
-  <p class="connect-url"><code>{{ connect_url }}{% if '?' in connect_url %}&amp;{% else %}?{% endif %}embed={{ embeddable_fields.0.name }},{{ embeddable_fields.1.name }}</code></p>
-  {% endif %}
+    {% if expand_only_fields %}
+      <p>De volgende many-to-many relaties kunnen alleen met <code>?expand=...</code> ingevoegd worden:</p>
+      <table class="table table-condensed">
+        <thead><tr><th>Relatie</th><th>Tabel</th><th>Omschrijving</th></tr></thead>
+        <tbody>
+        {% for expand in expand_only_fields %}
+          <tr>
+            <td><code><a href="?embed={{ expand.name }}">{{ expand.name }}</a></code></td>
+            <td><a href="{{ expand.target_doc }}"><code>{{ expand.relation_id }}</code></a></td>
+            <td>{{ expand.description|default:"" }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    {% endif %}
 
+
+    {% if expandable_fields|length > 1 and 'embed=' not in connect_url %}
+    <p>Je kan meerdere waarden met een comma scheiden, bijvoorbeeld:</p>
+    <p class="connect-url"><code>{{ connect_url }}{% if '?' in connect_url %}&amp;{% else %}?{% endif %}embed={{ expandable_fields.0.name }},{{ expandable_fields.1.name }}</code></p>
+    {% endif %}
+  {% endif %}
 
   <h2>Andere ontsluitingsvormen</h2>
   <p>Deze dataset is ook beschikbaar als:</p>
