@@ -142,9 +142,9 @@ def test_mvt_tilejson(api_client, afval_container, filled_router):
             {
                 "description": None,
                 "fields": {
-                    "geometry": "https://geojson.org/schema/Point.json",
-                    "id": "integer",
-                    "serienummer": "string",
+                    "geometry": "Geometrie",
+                    "id": "row identifier",
+                    "serienummer": "some serienumber",
                 },
                 "id": "adres_loopafstand",
                 "maxzoom": 15,
@@ -153,13 +153,13 @@ def test_mvt_tilejson(api_client, afval_container, filled_router):
             {
                 "description": None,
                 "fields": {
-                    "clusterId": "string",
-                    "datumCreatie": "string",
-                    "datumLeegmaken": "string",
-                    "eigenaarNaam": "string",
-                    "geometry": "https://geojson.org/schema/Point.json",
-                    "id": "integer",
-                    "serienummer": "string",
+                    "clusterId": "Cluster-ID",
+                    "datumCreatie": "Datum aangemaakt",
+                    "datumLeegmaken": "Datum leeggemaakt",
+                    "eigenaarNaam": "Naam van eigenaar",
+                    "geometry": "Geometrie",
+                    "id": "Container-ID",
+                    "serienummer": "Serienummer van container",
                 },
                 "id": "containers",
                 "maxzoom": 15,
