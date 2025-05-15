@@ -39,9 +39,7 @@ markdown = Markdown(
     ]
 )
 
-CACHE_DURATION = 3600  # seconds.
-
-decorators = [cache_page(CACHE_DURATION)]
+cache_doc_page = cache_page(timeout=36000)  # seconds
 
 
 def search(request: HttpRequest) -> HttpResponse:
@@ -50,7 +48,7 @@ def search(request: HttpRequest) -> HttpResponse:
     return HttpResponse(render_to_string(template, context={"query": query}))
 
 
-@cache_page(CACHE_DURATION)
+@cache_doc_page
 def search_index(_request) -> HttpResponse:
     index = {}
     for ds in Dataset.objects.api_enabled().db_enabled():
@@ -74,7 +72,7 @@ def search_index(_request) -> HttpResponse:
     return JsonResponse(index)
 
 
-# @method_decorator(decorators, name="get")
+@method_decorator(cache_doc_page, name="get")
 class GenericDocs(TemplateView):
     """Documentation pages from ``/v1/docs/generic/...``."""
 
@@ -100,7 +98,7 @@ class GenericDocs(TemplateView):
         }
 
 
-@method_decorator(decorators, name="dispatch")
+@method_decorator(cache_doc_page, name="dispatch")
 class DocsIndexView(TemplateView):
     """The ``/v1/docs/index.html`` page."""
 
@@ -129,7 +127,7 @@ class DocsIndexView(TemplateView):
         return context
 
 
-@method_decorator(decorators, name="dispatch")
+@method_decorator(cache_doc_page, name="dispatch")
 class DatasetDocView(TemplateView):
     """REST API-specific documentation for a single dataset (``/v1/docs/datasets/...```)."""
 
