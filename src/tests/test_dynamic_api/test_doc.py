@@ -36,9 +36,8 @@ def test_overview(api_client, filled_router, fietspaaltjes_dataset):
 @pytest.mark.django_db
 def test_dataset(api_client, filled_router, gebieden_dataset):
     """Tests documentation for a single dataset."""
-    gebieden_doc = reverse(
-        "dynamic_api:doc-gebieden"
-    )  # Gebieden has relationships between its tables.
+    # Gebieden has relationships between its tables.
+    gebieden_doc = reverse("dynamic_api:docs-dataset", kwargs={"dataset_name": "gebieden"})
     assert gebieden_doc
 
     response = api_client.get(gebieden_doc)
@@ -64,9 +63,8 @@ def test_table_for_export_links(api_client, filled_router, gebieden_dataset):
     table = gebieden_dataset.tables.get(name="bouwblokken")
     table.enable_export = True
     table.save()
-    gebieden_doc = reverse(
-        "dynamic_api:doc-gebieden"
-    )  # Gebieden has relationships between its tables.
+    # Gebieden has relationships between its tables.
+    gebieden_doc = reverse("dynamic_api:docs-dataset", kwargs={"dataset_name": "gebieden"})
     assert gebieden_doc
 
     response = api_client.get(gebieden_doc)
@@ -86,7 +84,7 @@ def test_table_for_export_links(api_client, filled_router, gebieden_dataset):
 @pytest.mark.django_db
 def test_dataset_casing(api_client, filled_router, hoofdroutes_dataset):
     """Tests documentation for dataset that needs camel casing."""
-    hoofdroutes_doc = reverse("dynamic_api:doc-hoofdroutes2")
+    hoofdroutes_doc = reverse("dynamic_api:docs-dataset", kwargs={"dataset_name": "hoofdroutes2"})
     assert hoofdroutes_doc
 
     response = api_client.get(hoofdroutes_doc)

@@ -53,7 +53,7 @@ def search_index(_request) -> HttpResponse:
     index = {}
     for ds in Dataset.objects.api_enabled().db_enabled():
         try:
-            uri = reverse(f"dynamic_api:doc-{ds.schema.id}")
+            uri = reverse("dynamic_api:docs", kwargs={"dataset_name": ds.schema.id})
         except NoReverseMatch as e:
             logger.warning("dataset %s: %s", ds.schema.id, e)
             continue
@@ -108,10 +108,11 @@ class DocsIndexView(TemplateView):
         datasets = []
         for ds in Dataset.objects.api_enabled().db_enabled():
             try:
-                uri = reverse(f"dynamic_api:doc-{ds.schema.id}")
+                uri = reverse("dynamic_api:docs-dataset", kwargs={"dataset_name": ds.schema.id})
             except NoReverseMatch as e:
                 logger.warning("dataset %s: %s", ds.schema.id, e)
                 continue
+
             datasets.append(
                 {
                     "id": ds.schema.id,
@@ -155,16 +156,18 @@ class DatasetDocView(TemplateView):
 
         context = super().get_context_data(**kwargs)
         context.update(
-            dict(
-                schema=ds,
-                schema_name=ds_schema.db_name,
-                schema_auth=ds_schema.auth,
-                dataset_has_auth=bool(_fix_auth(ds_schema.auth)),
-                main_title=main_title,
-                publisher=publisher,
-                tables=tables,
-                swagger_url=reverse(f"dynamic_api:openapi-{ds_schema.id}"),
-            )
+            {
+                "schema": ds,
+                "schema_name": ds_schema.db_name,
+                "schema_auth": ds_schema.auth,
+                "dataset_has_auth": bool(_fix_auth(ds_schema.auth)),
+                "main_title": main_title,
+                "publisher": publisher,
+                "tables": tables,
+                "swagger_url": reverse(
+                    "dynamic_api:openapi", kwargs={"dataset_name": ds_schema.id}
+                ),
+            }
         )
 
         return context
@@ -301,7 +304,8 @@ def _table_context(ds: Dataset, table: DatasetTableSchema):
 
 
 def _make_link(to_table: DatasetTableSchema) -> str:
-    return reverse(f"dynamic_api:doc-{to_table.dataset.id}") + f"#{to_table.id}"
+    url = reverse("dynamic_api:docs-dataset", kwargs={"dataset_name": to_table.dataset.id})
+    return f"{url}#{to_table.id}"
 
 
 def _make_table_expands(table: DatasetTableSchema, wfs: bool):
