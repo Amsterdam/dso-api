@@ -29,6 +29,7 @@ STATIC_URL = f"{STATIC_HOST}/v1/static/"
 STATIC_ROOT = env.str("DSO_STATIC_DIR")
 
 # -- Datapunt settings
+
 ENVIRONMENT_SUBDOMAIN = env.str("ENVIRONMENT_SUBDOMAIN", "data")
 
 APIKEYSERV_API_URL = env.str(
@@ -274,7 +275,7 @@ class CustomJsonFormatter(jsonlogger.JsonFormatter):
 
 _json_log_formatter = {
     "()": CustomJsonFormatter,
-    "format": "%(asctime)s $(levelname)s %(name)s %(message)s",  # parsed as a fields list.
+    "format": "%(asctime)s %(levelname)s %(name)s %(message)s",  # parsed as a fields list.
 }
 
 DJANGO_LOG_LEVEL = env.str("DJANGO_LOG_LEVEL", "INFO")
