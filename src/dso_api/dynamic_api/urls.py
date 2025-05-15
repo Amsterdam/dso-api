@@ -7,7 +7,7 @@ from django.urls import clear_url_caches, get_urlconf, include, path, re_path
 from . import views
 from .openapi import CombinedSchemaView
 from .routers import DynamicRouter
-from .views.doc import DocsOverview, GenericDocs, search, search_index
+from .views.doc import DocsIndexView, GenericDocs, search, search_index
 
 
 def get_patterns(router_urls):
@@ -24,7 +24,7 @@ def get_patterns(router_urls):
             GenericDocs.as_view(),
             name="docs-generic",
         ),
-        path("/docs/index.html", DocsOverview.as_view(), name="docs-index"),
+        path("/docs/index.html", DocsIndexView.as_view(), name="docs-index"),
         path("/docs/search.html", search),
         path("/docs/searchindex.json", search_index),
         re_path(r"/mvt/?$", views.DatasetMVTIndexView.as_view(), name="mvt-index"),

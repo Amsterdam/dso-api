@@ -78,7 +78,7 @@ def search_index(_request) -> HttpResponse:
 class GenericDocs(TemplateView):
     """Documentation pages from ``/v1/docs/generic/...``."""
 
-    template_name = "dso_api/dynamic_api/docs/rest/base.html"
+    template_name = "dso_api/dynamic_api/docs/base_markdown.html"
 
     def get_context_data(self, **kwargs):
         category = self.kwargs["category"]
@@ -101,10 +101,10 @@ class GenericDocs(TemplateView):
 
 
 @method_decorator(decorators, name="dispatch")
-class DocsOverview(TemplateView):
+class DocsIndexView(TemplateView):
     """The ``/v1/docs/index.html`` page."""
 
-    template_name = "dso_api/dynamic_api/docs/overview.html"
+    template_name = "dso_api/dynamic_api/docs/index.html"
 
     def get_context_data(self, **kwargs):
         datasets = []

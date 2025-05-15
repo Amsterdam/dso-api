@@ -73,7 +73,7 @@ class DatasetMVTIndexView(APIIndexView):
 class DatasetMVTSingleView(TemplateView):
     """Shows an HTML page about a dataset and its geo-tables."""
 
-    template_name = "dso_api/dynamic_api/mvt_single.html"
+    template_name = "dso_api/dynamic_api/mvt_dataset.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
