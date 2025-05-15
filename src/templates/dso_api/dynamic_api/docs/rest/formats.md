@@ -16,43 +16,25 @@ formaten worden ondersteund:
 | `?_format=geojson` | GeoJSON notatie              | `application/geo+json` |
 | `?_format=csv`     | Kommagescheiden bestand      | `text/csv`             |
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+<aside class="note">
+<h4 class="title">Note</h4>
 
 In plaats van `_format` wordt ook `format` ondersteund, maar `_format`
 heeft de voorkeur.
+</aside>
 
-</div>
-
-<div class="warning">
-
-<div class="title">
-
-Warning
-
-</div>
+<aside class="warning">
+<h4 class="title">Warning</h4>
 
 Niet ieder exportformaat ondersteund alle veldtypen die een dataset kan
 bevatten. Bij het gebruik van een CSV bestand worden de meer-op-meer
 relaties niet opgenomen in de export. In een GeoJSON bestand worden
 ingesloten velden opgenomen als losse objecten.
+</aside>
 
-</div>
-
-<div class="tip">
-
-<div class="title">
-
-Tip
-
-</div>
+<aside class="tip">
+<h4 class="title">Tip</h4>
 
 Voor het koppelen van de datasets in GIS-applicaties kun je naast het
-GeoJSON formaat ook gebruik maken van de `WFS koppeling <wfs>`.
-
-</div>
+GeoJSON formaat ook gebruik maken van de <a href="../gis/manual.html">WFS koppeling</a>.
+</aside>

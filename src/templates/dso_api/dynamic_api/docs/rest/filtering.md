@@ -69,18 +69,12 @@ identificatie ook weet.
 
 Afhankelijk van het veldtype zijn er extra operatoren mogelijk.
 
-<div class="tip">
+<aside class="tip">
+<h3 class="title">Tip</h3>
 
-<div class="title">
-
-Tip
-
-</div>
-
-De exacte namen en mogelijke velden per tabel zijn op de `REST API
-Datasets <../datasets/index>` pagina te zien.
-
-</div>
+De exacte namen en mogelijke velden per tabel zijn op
+de <a href="/v1/docs/">REST API Datasets</a> pagina te zien.
+</aside>
 
 ### Voor alle veldtypes
 

@@ -1,16 +1,8 @@
-<!doctype html>{% load i18n static %}
-<html>
-<head>
-  <title>Amsterdam Datapunt API Documentatie v1</title>
-  <link rel="stylesheet" type="text/css" href="{% static 'rest_framework/css/bootstrap.min.css' %}"/>
-  <link rel="stylesheet" type="text/css" href="{% static 'rest_framework/css/bootstrap-tweaks.css' %}"/>
-  <link rel="stylesheet" type="text/css" href="{% static 'rest_framework/css/default.css' %}"/>
-  <link rel="stylesheet" type="text/css" href="{% static 'dso_api/dynamic_api/css/docs.css' %}"/>
-  {% block extrahead %}{% endblock %}
-</head>
-<body>
-<div class="container">
+{% extends "dso_api/dynamic_api/docs/base.html" %}{% load i18n static %}
 
+{% block title %}Zoekresultaten{% endblock %}
+
+{% block content %}
   <script src="{% static "dso_api/dynamic_api/js/lunr.js" %}"></script>
   <script>
     const DEBUG = true;
@@ -60,11 +52,9 @@
       });
   </script>
 
+  <h2>Zoeken in datasets</h2>
   <div id="summary"></div>
 
   <ol id="results">
   </ol>
-
-</div>
-</body>
-</html>
+{% endblock %}

@@ -30,11 +30,12 @@ logger = logging.getLogger(__name__)
 class DatasetMVTIndexView(APIIndexView):
     """Overview of available MVT endpoints."""
 
-    name = "DSO-API MVT endpoints"  # for browsable API.
+    name = "MVT endpoints"  # for browsable API.
     description = (
-        "To use the DSO-API, see the documentation at <https://api.data.amsterdam.nl/v1/docs/>. "
-        "For information on using MVT tiles, see the documentation at "
-        "<https://api.data.amsterdam.nl/v1/docs/generic/gis.html>."
+        "Alle WFS endpoints voor de gegevens in de DSO-API.\n\n"
+        "Voor het gebruik van MVT endpoints, zie: "
+        "[Datasets laden in GIS-pakketten](/v1/docs/generic/gis.html),"
+        " en de algemene [documentatie van de DSO-API](/v1/docs/)."
     )
     api_type = "MVT"
 
@@ -46,7 +47,7 @@ class DatasetMVTIndexView(APIIndexView):
         ]
 
     def get_environments(self, ds: Dataset, base: str):
-        api_url = reverse("dynamic_api:mvt-single-dataset", kwargs={"dataset_name": ds.schema.id})
+        api_url = reverse("dynamic_api:mvt", kwargs={"dataset_name": ds.schema.id})
         return [
             {
                 "name": "production",
@@ -61,7 +62,7 @@ class DatasetMVTIndexView(APIIndexView):
         return [
             {
                 "type": "rest_json",
-                "url": base + reverse(f"dynamic_api:openapi-{dataset_id}"),
+                "url": base + reverse("dynamic_api:openapi", kwargs={"dataset_name": dataset_id}),
             },
             {
                 "type": "WFS",
@@ -73,7 +74,7 @@ class DatasetMVTIndexView(APIIndexView):
 class DatasetMVTSingleView(TemplateView):
     """Shows an HTML page about a dataset and its geo-tables."""
 
-    template_name = "dso_api/dynamic_api/mvt_single.html"
+    template_name = "dso_api/dynamic_api/mvt_dataset.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -94,9 +95,13 @@ class DatasetMVTSingleView(TemplateView):
         if len(geo_tables) == 0:
             raise Http404("Dataset does not support MVT") from None
 
+        schema = models[geo_tables[0]].table_schema().dataset
+
+        context["mvt_title"] = schema.title or dataset_name.title()
         context["name"] = dataset_name
         context["tables"] = geo_tables
-        context["schema"] = models[geo_tables[0]].table_schema().dataset
+        context["schema"] = schema
+        context["base_url"] = self.request.build_absolute_uri("/").rstrip("/")
         return context
 
 
@@ -250,13 +255,15 @@ class DatasetTileJSONView(TileJSONView):
         layer_fields = {}
         for field in schema.fields:
             field_name = field.name
+            if field_name == "schema":
+                continue
+
             if field.is_relation:
                 # Here we have to use the db_name, because that usually has a suffix not
                 # available on field.name.
                 field_name = toCamelCase(field.db_name)
-            if field_name != "schema":
-                # We exclude the main geometry and `schema` fields.
-                layer_fields[field_name] = field.type
+
+            layer_fields[field_name] = field.description or field.type
         layer.layer_fields = layer_fields
         return layer
 

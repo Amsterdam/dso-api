@@ -1,0 +1,35 @@
+<!doctype html>{% load static i18n %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block full-title %}{% block title %}{% endblock %} &mdash; Amsterdam Datapunt API Documentatie{% endblock %}</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'rest_framework/css/bootstrap.min.css' %}"/>
+    <link rel="stylesheet" type="text/css" href="{% static 'rest_framework/css/bootstrap-tweaks.css' %}"/>
+    <link rel="stylesheet" type="text/css" href="{% static 'rest_framework/css/default.css' %}"/>
+    <link rel="stylesheet" type="text/css" href="{% static 'dso_api/dynamic_api/css/browsable_api.css' %}"/>
+    <link rel="stylesheet" type="text/css" href="{% static 'dso_api/dynamic_api/css/docs.css' %}"/>
+    <link rel="stylesheet" href="https://static.amsterdam.nl/fonts/fonts.css">
+    {% block extrahead %}{% endblock %}
+</head>
+<body>
+<div class="wrapper">
+    {# this layout emulates the rest_framework/base.html structure to reuse the CSS #}
+    <div class="navbar navbar-static-top" role="navigation">
+        <div class="container"><span>
+        {% include "dso_api/dynamic_api/_branding.html" %}
+        </span></div>
+    </div>
+
+    <div class="container">
+          <ul class="breadcrumb">
+            <li><a href="/v1/">DSO-API Datasets</a></li>
+            {% block breadcrumb %}{% endblock %}
+          </ul>
+
+        <div id="content" role="main" aria-label="{% trans "content" %}">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+</div>
+</body>
+</html>

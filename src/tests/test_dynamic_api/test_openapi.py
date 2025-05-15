@@ -26,7 +26,7 @@ def test_get_patterns(afval_dataset, fietspaaltjes_dataset, filled_router):
 @pytest.mark.django_db
 def test_openapi_frontend(api_client, afval_dataset, filled_router):
     """Prove that the OpenAPI page can be rendered."""
-    url = reverse("dynamic_api:openapi-afvalwegingen")
+    url = reverse("dynamic_api:openapi", kwargs={"dataset_name": "afvalwegingen"})
     assert url == "/v1/afvalwegingen"
 
     response = api_client.get(url, HTTP_ACCEPT="text/html")
@@ -54,7 +54,7 @@ def test_openapi_swagger_disable(
 ):
     """Prove that the OpenAPI page can be rendered."""
     with pytest.raises(NoReverseMatch):
-        reverse("dynamic_api:openapi-afvalwegingen")
+        reverse("dynamic_api:openapi", kwargs={"dataset_name": "afvalwegingen"})
 
     response = api_client.get("/v1/afvalwegingen/", HTTP_ACCEPT="text/html")
     assert response.status_code == 404
@@ -66,7 +66,7 @@ def test_openapi_json(api_client, afval_dataset, fietspaaltjes_dataset, filled_r
     caplog.set_level(logging.WARNING)
 
     # Prove the that OpenAPI view can be found at the endpoint
-    url = reverse("dynamic_api:openapi-afvalwegingen")
+    url = reverse("dynamic_api:openapi", kwargs={"dataset_name": "afvalwegingen"})
     assert url == "/v1/afvalwegingen"
 
     response = api_client.get(url)
@@ -268,7 +268,7 @@ def test_openapi_parkeren_json(api_client, parkeervakken_dataset, filled_router,
     """Prove that the OpenAPI page can be rendered."""
     caplog.set_level(logging.WARNING)
     # Prove the that OpenAPI view can be found at the endpoint
-    url = reverse("dynamic_api:openapi-parkeervakken")
+    url = reverse("dynamic_api:openapi", kwargs={"dataset_name": "parkeervakken"})
     assert url == "/v1/parkeervakken"
 
     response = api_client.get(url)

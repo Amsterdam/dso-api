@@ -1,0 +1,96 @@
+{% extends "dso_api/dynamic_api/docs/base.html" %}{% load i18n static %}
+
+{% block title %}Overzicht{% endblock %}
+
+{% block breadcrumb %}
+    <li class="active"><a href="/v1/docs/">Documentatie</a></li>
+{% endblock %}
+
+{% block content %}
+{% include "dso_api/dynamic_api/_apikey_banner.html" %}
+
+<h1>Amsterdam DataPunt API Documentatie</h1>
+<p class="note">
+  Deze documentatie richt zich alleen op de API's op het <code>/v1/</code> endpoint
+    in het dataplatform van de Gemeente Amsterdam.
+  Er worden door andere partijen nog diverse API's aangeboden.
+  Deze vind je in de <a href="https://data.amsterdam.nl/catalogus/?filters=distributionType%3Bapi">dataset catalogus</a>.
+</p>
+
+<p>
+  In deze pagina's geven we uitleg hoe de API diensten van Datapunt afgenomen worden.
+</p>
+<p>
+  Om zoveel mogelijk afnemers te kunnen bedienen, ondersteunen we diverse koppelingen. Bijvoorbeeld:
+</p>
+<ul>
+  <li><a href="generic/rest/index.html">REST-API's</a> voor backend applicaties, JavaScript en mobiele-appontwikkelaars.</li>
+  <li><a href="generic/gis/index.html">WFS/MVT kaartlagen</a> voor GIS-professionals.</li>
+  <li>CSV exports.</li>
+  <li>GeoJSON exports.</li>
+  <li>Bulk exports in ZIP-formaat per dataset.</li>
+</ul>
+
+<h2>Algemene uitleg</h2>
+<p>REST API's</p>
+<ul>
+  <li><a href="generic/rest/index.html">Algemene uitleg</a></li>
+  <li><a href="generic/rest/pagination.html">Paginering</a></li>
+  <li><a href="generic/rest/filtering.html">Filtering</a></li>
+  <li><a href="generic/rest/fields.html">Minder velden ontvangen</a></li>
+  <li><a href="generic/rest/sort.html">Sorteren van resultaten</a></li>
+  <li><a href="generic/rest/embeds.html">Relaties direct insluiten</a></li>
+  <li><a href="generic/rest/formats.html">Exportformaat opgeven</a></li>
+  <li><a href="generic/rest/projections.html">Geometrie projecties</a></li>
+  <li><a href="generic/rest/authorization.html">Autorisaties</a></li>
+  <li><a href="generic/rest/temporal.html">Temporele datasets</a></li>
+</ul>
+
+<p>Geo API's</p>
+<ul>
+  <li><a href="generic/gis/qgis.html">Werken met QGIS</a></li>
+  <li><a href="generic/gis/manual.html">WFS handmatig koppelen</a></li>
+  <li><a href="generic/gis/wfs_technical.html">Technische achtergrond</a></li>
+</ul>
+
+<h2>Standarisatie</h2>
+<p>
+  De gemeente Amsterdam biedt haar datasets onder andere aan via een REST API die voldoet aan de
+  <a href="https://forumstandaardisatie.nl/open-standaarden/rest-api-design-rules">NL API REST API Design Rules</a>.
+  Daarnaast is ook gekozen de strictere interpretatie van de
+  <a href="https://iplo.nl/digitaal-stelsel/aansluiten/standaarden/api-en-uri-strategie">DSO API Strategie 2.0</a>
+  te volgen, aangezien het de intentie van de DSO API Strategie is om een interoperabel
+  koppelvlak voor data-uitwisseling te ontwikkelen dat overeenkomt met de behoeftes
+  van de Gemeente Amsterdam.
+</p>
+
+
+<h2><a id="overzicht-datasets">Naslagwerk datasets</a></h2>
+
+<form action="search.html" class="form-inline" style="margin-bottom: 2rem">
+  <input name="q" class="form-control" placeholder="Vul je zoekterm in..."><button class="btn btn-default" type="search">Zoek</button>
+</form>
+
+<p>De onderstaande API's zijn beschikbaar op het <code>/v1/</code> endpoint.</p>
+{% for ds in datasets %}
+    <h3 href="{{ ds.docs_url }}" title="{{ ds.id }}">{{ ds.title|title }}</h3>
+    {{ ds.description|truncatewords:50|linebreaks }}
+
+    <dl class="row">
+      <dt class="col-xs-1">Endpoints:</dt>
+      <dd>
+          <a href="/v1/{{ ds.path }}">REST API</a>,
+          {% if ds.has_geometry_fields %}
+            <a href="{% url 'dynamic_api:wfs' dataset_name=ds.id %}">WFS</a>,
+            <a href="{% url 'dynamic_api:mvt' dataset_name=ds.id %}">MVT</a>,
+          {% endif %}
+          <a href="{{ ds.docs_url }}">Documentatie</a>
+      </dd>
+      <dt class="col-xs-1">Tabellen:</dt><dd>
+        {% for table in ds.tables %}
+          <a href="{{ ds.docs_url }}#{{ table.id }}" title="{{ table.title|default:'' }}">{{ table.id }}</a>{% if not forloop.last %},{% endif %}
+        {% endfor %}
+      </dd>
+    </dl>
+{% endfor %}
+{% endblock %}

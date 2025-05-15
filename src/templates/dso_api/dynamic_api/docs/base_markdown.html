@@ -1,0 +1,18 @@
+{% extends "dso_api/dynamic_api/docs/base.html" %}{% load i18n static %}
+
+{% block title %}{{ markdown_title|default:topic }}{% endblock %}
+
+{% block breadcrumb %}
+    <li><a href="/v1/docs/">Documentatie</a></li>
+    {% if topic == 'index' %}
+        <li class="active"><a href="/v1/docs/generic/{{ category }}/index.html">{{ category_title }}</a></li>
+    {% else %}
+        <li><a href="/v1/docs/generic/{{ category }}/index.html">{{ category_title }}</a></li>
+        <li class="active"><a href=".">{{ markdown_title }}</a></li>
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+{% include "dso_api/dynamic_api/_apikey_banner.html" %}
+{{ markdown_content }}
+{% endblock %}

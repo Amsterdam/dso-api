@@ -3,11 +3,12 @@ from importlib import import_module, reload
 
 from django.conf import settings
 from django.urls import clear_url_caches, get_urlconf, include, path, re_path
+from django.views.generic import RedirectView
 
 from . import views
 from .openapi import CombinedSchemaView
 from .routers import DynamicRouter
-from .views.doc import DocsOverview, GenericDocs, search, search_index
+from .views.doc import DocsIndexView, GenericDocs, search, search_index
 
 
 def get_patterns(router_urls):
@@ -15,18 +16,25 @@ def get_patterns(router_urls):
     return [
         # Doc endpoints
         path(
-            "docs/generic/<slug:category>.html",
-            GenericDocs.as_view(),
-            name="docs-generic",
+            # No longer support the old generic/rest.html but redirect to generic/rest/index.html.
+            # This fixes relative links and maintains a canonical path.
+            "/docs/generic/<slug:category>.html",
+            RedirectView.as_view(pattern_name="dynamic_api:docs-generic", permanent=True),
+            kwargs={"topic": "index"},
         ),
         path(
-            "docs/generic/<slug:category>/<slug:topic>.html",
+            "/docs/generic/<slug:category>/",
+            RedirectView.as_view(pattern_name="dynamic_api:docs-generic", permanent=True),
+            kwargs={"topic": "index"},
+        ),
+        path(
+            "/docs/generic/<slug:category>/<slug:topic>.html",
             GenericDocs.as_view(),
             name="docs-generic",
         ),
-        path("docs/index.html", DocsOverview.as_view(), name="docs-index"),
-        path("docs/search.html", search),
-        path("docs/searchindex.json", search_index),
+        path("/docs/index.html", DocsIndexView.as_view(), name="docs-index"),
+        path("/docs/search.html", search),
+        path("/docs/searchindex.json", search_index),
         re_path(r"/mvt/?$", views.DatasetMVTIndexView.as_view(), name="mvt-index"),
         re_path(r"/wfs/?$", views.DatasetWFSIndexView.as_view(), name="wfs-index"),
         path("", include(router_urls), name="api-root"),

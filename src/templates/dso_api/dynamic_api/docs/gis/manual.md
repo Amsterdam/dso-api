@@ -28,20 +28,14 @@ Bijvoorbeeld:
   - [...&TYPENAMES=wijken&OUTPUTFORMAT=geojson](https://api.data.amsterdam.nl/v1/wfs/gebieden/?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=wijken&COUNT=10&OUTPUTFORMAT=geojson)
   - [...&TYPENAMES=wijken&OUTPUTFORMAT=csv](https://api.data.amsterdam.nl/v1/wfs/gebieden/?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=wijken&COUNT=10&OUTPUTFORMAT=csv)
 
-<div class="tip">
-
-<div class="title">
-
-Tip
-
-</div>
+<aside class="tip">
+<h3 class="title">Tip</h3>
 
 In de bovenstaande links is een `COUNT=` parameter opgenomen, die
 paginering activeert. Door deze parameter weg te laten worden *alle
 objecten* in een enkele request opgehaald. De server kan voor de meeste
 datasets dit met een goede performance leveren.
-
-</div>
+</aside>
 
 ## Relaties bij exportformats
 
@@ -56,14 +50,12 @@ Bijvoorbeeld:
   - [?embed=ligt\_in\_stadsdeel&...&TYPENAMES=wijken&OUTPUTFORMAT=csv](https://api.data.amsterdam.nl/v1/wfs/gebieden/?embed=ligt_in_stadsdeel&SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=wijken&COUNT=10&OUTPUTFORMAT=csv)
   - [?expand=ligt\_in\_stadsdeel&...&TYPENAMES=wijken&OUTPUTFORMAT=csv](https://api.data.amsterdam.nl/v1/wfs/gebieden/?expand=ligt_in_stadsdeel&SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=wijken&COUNT=10&OUTPUTFORMAT=csv)
 
-<div class="admonition">
-
-Sommige formats hebben beperkingen.
+<aside class="admonition">
+<h3 class="title">Sommige formats hebben beperkingen.</h3>
 
 De CSV-export kan alleen complexe relaties verwerken als deze ook
 platgeslagen kunnen worden. Dit is een beperking van het format zelf.
-
-</div>
+</aside>
 
 ## Geometrie projectie
 
@@ -160,33 +152,22 @@ tags worden allemaal ondersteund:
 | `<Not>`                            | `NOT {a}`                 | Negatie van het geneste element.                                                                  |
 | `<ResourceId>`                     | `table.id == {value}`     | Zoekt slechts een enkel element op "typenaam.identifier". Meerdere combineren tot een `IN` query. |
 
-<div class="tip">
-
-<div class="title">
-
-Tip
-
-</div>
+<aside class="tip">
+<h4 class="title">Tip</h4>
 
 Bij de operator `<BBOX>` mag het geometrieveld weggelaten worden. Het
 standaardgeometrieveld wordt dan gebruikt (doorgaans het eerste veld).
 
-</div>
+</aside>
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+<aside class="note">
+<h4 class="title">Note</h4>
 
 Hoewel een aantal geometrie-operatoren dubbelop lijken voor vlakken
 (zoals `<Intersects>`, `<Crosses>` en `<Overlaps>`), worden de
 onderlinge verschillen met name zichtbaar bij het vergelijken van punten
 met vlakken.
-
-</div>
+</aside>
 
 Als waarde mogen diverse expressies gebruikt worden:
 

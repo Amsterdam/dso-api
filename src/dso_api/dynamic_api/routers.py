@@ -33,6 +33,7 @@ from django.core import checks
 from django.core.exceptions import ImproperlyConfigured
 from django.db import connection
 from django.urls import NoReverseMatch, URLPattern, path, reverse
+from django.views.generic import RedirectView
 from rest_framework import routers
 from schematools.contrib.django.factories import remove_dynamic_models
 from schematools.contrib.django.models import Dataset
@@ -49,7 +50,6 @@ from .views import (
     DatasetMVTSingleView,
     DatasetMVTView,
     DatasetTileJSONView,
-    DatasetWFSDocView,
     DatasetWFSView,
     viewset_factory,
 )
@@ -66,7 +66,8 @@ class DynamicAPIIndexView(APIIndexView):
 
     name = "DSO-API Datasets"  # for browsable API.
     description = (
-        "To use the DSO-API, see the documentation at <https://api.data.amsterdam.nl/v1/docs/>. "
+        "In de DSO-API worden alle datasets van de Gemeente Amsterdam beschikbaar gesteld.\n"
+        "Algemene uitleg vind je op [https://api.data.amsterdam.nl/v1/docs/](/v1/docs/)."
     )
     api_type = "rest_json"
     path = None
@@ -82,7 +83,7 @@ class DynamicAPIIndexView(APIIndexView):
         if not ds.enable_db:
             return []
         try:
-            api_url = reverse(f"dynamic_api:openapi-{dataset_id}")
+            api_url = reverse("dynamic_api:openapi", kwargs={"dataset_name": dataset_id})
             return [
                 {
                     "name": "production",
@@ -101,7 +102,7 @@ class DynamicAPIIndexView(APIIndexView):
             # that are directly backed by a local database.
             ds_id = ds.schema.id
             wfs_url = reverse("dynamic_api:wfs", kwargs={"dataset_name": ds_id})
-            mvt_url = reverse("dynamic_api:mvt-single-dataset", kwargs={"dataset_name": ds_id})
+            mvt_url = reverse("dynamic_api:mvt", kwargs={"dataset_name": ds_id})
             return [
                 {"type": "WFS", "url": base + wfs_url},
                 {"type": "MVT", "url": base + mvt_url},
@@ -337,21 +338,25 @@ class DynamicRouter(routers.DefaultRouter):
 
     def _build_doc_views(self, datasets: Iterable[Dataset]) -> Iterator[URLPattern]:
         for dataset in datasets:
+            dataset_id = dataset.schema.id  # not dataset.name which is mangled.
             yield path(
                 f"/docs/datasets/{dataset.path}.html",
                 DatasetDocView.as_view(),
-                name=f"doc-{dataset.schema.id}",
-                kwargs={"dataset_name": dataset.schema.id},
+                name="docs-dataset",
+                kwargs={"dataset_name": dataset_id},
             )
 
             if not dataset.has_geometry_fields:
                 continue
 
+            # The old WFS-documentation pages (``/v1/docs/wfs-datasets/...``) have been merged with
+            # the index page that django-gisserver already provides.
+            # It has a more accurate overview, as that documentation is generated
+            # from the FeatureType definition, and not re-generated from Amsterdam Schema.
             yield path(
                 f"/docs/wfs-datasets/{dataset.path}.html",
-                DatasetWFSDocView.as_view(),
-                name=f"doc-wfs-{dataset.schema.id}",
-                kwargs={"dataset_name": dataset.schema.id},
+                RedirectView.as_view(pattern_name="wfs"),
+                kwargs={"dataset_name": dataset.id},
             )
 
     def _build_openapi_views(self, datasets: Iterable[Dataset]) -> list[URLPattern]:
@@ -363,28 +368,32 @@ class DynamicRouter(routers.DefaultRouter):
                 path(
                     f"/{dataset.path}",
                     get_openapi_view(dataset),
-                    name=f"openapi-{dataset_id}",
+                    name="openapi",
+                    kwargs={"dataset_name": dataset_id},
                 )
             )
             results.append(
                 path(
                     f"/{dataset.path}/",
                     get_openapi_view(dataset),
-                    name=f"openapi-{dataset_id}-slash",
+                    name="openapi-slash",
+                    kwargs={"dataset_name": dataset_id},
                 )
             )
             results.append(
                 path(
-                    "/" + dataset.path + "/openapi.yaml",
+                    f"/{dataset.path}/openapi.yaml",
                     get_openapi_view(dataset, response_format="yaml"),
-                    name=f"openapi-yaml-{dataset_id}",
+                    name="openapi-yaml",
+                    kwargs={"dataset_name": dataset_id},
                 )
             )
             results.append(
                 path(
-                    "/" + dataset.path + "/openapi.json",
+                    f"/{dataset.path}/openapi.json",
                     get_openapi_view(dataset, response_format="json"),
-                    name=f"openapi-json-{dataset_id}",
+                    name="openapi-json",
+                    kwargs={"dataset_name": dataset_id},
                 )
             )
         return results
@@ -396,23 +405,23 @@ class DynamicRouter(routers.DefaultRouter):
             dataset_id = dataset.schema.id  # not dataset.name which is mangled.
             results.append(
                 path(
-                    "/mvt/" + dataset.path + "/",
+                    f"/mvt/{dataset.path}/",
                     DatasetMVTSingleView.as_view(),
-                    name="mvt-single-dataset-slash",
+                    name="mvt-slash",
                     kwargs={"dataset_name": dataset_id},
                 )
             ),
             results.append(
                 path(
-                    "/mvt/" + dataset.path,
+                    f"/mvt/{dataset.path}",
                     DatasetMVTSingleView.as_view(),
-                    name="mvt-single-dataset",
+                    name="mvt",
                     kwargs={"dataset_name": dataset_id},
                 )
             )
             results.append(
                 path(
-                    "/mvt/" + dataset.path + "/tilejson.json",
+                    f"/mvt/{dataset.path}/tilejson.json",
                     DatasetTileJSONView.as_view(),
                     name="mvt-tilejson",
                     kwargs={"dataset_name": dataset_id},
@@ -420,7 +429,7 @@ class DynamicRouter(routers.DefaultRouter):
             ),
             results.append(
                 path(
-                    "/mvt/" + dataset.path + "/<table_name>/",
+                    f"/mvt/{dataset.path}/<table_name>/",
                     DatasetTileJSONView.as_view(),
                     name="mvt-tilejson-table-slash",
                     kwargs={"dataset_name": dataset_id},
@@ -428,7 +437,7 @@ class DynamicRouter(routers.DefaultRouter):
             ),
             results.append(
                 path(
-                    "/mvt/" + dataset.path + "/<table_name>",
+                    f"/mvt/{dataset.path}/<table_name>",
                     DatasetTileJSONView.as_view(),
                     name="mvt-tilejson-table",
                     kwargs={"dataset_name": dataset_id},
@@ -436,7 +445,7 @@ class DynamicRouter(routers.DefaultRouter):
             ),
             results.append(
                 path(
-                    "/mvt/" + dataset.path + "/<table_name>/<int:z>/<int:x>/<int:y>.pbf",
+                    f"/mvt/{dataset.path}/<table_name>/<int:z>/<int:x>/<int:y>.pbf",
                     DatasetMVTView.as_view(),
                     name="mvt-pbf",
                     kwargs={"dataset_name": dataset_id},
@@ -451,7 +460,7 @@ class DynamicRouter(routers.DefaultRouter):
             dataset_id = dataset.schema.id  # not dataset.name which is mangled.
             results.append(
                 path(
-                    "/wfs/" + dataset.path + "/",
+                    f"/wfs/{dataset.path}/",
                     DatasetWFSView.as_view(),
                     name="wfs-slash",
                     kwargs={"dataset_name": dataset_id},
@@ -459,7 +468,7 @@ class DynamicRouter(routers.DefaultRouter):
             ),
             results.append(
                 path(
-                    "/wfs/" + dataset.path,
+                    f"/wfs/{dataset.path}",
                     DatasetWFSView.as_view(),
                     name="wfs",
                     kwargs={"dataset_name": dataset_id},
@@ -489,14 +498,14 @@ class DynamicRouter(routers.DefaultRouter):
             name = p.split("/")[-1].capitalize() + " Datasets"
             results.append(
                 path(
-                    "/" + p + "/",
+                    f"/{p}/",
                     DynamicAPIIndexView.as_view(path=p, name=name),
                     name=f"{p}-index-slash",
                 )
             )
             results.append(
                 path(
-                    "/" + p,
+                    f"/{p}",
                     DynamicAPIIndexView.as_view(path=p, name=name),
                     name=f"{p}-index",
                 )

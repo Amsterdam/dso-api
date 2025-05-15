@@ -1,0 +1,17 @@
+{% load dso_api_tags %}
+{% if schema.description %}{{ schema.description|linebreaks }}{% endif %}
+
+  <dl class="row">
+    <dt class="col-xs-2">ID:</dt><dd>{{ schema.id }}</dd>
+    <dt class="col-xs-2">Versie:</dt><dd>{{ schema.version }}</dd>
+    <dt class="col-xs-2">Autorisatie:</dt><dd>{% print_scopes schema %}</dd>
+    <dt class="col-xs-2">Licentie:</dt><dd>{{ schema.license|default:'-' }}</dd>
+    <dt class="col-xs-2">Eigenaar:</dt><dd>{{ schema.owner|default:'-' }}</dd>
+    <dt class="col-xs-2">Uitgever:</dt><dd>{{ schema.publisher.name|default:"Cluster Digitalisering, Innovatie en Informatie (DII)" }}</dd>
+    <dt class="col-xs-2">Productie:</dt><dd>{{ schema.creator|default:'-' }}</dd>
+    <dt class="col-xs-2">Bronhouder:</dt><dd>{{ schema.authorizationGrantor|urlize|default:'-' }}</dd>
+  </dl>
+
+  {% if dataset_has_auth %}
+    <p>Toegang kan worden aangevraagd bij: {{ schema.authorizationGrantor|urlize|default:'-' }}</p>
+  {% endif %}

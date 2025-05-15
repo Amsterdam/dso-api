@@ -17,13 +17,13 @@ var FORMATTER = (rawJson) => {
       datasetEl.innerHTML = `
         <h3 class='dataset-name' style="text-transform: capitalize;">${dataset.service_name}</h3>
         <p class='dataset-description' style="width:80%;">${dataset.description}</p>
-        <p class='dataset-api-authentication'><b>Autorisatie</b>:${dataset.api_authentication}</p>
+        <p class='dataset-api-authentication'><b>Autorisatie</b>: ${dataset.api_authentication}</p>
 
       `
 
       let urls = [
-        {"type": "api", "url": dataset.environments[0].api_url},
-        {"type": "documentation", "url": dataset.environments[0].documentation_url}
+        {"type": "API", "url": dataset.environments[0].api_url},
+        {"type": "Documentation", "url": dataset.environments[0].documentation_url}
       ]
       if(dataset.related_apis) {
         urls = urls.concat(dataset.related_apis);
