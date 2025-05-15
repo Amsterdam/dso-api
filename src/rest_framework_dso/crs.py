@@ -14,7 +14,6 @@ __all__ = [
     "WGS84",
     "RD_NEW",
     "DEFAULT_CRS",
-    "OTHER_CRS",
     "ALL_CRS",
 ]
 
@@ -32,8 +31,5 @@ ETRS89 = CRS.from_string("urn:ogc:def:crs:EPSG::4258")
 #: The default suggested CRS (e.g for use in WFS)
 DEFAULT_CRS = RD_NEW
 
-#: Other suggested CRS's (e.g for use in WFS)
-OTHER_CRS = [WGS84, WEB_MERCATOR, ETRS89]
-
 #: All coordinate reference systems exposed by this file.
-ALL_CRS = frozenset([DEFAULT_CRS] + OTHER_CRS)
+ALL_CRS = [DEFAULT_CRS, WGS84, WEB_MERCATOR, ETRS89]
