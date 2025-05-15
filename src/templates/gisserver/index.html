@@ -1,17 +1,81 @@
-{% extends "gisserver/index.html" %}
+{% extends "gisserver/index.html" %}{% load i18n dso_api_tags %}
+{% comment %}
+    This overrides and extends the default gisserver/index.html template,
+    to provide additional documentation about expanding/embedding relations.
+{% endcomment %}
+
+{% block breadcrumb %}
+    <li><a href="/v1/wfs/">WFS Endpoints</a></li>
+    {% if has_custom_schema %}
+        <li><a href=".">{{ service_description.title }}</a></li>
+        <li class="active"><a href="">met expand/embed</a></li>
+    {% else %}
+        <li class="active"><a href=".">{{ service_description.title }}</a></li>
+    {% endif %}
+{% endblock %}
 
 {% block header %}
-  {{ block.super }}
+  <h1>{{ service_description.title }} {{ accept_operations|dictsort:0|join:"/" }}</h1>
+  {# some of this metadata is also exported in the 'service_description' that GetCapabilities also uses. #}
+  {% include "dso_api/dynamic_api/_dataset_metadata.html" %}
 
-  {% if expandable_fields %}
-    <p>Possible values for <code>?embed=...</code> or <code>?expand=...</code>:</p>
-    <ul>
-      {% for name in expandable_fields %}<li><code>{{ name }}</code></li>{% endfor %}
-    </ul>
+  <h2>Deze WFS gebruiken</h2>
+  <p>Voeg de volgende URL aan je GIS applicatie toe:</p>
+  <blockquote><samp>{{ connect_url }}</samp></blockquote>
+
+  <p>Voor de gebruikshandleiding, zie <a href="/v1/docs/generic/gis.html">Datasets laden in GIS-pakketten</a>.</p>
+
+  {% if embeddable_fields %}
+    <p>
+        <strong>Tip:</strong>
+        Je kan met <code>?embed=...</code> or <code>?expand=...</code> het WFS schema aanpassen,
+        zodat <a href="#expandable-fields">gerelateerde data bijgevoegd wordt</a>.
+    </p>
   {% endif %}
 
-  {% if expandable_fields|length > 1 %}
-  <p>Add multiple values by separating them with a comma, e.g:</p>
-  <blockquote><code>{{ connect_url }}?embed={{ expandable_fields.0 }},{{ expandable_fields.1 }}</code></blockquote>
+  <p>
+    Deze dataset is daarnaast ook beschikbaar als:
+    <a href="{% url 'dynamic_api:mvt' dataset_name=schema.id %}">MVT kaartlaag</a>
+      en <a href="{% url 'dynamic_api:docs-dataset' dataset_name=schema.id %}">Rest API</a>.
+  </p>
+{% endblock %}
+
+{% block content %}
+{{ block.super }}
+
+  <hr style="margin: 6rem 0 4rem 0;" />
+  {% if embeddable_fields %}
+    <h2><a id="expandable-fields"></a>Aanvullende data met embedding</h2>
+    <p>
+        Deze WFS ondersteund dynamisch invoegen van gerelateerde data.
+        Dat gebeurt door <code>?embed=...</code> of <code>?expand=...</code> aan de URL mee te geven.
+        Mogelijke waarden:
+    </p>
+
+    <table class="table table-condensed">
+      <thead><tr><th>Relatie</th><th>Tabel</th><th>Omschrijving</th></tr></thead>
+      <tbody>
+      {% for expand in embeddable_fields %}
+        <tr>
+            <td><code><a href="?expand={{ expand.name }}">{{ expand.name }}</a></code></td>
+          <td><a href="{{ expand.target_doc }}"><code>{{ expand.relation_id }}</code></a></td>
+          <td>{{ expand.description|default:"" }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
   {% endif %}
+
+  {% if embeddable_fields|length > 1 %}
+  <p>Je kan meerdere waarden met een comma scheiden, bijvoorbeeld:</p>
+  <p class="connect-url"><code>{{ connect_url }}{% if '?' in connect_url %}&amp;{% else %}?{% endif %}embed={{ embeddable_fields.0.name }},{{ embeddable_fields.1.name }}</code></p>
+  {% endif %}
+
+
+  <h2>Andere ontsluitingsvormen</h2>
+  <p>Deze dataset is ook beschikbaar als:</p>
+  <ul>
+    <li><a href="{% url 'dynamic_api:openapi' dataset_name=schema.id %}">Rest API</a></li>
+    <li><a href="{% url 'dynamic_api:mvt' dataset_name=schema.id %}">MVT kaartlaag / TileJSON</a></li>
+  </ul>
 {% endblock %}

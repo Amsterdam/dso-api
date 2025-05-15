@@ -1,8 +1,22 @@
 /* Override bootstrap 3 defaults */
-body { line-height: 1.6; }
 
 a:not([href]) { color: inherit; }
 a:not([href]):hover { color: inherit; text-decoration: none; }
+
+dl.row dt,
+dl.row dd {
+    margin-bottom: 0.2rem;
+}
+
+dt.col-xs-2 { width: 13%; } /* custom width */
+dt.col-xs-1 + dd { margin-left: 8.33%; max-width: 70%; }
+dt.col-xs-2 + dd { margin-left: 13%; max-width: 70%; }
+dl.row dd::after {
+   /* clearfix */
+  content: "";
+  clear: both;
+  display: table;
+}
 
 /* Inspired by readthedocs style */
 .tip,

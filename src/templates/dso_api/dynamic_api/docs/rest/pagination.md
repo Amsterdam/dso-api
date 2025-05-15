@@ -31,18 +31,12 @@ In de response zijn de volgende elementen te vinden:
 }
 ```
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+<aside class="note">
+<h4 class="title">Note</h4>
 
 In plaats van `_pageSize` wordt ook `page_size` ondersteund, maar
 `_pageSize` heeft de voorkeur.
-
-</div>
+</aside>
 
 Met de velden `_links.next` en `_links.previous` zijn respectievelijk de
 volgende en vorige pagina op te vragen. Meer algemeen kan pagina

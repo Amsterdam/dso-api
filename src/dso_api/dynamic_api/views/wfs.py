@@ -26,6 +26,7 @@ The models of that dataset become WFS feature types.
 
 from __future__ import annotations
 
+import logging
 import re
 from collections import UserList
 
@@ -35,6 +36,7 @@ from django.core.exceptions import ImproperlyConfigured
 from django.db import models
 from django.http import Http404
 from django.urls import reverse
+from django.utils import translation
 from django.utils.functional import cached_property
 from gisserver.exceptions import InvalidParameterValue, PermissionDenied
 from gisserver.features import ComplexFeatureField, FeatureField, FeatureType, ServiceDescription
@@ -51,6 +53,7 @@ from rest_framework_dso import crs
 
 from .index import APIIndexView
 
+logger = logging.getLogger(__name__)
 RE_SIMPLE_NAME = re.compile(
     # Strip XML prefix and our custom -variant name.
     r"^(?P<ns>\{[^}]+})?(?P<name>[a-z0-9_]+)(?P<variant>-[a-z0-9_]+)?$",
@@ -98,11 +101,12 @@ class DatasetWFSIndexView(APIIndexView):
     This makes sure a request to ``/wfs/`` renders a reasonable index page.
     """
 
-    name = "DSO-API WFS Endpoints"  # for browsable API.
+    name = "WFS Endpoints"  # for browsable API.
     description = (
-        "To use the DSO-API, see the documentation at <https://api.data.amsterdam.nl/v1/docs/>. "
-        "For information on using WFS see WFS documentation at "
-        "<https://api.data.amsterdam.nl/v1/docs/generic/gis.html>"
+        "Alle WFS endpoints voor de gegevens in de DSO-API.\n\n"
+        "Voor het gebruik van WFS endpoints, zie: "
+        "[Datasets laden in GIS-pakketten](/v1/docs/generic/gis.html),"
+        " en de algemene [documentatie van de DSO-API](/v1/docs/)."
     )
     api_type = "WFS"
 
@@ -168,6 +172,9 @@ class DatasetWFSView(CheckModelPermissionsMixin, WFSView):
         except KeyError:
             raise Http404(f"Invalid dataset: {dataset_name}") from None
 
+        # Get Amsterdam Schema for our generated model
+        self.schema = next(iter(self.models.values())).table_schema().dataset
+
         # Allow to define the expand or embed fields on request.
         expand = request.GET.get("expand", "")
         self.expand_fields = set(expand.split(",")) if expand else set()
@@ -189,41 +196,75 @@ class DatasetWFSView(CheckModelPermissionsMixin, WFSView):
 
         self.check_model_permissions(accessed_models)
 
+    def render_index(self, service: str | None = None):
+        """End-user docs are in Dutch, make sure any template translations work."""
+        with translation.override("nl"):
+            return super().render_index(service)
+
     def get_index_context_data(self, **kwargs):
         """Context data for the HTML root page"""
-        expandable_fields = set()
+        embeddable_fields = self._get_embeddable_fields()
+        return {
+            **super().get_index_context_data(**kwargs),
+            # Similar context as to DatasetMVTSingleView
+            "schema": self.schema,
+            "schema_auth": self.schema.auth,
+            "dataset_has_auth": bool(self.schema.auth - {"OPENBAAR"}),
+            "has_custom_schema": self.expand_fields or self.embed_fields,
+            "embeddable_fields": embeddable_fields,
+        }
+
+    def _get_embeddable_fields(self) -> list[dict]:
+        """Describe the expandable fields (for the HTML documentation page)."""
+        seen = set()
+        expands = []
         for model in self.models.values():
             table_schema: DatasetTableSchema = model.table_schema()
-            if table_schema.is_through_table:
+            if table_schema.is_through_table or not table_schema.has_geometry_fields:
                 continue
 
-            fields = {
-                field.name
-                for field in model._meta.get_fields()
-                if isinstance(field, models.ForeignKey)
-            }
+            for field in model._meta.get_fields():
+                if field.name in seen or (table_schema.is_nested_table and field.name == "parent"):
+                    continue
 
-            if table_schema.is_nested_table and "parent" in fields:
-                fields.remove("parent")
+                if isinstance(field, models.ForeignKey):
+                    seen.add(field.name)
+                    field_schema = field.model.get_field_schema(field)
+                    to_table = field_schema.related_table
+                    wfs_doc = (
+                        reverse("dynamic_api:wfs", kwargs={"dataset_name": to_table.dataset.id})
+                        if to_table.dataset != table_schema.dataset
+                        else ""
+                    )
 
-            expandable_fields.update(fields)
+                    expands.append(
+                        {
+                            "name": field.name,
+                            "description": to_table.description,
+                            "relation_id": field_schema["relation"],
+                            "target_doc": f"{wfs_doc}#feature-{to_table.id}",
+                        }
+                    )
 
-        context = super().get_index_context_data(**kwargs)
-
-        context["expandable_fields"] = sorted(expandable_fields)
-        return context
+        return expands
 
     def get_service_description(self, service: str | None = None) -> ServiceDescription:
         some_model: DynamicModel = next(iter(self.models.values()))
         schema = some_model.get_dataset_schema()
 
+        try:
+            publisher = self.schema.publisher.get("name")
+        except NotImplementedError:
+            # For tests that use DatabaseSchemaLoader without inlining publishers
+            publisher = None
+
         return ServiceDescription(
             title=schema.title or self.kwargs["dataset_name"].title(),
             abstract=schema.description,
             keywords=["wfs", "amsterdam", "datapunt"],
-            provider_name="Gemeente Amsterdam",
+            provider_name=self.schema.get("owner", "Gemeente Amsterdam"),
             provider_site="https://data.amsterdam.nl/",
-            contact_person="Onderzoek, Informatie en Statistiek",
+            contact_person=publisher or "Cluster Digitalisering, Innovatie en Informatie (DII)",
         )
 
     def get_feature_types(self) -> list[FeatureType]:
@@ -232,8 +273,12 @@ class DatasetWFSView(CheckModelPermissionsMixin, WFSView):
         # For performance, only the feature types are generated that are accessed by this request
         for model in self._get_requested_models():
             geo_fields = self._get_geometry_fields(model)
+            if not geo_fields:
+                continue
+
             base_name = model._meta.model_name
             base_title = model._meta.verbose_name
+            table_schema = model.table_schema()
 
             # When there are multiple geometry fields for a model,
             # multiple features are generated so both can be displayed.
@@ -257,6 +302,7 @@ class DatasetWFSView(CheckModelPermissionsMixin, WFSView):
                     model.objects.all(),
                     name=name,
                     title=title,
+                    abstract=table_schema.description,
                     fields=fields,
                     display_field_name=model.get_display_field(),
                     geometry_field_name=geo_field.name,
@@ -277,7 +323,7 @@ class DatasetWFSView(CheckModelPermissionsMixin, WFSView):
         fields = []
         other_geo_fields = []
         is_index_view = self.is_index_request()
-        for model_field in model._meta.get_fields():
+        for model_field in model._meta.get_fields():  # type models.Field
             if not is_index_view and not self.request.user_scopes.has_field_access(
                 model.get_field_schema(model_field)
             ):
@@ -308,6 +354,8 @@ class DatasetWFSView(CheckModelPermissionsMixin, WFSView):
             elif model_field.is_relation:
                 # don't support other relations yet
                 # Note: this also needs updates in get_index_context_data()!
+                if not model_field.hidden and "_rev_" not in model_field.name:
+                    logger.debug("WFS ignores relational field %s", model_field.name)
                 continue
             else:
                 field_name = model_field.name

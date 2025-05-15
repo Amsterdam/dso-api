@@ -1,22 +1,18 @@
-# REST API gebruiken
+# REST API's
 
 Alle nieuwe DSO-gebaseerde API's zijn te vinden onder het
 [https://api.data.amsterdam.nl/v1/](https://api.data.amsterdam.nl/api/swagger/?url=/v1/)
-endpoint. De individuele datasets worden toegelicht op de `datasets
-</datasets/index>` pagina.
+endpoint. De individuele datasets worden toegelicht op
+de [datasets](/v1/docs/index.html#overzicht-datasets) pagina.
 
-<div class="tip">
+<aside class="tip">
+<h4 class="title">Tip</h4>
 
-<div class="title">
+Een overzicht van alle DataPunt API's is te vinden
+op: <a href="/">https://api.data.amsterdam.nl/</a>.
+</aside>
 
-Tip
-
-</div>
-
-Een overzicht van alle DataPunt API's is te vinden op:
-<https://api.data.amsterdam.nl/>.
-
-</div>
+## Beschikbare endpoints
 
 De datasets ondersteunen de volgende HTTP operaties:
 
@@ -36,18 +32,43 @@ Wanneer een pagina direct met de browser opgevraagd wordt dan worden de
 resultaten als een doorklikbare HTML pagina getoond. Bijvoorbeeld:
 <https://api.data.amsterdam.nl/v1/gebieden/buurten/>. Door de header
 `Accept: application/hal+json` te sturen wordt altijd een JSON response
-geforceerd. Dit kan ook met de query parameter `_format=json`
+geforceerd. Dit kan ook met de query parameter `?_format=json`
 
-**Functionaliteit**
+## Gebruik API Keys
+
+Je kunt een sleutel verkrijgen via het [online formulier](https://keys.api.data.amsterdam.nl/clients/v1/register/).
+Geef deze sleutel bij iedere http-aanvraag met de `X-Api-Key` header mee, bijvoorbeeld:
+
+    curl https://api.data.amsterdam.nl/v1/gebieden/wijken/ -H "X-Api-Key: very...long...token".
+
+Voor WFS/geo-tools die geen request headers ondersteunen is ook mogelijk om
+de queryparameter `?x-api-key=...` te gebruiken.
+
+Door de API key kunnen we contact houden met de gebruikers van onze API's.
+Zo kunnen we gebruikers informeren over updates, en inzicht krijgen in het gebruik van de API's.
+Voor data-eigenaren is dit waardevolle informatie.
+
+<aside class="note">
+  <h4 class="title">Note</h4>
+
+  NB: De API-sleutel wordt alleen gebruikt om het gebruik van onze API's te registreren.
+  Deze sleutel biedt geen <a href="authorization.html">authenticatie of autorisaties</a> voor de API's.
+</aside>
+
+
+## Functionaliteit
 
 De API's ondersteunen mogelijkheden tot:
 
-<div class="toctree" data-maxdepth="1">
-
-rest/pagination rest/filtering rest/fields rest/sort rest/embeds
-rest/formats rest/projections rest/authorization rest/temporal
-
-</div>
+* [Paginering](pagination.md)
+* [Filtering](filtering.md)
+* [Minder velden ontvangen](fields.md)
+* [Sorteren van resultaten](sort.md)
+* [Relaties direct insluiten](embeds.md)
+* [Exportformaat opgeven](formats.md)
+* [Geometrie projecties](projections.md)
+* [Autorisatie](authorization.md)
+* [Temporele Datasets](temporal.md)
 
 ## De DSO Standaard
 
@@ -60,14 +81,15 @@ tegen:
 
   - HAL-JSON links, zoals: `{"_links": {"self": {"href": ..., "title":
     ...}}}`
-  - Met `?_expandScope={veld1},{veld2} <rest/embeds>` worden relaties
+  - Met [?_expandScope={veld1},{veld2}](embeds.md) worden relaties
     getoond in de `_embedded` sectie.
-  - Met `?_expand=true <rest/embeds>` worden alle relaties uitgevouwen
+  - Met [?_expand=true](embeds.md) worden alle relaties uitgevouwen
     in de `_embedded` sectie.
-  - Met `?_fields=... <rest/fields>` kunnen een beperkte set van velden
+  - Met [?_fields=...](fields.md) kunnen een beperkte set van velden
     opgevraagd worden.
-  - `Sortering <rest/sort>` met `?_sort={veldnaam},-{desc veldnaam}`
-  - `Filtering <rest/filtering>` op velden via de query-string.
-  - `Tijdreizen <rest/temporal>` met de `?geldigOp=...` parameter.
-  - `Paginering <rest/pagination>` en `X-Pagination-*` headers.
+  - [Sortering](sort.md) met `?_sort={veldnaam},-{desc veldnaam}`
+  - [Filtering](filtering.md) op velden via de query-string.
+  - [Tijdreizen](temporal.md) met de `?geldigOp=...` parameter.
+  - [Paginering](pagination.md) en `X-Pagination-*` headers.
+  - [Geometrie projecties](projections.md) via de `Accept-Crs` header.
   - Responses geven het object terug, zonder envelope.

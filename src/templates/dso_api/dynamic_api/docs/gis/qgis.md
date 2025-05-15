@@ -1,5 +1,11 @@
 # Werken met QGIS
 
+<aside class="tip">
+<h4 class="title">Tip</h4>
+Een overzicht van alle WFS API's is te vinden
+op: <a href="/v1/wfs/">https://api.data.amsterdam.nl/v1/wfs/</a>.
+</aside>
+
 ## Eenmalige lokale setup
 
 Let op, een eenmalige setup van de qgis-auth.db in je locale profiel is
@@ -17,38 +23,32 @@ Gebruik zo'n URL in QGIS:
 <img alt="Voorbeeldafbeelding van QGIS" src="/v1/static/images/qgis-add-wfs.png" style="width: 670px; height: 791px;">
 
 In de bovenstaande afbeelding wordt QGIS gekoppeld met de BAG dataset:
-<https://api.data.amsterdam.nl/v1/wfs/bag/>
+[https://api.data.amsterdam.nl/v1/wfs/bag/](/v1/wfs/bag/)
 
-<div class="tip">
+<aside class="tip">
+<h4 class="title">Tip</h4>
 
-<div class="title">
-
-Tip
-
-</div>
-
-De parameters `?SERVICE=WFS&VERSION=2.0.0&REQUEST=..` worden door QGIS
+De parameters <code>?SERVICE=WFS&VERSION=2.0.0&REQUEST=..</code> worden door QGIS
 zelf achter de URL gezet. Het is niet nodig deze zelf toe te voegen.
+</aside>
 
-</div>
-
-<div class="tip">
-
-<div class="title">
-
-Tip
-
-</div>
+<aside class="tip">
+<h4 class="title">Tip</h4>
 
 De schuine streep aan het einde van de URL is belangrijk. QGIS werkt
 niet als deze ontbreekt. Dit is een beperking in QGIS.
-
-</div>
+</aside>
 
 ## Vector tiles (MVT)
 
-De volgende stappen moeten uitgevoerd worden om vector tiles in QGIS te
-laden:
+QGis heeft geen ingebouwde ondersteuning voor TileJSON.
+Deze is wel beschikbaar via de **MapTiler** plugin: https://plugins.qgis.org/plugins/tags/tilejson/.
+Vervolgens kan je de TileJSON inladen:
+
+  - `https://api.data.amsterdam.nl/v1/mvt/<dataset>/tilejson.json`.
+
+De standaard QGis functionaliteit vereist dat je handmatig
+een "X/Y/Z-tegel" of "Vectortegel" URL opgeeft:
 
   - In de *Browser* (linker tabblad), rechtermuisklik op *Vector Tiles*,
     dan *Nieuwe algemene verbinding* (*New Generic Connection*).
@@ -56,13 +56,10 @@ laden:
     `https://api.data.amsterdam.nl/v1/mvt/<dataset>/<tabel>/{z}/{x}/{y}.pbf`.
     Vervang `<dataset>` en `<tabel>` door de namen in kwestie, maar laat
     `{z}/{x}/{y}` staan, inclusief de accolades.
-  - *Min. zoomniveau* (*Min. Zoom Level*) staat standaard op 0. Zet dit
-    op 1.
+  - *Min. zoomniveau* (*Min. Zoom Level*) staat standaard op 0. Zet dit op 1.
 
 Een lijst van datasets die vector tiles ondersteunen is beschikbaar op:
-<https://api.data.amsterdam.nl/v1/mvt/>. Op
-<https://api.data.amsterdam.nl/v1/mvt/<dataset>/tilejson.json> vind je URLs
-voor alle tabellen met geo-velden.
+[https://api.data.amsterdam.nl/v1/mvt/](/v1/mvt/).
 
 ## Autorisatie
 
@@ -109,25 +106,21 @@ Als voorbeeld: de BAG feature type *buurt* een relatie met een
 GIS-pakket:
 
   - `https://api.data.amsterdam.nl/v1/wfs/bag/?embed=stadsdeel` levert
-    een [stadsdelen met platgeslagen
-    dot-notate](https://api.data.amsterdam.nl/v1/wfs/bag/?embed=stadsdeel&SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=buurt&COUNT=5).
+    een [stadsdelen met platgeslagen dot-notate](/v1/wfs/bag/?embed=stadsdeel&SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=buurt&COUNT=5).
   - `https://api.data.amsterdam.nl/v1/wfs/bag/?expand=stadsdeel` levert
-    een [stadsdelen als complex
-    feature](https://api.data.amsterdam.nl/v1/wfs/bag/?expand=stadsdeel&SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=buurt&COUNT=5).
+    een [stadsdelen als complex feature](/v1/wfs/bag/?expand=stadsdeel&SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=buurt&COUNT=5).
 
 Deze parameters kunnen gecombineerd worden met de `OUTPUTFORMAT`
 parameter, zodat het export formaat ook geneste relaties bevat.
 
-<div class="admonition">
-
-Embed of expand gebruiken?
+<aside class="admonition">
+<h4 class="title">Embed of expand gebruiken?</h4>
 
 QGIS 3 heeft geen ondersteuning voor complex features, en verwerkt deze
 als tekst. Gebruikt in QGIS daarom alleen de platgeslagen versie met
 `?embed={...}`. De `?expand={...}` versie is daarentegen ideaal voor
 GeoJSON exports, die wel goed kan omgaan met geneste structuren.
-
-</div>
+</aside>
 
 ## Datasets met meerdere geometrieën
 

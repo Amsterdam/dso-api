@@ -1,48 +1,59 @@
-<!doctype html>{% load static %}
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Amsterdam DataPunt API Documentatie</title>
-  <link rel="stylesheet" type="text/css" href="{% static 'rest_framework/css/bootstrap.min.css' %}"/>
-  <link rel="stylesheet" type="text/css" href="{% static 'rest_framework/css/bootstrap-tweaks.css' %}"/>
-  <link rel="stylesheet" type="text/css" href="{% static 'rest_framework/css/default.css' %}"/>
-  <link rel="stylesheet" type="text/css" href="{% static 'dso_api/dynamic_api/css/docs.css' %}"/>
-</head>
-<body>
-<div class="container">
+{% extends "dso_api/dynamic_api/docs/base.html" %}{% load i18n static %}
 
-<h2>Introductie API Keys</h2>
-<blockquote style="border-color: #ec0101">
-    <p>
-        Het Dataplatform van de gemeente Amsterdam gaat het gebruik van een identificatie key bij het aanroepen van haar API's
-        vanaf 1 februari 2024 verplicht stellen. Vanaf 1 februari 2024 kun je de API's van het Dataplatform niet meer zonder een
-        key gebruiken. Vraag tijdig een key aan via dit aanvraagformulier. Doe je dit niet, dan werkt je applicatie of website
-        vanaf 1 februari 2024 niet meer. Dit geldt voor alle API's die op deze pagina gedocumenteerd zijn.
-    </p>
-    <p>
-        Door de API key kunnen we contact houden met de gebruikers van onze API's. Zo kunnen we gebruikers informeren over
-        updates. Daarnaast krijgen we hiermee inzicht in het gebruik van de API's en in wie welke dataset via de API bevraagt. Ook voor
-        dataeigenaren is dit waardevolle informatie.
-    </p>
-    <p>
-        Meer info: <br>
-        <a href="https://keys.api.data.amsterdam.nl/clients/v1/register/">Pagina API key aanvragen</a> <br>
-        <a href="https://keys.api.data.amsterdam.nl/clients/v1/docs/">Technische documentatie</a> <br>
-        Vragen? Mail naar dataplatform@amsterdam.nl <br>
-    <p>
-</blockquote>
+{% block title %}Overzicht{% endblock %}
+
+{% block breadcrumb %}
+    <li class="active"><a href="/v1/docs/">Documentatie</a></li>
+{% endblock %}
+
+{% block content %}
+{% include "dso_api/dynamic_api/_apikey_banner.html" %}
 
 <h1>Amsterdam DataPunt API Documentatie</h1>
+<p class="note">
+  Deze documentatie richt zich alleen op de API's op het <code>/v1/</code> endpoint
+    in het dataplatform van de Gemeente Amsterdam.
+  Er worden door andere partijen nog diverse API's aangeboden.
+  Deze vind je in de <a href="https://data.amsterdam.nl/catalogus/?filters=distributionType%3Bapi">dataset catalogus</a>.
+</p>
 
 <p>
   In deze pagina's geven we uitleg hoe de API diensten van Datapunt afgenomen worden.
 </p>
-<p class="note">
-  Naast de API's van DataPunt worden door andere partijen nog diverse API's aangeboden.
-  Deze vind je in de <a href="https://data.amsterdam.nl/datasets/zoek/?filters=distributionType%3Bapi">datasetcatalogus</a>.
-  Deze documentatie richt zich op de API's van DataPunt, onderdeel van OIS (Onderzoek, Informatie en Statistiek)
-  van de Gemeente Amsterdam.
+<p>
+  Om zoveel mogelijk afnemers te kunnen bedienen, ondersteunen we diverse koppelingen. Bijvoorbeeld:
 </p>
+<ul>
+  <li><a href="generic/rest/index.html">REST-API's</a> voor backend applicaties, JavaScript en mobiele-appontwikkelaars.</li>
+  <li><a href="generic/gis/index.html">WFS/MVT kaartlagen</a> voor GIS-professionals.</li>
+  <li>CSV exports.</li>
+  <li>GeoJSON exports.</li>
+  <li>Bulk exports in ZIP-formaat per dataset.</li>
+</ul>
+
+<h2>Algemene uitleg</h2>
+<p>REST API's</p>
+<ul>
+  <li><a href="generic/rest/index.html">Algemene uitleg</a></li>
+  <li><a href="generic/rest/pagination.html">Paginering</a></li>
+  <li><a href="generic/rest/filtering.html">Filtering</a></li>
+  <li><a href="generic/rest/fields.html">Minder velden ontvangen</a></li>
+  <li><a href="generic/rest/sort.html">Sorteren van resultaten</a></li>
+  <li><a href="generic/rest/embeds.html">Relaties direct insluiten</a></li>
+  <li><a href="generic/rest/formats.html">Exportformaat opgeven</a></li>
+  <li><a href="generic/rest/projections.html">Geometrie projecties</a></li>
+  <li><a href="generic/rest/authorization.html">Autorisaties</a></li>
+  <li><a href="generic/rest/temporal.html">Temporele datasets</a></li>
+</ul>
+
+<p>Geo API's</p>
+<ul>
+  <li><a href="generic/gis/qgis.html">Werken met QGIS</a></li>
+  <li><a href="generic/gis/manual.html">WFS handmatig koppelen</a></li>
+  <li><a href="generic/gis/wfs_technical.html">Technische achtergrond</a></li>
+</ul>
+
+<h2>Standarisatie</h2>
 <p>
   De gemeente Amsterdam biedt haar datasets onder andere aan via een REST API die voldoet aan de
   <a href="https://forumstandaardisatie.nl/open-standaarden/rest-api-design-rules">NL API REST API Design Rules</a>.
@@ -52,60 +63,34 @@
   koppelvlak voor data-uitwisseling te ontwikkelen dat overeenkomt met de behoeftes
   van de Gemeente Amsterdam.
 </p>
-<p>
-  Om zoveel mogelijk afnemers te kunnen bedienen, ondersteunen we diverse koppelingen.
-  Zo zal een mobiele-appontwikkelaar eerder een <a href="generic/rest.html">REST-API</a> gebruiken,
-  en een GIS-professional de <a href="generic/gis.html">WFS/MVT-koppelingen</a>.
-  Tot slot worden er ook volledige CSV en GeoJSON exports ondersteund.
-</p>
 
 
+<h2><a id="overzicht-datasets">Naslagwerk datasets</a></h2>
 
-<h2>Zoeken</h2>
-<form action="search.html">
-  <input name="q"/>
+<form action="search.html" class="form-inline" style="margin-bottom: 2rem">
+  <input name="q" class="form-control" placeholder="Vul je zoekterm in..."><button class="btn btn-default" type="search">Zoek</button>
 </form>
 
-<h2>Algemene uitleg</h2>
-<ul>
-  <li>
-    <div><a href="generic/rest/index.html">REST API gebruiken</a></div>
-    <ul>
-      <li><a href="generic/rest/pagination.html">Paginering</a></li>
-      <li><a href="generic/rest/filtering.html">Filtering</a></li>
-      <li><a href="generic/rest/fields.html">Minder velden ontvangen</a></li>
-      <li><a href="generic/rest/sort.html">Sorteren van resultaten</a></li>
-      <li><a href="generic/rest/embeds.html">Relaties direct insluiten</a></li>
-      <li><a href="generic/rest/formats.html">Exportformaat opgeven</a></li>
-      <li><a href="generic/rest/projections.html">Geometrie projecties</a></li>
-      <li><a href="generic/rest/authorization.html">Autorisaties</a></li>
-      <li><a href="generic/rest/temporal.html">Temporele datasets</a></li>
-    </ul>
-  </li>
-  <li>
-    <div>Datasets laden in GIS-pakketten</div>
-    <ul>
-      <li><a href="generic/gis/qgis.html">Werken met QGIS</a></li>
-      <li><a href="generic/gis/manual.html">WFS handmatig koppelen</a></li>
-      <li><a href="generic/gis/wfs_technical.html">Technische achtergrond</a></li>
-    </ul>
-  </li>
-</ul>
+<p>De onderstaande API's zijn beschikbaar op het <code>/v1/</code> endpoint.</p>
+{% for ds in datasets %}
+    <h3 href="{{ ds.docs_url }}" title="{{ ds.id }}">{{ ds.title|title }}</h3>
+    {{ ds.description|truncatewords:50|linebreaks }}
 
-<h2>Naslagwerk datasets</h2>
-<ul>
-  {% for ds in datasets %}
-  <li>
-    <a href="{{ ds.uri }}" title="{{ ds.id }}">{{ ds.title|title }}</a>
-    <ul>
-    {% for table in ds.tables %}
-      <li><a href="{{ ds.uri }}#{{ table }}">{{ table.title }}</a></li>
-    {% endfor %}
-    </ul>
-  </li>
-  {% endfor %}
-</ul>
-
-</div>
-</body>
-</html>
+    <dl class="row">
+      <dt class="col-xs-1">Endpoints:</dt>
+      <dd>
+          <a href="/v1/{{ ds.path }}">REST API</a>,
+          {% if ds.has_geometry_fields %}
+            <a href="{% url 'dynamic_api:wfs' dataset_name=ds.id %}">WFS</a>,
+            <a href="{% url 'dynamic_api:mvt' dataset_name=ds.id %}">MVT</a>,
+          {% endif %}
+          <a href="{{ ds.docs_url }}">Documentatie</a>
+      </dd>
+      <dt class="col-xs-1">Tabellen:</dt><dd>
+        {% for table in ds.tables %}
+          <a href="{{ ds.docs_url }}#{{ table.id }}" title="{{ table.title|default:'' }}">{{ table.id }}</a>{% if not forloop.last %},{% endif %}
+        {% endfor %}
+      </dd>
+    </dl>
+{% endfor %}
+{% endblock %}

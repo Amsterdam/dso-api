@@ -1,0 +1,25 @@
+{% extends "gisserver/wfs/feature_type.html" %}{% load i18n gisserver_tags dso_api_tags %}
+{% comment %}
+    This extends original template from the django-gisserver app,
+    by having the same filename in a different "templates" folder.
+    The blocks are
+{% endcomment %}
+
+{% block metadata %}
+    {% with table=feature_type.model.table_schema %}
+        <dl class="row">
+            <dt class="col-xs-2">XML namespace:</dt><dd><code>{{ feature_type.xml_namespace }}</code></dd>
+            <dt class="col-xs-2">Typename:</dt><dd><abbr title="{{ feature_type.xml_name }}">{% feature_qname feature_type %}</abbr></dd>
+            <dt class="col-xs-2">Mogelijke CRS:</dt>
+            <dd>
+              {% if GISSERVER_SUPPORTED_CRS_ONLY %}
+                Alle CRS waarden worden ondersteund, de brongegevens gebruiken {{ feature_type.crs }}.
+              {% else %}
+                {{ feature_type.supported_crs|join:", " }}
+              {% endif %}
+            </dd>
+            <dt class="col-xs-2">Authorisatie:</dt><dd>{% print_scopes table.dataset table %}</dd>
+            <dt class="col-xs-2">Formaten:</dt><dd>{% block metadata-formats %}{{ block.super }}{% endblock %}</dd>
+        </dl>
+    {% endwith %}
+{% endblock %}

@@ -1,82 +1,42 @@
-<!doctype html>{% load i18n static %}
-<html>
-<head>
-  <title>{% if schema.title %}{{ schema.title }}{% else %}{{ name|title }}{% endif %} &mdash; Amsterdam Datapunt API Documentatie v1</title>
-  <link rel="stylesheet" type="text/css" href="{% static 'rest_framework/css/bootstrap.min.css' %}"/>
-  <link rel="stylesheet" type="text/css" href="{% static 'rest_framework/css/bootstrap-tweaks.css' %}"/>
-  <link rel="stylesheet" type="text/css" href="{% static 'rest_framework/css/default.css' %}"/>
-  <link rel="stylesheet" type="text/css" href="{% static 'dso_api/dynamic_api/css/docs.css' %}"/>
-  {% block extrahead %}{% endblock %}
-</head>
-<body>
-<div class="container">
+{% extends "dso_api/dynamic_api/docs/base.html" %}{% load i18n static dso_api_tags %}
 
-    <h2>Introductie API Keys</h2>
-    <blockquote style="border-color: #ec0101">
-        <p>
-            Het Dataplatform van de gemeente Amsterdam gaat het gebruik van een identificatie key bij het aanroepen van haar API's
-            vanaf 1 februari 2024 verplicht stellen. Vanaf 1 februari 2024 kun je de API's van het Dataplatform niet meer zonder een
-            key gebruiken. Vraag tijdig een key aan via dit aanvraagformulier. Doe je dit niet, dan werkt je applicatie of website
-            vanaf 1 februari 2024 niet meer. Dit geldt voor alle API's die op deze pagina gedocumenteerd zijn.
-        </p>
-        <p>
-            Door de API key kunnen we contact houden met de gebruikers van onze API's. Zo kunnen we gebruikers informeren over
-            updates. Daarnaast krijgen we hiermee inzicht in het gebruik van de API's en in wie welke dataset via de API bevraagt. Ook voor
-            dataeigenaren is dit waardevolle informatie.
-        </p>
-        <p>
-            Meer info: <br>
-            <a href="https://keys.api.data.amsterdam.nl/clients/v1/register/">Pagina API key aanvragen</a> <br>
-            <a href="https://keys.api.data.amsterdam.nl/clients/v1/docs/">Technische documentatie</a> <br>
-            Vragen? Mail naar dataplatform@amsterdam.nl <br>
-        <p>
-    </blockquote>
+{% block title %}{{ main_title }}{% endblock %}
+
+{% block breadcrumb %}
+    <li><a href="/v1/docs/">Documentatie</a></li>
+    <li class="active"><a href=".">{{ main_title }}</a></li>
+{% endblock %}
+
+{% block content %}
+  {% include "dso_api/dynamic_api/_apikey_banner.html" %}
 
   <h1>{% if schema.title %}{{ schema.title }}{% else %}{{ name|title }}{% endif %}</h1>
-  <p>{% if schema.description %}{{ schema.description }}{% endif %}</p>
-  <ul>
-    <li><strong>ID:</strong> {{ schema.id }}</li>
-    <li><strong>Versie:</strong> {{ schema.version }}</li>
-    <li><strong>Autorisatie:</strong> {{ schema.auth }}</li>
-    <li><strong>Licentie:</strong> {{ schema.license }}</li>
-    <li><strong>Eigenaar:</strong> {{ schema.owner }}</li>
-    <li><strong>Uitgever:</strong> {{ publisher }}</li>
-    <li><strong>Bronhouder:</strong> {{ schema.creator }}</li>
-  </ul>
+  {% include "dso_api/dynamic_api/_dataset_metadata.html" %}
 
-  {% if dataset_has_auth %}
-    <p>Toegang kan worden aangevraagd bij de uitgever: {{ publisher }}</p>
-  {% endif %}
+  <h2>Endpoints</h2>
+  <dl class="row">
+    <dt class="col-xs-2">REST OpenAPI:</dt><dd><a href="{{ swagger_url }}">{{ swagger_url }}</a></dd>
+    {% if wfs_url %}<dt class="col-xs-2">WFS kaartlaag:</dt><dd><a href="{{ wfs_url }}">{{ wfs_url }}</a></dd>{% endif %}
+    {% if mvt_url %}<dt class="col-xs-2">MVT kaartlaag:</dt><dd><a href="{{ mvt_url }}">{{ mvt_url }}</a></dd>{% endif %}
+  </dl>
 
-  <h1>Endpoints</h1>
-  <ul>
-    <li>Swagger UI: <a href="{{ swagger_url }}">{{ swagger_url }}</a></li>
-  </ul>
+  <h2>Tabellen</h2>
+  {% for table_data in tables %}{# note these are custom dicts, not DatasetTableSchema #}
+    <h3><a id="{{ table_data.id }}">{{ table_data.name }}</a></h3>
+    {% if table_data.description %}{{ table_data.description|linebreaks }}{% endif %}
 
-  <h1>Tabellen</h1>
-  {% for table in tables %}
-    <h2><a id="{{ table.id }}">{{ table.title }}</a></h2>
-    {% if table.description %}<p>{{ table.description }}</p>{% endif %}
-
-    <ul>
-      <li>
-        <strong>Autorisatie:</strong>
-        {% if table.auth %}
-          {{ table.auth|join:", " }}
-        {% else %}
-          Geen, dit is openbare data.
-        {% endif %}
-      </li>
-      <li><strong>REST URI:</strong> <a href="{{ table.uri }}">{{ table.uri }}</a></li>
-      <li><strong>CSV-export:</strong> <a href="{{ table.uri }}?_format=csv">{{ table.uri }}?_format=csv</a></li>
-      <li><strong>GeoJSON-export:</strong> <a href="{{ table.uri }}?_format=geojson">{{ table.uri }}?_format=geojson</a></li>
-      {% for export_info in table.exports %}
+    <dl class="row">
+      <dt class="col-xs-2">Autorisatie:</dt><dd>{% print_scopes schema table_data.table_schema %}</dd>
+      <dt class="col-xs-2">REST URI:</dt><dd><a href="{{ table_data.uri }}">{{ table_data.uri }}</a></dd>
+      <dt class="col-xs-2">CSV-export:</dt><dd><a href="{{ table_data.uri }}?_format=csv">{{ table_data.uri }}?_format=csv</a></dd>
+      <dt class="col-xs-2">GeoJSON-export:</dt><dd><a href="{{ table_data.uri }}?_format=geojson">{{ table_data.uri }}?_format=geojson</a></dd>
+      {% for export_info in table_data.exports %}
         {% for ext_info in export_info %}
-            <li><strong>Downloadable {{ ext_info.description }}-export:</strong>
-                    <a href="{{ ext_info.url }}">{{ ext_info.url }}</a></li>
+            <dt class="col-xs-2">Downloadable {{ ext_info.description }}-export:</dt>
+            <dd><a href="{{ ext_info.url }}">{{ ext_info.url }}</a></dd>
         {% endfor %}
       {% endfor %}
-    </ul>
+    </dl>
 
     <p>De volgende velden zijn beschikbaar:</p>
     <table class="table table-striped">
@@ -89,7 +49,7 @@
         </tr>
       </thead>
       <tbody>
-      {% for field in table.fields %}
+      {% for field in table_data.fields %}
         <tr>
           <td>
           {% if field.is_deprecated %}
@@ -121,7 +81,7 @@
         </tr>
       </thead>
       <tbody>
-      {% for filter in table.filters %}
+      {% for filter in table_data.filters %}
         <tr>
           <td>
             {% if filter.is_deprecated %}
@@ -152,7 +112,7 @@
       </tbody>
     </table>
 
-    {% if table.expands %}
+    {% if table_data.expands %}
       <h3>Insluitbare relaties</h3>
       <p>De volgende velden kunnen ingesloten worden met <code>?_expandScope=...</code>:</p>
       <table class="table table-striped">
@@ -164,7 +124,7 @@
           </tr>
         </thead>
         <tbody>
-          {% for expand in table.expands %}
+          {% for expand in table_data.expands %}
             <tr>
               <td>{{ expand.name }}</td>
               <td><a href="{{ expand.target_doc }}">{{ expand.relation_id }}</a></td>
@@ -175,7 +135,4 @@
       </table>
     {% endif %}
   {% endfor %}
-
-</div>
-</body>
-</html>
+{% endblock %}
