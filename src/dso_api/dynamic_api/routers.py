@@ -375,14 +375,14 @@ class DynamicRouter(routers.DefaultRouter):
             )
             results.append(
                 path(
-                    "/" + dataset.path + "/openapi.yaml",
+                    f"/{dataset.path}/openapi.yaml",
                     get_openapi_view(dataset, response_format="yaml"),
                     name=f"openapi-yaml-{dataset_id}",
                 )
             )
             results.append(
                 path(
-                    "/" + dataset.path + "/openapi.json",
+                    f"/{dataset.path}/openapi.json",
                     get_openapi_view(dataset, response_format="json"),
                     name=f"openapi-json-{dataset_id}",
                 )
@@ -396,7 +396,7 @@ class DynamicRouter(routers.DefaultRouter):
             dataset_id = dataset.schema.id  # not dataset.name which is mangled.
             results.append(
                 path(
-                    "/mvt/" + dataset.path + "/",
+                    f"/mvt/{dataset.path}/",
                     DatasetMVTSingleView.as_view(),
                     name="mvt-single-dataset-slash",
                     kwargs={"dataset_name": dataset_id},
@@ -404,7 +404,7 @@ class DynamicRouter(routers.DefaultRouter):
             ),
             results.append(
                 path(
-                    "/mvt/" + dataset.path,
+                    f"/mvt/{dataset.path}",
                     DatasetMVTSingleView.as_view(),
                     name="mvt-single-dataset",
                     kwargs={"dataset_name": dataset_id},
@@ -412,7 +412,7 @@ class DynamicRouter(routers.DefaultRouter):
             )
             results.append(
                 path(
-                    "/mvt/" + dataset.path + "/tilejson.json",
+                    f"/mvt/{dataset.path}/tilejson.json",
                     DatasetTileJSONView.as_view(),
                     name="mvt-tilejson",
                     kwargs={"dataset_name": dataset_id},
@@ -420,7 +420,7 @@ class DynamicRouter(routers.DefaultRouter):
             ),
             results.append(
                 path(
-                    "/mvt/" + dataset.path + "/<table_name>/",
+                    f"/mvt/{dataset.path}/<table_name>/",
                     DatasetTileJSONView.as_view(),
                     name="mvt-tilejson-table-slash",
                     kwargs={"dataset_name": dataset_id},
@@ -428,7 +428,7 @@ class DynamicRouter(routers.DefaultRouter):
             ),
             results.append(
                 path(
-                    "/mvt/" + dataset.path + "/<table_name>",
+                    f"/mvt/{dataset.path}/<table_name>",
                     DatasetTileJSONView.as_view(),
                     name="mvt-tilejson-table",
                     kwargs={"dataset_name": dataset_id},
@@ -436,7 +436,7 @@ class DynamicRouter(routers.DefaultRouter):
             ),
             results.append(
                 path(
-                    "/mvt/" + dataset.path + "/<table_name>/<int:z>/<int:x>/<int:y>.pbf",
+                    f"/mvt/{dataset.path}/<table_name>/<int:z>/<int:x>/<int:y>.pbf",
                     DatasetMVTView.as_view(),
                     name="mvt-pbf",
                     kwargs={"dataset_name": dataset_id},
@@ -451,7 +451,7 @@ class DynamicRouter(routers.DefaultRouter):
             dataset_id = dataset.schema.id  # not dataset.name which is mangled.
             results.append(
                 path(
-                    "/wfs/" + dataset.path + "/",
+                    f"/wfs/{dataset.path}/",
                     DatasetWFSView.as_view(),
                     name="wfs-slash",
                     kwargs={"dataset_name": dataset_id},
@@ -459,7 +459,7 @@ class DynamicRouter(routers.DefaultRouter):
             ),
             results.append(
                 path(
-                    "/wfs/" + dataset.path,
+                    f"/wfs/{dataset.path}",
                     DatasetWFSView.as_view(),
                     name="wfs",
                     kwargs={"dataset_name": dataset_id},
@@ -489,14 +489,14 @@ class DynamicRouter(routers.DefaultRouter):
             name = p.split("/")[-1].capitalize() + " Datasets"
             results.append(
                 path(
-                    "/" + p + "/",
+                    f"/{p}/",
                     DynamicAPIIndexView.as_view(path=p, name=name),
                     name=f"{p}-index-slash",
                 )
             )
             results.append(
                 path(
-                    "/" + p,
+                    f"/{p}",
                     DynamicAPIIndexView.as_view(path=p, name=name),
                     name=f"{p}-index",
                 )
