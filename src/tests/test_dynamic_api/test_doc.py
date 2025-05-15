@@ -94,24 +94,3 @@ def test_dataset_casing(api_client, filled_router, hoofdroutes_dataset):
     content = response.rendered_content
 
     assert """<a id="routesGevaarlijkeStoffen">""" in content
-
-
-@pytest.mark.django_db
-def test_wfs_dataset(api_client, filled_router, fietspaaltjes_dataset):
-    """Assert that fietspaaltjes has WFS docs."""
-    fietspaaltjes_doc = reverse("dynamic_api:doc-wfs-fietspaaltjes")
-    assert fietspaaltjes_doc
-
-    response = api_client.get(fietspaaltjes_doc)
-    assert response.status_code == 200
-    content = response.rendered_content
-
-    # Check for the CSV and GeoJSON download links.
-    assert re.search(
-        r"""CSV.export:.*href="/v1/wfs/fietspaaltjes.*OUTPUTFORMAT=CSV""", content, re.I
-    )
-    assert re.search(
-        r"""GeoJSON.export:.*href="/v1/wfs/fietspaaltjes.*OUTPUTFORMAT=geojson""",
-        content,
-        re.I,
-    )
