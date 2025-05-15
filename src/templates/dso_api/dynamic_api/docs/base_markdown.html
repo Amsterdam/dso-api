@@ -1,43 +1,18 @@
-<!doctype html>{% load static %}
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Amsterdam DataPunt API Documentatie</title>
-  <link rel="stylesheet" type="text/css" href="{% static 'rest_framework/css/bootstrap.min.css' %}"/>
-  <link rel="stylesheet" type="text/css" href="{% static 'rest_framework/css/bootstrap-tweaks.css' %}"/>
-  <link rel="stylesheet" type="text/css" href="{% static 'rest_framework/css/default.css' %}"/>
-  <link rel="stylesheet" type="text/css" href="{% static 'dso_api/dynamic_api/css/docs.css' %}"/>
-</head>
-<body>
-  <div class="container">
+{% extends "dso_api/dynamic_api/docs/base.html" %}{% load i18n static %}
 
-<h2>Introductie API Keys</h2>
-<blockquote style="border-color: #ec0101">
-    <p>
-        Het Dataplatform van de gemeente Amsterdam gaat het gebruik van een identificatie key
-        bij het aanroepen van haar API's vanaf 1 februari 2024 verplicht stellen.
-        Vanaf 1 februari 2024 kun je de API's van het Dataplatform niet meer zonder
-        een key gebruiken. Vraag tijdig een key aan via dit aanvraagformulier.
-        Doe je dit niet, dan werkt je applicatie of website vanaf 1 februari 2024 niet meer.
-        Dit geldt voor alle API's die op deze pagina gedocumenteerd zijn.
-    </p>
-    <p>
-        Door de API key kunnen we contact houden met de gebruikers van onze API's.
-        Zo kunnen we gebruikers informeren over updates.
-        Daarnaast krijgen we hiermee inzicht in het gebruik van de API's
-        en in wie welke dataset via de API bevraagt.
-        Ook voor dataeigenaren is dit waardevolle informatie.
-    </p>
-    <p>
-        Meer info: <br>
-        <a href="{{ apikey_register_url }}">Pagina API key aanvragen</a> <br>
-        <a href="{{ apikey_docs_url }}">Technische documentatie</a> <br>
-        Vragen? Mail naar dataplatform@amsterdam.nl <br>
-    <p>
-</blockquote>
+{% block title %}{{ markdown_title|default:topic }}{% endblock %}
 
+{% block breadcrumb %}
+    <li><a href="/v1/docs/">Documentatie</a></li>
+    {% if topic == 'index' %}
+        <li class="active"><a href="/v1/docs/generic/{{ category }}/index.html">{{ category_title }}</a></li>
+    {% else %}
+        <li><a href="/v1/docs/generic/{{ category }}/index.html">{{ category_title }}</a></li>
+        <li class="active"><a href=".">{{ markdown_title }}</a></li>
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+{% include "dso_api/dynamic_api/_apikey_banner.html" %}
 {{ markdown_content }}
-
-</div>
-</body>
-</html>
+{% endblock %}

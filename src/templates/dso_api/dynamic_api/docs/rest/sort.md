@@ -21,15 +21,9 @@ Gebruik het `-`-teken om omgekeerd te sorteren
 curl 'https://api.data.amsterdam.nl/v1/gebieden/stadsdelen/?_sort=-ingangCyclus,naam'
 ```
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+<aside class="note">
+<h4 class="title">Note</h4>
 
 In plaats van `_sort` wordt ook `sorteer` ondersteund, maar `_sort`
 heeft de voorkeur.
-
-</div>
+</aside>

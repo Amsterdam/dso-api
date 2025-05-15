@@ -25,31 +25,19 @@ met uitzondering van het opgegeven veld:
 curl 'https://api.data.amsterdam.nl/v1/fietspaaltjes/fietspaaltjes/?_fields=-area,-noodzaak'
 ```
 
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+<aside class="note">
+<h4 class="title">Note</h4>
 
 In plaats van `_fields` wordt ook `fields` ondersteund, maar `_fields`
 heeft de voorkeur.
+</aside>
 
-</div>
-
-<div class="note">
-
-<div class="title">
-
-Note
-
-</div>
+<aside class="note">
+<h4 class="title">Note</h4>
 
 Het is niet mogelijk om velden tegelijk in te sluiten en uit te sluiten
 op hetzelfde object/niveau.
-
-</div>
+</aside>
 
 Wanneer er relaties worden teruggegeven (zowel geneste structuren, als
 ingesloten relaties met `?_expandScope`), werkt de `?_fields=` logica

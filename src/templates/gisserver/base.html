@@ -1,0 +1,9 @@
+{% extends "dso_api/dynamic_api/docs/base.html" %}{% load static %}
+{% comment %}
+    By re-defining this base template, all HTML pages from django-gisserver
+    get the same styling as the other REST API and documentation pages.
+{% endcomment %}
+
+{% block extrahead %}
+    <link rel="stylesheet" type="text/css" href="{% static 'gisserver/index.css' %}">
+{% endblock %}

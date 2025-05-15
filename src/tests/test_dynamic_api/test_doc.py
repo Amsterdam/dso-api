@@ -1,7 +1,5 @@
 """Tests for generated dataset documentation."""
 
-import re
-
 import pytest
 from django.urls import reverse
 
@@ -26,10 +24,10 @@ def test_overview(api_client, filled_router, fietspaaltjes_dataset):
     assert response.status_code == 200
 
     content = response.rendered_content
-    assert (
-        """<a href="/v1/docs/datasets/fietspaaltjes.html#fietspaaltjes">Fietspaaltjes</a>"""
-        in content
-    )
+    assert '<li><a href="generic/rest/filtering.html">Filtering</a></li>' in content
+    assert '<a href="/v1/wfs/fietspaaltjes">WFS</a>' in content
+    assert '<a href="/v1/mvt/fietspaaltjes">MVT</a>' in content
+    assert '<a href="/v1/docs/datasets/fietspaaltjes.html">Documentatie</a>' in content
     assert "`" not in content  # Check for leftover ` from ReST-to-HTML conversion.
 
 

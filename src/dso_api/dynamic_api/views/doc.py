@@ -6,6 +6,7 @@ the dataset definitions are always in sync with the actual live data models.
 
 import logging
 import operator
+import re
 from collections.abc import Iterable
 from typing import Any, NamedTuple
 from urllib.parse import urljoin
@@ -77,6 +78,10 @@ class GenericDocs(TemplateView):
     """Documentation pages from ``/v1/docs/generic/...``."""
 
     template_name = "dso_api/dynamic_api/docs/base_markdown.html"
+    CATEGORY_TITLE = {
+        "gis": "Geo API's",
+        "rest": "REST API's",
+    }
 
     def get_context_data(self, **kwargs):
         category = self.kwargs["category"]
@@ -89,12 +94,21 @@ class GenericDocs(TemplateView):
             raise Http404() from e
 
         html = markdown.convert(md)
-        html = html.replace("<table>", '<table class="table">')
+        html = html.replace("<table>", '<table class="table">').replace('.md"', '.html"')
+
+        # Take first <h1> as document title
+        if match := re.search("<h1>([^<]+)</h1>", html):
+            markdown_title = match.group(1)
+        else:
+            markdown_title = topic
 
         return {
+            "category": category,
+            "topic": topic,
+            "category_title": self.CATEGORY_TITLE.get(category, category.title()),
+            "markdown_title": markdown_title,
             "markdown_content": mark_safe(html),  # noqa: S308
             "apikey_register_url": urljoin(settings.APIKEYSERV_API_URL, "/clients/v1/register/"),
-            "apikey_docs_url": urljoin(settings.APIKEYSERV_API_URL, "/clients/v1/docs/"),
         }
 
 
@@ -108,7 +122,9 @@ class DocsIndexView(TemplateView):
         datasets = []
         for ds in Dataset.objects.api_enabled().db_enabled():
             try:
-                uri = reverse("dynamic_api:docs-dataset", kwargs={"dataset_name": ds.schema.id})
+                docs_url = reverse(
+                    "dynamic_api:docs-dataset", kwargs={"dataset_name": ds.schema.id}
+                )
             except NoReverseMatch as e:
                 logger.warning("dataset %s: %s", ds.schema.id, e)
                 continue
@@ -116,9 +132,12 @@ class DocsIndexView(TemplateView):
             datasets.append(
                 {
                     "id": ds.schema.id,
-                    "uri": uri,
+                    "path": ds.path,
+                    "description": ds.schema.description or "",
+                    "docs_url": docs_url,
+                    "has_geometry_fields": ds.has_geometry_fields,
                     "title": ds.schema.title or ds.schema.id,
-                    "tables": [table.id for table in ds.schema.tables],
+                    "tables": ds.schema.tables,
                 }
             )
         datasets.sort(key=lambda ds: ds["title"].lower())
@@ -140,32 +159,31 @@ class DatasetDocView(TemplateView):
             Dataset.objects.api_enabled().db_enabled(), name=dataset_name
         )
         ds_schema: DatasetSchema = ds.schema
-
         main_title = ds_schema.title or ds_schema.db_name.replace("_", " ").capitalize()
-
-        try:
-            if "name" in ds_schema.publisher:
-                publisher = ds_schema.publisher["name"]
-            elif isinstance(ds_schema.publisher, dict) and "$ref" in ds_schema.publisher:
-                publisher = ds_schema.publisher["$ref"]
-                publisher = publisher.lstrip("/").removeprefix("publishers/")
-        except NotImplementedError:  # Work around schema loaders being broken in tests.
-            publisher = "N/A"
-
         tables = [_table_context(ds, t) for t in ds_schema.tables]
 
         context = super().get_context_data(**kwargs)
         context.update(
             {
-                "schema": ds,
+                "dataset": ds,
+                "schema": ds_schema,
                 "schema_name": ds_schema.db_name,
                 "schema_auth": ds_schema.auth,
                 "dataset_has_auth": bool(_fix_auth(ds_schema.auth)),
                 "main_title": main_title,
-                "publisher": publisher,
                 "tables": tables,
                 "swagger_url": reverse(
                     "dynamic_api:openapi", kwargs={"dataset_name": ds_schema.id}
+                ),
+                "wfs_url": (
+                    reverse("dynamic_api:wfs", kwargs={"dataset_name": ds_schema.id})
+                    if ds.has_geometry_fields
+                    else None
+                ),
+                "mvt_url": (
+                    reverse("dynamic_api:mvt", kwargs={"dataset_name": ds_schema.id})
+                    if ds.has_geometry_fields
+                    else None
                 ),
             }
         )
@@ -290,14 +308,15 @@ def _table_context(ds: Dataset, table: DatasetTableSchema):
 
     return {
         "id": table.id,
-        "title": to_snake_case(table.id).replace("_", " ").capitalize(),
+        "name": to_snake_case(table.id).replace("_", " ").capitalize(),
+        "table_schema": table,
         "uri": uri,
         "exports": exports,
         "description": table.get("description"),
         "fields": [ctx for field in fields for ctx in _get_field_context(field, wfs=False)],
         "filters": filters,
         "auth": _fix_auth(table.auth | table.dataset.auth),
-        "expands": _make_table_expands(table, wfs=False),
+        "expands": _make_table_expands(table),
         "source": table,
         "has_geometry": table.has_geometry_fields,
     }
@@ -308,12 +327,12 @@ def _make_link(to_table: DatasetTableSchema) -> str:
     return f"{url}#{to_table.id}"
 
 
-def _make_table_expands(table: DatasetTableSchema, wfs: bool):
+def _make_table_expands(table: DatasetTableSchema):
     """Return which relations can be expanded"""
     expands = [
         {
             "id": field.id,
-            "name": field.python_name if wfs else field.name,
+            "name": field.name,
             "relation_id": field["relation"],
             "target_doc": _make_link(field.related_table),
             "related_table": field.related_table,
@@ -326,7 +345,7 @@ def _make_table_expands(table: DatasetTableSchema, wfs: bool):
     expands.extend(
         {
             "id": additional_relation.id,
-            "name": additional_relation.python_name if wfs else additional_relation.name,
+            "name": additional_relation.name,
             "relation_id": additional_relation.relation,
             "target_doc": _make_link(additional_relation.related_table),
             "related_table": additional_relation.related_table,

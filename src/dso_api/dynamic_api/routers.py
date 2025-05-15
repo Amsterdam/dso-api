@@ -66,7 +66,8 @@ class DynamicAPIIndexView(APIIndexView):
 
     name = "DSO-API Datasets"  # for browsable API.
     description = (
-        "To use the DSO-API, see the documentation at <https://api.data.amsterdam.nl/v1/docs/>. "
+        "In de DSO-API worden alle datasets van de Gemeente Amsterdam beschikbaar gesteld.\n"
+        "Algemene uitleg vind je op [https://api.data.amsterdam.nl/v1/docs/](/v1/docs/)."
     )
     api_type = "rest_json"
     path = None

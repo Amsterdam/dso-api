@@ -271,11 +271,6 @@ input:invalid {
   padding-left: 20px;
 }
 
-
-dt, dd {
-  display: inline-block;
-}
-
 .request-method {
   font-weight: bold;
 }

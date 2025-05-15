@@ -1,33 +1,38 @@
-<!doctype html>{% load i18n %}
-<html>
-<head>
-  <title>MVT dataset {% if schema.title %}{{ schema.title }}{% else %}{{ name|title }}{% endif %}</title>
-  {% block extrahead %}{% endblock %}
-</head>
-<body>
+{% extends "dso_api/dynamic_api/docs/base.html" %}{% load dso_api_tags %}
+
+{% block title %}MVT dataset {{ mvt_title }}{% endblock %}
+
+{% block breadcrumb %}
+    <li><a href="/v1/mvt/">MVT endpoints</a></li>
+    <li class="active"><a href=".">{{ mvt_title }}</a></li>
+{% endblock %}
+
+{% block content %}
   <main>
-    <h1>{% if schema.title %}{{ schema.title }}{% else %}{{ name|title }}{% endif %} MVT</h1>
-    <p>{% if schema.description %}{{ schema.description }}{% endif %}</p>
-    <dl>
-      <p>ID: {{ schema.id }}</p>
-      <p>Status: {{ schema.status }}</p>
-      <p>Openbaar: {{ schema.auth }}</p>
-      <p>Licentie: {{ schema.license }}</p>
-    </dl>
+    <h1>{{ mvt_title }} MVT</h1>
+    {% include "dso_api/dynamic_api/_dataset_metadata.html" %}
+
       <h2>Gebruik van deze dataset</h2>
-        <p>Voeg de volgende urls toe aan uw GIS applicatie:</p>
+      {% url 'dynamic_api:mvt-tilejson' dataset_name=schema.id as tilejson_url %}
+      {% if tilejson_url %}
+        <p>Voeg deze TileJSON URL toe aan uw GIS applicatie:</p>
+        <blockquote>
+          <a href="{{ tilejson_url }}"><samp>{{ base_url }}{{ tilejson_url }}</samp></a>
+        </blockquote>
+      {% endif %}
+      <p>Of voeg de volgende urls toe aan uw GIS applicatie:</p>
       <ul>
       {% for table in tables %}
-        <li><kbd>{{ request.scheme }}://{{ request.get_host }}{{ request.path }}{{ table }}/{z}/{x}/{y}.pbf</kbd></li>
+        <li><code>{{ base_url }}{{ request.path }}{{ table }}/{z}/{x}/{y}.pbf</code></li>
       {% endfor %}
       </ul>
-      <p>Voor de gebruikshandleiding, zie <a href='/v1/docs/generic/gis.html'>Datasets laden in GIS-pakketten</a></p>
+      <p>Voor de gebruikshandleiding, zie <a href='/v1/docs/generic/gis.html'>Datasets laden in GIS-pakketten</a>.</p>
 
-      <h2>Deze dataset is ook beschikbaar als</h2>
+      <h2>Andere ontsluitingsvormen</h2>
+      <p>Deze dataset is ook beschikbaar als:</p>
       <ul>
-        <li><a href='/v1/docs/datasets/{{ name }}.html'>Rest API</a></li>
-        <li><a href='{% url "dynamic_api:wfs" dataset_name=name %}'>WFS kaartlaag</a></li>
+        <li><a href="{% url 'dynamic_api:docs-dataset' dataset_name=name %}">Rest API</a></li>
+        <li><a href="{% url 'dynamic_api:wfs' dataset_name=name %}">WFS kaartlaag</a></li>
       </ul>
     </main>
-</body>
-</html>
+{% endblock %}

@@ -30,11 +30,12 @@ logger = logging.getLogger(__name__)
 class DatasetMVTIndexView(APIIndexView):
     """Overview of available MVT endpoints."""
 
-    name = "DSO-API MVT endpoints"  # for browsable API.
+    name = "MVT endpoints"  # for browsable API.
     description = (
-        "To use the DSO-API, see the documentation at <https://api.data.amsterdam.nl/v1/docs/>. "
-        "For information on using MVT tiles, see the documentation at "
-        "<https://api.data.amsterdam.nl/v1/docs/generic/gis.html>."
+        "Alle WFS endpoints voor de gegevens in de DSO-API.\n\n"
+        "Voor het gebruik van MVT endpoints, zie: "
+        "[Datasets laden in GIS-pakketten](/v1/docs/generic/gis.html),"
+        " en de algemene [documentatie van de DSO-API](/v1/docs/)."
     )
     api_type = "MVT"
 
@@ -94,9 +95,13 @@ class DatasetMVTSingleView(TemplateView):
         if len(geo_tables) == 0:
             raise Http404("Dataset does not support MVT") from None
 
+        schema = models[geo_tables[0]].table_schema().dataset
+
+        context["mvt_title"] = schema.title or dataset_name.title()
         context["name"] = dataset_name
         context["tables"] = geo_tables
-        context["schema"] = models[geo_tables[0]].table_schema().dataset
+        context["schema"] = schema
+        context["base_url"] = self.request.build_absolute_uri("/").rstrip("/")
         return context
 
 
