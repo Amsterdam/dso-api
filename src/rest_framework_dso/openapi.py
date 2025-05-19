@@ -204,7 +204,6 @@ class DSOSchemaGenerator(generators.SchemaGenerator):
     def get_schema(self, request=None, public=False):
         """Improved schema generation, include more OpenAPI fields"""
         schema = super().get_schema(request=request, public=public)
-
         # Fix missing 'fields' that drf-spectacular doesn't read from self,
         # it only reads the 'SPECTACULAR_SETTINGS' for this.
         if self.version is not None:
@@ -390,6 +389,13 @@ class DSOAutoSchema(openapi.AutoSchema):
             ]
 
         return extra
+
+    def get_operation_id(self) -> str:
+        """Add a _slash to operation_id to enforce uniqueness for paths ending on /"""
+        operation_id = super().get_operation_id()
+        if self.path.endswith("/"):
+            operation_id = f"{operation_id}_slash"
+        return operation_id
 
     def _get_expand_description(self, field: AbstractEmbeddedField):
         """Generate a description for the embed, this uses the help text."""
