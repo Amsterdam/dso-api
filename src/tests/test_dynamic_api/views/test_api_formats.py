@@ -395,6 +395,30 @@ class TestFormats:
             "03630950000000,1,,,2021-02-28,,\r\n"
         )
 
+    def test_csv_array_fields(self, api_client, api_rf, fietspaaltjes_data):
+        url = reverse("dynamic_api:fietspaaltjes-fietspaaltjes-list")
+        api_client.raise_request_exception = False
+        response = api_client.get(url, {"_format": "csv"})
+        assert response.status_code == 200, response.getvalue()
+        data = read_response(response)
+
+        assert data == (
+            "Id,Geometry,Street,At,Area,Score2013,Scorecurrent,Count,Paaltjesweg,Soortpaaltje"
+            ",Uiterlijk,Type,Ruimte,Markering,Beschadigingen,Veiligheid,Zichtindonker,Soortweg,Noodzaak\r\n"
+            "Fietsplaatje record met display"
+            ",SRID=28992;POINT (123207.6558130105 486624.6399002579)"
+            ",Weesperplein,Geschutswerf,Amsterdam-Centrum,,reference for DISPLAY FIELD,6"
+            ",nu paaltje(s)"  # paaltjes_weg: 1 item
+            ',"paaltje(s) ong. 75cm hoog,verwijderde paaltjes"'  # soort_paaltje: array of 2
+            ",rood/wit"  # uiterlijk
+            ',"vast,uitneembaar"'  # type, array of 2
+            ",Voldoende: 1.6m of meer"  # ruimte, 1 item
+            ',"markering ontbreekt,onvoldoende markering"'  # markering: array of 2
+            ",,overzichtelijke locatie,onvoldoende reflectie op paal"
+            ',"rijbaan fiets+auto,fietspad"'  # soort_weg: array of 2
+            ",nodig tegen sluipverkeer\r\n"  # noodzaak: 1 item
+        )
+
     DETAIL_FORMATS = {
         "csv": (
             as_is,
