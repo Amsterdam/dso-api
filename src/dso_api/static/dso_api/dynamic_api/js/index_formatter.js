@@ -5,38 +5,53 @@
 // returns: HTML string
 
 const FORMATTER = (rawJson) => {
-    let datasetsEl = document.createElement("div")
+    const datasetsEl = document.createElement("div")
     datasetsEl.className = "datasets"
     Object.keys(rawJson.datasets).forEach((datasetId) => {
-        let dataset = rawJson.datasets[datasetId]
-        let datasetEl = document.createElement("div")
+        const dataset = rawJson.datasets[datasetId]
+        const datasetEl = document.createElement("div")
         datasetEl.className = "dataset"
         datasetEl.style = "margin-bottom:30px"
         datasetEl.innerHTML = `
         <h3 class='dataset-name' style="text-transform: capitalize;">${dataset.service_name}</h3>
         <p class='dataset-description' style="width:80%; word-break: normal;">${dataset.description}</p>
-        <p class='dataset-api-authentication'><b>Autorisatie</b>: ${dataset.api_authentication}</p>
-
-      `
-        let versions = dataset.versions
-        let defaultVersion = dataset.default_version
-        let urls = [
-            { type: "API", url: dataset.environments[0].api_url },
-            {
-                type: "Documentation",
-                url: dataset.environments[0].documentation_url,
+        <p class='dataset-api-authentication'><b>Autorisatie</b>: ${dataset.api_authentication}</p>`
+        const linksForAllVersions = dataset.versions.reduce(
+            (result, version) => {
+                return (
+                    result +
+                    `<h4 class='dataset-version'>${version.header}</h4>` +
+                    createLinksForVersion(version)
+                )
             },
-        ]
-        if (dataset.related_apis) {
-            urls = urls.concat(dataset.related_apis)
-        }
-
-        let urlsEl = document.createElement("div")
-        urls.forEach((url) => {
-            urlsEl.innerHTML += `<div><b>${url["type"]}:</b> <a href="${url["url"]}">${url["url"]}</a></div>`
-        })
-        datasetEl.appendChild(urlsEl)
+            ""
+        )
+        datasetEl.innerHTML += linksForAllVersions
         datasetsEl.appendChild(datasetEl)
     })
     return datasetsEl.innerHTML
+}
+
+const createLinksForVersion = (version) => {
+    return `
+        <div>
+            <div><b>API:</b> <a href="${version.api_url}">${
+        version.api_url
+    }</a></div>
+            <div><b>Documentation:</b> <a href="${version.documentation_url}">${
+        version.documentation_url
+    }</a></div>
+            ${
+                version.mvt_url
+                    ? `<div><b>MVT:</b> <a href="${version.mvt_url}">${version.mvt_url}</a></div>`
+                    : ""
+            }
+            ${
+                version.wfs_url
+                    ? `<div><b>WFS:</b> <a href="${version.wfs_url}">${version.wfs_url}</a></div>`
+                    : ""
+            }
+
+        </div>
+    `
 }

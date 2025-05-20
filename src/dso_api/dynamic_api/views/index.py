@@ -42,6 +42,10 @@ class APIIndexView(APIView):
         """Get list of other APIs exposing the same dataset"""
         raise NotImplementedError()
 
+    def get_version_endpoints(self, ds: Dataset, base: str) -> list[dict]:
+        """Get versions with all their"""
+        raise NotImplementedError()
+
     def get(self, request, *args, **kwargs):
         # Data not needed for html view
         if getattr(request, "accepted_media_type", None) == "text/html":
@@ -54,16 +58,14 @@ class APIIndexView(APIView):
         for ds in datasets:
             # Don't let datasets break each other and the entire page.
             try:
-                env = self.get_environments(ds, base)
-                rel = self.get_related_apis(ds, base)
+                versions = self.get_version_endpoints(ds, base)
             except NoReverseMatch as e:
                 # Due to too many of these issues, avoid breaking the whole index listing for this.
                 # Plus, having the front page give a 500 error is not that nice.
                 logging.exception(
                     "Internal URL resolving is broken for schema {%s}: {%s}", ds.schema.id, str(e)
                 )
-                env = []
-                rel = []
+                versions = []
 
             result["datasets"][ds.schema.id] = {
                 "id": ds.schema.id,
@@ -77,8 +79,7 @@ class APIIndexView(APIView):
                     "pay_per_use": False,
                     "license": ds.schema.license,
                 },
-                "environments": env,
-                "related_apis": rel,
+                "versions": versions,
                 "api_authentication": list(ds.schema.auth) or None,
                 "api_type": self.api_type,
                 "organization_name": "Gemeente Amsterdam",
