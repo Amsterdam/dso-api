@@ -305,6 +305,15 @@ class CSVRenderer(RendererMixin, CSVStreamingRenderer):
         else:
             return header + extra_headers, labels | extra_labels
 
+    def flatten_list(self, value):
+        """Make sure ArrayField data is correctly rendered"""
+        if value and not isinstance(value[0], (list, dict)):
+            # Render ArrayField as single field. Key is prefixed by caller.
+            return {"": ",".join(map(str, value))}
+        else:
+            # Original logic renders a "fieldname.0", "fieldname.1" columns.
+            return super().flatten_list(value)
+
     def render(self, data, media_type=None, renderer_context=None):
         if (serializer := get_data_serializer(data)) is not None:
             request = renderer_context.get("request")
