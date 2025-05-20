@@ -78,20 +78,53 @@ class DynamicAPIIndexView(APIIndexView):
             datasets = [ds for ds in datasets if ds.path.startswith(self.path)]
         return datasets
 
-    def get_environments(self, ds: Dataset, base: str):
+    def get_version_endpoints(self, ds: Dataset, base: str):
         dataset_id = ds.schema.id
         if not ds.enable_db:
             return []
         try:
+            versions = []
             api_url = reverse("dynamic_api:openapi", kwargs={"dataset_name": dataset_id})
-            return [
-                {
-                    "name": "production",
+            docs_url = reverse(
+                "dynamic_api:docs-dataset",
+                kwargs={"dataset_name": dataset_id, "dataset_version": ds.default_version},
+            )
+            version = {
+                "header": f"Default Version ({ds.default_version})",
+                "api_url": base + api_url,
+                "specification_url": base + api_url,
+                "documentation_url": base + docs_url,
+            }
+            if ds.has_geometry_fields:
+                wfs_url = reverse("dynamic_api:wfs", kwargs={"dataset_name": dataset_id})
+                mvt_url = reverse("dynamic_api:mvt", kwargs={"dataset_name": dataset_id})
+                version["wfs_url"] = base + wfs_url
+                version["mvt_url"] = base + mvt_url
+
+            versions.append(version)
+            for version in ds.schema.versions:
+                api_url = reverse(
+                    "dynamic_api:openapi-version",
+                    kwargs={"dataset_name": dataset_id, "dataset_version": version},
+                )
+                docs_url = reverse(
+                    "dynamic_api:docs-dataset-version",
+                    kwargs={"dataset_name": dataset_id, "dataset_version": version},
+                )
+                version = {
+                    "header": f"Version {version}",
                     "api_url": base + api_url,
                     "specification_url": base + api_url,
-                    "documentation_url": f"{base}/v1/docs/datasets/{ds.path}.html",
+                    "documentation_url": base + docs_url,
                 }
-            ]
+                if ds.has_geometry_fields:
+                    wfs_url = reverse("dynamic_api:wfs", kwargs={"dataset_name": dataset_id})
+                    mvt_url = reverse("dynamic_api:mvt", kwargs={"dataset_name": dataset_id})
+                    version["wfs_url"] = base + wfs_url
+                    version["mvt_url"] = base + mvt_url
+                versions.append(version)
+
+            return versions
         except NoReverseMatch as e:
             logger.warning("dataset %s: %s", dataset_id, e)
             return []
@@ -350,8 +383,16 @@ class DynamicRouter(DefaultRouter):
                 f"/docs/datasets/{dataset.path}.html",
                 DatasetDocView.as_view(),
                 name="docs-dataset",
-                kwargs={"dataset_name": dataset_id},
+                kwargs={"dataset_name": dataset_id, "dataset_version": dataset.default_version},
             )
+
+            for vmajor in dataset.schema.versions:
+                yield path(
+                    f"/docs/datasets/{dataset.path}@{vmajor}.html",
+                    DatasetDocView.as_view(),
+                    name="docs-dataset-version",
+                    kwargs={"dataset_name": dataset_id, "dataset_version": vmajor},
+                )
 
             if not dataset.has_geometry_fields:
                 continue
