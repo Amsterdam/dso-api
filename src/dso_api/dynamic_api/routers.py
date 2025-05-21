@@ -39,6 +39,7 @@ from schematools.contrib.django.factories import remove_dynamic_models
 from schematools.contrib.django.models import Dataset
 from schematools.naming import to_snake_case
 
+from .constants import DEFAULT
 from .datasets import get_active_datasets
 from .models import SealedDynamicModel
 from .openapi import get_openapi_view
@@ -96,8 +97,14 @@ class DynamicAPIIndexView(APIIndexView):
                 "documentation_url": base + docs_url,
             }
             if ds.has_geometry_fields:
-                wfs_url = reverse("dynamic_api:wfs", kwargs={"dataset_name": dataset_id})
-                mvt_url = reverse("dynamic_api:mvt", kwargs={"dataset_name": dataset_id})
+                wfs_url = reverse(
+                    "dynamic_api:wfs",
+                    kwargs={"dataset_name": dataset_id, "dataset_version": DEFAULT},
+                )
+                mvt_url = reverse(
+                    "dynamic_api:mvt",
+                    kwargs={"dataset_name": dataset_id, "dataset_version": DEFAULT},
+                )
                 version["wfs_url"] = base + wfs_url
                 version["mvt_url"] = base + mvt_url
 
@@ -383,7 +390,7 @@ class DynamicRouter(DefaultRouter):
                 f"/docs/datasets/{dataset.path}.html",
                 DatasetDocView.as_view(),
                 name="docs-dataset",
-                kwargs={"dataset_name": dataset_id, "dataset_version": dataset.default_version},
+                kwargs={"dataset_name": dataset_id, "dataset_version": DEFAULT},
             )
 
             for vmajor in dataset.schema.versions:
@@ -417,9 +424,21 @@ class DynamicRouter(DefaultRouter):
                     f"/{dataset.path}",
                     get_openapi_view(dataset),
                     name="openapi",
-                    kwargs={"dataset_name": dataset_id},
+                    kwargs={
+                        "dataset_name": dataset_id,
+                        "dataset_version": DEFAULT,
+                    },
                 )
             )
+            for version in dataset.schema.versions:
+                results.append(
+                    path(
+                        f"/{dataset.path}/{version}",
+                        get_openapi_view(dataset, version),
+                        name="openapi-version",
+                        kwargs={"dataset_name": dataset_id, "dataset_version": version},
+                    )
+                )
             results.append(
                 path(
                     f"/{dataset.path}/",
@@ -456,7 +475,7 @@ class DynamicRouter(DefaultRouter):
                     f"/mvt/{dataset.path}/",
                     DatasetMVTSingleView.as_view(),
                     name="mvt-slash",
-                    kwargs={"dataset_name": dataset_id},
+                    kwargs={"dataset_name": dataset_id, "dataset_version": DEFAULT},
                 )
             ),
             results.append(
@@ -464,9 +483,21 @@ class DynamicRouter(DefaultRouter):
                     f"/mvt/{dataset.path}",
                     DatasetMVTSingleView.as_view(),
                     name="mvt",
-                    kwargs={"dataset_name": dataset_id},
+                    kwargs={
+                        "dataset_name": dataset_id,
+                        "dataset_version": DEFAULT,
+                    },
                 )
             )
+            for vmajor in dataset.schema.versions:
+                results.append(
+                    path(
+                        f"/mvt/{dataset.path}/{vmajor}",
+                        DatasetMVTSingleView.as_view(),
+                        name="mvt-version",
+                        kwargs={"dataset_name": dataset_id, "dataset_version": vmajor},
+                    )
+                )
             results.append(
                 path(
                     f"/mvt/{dataset.path}/tilejson.json",
@@ -511,7 +542,10 @@ class DynamicRouter(DefaultRouter):
                     f"/wfs/{dataset.path}/",
                     DatasetWFSView.as_view(),
                     name="wfs-slash",
-                    kwargs={"dataset_name": dataset_id},
+                    kwargs={
+                        "dataset_name": dataset_id,
+                        "dataset_version": DEFAULT,
+                    },
                 )
             ),
             results.append(
@@ -519,9 +553,21 @@ class DynamicRouter(DefaultRouter):
                     f"/wfs/{dataset.path}",
                     DatasetWFSView.as_view(),
                     name="wfs",
-                    kwargs={"dataset_name": dataset_id},
+                    kwargs={
+                        "dataset_name": dataset_id,
+                        "dataset_version": DEFAULT,
+                    },
                 )
             )
+            for vmajor in dataset.schema.versions:
+                results.append(
+                    path(
+                        f"/wfs/{dataset.path}/{vmajor}",
+                        DatasetWFSView.as_view(),
+                        name="wfs-version",
+                        kwargs={"dataset_name": dataset_id, "dataset_version": vmajor},
+                    )
+                )
         return results
 
     def _build_index_views(self, datasets: Iterable[Dataset]) -> list[URLPattern]:

@@ -28,6 +28,7 @@ from schematools.contrib.django.models import Dataset
 from schematools.naming import to_snake_case
 from schematools.types import DatasetFieldSchema, DatasetSchema, DatasetTableSchema
 
+from dso_api.dynamic_api.constants import DEFAULT
 from dso_api.dynamic_api.filters.parser import QueryFilterEngine
 
 logger = logging.getLogger(__name__)
@@ -158,10 +159,17 @@ class DatasetDocView(TemplateView):
         ds: Dataset = get_object_or_404(
             Dataset.objects.api_enabled().db_enabled(), name=dataset_name
         )
+        dataset_version = kwargs["dataset_version"]
+        print(dataset_version)
         ds_schema: DatasetSchema = ds.schema
         main_title = ds_schema.title or ds_schema.db_name.replace("_", " ").capitalize()
-        tables = [_table_context(ds, t) for t in ds_schema.tables]
-
+        tables = [
+            _table_context(ds, t, dataset_version)
+            for t in ds_schema.get_version(
+                ds.default_version if dataset_version == DEFAULT else dataset_version
+            ).tables
+        ]
+        pattern_suffix = "" if dataset_version == DEFAULT else "-version"
         context = super().get_context_data(**kwargs)
         context.update(
             {
@@ -169,19 +177,27 @@ class DatasetDocView(TemplateView):
                 "schema": ds_schema,
                 "schema_name": ds_schema.db_name,
                 "schema_auth": ds_schema.auth,
+                "dataset_version": dataset_version,
                 "dataset_has_auth": bool(_fix_auth(ds_schema.auth)),
                 "main_title": main_title,
                 "tables": tables,
                 "swagger_url": reverse(
-                    "dynamic_api:openapi", kwargs={"dataset_name": ds_schema.id}
+                    f"dynamic_api:openapi{pattern_suffix}",
+                    kwargs={"dataset_name": ds_schema.id, "dataset_version": dataset_version},
                 ),
                 "wfs_url": (
-                    reverse("dynamic_api:wfs", kwargs={"dataset_name": ds_schema.id})
+                    reverse(
+                        f"dynamic_api:wfs{pattern_suffix}",
+                        kwargs={"dataset_name": ds_schema.id, "dataset_version": dataset_version},
+                    )
                     if ds.has_geometry_fields
                     else None
                 ),
                 "mvt_url": (
-                    reverse("dynamic_api:mvt", kwargs={"dataset_name": ds_schema.id})
+                    reverse(
+                        f"dynamic_api:mvt{pattern_suffix}",
+                        kwargs={"dataset_name": ds_schema.id, "dataset_version": dataset_version},
+                    )
                     if ds.has_geometry_fields
                     else None
                 ),
@@ -267,16 +283,19 @@ LOOKUP_CONTEXT = {
 }
 
 
-def _table_context(ds: Dataset, table: DatasetTableSchema):
+def _table_context(ds: Dataset, table: DatasetTableSchema, dataset_version: str):
     """Collect all table data for the REST API spec."""
     dataset_name = to_snake_case(table.dataset.id)
     table_name = to_snake_case(table.id)
-    uri = reverse(f"dynamic_api:{dataset_name}-{table_name}-list")
+    vmajor = ds.default_version if dataset_version == DEFAULT else dataset_version
+    pattern_version = "" if dataset_version == DEFAULT else f"-{dataset_version}"
+    uri = reverse(f"dynamic_api:{dataset_name}{pattern_version}-{table_name}-list")
     fields = _list_fields(table.fields)
     filters = _get_filters(table.fields)
     exports = []
+    version = ds.versions.get(version=vmajor)
     # if dataset_name in settings.EXPORTED_DATASETS.split(","):
-    if ds.tables.get(name=table_name).enable_export:
+    if version.tables.get(name=table_name).enable_export:
         export_info = []
         for type_, extension, description in (
             ("csv", "csv", "CSV"),
