@@ -3,7 +3,7 @@
 
   <dl class="row">
     <dt class="col-xs-2">ID:</dt><dd>{{ schema.id }}</dd>
-    <dt class="col-xs-2">Versie:</dt><dd>{{ schema.version }}</dd>
+    <dt class="col-xs-2">Versie:</dt><dd>{{ dataset_version }}</dd>
     <dt class="col-xs-2">Autorisatie:</dt><dd>{% print_scopes schema %}</dd>
     <dt class="col-xs-2">Licentie:</dt><dd>{{ schema.license|default:'-' }}</dd>
     <dt class="col-xs-2">Eigenaar:</dt><dd>{{ schema.owner|default:'-' }}</dd>
