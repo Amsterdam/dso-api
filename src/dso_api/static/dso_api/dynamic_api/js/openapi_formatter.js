@@ -12,10 +12,27 @@ const FORMATTER = (rawJson) => {
     }
     openApiEl.innerHTML = `
       <h3>OpenAPI ${rawJson.info.title}</h3>
+      <b>Versions</b>
+      ${Object.entries(rawJson["x-versions"])
+          .map(([version, url]) => {
+              return `
+                <p>
+                    <div style="display:inline-block;">${version}:</div>&emsp;
+                    <a href="${url}">${url}</a>
+                    ${
+                        url === requestPath
+                            ? `&emsp;<div style="display:inline-block;">(huidige)</div>`
+                            : ""
+                    }
+                </p>`
+          })
+          .join("")}
       <p><dt>OpenAPI version</dt> <dd>${rawJson.openapi}</dd></p>
       <p>
         <dt>${rawJson.externalDocs.description}</dt>
-        <dd><a href="${rawJson.externalDocs.url}" style="display:inline-block">${rawJson.externalDocs.url}</a></dd>
+        <dd><a href="${
+            rawJson.externalDocs.url
+        }" style="display:inline-block">${rawJson.externalDocs.url}</a></dd>
       </p>
       <h3>Paths:</h3>
     `

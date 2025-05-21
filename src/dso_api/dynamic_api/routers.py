@@ -85,10 +85,13 @@ class DynamicAPIIndexView(APIIndexView):
             return []
         try:
             versions = []
-            api_url = reverse("dynamic_api:openapi", kwargs={"dataset_name": dataset_id})
+            api_url = reverse(
+                "dynamic_api:openapi",
+                kwargs={"dataset_name": dataset_id, "dataset_version": DEFAULT},
+            )
             docs_url = reverse(
                 "dynamic_api:docs-dataset",
-                kwargs={"dataset_name": dataset_id, "dataset_version": ds.default_version},
+                kwargs={"dataset_name": dataset_id, "dataset_version": DEFAULT},
             )
             version = {
                 "header": f"Default Version ({ds.default_version})",
@@ -109,24 +112,30 @@ class DynamicAPIIndexView(APIIndexView):
                 version["mvt_url"] = base + mvt_url
 
             versions.append(version)
-            for version in ds.schema.versions:
+            for vmajor in ds.schema.versions:
                 api_url = reverse(
                     "dynamic_api:openapi-version",
-                    kwargs={"dataset_name": dataset_id, "dataset_version": version},
+                    kwargs={"dataset_name": dataset_id, "dataset_version": vmajor},
                 )
                 docs_url = reverse(
                     "dynamic_api:docs-dataset-version",
-                    kwargs={"dataset_name": dataset_id, "dataset_version": version},
+                    kwargs={"dataset_name": dataset_id, "dataset_version": vmajor},
                 )
                 version = {
-                    "header": f"Version {version}",
+                    "header": f"Version {vmajor}",
                     "api_url": base + api_url,
                     "specification_url": base + api_url,
                     "documentation_url": base + docs_url,
                 }
                 if ds.has_geometry_fields:
-                    wfs_url = reverse("dynamic_api:wfs", kwargs={"dataset_name": dataset_id})
-                    mvt_url = reverse("dynamic_api:mvt", kwargs={"dataset_name": dataset_id})
+                    wfs_url = reverse(
+                        "dynamic_api:wfs-version",
+                        kwargs={"dataset_name": dataset_id, "dataset_version": vmajor},
+                    )
+                    mvt_url = reverse(
+                        "dynamic_api:mvt-version",
+                        kwargs={"dataset_name": dataset_id, "dataset_version": vmajor},
+                    )
                     version["wfs_url"] = base + wfs_url
                     version["mvt_url"] = base + mvt_url
                 versions.append(version)
@@ -430,15 +439,6 @@ class DynamicRouter(DefaultRouter):
                     },
                 )
             )
-            for version in dataset.schema.versions:
-                results.append(
-                    path(
-                        f"/{dataset.path}/{version}",
-                        get_openapi_view(dataset, version),
-                        name="openapi-version",
-                        kwargs={"dataset_name": dataset_id, "dataset_version": version},
-                    )
-                )
             results.append(
                 path(
                     f"/{dataset.path}/",
@@ -451,8 +451,8 @@ class DynamicRouter(DefaultRouter):
                 path(
                     f"/{dataset.path}/openapi.yaml",
                     get_openapi_view(dataset, response_format="yaml"),
-                    name="openapi-yaml",
                     kwargs={"dataset_name": dataset_id},
+                    name="openapi-yaml",
                 )
             )
             results.append(
@@ -463,6 +463,31 @@ class DynamicRouter(DefaultRouter):
                     kwargs={"dataset_name": dataset_id},
                 )
             )
+            for version in dataset.schema.versions:
+                results.append(
+                    path(
+                        f"/{dataset.path}/{version}",
+                        get_openapi_view(dataset, version),
+                        name="openapi-version",
+                        kwargs={"dataset_name": dataset_id, "dataset_version": version},
+                    )
+                )
+                results.append(
+                    path(
+                        f"/{dataset.path}/{version}/openapi.yaml",
+                        get_openapi_view(dataset, response_format="yaml"),
+                        name="openapi-yaml-version",
+                        kwargs={"dataset_name": dataset_id},
+                    )
+                )
+                results.append(
+                    path(
+                        f"/{dataset.path}/{version}/openapi.json",
+                        get_openapi_view(dataset, response_format="json"),
+                        name="openapi-json-version",
+                        kwargs={"dataset_name": dataset_id},
+                    )
+                )
         return results
 
     def _build_mvt_views(self, datasets: Iterable[Dataset]) -> list[URLPattern]:
