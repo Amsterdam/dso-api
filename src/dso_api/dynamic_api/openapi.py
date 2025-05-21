@@ -6,6 +6,7 @@ The main logic can be found in :mod:`rest_framework_dso.openapi`.
 import copy
 import logging
 import os
+import re
 from collections.abc import Callable
 from functools import wraps
 from urllib.parse import urljoin
@@ -150,15 +151,14 @@ class DynamicApiSchemaGenerator(DSOSchemaGenerator):
                         relative_path = relative_path[:-1]
                     if not relative_path.startswith("/"):
                         relative_path = "/" + relative_path
-                    modified_paths[relative_path] = path_item
-                else:
-                    # Path doesn't start with the expected base path, keep it as is
-                    modified_paths[path] = path_item
+                    # We don't show paths of different versions
+                    if not re.match(r"^\/v\d{1,2}\/", relative_path):
+                        modified_paths[relative_path] = path_item
             schema["paths"] = modified_paths
         return schema
 
 
-def get_openapi_view(dataset, response_format: str = "json"):
+def get_openapi_view(dataset, version: str | None = None, response_format: str = "json"):
 
     if not isinstance(dataset, Dataset):
         raise TypeError(f"Expected Dataset instance, got {type(dataset)}")
@@ -176,10 +176,23 @@ def get_openapi_view(dataset, response_format: str = "json"):
         patterns=_lazy_get_dataset_patterns(dataset_schema.id),
         generator_class=DynamicApiSchemaGenerator,
         permission_classes=(permissions.AllowAny,),
-        version=dataset_schema.get_version(dataset_schema.default_version)["version"],
+        version=dataset_schema.get_version(version or dataset_schema.default_version)["version"],
     )
 
     # Specific data to override in the OpenAPI
+    docfile = f"{dataset.path}@{version}" if version else dataset.path
+    versions = {
+        f"default ({dataset.default_version})": urljoin(
+            settings.DATAPUNT_API_URL,  # to preserve hostname
+            f"/v1/{dataset_schema.id}",
+        )
+    }
+    for vmajor in dataset_schema.versions:
+        versions[f"version {vmajor}"] = urljoin(
+            settings.DATAPUNT_API_URL,  # to preserve hostname
+            f"/v1/{dataset_schema.id}/{vmajor}",
+        )
+
     openapi_overrides = {
         "info": {
             "license": {
@@ -189,9 +202,10 @@ def get_openapi_view(dataset, response_format: str = "json"):
         "externalDocs": {
             "url": urljoin(
                 settings.DATAPUNT_API_URL,  # to preserve hostname
-                f"/v1/docs/datasets/{dataset.path}.html",
+                f"/v1/docs/datasets/{docfile}.html",
             )
         },
+        "x-versions": versions,  # properties not in schema should be prefixed with `x-`
     }
 
     # As get_schema_view() offers no **initkwargs to the view, it's not possible to pass
