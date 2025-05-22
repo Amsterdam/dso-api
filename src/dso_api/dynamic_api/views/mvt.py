@@ -16,6 +16,7 @@ from vectortiles import VectorLayer
 from vectortiles.backends import BaseVectorLayerMixin
 from vectortiles.views import TileJSONView
 
+from dso_api.dynamic_api.constants import DEFAULT
 from dso_api.dynamic_api.datasets import get_active_datasets
 from dso_api.dynamic_api.filters.values import AMSTERDAM_BOUNDS, DAM_SQUARE
 from dso_api.dynamic_api.permissions import CheckModelPermissionsMixin
@@ -88,12 +89,25 @@ class DatasetMVTSingleView(TemplateView):
             raise Http404("Dataset does not support MVT") from None
 
         schema = models[geo_tables[0]].table_schema().dataset
+        suffix = "" if dataset_version == DEFAULT else "-version"
+        path = self.request.path
+        if not path.endswith("/"):
+            path += "/"
 
-        context["mvt_title"] = schema.title or dataset_name.title()
-        context["name"] = dataset_name
-        context["tables"] = geo_tables
-        context["schema"] = schema
-        context["base_url"] = self.request.build_absolute_uri("/").rstrip("/")
+        context.update(
+            {
+                "mvt_title": schema.title or dataset_name.title(),
+                "schema": schema,
+                "tables": geo_tables,
+                "version": dataset_version,
+                "base_url": self.request.build_absolute_uri("/").rstrip("/"),
+                "tilejson_url": reverse(f"dynamic_api:mvt-tilejson{suffix}", kwargs=kwargs),
+                "path": path,
+                "doc_url": reverse(f"dynamic_api:docs-dataset{suffix}", kwargs=kwargs),
+                "wfs_url": reverse(f"dynamic_api:wfs{suffix}", kwargs=kwargs),
+            }
+        )
+
         return context
 
 
