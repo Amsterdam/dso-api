@@ -44,13 +44,13 @@ azure-core-tracing-opentelemetry==1.0.0b12 \
     --hash=sha256:38fd42709f1cc4bbc4f2797008b1c30a6a01617e49910c05daa3a0d0c65053ac \
     --hash=sha256:bb454142440bae11fd9d68c7c1d67ae38a1756ce808c5e4d736730a7b4b04144
     # via azure-monitor-opentelemetry
-azure-identity==1.22.0 \
-    --hash=sha256:26d6c63f2ca453c77c3e74be8613941ad074e05d0c8be135247573752c249ad8 \
-    --hash=sha256:c8f5ef23e5295c2fa300c984dd9f5e1fe43503fc25c121c37ff6a15e39b800b9
+azure-identity==1.23.0 \
+    --hash=sha256:d9cdcad39adb49d4bb2953a217f62aec1f65bbb3c63c9076da2be2a47e53dde4 \
+    --hash=sha256:dbbeb64b8e5eaa81c44c565f264b519ff2de7ff0e02271c49f3cb492762a50b0
     # via -r requirements.in
-azure-monitor-opentelemetry==1.6.8 \
-    --hash=sha256:227b3caaaf1a86bbd71d5f4443ef3d64e42dddfcaeb7aade1d3d4a9a8059309d \
-    --hash=sha256:d6098ca82a0b067bf342fd1d0b23ffacb45410276e0b7e12beafcd4a6c3b77a3
+azure-monitor-opentelemetry==1.6.9 \
+    --hash=sha256:2689cb019982d01688584de832e118316e974c3ba02d81f71d8e8e7ca5d1e799 \
+    --hash=sha256:3e3ae4b4f8f048df7b7056510f75dbcf41055cdd433cc9425a5b7f7d1a0163c3
     # via -r requirements.in
 azure-monitor-opentelemetry-exporter==1.0.0b35 \
     --hash=sha256:5ecc1c502485ede7a11ccc9ef9370abf6ec4b0431ebec77dab25d568d018f04f \
@@ -1574,9 +1574,9 @@ rpds-py==0.24.0 \
     # via
     #   jsonschema
     #   referencing
-sentry-sdk==2.28.0 \
-    --hash=sha256:14d2b73bc93afaf2a9412490329099e6217761cbab13b6ee8bc0e82927e1504e \
-    --hash=sha256:51496e6cb3cb625b99c8e08907c67a9112360259b0ef08470e532c3ab184a232
+sentry-sdk==2.29.1 \
+    --hash=sha256:8d4a0206b95fa5fe85e5e7517ed662e3888374bdc342c00e435e10e6d831aa6d \
+    --hash=sha256:90862fe0616ded4572da6c9dadb363121a1ae49a49e21c418f0634e9d10b4c19
     # via -r requirements.in
 shapely==2.0.7 \
     --hash=sha256:0145387565fcf8f7c028b073c802956431308da933ef41d08b1693de49990d27 \
