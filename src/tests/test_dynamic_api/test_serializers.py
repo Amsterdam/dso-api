@@ -728,7 +728,7 @@ class TestDynamicSerializer:
             "datumCreatie": "2021-01-03",
             "datumLeegmaken": "2021-01-03T11:13:14",
             "eigenaarNaam": "Dataservices",
-            "geometry": {"coordinates": [10.0, 10.0], "type": "Point"},
+            "geometry": {"coordinates": [121389, 487369], "type": "Point"},
             "id": 1,
             "serienummer": "foobar-123",
         }
