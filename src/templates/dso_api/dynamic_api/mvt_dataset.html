@@ -9,11 +9,10 @@
 
 {% block content %}
   <main>
-    <h1>{{ mvt_title }} MVT</h1>
+    <h1>{{ mvt_title }} MVT {% if version != "default" %}({{version}}){% endif %}</h1>
     {% include "dso_api/dynamic_api/_dataset_metadata.html" %}
 
       <h2>Gebruik van deze dataset</h2>
-      {% url 'dynamic_api:mvt-tilejson' dataset_name=schema.id as tilejson_url %}
       {% if tilejson_url %}
         <p>Voeg deze TileJSON URL toe aan uw GIS applicatie:</p>
         <blockquote>
@@ -23,7 +22,7 @@
       <p>Of voeg de volgende urls toe aan uw GIS applicatie:</p>
       <ul>
       {% for table in tables %}
-        <li><code>{{ base_url }}{{ request.path }}{{ table }}/{z}/{x}/{y}.pbf</code></li>
+        <li><code>{{ base_url }}{{ path }}{{ table }}/{z}/{x}/{y}.pbf</code></li>
       {% endfor %}
       </ul>
       <p>Voor de gebruikshandleiding, zie <a href='/v1/docs/generic/gis.html'>Datasets laden in GIS-pakketten</a>.</p>
@@ -31,8 +30,8 @@
       <h2>Andere ontsluitingsvormen</h2>
       <p>Deze dataset is ook beschikbaar als:</p>
       <ul>
-        <li><a href="{% url 'dynamic_api:docs-dataset' dataset_name=name %}">Rest API</a></li>
-        <li><a href="{% url 'dynamic_api:wfs' dataset_name=name %}">WFS kaartlaag</a></li>
+        <li><a href="{{ doc_url }}">Rest API</a></li>
+        <li><a href="{{ wfs_url }}">WFS kaartlaag</a></li>
       </ul>
     </main>
 {% endblock %}
