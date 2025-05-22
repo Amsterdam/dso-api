@@ -32,4 +32,5 @@ ETRS89 = CRS.from_string("urn:ogc:def:crs:EPSG::4258")
 DEFAULT_CRS = RD_NEW
 
 #: All coordinate reference systems exposed by this file.
-ALL_CRS = [DEFAULT_CRS, WGS84, WEB_MERCATOR, ETRS89]
+#: These are accepted by the Accept-Crs header, and exposed in the WFS.
+ALL_CRS = [WGS84, CRS84, WEB_MERCATOR, ETRS89, RD_NEW]
