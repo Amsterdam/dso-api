@@ -358,6 +358,12 @@ class GeoJSONRenderer(RendererMixin, renderers.JSONRenderer):
 
     def tune_serializer(self, serializer: Serializer):
         """Remove unused fields from the serializer:"""
+        request = serializer.context["request"]
+        if request.accept_crs == WGS84:
+            # The GeoJSON standard mandates coordinates are always in x/y ordering.
+            # Enforce this by converting "Accept-Crs: EPSG:4326" into CRS84 here.
+            request.accept_crs = CRS84
+
         serializer.fields = {
             name: field for name, field in serializer.fields.items() if name != "_links"
         }
@@ -470,12 +476,6 @@ class GeoJSONRenderer(RendererMixin, renderers.JSONRenderer):
             content_crs = getattr(request, "response_content_crs", None) or accept_crs
 
             if content_crs is not None:
-                # The GeoJSON standard mandates coordinates are always in x/y ordering.
-                # Thus, it makes sense GEOSGeometry.json always returns coordinates like that.
-                # Make sure the crs value reflects that; WGS84 uses (y/x) and CRS84 uses (x/y).
-                if content_crs == WGS84:
-                    content_crs = CRS84
-
                 return {
                     "crs": {
                         "type": "name",
