@@ -9,7 +9,6 @@ from django.db.models import F, Model
 from django.http import Http404
 from django.urls.base import reverse
 from django.views.generic import TemplateView
-from schematools.contrib.django.models import Dataset
 from schematools.naming import toCamelCase
 from schematools.permissions import UserScopes
 from schematools.types import DatasetTableSchema
@@ -46,29 +45,22 @@ class DatasetMVTIndexView(APIIndexView):
             if ds.has_geometry_fields
         ]
 
-    def get_environments(self, ds: Dataset, base: str):
-        api_url = reverse("dynamic_api:mvt", kwargs={"dataset_name": ds.schema.id})
-        return [
-            {
-                "name": "production",
-                "api_url": base + api_url,
-                "specification_url": base + api_url,
-                "documentation_url": f"{base}/v1/docs/generic/gis.html",
-            }
-        ]
-
-    def get_related_apis(self, ds: Dataset, base: str):
-        dataset_id = ds.schema.id
-        return [
-            {
-                "type": "rest_json",
-                "url": base + reverse("dynamic_api:openapi", kwargs={"dataset_name": dataset_id}),
-            },
-            {
-                "type": "WFS",
-                "url": base + reverse("dynamic_api:wfs", kwargs={"dataset_name": dataset_id}),
-            },
-        ]
+    def _build_version_endpoints(
+        self, base: str, dataset_id: str, version: str, header: str | None = None, suffix: str = ""
+    ):
+        kwargs = {"dataset_name": dataset_id, "dataset_version": version}
+        mvt_url = reverse(f"dynamic_api:mvt{suffix}", kwargs=kwargs)
+        wfs_url = reverse(f"dynamic_api:wfs{suffix}", kwargs=kwargs)
+        api_url = reverse(f"dynamic_api:openapi{suffix}", kwargs=kwargs)
+        return {
+            "header": header or f"Version {version}",
+            "mvt_url": base + mvt_url,
+            "doc_url": f"{base}/v1/docs/generic/gis.html",
+            "documentation_url": f"{base}/v1/docs/generic/gis.html",  # For catalog
+            "api_url": base + api_url,
+            "wfs_url": base + wfs_url,
+            "specification_url": base + mvt_url,  # For catalog
+        }
 
 
 class DatasetMVTSingleView(TemplateView):
