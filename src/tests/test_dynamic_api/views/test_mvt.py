@@ -26,7 +26,7 @@ class TestDatasetMVTIndexView:
         assert response.status_code == 200
 
         # Prove that response contains the correct data
-        base = drf_request.build_absolute_uri("/").rstrip("/")
+        BASE = drf_request.build_absolute_uri("/").rstrip("/")
         assert response.data == {
             "datasets": {
                 "afvalwegingen": {
@@ -43,15 +43,34 @@ class TestDatasetMVTIndexView:
                     },
                     "environments": [
                         {
-                            "name": "production",
-                            "api_url": f"{base}/v1/mvt/afvalwegingen",
-                            "specification_url": f"{base}/v1/mvt/afvalwegingen",
-                            "documentation_url": f"{base}/v1/docs/generic/gis.html",
-                        }
+                            "api_url": f"{BASE}/v1/afvalwegingen",
+                            "doc_url": f"{BASE}/v1/docs/generic/gis.html",
+                            "documentation_url": f"{BASE}/v1/docs/generic/gis.html",
+                            "header": "Standaardversie (v1)",
+                            "mvt_url": f"{BASE}/v1/mvt/afvalwegingen",
+                            "specification_url": f"{BASE}/v1/mvt/afvalwegingen",
+                            "wfs_url": f"{BASE}/v1/wfs/afvalwegingen",
+                        },
                     ],
-                    "related_apis": [
-                        {"type": "rest_json", "url": f"{base}/v1/afvalwegingen"},
-                        {"type": "WFS", "url": f"{base}/v1/wfs/afvalwegingen"},
+                    "versions": [
+                        {
+                            "api_url": f"{BASE}/v1/afvalwegingen",
+                            "doc_url": f"{BASE}/v1/docs/generic/gis.html",
+                            "documentation_url": f"{BASE}/v1/docs/generic/gis.html",
+                            "header": "Standaardversie (v1)",
+                            "mvt_url": f"{BASE}/v1/mvt/afvalwegingen",
+                            "specification_url": f"{BASE}/v1/mvt/afvalwegingen",
+                            "wfs_url": f"{BASE}/v1/wfs/afvalwegingen",
+                        },
+                        {
+                            "api_url": f"{BASE}/v1/afvalwegingen/v1",
+                            "doc_url": f"{BASE}/v1/docs/generic/gis.html",
+                            "documentation_url": f"{BASE}/v1/docs/generic/gis.html",
+                            "header": "Versie v1",
+                            "mvt_url": f"{BASE}/v1/mvt/afvalwegingen/v1",
+                            "specification_url": f"{BASE}/v1/mvt/afvalwegingen/v1",
+                            "wfs_url": f"{BASE}/v1/wfs/afvalwegingen/v1",
+                        },
                     ],
                     "api_authentication": ["OPENBAAR"],
                     "api_type": "MVT",
@@ -76,15 +95,34 @@ class TestDatasetMVTIndexView:
                     },
                     "environments": [
                         {
-                            "name": "production",
-                            "api_url": f"{base}/v1/mvt/fietspaaltjes",
-                            "specification_url": f"{base}/v1/mvt/fietspaaltjes",
-                            "documentation_url": f"{base}/v1/docs/generic/gis.html",
-                        }
+                            "api_url": f"{BASE}/v1/fietspaaltjes",
+                            "doc_url": f"{BASE}/v1/docs/generic/gis.html",
+                            "documentation_url": f"{BASE}/v1/docs/generic/gis.html",
+                            "header": "Standaardversie (v1)",
+                            "mvt_url": f"{BASE}/v1/mvt/fietspaaltjes",
+                            "specification_url": f"{BASE}/v1/mvt/fietspaaltjes",
+                            "wfs_url": f"{BASE}/v1/wfs/fietspaaltjes",
+                        },
                     ],
-                    "related_apis": [
-                        {"type": "rest_json", "url": f"{base}/v1/fietspaaltjes"},
-                        {"type": "WFS", "url": f"{base}/v1/wfs/fietspaaltjes"},
+                    "versions": [
+                        {
+                            "api_url": f"{BASE}/v1/fietspaaltjes",
+                            "doc_url": f"{BASE}/v1/docs/generic/gis.html",
+                            "documentation_url": f"{BASE}/v1/docs/generic/gis.html",
+                            "header": "Standaardversie (v1)",
+                            "mvt_url": f"{BASE}/v1/mvt/fietspaaltjes",
+                            "specification_url": f"{BASE}/v1/mvt/fietspaaltjes",
+                            "wfs_url": f"{BASE}/v1/wfs/fietspaaltjes",
+                        },
+                        {
+                            "api_url": f"{BASE}/v1/fietspaaltjes/v1",
+                            "doc_url": f"{BASE}/v1/docs/generic/gis.html",
+                            "documentation_url": f"{BASE}/v1/docs/generic/gis.html",
+                            "header": "Versie v1",
+                            "mvt_url": f"{BASE}/v1/mvt/fietspaaltjes/v1",
+                            "specification_url": f"{BASE}/v1/mvt/fietspaaltjes/v1",
+                            "wfs_url": f"{BASE}/v1/wfs/fietspaaltjes/v1",
+                        },
                     ],
                     "api_authentication": ["OPENBAAR"],
                     "api_type": "MVT",
