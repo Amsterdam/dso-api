@@ -23,6 +23,7 @@ the :func:`~schematools.contrib.django.factories.model_factory` and
 from __future__ import annotations
 
 import logging
+from collections import defaultdict
 from collections.abc import Iterable, Iterator
 from itertools import chain
 from typing import TYPE_CHECKING
@@ -166,7 +167,7 @@ class DynamicRouter(DefaultRouter):
     def __init__(self):
         super().__init__(trailing_slash=False)
         self.include_format_suffixes = False
-        self.all_models: dict[str, dict[str, type[DynamicModel]]] = {}
+        self.all_models: dict[str, dict[str, dict[str, type[DynamicModel]]]] = {}
         self.static_routes = []
         self._doc_urls = []
         self._openapi_urls = []
@@ -297,7 +298,7 @@ class DynamicRouter(DefaultRouter):
 
         for dataset in db_datasets:
             dataset_id = dataset.schema.id  # not dataset.name which is mangled.
-            new_models = {}
+            new_models = defaultdict(dict)
             models = dataset.create_models(
                 base_app_name="dso_api.dynamic_api",
                 base_model=SealedDynamicModel,
@@ -306,11 +307,15 @@ class DynamicRouter(DefaultRouter):
 
             for model in models:
                 logger.debug("Created model %s.%s", dataset_id, model.__name__)
-                new_models[model._meta.model_name] = model
+                # In case there are no versions where this table exists, add it to the default.
+                # This happens in some tests.
+                for version in model._dataset_versions or [dataset.default_version]:
+                    new_models[version][model._meta.model_name] = model
+                    if version == dataset.default_version:
+                        new_models[DEFAULT][model._meta.model_name] = model
 
             self.all_models[dataset_id] = new_models
-
-            generated_models.extend(new_models.values())
+            generated_models.extend(models)
 
         return generated_models
 
@@ -359,35 +364,36 @@ class DynamicRouter(DefaultRouter):
 
         # Generate views now that all models have been created.
         # This makes sure the 'to' field is resolved to an actual model class.
-        for app_label, models_by_name in self.all_models.items():
+        for app_label, versioned_models_by_name in self.all_models.items():
             if app_label not in db_datasets:
                 logger.debug("Skipping API creation for dataset: %s", app_label)
                 continue
 
-            dataset: Dataset = db_datasets[app_label]
-            for model in models_by_name.values():
-                _validate_model(model)
-                if model.has_parent_table():
-                    # Do not create separate viewsets for nested tables.
-                    continue
+            for version, models_by_name in versioned_models_by_name.items():
+                for model in models_by_name.values():
+                    _validate_model(model)
+                    if model.has_parent_table():
+                        # Do not create separate viewsets for nested tables.
+                        continue
 
-                dataset_id = to_snake_case(model.get_dataset_id())
-                table_id = to_snake_case(model.get_table_id())
-
-                for vmajor in dataset.schema.versions:
-                    # Determine the URL prefix for the versioned model
-                    url_prefix = self._make_url(model.get_dataset_path(), table_id, vmajor)
-
-                    logger.debug("Created viewset %s", url_prefix)
+                    dataset_id = to_snake_case(model.get_dataset_id())
+                    table_id = to_snake_case(model.get_table_id())
                     viewset = viewset_factory(model)
-                    tmp_router.register(
-                        url_prefix, viewset, basename=f"{dataset_id}-{vmajor}-{table_id}"
-                    )
-                    if vmajor == dataset.default_version:
+
+                    if version == DEFAULT:
                         # Default version accessible without version number.
                         url_prefix = self._make_url(model.get_dataset_path(), table_id)
                         tmp_router.register(
                             url_prefix, viewset, basename=f"{dataset_id}-{table_id}"
+                        )
+
+                    else:
+                        # Determine the URL prefix for the versioned model
+                        url_prefix = self._make_url(model.get_dataset_path(), table_id, version)
+
+                        logger.debug("Created viewset %s", url_prefix)
+                        tmp_router.register(
+                            url_prefix, viewset, basename=f"{dataset_id}-{version}-{table_id}"
                         )
 
         return tmp_router.registry
@@ -514,6 +520,22 @@ class DynamicRouter(DefaultRouter):
                     },
                 )
             )
+            results.append(
+                path(
+                    f"/mvt/{dataset.path}/tilejson.json",
+                    DatasetTileJSONView.as_view(),
+                    name="mvt-tilejson",
+                    kwargs={"dataset_name": dataset_id, "dataset_version": DEFAULT},
+                )
+            ),
+            results.append(
+                path(
+                    f"/mvt/{dataset.path}/<table_name>/<int:z>/<int:x>/<int:y>.pbf",
+                    DatasetMVTView.as_view(),
+                    name="mvt-pbf",
+                    kwargs={"dataset_name": dataset_id, "dataset_version": DEFAULT},
+                )
+            )
             for vmajor in dataset.schema.versions:
                 results.append(
                     path(
@@ -523,38 +545,23 @@ class DynamicRouter(DefaultRouter):
                         kwargs={"dataset_name": dataset_id, "dataset_version": vmajor},
                     )
                 )
-            results.append(
-                path(
-                    f"/mvt/{dataset.path}/tilejson.json",
-                    DatasetTileJSONView.as_view(),
-                    name="mvt-tilejson",
-                    kwargs={"dataset_name": dataset_id},
+                results.append(
+                    path(
+                        f"/mvt/{dataset.path}/{vmajor}/tilejson.json",
+                        DatasetTileJSONView.as_view(),
+                        name="mvt-tilejson-version",
+                        kwargs={"dataset_name": dataset_id, "dataset_version": vmajor},
+                    )
                 )
-            ),
-            results.append(
-                path(
-                    f"/mvt/{dataset.path}/<table_name>/",
-                    DatasetTileJSONView.as_view(),
-                    name="mvt-tilejson-table-slash",
-                    kwargs={"dataset_name": dataset_id},
+                results.append(
+                    path(
+                        f"/mvt/{dataset.path}/{vmajor}/<table_name>/<int:z>/<int:x>/<int:y>.pbf",
+                        DatasetMVTView.as_view(),
+                        name="mvt-pbf-version",
+                        kwargs={"dataset_name": dataset_id, "dataset_version": vmajor},
+                    )
                 )
-            ),
-            results.append(
-                path(
-                    f"/mvt/{dataset.path}/<table_name>",
-                    DatasetTileJSONView.as_view(),
-                    name="mvt-tilejson-table",
-                    kwargs={"dataset_name": dataset_id},
-                )
-            ),
-            results.append(
-                path(
-                    f"/mvt/{dataset.path}/<table_name>/<int:z>/<int:x>/<int:y>.pbf",
-                    DatasetMVTView.as_view(),
-                    name="mvt-pbf",
-                    kwargs={"dataset_name": dataset_id},
-                )
-            )
+
         return results
 
     def _build_wfs_views(self, datasets: Iterable[Dataset]) -> list[URLPattern]:

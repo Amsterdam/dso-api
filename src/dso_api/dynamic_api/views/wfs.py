@@ -167,8 +167,9 @@ class DatasetWFSView(CheckModelPermissionsMixin, WFSView):
         from dso_api.dynamic_api.urls import router
 
         dataset_name = self.kwargs["dataset_name"]
+        dataset_version = self.kwargs["dataset_version"]
         try:
-            self.models = router.all_models[dataset_name]
+            self.models = router.all_models[dataset_name][dataset_version]
         except KeyError:
             raise Http404(f"Invalid dataset: {dataset_name}") from None
 
