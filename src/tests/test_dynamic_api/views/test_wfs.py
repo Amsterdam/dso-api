@@ -289,8 +289,10 @@ class TestDatasetWFSViewAuth:
         # if we have access to the dataset.
         data = self.parse_response(response)
         assert data == {
-            "boundedBy": {"Envelope": [{"lowerCorner": "10 10"}, {"upperCorner": "10 10"}]},
-            "geometry": {"Point": {"pos": "10 10"}},
+            "boundedBy": {
+                "Envelope": [{"lowerCorner": "121389 487369"}, {"upperCorner": "121389 487369"}]
+            },
+            "geometry": {"Point": {"pos": "121389 487369"}},
             "id": "1",
             "metadata": "secret",
         }
@@ -302,9 +304,11 @@ class TestDatasetWFSViewAuth:
         assert response.status_code == 200
         data = self.parse_response(response)
         assert data == {
-            "boundedBy": {"Envelope": [{"lowerCorner": "10 10"}, {"upperCorner": "10 10"}]},
+            "boundedBy": {
+                "Envelope": [{"lowerCorner": "121389 487369"}, {"upperCorner": "121389 487369"}]
+            },
             "id": "1",
-            "geometry_with_auth": {"Point": {"pos": "10 10"}},
+            "geometry_with_auth": {"Point": {"pos": "121389 487369"}},
         }
 
     @pytest.mark.parametrize("scopes", [[], ["TEST/META"]])
@@ -367,8 +371,10 @@ class TestDatasetWFSViewAuth:
         assert response.status_code == 200, response
         data = self.parse_response(response)
         assert data == {
-            "boundedBy": {"Envelope": [{"lowerCorner": "10 10"}, {"upperCorner": "10 10"}]},
-            "geometry_with_auth": {"Point": {"pos": "10 10"}},
+            "boundedBy": {
+                "Envelope": [{"lowerCorner": "121389 487369"}, {"upperCorner": "121389 487369"}]
+            },
+            "geometry_with_auth": {"Point": {"pos": "121389 487369"}},
             "id": "1",
             "metadata": "secret",
         }

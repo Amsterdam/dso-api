@@ -28,6 +28,19 @@ HERE = Path(__file__).parent
 DATE_2021_FEB = datetime(2021, 2, 28, 10, 0, tzinfo=get_current_timezone())
 DATE_2021_JUNE = datetime(2021, 6, 11, 10, 0, tzinfo=get_current_timezone())
 
+# Database formats
+DAM_SQUARE_LATLON = "SRID=4326;POINT (4.8936582 52.3731716)"  # x,y ordering in database
+DAM_SQUARE_RD = "SRID=28992;POINT (121389 487369)"
+
+# Django formats
+DAM_SQUARE_POINT_NO_SRID = Point(121389, 487369)  # uses django model field srid.
+DAM_SQUARE_POINT = Point(121389, 487369, srid=28992)
+
+# Allow comparing on systems that have different gdal/proj4 versions
+DAM_SQUARE_LATLON_APPROX = pytest.approx([4.8936582, 52.3731716], rel=1e-6)  # x,y ordering
+DAM_SQUARE_WGS84_APPROX = pytest.approx([52.3731716, 4.8936582], rel=1e-6)  # north,east (y,x)
+DAM_SQUARE_RD_APPROX = pytest.approx([121389, 487369], rel=0.001)
+
 
 # In test files we use a lot of non-existent scopes, so instead of writing scope
 # json files we monkeypatch this method.
@@ -375,7 +388,7 @@ def afval_container(afval_container_model, afval_cluster):
         datum_creatie=date(2021, 1, 3),
         datum_leegmaken=datetime(2021, 1, 3, 12, 13, 14, tzinfo=get_current_timezone()),
         cluster=afval_cluster,
-        geometry=Point(10, 10),  # no SRID on purpose, should use django model field.
+        geometry=DAM_SQUARE_POINT_NO_SRID,
     )
 
 
@@ -460,7 +473,7 @@ def geometry_auth_thing(geometry_auth_model):
     return geometry_auth_model.objects.create(
         id=1,
         metadata="secret",
-        geometry_with_auth=Point(10, 10),
+        geometry_with_auth=DAM_SQUARE_POINT_NO_SRID,
     )
 
 
@@ -487,7 +500,7 @@ def geometry_authdataset_thing(geometry_authdataset_model):
     return geometry_authdataset_model.objects.create(
         id=1,
         metadata="secret",
-        geometry=Point(10, 10),
+        geometry=DAM_SQUARE_POINT_NO_SRID,
     )
 
 
@@ -514,8 +527,8 @@ def geometry_multiple_thing(geometry_multiple_model):
     return geometry_multiple_model.objects.create(
         id=1,
         metadata="secret",
-        geometrie=Point(10, 10),
-        main_geometrie=Point(10, 10),
+        geometrie=DAM_SQUARE_POINT_NO_SRID,
+        main_geometrie=DAM_SQUARE_POINT_NO_SRID,
     )
 
 

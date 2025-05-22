@@ -1,31 +1,22 @@
 import inspect
 import json
-import math
 from typing import Any
 
 import orjson
 import pytest
-from django.contrib.gis.geos import Point
 from django.urls import reverse
 from rest_framework.response import Response
 
-from rest_framework_dso.crs import RD_NEW
 from rest_framework_dso.response import StreamingResponse
+from tests.conftest import DAM_SQUARE_POINT
 from tests.utils import patch_table_auth, read_response, read_response_json
 
+RAW_GEOJSON_COORDS = list(DAM_SQUARE_POINT.transform("urn:ogc:def:crs:OGC::CRS84", clone=True))
 
-class AproxFloat(float):
-    def __eq__(self, other):
-        # allow minor differences in comparing the floats. This makes sure that the
-        # precise float deserialization of orjson.loads() doesn't cause any
-        # comparison issues. The first 14 decimals must be the same:
-        return math.isclose(self, other, rel_tol=1e-14, abs_tol=1e-14)
-
-
-GEOJSON_POINT = [
-    AproxFloat(c)
-    for c in Point(10, 10, srid=RD_NEW.srid).transform("urn:ogc:def:crs:OGC::CRS84", clone=True)
-]
+# allow minor differences in comparing the floats. This makes sure that the
+# precise float deserialization of orjson.loads() doesn't cause any
+# comparison issues. The first 14 decimals must be the same:
+GEOJSON_COORDS = pytest.approx(RAW_GEOJSON_COORDS, rel=1e-14, abs=1e-14)
 
 
 def as_is(data):
@@ -41,11 +32,11 @@ class TestFormats:
         This only compares a rounded version, as there can be subtle differences
         in the actual value depending on your GDAL/libproj version.
         """
-        crs84_point = [round(GEOJSON_POINT[0], 2), round(GEOJSON_POINT[1], 2)]
+        crs84_point = pytest.approx(RAW_GEOJSON_COORDS, rel=1e-2)
         # GeoJSON should always be longitude and latitude,
         # even though GDAL 2 vs 3 have different behavior:
         # https://gdal.org/tutorials/osr_api_tut.html#crs-and-axis-order
-        assert crs84_point == [3.31, 47.97]
+        assert crs84_point == [4.89, 52.37]
 
     UNPAGINATED_FORMATS = {
         "csv": (
@@ -53,7 +44,7 @@ class TestFormats:
             "text/csv; charset=utf-8",
             b"Id,Clusterid,Serienummer,Eigenaarnaam,Datumcreatie,Datumleegmaken,Geometry\r\n"
             b"1,c1,foobar-123,Dataservices,2021-01-03,2021-01-03T12:13:14,SRID=28992;"
-            b"POINT (10 10)\r\n",
+            b"POINT (121389 487369)\r\n",
         ),
         "geojson": (
             orjson.loads,
@@ -70,7 +61,7 @@ class TestFormats:
                         "id": "containers.1",
                         "geometry": {
                             "type": "Point",
-                            "coordinates": GEOJSON_POINT,
+                            "coordinates": GEOJSON_COORDS,
                         },
                         "properties": {
                             "id": 1,
@@ -126,7 +117,7 @@ class TestFormats:
 
         lines = (
             f"{i},c1,foobar-123,Dataservices,2021-01-03,2021-01-03T12:13:14,"
-            "SRID=28992;POINT (10 10)\r\n"
+            "SRID=28992;POINT (121389 487369)\r\n"
             for i in range(start, end)
         )
         return (
@@ -162,7 +153,7 @@ class TestFormats:
                         "datumCreatie": "2021-01-03",
                         "datumLeegmaken": "2021-01-03T12:13:14",
                         "eigenaarNaam": "Dataservices",
-                        "geometry": {"coordinates": [10.0, 10.0], "type": "Point"},
+                        "geometry": {"coordinates": [121389, 487369], "type": "Point"},
                         "id": i,
                         "serienummer": "foobar-123",
                     }
@@ -207,7 +198,7 @@ class TestFormats:
                     "id": f"containers.{i}",
                     "geometry": {
                         "type": "Point",
-                        "coordinates": GEOJSON_POINT,
+                        "coordinates": GEOJSON_COORDS,
                     },
                     "properties": {
                         "id": i,
@@ -357,10 +348,10 @@ class TestFormats:
         assert isinstance(response, StreamingResponse)
         data = read_response(response)
         assert data == (
-            "Id,Clusterid,Serienummer,Eigenaarnaam,Datumcreatie,Datumleegmaken,Geometry"
-            ",Cluster.Id,Cluster.Status\r\n"
-            "1,c1,foobar-123,Dataservices,2021-01-03,2021-01-03T12:13:14,SRID=28992;POINT (10 10)"
-            ",c1,valid\r\n"
+            "Id,Clusterid,Serienummer,Eigenaarnaam,Datumcreatie,Datumleegmaken"
+            ",Geometry,Cluster.Id,Cluster.Status\r\n"
+            "1,c1,foobar-123,Dataservices,2021-01-03,2021-01-03T12:13:14"
+            ",SRID=28992;POINT (121389 487369),c1,valid\r\n"
         )
 
     def test_csv_expand_m2m_invalid(self, api_client, api_rf, ggwgebieden_data, filled_router):
@@ -425,7 +416,7 @@ class TestFormats:
             "text/csv; charset=utf-8",
             b"Id,Clusterid,Serienummer,Eigenaarnaam,Datumcreatie,Datumleegmaken,Geometry\r\n"
             b"1,c1,foobar-123,Dataservices,2021-01-03,2021-01-03T12:13:14,SRID=28992"
-            b";POINT (10 10)\r\n",
+            b";POINT (121389 487369)\r\n",
         ),
         "geojson": (
             orjson.loads,
@@ -434,7 +425,7 @@ class TestFormats:
                 "type": "Feature",
                 "id": "containers.1",
                 "geometry": {
-                    "coordinates": GEOJSON_POINT,
+                    "coordinates": GEOJSON_COORDS,
                     "type": "Point",
                 },
                 "properties": {
