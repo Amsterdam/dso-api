@@ -46,6 +46,7 @@ from gisserver.views import WFSView
 from schematools.contrib.django.models import DynamicModel
 from schematools.types import DatasetTableSchema
 
+from dso_api.dynamic_api.constants import DEFAULT
 from dso_api.dynamic_api.datasets import get_active_datasets
 from dso_api.dynamic_api.permissions import CheckModelPermissionsMixin
 from dso_api.dynamic_api.temporal import filter_temporal_slice
@@ -200,6 +201,8 @@ class DatasetWFSView(CheckModelPermissionsMixin, WFSView):
     def get_index_context_data(self, **kwargs):
         """Context data for the HTML root page"""
         embeddable_fields = self._get_embeddable_fields()
+        dataset_version = self.kwargs["dataset_version"]
+        suffix = "" if dataset_version == DEFAULT else "-version"
         return {
             **super().get_index_context_data(**kwargs),
             # Similar context as to DatasetMVTSingleView
@@ -208,6 +211,9 @@ class DatasetWFSView(CheckModelPermissionsMixin, WFSView):
             "dataset_has_auth": bool(self.schema.auth - {"OPENBAAR"}),
             "has_custom_schema": self.expand_fields or self.embed_fields,
             "embeddable_fields": embeddable_fields,
+            "dataset_version": dataset_version,
+            "mvt_url": reverse(f"dynamic_api:mvt{suffix}", kwargs=self.kwargs),
+            "doc_url": reverse(f"dynamic_api:docs-dataset{suffix}", kwargs=self.kwargs),
         }
 
     def _get_embeddable_fields(self) -> list[dict]:
