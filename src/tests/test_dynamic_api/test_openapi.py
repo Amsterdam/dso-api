@@ -95,12 +95,6 @@ def test_openapi_json(api_client, afval_dataset, fietspaaltjes_dataset, filled_r
         "/clusters/{id}",
         "/containers",
         "/containers/{id}",
-        "/v1/adres_loopafstand",
-        "/v1/adres_loopafstand/{id}",
-        "/v1/clusters",
-        "/v1/clusters/{id}",
-        "/v1/containers",
-        "/v1/containers/{id}",
     ]
 
     # Prove that the oauth model is exposed
