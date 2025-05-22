@@ -78,12 +78,12 @@ class DatasetMVTSingleView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-
+        dataset_version = kwargs["dataset_version"]
         try:
             from dso_api.dynamic_api.urls import router
 
             dataset_name = kwargs["dataset_name"]
-            models = router.all_models[dataset_name]
+            models = router.all_models[dataset_name][dataset_version]
         except KeyError:
             raise Http404(f"Unknown dataset: {dataset_name!r}") from None
 
@@ -115,10 +115,11 @@ class DatasetMVTView(CheckModelPermissionsMixin, StreamingMVTView):
         from dso_api.dynamic_api.urls import router
 
         dataset_name = self.kwargs["dataset_name"]
+        dataset_version = self.kwargs["dataset_version"]
         table_name = self.kwargs["table_name"]
 
         try:
-            model = router.all_models[dataset_name][table_name]
+            model = router.all_models[dataset_name][dataset_version][table_name]
         except KeyError:
             raise Http404(f"Invalid table: {dataset_name}.{table_name}") from None
 
@@ -211,10 +212,11 @@ class DatasetTileJSONView(TileJSONView):
         from dso_api.dynamic_api.urls import router
 
         dataset_name = self.kwargs["dataset_name"]
+        dataset_version = self.kwargs["dataset_version"]
         self.name = dataset_name
 
         try:
-            models = router.all_models[dataset_name]
+            models = router.all_models[dataset_name][dataset_version]
         except KeyError:
             raise Http404(f"Invalid dataset: {dataset_name}") from None
 
