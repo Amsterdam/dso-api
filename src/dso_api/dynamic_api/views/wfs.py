@@ -43,7 +43,7 @@ from gisserver.features import ComplexFeatureField, FeatureField, FeatureType, S
 from gisserver.geometries import CRS
 from gisserver.parsers import wfs20
 from gisserver.views import WFSView
-from schematools.contrib.django.models import Dataset, DynamicModel
+from schematools.contrib.django.models import DynamicModel
 from schematools.types import DatasetTableSchema
 
 from dso_api.dynamic_api.datasets import get_active_datasets
@@ -117,27 +117,22 @@ class DatasetWFSIndexView(APIIndexView):
             if ds.has_geometry_fields
         ]
 
-    def get_environments(self, ds: Dataset, base: str):
-        dataset_id = ds.schema.id
-        wfs_url = reverse("dynamic_api:wfs", kwargs={"dataset_name": dataset_id})
-        abs_wfs_url = f"{base}{wfs_url}"
-        return [
-            {
-                "name": "production",
-                "api_url": abs_wfs_url,
-                "specification_url": f"{abs_wfs_url}?SERVICE=WFS&REQUEST=GetCapabilities",
-                "documentation_url": abs_wfs_url,
-            }
-        ]
-
-    def get_related_apis(self, ds: Dataset, base: str):
-        dataset_id = ds.schema.id
-        json_url = reverse("dynamic_api:openapi", kwargs={"dataset_name": dataset_id})
-        mvt_url = reverse("dynamic_api:mvt", kwargs={"dataset_name": dataset_id})
-        return [
-            {"type": "rest_json", "url": base + json_url},
-            {"type": "MVT", "url": base + mvt_url},
-        ]
+    def _build_version_endpoints(
+        self, base: str, dataset_id: str, version: str, header: str | None = None, suffix: str = ""
+    ):
+        kwargs = {"dataset_name": dataset_id, "dataset_version": version}
+        mvt_url = reverse(f"dynamic_api:mvt{suffix}", kwargs=kwargs)
+        wfs_url = reverse(f"dynamic_api:wfs{suffix}", kwargs=kwargs)
+        api_url = reverse(f"dynamic_api:openapi{suffix}", kwargs=kwargs)
+        return {
+            "header": header or f"Version {version}",
+            "wfs_url": base + wfs_url,
+            "doc_url": base + wfs_url,
+            "documentation_url": base + wfs_url,  # For catalog
+            "api_url": base + api_url,
+            "mvt_url": base + mvt_url,
+            "specification_url": base + wfs_url,  # For catalog
+        }
 
 
 class DatasetWFSView(CheckModelPermissionsMixin, WFSView):

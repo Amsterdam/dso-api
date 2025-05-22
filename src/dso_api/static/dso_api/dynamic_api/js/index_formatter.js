@@ -18,10 +18,11 @@ const FORMATTER = (rawJson) => {
         <p class='dataset-api-authentication'><b>Autorisatie</b>: ${dataset.api_authentication}</p>`
         const linksForAllVersions = dataset.versions.reduce(
             (result, version) => {
+                const { header, ...urls } = version
                 return (
                     result +
-                    `<h4 class='dataset-version'>${version.header}</h4>` +
-                    createLinksForVersion(version)
+                    `<h4 class='dataset-version'>${header}</h4>` +
+                    createLinksForVersion(urls)
                 )
             },
             ""
@@ -32,26 +33,19 @@ const FORMATTER = (rawJson) => {
     return datasetsEl.innerHTML
 }
 
-const createLinksForVersion = (version) => {
-    return `
-        <div>
-            <div><b>API:</b> <a href="${version.api_url}">${
-        version.api_url
-    }</a></div>
-            <div><b>Documentation:</b> <a href="${version.documentation_url}">${
-        version.documentation_url
-    }</a></div>
-            ${
-                version.mvt_url
-                    ? `<div><b>MVT:</b> <a href="${version.mvt_url}">${version.mvt_url}</a></div>`
-                    : ""
-            }
-            ${
-                version.wfs_url
-                    ? `<div><b>WFS:</b> <a href="${version.wfs_url}">${version.wfs_url}</a></div>`
-                    : ""
-            }
+const KEYMAP = {
+    doc_url: "Documentation",
+    api_url: "REST API",
+    wfs_url: "WFS",
+    mvt_url: "MVT",
+}
 
-        </div>
-    `
+const createLinksForVersion = (urls) => {
+    return Object.entries(urls)
+        .map(([key, value]) =>
+            key in KEYMAP
+                ? `<div><b>${KEYMAP[key]}:</b> <a href="${value}">${value}</a></div>`
+                : ""
+        )
+        .join("")
 }

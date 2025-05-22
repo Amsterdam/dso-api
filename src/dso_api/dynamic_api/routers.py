@@ -80,85 +80,23 @@ class DynamicAPIIndexView(APIIndexView):
             datasets = [ds for ds in datasets if ds.path.startswith(self.path)]
         return datasets
 
-    def get_version_endpoints(self, ds: Dataset, base: str):
-        dataset_id = ds.schema.id
-        if not ds.enable_db:
-            return []
-        try:
-            versions = []
-            api_url = reverse(
-                "dynamic_api:openapi",
-                kwargs={"dataset_name": dataset_id, "dataset_version": DEFAULT},
-            )
-            docs_url = reverse(
-                "dynamic_api:docs-dataset",
-                kwargs={"dataset_name": dataset_id, "dataset_version": DEFAULT},
-            )
-            version = {
-                "header": f"Default Version ({ds.default_version})",
-                "api_url": base + api_url,
-                "specification_url": base + api_url,
-                "documentation_url": base + docs_url,
-            }
-            if ds.has_geometry_fields:
-                wfs_url = reverse(
-                    "dynamic_api:wfs",
-                    kwargs={"dataset_name": dataset_id, "dataset_version": DEFAULT},
-                )
-                mvt_url = reverse(
-                    "dynamic_api:mvt",
-                    kwargs={"dataset_name": dataset_id, "dataset_version": DEFAULT},
-                )
-                version["wfs_url"] = base + wfs_url
-                version["mvt_url"] = base + mvt_url
-
-            versions.append(version)
-            for vmajor in ds.schema.versions:
-                api_url = reverse(
-                    "dynamic_api:openapi-version",
-                    kwargs={"dataset_name": dataset_id, "dataset_version": vmajor},
-                )
-                docs_url = reverse(
-                    "dynamic_api:docs-dataset-version",
-                    kwargs={"dataset_name": dataset_id, "dataset_version": vmajor},
-                )
-                version = {
-                    "header": f"Version {vmajor}",
-                    "api_url": base + api_url,
-                    "specification_url": base + api_url,
-                    "documentation_url": base + docs_url,
-                }
-                if ds.has_geometry_fields:
-                    wfs_url = reverse(
-                        "dynamic_api:wfs-version",
-                        kwargs={"dataset_name": dataset_id, "dataset_version": vmajor},
-                    )
-                    mvt_url = reverse(
-                        "dynamic_api:mvt-version",
-                        kwargs={"dataset_name": dataset_id, "dataset_version": vmajor},
-                    )
-                    version["wfs_url"] = base + wfs_url
-                    version["mvt_url"] = base + mvt_url
-                versions.append(version)
-
-            return versions
-        except NoReverseMatch as e:
-            logger.warning("dataset %s: %s", dataset_id, e)
-            return []
-
-    def get_related_apis(self, ds: Dataset, base: str):
-        if ds.enable_db and ds.has_geometry_fields:
-            # WFS and MVT is only created for datasets
-            # that are directly backed by a local database.
-            ds_id = ds.schema.id
-            wfs_url = reverse("dynamic_api:wfs", kwargs={"dataset_name": ds_id})
-            mvt_url = reverse("dynamic_api:mvt", kwargs={"dataset_name": ds_id})
-            return [
-                {"type": "WFS", "url": base + wfs_url},
-                {"type": "MVT", "url": base + mvt_url},
-            ]
-        else:
-            return []
+    def _build_version_endpoints(
+        self, base: str, dataset_id: str, version: str, header: str | None = None, suffix: str = ""
+    ):
+        kwargs = {"dataset_name": dataset_id, "dataset_version": version}
+        mvt_url = reverse(f"dynamic_api:mvt{suffix}", kwargs=kwargs)
+        wfs_url = reverse(f"dynamic_api:wfs{suffix}", kwargs=kwargs)
+        api_url = reverse(f"dynamic_api:openapi{suffix}", kwargs=kwargs)
+        docs_url = reverse(f"dynamic_api:docs-dataset{suffix}", kwargs=kwargs)
+        return {
+            "header": header or f"Version {version}",
+            "api_url": base + api_url,
+            "specification_url": base + api_url,  # For catalog
+            "doc_url": base + docs_url,
+            "documentation_url": base + docs_url,  # For catalog
+            "mvt_url": base + mvt_url,
+            "wfs_url": base + wfs_url,
+        }
 
 
 class DynamicRouter(DefaultRouter):

@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from schematools.contrib.django.models import Dataset
 
+from dso_api.dynamic_api.constants import DEFAULT
 from dso_api.dynamic_api.datasets import get_active_datasets
 from rest_framework_dso.renderers import BrowsableAPIRenderer, HALJSONRenderer
 
@@ -35,16 +36,27 @@ class APIIndexView(APIView):
     def get_datasets(self) -> Iterable[Dataset]:
         return get_active_datasets().order_by("name")
 
-    def get_environments(self, ds: Dataset, base: str) -> list[dict]:
+    def _build_version_endpoints(
+        self, base: str, dataset_id: str, version: str, header: str | None = None, suffix: str = ""
+    ):
         raise NotImplementedError()
 
-    def get_related_apis(self, ds: Dataset, base: str) -> list[dict]:
-        """Get list of other APIs exposing the same dataset"""
-        raise NotImplementedError()
-
-    def get_version_endpoints(self, ds: Dataset, base: str) -> list[dict]:
-        """Get versions with all their"""
-        raise NotImplementedError()
+    def get_version_endpoints(self, ds: Dataset, base: str):
+        if not ds.enable_db:
+            return []
+        try:
+            dataset_id = ds.schema.id
+            return [
+                self._build_version_endpoints(
+                    base, dataset_id, DEFAULT, f"Default Version ({ds.default_version})"
+                )
+            ] + [
+                self._build_version_endpoints(base, dataset_id, vmajor, suffix="-version")
+                for vmajor in ds.schema.versions
+            ]
+        except NoReverseMatch as e:
+            logger.warning("dataset %s: %s", dataset_id, e)
+            return []
 
     def get(self, request, *args, **kwargs):
         # Data not needed for html view
