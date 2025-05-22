@@ -160,7 +160,6 @@ class DatasetDocView(TemplateView):
             Dataset.objects.api_enabled().db_enabled(), name=dataset_name
         )
         dataset_version = kwargs["dataset_version"]
-        print(dataset_version)
         ds_schema: DatasetSchema = ds.schema
         main_title = ds_schema.title or ds_schema.db_name.replace("_", " ").capitalize()
         tables = [
