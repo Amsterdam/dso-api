@@ -15,7 +15,7 @@
 {% endblock %}
 
 {% block header %}
-  <h1>{{ service_description.title }} {{ accept_operations|dictsort:0|join:"/" }}</h1>
+  <h1>{{ service_description.title }} {{ accept_operations|dictsort:0|join:"/" }}{% if dataset_version != "default" %} {{dataset_version}}{% endif %}</h1>
   {# some of this metadata is also exported in the 'service_description' that GetCapabilities also uses. #}
   {% include "dso_api/dynamic_api/_dataset_metadata.html" %}
 
@@ -35,8 +35,8 @@
 
   <p>
     Deze dataset is daarnaast ook beschikbaar als:
-    <a href="{% url 'dynamic_api:mvt' dataset_name=schema.id %}">MVT kaartlaag</a>
-      en <a href="{% url 'dynamic_api:docs-dataset' dataset_name=schema.id %}">Rest API</a>.
+    <a href="{{ mvt_url }}">MVT kaartlaag</a>
+      en <a href="{{ doc_url }}">Rest API</a>.
   </p>
 {% endblock %}
 
