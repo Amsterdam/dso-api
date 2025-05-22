@@ -74,20 +74,20 @@ class TestDSOViewMixin:
     def test_not_supported_crs(self, api_client, afval_dataset, filled_router):
         """Prove that invalid CRS leads to a 406 status"""
         url = reverse("dynamic_api:afvalwegingen-containers-list")
-        response = api_client.get(url, HTTP_ACCEPT_CRS="EPSG:2000")
+        response = api_client.get(url, headers={"Accept-Crs": "EPSG:2000"})
         assert response.status_code == 406, response.data
 
     def test_bogus_crs(self, api_client, afval_dataset, filled_router):
         """Prove that invalid CRS leads to a 406 status"""
         url = reverse("dynamic_api:afvalwegingen-containers-list")
         for crs in ("nonsense", "EPSG:", "EPSG:foo"):
-            response = api_client.get(url, HTTP_ACCEPT_CRS=crs)
+            response = api_client.get(url, headers={"Accept-Crs": crs})
             assert response.status_code == 406, response.data
 
     def test_response_has_crs_from_accept_crs(self, api_client, afval_dataset, filled_router):
         """Prove that response has a CRS header taken from the Accept-Crs header"""
         url = reverse("dynamic_api:afvalwegingen-containers-list")
-        response = api_client.get(url, HTTP_ACCEPT_CRS="EPSG:4258")
+        response = api_client.get(url, headers={"Accept-Crs": "EPSG:4258"})
         assert response.status_code == 200, response.data
         assert response.has_header("Content-Crs"), dict(response.items())
         assert CRS.from_string("EPSG:4258") == CRS.from_string(response["Content-Crs"])
@@ -97,7 +97,7 @@ class TestDSOViewMixin:
     ):
         """Prove that response has a CRS header taken from the Accept-Crs header"""
         url = reverse("dynamic_api:afvalwegingen-containers-list")
-        response = api_client.get(url, HTTP_ACCEPT_CRS="EPSG:4258")
+        response = api_client.get(url, headers={"Accept-Crs": "EPSG:4258"})
         assert response.status_code == 200, response.data
         assert response.has_header("Content-Crs"), dict(response.items())
         assert CRS.from_string("EPSG:4258") == CRS.from_string(response["Content-Crs"])
