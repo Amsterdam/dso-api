@@ -616,3 +616,72 @@ class TestFormats:
         assert response.status_code == 200
         response_data = [row.decode("utf-8") for row in response.streaming_content]
         assert response_data == data
+
+    @pytest.mark.parametrize(
+        "accept_crs",
+        ["urn:ogc:def:crs:OGC::CRS84", "urn:ogc:def:crs:EPSG::4326", "EPSG:4326"],
+    )
+    def test_geojson_axis_orientation(
+        self, api_client, fietspaaltjes_data, filled_router, accept_crs
+    ):
+        """Prove that GeoJSON coordinates are properly translated as X,Y.
+        The GeoJSON standard mandates that coordinates are always rendered as X,Y.
+        That means longitude/latitude (x/y) of CRS84,
+        instead of latitude/longitude (y/x) that WGS84 uses (northing/easting).
+        """
+        url = reverse("dynamic_api:fietspaaltjes-fietspaaltjes-list")
+        response = api_client.get(url, {"_format": "geojson"}, headers={"Accept-Crs": accept_crs})
+        assert response.status_code == 200, response.getvalue()
+        data = read_response_json(response)
+
+        assert data["features"][0]["geometry"] == {
+            "type": "Point",
+            "coordinates": [
+                pytest.approx(4.9204, rel=1e-4),  # longitude first!
+                pytest.approx(52.3665, rel=1e-4),
+            ],
+        }
+        assert data["crs"] == {
+            # To be clear that coordinates are x,y, this format is returned:
+            "properties": {"name": "urn:ogc:def:crs:OGC::CRS84"},
+            "type": "name",
+        }
+
+    def test_rest_api_axis_orientation(self, api_client, fietspaaltjes_data, filled_router):
+        """Prove that REST coordinates are properly translated as Y,X for EPSG:4326.
+        That follows the EPSG axis ordering.
+        This is different from GeoJSON, which mandates x,y ordering.
+        """
+        url = reverse("dynamic_api:fietspaaltjes-fietspaaltjes-list")
+        response = api_client.get(url, {"_format": "json"}, headers={"Accept-Crs": "EPSG:4326"})
+        assert response.status_code == 200, response.getvalue()
+        data = read_response_json(response)
+
+        assert data["_embedded"]["fietspaaltjes"][0]["geometry"] == {
+            "type": "Point",
+            "coordinates": [
+                pytest.approx(52.3665, rel=1e-4),  # longitude first
+                pytest.approx(4.9204, rel=1e-4),
+            ],
+        }
+        assert response.headers["Content-Crs"] == "urn:ogc:def:crs:EPSG::4326"
+
+    def test_rest_api_axis_orientation_crs84(self, api_client, fietspaaltjes_data, filled_router):
+        """Prove that REST coordinates are properly translated as X,Y when requesting CRS84.
+        That is the GeoJSON ordering.
+        """
+        url = reverse("dynamic_api:fietspaaltjes-fietspaaltjes-list")
+        response = api_client.get(
+            url, {"_format": "json"}, headers={"Accept-Crs": "urn:ogc:def:crs:OGC::CRS84"}
+        )
+        assert response.status_code == 200, response.getvalue()
+        data = read_response_json(response)
+
+        assert data["_embedded"]["fietspaaltjes"][0]["geometry"] == {
+            "type": "Point",
+            "coordinates": [
+                pytest.approx(4.9204, rel=1e-4),  # longitude first (as CRS84 is)
+                pytest.approx(52.3665, rel=1e-4),
+            ],
+        }
+        assert response.headers["Content-Crs"] == "urn:ogc:def:crs:OGC::CRS84"

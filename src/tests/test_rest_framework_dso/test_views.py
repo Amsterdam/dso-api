@@ -14,7 +14,7 @@ from .models import Location, Movie
 from .serializers import LocationSerializer, MovieSerializer
 
 
-class MovieDetailAPIView(generics.RetrieveAPIView):
+class MovieDetailAPIView(views.DSOViewMixin, generics.RetrieveAPIView):
     serializer_class = MovieSerializer
     queryset = Movie.objects.all()
 
