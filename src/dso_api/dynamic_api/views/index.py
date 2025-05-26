@@ -48,7 +48,7 @@ class APIIndexView(APIView):
             dataset_id = ds.schema.id
             return [
                 self._build_version_endpoints(
-                    base, dataset_id, DEFAULT, f"Default Version ({ds.default_version})"
+                    base, dataset_id, DEFAULT, f"Standaardversie ({ds.default_version})"
                 )
             ] + [
                 self._build_version_endpoints(base, dataset_id, vmajor, suffix="-version")
