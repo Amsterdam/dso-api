@@ -264,6 +264,22 @@ def test_openapi_json(api_client, afval_dataset, fietspaaltjes_dataset, filled_r
 
 
 @pytest.mark.django_db
+def test_openapi_json_v1(api_client, afval_dataset, fietspaaltjes_dataset, filled_router, caplog):
+    """Prove that the OpenAPI page can be rendered."""
+    caplog.set_level(logging.WARNING)
+
+    # Prove the that OpenAPI view can be found at the endpoint
+    url = reverse(
+        "dynamic_api:openapi-version",
+        kwargs={"dataset_name": "afvalwegingen", "dataset_version": "v1"},
+    )
+    assert url == "/v1/afvalwegingen/v1"
+
+    response = api_client.get(url)
+    assert response.status_code == 200, response.data
+
+
+@pytest.mark.django_db
 def test_openapi_parkeren_json(api_client, parkeervakken_dataset, filled_router, caplog):
     """Prove that the OpenAPI page can be rendered."""
     caplog.set_level(logging.WARNING)
