@@ -250,33 +250,28 @@ class TestDatasetWFSView:
 
         assert len(xml_root) == 0
 
-    @pytest.mark.skip(
-        reason="Test was designed for old implementation of versioned datasets."
-        "Will need to be re-implemented once versioning is in place."
-    )
-    def test_wfs_non_default_dataset_not_exposed(
+    def test_wfs_versioned_dataset_exposed(
         self,
         api_client,
         router,
-        bommen_v2_dataset,
+        bommen_dataset,
     ):
         """Prove that if feature name contains non-letters like underscore,
         it can be useds find the correct table name and data
         """
         router.reload()
-        # manually creating tables.
-        # Not using filled_router here, as it will throw RuntimeError,
-        #  due to missing model, which is expected,
-        #  because non-default dataset is not expected to be registered in router.
-        create_tables(bommen_v2_dataset)
-
+        # manually creating tables, as we do not want to use `filled_router` here.
+        create_tables(bommen_dataset)
         wfs_url = (
-            f"/v1/wfs/{bommen_v2_dataset.name}/"
+            f"/v1/wfs/{bommen_dataset.name}/v1"
             "?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=app:bommen"
             "&OUTPUTFORMAT=application/gml+xml"
         )
         response = api_client.get(wfs_url)
-        assert response.status_code == 404
+        assert response.status_code == 200
+        xml_root = read_response_xml(response)
+
+        assert len(xml_root) == 0
 
 
 @pytest.mark.django_db

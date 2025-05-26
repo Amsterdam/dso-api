@@ -154,6 +154,14 @@ def test_mvt_single(api_client, afval_container, filled_router):
 
 
 @pytest.mark.django_db
+def test_mvt_single_v1(api_client, afval_container, filled_router):
+    """Prove that the MVT single view works."""
+    response = api_client.get("/v1/mvt/afvalwegingen/v1")
+    assert response.status_code == 200
+    assert b"/v1/mvt/afvalwegingen/v1/containers/{z}/{x}/{y}.pbf" in response.content
+
+
+@pytest.mark.django_db
 def test_mvt_tilejson(api_client, afval_container, filled_router):
     """Prove that the MVT single view works."""
     response = api_client.get("/v1/mvt/afvalwegingen/tilejson.json")
@@ -175,6 +183,61 @@ def test_mvt_tilejson(api_client, afval_container, filled_router):
         "tiles": [
             "http://testserver/v1/mvt/afvalwegingen/adres_loopafstand/{z}/{x}/{y}.pbf",
             "http://testserver/v1/mvt/afvalwegingen/containers/{z}/{x}/{y}.pbf",
+        ],
+        "vector_layers": [
+            {
+                "description": None,
+                "fields": {
+                    "geometry": "Geometrie",
+                    "id": "row identifier",
+                    "serienummer": "some serienumber",
+                },
+                "id": "adres_loopafstand",
+                "maxzoom": 15,
+                "minzoom": 7,
+            },
+            {
+                "description": None,
+                "fields": {
+                    "clusterId": "Cluster-ID",
+                    "datumCreatie": "Datum aangemaakt",
+                    "datumLeegmaken": "Datum leeggemaakt",
+                    "eigenaarNaam": "Naam van eigenaar",
+                    "geometry": "Geometrie",
+                    "id": "Container-ID",
+                    "serienummer": "Serienummer van container",
+                },
+                "id": "containers",
+                "maxzoom": 15,
+                "minzoom": 7,
+            },
+        ],
+        "version": "1.0.0",
+    }
+
+
+@pytest.mark.django_db
+def test_mvt_tilejson_v1(api_client, afval_container, filled_router):
+    """Prove that the MVT single view works."""
+    response = api_client.get("/v1/mvt/afvalwegingen/v1/tilejson.json")
+    assert response.status_code == 200
+
+    tilejson = response.json()
+    assert tilejson == {
+        "attribution": '(c) Gemeente <a href="https://amsterdam.nl">Amsterdam</a>',
+        "bounds": AMSTERDAM_BOUNDS,
+        "center": DAM_SQUARE,
+        "description": "unit testing version of afvalwegingen",
+        "fillzoom": None,
+        "legend": None,
+        "maxzoom": 15,
+        "minzoom": 7,
+        "name": "Afvalwegingen",
+        "scheme": "xyz",
+        "tilejson": "3.0.0",
+        "tiles": [
+            "http://testserver/v1/mvt/afvalwegingen/v1/adres_loopafstand/{z}/{x}/{y}.pbf",
+            "http://testserver/v1/mvt/afvalwegingen/v1/containers/{z}/{x}/{y}.pbf",
         ],
         "vector_layers": [
             {
@@ -293,6 +356,90 @@ def test_mvt_content(
 
     # MVT view returns 204 when the tile is empty.
     url = "/v1/mvt/afvalwegingen/containers/14/0/0.pbf"
+    response = api_client.get(url)
+    assert response.status_code == 204
+    assert response["Content-Type"] == CONTENT_TYPE
+    assert response.content == b""
+
+
+@pytest.mark.django_db
+def test_mvt_content_v1(
+    api_client, afval_dataset, filled_router, afval_container_model, afval_cluster
+):
+    """Prove that the MVT view produces vector tiles."""
+
+    # Coordinates below have been calculated using https://oms.wff.ch/calc.htm
+    # and https://www.maptiler.com/google-maps-coordinates-tile-bounds-projection/.
+    afval_container_model.objects.create(
+        id=1,
+        serienummer="foobar-123",
+        eigenaar_naam="Dataservices",
+        # set to fixed dates to the CSV export can also check for desired formatting
+        datum_creatie=date(2021, 1, 3),
+        datum_leegmaken=datetime(2021, 1, 3, 12, 13, 14, tzinfo=get_current_timezone()),
+        cluster=afval_cluster,
+        geometry=Point(123207.6558130105, 486624.6399002579),
+    )
+
+    url = "/v1/mvt/afvalwegingen/v1/containers/17/67327/43077.pbf"
+    response = api_client.get(url)
+    # MVT view returns 204 when the tile is empty.
+    assert response.status_code == 200
+    assert response["Content-Type"] == CONTENT_TYPE
+
+    vt = decode_mvt(response)
+
+    assert vt == {
+        "default": {
+            "extent": 4096,
+            "version": 2,
+            "type": "FeatureCollection",
+            "features": [
+                {
+                    "geometry": {"type": "Point", "coordinates": [1928, 2558]},
+                    "properties": {
+                        "id": 1,
+                        "clusterId": "c1",  # relation
+                        "serienummer": "foobar-123",
+                        "datumCreatie": "2021-01-03",
+                        "eigenaarNaam": "Dataservices",
+                        "datumLeegmaken": "2021-01-03 12:13:14+01",
+                    },
+                    "id": 0,
+                    "type": "Feature",
+                }
+            ],
+        }
+    }
+
+    # Try again at a higher zoom level. We should get the same features and only the "id" property.
+    url = "/v1/mvt/afvalwegingen/v1/containers/14/8415/5384.pbf"
+    response = api_client.get(url)
+    assert response.status_code == 200
+    assert response["Content-Type"] == CONTENT_TYPE
+
+    vt = decode_mvt(response)
+
+    assert vt == {
+        "default": {
+            "extent": 4096,
+            "version": 2,
+            "type": "FeatureCollection",
+            "features": [
+                {
+                    "geometry": {"type": "Point", "coordinates": [3825, 1344]},
+                    "properties": {
+                        "id": 1,
+                    },
+                    "id": 0,
+                    "type": "Feature",
+                }
+            ],
+        }
+    }
+
+    # MVT view returns 204 when the tile is empty.
+    url = "/v1/mvt/afvalwegingen/v1/containers/14/0/0.pbf"
     response = api_client.get(url)
     assert response.status_code == 204
     assert response["Content-Type"] == CONTENT_TYPE

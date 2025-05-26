@@ -13,6 +13,7 @@ def test_reload_add(router, bommen_dataset):
 
     # Prove that URLs can now be resolved.
     assert reverse("dynamic_api:bommen-bommen-list")
+    assert reverse("dynamic_api:bommen-v1-bommen-list")
 
 
 @pytest.mark.django_db
@@ -20,6 +21,7 @@ def test_reload_delete(router, bommen_dataset):
     router.reload()
     assert len(router.urls) > 1
     assert reverse("dynamic_api:bommen-bommen-list")  # enforce importing urls.py
+    assert reverse("dynamic_api:bommen-v1-bommen-list")
 
     # Prove that the router also unregisters the URLs
     bommen_dataset.delete()
@@ -29,6 +31,8 @@ def test_reload_delete(router, bommen_dataset):
 
     with pytest.raises(NoReverseMatch):
         assert reverse("dynamic_api:bommen-bommen-list")
+    with pytest.raises(NoReverseMatch):
+        assert reverse("dynamic_api:bommen-v1-bommen-list")
 
 
 @pytest.mark.django_db
@@ -36,6 +40,7 @@ def test_router_excludes_disabled_api(settings, router, bommen_dataset, gebieden
     router.reload()
 
     assert reverse("dynamic_api:bommen-bommen-list")
+    assert reverse("dynamic_api:bommen-v1-bommen-list")
     assert reverse("dynamic_api:gebieden-buurten-list")
 
     bommen_dataset.enable_api = False
@@ -45,6 +50,8 @@ def test_router_excludes_disabled_api(settings, router, bommen_dataset, gebieden
 
     with pytest.raises(NoReverseMatch):
         reverse("dynamic_api:bommen-bommen-list")
+    with pytest.raises(NoReverseMatch):
+        reverse("dynamic_api:bommen-v1-bommen-list")
     assert reverse("dynamic_api:gebieden-buurten-list")
 
 
@@ -109,23 +116,6 @@ def test_router_excludes_datasets_combined_with_list(
         assert reverse("dynamic_api:bommen-bommen-list")
     with pytest.raises(NoReverseMatch):
         assert reverse("dynamic_api:meldingen-statistieken-list")
-
-
-@pytest.mark.skip(
-    reason="Test was designed for old implementation of versioned datasets."
-    "Will need to be re-implemented once versioning is in place."
-)
-@pytest.mark.django_db
-def test_router_excludes_non_default_dataset_versions(settings, bommen_v2_dataset, router):
-    # Not using filled_router here, as it will throw RuntimeError,
-    #  due to missing model, which is expected,
-    #  because non-default dataset is not expected to be registered in router.
-    router.reload()
-    assert len(router.urls) == 1
-    assert router.all_models == {}
-
-    with pytest.raises(NoReverseMatch):
-        assert reverse("dynamic_api:bommen-bommen-list")
 
 
 @pytest.mark.django_db
