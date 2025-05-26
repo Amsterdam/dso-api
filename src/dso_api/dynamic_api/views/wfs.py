@@ -126,7 +126,7 @@ class DatasetWFSIndexView(APIIndexView):
         wfs_url = reverse(f"dynamic_api:wfs{suffix}", kwargs=kwargs)
         api_url = reverse(f"dynamic_api:openapi{suffix}", kwargs=kwargs)
         return {
-            "header": header or f"Version {version}",
+            "header": header or f"Versie {version}",
             "wfs_url": base + wfs_url,
             "doc_url": base + wfs_url,
             "documentation_url": base + wfs_url,  # For catalog

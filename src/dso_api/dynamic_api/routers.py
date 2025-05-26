@@ -89,7 +89,7 @@ class DynamicAPIIndexView(APIIndexView):
         api_url = reverse(f"dynamic_api:openapi{suffix}", kwargs=kwargs)
         docs_url = reverse(f"dynamic_api:docs-dataset{suffix}", kwargs=kwargs)
         return {
-            "header": header or f"Version {version}",
+            "header": header or f"Versie {version}",
             "api_url": base + api_url,
             "specification_url": base + api_url,  # For catalog
             "doc_url": base + docs_url,

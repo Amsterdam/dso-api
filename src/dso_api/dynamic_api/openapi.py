@@ -182,13 +182,13 @@ def get_openapi_view(dataset, version: str | None = None, response_format: str =
     # Specific data to override in the OpenAPI
     docfile = f"{dataset.path}@{version}" if version else dataset.path
     versions = {
-        f"default ({dataset.default_version})": urljoin(
+        f"standaard ({dataset.default_version})": urljoin(
             settings.DATAPUNT_API_URL,  # to preserve hostname
             f"/v1/{dataset_schema.id}",
         )
     }
     for vmajor in dataset_schema.versions:
-        versions[f"version {vmajor}"] = urljoin(
+        versions[f"versie {vmajor}"] = urljoin(
             settings.DATAPUNT_API_URL,  # to preserve hostname
             f"/v1/{dataset_schema.id}/{vmajor}",
         )
