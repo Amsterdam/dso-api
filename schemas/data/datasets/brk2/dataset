@@ -2,8 +2,6 @@
   "type": "dataset",
   "id": "brk2",
   "title": "brk2",
-  "status": "beschikbaar",
-  "version": "1.0.0",
   "crs": "EPSG:28992",
   "owner": "Gemeente Amsterdam, afdeling Basisinformatie",
   "creator": "Kadaster",
@@ -17,13 +15,21 @@
   "contactPoint": {
     "email": "OIS.GOB@amsterdam.nl"
   },
-  "tables": [
-    {
-      "id": "gemeentes",
-      "$ref": "gemeentes/v1.0.1",
-      "activeVersions": {
-        "1.0.1": "gemeentes/v1.0.1"
-      }
+  "defaultVersion": "v1",
+  "versions": {
+    "v1": {
+      "status": "beschikbaar",
+      "lifecycleStatus": "stable",
+      "version": "1.0.0",
+      "tables": [
+        {
+          "id": "gemeentes",
+          "$ref": "gemeentes/v1.0.1",
+          "activeVersions": {
+            "1.0.1": "gemeentes/v1.0.1"
+          }
+        }
+      ]
     }
-  ]
+  }
 }
