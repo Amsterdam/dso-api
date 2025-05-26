@@ -54,7 +54,7 @@ class DatasetMVTIndexView(APIIndexView):
         wfs_url = reverse(f"dynamic_api:wfs{suffix}", kwargs=kwargs)
         api_url = reverse(f"dynamic_api:openapi{suffix}", kwargs=kwargs)
         return {
-            "header": header or f"Version {version}",
+            "header": header or f"Versie {version}",
             "mvt_url": base + mvt_url,
             "doc_url": f"{base}/v1/docs/generic/gis.html",
             "documentation_url": f"{base}/v1/docs/generic/gis.html",  # For catalog
