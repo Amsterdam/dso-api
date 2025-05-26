@@ -28,6 +28,9 @@ application(
         "SERVER_PORT": 80,
         "PATH_INFO": "/v1/",
         "wsgi.input": sys.stdin,
+        "wsgi.url_scheme": "https",
+        "wsgi.errors": sys.stderr,
+        "wsgi.version": (1, 0),
     },
     lambda x, y: None,
 )
