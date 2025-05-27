@@ -21,6 +21,7 @@ from rest_framework.serializers import Field
 from schematools.naming import toCamelCase
 from schematools.types import DatasetTableSchema
 
+from dso_api.dynamic_api.constants import DEFAULT
 from dso_api.dynamic_api.temporal import TemporalTableQuery
 from dso_api.dynamic_api.utils import get_view_name, split_on_separator
 
@@ -38,7 +39,10 @@ from dso_api.dynamic_api.utils import get_view_name, split_on_separator
 class RelatedSummaryField(Field):
     def to_representation(self, value: models.Manager):
         request = self.context["request"]
-        url = reverse(get_view_name(value.model, "list"), request=request)
+        version = (
+            self.parent.version if self.parent.dataset_id == value.model._dataset.name else DEFAULT
+        )
+        url = reverse(get_view_name(value.model, "list", version), request=request)
 
         # the "core_filters" attribute is available on all related managers
         filter_field = next(iter(value.core_filters.keys()))
