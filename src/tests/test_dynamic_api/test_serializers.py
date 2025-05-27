@@ -7,6 +7,7 @@ from django.core.validators import EmailValidator, URLValidator
 from schematools.permissions import UserScopes
 from schematools.types import ProfileSchema
 
+from dso_api.dynamic_api.constants import DEFAULT
 from dso_api.dynamic_api.serializers import clear_serializer_factory_cache, serializer_factory
 from dso_api.dynamic_api.serializers.fields import HALRawIdentifierUrlField
 from rest_framework_dso.fields import EmbeddedField
@@ -105,7 +106,7 @@ class TestDynamicSerializer:
                     "title": "123.456",
                     "id": "123.456",
                 },
-                "schema": "https://schemas.data.amsterdam.nl/datasets/afvalwegingen/dataset#containers",  # noqa: E501
+                "schema": "https://schemas.data.amsterdam.nl/datasets/afvalwegingen/containers/v1.0.0",  # noqa: E501
                 "self": {
                     "href": "http://testserver/v1/afvalwegingen/containers/2",
                     "title": "2",
@@ -140,7 +141,7 @@ class TestDynamicSerializer:
         data = normalize_data(container_serializer.data)
         assert data == {
             "_links": {
-                "schema": "https://schemas.data.amsterdam.nl/datasets/afvalwegingen/dataset#containers",  # noqa: E501
+                "schema": "https://schemas.data.amsterdam.nl/datasets/afvalwegingen/containers/v1.0.0",  # noqa: E501
                 "self": {
                     "href": "http://testserver/v1/afvalwegingen/containers/2",
                     "title": "2",
@@ -167,7 +168,7 @@ class TestDynamicSerializer:
                             "title": "123.456",
                             "id": "123.456",
                         },
-                        "schema": "https://schemas.data.amsterdam.nl/datasets/afvalwegingen/dataset#clusters",  # noqa: E501
+                        "schema": "https://schemas.data.amsterdam.nl/datasets/afvalwegingen/clusters/v1.0.0",  # noqa: E501
                     },
                     "id": "123.456",
                     "status": "open",
@@ -195,7 +196,7 @@ class TestDynamicSerializer:
         data = normalize_data(container_serializer.data)
         assert data == {
             "_links": {
-                "schema": "https://schemas.data.amsterdam.nl/datasets/afvalwegingen/dataset#containers",  # noqa: E501
+                "schema": "https://schemas.data.amsterdam.nl/datasets/afvalwegingen/containers/v1.0.0",  # noqa: E501
                 "self": {
                     "href": "http://testserver/v1/afvalwegingen/containers/3",
                     "title": "3",
@@ -239,7 +240,7 @@ class TestDynamicSerializer:
                     "title": "4",
                     "id": 4,
                 },
-                "schema": "https://schemas.data.amsterdam.nl/datasets/afvalwegingen/dataset#containers",  # noqa: E501
+                "schema": "https://schemas.data.amsterdam.nl/datasets/afvalwegingen/containers/v1.0.0",  # noqa: E501
                 "cluster": None,
             },
             "id": 4,
@@ -270,7 +271,7 @@ class TestDynamicSerializer:
         # Update dataset in instance cache
         afval_container_model._dataset = afval_dataset
         afval_cluster_model._dataset = afval_dataset
-        ContainerSerializer = serializer_factory(afval_container_model, 0)
+        ContainerSerializer = serializer_factory(afval_container_model, DEFAULT, 0)
         afval_container = afval_container_model.objects.create(id=2, cluster=afval_cluster)
 
         # Prove that expands work on object-detail level
@@ -282,7 +283,7 @@ class TestDynamicSerializer:
         data = normalize_data(container_serializer.data)
         assert data == {
             "_links": {
-                "schema": "https://schemas.data.amsterdam.nl/datasets/test/afvalwegingen/dataset#containers",  # noqa: E501
+                "schema": "https://schemas.data.amsterdam.nl/datasets/test/afvalwegingen/containers/v1.0.0",  # noqa: E501
                 "self": {
                     "href": "http://testserver/v1/afvalwegingen/containers/2",
                     "title": "2",
@@ -309,7 +310,7 @@ class TestDynamicSerializer:
                             "title": "123.456",
                             "id": "123.456",
                         },
-                        "schema": "https://schemas.data.amsterdam.nl/datasets/test/afvalwegingen/dataset#clusters",  # noqa: E501
+                        "schema": "https://schemas.data.amsterdam.nl/datasets/test/afvalwegingen/clusters/v1.0.0",  # noqa: E501
                     },
                     "id": "123.456",
                     "status": "open",
@@ -344,7 +345,7 @@ class TestDynamicSerializer:
                 "_links": {
                     "schema": (
                         "https://schemas.data.amsterdam.nl"
-                        "/datasets/aardgasverbruik/dataset#mraStatistiekenPcranges"
+                        "/datasets/aardgasverbruik/mra_statistieken_pcranges/v1.0.0"
                     ),
                     "self": {
                         "href": (
@@ -393,7 +394,7 @@ class TestDynamicSerializer:
                     "volgnummer": 1,
                     "identificatie": "0363",
                 },
-                "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/dataset#stadsdelen",
+                "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/stadsdelen/v1.0.0",
                 "wijken": [
                     {
                         "href": "http://testserver/v1/gebieden/wijken/03630000000001?volgnummer=1",
@@ -443,7 +444,7 @@ class TestDynamicSerializer:
                     "title": "1",
                     "id": 1,
                 },
-                "schema": "https://schemas.data.amsterdam.nl/datasets/vestiging/dataset#vestiging",  # noqa: E501
+                "schema": "https://schemas.data.amsterdam.nl/datasets/vestiging/vestiging/v1.0.0",  # noqa: E501
                 "postAdres": {
                     "href": "http://testserver/v1/vestiging/adres/3",
                     "title": "3",
@@ -476,7 +477,7 @@ class TestDynamicSerializer:
                     "title": "2",
                     "id": 2,
                 },
-                "schema": "https://schemas.data.amsterdam.nl/datasets/vestiging/dataset#vestiging",  # noqa: E501
+                "schema": "https://schemas.data.amsterdam.nl/datasets/vestiging/vestiging/v1.0.0",  # noqa: E501
                 "postAdres": {
                     "href": "http://testserver/v1/vestiging/adres/3",
                     "title": "3",
@@ -502,7 +503,7 @@ class TestDynamicSerializer:
         data = normalize_data(adres_serializer.data)
         assert data == {
             "_links": {
-                "schema": "https://schemas.data.amsterdam.nl/datasets/vestiging/dataset#adres",
+                "schema": "https://schemas.data.amsterdam.nl/datasets/vestiging/adres/v1.0.0",
                 "self": {
                     "href": "http://testserver/v1/vestiging/adres/3",
                     "title": "3",
@@ -582,7 +583,7 @@ class TestDynamicSerializer:
                     "href": "http://testserver/v1/parkeervakken/parkeervakken/121138489047",
                     "id": "121138489047",
                 },
-                "schema": "https://schemas.data.amsterdam.nl/datasets/parkeervakken/dataset#parkeervakken",  # noqa: E501
+                "schema": "https://schemas.data.amsterdam.nl/datasets/parkeervakken/parkeervakken/v1.0.0",  # noqa: E501
             },
             "geometry": None,
             "id": "121138489047",
@@ -717,7 +718,7 @@ class TestDynamicSerializer:
                 #     "title": "123.456",
                 #     "id": "123.456",
                 # },
-                "schema": "https://schemas.data.amsterdam.nl/datasets/afvalwegingen/dataset#containers",  # noqa: E501
+                "schema": "https://schemas.data.amsterdam.nl/datasets/afvalwegingen/containers/v1.0.0",  # noqa: E501
                 "self": {
                     "href": "http://testserver/v1/afvalwegingen/containers/1",
                     "title": "1",
@@ -926,7 +927,7 @@ class TestDynamicSerializer:
         data = normalize_data(complexen_serializer.data)
         assert data == {
             "_links": {
-                "schema": "https://schemas.data.amsterdam.nl/datasets/monumenten/dataset#complexen",
+                "schema": "https://schemas.data.amsterdam.nl/datasets/monumenten/complexen/v3.0.0",
                 "self": {
                     "href": "http://testserver/v1/monumenten/complexen/AB",
                     "identificatie": "AB",
@@ -941,7 +942,7 @@ class TestDynamicSerializer:
         data = normalize_data(monumenten_serializer.data)
         assert data == {
             "_links": {
-                "schema": "https://schemas.data.amsterdam.nl/datasets/monumenten/dataset#monumenten",
+                "schema": "https://schemas.data.amsterdam.nl/datasets/monumenten/monumenten/v2.0.0",
                 "self": {
                     "href": "http://testserver/v1/monumenten/monumenten/AB.CD",
                     "identificatie": "AB.CD",
@@ -1000,7 +1001,7 @@ class TestDynamicSerializer:
                     }
                 ],
                 "schema": "https://schemas.data.amsterdam.nl/"
-                "datasets/monumenten/dataset#complexen",
+                "datasets/monumenten/complexen/v3.0.0",
                 "self": {
                     "href": "http://testserver/v1/monumenten/complexen/AB",
                     "identificatie": "AB",
@@ -1022,7 +1023,7 @@ class TestDynamicSerializer:
                     "title": "AB",
                 },
                 "schema": "https://schemas.data.amsterdam.nl/"
-                "datasets/monumenten/dataset#monumenten",
+                "datasets/monumenten/monumenten/v2.0.0",
                 "self": {
                     "href": "http://testserver/v1/monumenten/monumenten/AB.CD",
                     "identificatie": "AB.CD",
@@ -1089,7 +1090,7 @@ class TestDynamicSerializer:
                 "ligtInMonumentenComplex": {
                     "_links": {
                         "schema": "https://schemas.data.amsterdam.nl/datasets"
-                        "/monumenten/dataset#complexen",
+                        "/monumenten/complexen/v3.0.0",
                         "self": {
                             "href": "http://testserver/v1/monumenten/complexen/AB",
                             "identificatie": "AB",
@@ -1102,7 +1103,7 @@ class TestDynamicSerializer:
             },
             "_links": {
                 "schema": "https://schemas.data.amsterdam.nl/datasets"
-                "/monumenten/dataset#monumenten",
+                "/monumenten/monumenten/v2.0.0",
                 "self": {
                     "href": "http://testserver/v1/monumenten/monumenten/AB.CD",
                     "identificatie": "AB.CD",

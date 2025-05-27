@@ -316,7 +316,7 @@ class DynamicRouter(DefaultRouter):
 
                     dataset_id = to_snake_case(model.get_dataset_id())
                     table_id = to_snake_case(model.get_table_id())
-                    viewset = viewset_factory(model)
+                    viewset = viewset_factory(model, version)
 
                     if version == DEFAULT:
                         # Default version accessible without version number.

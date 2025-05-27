@@ -24,6 +24,7 @@ from rest_framework.exceptions import NotFound, PermissionDenied
 from schematools.contrib.django.models import DynamicModel
 
 from dso_api.dynamic_api import filters, permissions, serializers
+from dso_api.dynamic_api.constants import DEFAULT
 from dso_api.dynamic_api.temporal import TemporalTableQuery
 from dso_api.dynamic_api.utils import limit_queryset_for_scopes
 from rest_framework_dso.views import DSOViewMixin
@@ -175,17 +176,19 @@ class DynamicApiViewSet(DSOViewMixin, viewsets.ReadOnlyModelViewSet):
         return super().paginator
 
 
-def _get_viewset_api_docs(model: type[DynamicModel]) -> str:
+def _get_viewset_api_docs(model: type[DynamicModel], version: str) -> str:
     """Generate the API documentation header for the viewset."""
     description = model.table_schema().description
-    docs_path = f"datasets/{model.get_dataset_path()}.html#{model.get_table_id()}"
+    suffix = "" if version == DEFAULT else f"@{version}"
+    docs_path = f"datasets/{model.get_dataset_path()}{suffix}.html#{model.get_table_id()}"
+
     return (
         f"{description or ''}\n\nSee the documentation at: "
         f"<https://api.data.amsterdam.nl/v1/docs/{docs_path}>"
     )
 
 
-def viewset_factory(model: type[DynamicModel]) -> type[DynamicApiViewSet]:
+def viewset_factory(model: type[DynamicModel], version: str) -> type[DynamicApiViewSet]:
     """Generate the viewset for a dynamic model.
 
     This generates a class in-memory, as if the following code was written:
@@ -198,7 +201,7 @@ def viewset_factory(model: type[DynamicModel]) -> type[DynamicApiViewSet]:
             model = ...
 
             queryset = model.objects.all()
-            serializer_class = serializer_factory(model)
+            serializer_class = serializer_factory(model, version)
             filterset_class = filterset_factory(model)
             authorization_grantor = "OIS"
             ordering_fields = ...
@@ -206,11 +209,11 @@ def viewset_factory(model: type[DynamicModel]) -> type[DynamicApiViewSet]:
     Internally, the :func:`~dso_api.dynamic_api.serializers.serializer_factory`,
     function is called to generate those classes.
     """
-    serializer_class = serializers.serializer_factory(model)
+    serializer_class = serializers.serializer_factory(model, version)
     table_schema = model.table_schema()
 
     attrs = {
-        "__doc__": _get_viewset_api_docs(model),
+        "__doc__": _get_viewset_api_docs(model, version),
         "model": model,
         "queryset": model.objects.all(),  # also for OpenAPI schema parsing.
         "serializer_class": serializer_class,
