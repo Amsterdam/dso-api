@@ -22,7 +22,8 @@
 
   <h2>Tabellen</h2>
   {% for table_data in tables %}{# note these are custom dicts, not DatasetTableSchema #}
-    <h3><a id="{{ table_data.id }}">{{ table_data.name }}</a></h3>
+    <a id="{{ table_data.id }}" class="anchor"></a>
+    <h3>{{ table_data.name }}</h3>
     {% if table_data.description %}{{ table_data.description|linebreaks }}{% endif %}
 
     <dl class="row">
