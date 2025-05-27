@@ -484,9 +484,11 @@ class DynamicLinksSerializer(FieldAccessMixin, DSOModelSerializerBase):
     @extend_schema_field(OpenApiTypes.URI)
     def get_schema(self, instance):
         """The schema field is exposed with every record"""
-        table = instance.get_table_id()
-        dataset_path = instance.get_dataset_path()
-        return f"https://schemas.data.amsterdam.nl/datasets/{dataset_path}/dataset#{table}"
+        table = to_snake_case(instance.get_table_id())
+        dataset_path = "/".join(
+            [to_snake_case(part) for part in instance.get_dataset_path().split("/")]
+        )
+        return f"https://schemas.data.amsterdam.nl/datasets/{dataset_path}/{table}/v{instance._table_schema.version}"
 
     def to_representation(self, instance):
         """Copy of `to_representation` of superclass with extra auth checks.
@@ -597,7 +599,7 @@ class DynamicLinksSerializer(FieldAccessMixin, DSOModelSerializerBase):
             field_kwargs = {"source": "*"}
         else:
             # Normal DSOSelfLinkField, link to correct URL.
-            field_kwargs = {"view_name": get_view_name(model_class, "detail")}
+            field_kwargs = {"view_name": get_view_name(model_class, "detail", self.version)}
 
         return self.serializer_url_field, field_kwargs
 
