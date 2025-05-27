@@ -134,7 +134,7 @@ class TestFormats:
             "id": "c1",
             "title": "c1",
         }
-        schema = "https://schemas.data.amsterdam.nl/datasets/afvalwegingen/dataset#containers"
+        schema = "https://schemas.data.amsterdam.nl/datasets/afvalwegingen/containers/v1.0.0"
 
         page = {
             "_embedded": {
@@ -153,7 +153,7 @@ class TestFormats:
                         "datumCreatie": "2021-01-03",
                         "datumLeegmaken": "2021-01-03T12:13:14",
                         "eigenaarNaam": "Dataservices",
-                        "geometry": {"coordinates": [121389, 487369], "type": "Point"},
+                        "geometry": {"coordinates": [121389.0, 487369.0], "type": "Point"},
                         "id": i,
                         "serienummer": "foobar-123",
                     }

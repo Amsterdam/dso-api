@@ -44,6 +44,7 @@ from schematools.contrib.django.signals import dynamic_models_removed
 from schematools.naming import to_snake_case, toCamelCase
 from schematools.types import DatasetFieldSchema, DatasetTableSchema, Temporal
 
+from dso_api.dynamic_api.constants import DEFAULT
 from dso_api.dynamic_api.utils import get_view_name
 from rest_framework_dso.fields import AbstractEmbeddedField, get_embedded_field_class
 from rest_framework_dso.serializers import HALRawIdentifierLinkSerializer
@@ -106,6 +107,8 @@ class SerializerAssemblyLine:
     def __init__(
         self,
         model: type[DynamicModel],
+        version: str = DEFAULT,
+        dataset_id: str = "",
         fields=None,
         depth: int = 0,
         openapi_docs: str = "",
@@ -123,6 +126,8 @@ class SerializerAssemblyLine:
             "__doc__": openapi_docs,  # avoid exposing our docstrings.
             "table_schema": model.table_schema(),
             "_factory_function": factory_name,
+            "version": version,
+            "dataset_id": dataset_id,
             "Meta": type(
                 "Meta",
                 (),
@@ -195,7 +200,7 @@ def _serializer_cache_key(model, depth=0, nesting_level=0):
 
 @cached(cache=_serializer_factory_cache, key=_serializer_cache_key)
 def serializer_factory(
-    model: type[DynamicModel], depth: int = 0, nesting_level=0
+    model: type[DynamicModel], version: str = DEFAULT, depth: int = 0, nesting_level=0
 ) -> type[base.DynamicSerializer]:
     """Generate the DRF serializer class for a specific dataset model.
 
@@ -249,7 +254,9 @@ def serializer_factory(
         # Inner tables have no schema or links defined
         # Generate the serializer for the _links field containing the relations according to HAL.
         # This is attached as a normal field, so it's recognized by prefetch optimizations.
-        serializer_part.add_field("_links", _links_serializer_factory(model, depth)(source="*"))
+        serializer_part.add_field(
+            "_links", _links_serializer_factory(model, version, depth)(source="*")
+        )
 
     # Debug how deep serializers are created, debug circular references
     logger.debug(
@@ -304,15 +311,19 @@ def _validate_model(model: type[DynamicModel]):
 
 
 def _links_serializer_factory(
-    model: type[DynamicModel], depth: int
+    model: type[DynamicModel], version: str, depth: int
 ) -> type[base.DynamicLinksSerializer]:
     """Generate the DRF serializer class for the ``_links`` section."""
     dataset_schema = model.get_dataset_schema()
     table_schema = model.table_schema()
-    serializer_name = f"{dataset_schema.python_name}{table_schema.python_name}LinksSerializer"
+    serializer_name = (
+        f"{dataset_schema.python_name}{version}{table_schema.python_name}LinksSerializer"
+    )
 
     serializer_part = SerializerAssemblyLine(
         model,
+        version=version,
+        dataset_id=dataset_schema.id,
         fields=["schema", "self"],
         openapi_docs=(
             f"The contents of the `{model.table_schema().id}._links` field."
@@ -325,29 +336,37 @@ def _links_serializer_factory(
     # Configure the serializer class to use for the link to 'self'
     # The 'fields_always_included' is set, so the 'self' link never hides fields.
     if model.is_temporal():
-        self_link_class = _temporal_link_serializer_factory(model)
+        self_link_class = _temporal_link_serializer_factory(model, version)
     else:
-        self_link_class = _nontemporal_link_serializer_factory(model)
+        self_link_class = _nontemporal_link_serializer_factory(model, version)
     self_link_class.fields_always_included = set(self_link_class.Meta.fields)
     serializer_part.class_attrs["serializer_url_field"] = self_link_class
 
     # Parse fields for serializer
     for model_field in model._meta.get_fields():
+        # The version in the href matches the version if we refer to the same dataset,
+        # for other datasets we take the default.
+        field_version = (
+            version
+            if model_field.related_model is not None
+            and model_field.related_model.get_dataset() == model.get_dataset()
+            else DEFAULT
+        )
         # Only create fields for relations, avoid adding non-relation fields in _links.
         if isinstance(model_field, models.ManyToOneRel):
-            _build_serializer_reverse_fk_field(serializer_part, model_field)
+            _build_serializer_reverse_fk_field(serializer_part, model_field, field_version)
         # This includes LooseRelationManyToManyField
         elif isinstance(model_field, models.ManyToManyField):
-            _build_m2m_serializer_field(serializer_part, model_field)
+            _build_m2m_serializer_field(serializer_part, model_field, field_version)
         elif isinstance(model_field, (RelatedField, models.ForeignObjectRel)):
-            _build_link_serializer_field(serializer_part, model_field)
+            _build_link_serializer_field(serializer_part, model_field, field_version)
 
     # Generate serializer class
     return serializer_part.construct_class(serializer_name, base_class=base.DynamicLinksSerializer)
 
 
 def _nontemporal_link_serializer_factory(
-    related_model: type[DynamicModel],
+    related_model: type[DynamicModel], version: str = DEFAULT
 ) -> type[LinkSerializer]:
     """Construct a serializer that represents a relationship of which the remote
     table is not temporal."""
@@ -362,7 +381,7 @@ def _nontemporal_link_serializer_factory(
         factory_name="_nontemporal_link_serializer_factory",
     )
 
-    serializer_part.add_field("href", _build_href_field(related_model))
+    serializer_part.add_field("href", _build_href_field(related_model, version=version))
     if related_model.has_display_field():
         # In case the display field is a PK with a relation (OneToOneField), "id_id" is used:
         source = _get_attname_source(related_model.table_schema().display_field)
@@ -389,7 +408,7 @@ def _get_attname_source(field_schema: DatasetFieldSchema):
 
 @cached(cache=_temporal_link_serializer_factory_cache)
 def _temporal_link_serializer_factory(
-    related_model: type[DynamicModel],
+    related_model: type[DynamicModel], version: str = DEFAULT
 ) -> type[LinkSerializer]:
     """Construct a serializer that represents a relationship in which the remote
     table is temporal.
@@ -423,6 +442,7 @@ def _temporal_link_serializer_factory(
             related_model,
             field_cls=fields.TemporalHyperlinkedRelatedField,
             table_schema=table_schema,
+            version=version,
         ),
     )
     if related_model.has_display_field():
@@ -442,7 +462,7 @@ def _temporal_link_serializer_factory(
 
 
 def _raw_identifier_link_serializer_factory(
-    related_model: type[DynamicModel],
+    related_model: type[DynamicModel], version: str
 ) -> type[HALRawIdentifierLinkSerializer]:
     """Construct a serializer that displays an object structure for a relationship ID.
 
@@ -461,7 +481,9 @@ def _raw_identifier_link_serializer_factory(
     )
     serializer_part.add_field(
         "href",
-        _build_href_field(related_model, field_cls=fields.HALRawIdentifierUrlField),
+        _build_href_field(
+            related_model, field_cls=fields.HALRawIdentifierUrlField, version=version
+        ),
     )
     if related_model.has_display_field():
         # Using source="*" because the source is already a str.
@@ -551,7 +573,7 @@ def _build_serializer_embedded_field(
 
 
 def _through_serializer_factory(  # noqa: C901
-    m2m_field: models.ManyToManyField,
+    m2m_field: models.ManyToManyField, version: str
 ) -> type[base.ThroughSerializer]:
     """Generate the DRF serializer class for a M2M model.
 
@@ -613,6 +635,7 @@ def _through_serializer_factory(  # noqa: C901
             lookup_field=f"{target_fk_name}_id",
             lookup_url_kwarg="pk",
             field_cls=href_field_cls,
+            version=version,
             **field_kwargs,
         ),
     )
@@ -667,7 +690,7 @@ def _through_serializer_factory(  # noqa: C901
 
 
 def _build_m2m_serializer_field(
-    serializer_part: SerializerAssemblyLine, m2m_field: models.ManyToManyField
+    serializer_part: SerializerAssemblyLine, m2m_field: models.ManyToManyField, version: str
 ):
     """Add a serializer for a m2m field to the output parameters.
 
@@ -680,7 +703,7 @@ def _build_m2m_serializer_field(
     unnecessary queries joining both the through and target table.
     """
     field_schema = DynamicModel.get_field_schema(m2m_field)
-    serializer_class = _through_serializer_factory(m2m_field)
+    serializer_class = _through_serializer_factory(m2m_field, version=version)
 
     # Add the field to the serializer, but let it navigate to the through model
     # by using the reverse_name of it's first foreign key:
@@ -715,7 +738,9 @@ def _build_plain_serializer_field(
 
 
 def _build_link_serializer_field(
-    serializer_part: SerializerAssemblyLine, model_field: RelatedField | models.ForeignObjectRel
+    serializer_part: SerializerAssemblyLine,
+    model_field: RelatedField | models.ForeignObjectRel,
+    version: str,
 ):
     """Build a field that will be an item in the ``_links`` section."""
     related_model = model_field.related_model
@@ -731,10 +756,10 @@ def _build_link_serializer_field(
     # The link element itself is constructed using a serializer instead of some simple field,
     # because this provides a proper field definition for the generated OpenAPI spec.
     if isinstance(model_field, LooseRelationField):
-        field_class = _raw_identifier_link_serializer_factory(related_model)
+        field_class = _raw_identifier_link_serializer_factory(related_model, version)
         field_kwargs["source"] = model_field.attname  # receives ID value, not full object.
     elif model_field.related_model.table_schema().is_temporal:
-        field_class = _temporal_link_serializer_factory(related_model)
+        field_class = _temporal_link_serializer_factory(related_model, version)
     elif (
         model_field.one_to_one
         and model_field.primary_key
@@ -746,10 +771,10 @@ def _build_link_serializer_field(
         # Optimization for OneToOneField. If the whole link object just needs the field ID,
         # there is no need to create a standard _nontemporal_link_serializer_factory().
         # Reusing the "raw-id link" factory, because this is the exact same layout as needed.
-        field_class = _raw_identifier_link_serializer_factory(related_model)
+        field_class = _raw_identifier_link_serializer_factory(related_model, version)
         field_kwargs["source"] = model_field.attname  # receives ID value, not full object.
     else:
-        field_class = _nontemporal_link_serializer_factory(related_model)
+        field_class = _nontemporal_link_serializer_factory(related_model, version)
 
     serializer_part.add_field(
         camel_name,  # Can be reverse relation, so based on model name.
@@ -785,8 +810,7 @@ def _build_serializer_related_id_field(
 
 
 def _build_serializer_reverse_fk_field(
-    serializer_part: SerializerAssemblyLine,
-    model_field: models.ManyToOneRel,
+    serializer_part: SerializerAssemblyLine, model_field: models.ManyToOneRel, version: str
 ):
     """Build the ManyToOneRel field"""
     field_schema = DynamicModel.get_field_schema(model_field)
@@ -804,9 +828,9 @@ def _build_serializer_reverse_fk_field(
             # Since the "identificatie" / "volgnummer" fields are dynamic, there is no good
             # way to generate an OpenAPI definition from this unless the whole result
             # is defined as a serializer class that has those particular fields.
-            field_class = _temporal_link_serializer_factory(target_model)
+            field_class = _temporal_link_serializer_factory(target_model, version)
         else:
-            field_class = _nontemporal_link_serializer_factory(target_model)
+            field_class = _nontemporal_link_serializer_factory(target_model, version)
 
         serializer_part.add_field(name, field_class(read_only=True, many=True))
     elif format1 == "summary":
@@ -820,6 +844,7 @@ def _build_href_field(
     target_model: type[DynamicModel],
     lookup_field: str = "pk",
     field_cls=HyperlinkedRelatedField,
+    version: str = DEFAULT,
     **kwargs,
 ) -> HyperlinkedRelatedField:
     """Generate a link field for a regular, temporal or loose relation.
@@ -831,7 +856,7 @@ def _build_href_field(
         lookup_field = target_model._meta.pk.attname
 
     return field_cls(
-        view_name=get_view_name(target_model, "detail"),
+        view_name=get_view_name(target_model, "detail", version),
         read_only=True,  # avoids having to add a queryset
         source="*",  # reads whole object, but only takes 'lookup_field' for the ID.
         lookup_field=lookup_field,
