@@ -43,7 +43,7 @@ def test_dataset(api_client, filled_router, gebieden_dataset):
     content = response.rendered_content
 
     # Check for self-link to wijken.
-    assert """<a id="wijken">""" in content
+    assert """<a id="wijken" class="anchor">""" in content
     assert (
         """<a href="/v1/docs/datasets/gebieden.html#wijken">gebieden:wijken:ligtInStadsdeel</a>"""
         in content
@@ -89,4 +89,4 @@ def test_dataset_casing(api_client, filled_router, hoofdroutes_dataset):
     assert response.status_code == 200
     content = response.rendered_content
 
-    assert """<a id="routesGevaarlijkeStoffen">""" in content
+    assert """<a id="routesGevaarlijkeStoffen" class="anchor">""" in content

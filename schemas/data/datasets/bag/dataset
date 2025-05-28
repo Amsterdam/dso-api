@@ -3,8 +3,6 @@
   "id": "bag",
   "title": "BAG",
   "description": "De Basisregistratie adressen en gebouwen (BAG) bevat gegevens over panden, verblijfsobjecten, standplaatsen en ligplaatsen en de bijbehorende adressen (openbare ruimte, nummeraanduiding en woonplaats).",
-  "status": "beschikbaar",
-  "version": "1.0.0",
   "crs": "EPSG:28992",
   "owner": "Gemeente Amsterdam, afdeling Basisinformatie",
   "publisher": {
@@ -24,83 +22,91 @@
     "standplaatsen",
     "panden"
   ],
-  "tables": [
-    {
-      "id": "woonplaatsen",
-      "$ref": "woonplaatsen/v1.6.3",
-      "activeVersions": {
-        "1.6.3": "woonplaatsen/v1.6.3"
-      }
-    },
-    {
-      "id": "standplaatsen",
-      "$ref": "standplaatsen/v1.4.2",
-      "activeVersions": {
-        "1.4.2": "standplaatsen/v1.4.2"
-      }
-    },
-    {
-      "id": "ligplaatsen",
-      "$ref": "ligplaatsen/v1.4.2",
-      "activeVersions": {
-        "1.4.2": "ligplaatsen/v1.4.2"
-      }
-    },
-    {
-      "id": "openbareruimtes",
-      "$ref": "openbareruimtes/v1.5.2",
-      "activeVersions": {
-        "1.5.2": "openbareruimtes/v1.5.2"
-      }
-    },
-    {
-      "id": "nummeraanduidingen",
-      "$ref": "nummeraanduidingen/v1.4.2",
-      "activeVersions": {
-        "1.4.2": "nummeraanduidingen/v1.4.2"
-      }
-    },
-    {
-      "id": "verblijfsobjecten",
-      "$ref": "verblijfsobjecten/v1.4.4",
-      "activeVersions": {
-        "1.4.4": "verblijfsobjecten/v1.4.4"
-      }
-    },
-    {
-      "id": "panden",
-      "$ref": "panden/v1.4.2",
-      "activeVersions": {
-        "1.4.2": "panden/v1.4.2"
-      }
-    },
-    {
-      "id": "dossiers",
-      "$ref": "dossiers/v1.0.1",
-      "activeVersions": {
-        "1.0.1": "dossiers/v1.0.1"
-      }
-    },
-    {
-      "id": "brondocumenten",
-      "$ref": "brondocumenten/v1.0.1",
-      "activeVersions": {
-        "1.0.1": "brondocumenten/v1.0.1"
-      }
-    },
-    {
-      "id": "onderzoeken",
-      "$ref": "onderzoeken/v1.1.1",
-      "activeVersions": {
-        "1.1.1": "onderzoeken/v1.1.1"
-      }
-    },
-    {
-      "id": "votopafvoerlegacy",
-      "$ref": "votopafvoerlegacy/v1.0.1",
-      "activeVersions": {
-        "1.0.1": "votopafvoerlegacy/v1.0.1"
-      }
+  "defaultVersion": "v1",
+  "versions": {
+    "v1": {
+      "status": "beschikbaar",
+      "lifecycleStatus": "stable",
+      "version": "1.0.0",
+      "tables": [
+        {
+          "id": "woonplaatsen",
+          "$ref": "woonplaatsen/v1.6.3",
+          "activeVersions": {
+            "1.6.3": "woonplaatsen/v1.6.3"
+          }
+        },
+        {
+          "id": "standplaatsen",
+          "$ref": "standplaatsen/v1.4.2",
+          "activeVersions": {
+            "1.4.2": "standplaatsen/v1.4.2"
+          }
+        },
+        {
+          "id": "ligplaatsen",
+          "$ref": "ligplaatsen/v1.4.2",
+          "activeVersions": {
+            "1.4.2": "ligplaatsen/v1.4.2"
+          }
+        },
+        {
+          "id": "openbareruimtes",
+          "$ref": "openbareruimtes/v1.5.2",
+          "activeVersions": {
+            "1.5.2": "openbareruimtes/v1.5.2"
+          }
+        },
+        {
+          "id": "nummeraanduidingen",
+          "$ref": "nummeraanduidingen/v1.4.2",
+          "activeVersions": {
+            "1.4.2": "nummeraanduidingen/v1.4.2"
+          }
+        },
+        {
+          "id": "verblijfsobjecten",
+          "$ref": "verblijfsobjecten/v1.4.4",
+          "activeVersions": {
+            "1.4.4": "verblijfsobjecten/v1.4.4"
+          }
+        },
+        {
+          "id": "panden",
+          "$ref": "panden/v1.4.2",
+          "activeVersions": {
+            "1.4.2": "panden/v1.4.2"
+          }
+        },
+        {
+          "id": "dossiers",
+          "$ref": "dossiers/v1.0.1",
+          "activeVersions": {
+            "1.0.1": "dossiers/v1.0.1"
+          }
+        },
+        {
+          "id": "brondocumenten",
+          "$ref": "brondocumenten/v1.0.1",
+          "activeVersions": {
+            "1.0.1": "brondocumenten/v1.0.1"
+          }
+        },
+        {
+          "id": "onderzoeken",
+          "$ref": "onderzoeken/v1.1.1",
+          "activeVersions": {
+            "1.1.1": "onderzoeken/v1.1.1"
+          }
+        },
+        {
+          "id": "votopafvoerlegacy",
+          "$ref": "votopafvoerlegacy/v1.0.1",
+          "activeVersions": {
+            "1.0.1": "votopafvoerlegacy/v1.0.1"
+          }
+        }
+      ]
     }
-  ]
+  }
 }

@@ -131,7 +131,7 @@ class TestLimitFields:
                             "id": 1,
                             "title": "1",
                         },
-                        "schema": "https://schemas.data.amsterdam.nl/datasets/afvalwegingen/dataset#containers",  # noqa: E501
+                        "schema": "https://schemas.data.amsterdam.nl/datasets/afvalwegingen/containers/v1.0.0",  # noqa: E501
                     },
                     "id": 1,
                     "serienummer": "foobar-123",
