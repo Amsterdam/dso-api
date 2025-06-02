@@ -11,7 +11,7 @@ djangorestframework-csv == 3.0.2
 djangorestframework-gis == 1.1
 amsterdam-schema-tools[django] == 7.7.3
 azure-identity == 1.23.0
-azure-monitor-opentelemetry == 1.6.9
+azure-monitor-opentelemetry == 1.6.10
 cachetools == 6.0.0
 datadiensten-apikeyclient == 0.6.0
 datapunt-authorization-django==1.6.1
@@ -43,7 +43,8 @@ uwsgi-readiness-check == 0.2.0
 
 # Testing
 bandit == 1.8.3
-cryptography >= 45.0.3
+# 45.0.3 caused pip to install the whole rust toolchain on Debian, slowing everything and needing more firewall rules
+cryptography >= 45.0.2, !=45.0.3
 flake8 == 7.2.0
 flake8-blind-except == 0.2.1
 flake8-colors == 0.1.9
