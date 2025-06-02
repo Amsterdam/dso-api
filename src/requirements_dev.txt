@@ -410,6 +410,7 @@ pyflakes==3.3.2
 pygments==2.19.1
     # via
     #   -r ./requirements.in
+    #   pytest
     #   rich
 pyjwt[crypto]==2.8.0
     # via
@@ -422,7 +423,7 @@ pyproject-hooks==1.2.0
     # via
     #   build
     #   pip-tools
-pytest==8.3.5
+pytest==8.4.0
     # via
     #   -r ./requirements.in
     #   pytest-cov
