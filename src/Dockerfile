@@ -12,7 +12,7 @@ RUN python -m pip install -U pip \
 # The `--no-deps` has been added because of a pip bug with --require-hashes
 # The dependencies have already been resolved during the generation of
 # the requirements.txt, so adding `--no-deps` can safely be done.
-RUN python -m pip install --no-cache-dir --no-deps -r $PIP_REQUIREMENTS
+RUN python -m pip -v install --no-cache-dir --no-deps -r $PIP_REQUIREMENTS
 
 # Start runtime image
 FROM python:3.13-slim-bookworm AS runtime
