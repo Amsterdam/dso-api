@@ -20,6 +20,7 @@ RUN apt update && apt install --no-install-recommends -y \
     curl \
     libgdal32 \
     libgeos-c1v5 \
+    libproj25 \
     libpq5 \
     media-types \
     netcat-openbsd
