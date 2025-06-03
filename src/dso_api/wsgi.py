@@ -25,10 +25,10 @@ application(
     {
         "REQUEST_METHOD": "GET",
         "SERVER_NAME": "127.0.0.1",
-        "SERVER_PORT": 80,
+        "SERVER_PORT": "80",
         "PATH_INFO": "/v1/",
         "wsgi.input": sys.stdin,
-        "wsgi.url_scheme": "https",
+        "wsgi.url_scheme": "http",
         "wsgi.errors": sys.stderr,
         "wsgi.version": (1, 0),
     },
