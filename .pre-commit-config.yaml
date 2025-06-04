@@ -36,9 +36,11 @@ repos:
         args:
         - --fix
         - --show-fixes
-        - --config=pyproject.toml
+        - --config=src/pyproject.toml
         - --exit-non-zero-on-fix
   - repo: https://github.com/psf/black
     rev: 25.1.0
     hooks:
       - id: black
+        args:
+        - --config=src/pyproject.toml

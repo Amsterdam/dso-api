@@ -24,6 +24,11 @@ Navigate to `localhost:8090`.
 By default a collection of example datasets is loaded, and a local database is setup and initialized.
 This behaviour can be changed with environment variables as described below.
 
+Running tests inside the container can be done as follows:
+```
+    docker compose exec web pytest <file/dir>
+```
+
 ### Environment
 
 The following environment variables are useful for configuring a local development environment.
@@ -54,6 +59,22 @@ A local setup using the production dataset schema's with mock data:
     export SCHEMA_URL="https://schemas.data.amsterdam.nl/datasets/"
     docker compose up
 ```
+
+### Debugging containerized code in VSCode
+Run docker compose with the extra file.
+```
+    docker compose -f docker-compose.yml -f docker-compose.debug.yml up -d
+```
+
+In your `.vscode` folder, copy the `launch.example.json` to `launch.json` and the
+`tasks.example.json` to `tasks.json`. Ensure that the paths are matching with what you
+have (especially packages in your virtualenv).
+
+Start the debugger through the Run and Debug menu. The debugger is called "Python Debugger:
+Remote Attach". You can now add breakpoints.
+
+Note: this currently does not work with pytest in the container. It does work from the browser
+or through `curl`.
 
 ## Without Docker Compose
 See the instructions at: <https://dso-api.readthedocs.io/en/latest/howto/install.html>
