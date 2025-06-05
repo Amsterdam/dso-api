@@ -69,12 +69,24 @@ geometrie velden in de gewenste projectie te ontvangen. Bijvoorbeeld:
 `SRSNAME=urn:ogc:def:crs:EPSG::3857` voor de web-mercator projectie die
 Google Maps gebruikt. De toegestane projecties zijn:
 
-| Projectie                     | Toelichting                                     |
-| ----------------------------- | ----------------------------------------------- |
-| `urn:ogc:def:crs:EPSG::28992` | Nederlandse rijksdriehoekscoördinaten (RD New). |
-| `urn:ogc:def:crs:EPSG::4258`  | ETRS89, Europese projectie.                     |
-| `urn:ogc:def:crs:EPSG::3857`  | Pseudo-Mercator (vergelijkbaar met Google Maps) |
-| `urn:ogc:def:crs:EPSG::4326`  | WGS 84 longitude-latitude, wereldwijd.          |
+| Projectie                     | Toelichting                                                                               |
+|-------------------------------|-------------------------------------------------------------------------------------------|
+| `urn:ogc:def:crs:EPSG::28992` | Nederlandse rijksdriehoekscoördinaten (RD New).                                           |
+| `urn:ogc:def:crs:EPSG::4258`  | ETRS89, Europese projectie.                                                               |
+| `urn:ogc:def:crs:EPSG::3857`  | Pseudo-Mercator (vergelijkbaar met Google Maps)                                           |
+| `urn:ogc:def:crs:EPSG::4326`  | WGS 84 latitude-longitude, wereldwijd.                                                    |
+| `urn:ogc:def:crs:OGC::CRS84`  | WGS 84 longitude/latitude. Coordinaten zijn in x/y volgorde, o.a. gebruikt in GeoJSON.    |
+| `EPSG:4326`                   | De oude notatie voor WGS 84, en geeft coordinaten in de oude longitude/latitude volgorde. |
+
+Wie goed oplet ziet dat WFS 2.0 de coördinaatvolgorde van de autoriteit aanhoud.
+Gebruik daarvoor wel de *aanbevolen* OGC-notatie van `urn:ogc:def:crs:EPSG::4326` of `http://www.opengis.net/def/crs/epsg/0/4326`.
+
+### Compatibiliteit
+
+In veel legacy-software wordt nog `EPSG:4326` als notatie gebruikt,
+en aangenomen dat er longitude/latitude coördinaten zijn.
+Wie deze code gebruikt in de `SRSNAME` of `BBOX`, zal de coordinaten ook in deze legacy volgorde ontvangen.
+Moderne GIS pakketten gebruiken allemaal de aanbevolen OGC-notatie, en hebben hier geen last van.
 
 ## Eenvoudige Filters
 
