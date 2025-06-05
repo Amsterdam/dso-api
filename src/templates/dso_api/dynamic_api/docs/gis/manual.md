@@ -1,5 +1,10 @@
 # WFS handmatig koppelen
 
+<!--
+    Dit is grotendeels een Nederlandse/Amsterdamse versie van:
+    https://django-gisserver.readthedocs.io/en/latest/user/filters.html
+-->
+
 De WFS server kan rechtstreeks vanuit de browser of HTTP-client (curl
 e.d.) uitgelezen worden. Gebruik de basis URL
 `https://api.data.amsterdam.nl/v1/wfs/{<dataset naam>}/` in een
@@ -236,16 +241,44 @@ Als simpel voorbeeld:
 </fes:Function>
 ```
 
-De volgende functies zijn beschikbaar in de server:
+Aangezien de argumenten een *expressie* mogen zijn, is het volgende ook mogelijk:
 
-| Functie                              | SQL equivalent               | Omschrijving                                               |
-| ------------------------------------ | ---------------------------- | ---------------------------------------------------------- |
-| `strConcat(string)`                  | `CONCAT()`                   | Combineert teksten                                         |
-| `strToLowerCase(string)`             | `LOWER()`                    | Tekst omzetten naar kleine letters.                        |
-| `strToUpperCase(string)`             | `UPPER()`                    | Tekst omzetten naar hoofdletters                           |
-| `strTrim(string)`                    | `TRIM()`                     | Witruimte aan het begin en einde verwijderen.              |
-| `strLength(string)`                  | `LENGTH()` / `CHAR_LENGTH()` | Tekstlengte bepalen.                                       |
-| `length(string)`                     | `LENGTH()` / `CHAR_LENGTH()` | Alias van `strLength()`.                                   |
+``` xml
+<Filter>
+    <PropertyIsEqualTo>
+        <Function name="strToLowerCase">
+            <Function name="strSubstring">
+                <ValueReference>name</ValueReference>
+                <Literal>0</Literal>
+                <Literal>4</Literal>
+            </Function>
+        </Function>
+        <Literal>cafe</Literal>
+    </PropertyIsEqualTo>
+</Filter>
+```
+
+De volgende functies zijn beschikbaar in de server,
+gebaseerd op de filter functies uit [GeoServer](https://docs.geoserver.org/stable/en/user/filter/function_reference.html):
+
+### Tekstbewerking
+
+| Functie                              | SQL equivalent               | Omschrijving                                             |
+|--------------------------------------|------------------------------|----------------------------------------------------------|
+| `strConcat(string)`                  | `CONCAT()`                   | Combineert teksten                                       |
+| `strIndexOf(string, substring)`      | `STRPOS() - 1`               | Zoekt de tekst, met een 0-gebaseerde index.              |
+| `strSubstring(string, begin, end)`   | `SUBSTRING()`                | Verwijderd tekens voor het *begin* en achter het *einde* |
+| `strSubstringStart(string, begin)`   | `SUBSTRING()`                | Verwijderd tekens voor *begin*, index op 0 gebaseeerd.   |
+| `strToLowerCase(string)`             | `LOWER()`                    | Tekst omzetten naar kleine letters.                      |
+| `strToUpperCase(string)`             | `UPPER()`                    | Tekst omzetten naar hoofdletters                         |
+| `strTrim(string)`                    | `TRIM()`                     | Witruimte aan het begin en einde verwijderen.            |
+| `strLength(string)`                  | `LENGTH()` / `CHAR_LENGTH()` | Tekstlengte bepalen.                                     |
+| `length(string)`                     | `LENGTH()` / `CHAR_LENGTH()` | Alias van `strLength()`.                                 |
+
+### Wiskundige getalfuncties
+
+| Functie                              | SQL equivalent               | Omschrijving                                             |
+|--------------------------------------|------------------------------|----------------------------------------------------------|
 | `abs(number)`                        | `ABS()`                      | Negatieve getallen omdraaien.                              |
 | `ceil(number)`                       | `CEIL()`                     | Afronden naar boven.                                       |
 | `floor(number)`                      | `FLOOR()`                    | Afronden naar beneden.                                     |
@@ -256,6 +289,11 @@ De volgende functies zijn beschikbaar in de server:
 | `exp(value)`                         | `EXP()`                      | Exponent van 𝑒 (2,71828...; natuurlijke logaritme).        |
 | `log(value)`                         | `LOG()`                      | Logaritme; inverse van een exponent.                       |
 | `sqrt(value)`                        | `SQRT()`                     | Worteltrekken; inverse van machtsverheffen.                |
+
+### Wiskundige trigonometrie
+
+| Functie                              | SQL equivalent               | Omschrijving                                             |
+|--------------------------------------|------------------------------|----------------------------------------------------------|
 | `acos(value)`                        | `ACOS()`                     | Arccosinus; inverse van cosinus.                           |
 | `asin(value)`                        | `ASIN()`                     | Arcsinus; inverse van sinus.                               |
 | `atan(value)`                        | `ATAN()`                     | Arctangens; invere van tangens.                            |
@@ -266,15 +304,71 @@ De volgende functies zijn beschikbaar in de server:
 | `pi()`                               | `PI`                         | De waarde van π (3,141592653...)                           |
 | `toDegrees(radians)`                 | `DEGREES()`                  | Omzetting radialen naar graden.                            |
 | `toRadians(degree)`                  | `RADIANS()`                  | Omzetting graden naar radialen.                            |
-| `Area(geometry)`                     | `ST_AREA()`                  | Geometrie omzetten naar gebied.                            |
-| `Centroid(features)`                 | `ST_Centroid()`              | Geometrisch centrum als "zwaartekrachtpunt" teruggeven.    |
-| `Difference(geometry1, geometry2)`   | `ST_Difference()`            | Delen van geometrie 1 die niet overlappen met geometrie 2. |
-| `distance(geometry1, geometry2)`     | `ST_Distance()`              | Minimale afstand tussen 2 geometrieën.                     |
-| `Envelope(geometry)`                 | `ST_Envelope()`              | Geometrie omzetten naar bounding box.                      |
-| `Intersection(geometry1, geometry2)` | `ST_Intersection()`          | Delen van geometrie 1 die overlappen met geometrie 2.      |
-| `Union(geometry1, geometry2)`        | `ST_Union()`                 | Geometrie 1 en 2 samenvoegen.                              |
+
+
+### Geometrie functies
+
+| Functie                              | SQL equivalent       | Omschrijving                                               |
+|--------------------------------------|----------------------|------------------------------------------------------------|
+| `Area(geometry)`                     | `ST_AREA()`          | Geometrie omzetten naar gebied.                            |
+| `Centroid(features)`                 | `ST_Centroid()`      | Geometrisch centrum als "zwaartekrachtpunt" teruggeven.    |
+| `Difference(geometry1, geometry2)`   | `ST_Difference()`    | Delen van geometrie 1 die niet overlappen met geometrie 2. |
+| `distance(geometry1, geometry2)`     | `ST_Distance()`      | Minimale afstand tussen 2 geometrieën.                     |
+| `envelope(geometry)`                 | `ST_Envelope()`      | Geometrie omzetten naar bounding box.                      |
+| `geomLength(geometry) `              | `ST_Length()`        | De cartesiaanse lengte voor een lijnstring/curve.          |
+| `isValid(geometry)`                  | `ST_IsValid()`       | Geometrie moet geldig zijn.                                |
+| `numGeometries(geometry)`            | `ST_NumGeometries()` | Hoeveel geometrieën er in een collectie zitten.            |
+| `numPoints(geometry)`                | `ST_NumPoints()`     | Hoeveel punten er in een lijn zitten.                      |
+| `perimeter(geometry)`                | `ST_Perimeter()`     | De 2D-omtrek van het oppervlak of veelhoek.                |
+| `Intersection(geometry1, geometry2)` | `ST_Intersection()`  | Delen van geometrie 1 die overlappen met geometrie 2.      |
+| `Union(geometry1, geometry2)`        | `ST_Union()`         | Geometrie 1 en 2 samenvoegen.                              |
+
+## XML POST requests gebruiken
+
+Als een filter te lang is voor de query-string,
+kan je ook een XML POST request gebruiken in plaats van het KVP query-string formaat.
+
+Een GET aanvraag zoals:
+
+``` urlencoded
+?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature
+&TYPENAMES=app:restaurant
+&FILTER=<Filter>...</Filter>
+&PROPERTYNAME=app:id,app:name,app:location
+&SORTBY=app:name ASC
+```
+
+...kan ook worden ingestuurd als XML-gecodeerde POST aanvraag:
+
+``` xml
+<wfs:GetFeature service="WFS" version="2.0.0"
+    xmlns:wfs="http://www.opengis.net/wfs/2.0"
+    xmlns:gml="http://www.opengis.net/gml/3.2"
+    xmlns:fes="http://www.opengis.net/fes/2.0"
+    xmlns:app="https://api.data.amsterdam.nl/v1/wfs/">
+
+  <wfs:Query typeNames="app:restaurant">
+    <wfs:PropertyName>app:id</wfs:PropertyName>
+    <wfs:PropertyName>app:name</wfs:PropertyName>
+    <wfs:PropertyName>app:location</wfs:PropertyName>
+
+    <fes:Filter>
+      ...
+    </fes:Filter>
+
+    <fes:SortBy>
+      <fes:SortProperty>
+        <fes:ValueReference>app:name</fes:ValueReference>
+        <fes:SortOrder>ASC</fes:SortOrder>
+      </fes:SortProperty>
+    </fes:SortBy>
+  </wfs:Query>
+</wfs:GetFeature>
+```
 
 ## Filter compatibiliteit
+
+### Ontbrekende XML-namespaces
 
 Officieel zijn XML-namespaces verplicht in het filter. Aangezien veel
 clients deze achterwege laten, ondersteunt de server ook aanvragen
@@ -318,6 +412,8 @@ Bij geometriefilters is dat officieel zelfs:
 Conform de XML-regels mag hier de "fes" namespace alias hernoemd worden,
 of weggelaten worden als er alleen `xmlns="..."` gebruikt wordt i.p.v.
 `xmlns:fes="..."`.
+
+### Oudere filter syntax
 
 Diverse bestaande filters gebruiken nog andere WFS 1-elementen, zoals
 `<PropertyName>` in plaats van `<ValueReference>`. Voor compatibiliteit
