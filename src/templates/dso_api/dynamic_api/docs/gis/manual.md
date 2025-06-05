@@ -160,7 +160,7 @@ tags worden allemaal ondersteund:
 <aside class="tip">
 <h4 class="title">Tip</h4>
 
-Bij de operator `<BBOX>` mag het geometrieveld weggelaten worden. Het
+Bij de operator <code>&lt;BBOX&gt;</code> mag het geometrieveld weggelaten worden. Het
 standaardgeometrieveld wordt dan gebruikt (doorgaans het eerste veld).
 
 </aside>
@@ -169,7 +169,7 @@ standaardgeometrieveld wordt dan gebruikt (doorgaans het eerste veld).
 <h4 class="title">Note</h4>
 
 Hoewel een aantal geometrie-operatoren dubbelop lijken voor vlakken
-(zoals `<Intersects>`, `<Crosses>` en `<Overlaps>`), worden de
+(zoals <code>&lt;Intersects&gt;</code>, <code>&lt;Crosses&gt;</code> en <code>&lt;Overlaps&gt;</code>), worden de
 onderlinge verschillen met name zichtbaar bij het vergelijken van punten
 met vlakken.
 </aside>

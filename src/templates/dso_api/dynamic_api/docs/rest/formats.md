@@ -19,7 +19,7 @@ formaten worden ondersteund:
 <aside class="note">
 <h4 class="title">Note</h4>
 
-In plaats van `_format` wordt ook `format` ondersteund, maar `_format`
+In plaats van <code>_format</code> wordt ook <code>format</code> ondersteund, maar <code>_format</code>
 heeft de voorkeur.
 </aside>
 
