@@ -619,7 +619,7 @@ class TestFormats:
 
     @pytest.mark.parametrize(
         "accept_crs",
-        ["urn:ogc:def:crs:OGC::CRS84", "urn:ogc:def:crs:EPSG::4326", "EPSG:4326"],
+        ["urn:ogc:def:crs:OGC::CRS84", "urn:ogc:def:crs:EPSG::4326"],
     )
     def test_geojson_axis_orientation(
         self, api_client, fietspaaltjes_data, filled_router, accept_crs
@@ -647,13 +647,15 @@ class TestFormats:
             "type": "name",
         }
 
-    def test_rest_api_axis_orientation(self, api_client, fietspaaltjes_data, filled_router):
+    def test_rest_api_axis_orientation_yx(self, api_client, fietspaaltjes_data, filled_router):
         """Prove that REST coordinates are properly translated as Y,X for EPSG:4326.
         That follows the EPSG axis ordering.
         This is different from GeoJSON, which mandates x,y ordering.
         """
         url = reverse("dynamic_api:fietspaaltjes-fietspaaltjes-list")
-        response = api_client.get(url, {"_format": "json"}, headers={"Accept-Crs": "EPSG:4326"})
+        response = api_client.get(
+            url, {"_format": "json"}, headers={"Accept-Crs": "urn:ogc:def:crs:EPSG::4326"}
+        )
         assert response.status_code == 200, response.getvalue()
         data = read_response_json(response)
 
@@ -666,14 +668,21 @@ class TestFormats:
         }
         assert response.headers["Content-Crs"] == "urn:ogc:def:crs:EPSG::4326"
 
-    def test_rest_api_axis_orientation_crs84(self, api_client, fietspaaltjes_data, filled_router):
+    @pytest.mark.parametrize(
+        "accept_crs,content_crs",
+        [
+            ("urn:ogc:def:crs:OGC::CRS84", "urn:ogc:def:crs:OGC::CRS84"),  # GeoJSON
+            ("EPSG:4326", "http://www.opengis.net/gml/srs/epsg.xml#4326"),  # legacy
+        ],
+    )
+    def test_rest_api_axis_orientation_xy(
+        self, api_client, fietspaaltjes_data, filled_router, accept_crs, content_crs
+    ):
         """Prove that REST coordinates are properly translated as X,Y when requesting CRS84.
         That is the GeoJSON ordering.
         """
         url = reverse("dynamic_api:fietspaaltjes-fietspaaltjes-list")
-        response = api_client.get(
-            url, {"_format": "json"}, headers={"Accept-Crs": "urn:ogc:def:crs:OGC::CRS84"}
-        )
+        response = api_client.get(url, {"_format": "json"}, headers={"Accept-Crs": accept_crs})
         assert response.status_code == 200, response.getvalue()
         data = read_response_json(response)
 
@@ -684,4 +693,4 @@ class TestFormats:
                 pytest.approx(52.3665, rel=1e-4),
             ],
         }
-        assert response.headers["Content-Crs"] == "urn:ogc:def:crs:OGC::CRS84"
+        assert response.headers["Content-Crs"] == content_crs
