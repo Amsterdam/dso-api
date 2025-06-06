@@ -326,8 +326,8 @@ class DSOViewMixin:
         except ExternalValueError as e:
             raise NotAcceptable(f"Chosen CRS is invalid: {e}") from e
 
-        if accept_crs not in self.accept_crs:
-            raise NotAcceptable(f"Chosen CRS is not supported: {accept_crs}")
+        if not any(x.matches(accept_crs, compare_legacy=False) for x in self.accept_crs):
+            raise NotAcceptable(f"Chosen CRS is not supported: {value}")
         return accept_crs
 
     def get_serializer(self, *args, **kwargs):
