@@ -419,9 +419,9 @@ django-filter==24.3 \
     --hash=sha256:c4852822928ce17fb699bcfccd644b3574f1a2d80aeb2b4ff4f16b02dd49dc64 \
     --hash=sha256:d8ccaf6732afd21ca0542f6733b11591030fa98669f8d15599b358e24a2cd9c3
     # via djangorestframework-gis
-django-gisserver==2.1 \
-    --hash=sha256:65c9ab5cf537d66498262de689af790eccb0c301af30f07dc283d668b0aa59a9 \
-    --hash=sha256:c90b0a8e302a859ba3042b798951f885714aa2de9d31345f02212af720ecc9fe
+django-gisserver==2.1.1 \
+    --hash=sha256:62cd59ab93628ddcb17d12fe50a9916b335842f616773a89df588eba9f114e34 \
+    --hash=sha256:cdd7d360a3a5689201a36d2806c3c2104c7f4a673034f73856b2d2ad8224720f
     # via
     #   -r requirements.in
     #   amsterdam-schema-tools

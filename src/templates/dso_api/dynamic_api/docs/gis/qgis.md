@@ -113,12 +113,12 @@ GIS-pakket:
 Deze parameters kunnen gecombineerd worden met de `OUTPUTFORMAT`
 parameter, zodat het export formaat ook geneste relaties bevat.
 
-<aside class="admonition">
+<aside class="tip">
 <h4 class="title">Embed of expand gebruiken?</h4>
 
 QGIS 3 heeft geen ondersteuning voor complex features, en verwerkt deze
 als tekst. Gebruikt in QGIS daarom alleen de platgeslagen versie met
-`?embed={...}`. De `?expand={...}` versie is daarentegen ideaal voor
+<code>?embed={...}</code>. De <code>?expand={...}</code> versie is daarentegen ideaal voor
 GeoJSON exports, die wel goed kan omgaan met geneste structuren.
 </aside>
 
