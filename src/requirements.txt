@@ -404,6 +404,7 @@ django==4.2.21 \
     #   django-redis
     #   django-vectortiles
     #   djangorestframework
+    #   djangorestframework-gis
     #   drf-spectacular
 django-cors-headers==4.7.0 \
     --hash=sha256:6fdf31bf9c6d6448ba09ef57157db2268d515d94fc5c89a0a1028e1fc03ee52b \
@@ -419,9 +420,9 @@ django-filter==24.3 \
     --hash=sha256:c4852822928ce17fb699bcfccd644b3574f1a2d80aeb2b4ff4f16b02dd49dc64 \
     --hash=sha256:d8ccaf6732afd21ca0542f6733b11591030fa98669f8d15599b358e24a2cd9c3
     # via djangorestframework-gis
-django-gisserver==2.1 \
-    --hash=sha256:65c9ab5cf537d66498262de689af790eccb0c301af30f07dc283d668b0aa59a9 \
-    --hash=sha256:c90b0a8e302a859ba3042b798951f885714aa2de9d31345f02212af720ecc9fe
+django-gisserver==2.1.1 \
+    --hash=sha256:62cd59ab93628ddcb17d12fe50a9916b335842f616773a89df588eba9f114e34 \
+    --hash=sha256:cdd7d360a3a5689201a36d2806c3c2104c7f4a673034f73856b2d2ad8224720f
     # via
     #   -r requirements.in
     #   amsterdam-schema-tools
@@ -453,9 +454,9 @@ djangorestframework-csv==3.0.2 \
     --hash=sha256:b269b692feda1971e1342f395a21d339c6a16d2961ff64357a9a6188f27af10f \
     --hash=sha256:d1bcfbaaeaa5145af6bb0985a36a5bbf2f853d9961c722f69c7b0c9c3bcc269a
     # via -r requirements.in
-djangorestframework-gis==1.1 \
-    --hash=sha256:84b915503a59263ed9473ecde34b19260c3e9c5c8ebb3aea8d91a67fd39f7215 \
-    --hash=sha256:fd8631c2c10208df5f05ee297ce333aaa9a794acd654420207f72e8f9acd59ea
+djangorestframework-gis==1.2.0 \
+    --hash=sha256:3924651b2f6dcb5a64b30df9692577af548a04725b0c2c36cbc385f7c50fc80a \
+    --hash=sha256:702ba9ad44173b7cc70e48c6c84da48c28f6f82612cc901a77fdb54c5c57c971
     # via -r requirements.in
 drf-spectacular==0.28.0 \
     --hash=sha256:2c778a47a40ab2f5078a7c42e82baba07397bb35b074ae4680721b2805943061 \
@@ -920,9 +921,9 @@ openapi-schema-validator==0.6.3 \
     --hash=sha256:f37bace4fc2a5d96692f4f8b31dc0f8d7400fd04f3a937798eaf880d425de6ee \
     --hash=sha256:f3b9870f4e556b5a62a1c39da72a6b4b16f3ad9c73dc80084b1b11e74ba148a3
     # via openapi-spec-validator
-openapi-spec-validator==0.7.1 \
-    --hash=sha256:3c81825043f24ccbcd2f4b149b11e8231abce5ba84f37065e14ec947d8f4e959 \
-    --hash=sha256:8577b85a8268685da6f8aa30990b83b7960d4d1117e901d451b5d572605e5ec7
+openapi-spec-validator==0.7.2 \
+    --hash=sha256:4bbdc0894ec85f1d1bea1d6d9c8b2c3c8d7ccaa13577ef40da9c006c9fd0eb60 \
+    --hash=sha256:cc029309b5c5dbc7859df0372d55e9d1ff43e96d678b9ba087f7c56fc586f734
     # via -r requirements.in
 opentelemetry-api==1.31.1 \
     --hash=sha256:137ad4b64215f02b3000a0292e077641c8611aab636414632a9b9068593b7e91 \
@@ -1261,6 +1262,7 @@ pygments==2.19.1 \
     --hash=sha256:9ea1544ad55cecf4b8242fab6dd35a93bbce657034b0611ee383099054ab6d8c
     # via
     #   -r requirements.in
+    #   pytest
     #   rich
 pyjwt[crypto]==2.8.0 \
     --hash=sha256:57e28d156e3d5c10088e0c68abb90bfac3df82b40a71bd0daa20c65ccd5c23de \
@@ -1308,9 +1310,9 @@ pyproject-hooks==1.2.0 \
     --hash=sha256:1e859bd5c40fae9448642dd871adf459e5e2084186e8d2c2a79a824c970da1f8 \
     --hash=sha256:9e5c6bfa8dcc30091c74b0cf803c81fdd29d94f01992a7707bc97babb1141913
     # via build
-pytest==8.3.5 \
-    --hash=sha256:c69214aa47deac29fad6c2a4f590b9c4a9fdb16a403176fe154b79c0b4d4d820 \
-    --hash=sha256:f4efe70cc14e511565ac476b57c279e12a855b11f48f212af1080ef2263d3845
+pytest==8.4.0 \
+    --hash=sha256:14d920b48472ea0dbf68e45b96cd1ffda4705f33307dcc86c676c1b5104838a6 \
+    --hash=sha256:f40f825768ad76c0977cbacdf1fd37c6f7a468e460ea6a0636078f8972d4517e
     # via
     #   -r requirements.in
     #   pytest-cov
@@ -1416,9 +1418,9 @@ remote-pdb==2.1.0 \
     --hash=sha256:2d70c6f41e0eabf0165e8f1be58f82aa7a605aaeab8f2aefeb9ce246431091c1 \
     --hash=sha256:94f73a92ac1248cf16189211011f97096bdada8a7baac8c79372663bbb57b5d0
     # via amsterdam-schema-tools
-requests==2.32.3 \
-    --hash=sha256:55365417734eb18255590a9ff9eb97e9e1da868d4ccd6402399eaf68af20a760 \
-    --hash=sha256:70761cfe03c773ceb22aa2f671b4757976145175cdfca038c02654d061d6dcc6
+requests==2.32.4 \
+    --hash=sha256:27babd3cda2a6d50b30443204ee89830707d396671944c998b5975b031ac2b2c \
+    --hash=sha256:27d0316682c8a29834d3264820024b62a36942083d52caf2f14c0591336d3422
     # via
     #   -r requirements.in
     #   amsterdam-schema-tools
@@ -1838,9 +1840,9 @@ zaproxy==0.4.0 \
     --hash=sha256:b25285bc306d1ad91bc4d8b247aecfa06e0cb5e407fb3f5dd2fcf2fe38a67330 \
     --hash=sha256:dd0ae2f12597caf934189ac85e139a9a7239c2623a1051f9613f9356d4ec162c
     # via python-owasp-zap-v2-4
-zipp==3.22.0 \
-    --hash=sha256:dd2f28c3ce4bc67507bfd3781d21b7bb2be31103b51a4553ad7d90b84e57ace5 \
-    --hash=sha256:fe208f65f2aca48b81f9e6fd8cf7b8b32c26375266b009b413d45306b6148343
+zipp==3.23.0 \
+    --hash=sha256:071652d6115ed432f5ce1d34c336c0adfd6a884660d1e9712a256d3d3bd4b14e \
+    --hash=sha256:a07157588a12518c9d4034df3fbbee09c814741a33ff63c05fa29d26a2404166
     # via
     #   -r requirements.in
     #   importlib-metadata
