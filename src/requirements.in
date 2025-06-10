@@ -27,7 +27,7 @@ orjson == 3.10.18
 pygments == 2.19.1
 python-json-logger==3.3.0
 python-string-utils == 1.0.0
-requests == 2.32.3
+requests == 2.32.4
 sentry-sdk == 2.29.1
 urllib3 == 2.4.0
 urllib3-mock == 0.3.3
