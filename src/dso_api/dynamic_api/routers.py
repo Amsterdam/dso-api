@@ -248,9 +248,10 @@ class DynamicRouter(DefaultRouter):
                 # In case there are no versions where this table exists, add it to the default.
                 # This happens in some tests.
                 for version in model._dataset_versions or [dataset.default_version]:
-                    new_models[version][model._meta.model_name] = model
-                    if version == dataset.default_version:
-                        new_models[DEFAULT][model._meta.model_name] = model
+                    if model._meta.model_name.endswith(version):
+                        new_models[version][model._meta.model_name] = model
+                        if version == dataset.default_version:
+                            new_models[DEFAULT][model._meta.model_name] = model
 
             self.all_models[dataset_id] = new_models
             generated_models.extend(models)
