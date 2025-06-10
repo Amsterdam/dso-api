@@ -16,7 +16,7 @@ like:
     ]
 
 The :func:`~DynamicRouter.initialize` function is also responsible for calling
-the :func:`~schematools.contrib.django.factories.model_factory` and
+the :func:`~schematools.contrib.django.factories.DjangoModelFactory.build_models` and
 :func:`~dso_api.dynamic_api.views.viewset_factory`.
 """
 
@@ -130,7 +130,7 @@ class DynamicRouter(DefaultRouter):
         or when the meta tables are not found in the database (e.g. using a first migrate).
 
         The initialization calls
-        the :func:`~schematools.contrib.django.factories.model_factory` and
+        the :func:`~schematools.contrib.django.factories.DjangoModelFactory.build_models` and
         :func:`~dso_api.dynamic_api.views.viewset_factory`.
         """
         if not settings.INITIALIZE_DYNAMIC_VIEWSETS:
@@ -244,14 +244,11 @@ class DynamicRouter(DefaultRouter):
             )
 
             for model in models:
-                logger.debug("Created model %s.%s", dataset_id, model.__name__)
-                # In case there are no versions where this table exists, add it to the default.
-                # This happens in some tests.
-                for version in model._dataset_versions or [dataset.default_version]:
-                    if model._meta.model_name.endswith(version):
-                        new_models[version][model._meta.model_name] = model
-                        if version == dataset.default_version:
-                            new_models[DEFAULT][model._meta.model_name] = model
+                logger.debug("Created model %s.%s", model._meta.app_label, model.__name__)
+                version = model._meta.app_label.split("_")[-1]  # app_label has a `_vX` suffix.
+                new_models[version][model._meta.model_name] = model
+                if version == dataset.default_version:
+                    new_models[DEFAULT][model._meta.model_name] = model
 
             self.all_models[dataset_id] = new_models
             generated_models.extend(models)

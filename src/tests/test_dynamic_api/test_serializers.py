@@ -60,8 +60,8 @@ class TestDynamicSerializer:
 
         # Confirm that the model is the object that Django also has registered
         # (if this differs, create_tables() might be called twice).
-        assert afval_cluster_model is apps.get_model("afvalwegingen.clusters")
-        assert afval_container_model is apps.get_model("afvalwegingen.containers")
+        assert afval_cluster_model is apps.get_model("afvalwegingen_v1.clusters")
+        assert afval_container_model is apps.get_model("afvalwegingen_v1.containers")
 
         afval_container = afval_container_model.objects.create(
             id=2,

@@ -147,7 +147,7 @@ class TestFilterEngine:
         Serialiser should contain reverse relations.
         """
         # reload model from APPs registry, in ordeer to fetch all relations.
-        Parkeervakken = apps.get_model("parkeervakken", "parkeervakken")
+        Parkeervakken = apps.get_model("parkeervakken_v1", "parkeervakken")
         parkeervak = parkeervakken_parkeervak_model.objects.create(
             id="121138489047",
             type="File",
