@@ -24,8 +24,9 @@ def patch_dataset_auth(schema: DatasetSchema, *, auth: list[str]):
     schema["auth"] = auth
 
     # Also patch models of this app
-    for model in apps.get_app_config(schema.id).get_models():
-        model.get_dataset_schema()["auth"] = auth
+    for vmajor in schema.versions:
+        for model in apps.get_app_config(f"{schema.id}_{vmajor}").get_models():
+            model.get_dataset_schema()["auth"] = auth
 
 
 def patch_table_auth(schema: DatasetSchema, table_id, *, auth: list[str]):
@@ -33,16 +34,16 @@ def patch_table_auth(schema: DatasetSchema, table_id, *, auth: list[str]):
     # This updates the low-level dict data so all high-level objects get it.
     schema.get_table_by_id(table_id)  # checks errors
 
-    raw_table = next(
-        t
-        for version in schema["versions"].values()
+    raw_table, vmajor = next(
+        (t, vmajor)
+        for vmajor, version in schema["versions"].items()
         for t in version["tables"]
         if t["id"] == table_id
     )
     raw_table["auth"] = auth
 
     # Also patch the active model, as that's already loaded and has a copy of the table schema
-    model = apps.get_model(schema.id, table_id)
+    model = apps.get_model(f"{schema.id}_{vmajor}", table_id)
     model.table_schema()["auth"] = auth
 
 
@@ -59,9 +60,9 @@ def patch_field_auth(
 
     # Patch underlying data that gave rise to it all
     # (needed for fields that read schema data, like DynamicOrderingFilter)
-    raw_table: dict = next(
-        t
-        for version in schema["versions"].values()
+    raw_table, vmajor = next(
+        (t, vmajor)
+        for vmajor, version in schema["versions"].items()
         for t in version["tables"]
         if t["id"] == table_id
     )
@@ -76,8 +77,8 @@ def patch_field_auth(
 
     # Also patch the active model, if its already created (it fetched schema data from database)
     # (needed for serializer fields, these access the model fields to retrieve the schema data)
-    if schema.id in apps.app_configs:
-        model = apps.get_model(schema.id, table_id)
+    if f"{schema.id}_{vmajor}" in apps.app_configs:
+        model = apps.get_model(f"{schema.id}_{vmajor}", table_id)
         model._table_schema = table
 
         model_field = model._meta.get_field(to_snake_case(field_id))

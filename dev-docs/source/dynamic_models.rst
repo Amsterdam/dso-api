@@ -2,7 +2,7 @@ Dynamic Models
 ==============
 
 The DSO-API uses dynamically generated models, which are constructed from JSON schema definitions.
-The central function to construct models is :func:`~schematools.contrib.django.factories.model_factory`.
+The central function to construct models is :func:`~schematools.contrib.django.factories.DjangoModelFactory.build_model`.
 It builds a Django model based on the imported schema data.
 
 .. graphviz::
@@ -12,14 +12,16 @@ It builds a Django model based on the imported schema data.
       ams [label="Amsterdam Schema", shape=note]
 
       dataset [label="Dataset [model]" shape=box]
-      model_factory [label="model_factory()" shape=none]
+      factory [label="DjangoModelFactory [dataset]" shape=box]
+      build_model [label="build_model()" shape=none]
       custom1 [label="CustomModel1" shape=box]
       custom2 [label="CustomModel2" shape=box]
 
       ams -> dataset [style=dotted, label="manage.py import_schemas"]
-      dataset -> model_factory
-      model_factory -> custom1
-      model_factory -> custom2
+      dataset -> factory
+      factory -> build_model
+      build_model -> custom1
+      build_model -> custom2
 
     }
 
@@ -83,8 +85,8 @@ That's the part after all that would normally be written in Python as well.
         >>> Model = router.all_models["dataset"]["tablename"]
         >>> Model.objects.all()  # etc..
 
-Internals of model_factory()
-----------------------------
+Internals of DjangoModelFactory.build_model()
+---------------------------------------------
 
 Classes can be generated at run-time in Python using the :class:`type` class
 or by calling the metaclass. The following code examples are functionally equivalent:
@@ -106,7 +108,7 @@ And
         }
     )
 
-This is the logic that :func:`~schematools.contrib.django.factories.model_factory` uses
+This is the logic that :func:`~schematools.contrib.django.factories.DjangoModelFactory.build_model` uses
 to create dynamic models. The code looks more extensive, as it reads the schema
 definitions to come up with the proper model fields as a dictionary.
 
