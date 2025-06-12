@@ -2,77 +2,92 @@
   "type": "dataset",
   "id": "selfref",
   "title": "bag",
-  "status": "beschikbaar",
   "publisher": "Nobody",
-  "version": "0.0.1",
   "crs": "EPSG:28992",
-  "tables": [
-    {
-      "id": "nummeraanduidingen",
-      "type": "table",
-      "version": "1.0.0",
-      "schema": {
-        "$id": "https://github.com/Amsterdam/schemas/bag/nummeraanduidingen.json",
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "type": "object",
-        "additionalProperties": false,
-        "identifier": ["identifier"],
-        "required": ["schema", "identifier"],
-        "display": "identifier",
-        "properties": {
+  "defaultVersion": "v1",
+  "versions": {
+    "v1": {
+      "status": "beschikbaar",
+      "lifecycleStatus": "stable",
+      "version": "0.0.1",
+      "tables": [
+        {
+          "id": "nummeraanduidingen",
+          "type": "table",
+          "version": "1.0.0",
           "schema": {
-            "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.1#/definitions/schema"
-          },
-          "identifier": {
-            "type": "string",
-            "description": "Landelijke identificerende sleutel."
-          },
-          "adresseertLigplaats": {
+            "$id": "https://github.com/Amsterdam/schemas/bag/nummeraanduidingen.json",
+            "$schema": "http://json-schema.org/draft-07/schema#",
             "type": "object",
+            "additionalProperties": false,
+            "identifier": [
+              "identifier"
+            ],
+            "required": [
+              "schema",
+              "identifier"
+            ],
+            "display": "identifier",
             "properties": {
+              "schema": {
+                "$ref": "https://schemas.data.amsterdam.nl/schema@v3.1.0#/definitions/schema"
+              },
               "identifier": {
-                "type": "string"
+                "type": "string",
+                "description": "Landelijke identificerende sleutel."
+              },
+              "adresseertLigplaats": {
+                "type": "object",
+                "properties": {
+                  "identifier": {
+                    "type": "string"
+                  }
+                },
+                "relation": "selfref:ligplaatsen",
+                "description": "De ligplaats (landelijke identificatie) die door de nummeraanduiding wordt aangeduid."
               }
-            },
-            "relation": "selfref:ligplaatsen",
-            "description": "De ligplaats (landelijke identificatie) die door de nummeraanduiding wordt aangeduid."
-          }
-        }
-      }
-    },
-
-    {
-      "id": "ligplaatsen",
-      "type": "table",
-      "version": "1.0.0",
-      "schema": {
-        "$id": "https://github.com/Amsterdam/schemas/bag/ligplaatsen.json",
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "type": "object",
-        "additionalProperties": false,
-        "identifier": "identifier",
-        "required": ["schema", "identifier"],
-        "display": "identifier",
-        "properties": {
+            }
+          },
+          "lifecycleStatus": "stable"
+        },
+        {
+          "id": "ligplaatsen",
+          "type": "table",
+          "version": "1.0.0",
           "schema": {
-            "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.1#/definitions/schema"
-          },
-          "identifier": {
-            "type": "string",
-            "description": "Landelijke identificerende sleutel."
-          },
-          "heeftHoofdadres": {
+            "$id": "https://github.com/Amsterdam/schemas/bag/ligplaatsen.json",
+            "$schema": "http://json-schema.org/draft-07/schema#",
             "type": "object",
+            "additionalProperties": false,
+            "identifier": "identifier",
+            "required": [
+              "schema",
+              "identifier"
+            ],
+            "display": "identifier",
             "properties": {
+              "schema": {
+                "$ref": "https://schemas.data.amsterdam.nl/schema@v3.1.0#/definitions/schema"
+              },
               "identifier": {
-                "type": "string"
+                "type": "string",
+                "description": "Landelijke identificerende sleutel."
+              },
+              "heeftHoofdadres": {
+                "type": "object",
+                "properties": {
+                  "identifier": {
+                    "type": "string"
+                  }
+                },
+                "relation": "selfref:nummeraanduidingen",
+                "description": "Het HOOFDadres dat de ligplaats heeft."
               }
-            },
-            "relation": "selfref:nummeraanduidingen",
-            "description": "Het HOOFDadres dat de ligplaats heeft."
-          }
+            }
+          },
+          "lifecycleStatus": "stable"
         }
-      }
+      ]
     }
-  ]
+  }
 }

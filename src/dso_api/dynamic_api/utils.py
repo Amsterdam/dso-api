@@ -15,6 +15,7 @@ from schematools.naming import to_snake_case
 from schematools.permissions import UserScopes
 from schematools.types import DatasetFieldSchema
 
+from dso_api.dynamic_api.constants import DEFAULT
 from rest_framework_dso.fields import GeoJSONIdentifierField
 
 # We rely on the greedyness of the first pattern `.*`
@@ -29,7 +30,7 @@ def split_on_separator(value: str) -> tuple[str, ...]:
     return match.groups()
 
 
-def get_view_name(model: type[DynamicModel], suffix: str):
+def get_view_name(model: type[DynamicModel], suffix: str, version: str = DEFAULT):
     """Return the URL pattern for a dynamically generated model.
 
     :param model: The dynamic model.
@@ -37,7 +38,11 @@ def get_view_name(model: type[DynamicModel], suffix: str):
     """
     dataset_id = to_snake_case(model.get_dataset_id())
     table_id = to_snake_case(model.get_table_id())
-    return f"dynamic_api:{dataset_id}-{table_id}-{suffix}"
+    return (
+        f"dynamic_api:{dataset_id}-{table_id}-{suffix}"
+        if version == DEFAULT
+        else f"dynamic_api:{dataset_id}-{version}-{table_id}-{suffix}"
+    )
 
 
 # When models are removed, clear the cache.

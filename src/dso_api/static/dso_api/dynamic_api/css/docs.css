@@ -3,6 +3,12 @@
 a:not([href]) { color: inherit; }
 a:not([href]):hover { color: inherit; text-decoration: none; }
 
+a.anchor {
+    display: block;
+    position: relative;
+    top: -120px;
+}
+
 dl.row dt,
 dl.row dd {
     margin-bottom: 0.2rem;

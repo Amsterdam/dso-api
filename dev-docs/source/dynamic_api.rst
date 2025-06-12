@@ -22,7 +22,8 @@ To demonstrate the basic principle:
 
 .. code-block:: python
 
-    MyModel: type[DynamicModel] = model_factory(dataset, table_schema)
+    factory = DjangoModelFactory(dataset)
+    MyModel: type[DynamicModel] = factory.build_model(table_schema)
 
     MySerializerClass: type[DynamicSerializer] = serializer_factory(MyModel)
 
@@ -81,14 +82,14 @@ all dynamic class construction, including the model, viewsets and serializer cla
 
       get_models [label="DataSet.objects.filter(...)" shape=none]
       create_models [label="dataset.create_models()" shape=none]
-      model_factory [label="model_factory()" shape=none]
+      build_models [label="DjangoModelFactory.build_models()" shape=none]
       viewset_factory [label="viewset_factory()" shape=none]
       serializer_factory [label="serializer_factory()" shape=none]
       filterset_factory [label="filterset_factory()" shape=none]
 
       DynamicRouter -> get_models
       DynamicRouter -> create_models
-      create_models -> model_factory
+      create_models -> build_models
 
       DynamicRouter -> viewset_factory
       viewset_factory -> serializer_factory

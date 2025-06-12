@@ -23,7 +23,7 @@ def test_list_dynamic_view_reload(api_client, api_rf, router, bommen_dataset):
 
     # Make sure the tables are created too
     if "bommen_bommen" not in connection.introspection.table_names():
-        create_tables(bommen_dataset, base_app_name="dso_api.dynamic_api")
+        create_tables(bommen_dataset)
 
     # Prove that URLs can now be resolved.
     url = reverse("dynamic_api:bommen-bommen-list")
@@ -131,7 +131,7 @@ class TestLimitFields:
                             "id": 1,
                             "title": "1",
                         },
-                        "schema": "https://schemas.data.amsterdam.nl/datasets/afvalwegingen/dataset#containers",  # noqa: E501
+                        "schema": "https://schemas.data.amsterdam.nl/datasets/afvalwegingen/containers/v1.0.0",  # noqa: E501
                     },
                     "id": 1,
                     "serienummer": "foobar-123",

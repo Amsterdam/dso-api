@@ -16,13 +16,14 @@ like:
     ]
 
 The :func:`~DynamicRouter.initialize` function is also responsible for calling
-the :func:`~schematools.contrib.django.factories.model_factory` and
+the :func:`~schematools.contrib.django.factories.DjangoModelFactory.build_models` and
 :func:`~dso_api.dynamic_api.views.viewset_factory`.
 """
 
 from __future__ import annotations
 
 import logging
+from collections import defaultdict
 from collections.abc import Iterable, Iterator
 from itertools import chain
 from typing import TYPE_CHECKING
@@ -34,11 +35,12 @@ from django.core.exceptions import ImproperlyConfigured
 from django.db import connection
 from django.urls import NoReverseMatch, URLPattern, path, reverse
 from django.views.generic import RedirectView
-from rest_framework import routers
+from rest_framework.routers import DefaultRouter, Route
 from schematools.contrib.django.factories import remove_dynamic_models
 from schematools.contrib.django.models import Dataset
 from schematools.naming import to_snake_case
 
+from .constants import DEFAULT
 from .datasets import get_active_datasets
 from .models import SealedDynamicModel
 from .openapi import get_openapi_view
@@ -78,46 +80,32 @@ class DynamicAPIIndexView(APIIndexView):
             datasets = [ds for ds in datasets if ds.path.startswith(self.path)]
         return datasets
 
-    def get_environments(self, ds: Dataset, base: str):
-        dataset_id = ds.schema.id
-        if not ds.enable_db:
-            return []
-        try:
-            api_url = reverse("dynamic_api:openapi", kwargs={"dataset_name": dataset_id})
-            return [
-                {
-                    "name": "production",
-                    "api_url": base + api_url,
-                    "specification_url": base + api_url,
-                    "documentation_url": f"{base}/v1/docs/datasets/{ds.path}.html",
-                }
-            ]
-        except NoReverseMatch as e:
-            logger.warning("dataset %s: %s", dataset_id, e)
-            return []
-
-    def get_related_apis(self, ds: Dataset, base: str):
-        if ds.enable_db and ds.has_geometry_fields:
-            # WFS and MVT is only created for datasets
-            # that are directly backed by a local database.
-            ds_id = ds.schema.id
-            wfs_url = reverse("dynamic_api:wfs", kwargs={"dataset_name": ds_id})
-            mvt_url = reverse("dynamic_api:mvt", kwargs={"dataset_name": ds_id})
-            return [
-                {"type": "WFS", "url": base + wfs_url},
-                {"type": "MVT", "url": base + mvt_url},
-            ]
-        else:
-            return []
+    def _build_version_endpoints(
+        self, base: str, dataset_id: str, version: str, header: str | None = None, suffix: str = ""
+    ):
+        kwargs = {"dataset_name": dataset_id, "dataset_version": version}
+        mvt_url = reverse(f"dynamic_api:mvt{suffix}", kwargs=kwargs)
+        wfs_url = reverse(f"dynamic_api:wfs{suffix}", kwargs=kwargs)
+        api_url = reverse(f"dynamic_api:openapi{suffix}", kwargs=kwargs)
+        docs_url = reverse(f"dynamic_api:docs-dataset{suffix}", kwargs=kwargs)
+        return {
+            "header": header or f"Versie {version}",
+            "api_url": base + api_url,
+            "specification_url": base + api_url,  # For catalog
+            "doc_url": base + docs_url,
+            "documentation_url": base + docs_url,  # For catalog
+            "mvt_url": base + mvt_url,
+            "wfs_url": base + wfs_url,
+        }
 
 
-class DynamicRouter(routers.DefaultRouter):
+class DynamicRouter(DefaultRouter):
     """Router that dynamically creates all views and viewsets based on the Dataset models."""
 
     def __init__(self):
         super().__init__(trailing_slash=False)
         self.include_format_suffixes = False
-        self.all_models: dict[str, dict[str, type[DynamicModel]]] = {}
+        self.all_models: dict[str, dict[str, dict[str, type[DynamicModel]]]] = {}
         self.static_routes = []
         self._doc_urls = []
         self._openapi_urls = []
@@ -142,7 +130,7 @@ class DynamicRouter(routers.DefaultRouter):
         or when the meta tables are not found in the database (e.g. using a first migrate).
 
         The initialization calls
-        the :func:`~schematools.contrib.django.factories.model_factory` and
+        the :func:`~schematools.contrib.django.factories.DjangoModelFactory.build_models` and
         :func:`~dso_api.dynamic_api.views.viewset_factory`.
         """
         if not settings.INITIALIZE_DYNAMIC_VIEWSETS:
@@ -187,7 +175,7 @@ class DynamicRouter(routers.DefaultRouter):
         clear_serializer_factory_cache()
 
         # Create all models, including those with no API enabled.
-        db_datasets = list(get_active_datasets(api_enabled=None).db_enabled())
+        db_datasets: list[Dataset] = list(get_active_datasets(api_enabled=None).db_enabled())
         generated_models = self._build_db_models(db_datasets)
 
         if settings.DEBUG and self._has_model_errors():
@@ -246,30 +234,29 @@ class DynamicRouter(routers.DefaultRouter):
         for dataset in db_datasets:
             dataset.schema  # noqa: B018 (load data early)
 
-        for dataset in db_datasets:  # type: Dataset
+        for dataset in db_datasets:
             dataset_id = dataset.schema.id  # not dataset.name which is mangled.
-            new_models = {}
-
+            new_models = defaultdict(dict)
             models = dataset.create_models(
                 base_app_name="dso_api.dynamic_api",
                 base_model=SealedDynamicModel,
+                include_versioned_tables=True,
             )
 
             for model in models:
-                logger.debug("Created model %s.%s", dataset_id, model.__name__)
-                new_models[model._meta.model_name] = model
+                logger.debug("Created model %s.%s", model._meta.app_label, model.__name__)
+                version = model._meta.app_label.split("_")[-1]  # app_label has a `_vX` suffix.
+                new_models[version][model._meta.model_name] = model
+                if version == dataset.default_version:
+                    new_models[DEFAULT][model._meta.model_name] = model
 
             self.all_models[dataset_id] = new_models
+            generated_models.extend(models)
 
-            generated_models.extend(new_models.values())
-
-        # Perform system checks on the late generated models:
         return generated_models
 
     def _build_db_viewsets(self, db_datasets: Iterable[Dataset]):
         """Initialize viewsets that are linked to Django database models."""
-        from rest_framework.routers import Route
-
         # Define custom routes that support both slash and no-slash
         self.routes = [
             # List route
@@ -306,33 +293,44 @@ class DynamicRouter(routers.DefaultRouter):
             ),
         ]
 
-        tmp_router = routers.DefaultRouter()
+        tmp_router = DefaultRouter()
         tmp_router.routes = self.routes
 
         db_datasets = {dataset.schema.id: dataset for dataset in db_datasets}
 
         # Generate views now that all models have been created.
         # This makes sure the 'to' field is resolved to an actual model class.
-        for app_label, models_by_name in self.all_models.items():
+        for app_label, versioned_models_by_name in self.all_models.items():
             if app_label not in db_datasets:
                 logger.debug("Skipping API creation for dataset: %s", app_label)
                 continue
 
-            for model in models_by_name.values():
-                _validate_model(model)
-                if model.has_parent_table():
-                    # Do not create separate viewsets for nested tables.
-                    continue
+            for version, models_by_name in versioned_models_by_name.items():
+                for model in models_by_name.values():
+                    _validate_model(model)
+                    if model.has_parent_table():
+                        # Do not create separate viewsets for nested tables.
+                        continue
 
-                dataset_id = to_snake_case(model.get_dataset_id())
-                table_id = to_snake_case(model.get_table_id())
+                    dataset_id = to_snake_case(model.get_dataset_id())
+                    table_id = to_snake_case(model.get_table_id())
+                    viewset = viewset_factory(model, version)
 
-                # Determine the URL prefix for the model
-                url_prefix = self._make_url(model.get_dataset_path(), table_id)
+                    if version == DEFAULT:
+                        # Default version accessible without version number.
+                        url_prefix = self._make_url(model.get_dataset_path(), table_id)
+                        tmp_router.register(
+                            url_prefix, viewset, basename=f"{dataset_id}-{table_id}"
+                        )
 
-                logger.debug("Created viewset %s", url_prefix)
-                viewset = viewset_factory(model)
-                tmp_router.register(url_prefix, viewset, basename=f"{dataset_id}-{table_id}")
+                    else:
+                        # Determine the URL prefix for the versioned model
+                        url_prefix = self._make_url(model.get_dataset_path(), table_id, version)
+
+                        logger.debug("Created viewset %s", url_prefix)
+                        tmp_router.register(
+                            url_prefix, viewset, basename=f"{dataset_id}-{version}-{table_id}"
+                        )
 
         return tmp_router.registry
 
@@ -343,8 +341,16 @@ class DynamicRouter(routers.DefaultRouter):
                 f"/docs/datasets/{dataset.path}.html",
                 DatasetDocView.as_view(),
                 name="docs-dataset",
-                kwargs={"dataset_name": dataset_id},
+                kwargs={"dataset_name": dataset_id, "dataset_version": DEFAULT},
             )
+
+            for vmajor in dataset.schema.versions:
+                yield path(
+                    f"/docs/datasets/{dataset.path}@{vmajor}.html",
+                    DatasetDocView.as_view(),
+                    name="docs-dataset-version",
+                    kwargs={"dataset_name": dataset_id, "dataset_version": vmajor},
+                )
 
             if not dataset.has_geometry_fields:
                 continue
@@ -369,7 +375,10 @@ class DynamicRouter(routers.DefaultRouter):
                     f"/{dataset.path}",
                     get_openapi_view(dataset),
                     name="openapi",
-                    kwargs={"dataset_name": dataset_id},
+                    kwargs={
+                        "dataset_name": dataset_id,
+                        "dataset_version": DEFAULT,
+                    },
                 )
             )
             results.append(
@@ -384,8 +393,8 @@ class DynamicRouter(routers.DefaultRouter):
                 path(
                     f"/{dataset.path}/openapi.yaml",
                     get_openapi_view(dataset, response_format="yaml"),
-                    name="openapi-yaml",
                     kwargs={"dataset_name": dataset_id},
+                    name="openapi-yaml",
                 )
             )
             results.append(
@@ -396,6 +405,31 @@ class DynamicRouter(routers.DefaultRouter):
                     kwargs={"dataset_name": dataset_id},
                 )
             )
+            for version in dataset.schema.versions:
+                results.append(
+                    path(
+                        f"/{dataset.path}/{version}",
+                        get_openapi_view(dataset, version),
+                        name="openapi-version",
+                        kwargs={"dataset_name": dataset_id, "dataset_version": version},
+                    )
+                )
+                results.append(
+                    path(
+                        f"/{dataset.path}/{version}/openapi.yaml",
+                        get_openapi_view(dataset, response_format="yaml"),
+                        name="openapi-yaml-version",
+                        kwargs={"dataset_name": dataset_id},
+                    )
+                )
+                results.append(
+                    path(
+                        f"/{dataset.path}/{version}/openapi.json",
+                        get_openapi_view(dataset, response_format="json"),
+                        name="openapi-json-version",
+                        kwargs={"dataset_name": dataset_id},
+                    )
+                )
         return results
 
     def _build_mvt_views(self, datasets: Iterable[Dataset]) -> list[URLPattern]:
@@ -408,7 +442,7 @@ class DynamicRouter(routers.DefaultRouter):
                     f"/mvt/{dataset.path}/",
                     DatasetMVTSingleView.as_view(),
                     name="mvt-slash",
-                    kwargs={"dataset_name": dataset_id},
+                    kwargs={"dataset_name": dataset_id, "dataset_version": DEFAULT},
                 )
             ),
             results.append(
@@ -416,7 +450,10 @@ class DynamicRouter(routers.DefaultRouter):
                     f"/mvt/{dataset.path}",
                     DatasetMVTSingleView.as_view(),
                     name="mvt",
-                    kwargs={"dataset_name": dataset_id},
+                    kwargs={
+                        "dataset_name": dataset_id,
+                        "dataset_version": DEFAULT,
+                    },
                 )
             )
             results.append(
@@ -424,23 +461,7 @@ class DynamicRouter(routers.DefaultRouter):
                     f"/mvt/{dataset.path}/tilejson.json",
                     DatasetTileJSONView.as_view(),
                     name="mvt-tilejson",
-                    kwargs={"dataset_name": dataset_id},
-                )
-            ),
-            results.append(
-                path(
-                    f"/mvt/{dataset.path}/<table_name>/",
-                    DatasetTileJSONView.as_view(),
-                    name="mvt-tilejson-table-slash",
-                    kwargs={"dataset_name": dataset_id},
-                )
-            ),
-            results.append(
-                path(
-                    f"/mvt/{dataset.path}/<table_name>",
-                    DatasetTileJSONView.as_view(),
-                    name="mvt-tilejson-table",
-                    kwargs={"dataset_name": dataset_id},
+                    kwargs={"dataset_name": dataset_id, "dataset_version": DEFAULT},
                 )
             ),
             results.append(
@@ -448,9 +469,35 @@ class DynamicRouter(routers.DefaultRouter):
                     f"/mvt/{dataset.path}/<table_name>/<int:z>/<int:x>/<int:y>.pbf",
                     DatasetMVTView.as_view(),
                     name="mvt-pbf",
-                    kwargs={"dataset_name": dataset_id},
+                    kwargs={"dataset_name": dataset_id, "dataset_version": DEFAULT},
                 )
             )
+            for vmajor in dataset.schema.versions:
+                results.append(
+                    path(
+                        f"/mvt/{dataset.path}/{vmajor}",
+                        DatasetMVTSingleView.as_view(),
+                        name="mvt-version",
+                        kwargs={"dataset_name": dataset_id, "dataset_version": vmajor},
+                    )
+                )
+                results.append(
+                    path(
+                        f"/mvt/{dataset.path}/{vmajor}/tilejson.json",
+                        DatasetTileJSONView.as_view(),
+                        name="mvt-tilejson-version",
+                        kwargs={"dataset_name": dataset_id, "dataset_version": vmajor},
+                    )
+                )
+                results.append(
+                    path(
+                        f"/mvt/{dataset.path}/{vmajor}/<table_name>/<int:z>/<int:x>/<int:y>.pbf",
+                        DatasetMVTView.as_view(),
+                        name="mvt-pbf-version",
+                        kwargs={"dataset_name": dataset_id, "dataset_version": vmajor},
+                    )
+                )
+
         return results
 
     def _build_wfs_views(self, datasets: Iterable[Dataset]) -> list[URLPattern]:
@@ -463,7 +510,10 @@ class DynamicRouter(routers.DefaultRouter):
                     f"/wfs/{dataset.path}/",
                     DatasetWFSView.as_view(),
                     name="wfs-slash",
-                    kwargs={"dataset_name": dataset_id},
+                    kwargs={
+                        "dataset_name": dataset_id,
+                        "dataset_version": DEFAULT,
+                    },
                 )
             ),
             results.append(
@@ -471,9 +521,21 @@ class DynamicRouter(routers.DefaultRouter):
                     f"/wfs/{dataset.path}",
                     DatasetWFSView.as_view(),
                     name="wfs",
-                    kwargs={"dataset_name": dataset_id},
+                    kwargs={
+                        "dataset_name": dataset_id,
+                        "dataset_version": DEFAULT,
+                    },
                 )
             )
+            for vmajor in dataset.schema.versions:
+                results.append(
+                    path(
+                        f"/wfs/{dataset.path}/{vmajor}",
+                        DatasetWFSView.as_view(),
+                        name="wfs-version",
+                        kwargs={"dataset_name": dataset_id, "dataset_version": vmajor},
+                    )
+                )
         return results
 
     def _build_index_views(self, datasets: Iterable[Dataset]) -> list[URLPattern]:
@@ -512,10 +574,10 @@ class DynamicRouter(routers.DefaultRouter):
             )
         return results
 
-    def _make_url(self, prefix, url_path):
+    def _make_url(self, prefix, url_path, vmajor: str | None = None):
         """Generate the URL for the viewset"""
         if prefix:
-            url_path = f"/{prefix}/{url_path}"
+            url_path = f"/{prefix}/{vmajor}/{url_path}" if vmajor else f"/{prefix}/{url_path}"
         return url_path
 
     def reload(self) -> dict[type[DynamicModel], str]:

@@ -14,13 +14,14 @@ from django.db import connection
 from django.utils.functional import SimpleLazyObject
 from django.utils.timezone import get_current_timezone
 from jwcrypto.jwt import JWT
-from psycopg2.sql import SQL, Identifier
+from psycopg.sql import SQL, Identifier
 from rest_framework.request import Request
 from rest_framework.test import APIClient, APIRequestFactory
 from schematools.contrib.django.models import Dataset, DynamicModel, Profile
 from schematools.loaders import FileSystemProfileLoader, FileSystemSchemaLoader
 from schematools.types import DatasetSchema, Scope
 
+from dso_api.dynamic_api.constants import DEFAULT
 from tests.test_rest_framework_dso.models import Actor, Category, Location, Movie, MovieUser
 from tests.utils import api_request_with_scopes, to_drf_request
 
@@ -117,9 +118,8 @@ class _LazyDynamicModels:
     def _get_model(self, dataset_name, model_name):
         if not self.router.all_models:
             _initialize_router(self.router)
-
         try:
-            app = self.router.all_models[dataset_name]
+            app = self.router.all_models[dataset_name][DEFAULT]
         except KeyError:
             loaded = sorted(self.router.all_models.keys())
             later = {ds.schema.id for ds in Dataset.objects.db_enabled()}.difference(loaded)
@@ -207,8 +207,8 @@ def _create_tables_if_missing(dynamic_models):
     table_names = connection.introspection.table_names()
 
     with connection.schema_editor() as schema_editor:
-        for _dataset_id, models in dynamic_models.items():
-            for model in models.values():
+        for _dataset_id, versions in dynamic_models.items():
+            for model in versions[DEFAULT].values():
                 if model._meta.db_table not in table_names:
                     schema_editor.create_model(model)
 

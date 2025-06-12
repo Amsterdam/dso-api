@@ -4,88 +4,106 @@
   "title": "explosieven",
   "description": "Informatie over bominslagen, gevrijwaarde gebieden, verdachte gebieden en uitgevoerde onderzoeken",
   "license": "public",
-  "status": "beschikbaar",
-  "version": "0.0.1",
-  "theme": ["Wonen", "duurzaamheid en milieu", "Ruimte en Topografie"],
+  "theme": [
+    "Wonen",
+    "duurzaamheid en milieu",
+    "Ruimte en Topografie"
+  ],
   "publisher": "OIS",
   "owner": "Gemeente Amsterdam",
   "authorizationGrantor": "OIS",
-  "keywords": ["bommen", "explosies", "gevaar"],
+  "keywords": [
+    "bommen",
+    "explosies",
+    "gevaar"
+  ],
   "crs": "EPSG:28992",
-  "tables": [
-    {
-      "id": "verdachtgebied",
-      "title": "Verdachtgebied",
-      "type": "table",
-      "version": "1.0.0",
-      "schema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["schema", "id"],
-        "display": "kenmerk",
-        "properties": {
+  "defaultVersion": "v1",
+  "versions": {
+    "v1": {
+      "status": "beschikbaar",
+      "lifecycleStatus": "stable",
+      "version": "0.0.1",
+      "tables": [
+        {
+          "id": "verdachtgebied",
+          "title": "Verdachtgebied",
+          "type": "table",
+          "version": "1.0.0",
           "schema": {
-            "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.1#/definitions/schema"
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "schema",
+              "id"
+            ],
+            "display": "kenmerk",
+            "properties": {
+              "schema": {
+                "$ref": "https://schemas.data.amsterdam.nl/schema@v3.1.0#/definitions/schema"
+              },
+              "id": {
+                "type": "integer"
+              },
+              "geometry": {
+                "$ref": "https://geojson.org/schema/Geometry.json"
+              },
+              "kenmerk": {
+                "type": "string"
+              },
+              "detailType": {
+                "type": "string",
+                "provenance": "hoofdgroep"
+              },
+              "subtype": {
+                "type": "string",
+                "provenance": "subsoort"
+              },
+              "kaliber": {
+                "type": "string"
+              },
+              "aantal": {
+                "type": "string",
+                "provenance": "aantallen"
+              },
+              "verschijning": {
+                "type": "string",
+                "provenance": "verschijni"
+              },
+              "oorlogshandeling": {
+                "type": "string",
+                "provenance": "oorlogshan"
+              },
+              "afbakening": {
+                "type": "string"
+              },
+              "horizontaal": {
+                "type": "string",
+                "provenance": "horizontal"
+              },
+              "cartografie": {
+                "type": "string",
+                "provenance": "cartografi"
+              },
+              "opmerkingen": {
+                "type": "string",
+                "provenance": "opmerkinge"
+              },
+              "emailadres": {
+                "type": "string",
+                "uri": "email"
+              },
+              "pdf": {
+                "type": "string",
+                "format": "uri",
+                "provenance": "hyperlink"
+              }
+            }
           },
-          "id": {
-            "type": "integer"
-          },
-          "geometry": {
-            "$ref": "https://geojson.org/schema/Geometry.json"
-          },
-          "kenmerk": {
-            "type": "string"
-          },
-          "detailType": {
-            "type": "string",
-            "provenance": "hoofdgroep"
-          },
-          "subtype": {
-            "type": "string",
-            "provenance": "subsoort"
-          },
-          "kaliber": {
-            "type": "string"
-          },
-          "aantal": {
-            "type": "string",
-            "provenance": "aantallen"
-          },
-          "verschijning": {
-            "type": "string",
-            "provenance": "verschijni"
-          },
-          "oorlogshandeling": {
-            "type": "string",
-            "provenance": "oorlogshan"
-          },
-          "afbakening": {
-            "type": "string"
-          },
-          "horizontaal": {
-            "type": "string",
-            "provenance": "horizontal"
-          },
-          "cartografie": {
-            "type": "string",
-            "provenance": "cartografi"
-          },
-          "opmerkingen": {
-            "type": "string",
-            "provenance": "opmerkinge"
-          },
-          "emailadres": {
-            "type": "string",
-            "uri": "email"
-          },
-          "pdf": {
-            "type": "string",
-            "format": "uri",
-            "provenance": "hyperlink"
-          }
+          "lifecycleStatus": "stable"
         }
-      }
+      ]
     }
-  ]
+  }
 }

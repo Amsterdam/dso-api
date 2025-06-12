@@ -3,104 +3,112 @@
   "id": "woningbouwplannen",
   "title": "Woningbouwplannen en Strategische ruimtes",
   "publisher": "Nobody",
-  "status": "beschikbaar",
-  "version": "0.0.1",
   "crs": "EPSG:28992",
-  "tables": [
-    {
-      "id": "woningbouwplan",
-      "type": "table",
-      "version": "1.0.0",
-      "schema": {
-        "$id": "https://github.com/Amsterdam/schemas/woningbouwplannen/woningbouwplan.json",
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "type": "object",
-        "additionalProperties": false,
-        "mainGeometry": "geometrie",
-        "required": [
-          "schema",
-          "id"
-        ],
-        "display": "id",
-        "properties": {
+  "defaultVersion": "v1",
+  "versions": {
+    "v1": {
+      "status": "beschikbaar",
+      "lifecycleStatus": "stable",
+      "version": "0.0.1",
+      "tables": [
+        {
+          "id": "woningbouwplan",
+          "type": "table",
+          "version": "1.0.0",
           "schema": {
-            "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.1#/definitions/schema"
-          },
-          "id": {
-            "type": "integer",
-            "description": "Unieke id van het object",
-            "provenance": "wbw_woningbouwplan_id"
-          },
-          "buurten": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "identificatie": {
-                  "type": "string"
-                }
-              }
-            },
-            "relation": "gebieden:buurten",
-            "description": "De buurten waaruit het object bestaat. (loose relatie naar temporal)"
-          },
-          "buurtenregular": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "identificatie": {
+            "$id": "https://github.com/Amsterdam/schemas/woningbouwplannen/woningbouwplan.json",
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "type": "object",
+            "additionalProperties": false,
+            "mainGeometry": "geometrie",
+            "required": [
+              "schema",
+              "id"
+            ],
+            "display": "id",
+            "properties": {
+              "schema": {
+                "$ref": "https://schemas.data.amsterdam.nl/schema@v3.1.0#/definitions/schema"
+              },
+              "id": {
+                "type": "integer",
+                "description": "Unieke id van het object",
+                "provenance": "wbw_woningbouwplan_id"
+              },
+              "buurten": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "identificatie": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "relation": "gebieden:buurten",
+                "description": "De buurten waaruit het object bestaat. (loose relatie naar temporal)"
+              },
+              "buurtenregular": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "identificatie": {
+                      "type": "string"
+                    },
+                    "volgnummer": {
+                      "type": "integer"
+                    }
+                  }
+                },
+                "relation": "gebieden:buurten",
+                "description": "De buurten waaruit het object bestaat. (normale relatie naar temporal)"
+              },
+              "nontemporeleNm": {
+                "type": "array",
+                "items": {
                   "type": "string"
                 },
-                "volgnummer": {
-                  "type": "integer"
-                }
+                "relation": "woningbouwplannen:nontemporeel",
+                "description": "normale many to many naar non-temporal"
+              },
+              "geometrie": {
+                "$ref": "https://geojson.org/schema/Geometry.json",
+                "description": "Geometrische beschrijving van een object."
               }
-            },
-            "relation": "gebieden:buurten",
-            "description": "De buurten waaruit het object bestaat. (normale relatie naar temporal)"
+            }
           },
-          "nontemporeleNm": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "relation": "woningbouwplannen:nontemporeel",
-            "description": "normale many to many naar non-temporal"
-          },
-          "geometrie": {
-            "$ref": "https://geojson.org/schema/Geometry.json",
-            "description": "Geometrische beschrijving van een object."
-          }
-        }
-      }
-    },
-    {
-      "id": "nontemporeel",
-      "type": "table",
-      "version": "0.0.1",
-      "description": "Een non temporele tabel voor test doeleinden",
-      "schema": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "type": "object",
-        "identifier": "sleutel",
-        "required": [
-          "schema",
-          "sleutel"
-        ],
-        "display": "label",
-        "properties": {
+          "lifecycleStatus": "stable"
+        },
+        {
+          "id": "nontemporeel",
+          "type": "table",
+          "version": "0.0.1",
+          "description": "Een non temporele tabel voor test doeleinden",
           "schema": {
-            "$ref": "https://schemas.data.amsterdam.nl/schema@v1.1.1#/definitions/schema"
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "type": "object",
+            "identifier": "sleutel",
+            "required": [
+              "schema",
+              "sleutel"
+            ],
+            "display": "label",
+            "properties": {
+              "schema": {
+                "$ref": "https://schemas.data.amsterdam.nl/schema@v3.1.0#/definitions/schema"
+              },
+              "sleutel": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              }
+            }
           },
-          "sleutel": {
-            "type": "string"
-          },
-          "label": {
-            "type": "string"
-          }
+          "lifecycleStatus": "stable"
         }
-      }
+      ]
     }
-  ]
+  }
 }
