@@ -71,7 +71,7 @@ click==8.2.1
     #   pur
 coverage[toml]==7.8.2
     # via pytest-cov
-cryptography==45.0.2
+cryptography==45.0.4
     # via
     #   -r ./requirements.in
     #   azure-identity
@@ -111,6 +111,7 @@ django==4.2.21
     #   django-redis
     #   django-vectortiles
     #   djangorestframework
+    #   djangorestframework-gis
     #   drf-spectacular
 django-cors-headers==4.7.0
     # via -r ./requirements.in
@@ -144,7 +145,7 @@ djangorestframework==3.15.2
     #   drf-spectacular
 djangorestframework-csv==3.0.2
     # via -r ./requirements.in
-djangorestframework-gis==1.1
+djangorestframework-gis==1.2.0
     # via -r ./requirements.in
 drf-spectacular==0.28.0
     # via -r ./requirements.in
@@ -270,7 +271,7 @@ oauthlib==3.2.2
     # via requests-oauthlib
 openapi-schema-validator==0.6.3
     # via openapi-spec-validator
-openapi-spec-validator==0.7.1
+openapi-spec-validator==0.7.2
     # via -r ./requirements.in
 opentelemetry-api==1.31.1
     # via
@@ -412,6 +413,7 @@ pyflakes==3.3.2
 pygments==2.19.1
     # via
     #   -r ./requirements.in
+    #   pytest
     #   rich
 pyjwt[crypto]==2.8.0
     # via
@@ -424,7 +426,7 @@ pyproject-hooks==1.2.0
     # via
     #   build
     #   pip-tools
-pytest==8.3.5
+pytest==8.4.0
     # via
     #   -r ./requirements.in
     #   pytest-cov
@@ -463,7 +465,7 @@ referencing==0.36.2
     #   jsonschema-specifications
 remote-pdb==2.1.0
     # via amsterdam-schema-tools
-requests==2.32.3
+requests==2.32.4
     # via
     #   -r ./requirements.in
     #   amsterdam-schema-tools
@@ -491,7 +493,7 @@ rpds-py==0.25.1
     # via
     #   jsonschema
     #   referencing
-ruff==0.11.12
+ruff==0.11.13
     # via -r requirements_dev.in
 sentry-sdk==2.29.1
     # via -r ./requirements.in
@@ -564,7 +566,7 @@ wrapt==1.17.2
     #   opentelemetry-instrumentation-urllib3
 zaproxy==0.4.0
     # via python-owasp-zap-v2-4
-zipp==3.22.0
+zipp==3.23.0
     # via
     #   -r ./requirements.in
     #   importlib-metadata
