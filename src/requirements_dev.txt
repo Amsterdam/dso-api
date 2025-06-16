@@ -4,7 +4,7 @@
 #
 #    pip-compile --output-file=requirements_dev.txt requirements_dev.in
 #
-amsterdam-schema-tools[django]==7.7.3
+amsterdam-schema-tools[django]==7.8.0
     # via -r ./requirements.in
 argparse==1.4.0
     # via uwsgi-readiness-check
@@ -403,9 +403,9 @@ protobuf==5.29.5
 psutil==7.0.0
     # via azure-monitor-opentelemetry-exporter
 psycopg==3.2.6
-    # via -r ./requirements.in
-psycopg2==2.9.10
-    # via amsterdam-schema-tools
+    # via
+    #   -r ./requirements.in
+    #   amsterdam-schema-tools
 pur==7.3.3
     # via -r ./requirements.in
 pyclipper==1.3.0.post6
