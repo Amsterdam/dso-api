@@ -33,7 +33,7 @@ from django.db.backends.base.base import BaseDatabaseWrapper
 from django.db.backends.signals import connection_created
 from django.db.utils import DatabaseError
 from django.dispatch import receiver
-from psycopg2.extensions import STATUS_IN_TRANSACTION
+from psycopg.pq import TransactionStatus
 
 logger = logging.getLogger(__name__)
 
@@ -165,7 +165,7 @@ class DatabaseRoles:
         # can also ensure the connection is not reused for another session.
         with user_connection.cursor() as c:
             try:
-                if c.connection.status != STATUS_IN_TRANSACTION:
+                if c.connection.info.transaction_status != TransactionStatus.INTRANS:
                     logger.debug("Starting transaction for user-context: %s", role_name)
                     c.execute("BEGIN TRANSACTION;")
                 else:

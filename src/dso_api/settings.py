@@ -358,7 +358,7 @@ if DEBUG:
 if CLOUD_ENV.startswith("azure"):
     from azure.monitor.opentelemetry import configure_azure_monitor
     from opentelemetry.instrumentation.django import DjangoInstrumentor
-    from opentelemetry.instrumentation.psycopg2 import Psycopg2Instrumentor
+    from opentelemetry.instrumentation.psycopg import PsycopgInstrumentor
     from opentelemetry.sdk.resources import Resource
     from opentelemetry.semconv.resource import ResourceAttributes
 
@@ -398,7 +398,7 @@ if CLOUD_ENV.startswith("azure"):
         DjangoInstrumentor().instrument(response_hook=response_hook)
         print("Django instrumentor enabled")
 
-        Psycopg2Instrumentor().instrument(enable_commenter=True, commenter_options={})
+        PsycopgInstrumentor().instrument(enable_commenter=True, commenter_options={})
         print("Psycopg instrumentor enabled")
 
     if AZURE_APPI_AUDIT_CONNECTION_STRING is not None:
