@@ -137,7 +137,7 @@ django-redis==5.4.0
     # via -r ./requirements.in
 django-vectortiles==1.0.1
     # via -r ./requirements.in
-djangorestframework==3.15.2
+djangorestframework==3.16.0
     # via
     #   -r ./requirements.in
     #   djangorestframework-csv
@@ -393,7 +393,9 @@ platformdirs==4.3.8
     #   black
     #   virtualenv
 pluggy==1.6.0
-    # via pytest
+    # via
+    #   pytest
+    #   pytest-cov
 ply==3.11
     # via jsonpath-rw
 pre-commit==4.2.0
@@ -402,7 +404,7 @@ protobuf==5.29.5
     # via mapbox-vector-tile
 psutil==7.0.0
     # via azure-monitor-opentelemetry-exporter
-psycopg==3.2.6
+psycopg==3.2.9
     # via
     #   -r ./requirements.in
     #   amsterdam-schema-tools
@@ -440,7 +442,7 @@ pytest==8.4.0
     #   pytest-cov
     #   pytest-django
     #   pytest-sugar
-pytest-cov==6.1.1
+pytest-cov==6.2.1
     # via -r ./requirements.in
 pytest-django==4.11.1
     # via -r ./requirements.in
@@ -503,7 +505,7 @@ rpds-py==0.25.1
     #   referencing
 ruff==0.11.13
     # via -r requirements_dev.in
-sentry-sdk==2.29.1
+sentry-sdk==2.30.0
     # via -r ./requirements.in
 shapely==2.1.1
     # via
