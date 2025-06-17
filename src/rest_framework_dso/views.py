@@ -3,6 +3,7 @@ import sys
 from inspect import isgeneratorfunction
 
 from django.http import HttpResponseNotFound, JsonResponse
+from django.utils.html import escape
 from gisserver.exceptions import ExternalValueError
 from rest_framework import status
 from rest_framework.exceptions import APIException, ErrorDetail, NotAcceptable, ValidationError
@@ -70,7 +71,7 @@ def multiple_slashes(request):
         "code": "HTTP_404_NOT_FOUND",
         "title": "Multiple slashes not supported",
         "status": "404",
-        "instance": request.path,
+        "instance": escape(request.path),
     }
 
     return HttpResponseNotFound(json.dumps(response_data), content_type="application/json")
