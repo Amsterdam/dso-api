@@ -96,7 +96,7 @@ deprecated==1.2.18
     #   opentelemetry-semantic-conventions
 distlib==0.3.9
     # via virtualenv
-django==4.2.22
+django==4.2.23
     # via
     #   -r ./requirements.in
     #   amsterdam-schema-tools
