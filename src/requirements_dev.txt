@@ -549,7 +549,7 @@ uri-template==1.3.0
     # via jsonschema
 uritemplate==4.2.0
     # via drf-spectacular
-urllib3==2.4.0
+urllib3==2.5.0
     # via
     #   -r ./requirements.in
     #   requests
