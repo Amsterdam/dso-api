@@ -225,8 +225,8 @@ DATABASES["default"]["OPTIONS"]["application_name"] = "DSO-API"
 
 # These constants that are used for end-user context switching
 # are configured in our dp-infra repo
-USER_ROLE = "{user_email}_role"
-INTERNAL_ROLE = "medewerker_role"
+USER_ROLE = "{user_email}_role.filtered"
+INTERNAL_ROLE = "medewerker_role.filtered"
 ANONYMOUS_ROLE = "anonymous_role"
 ANONYMOUS_APP_NAME = "DSO-openbaar"
 
