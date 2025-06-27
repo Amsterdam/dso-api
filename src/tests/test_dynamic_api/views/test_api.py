@@ -53,6 +53,17 @@ def test_filled_router(api_client, bommen_dataset, filled_router):
 
 
 @pytest.mark.django_db
+def test_nested_routes_work(api_client, beheerkaart_basis_dataset, filled_router):
+    """Prove that nested routes work."""
+    url = reverse("dynamic_api:beheerkaart_basis-bgt-list")
+    response = api_client.get(url)
+    assert response.status_code == 200, response.data
+
+    # url shows nested path
+    assert url == "/v1/beheerkaart/basis/bgt"
+
+
+@pytest.mark.django_db
 def test_list_dynamic_view_unregister(api_client, bommen_dataset, filled_router):
     """Prove that unregistering works."""
     url = reverse("dynamic_api:bommen-bommen-list")

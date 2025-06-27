@@ -412,6 +412,18 @@ def array_auth(schema_loader):
 
 
 @pytest.fixture()
+def beheerkaar_basis_schema(schema_loader) -> DatasetSchema:
+    return schema_loader.get_dataset_from_file("beheerkaart/basis/dataset.json")
+
+
+@pytest.fixture()
+def beheerkaart_basis_dataset(schema_loader, beheerkaar_basis_schema) -> Dataset:
+    # path is needed to create a nested route, use same logic as `import schemas`.
+    path = schema_loader._get_dataset_path(beheerkaar_basis_schema.id)
+    return Dataset.create_for_schema(beheerkaar_basis_schema, path)
+
+
+@pytest.fixture()
 def bommen_schema_json() -> dict:
     """Fixture to return the schema json for"""
     path = HERE / "files/datasets/bommen.json"
