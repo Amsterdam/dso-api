@@ -1,0 +1,33 @@
+{
+  "id": "bgt",
+  "type": "table",
+  "provenance": "bkt_bgt",
+  "description": "Hulptabel beheerkaart_basis_bgt bevat de gegevens van alle BGT-objecten van geselecteerde objectklassen en wordt gebruikt om samen met hulptabel beheerkaart_basis_eigendomsrecht de hoofdtabel beheerkaart_basis_kaart te vullen.",
+  "version": "1.0.0",
+  "schema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "schema",
+      "id"
+    ],
+    "display": "id",
+    "properties": {
+      "schema": {
+        "$ref": "https://schemas.data.amsterdam.nl/schema@v3.1.0#/definitions/schema"
+      },
+      "id": {
+        "provenance": "bk_bkt_bgt",
+        "description": "Business-key: unieke aanduiding per voorkomen in tabel beheerkaart_basis_bgt (bestaande uit bk_bgt_object).",
+        "type": "string"
+      },
+      "geometrie": {
+        "$ref": "https://geojson.org/schema/MultiPolygon.json",
+        "description": "Vlak-coördinaten van het BGT-object."
+      }
+    },
+    "mainGeometry": "geometrie"
+  },
+  "lifecycleStatus": "stable"
+}
