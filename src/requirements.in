@@ -9,7 +9,7 @@ django-vectortiles == 1.0.1
 djangorestframework == 3.16.0
 djangorestframework-csv == 3.0.2
 djangorestframework-gis == 1.2.0
-amsterdam-schema-tools[django] == 8.1.2
+amsterdam-schema-tools[django] == 8.2.1
 azure-identity == 1.23.0
 azure-monitor-opentelemetry == 1.6.10
 cachetools == 6.1.0
