@@ -123,7 +123,7 @@ def test_user_when_token(
     # can make assertions about the session state here
     with connection.cursor() as c:
         c.execute("SELECT current_user;")
-        assert c.fetchone()[0] == f"{settings.TEST_USER_EMAIL}_role"
+        assert c.fetchone()[0] == f"{settings.TEST_USER_EMAIL}_role.filtered"
 
     # The test user can see directors and movie data
     assert json.loads("".join([x.decode() for x in response.streaming_content])) == director_data
@@ -153,7 +153,7 @@ def test_user_switches_on_consecutive_requests(
     # can make assertions about the session state here
     with connection.cursor() as c:
         c.execute("SELECT current_user;")
-        assert c.fetchone()[0] == f"{settings.TEST_USER_EMAIL}_role"
+        assert c.fetchone()[0] == f"{settings.TEST_USER_EMAIL}_role.filtered"
 
     # The test user can see directors and movie data
     assert json.loads("".join([x.decode() for x in response.streaming_content])) == director_data

@@ -237,6 +237,7 @@ def activate_dbroles(settings, movies_dataset, movies_data, directors_data):
         movies_director SELECT -> scope_test_director
     """
     test_user_role = Identifier(f"{settings.TEST_USER_EMAIL}_role")
+    test_user_role_filtered = Identifier(f"{settings.TEST_USER_EMAIL}_role.filtered")
 
     with connection.cursor() as curs:
         curs.execute(
@@ -245,14 +246,16 @@ def activate_dbroles(settings, movies_dataset, movies_data, directors_data):
                     CREATE ROLE {0};
                     CREATE ROLE {1};
                     CREATE ROLE {2};
-                    CREATE ROLE {3} NOINHERIT;
-                    GRANT {0},{1},{2} TO {3};
-                    GRANT {3} TO {4};
+                    CREATE ROLE {3};
+                    CREATE ROLE {4} NOINHERIT;
+                    GRANT {0},{1},{2},{3} TO {4};
+                    GRANT {4} TO {5};
                 """
             ).format(
                 Identifier(settings.INTERNAL_ROLE),
                 Identifier(settings.ANONYMOUS_ROLE),
                 test_user_role,
+                test_user_role_filtered,
                 Identifier(settings.TEST_NOINHERIT_ROLE),
                 Identifier(settings.DB_USER),
             )
@@ -269,13 +272,14 @@ def activate_dbroles(settings, movies_dataset, movies_data, directors_data):
                 """
                 CREATE ROLE scope_test_openbaar;
                 CREATE ROLE scope_test_director;
-                GRANT scope_test_openbaar to {0},{1},{2};
-                GRANT scope_test_director to {2};
+                GRANT scope_test_openbaar to {0},{1},{2},{3};
+                GRANT scope_test_director to {2},{3};
             """
             ).format(
                 Identifier(settings.ANONYMOUS_ROLE),
                 Identifier(settings.INTERNAL_ROLE),
                 test_user_role,
+                test_user_role_filtered,
             )
         )
 
@@ -308,7 +312,7 @@ def activate_dbroles(settings, movies_dataset, movies_data, directors_data):
             SQL(
                 """
                 DROP OWNED BY scope_test_openbaar,scope_test_director;
-                DROP ROLE IF EXISTS {0},{1},{2},{3};
+                DROP ROLE IF EXISTS {0},{1},{2},{3},{4};
                 DROP ROLE IF EXISTS scope_test_openbaar,scope_test_director;
             """
             ).format(
@@ -316,6 +320,7 @@ def activate_dbroles(settings, movies_dataset, movies_data, directors_data):
                 Identifier(settings.ANONYMOUS_ROLE),
                 Identifier(settings.TEST_NOINHERIT_ROLE),
                 test_user_role,
+                test_user_role_filtered,
             )
         )
 
