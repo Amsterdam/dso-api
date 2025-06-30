@@ -31,7 +31,7 @@ pygments == 2.19.2
 python-json-logger==3.3.0
 python-string-utils == 1.0.0
 requests == 2.32.4
-sentry-sdk == 2.30.0
+sentry-sdk == 2.32.0
 urllib3 == 2.5.0
 urllib3-mock == 0.3.3
 whitenoise == 6.9.0
