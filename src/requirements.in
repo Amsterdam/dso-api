@@ -45,7 +45,7 @@ uwsgitop == 0.12
 uwsgi-readiness-check == 0.2.0
 
 # Testing
-bandit == 1.8.5
+bandit == 1.8.6
 # 45.0.3 caused pip to install the whole rust toolchain on Debian, slowing everything and needing more firewall rules
 cryptography >= 45.0.4, !=45.0.3
 flake8 == 7.3.0
