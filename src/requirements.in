@@ -5,7 +5,7 @@ django-healthchecks == 1.5.0
 django-postgres-unlimited-varchar == 1.1.2
 django-redis == 6.0.0
 django-gisserver == 2.1.1
-django-vectortiles == 1.0.1
+django-vectortiles == 1.0.2
 djangorestframework == 3.16.0
 djangorestframework-csv == 3.0.2
 djangorestframework-gis == 1.2.0
@@ -45,7 +45,7 @@ uwsgitop == 0.12
 uwsgi-readiness-check == 0.2.0
 
 # Testing
-bandit == 1.8.5
+bandit == 1.8.6
 # 45.0.3 caused pip to install the whole rust toolchain on Debian, slowing everything and needing more firewall rules
 cryptography >= 45.0.4, !=45.0.3
 flake8 == 7.3.0
