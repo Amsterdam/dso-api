@@ -11,7 +11,7 @@ djangorestframework-csv == 3.0.2
 djangorestframework-gis == 1.2.0
 amsterdam-schema-tools[django] == 8.2.2.post1
 azure-identity == 1.23.1
-azure-monitor-opentelemetry == 1.6.11
+azure-monitor-opentelemetry == 1.6.12
 cachetools == 6.1.0
 datadiensten-apikeyclient == 0.6.0
 datapunt-authorization-django==1.6.1
