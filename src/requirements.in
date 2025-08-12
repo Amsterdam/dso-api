@@ -6,11 +6,11 @@ django-postgres-unlimited-varchar == 1.1.2
 django-redis == 6.0.0
 django-gisserver == 2.1.1
 django-vectortiles == 1.0.2
-djangorestframework == 3.16.0
+djangorestframework == 3.16.1
 djangorestframework-csv == 3.0.2
 djangorestframework-gis == 1.2.0
 amsterdam-schema-tools[django] == 8.2.2.post1
-azure-identity == 1.23.1
+azure-identity == 1.24.0
 azure-monitor-opentelemetry == 1.6.12
 cachetools == 6.1.0
 datadiensten-apikeyclient == 0.6.0
@@ -25,13 +25,13 @@ more-itertools == 10.7.0
 openapi-spec-validator == 0.7.2
 # Version should match with opentelemetry subdependency:
 opentelemetry-instrumentation-psycopg == 0.52b1
-orjson == 3.11.0
+orjson == 3.11.1
 psycopg == 3.2.9
 pygments == 2.19.2
 python-json-logger==3.3.0
 python-string-utils == 1.0.0
 requests == 2.32.4
-sentry-sdk == 2.33.1
+sentry-sdk == 2.34.1
 urllib3 == 2.5.0
 urllib3-mock == 0.3.3
 whitenoise == 6.9.0
