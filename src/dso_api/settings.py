@@ -569,6 +569,9 @@ SEAL_WARN_ONLY = True
 
 # Configuration for canned exports
 EXPORT_BASE_URI = env.str("BULK_ENDPOINT", "https://api.data.amsterdam.nl/bulk-data")
+CONFIDENTIAL_EXPORT_BASE_URI = env.str(
+    "CONFIDENTIAL_BULK_ENDPOINT", "https://api.data.amsterdam.nl/bulk-data-fp-mdw"
+)
 
 # Setting for django-gisserver, disabling this makes WFS much faster
 GISSERVER_CAPABILITIES_BOUNDING_BOX = False

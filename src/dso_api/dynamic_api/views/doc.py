@@ -294,7 +294,8 @@ def _table_context(ds: Dataset, table: DatasetTableSchema, dataset_version: str)
     exports = []
     version = ds.versions.get(version=vmajor)
     # if dataset_name in settings.EXPORTED_DATASETS.split(","):
-    if version.tables.get(name=table_name).enable_export:
+    table_instance = version.tables.get(name=table_name)
+    if table_instance.enable_export:
         export_info = []
         for type_, extension, description in (
             ("csv", "csv", "CSV"),
@@ -302,12 +303,25 @@ def _table_context(ds: Dataset, table: DatasetTableSchema, dataset_version: str)
             ("jsonlines", "jsonl", "JSONlines"),
             ("geojson", "geojson", "GeoJSON"),
         ):
+            if (
+                ds.auth != "OPENBAAR"
+                or table_instance.auth != "OPENBAAR"
+                or table_instance.fields.exclude(auth="OPENBAAR").exists()
+            ):
+                url = (
+                    f"{settings.CONFIDENTIAL_EXPORT_BASE_URI}/{type_}/"
+                    f"{dataset_name}_{table_name}.{extension}.zip"
+                )
+            else:
+                url = (
+                    f"{settings.EXPORT_BASE_URI}/{type_}/"
+                    f"{dataset_name}_{table_name}.{extension}.zip"
+                )
             ext_info = {
                 "extension": extension,
                 "type": type_,
                 "description": description,
-                "url": f"{settings.EXPORT_BASE_URI}/{type_}/"
-                f"{dataset_name}_{table_name}.{extension}.zip",
+                "url": url,
             }
             export_info.append(ext_info)
         exports.append(export_info)
