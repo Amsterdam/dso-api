@@ -34,7 +34,7 @@
       {% for export_info in table_data.exports %}
         {% for ext_info in export_info %}
             <dt class="col-xs-2">Downloadable {{ ext_info.description }}-export:</dt>
-            <dd><a href="{{ ext_info.url }}">{{ ext_info.url }}</a></dd>
+            <dd><a href="{{ ext_info.url }}" class="{{ ext_info.kind }}">{{ ext_info.url }}</a></dd>
         {% endfor %}
       {% endfor %}
     </dl>
