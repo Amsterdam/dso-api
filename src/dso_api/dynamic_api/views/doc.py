@@ -180,6 +180,7 @@ class DatasetDocView(TemplateView):
                 "dataset_has_auth": bool(_fix_auth(ds_schema.auth)),
                 "main_title": main_title,
                 "tables": tables,
+                "oauth_url": settings.OAUTH_URL,
                 "swagger_url": reverse(
                     f"dynamic_api:openapi{pattern_suffix}",
                     kwargs={"dataset_name": ds_schema.id, "dataset_version": dataset_version},
@@ -312,16 +313,19 @@ def _table_context(ds: Dataset, table: DatasetTableSchema, dataset_version: str)
                     f"{settings.CONFIDENTIAL_EXPORT_BASE_URI}/{type_}/"
                     f"{dataset_name}_{table_name}.{extension}.zip"
                 )
+                kind = "confidential"
             else:
                 url = (
                     f"{settings.EXPORT_BASE_URI}/{type_}/"
                     f"{dataset_name}_{table_name}.{extension}.zip"
                 )
+                kind = "public"
             ext_info = {
                 "extension": extension,
                 "type": type_,
                 "description": description,
                 "url": url,
+                "kind": kind,
             }
             export_info.append(ext_info)
         exports.append(export_info)

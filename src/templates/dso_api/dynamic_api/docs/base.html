@@ -32,4 +32,10 @@
     </div>
 </div>
 </body>
+<script>
+    const CLIENTID = "dso-api-open-api";
+    const REDIRECTURI = window.location.origin + "/v1/oauth2-redirect.html";
+    const OAUTHURI = "{{ oauth_url }}"
+</script>
+<script src="{% static 'dso_api/dynamic_api/js/docs.js' %}"></script>
 </html>
