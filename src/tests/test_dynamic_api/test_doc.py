@@ -70,9 +70,88 @@ def test_table_for_export_links(api_client, filled_router, gebieden_dataset):
     content = response.rendered_content
     # Extensions for exported format followed by ".zip"
     # are signalling links to the generated exports.
-    assert "gebieden_bouwblokken.gpkg.zip" in content
-    assert "gebieden_bouwblokken.jsonl.zip" in content
-    assert "gebieden_bouwblokken.csv.zip" in content
+    assert "bulk-data/geopackage/gebieden_bouwblokken.gpkg.zip" in content
+    assert "bulk-data/jsonlines/gebieden_bouwblokken.jsonl.zip" in content
+    assert "bulk-data/csv/gebieden_bouwblokken.csv.zip" in content
+
+    assert "gebieden_buurten.csv.zip" not in content
+    assert "gebieden_buurten.jsonl.zip" not in content
+    assert "gebieden_buurten.gpkg.zip" not in content
+
+
+@pytest.mark.django_db
+def test_table_for_confidential_dataset_export_links(api_client, filled_router, gebieden_dataset):
+    """Tests documentation for a single dataset."""
+    table = gebieden_dataset.tables.get(name="bouwblokken")
+    table.enable_export = True
+    table.save()
+    gebieden_dataset.auth = "FP/MDW"
+    gebieden_dataset.save()
+
+    # Gebieden has relationships between its tables.
+    gebieden_doc = reverse("dynamic_api:docs-dataset", kwargs={"dataset_name": "gebieden"})
+    assert gebieden_doc
+
+    response = api_client.get(gebieden_doc)
+    assert response.status_code == 200
+    content = response.rendered_content
+    # Extensions for exported format followed by ".zip"
+    # are signalling links to the generated exports.
+    assert "bulk-data-fp-mdw/geopackage/gebieden_bouwblokken.gpkg.zip" in content
+    assert "bulk-data-fp-mdw/jsonlines/gebieden_bouwblokken.jsonl.zip" in content
+    assert "bulk-data-fp-mdw/csv/gebieden_bouwblokken.csv.zip" in content
+
+    assert "gebieden_buurten.csv.zip" not in content
+    assert "gebieden_buurten.jsonl.zip" not in content
+    assert "gebieden_buurten.gpkg.zip" not in content
+
+
+@pytest.mark.django_db
+def test_table_for_confidential_table_export_links(api_client, filled_router, gebieden_dataset):
+    """Tests documentation for a single dataset."""
+    table = gebieden_dataset.tables.get(name="bouwblokken")
+    table.auth = "FP/MDW"
+    table.enable_export = True
+    table.save()
+    # Gebieden has relationships between its tables.
+    gebieden_doc = reverse("dynamic_api:docs-dataset", kwargs={"dataset_name": "gebieden"})
+    assert gebieden_doc
+
+    response = api_client.get(gebieden_doc)
+    assert response.status_code == 200
+    content = response.rendered_content
+    # Extensions for exported format followed by ".zip"
+    # are signalling links to the generated exports.
+    assert "bulk-data-fp-mdw/geopackage/gebieden_bouwblokken.gpkg.zip" in content
+    assert "bulk-data-fp-mdw/jsonlines/gebieden_bouwblokken.jsonl.zip" in content
+    assert "bulk-data-fp-mdw/csv/gebieden_bouwblokken.csv.zip" in content
+
+    assert "gebieden_buurten.csv.zip" not in content
+    assert "gebieden_buurten.jsonl.zip" not in content
+    assert "gebieden_buurten.gpkg.zip" not in content
+
+
+@pytest.mark.django_db
+def test_table_for_confidential_field_export_links(api_client, filled_router, gebieden_dataset):
+    """Tests documentation for a single dataset."""
+    table = gebieden_dataset.tables.get(name="bouwblokken")
+    table.enable_export = True
+    table.save()
+    field = table.fields.first()
+    field.auth = "FP/MDW"
+    field.save()
+    # Gebieden has relationships between its tables.
+    gebieden_doc = reverse("dynamic_api:docs-dataset", kwargs={"dataset_name": "gebieden"})
+    assert gebieden_doc
+
+    response = api_client.get(gebieden_doc)
+    assert response.status_code == 200
+    content = response.rendered_content
+    # Extensions for exported format followed by ".zip"
+    # are signalling links to the generated exports.
+    assert "bulk-data-fp-mdw/geopackage/gebieden_bouwblokken.gpkg.zip" in content
+    assert "bulk-data-fp-mdw/jsonlines/gebieden_bouwblokken.jsonl.zip" in content
+    assert "bulk-data-fp-mdw/csv/gebieden_bouwblokken.csv.zip" in content
 
     assert "gebieden_buurten.csv.zip" not in content
     assert "gebieden_buurten.jsonl.zip" not in content
