@@ -320,6 +320,8 @@ def _table_context(ds: Dataset, table: DatasetTableSchema, dataset_version: str)
                     f"{dataset_name}_{table_name}.{extension}.zip"
                 )
                 kind = "public"
+            if not url.startswith("http"):  # The settings urls are not prefixed with https://
+                url = f"https://{url}"
             ext_info = {
                 "extension": extension,
                 "type": type_,
