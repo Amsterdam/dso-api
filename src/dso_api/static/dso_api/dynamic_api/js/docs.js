@@ -61,8 +61,8 @@ function authorize() {
     window.open(authUrl, "_blank")
 }
 
-async function getData(url, headers) {
-    await fetch(url, { method: "GET", headers })
+async function getData(blobUrl, headers) {
+    await fetch(blobUrl, { method: "GET", headers })
         .then((response) => {
             if (!response.ok) {
                 throw new Error(response.statusText)
@@ -70,7 +70,7 @@ async function getData(url, headers) {
             return response.blob()
         })
         .then((response) => {
-            const fileName = url.replace(/^.*[\\/]/, "")
+            const fileName = blobUrl.replace(/^.*[\\/]/, "")
             const url = window.URL.createObjectURL(response)
             const a = document.createElement("a")
             a.style.display = "none"
