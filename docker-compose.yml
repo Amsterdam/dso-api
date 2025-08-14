@@ -39,6 +39,8 @@ services:
       UWSGI_MASTER: 1
       UWSGI_STATIC_MAP: "/dso_api/static=/static"
       SECRET_KEY: insecure
+      BULK_ENDPOINT: "${BULK_ENDPOINT:-https://api.data-o.azure.amsterdam.nl/bulk-data}"
+      CONFIDENTIAL_BULK_ENDPOINT: "${CONFIDENTIAL_BULK_ENDPOINT:-https://api.data-o.azure.amsterdam.nl/buk-data-fp-mdw}"
       DATABASE_URL: "${DATABASE_URL:-postgresql://postgres:insecure@database/dataservices}"
       DJANGO_LOG_LEVEL: "${DJANGO_LOG_LEVEL:-INFO}"
       DSO_API_LOG_LEVEL: "${DSO_API_LOG_LEVEL:-INFO}"
