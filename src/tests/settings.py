@@ -62,3 +62,5 @@ STORAGES = {
 
 # During testing we want to see if there is unwanted deferred access
 SEAL_WARN_ONLY = False
+EXPORT_BASE_URI = "https://test.api/bulk-data"
+CONFIDENTIAL_EXPORT_BASE_URI = "https://test.api/bulk-data-fp-mdw"
