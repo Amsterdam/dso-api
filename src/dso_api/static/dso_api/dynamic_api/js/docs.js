@@ -3,7 +3,7 @@ if (document.addEventListener) {
 }
 
 // Override the same object from browsable_api.js, as this one we don't want to alter the DOM
-const swaggerUIRedirectOauth2 = {
+window.swaggerUIRedirectOauth2 = {
     state: null,
     redirectUrl: REDIRECTURI,
     auth: {
@@ -21,6 +21,8 @@ const swaggerUIRedirectOauth2 = {
     },
 }
 
+window.dsoShowToken = () => {}
+
 function onPageLoad() {
     confidential_links = Array.from(
         document.getElementsByClassName("confidential")
@@ -31,9 +33,18 @@ function onPageLoad() {
             const url = link.href
             const token = JSON.parse(window.localStorage.getItem("authToken"))
             if (token) {
-                getData(url, {
-                    Authorization: `Bearer ${token.access_token}`,
-                })
+                const tokenPayload = JSON.parse(
+                    atob(token.access_token.split(".")[1])
+                )
+                const exp = new Date(tokenPayload.exp * 1000)
+                const now = new Date()
+                if (exp > now) {
+                    getData(url, {
+                        Authorization: `Bearer ${token.access_token}`,
+                    })
+                } else {
+                    authorize()
+                }
             } else {
                 authorize()
             }
