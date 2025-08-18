@@ -73,6 +73,7 @@ def test_table_for_export_links(api_client, filled_router, gebieden_dataset):
     assert "bulk-data/geopackage/gebieden_bouwblokken.gpkg.zip" in content
     assert "bulk-data/jsonlines/gebieden_bouwblokken.jsonl.zip" in content
     assert "bulk-data/csv/gebieden_bouwblokken.csv.zip" in content
+    assert "bulk-data/geojson/gebieden_bouwblokken.geojson.zip" in content
 
     assert "gebieden_buurten.csv.zip" not in content
     assert "gebieden_buurten.jsonl.zip" not in content
@@ -80,8 +81,104 @@ def test_table_for_export_links(api_client, filled_router, gebieden_dataset):
 
 
 @pytest.mark.django_db
+def test_table_for_export_links_with_strict_auth_on_field(
+    api_client, filled_router, gebieden_dataset
+):
+    """Tests documentation for a single dataset where one of the fields has an auth
+    more strict than FP/MDW, resulting in regular download links"""
+    table = gebieden_dataset.tables.get(name="bouwblokken")
+    table.enable_export = True
+    table.save()
+    field = table.fields.first()
+    field.auth = "BRK/RS"
+    field.save()
+    # Gebieden has relationships between its tables.
+    gebieden_doc = reverse("dynamic_api:docs-dataset", kwargs={"dataset_name": "gebieden"})
+    assert gebieden_doc
+
+    response = api_client.get(gebieden_doc)
+    assert response.status_code == 200
+    content = response.rendered_content
+    # Extensions for exported format followed by ".zip"
+    # are signalling links to the generated exports.
+    assert "bulk-data/" in content
+
+
+@pytest.mark.django_db
+def test_table_for_export_links_with_strict_auth_on_all_fields(
+    api_client, filled_router, gebieden_dataset
+):
+    """Tests documentation for a single dataset where all the fields have an auth more
+    strict than FP/MDW, resulting in no bulk downloads."""
+    table = gebieden_dataset.tables.get(name="bouwblokken")
+    table.enable_export = True
+    table.save()
+    for field in table.fields.all():
+        field.auth = "BRK/RS"
+        field.save()
+    # Gebieden has relationships between its tables.
+    gebieden_doc = reverse("dynamic_api:docs-dataset", kwargs={"dataset_name": "gebieden"})
+    assert gebieden_doc
+
+    response = api_client.get(gebieden_doc)
+    assert response.status_code == 200
+    content = response.rendered_content
+    # Extensions for exported format followed by ".zip"
+    # are signalling links to the generated exports.
+    assert "bulk-data/" not in content
+    assert "bulk-data-fp-mdw/" not in content
+
+
+@pytest.mark.django_db
+def test_table_for_export_links_with_strict_auth_on_table(
+    api_client, filled_router, gebieden_dataset
+):
+    """Tests documentation for a single dataset where the table has an auth more
+    strict than FP/MDW, resulting in no bulk downloads."""
+    table = gebieden_dataset.tables.get(name="bouwblokken")
+    table.enable_export = True
+    table.auth = "BRK/RS"
+    table.save()
+    # Gebieden has relationships between its tables.
+    gebieden_doc = reverse("dynamic_api:docs-dataset", kwargs={"dataset_name": "gebieden"})
+    assert gebieden_doc
+
+    response = api_client.get(gebieden_doc)
+    assert response.status_code == 200
+    content = response.rendered_content
+    # Extensions for exported format followed by ".zip"
+    # are signalling links to the generated exports.
+    assert "bulk-data/" not in content
+    assert "bulk-data-fp-mdw/" not in content
+
+
+@pytest.mark.django_db
+def test_table_for_export_links_with_strict_auth_on_dataset(
+    api_client, filled_router, gebieden_dataset
+):
+    """Tests documentation for a single dataset with an auth more
+    strict than FP/MDW, resulting in no bulk downloads."""
+    table = gebieden_dataset.tables.get(name="bouwblokken")
+    table.enable_export = True
+    table.save()
+    gebieden_dataset.auth = "BRK/RS"
+    gebieden_dataset.save()
+    # Gebieden has relationships between its tables.
+    gebieden_doc = reverse("dynamic_api:docs-dataset", kwargs={"dataset_name": "gebieden"})
+    assert gebieden_doc
+
+    response = api_client.get(gebieden_doc)
+    assert response.status_code == 200
+    content = response.rendered_content
+    # Extensions for exported format followed by ".zip"
+    # are signalling links to the generated exports.
+    assert "bulk-data/" not in content
+    assert "bulk-data-fp-mdw/" not in content
+
+
+@pytest.mark.django_db
 def test_table_for_confidential_dataset_export_links(api_client, filled_router, gebieden_dataset):
-    """Tests documentation for a single dataset."""
+    """Tests documentation for a single dataset with FP/MDW on the dataset."""
     table = gebieden_dataset.tables.get(name="bouwblokken")
     table.enable_export = True
     table.save()
@@ -100,15 +197,12 @@ def test_table_for_confidential_dataset_export_links(api_client, filled_router, 
     assert "bulk-data-fp-mdw/geopackage/gebieden_bouwblokken.gpkg.zip" in content
     assert "bulk-data-fp-mdw/jsonlines/gebieden_bouwblokken.jsonl.zip" in content
     assert "bulk-data-fp-mdw/csv/gebieden_bouwblokken.csv.zip" in content
-
-    assert "gebieden_buurten.csv.zip" not in content
-    assert "gebieden_buurten.jsonl.zip" not in content
-    assert "gebieden_buurten.gpkg.zip" not in content
+    assert "bulk-data-fp-mdw/geojson/gebieden_bouwblokken.geojson.zip" in content
 
 
 @pytest.mark.django_db
 def test_table_for_confidential_table_export_links(api_client, filled_router, gebieden_dataset):
-    """Tests documentation for a single dataset."""
+    """Tests documentation for a single dataset with FP/MDW on the table."""
     table = gebieden_dataset.tables.get(name="bouwblokken")
     table.auth = "FP/MDW"
     table.enable_export = True
@@ -126,14 +220,11 @@ def test_table_for_confidential_table_export_links(api_client, filled_router, ge
     assert "bulk-data-fp-mdw/jsonlines/gebieden_bouwblokken.jsonl.zip" in content
     assert "bulk-data-fp-mdw/csv/gebieden_bouwblokken.csv.zip" in content
 
-    assert "gebieden_buurten.csv.zip" not in content
-    assert "gebieden_buurten.jsonl.zip" not in content
-    assert "gebieden_buurten.gpkg.zip" not in content
-
 
 @pytest.mark.django_db
 def test_table_for_confidential_field_export_links(api_client, filled_router, gebieden_dataset):
-    """Tests documentation for a single dataset."""
+    """Tests documentation for a single dataset with FP/MDW on one field has both confidential and
+    public links."""
     table = gebieden_dataset.tables.get(name="bouwblokken")
     table.enable_export = True
     table.save()
@@ -149,13 +240,12 @@ def test_table_for_confidential_field_export_links(api_client, filled_router, ge
     content = response.rendered_content
     # Extensions for exported format followed by ".zip"
     # are signalling links to the generated exports.
+    assert "bulk-data/geopackage/gebieden_bouwblokken.gpkg.zip" in content
+    assert "bulk-data/jsonlines/gebieden_bouwblokken.jsonl.zip" in content
+    assert "bulk-data/csv/gebieden_bouwblokken.csv.zip" in content
     assert "bulk-data-fp-mdw/geopackage/gebieden_bouwblokken.gpkg.zip" in content
     assert "bulk-data-fp-mdw/jsonlines/gebieden_bouwblokken.jsonl.zip" in content
     assert "bulk-data-fp-mdw/csv/gebieden_bouwblokken.csv.zip" in content
-
-    assert "gebieden_buurten.csv.zip" not in content
-    assert "gebieden_buurten.jsonl.zip" not in content
-    assert "gebieden_buurten.gpkg.zip" not in content
 
 
 @pytest.mark.django_db
