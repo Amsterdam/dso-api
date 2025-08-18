@@ -304,32 +304,48 @@ def _table_context(ds: Dataset, table: DatasetTableSchema, dataset_version: str)
             ("jsonlines", "jsonl", "JSONlines"),
             ("geojson", "geojson", "GeoJSON"),
         ):
+            # Als FP/MDW op dataset/tabel/veld auth zit, is er een vertrouwelijke bulk link
             if (
-                ds.auth != "OPENBAAR"
-                or table_instance.auth != "OPENBAAR"
-                or table_instance.fields.exclude(auth="OPENBAAR").exists()
+                ds.auth == "FP/MDW"
+                or table_instance.auth == "FP/MDW"
+                or table_instance.fields.filter(auth="FP/MDW").exists()
             ):
                 url = (
                     f"{settings.CONFIDENTIAL_EXPORT_BASE_URI}/{type_}/"
                     f"{dataset_name}_{table_name}.{extension}.zip"
                 )
-                kind = "confidential"
-            else:
+                if not url.startswith("http"):  # The settings urls are not prefixed with https://
+                    url = f"https://{url}"
+                ext_info = {
+                    "extension": extension,
+                    "type": type_,
+                    "description": description,
+                    "url": url,
+                    "kind": "confidential",
+                }
+                export_info.append(ext_info)
+
+            # Voor openbare data (ook slechts indien een subset van de velden) is er een reguliere
+            # bulk link
+            if (
+                ds.auth == "OPENBAAR"
+                and table_instance.auth == "OPENBAAR"
+                and table_instance.fields.filter(auth="OPENBAAR").exists()
+            ):
                 url = (
                     f"{settings.EXPORT_BASE_URI}/{type_}/"
                     f"{dataset_name}_{table_name}.{extension}.zip"
                 )
-                kind = "public"
-            if not url.startswith("http"):  # The settings urls are not prefixed with https://
-                url = f"https://{url}"
-            ext_info = {
-                "extension": extension,
-                "type": type_,
-                "description": description,
-                "url": url,
-                "kind": kind,
-            }
-            export_info.append(ext_info)
+                if not url.startswith("http"):  # The settings urls are not prefixed with https://
+                    url = f"https://{url}"
+                ext_info = {
+                    "extension": extension,
+                    "type": type_,
+                    "description": description,
+                    "url": url,
+                    "kind": "public",
+                }
+                export_info.append(ext_info)
         exports.append(export_info)
 
     if (temporal := table.temporal) is not None:
