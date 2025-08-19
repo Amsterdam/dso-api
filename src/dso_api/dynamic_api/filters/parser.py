@@ -173,6 +173,8 @@ class QueryFilterEngine:
         "page",
         "_sort",
         "sorteer",
+        "_csv_header",
+        "_csv_separator",
     }
 
     @classmethod
