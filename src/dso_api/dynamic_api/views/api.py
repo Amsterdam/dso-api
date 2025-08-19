@@ -18,7 +18,9 @@ from functools import cached_property
 
 from django.db import models
 from django.db.utils import ProgrammingError
+from django.utils.decorators import method_decorator
 from django.utils.translation import gettext as _
+from django.views.decorators.cache import never_cache
 from rest_framework import viewsets
 from rest_framework.exceptions import NotFound, PermissionDenied
 from schematools.contrib.django.models import DynamicModel
@@ -32,6 +34,7 @@ from rest_framework_dso.views import DSOViewMixin
 logger = logging.getLogger(__name__)
 
 
+@method_decorator(never_cache, name="dispatch")
 class DynamicApiViewSet(DSOViewMixin, viewsets.ReadOnlyModelViewSet):
     """Viewset for an API, that is DSO-compatible and dynamically generated.
     Each dynamically generated model in this server will receive a viewset.
