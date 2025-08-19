@@ -400,7 +400,6 @@ class TestFormats:
             "03630950000000,1,,,2021-02-28,,\r\n"
         )
 
-
     def test_csv_separator(self, api_client, api_rf, ggwgebieden_data, filled_router):
         """Prove that semicolon can be used as separator instead of default comma"""
         url = reverse("dynamic_api:gebieden-ggwgebieden-list")
@@ -415,23 +414,30 @@ class TestFormats:
             "03630950000000;1;;;2021-02-28;;\r\n"
         )
 
-    def test_csv_separator_without_header(self, api_client, api_rf, ggwgebieden_data, filled_router):
+    def test_csv_separator_without_header(
+        self, api_client, api_rf, ggwgebieden_data, filled_router
+    ):
         """Prove that alternative separator still works without header"""
         url = reverse("dynamic_api:gebieden-ggwgebieden-list")
         api_client.raise_request_exception = False
-        response = api_client.get(url, {"_format": "csv", "_csv_header": "none", "_csv_separator": ";"})
+        response = api_client.get(
+            url, {"_format": "csv", "_csv_header": "none", "_csv_separator": ";"}
+        )
         assert response.status_code == 200, response.getvalue()
         data = read_response(response)
 
-        assert data == (
-            "03630950000000;1;;;2021-02-28;;\r\n"
-        )
+        assert data == ("03630950000000;1;;;2021-02-28;;\r\n")
 
     def test_csv_exclude_fields_with_header(self, api_client, gebieden_dataset, filled_router):
         """Prove that _fields parameter still works for a given header parameter"""
         url = reverse("dynamic_api:gebieden-stadsdelen-list")
         response = api_client.get(
-            url, {"_format": "csv","_fields": "-code,-naam,-documentdatum,-documentnummer","_csv_header": "titles"}
+            url,
+            {
+                "_format": "csv",
+                "_fields": "-code,-naam,-documentdatum,-documentnummer",
+                "_csv_header": "titles",
+            },
         )
         assert response.status_code == 200
         response_data = [row.decode("utf-8") for row in response.streaming_content]
@@ -440,36 +446,49 @@ class TestFormats:
             "Ligtingemeenteidentificatie,Geometrie\r\n"
         ]
 
-    def test_csv_exclude_fields_without_header(self, api_client, api_rf, ggwgebieden_data, filled_router):
+    def test_csv_exclude_fields_without_header(
+        self, api_client, api_rf, ggwgebieden_data, filled_router
+    ):
         """Prove that fields can still be excluded without headers"""
         url = reverse("dynamic_api:gebieden-ggwgebieden-list")
         api_client.raise_request_exception = False
-        response = api_client.get(url, {"_format": "csv","_csv_header": "none","_fields": "-registratiedatum,-naam,-eindGeldigheid"})
+        response = api_client.get(
+            url,
+            {
+                "_format": "csv",
+                "_csv_header": "none",
+                "_fields": "-registratiedatum,-naam,-eindGeldigheid",
+            },
+        )
         assert response.status_code == 200, response.getvalue()
         data = read_response(response)
 
-        assert data == (
-            "03630950000000,1,2021-02-28,\r\n"
-        )
+        assert data == ("03630950000000,1,2021-02-28,\r\n")
 
     def test_csv_fields_with_separator(self, api_client, api_rf, ggwgebieden_data, filled_router):
         """Prove that _fields parameter can be used in combination with an alternative separator"""
         url = reverse("dynamic_api:gebieden-ggwgebieden-list")
         api_client.raise_request_exception = False
-        response = api_client.get(url, {"_format": "csv", "_csv_separator": ";", "_fields": "identificatie,volgnummer,naam,geometrie"})
+        response = api_client.get(
+            url,
+            {
+                "_format": "csv",
+                "_csv_separator": ";",
+                "_fields": "identificatie,volgnummer,naam,geometrie",
+            },
+        )
         assert response.status_code == 200, response.getvalue()
         data = read_response(response)
 
-        assert data == (
-            "identificatie;volgnummer;naam;geometrie\r\n"
-            "03630950000000;1;;\r\n"
-        )
+        assert data == ("identificatie;volgnummer;naam;geometrie\r\n03630950000000;1;;\r\n")
 
     def test_csv_title_with_separator(self, api_client, api_rf, ggwgebieden_data, filled_router):
         """Prove that _csv_header can be used in combination with _csv_separator"""
         url = reverse("dynamic_api:gebieden-ggwgebieden-list")
         api_client.raise_request_exception = False
-        response = api_client.get(url, {"_format": "csv", "_csv_header": "titles", "_csv_separator": ";"})
+        response = api_client.get(
+            url, {"_format": "csv", "_csv_header": "titles", "_csv_separator": ";"}
+        )
         assert response.status_code == 200, response.getvalue()
         data = read_response(response)
 
@@ -486,12 +505,10 @@ class TestFormats:
         response = api_client.get(url, {"_format": "csv", "_csv_header": "none"})
         assert response.status_code == 200, response.getvalue()
         data = read_response(response)
-        
-        assert data == (
-            "03630950000000,1,,,2021-02-28,,\r\n"
-        )
 
-    def test_csv_array_fields(self, api_client, api_rf, fietspaaltjes_data): 
+        assert data == ("03630950000000,1,,,2021-02-28,,\r\n")
+
+    def test_csv_array_fields(self, api_client, api_rf, fietspaaltjes_data):
         url = reverse("dynamic_api:fietspaaltjes-fietspaaltjes-list")
         api_client.raise_request_exception = False
         response = api_client.get(url, {"_format": "csv"})
@@ -649,8 +666,7 @@ class TestFormats:
             ("volgnummer,code,naam", ["volgnummer,code,naam\r\n"]),
         ],
     )
-
-    def test_csv_ordered_fields(self, api_client, gebieden_dataset, filled_router, fields, data): #fails als ids ipv titles worden gebruikt als csvheaders
+    def test_csv_ordered_fields(self, api_client, gebieden_dataset, filled_router, fields, data):
         url = reverse("dynamic_api:gebieden-stadsdelen-list")
         response = api_client.get(url, {"_format": "csv", "_fields": fields})
         assert response.status_code == 200
@@ -686,7 +702,7 @@ class TestFormats:
             ),
         ],
     )
-    def test_csv_ordered_fields_embedded( 
+    def test_csv_ordered_fields_embedded(
         self, api_client, gebieden_dataset, filled_router, fields, data
     ):
         url = reverse("dynamic_api:gebieden-stadsdelen-list")
@@ -708,7 +724,7 @@ class TestFormats:
             ),
         ],
     )
-    def test_csv_ordered_fields_embedded_with_data( 
+    def test_csv_ordered_fields_embedded_with_data(
         self,
         api_client,
         stadsdelen_data,

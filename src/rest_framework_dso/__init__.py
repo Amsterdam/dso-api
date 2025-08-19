@@ -25,7 +25,8 @@ Additionally:
   (e.g. ``json``, ``geojson`` or ``csv``).
 * We support ``?_csv_header=..`` to request alternative headers\
   (e.g. ``none``, ``titles``).
-* We support ``?_csv_separator=..`` to request a semicolon as delimiter, with a standard comma as fallback.\
+* We support ``?_csv_separator=..`` to request a semicolon as delimiter, with a standard comma\
+  as fallback.
 
 Mandatory settings to activate these classes by default:
 
