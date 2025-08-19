@@ -267,6 +267,20 @@ class CSVRenderer(RendererMixin, CSVStreamingRenderer):
 
         serializer.fields = csv_fields
 
+    def _get_query_params(self, request: HttpRequest | None = None):
+        if request is not None:
+            return {
+                "fields": request.GET.get("_fields", ""),
+                "header": request.GET.get("_csv_header", None),
+                "separator": request.GET.get("_csv_separator", ","),
+            }
+        else:
+            return {
+                "fields": "",
+                "header": "id",
+                "separator": ",",
+            }
+
     def _get_csv_header(self, serializer: Serializer, request: HttpRequest | None = None):
         """Build the CSV header, including fields from sub-resources.
 
@@ -279,19 +293,30 @@ class CSVRenderer(RendererMixin, CSVStreamingRenderer):
         extra_headers = []  # separate list to append at the end.
         extra_labels = {}
 
+        query_params = self._get_query_params(request)
+        use_titles = query_params and query_params.get("header") == "titles"
+
         for name, field in serializer.fields.items():
             if isinstance(field, Serializer):
-                sub_header, sub_labels = self._get_csv_header(field)
+                sub_header, sub_labels = self._get_csv_header(field, request)
                 extra_headers.extend(f"{name}.{sub_name}" for sub_name in sub_header)
-                extra_labels.update(
-                    {
-                        f"{name}.{sub_name}": f"{field.label}.{sub_label}"
-                        for sub_name, sub_label in sub_labels.items()
-                    }
-                )
+                if use_titles:
+                    extra_labels.update(
+                        {
+                            f"{name}.{sub_name}": f"{field.label}.{sub_label}"
+                            for sub_name, sub_label in sub_labels.items()
+                        }
+                    )
+                else:
+                    extra_labels.update(
+                        {f"{name}.{sub_name}": f"{name}.{sub_name}" for sub_name in sub_header}
+                    )
             else:
                 header.append(name)
-                labels[name] = field.label
+                if use_titles:
+                    labels[name] = field.label
+                else:  # Default to names instead of labels as headers
+                    labels[name] = name
 
         # Only at the top-level of the recursion, field ordering can be redefined
         if request is not None and (
@@ -315,13 +340,34 @@ class CSVRenderer(RendererMixin, CSVStreamingRenderer):
             return super().flatten_list(value)
 
     def render(self, data, media_type=None, renderer_context=None):
+        csv_header = "id"
         if (serializer := get_data_serializer(data)) is not None:
             request = renderer_context.get("request")
             header, labels = self._get_csv_header(serializer, request)
 
-            renderer_context = {**(renderer_context or {}), "header": header, "labels": labels}
+            # Get query parameters
+            query_params = self._get_query_params(request)
+            csv_header = query_params["header"]
+            csv_separator = query_params["separator"]
+
+            writer_opts = {}
+            # Overwrite delimiter
+            if csv_separator:
+                writer_opts = {"delimiter": csv_separator}
+
+            renderer_context = {
+                **(renderer_context or {}),
+                "header": header,
+                "labels": labels,
+                "writer_opts": writer_opts,
+            }
 
         output = super().render(data, media_type=media_type, renderer_context=renderer_context)
+
+        # CSVStreamingRenderer uses keys as headers by default so if no headers are passed,
+        # they are still present in the output. Here we manually remove the first row
+        if csv_header == "none":
+            next(output)
 
         # This method must have a "yield" statement so finalize_response() can
         # recognize this renderer returns a generator/stream, and patch the

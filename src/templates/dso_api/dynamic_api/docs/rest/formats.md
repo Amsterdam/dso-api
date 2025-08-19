@@ -16,6 +16,24 @@ formaten worden ondersteund:
 | `?_format=geojson` | GeoJSON notatie              | `application/geo+json` |
 | `?_format=csv`     | Kommagescheiden bestand      | `text/csv`             |
 
+Voor het csv formaat worden de volgende query parameters ook ondersteund:
+
+| Parameter             | Toelichting                  |
+| ------------------    | ---------------------------- |
+| `?_csv_header=id`     | Gebruik id's als headers     |
+| `?_csv_header=none`   | Gebruik geen header          |
+| `?_csv_header=titles` | Gebruik titels als headers   |
+
+| Parameter             | Toelichting                               |
+| ------------------    | ----------------------------              |
+| `?_csv_separator=,`   | Gebruik een standaard komma als separator |
+| `?_csv_separator=;`   | Gebruik een puntkomma als separator       |
+
+
+* We support ``?_csv_header=..`` to request alternative headers\
+  (e.g. ``none``, ``titles``).
+* We support ``?_csv_separator=..`` to request a semicolon as delimiter, with a standard comma as fallback.\
+
 <aside class="note">
 <h4 class="title">Note</h4>
 
