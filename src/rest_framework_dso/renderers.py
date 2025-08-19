@@ -340,6 +340,7 @@ class CSVRenderer(RendererMixin, CSVStreamingRenderer):
             return super().flatten_list(value)
 
     def render(self, data, media_type=None, renderer_context=None):
+        csv_header = "id"
         if (serializer := get_data_serializer(data)) is not None:
             request = renderer_context.get("request")
             header, labels = self._get_csv_header(serializer, request)
