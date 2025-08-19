@@ -18,16 +18,16 @@ formaten worden ondersteund:
 
 Voor het csv formaat worden de volgende query parameters ook ondersteund:
 
-| Parameter             | Toelichting                  | 
-| ------------------    | ---------------------------- | 
-| `?_csv_header=id`     | Gebruik id's als headers     | 
-| `?_csv_header=none`   | Gebruik geen header          | 
-| `?_csv_header=titles` | Gebruik titels als headers   | 
+| Parameter             | Toelichting                  |
+| ------------------    | ---------------------------- |
+| `?_csv_header=id`     | Gebruik id's als headers     |
+| `?_csv_header=none`   | Gebruik geen header          |
+| `?_csv_header=titles` | Gebruik titels als headers   |
 
-| Parameter             | Toelichting                               | 
-| ------------------    | ----------------------------              | 
-| `?_csv_separator=,`   | Gebruik een standaard komma als separator | 
-| `?_csv_separator=;`   | Gebruik een puntkomma als separator       | 
+| Parameter             | Toelichting                               |
+| ------------------    | ----------------------------              |
+| `?_csv_separator=,`   | Gebruik een standaard komma als separator |
+| `?_csv_separator=;`   | Gebruik een puntkomma als separator       |
 
 
 * We support ``?_csv_header=..`` to request alternative headers\
