@@ -80,7 +80,7 @@ cryptography==45.0.6
     #   pyjwt
 datadiensten-apikeyclient==0.6.0
     # via -r ./requirements.in
-datapunt-authorization-django==1.6.1
+datapunt-authorization-django==1.6.2
     # via -r ./requirements.in
 debugpy==1.8.16
     # via -r requirements_dev.in
@@ -205,7 +205,7 @@ jsonpointer==3.0.0
     # via jsonschema
 jsonref==1.1.0
     # via mappyfile
-jsonschema[format]==4.25.0
+jsonschema[format]==4.25.1
     # via
     #   -r ./requirements.in
     #   amsterdam-schema-tools
@@ -362,7 +362,7 @@ opentelemetry-util-http==0.52b1
     #   opentelemetry-instrumentation-wsgi
 orderly-set==5.4.1
     # via deepdiff
-orjson==3.11.1
+orjson==3.11.2
     # via
     #   -r ./requirements.in
     #   amsterdam-schema-tools
@@ -375,7 +375,6 @@ packaging==25.0
     #   opentelemetry-instrumentation
     #   opentelemetry-instrumentation-flask
     #   pytest
-    #   pytest-sugar
 pathable==0.4.4
     # via jsonschema-path
 pathspec==0.12.1
@@ -446,7 +445,7 @@ pytest-cov==6.2.1
     # via -r ./requirements.in
 pytest-django==4.11.1
     # via -r ./requirements.in
-pytest-sugar==1.0.0
+pytest-sugar==1.1.0
     # via -r requirements_dev.in
 python-dateutil==2.9.0.post0
     # via
@@ -475,7 +474,7 @@ referencing==0.36.2
     #   jsonschema-specifications
 remote-pdb==2.1.0
     # via amsterdam-schema-tools
-requests==2.32.4
+requests==2.32.5
     # via
     #   -r ./requirements.in
     #   amsterdam-schema-tools
@@ -503,9 +502,9 @@ rpds-py==0.25.1
     # via
     #   jsonschema
     #   referencing
-ruff==0.12.8
+ruff==0.12.9
     # via -r requirements_dev.in
-sentry-sdk==2.34.1
+sentry-sdk==2.35.0
     # via -r ./requirements.in
 shapely==2.1.1
     # via
