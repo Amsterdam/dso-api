@@ -123,6 +123,8 @@ def test_openapi_json(api_client, afval_dataset, fietspaaltjes_dataset, filled_r
         "_format",
         "_pageSize",
         "_sort",
+        "_csv_header",
+        "_csv_separator",
         "cluster.id",
         "cluster.id[in]",
         "cluster.id[isempty]",

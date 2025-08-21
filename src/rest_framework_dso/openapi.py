@@ -315,6 +315,33 @@ class DSOAutoSchema(openapi.AutoSchema):
                 description="Select the export format",
                 required=False,
             ),
+            OpenApiParameter(
+                name="_csv_header",
+                type={
+                    "type": "string",
+                    "enum": [
+                        "id",
+                        "title",
+                        "none",
+                    ],
+                },
+                location=OpenApiParameter.QUERY,
+                description="Specify type of header for csv file",
+                required=False,
+            ),
+            OpenApiParameter(
+                name="_csv_separator",
+                type={
+                    "type": "string",
+                    "enum": [
+                        ",",
+                        ";",
+                    ],
+                },
+                location=OpenApiParameter.QUERY,
+                description="Specify type of separator for csv file",
+                required=False,
+            ),
         ]
 
         if isinstance(self.view, DSOViewMixin):
