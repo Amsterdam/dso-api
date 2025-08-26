@@ -46,7 +46,7 @@ build==1.2.2.post1
     # via
     #   datadiensten-apikeyclient
     #   pip-tools
-cachetools==6.1.0
+cachetools==6.2.0
     # via -r ./requirements.in
 certifi==2025.6.15
     # via
@@ -445,7 +445,7 @@ pytest-cov==6.2.1
     # via -r ./requirements.in
 pytest-django==4.11.1
     # via -r ./requirements.in
-pytest-sugar==1.1.0
+pytest-sugar==1.1.1
     # via -r requirements_dev.in
 python-dateutil==2.9.0.post0
     # via
@@ -502,7 +502,7 @@ rpds-py==0.25.1
     # via
     #   jsonschema
     #   referencing
-ruff==0.12.9
+ruff==0.12.10
     # via -r requirements_dev.in
 sentry-sdk==2.35.0
     # via -r ./requirements.in
