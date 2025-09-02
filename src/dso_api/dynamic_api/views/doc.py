@@ -469,6 +469,7 @@ def _get_field_context(field: DatasetFieldSchema, wfs: bool) -> Iterable[dict[st
         "id": field.id,
         # WFS uses the ORM names of fields.
         "name": _get_dotted_python_name(field) if wfs else _get_dotted_api_name(field),
+        "title": field.title,
         "is_identifier": field.is_identifier_part,
         "is_deprecated": False,
         "is_relation": is_foreign_id or bool(field.relation),
