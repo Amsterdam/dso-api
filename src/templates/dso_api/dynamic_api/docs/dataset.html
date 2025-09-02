@@ -43,6 +43,7 @@
     <table class="table table-striped">
       <thead>
         <tr>
+          <th>Veld ID</th>
           <th>Veldnaam</th>
           <th>Type</th>
           <th>Identifier</th>
@@ -59,6 +60,9 @@
           {% else %}
             <code>{{ field.name }}</code>
           {% endif %}
+          </td>
+          <td>
+            {{ field.title }}
           </td>
           <td>
             {{ field.type|default:"" }}
