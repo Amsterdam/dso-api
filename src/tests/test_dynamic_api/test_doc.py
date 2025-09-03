@@ -49,6 +49,9 @@ def test_dataset(api_client, filled_router, gebieden_dataset):
         in content
     )
 
+    # Check for field title
+    assert "Object ID test title" in content
+
     # Check for publisher.
     # Disabled for now because of issues with schema loaders.
     # assert "<strong>Uitgever:</strong> Nobody" in content
