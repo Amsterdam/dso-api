@@ -47,7 +47,8 @@
               },
               "identificatie": {
                 "type": "string",
-                "description": "Unieke identificatie van het object."
+                "description": "Unieke identificatie van het object.",
+                "title": "Object ID test title"
               },
               "volgnummer": {
                 "type": "integer",
