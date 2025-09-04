@@ -71,7 +71,7 @@ click==8.2.1
     #   pur
 coverage[toml]==7.9.1
     # via pytest-cov
-cryptography==45.0.6
+cryptography==45.0.7
     # via
     #   -r ./requirements.in
     #   azure-identity
@@ -249,7 +249,7 @@ more-ds==0.0.6
     # via
     #   -r ./requirements.in
     #   amsterdam-schema-tools
-more-itertools==10.7.0
+more-itertools==10.8.0
     # via
     #   -r ./requirements.in
     #   amsterdam-schema-tools
@@ -362,7 +362,7 @@ opentelemetry-util-http==0.52b1
     #   opentelemetry-instrumentation-wsgi
 orderly-set==5.4.1
     # via deepdiff
-orjson==3.11.2
+orjson==3.11.3
     # via
     #   -r ./requirements.in
     #   amsterdam-schema-tools
@@ -435,7 +435,7 @@ pyproject-hooks==1.2.0
     # via
     #   build
     #   pip-tools
-pytest==8.4.1
+pytest==8.4.2
     # via
     #   -r ./requirements.in
     #   pytest-cov
@@ -502,9 +502,9 @@ rpds-py==0.25.1
     # via
     #   jsonschema
     #   referencing
-ruff==0.12.10
+ruff==0.12.11
     # via -r requirements_dev.in
-sentry-sdk==2.35.0
+sentry-sdk==2.36.0
     # via -r ./requirements.in
 shapely==2.1.1
     # via
