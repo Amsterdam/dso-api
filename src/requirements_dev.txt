@@ -86,7 +86,7 @@ debugpy==1.8.16
     # via -r requirements_dev.in
 decorator==5.2.1
     # via jsonpath-rw
-deepdiff==8.5.0
+deepdiff==8.6.1
     # via amsterdam-schema-tools
 defusedxml==0.7.1
     # via django-gisserver
