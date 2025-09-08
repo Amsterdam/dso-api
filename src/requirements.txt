@@ -406,9 +406,9 @@ django==4.2.23 \
     #   djangorestframework
     #   djangorestframework-gis
     #   drf-spectacular
-django-cors-headers==4.7.0 \
-    --hash=sha256:6fdf31bf9c6d6448ba09ef57157db2268d515d94fc5c89a0a1028e1fc03ee52b \
-    --hash=sha256:f1c125dcd58479fe7a67fe2499c16ee38b81b397463cf025f0e2c42937421070
+django-cors-headers==4.8.0 \
+    --hash=sha256:0a12a2efcd59a3cea741e44db8ab589e929949de5bc4cdf35a29c6ae77297686 \
+    --hash=sha256:3b883f4c6d07848673218456a5e070d8ab51f97341c1f27d0242ca167e7272ab
     # via -r requirements.in
 django-environ==0.12.0 \
     --hash=sha256:227dc891453dd5bde769c3449cf4a74b6f2ee8f7ab2361c93a07068f4179041a \
@@ -746,9 +746,9 @@ mappyfile==1.0.2 \
     --hash=sha256:43ada1b98cfc0fd670e6f384d74b15f6601aadb5ab9e1f1d506e839a37a9b8dc \
     --hash=sha256:695c9a8841ce3e8fef49314f9873d7efda2544dea0825b6550540d9a7e650ceb
     # via amsterdam-schema-tools
-markdown==3.8.2 \
-    --hash=sha256:247b9a70dd12e27f67431ce62523e675b866d254f900c4fe75ce3dda62237c45 \
-    --hash=sha256:5c83764dbd4e00bdd94d85a19b8d55ccca20fe35b2e678a1422b380324dd5f24
+markdown==3.9 \
+    --hash=sha256:9f4d91ed810864ea88a6f32c07ba8bee1346c0cc1f6b1f9f6c822f2a9667d280 \
+    --hash=sha256:d2900fe1782bd33bdbbd56859defef70c2e78fc46668f8eb9df3128138f2cb6a
     # via -r requirements.in
 markdown-it-py==3.0.0 \
     --hash=sha256:355216845c60bd96232cd8d8c40e8f9765cc86f46880e43a8fd22dc1a1a8cab1 \
@@ -1192,9 +1192,9 @@ psutil==7.0.0 \
     --hash=sha256:a5f098451abc2828f7dc6b58d44b532b22f2088f4999a937557b603ce72b1993 \
     --hash=sha256:ba3fcef7523064a6c9da440fc4d6bd07da93ac726b5733c29027d7dc95b39d99
     # via azure-monitor-opentelemetry-exporter
-psycopg==3.2.9 \
-    --hash=sha256:01a8dadccdaac2123c916208c96e06631641c0566b22005493f09663c7a8d3b6 \
-    --hash=sha256:2fbb46fcd17bc81f993f28c47f1ebea38d66ae97cc2dbc3cad73b37cefbff700
+psycopg==3.2.10 \
+    --hash=sha256:0bce99269d16ed18401683a8569b2c5abd94f72f8364856d56c0389bcd50972a \
+    --hash=sha256:ab5caf09a9ec42e314a21f5216dbcceac528e0e05142e42eea83a3b28b320ac3
     # via
     #   -r requirements.in
     #   amsterdam-schema-tools
@@ -1327,9 +1327,9 @@ pytest==8.4.2 \
     #   -r requirements.in
     #   pytest-cov
     #   pytest-django
-pytest-cov==6.2.1 \
-    --hash=sha256:25cc6cc0a5358204b8108ecedc51a9b57b34cc6b8c967cc2c01a4e00d8a67da2 \
-    --hash=sha256:f5bc4c23f42f1cdd23c70b1dab1bbaef4fc505ba950d53e0081d0730dd7e86d5
+pytest-cov==6.3.0 \
+    --hash=sha256:35c580e7800f87ce892e687461166e1ac2bcb8fb9e13aea79032518d6e503ff2 \
+    --hash=sha256:440db28156d2468cafc0415b4f8e50856a0d11faefa38f30906048fe490f1749
     # via -r requirements.in
 pytest-django==4.11.1 \
     --hash=sha256:1b63773f648aa3d8541000c26929c1ea63934be1cfa674c76436966d73fe6a10 \
@@ -1583,9 +1583,9 @@ rpds-py==0.25.1 \
     # via
     #   jsonschema
     #   referencing
-sentry-sdk==2.36.0 \
-    --hash=sha256:0f95586a141068d215376e5bf8ebd279e126f7f42805e9570190ef82a7e232b3 \
-    --hash=sha256:af9260e8155e41e8217615a453828e98aa40740865ac4b16b1ccb6a63b4b2e31
+sentry-sdk==2.37.0 \
+    --hash=sha256:2c661a482dd5accf3df58464f31733545745bb4d5cf8f5e46e0e1c4eed88479f \
+    --hash=sha256:89c1ed205d5c25926558b64a9bed8a5b4fb295b007cecc32c0ec4bf7694da2e1
     # via -r requirements.in
 shapely==2.1.1 \
     --hash=sha256:04e4c12a45a1d70aeb266618d8cf81a2de9c4df511b63e105b90bfdfb52146de \

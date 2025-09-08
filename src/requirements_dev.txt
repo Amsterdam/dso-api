@@ -113,7 +113,7 @@ django==4.2.23
     #   djangorestframework
     #   djangorestframework-gis
     #   drf-spectacular
-django-cors-headers==4.7.0
+django-cors-headers==4.8.0
     # via -r ./requirements.in
 django-debug-toolbar==6.0.0
     # via -r requirements_dev.in
@@ -233,7 +233,7 @@ mapbox-vector-tile==2.1.0
     # via -r ./requirements.in
 mappyfile==1.0.2
     # via amsterdam-schema-tools
-markdown==3.8.2
+markdown==3.9
     # via -r ./requirements.in
 markdown-it-py==3.0.0
     # via rich
@@ -403,7 +403,7 @@ protobuf==5.29.5
     # via mapbox-vector-tile
 psutil==7.0.0
     # via azure-monitor-opentelemetry-exporter
-psycopg==3.2.9
+psycopg==3.2.10
     # via
     #   -r ./requirements.in
     #   amsterdam-schema-tools
@@ -441,7 +441,7 @@ pytest==8.4.2
     #   pytest-cov
     #   pytest-django
     #   pytest-sugar
-pytest-cov==6.2.1
+pytest-cov==6.3.0
     # via -r ./requirements.in
 pytest-django==4.11.1
     # via -r ./requirements.in
@@ -502,9 +502,9 @@ rpds-py==0.25.1
     # via
     #   jsonschema
     #   referencing
-ruff==0.12.11
+ruff==0.12.12
     # via -r requirements_dev.in
-sentry-sdk==2.36.0
+sentry-sdk==2.37.0
     # via -r ./requirements.in
 shapely==2.1.1
     # via
