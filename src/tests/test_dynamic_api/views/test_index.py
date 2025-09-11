@@ -136,6 +136,16 @@ def test_api_index_view_disabled(
 
 
 @pytest.mark.django_db
+def test_api_index_view_niet_beschikbaar(
+    api_client, disabled_afval_dataset, fietspaaltjes_dataset_niet_beschikbaar, filled_router
+):
+    """Prove that onbeschikbare versies are not listed."""
+    response = api_client.get("/v1")
+    assert response.status_code == 200, response.data
+    assert len(response.data["datasets"]["fietspaaltjes"]["versions"]) == 2
+
+
+@pytest.mark.django_db
 def test_api_index_subpath_view(
     api_client, afval_dataset_subpath, fietspaaltjes_dataset_subpath, filled_router, drf_request
 ):
