@@ -885,6 +885,56 @@ def fietspaaltjes_data_no_display(fietspaaltjes_model_no_display):
     )
 
 
+# start niet beschikbaar
+@pytest.fixture()
+def fietspaaltjes_schema_niet_beschikbaar(schema_loader) -> DatasetSchema:
+    return schema_loader.get_dataset_from_file("fietspaaltjes_niet_beschikbaar.json")
+
+
+@pytest.fixture()
+def fietspaaltjes_model_niet_beschikbaar(fietspaaltjes_dataset_niet_beschikbaar, dynamic_models):
+    return dynamic_models["fietspaaltjesnietbeschikbaar"]["fietspaaltjesnietbeschikbaar"]
+
+
+@pytest.fixture()
+def fietspaaltjes_dataset_niet_beschikbaar(fietspaaltjes_schema_niet_beschikbaar) -> Dataset:
+    return Dataset.create_for_schema(fietspaaltjes_schema_niet_beschikbaar)
+
+
+@pytest.fixture()
+def fietspaaltjes_dataset_subpath_niet_beschikbaar(
+    fietspaaltjes_schema_niet_beschikbaar,
+) -> Dataset:
+    return Dataset.create_for_schema(
+        fietspaaltjes_schema_niet_beschikbaar, path="sub/fietspaaltjes"
+    )
+
+
+@pytest.fixture()
+def fietspaaltjes_data_niet_beschikbaar(fietspaaltjes_model_niet_beschikbaar):
+    return fietspaaltjes_model.objects.create(
+        id="Fietsplaatje record met display",
+        geometry="POINT (123207.6558130105 486624.6399002579)",
+        street="Weesperplein",
+        at="Geschutswerf",
+        area="Amsterdam-Centrum",
+        score_2013=None,
+        score_current="reference for DISPLAY FIELD",
+        count=6,
+        paaltjes_weg=["nu paaltje(s)"],
+        soort_paaltje=["paaltje(s) ong. 75cm hoog", "verwijderde paaltjes"],
+        uiterlijk=["rood/wit"],
+        type=["vast", "uitneembaar"],
+        ruimte=["Voldoende: 1.6m of meer"],
+        markering=["markering ontbreekt", "onvoldoende markering"],
+        beschadigingen=None,
+        veiligheid=["overzichtelijke locatie"],
+        zicht_in_donker=["onvoldoende reflectie op paal"],
+        soort_weg=["rijbaan fiets+auto", "fietspad"],
+        noodzaak=["nodig tegen sluipverkeer"],
+    )
+
+
 # --| >> EINDE no display check>> FIETSPAALTJES  >>no display check >> |--#
 
 # --| >> START uri check>> EXPLOSIEVEN  >> uri check >> |--#

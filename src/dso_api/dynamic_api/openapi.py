@@ -189,11 +189,12 @@ def get_openapi_view(dataset, version: str | None = None, response_format: str =
             f"/v1/{dataset.path}",
         )
     }
-    for vmajor in dataset_schema.versions:
-        versions[f"versie {vmajor}"] = urljoin(
-            settings.DATAPUNT_API_URL,  # to preserve hostname
-            f"/v1/{dataset.path}/{vmajor}",
-        )
+    for vmajor, vschema in dataset_schema.versions.items():
+        if vschema.status.value == "beschikbaar":
+            versions[f"versie {vmajor}"] = urljoin(
+                settings.DATAPUNT_API_URL,  # to preserve hostname
+                f"/v1/{dataset.path}/{vmajor}",
+            )
 
     openapi_overrides = {
         "info": {

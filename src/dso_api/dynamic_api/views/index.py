@@ -46,13 +46,15 @@ class APIIndexView(APIView):
             return []
         try:
             dataset_id = ds.schema.id
+
             return [
                 self._build_version_endpoints(
                     base, dataset_id, DEFAULT, f"Standaardversie ({ds.default_version})"
                 )
             ] + [
                 self._build_version_endpoints(base, dataset_id, vmajor, suffix="-version")
-                for vmajor in ds.schema.versions
+                for vmajor, vschema in ds.schema.versions.items()
+                if vschema.status.value == "beschikbaar"
             ]
         except NoReverseMatch as e:
             logger.warning("dataset %s: %s", dataset_id, e)
