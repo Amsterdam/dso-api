@@ -4,9 +4,9 @@
 #
 #    pip-compile --generate-hashes --output-file=requirements.txt requirements.in
 #
-amsterdam-schema-tools[django]==8.3.2 \
-    --hash=sha256:74d3ba04182fe74af5ff067f2452fd8fa257d5ccaafe89832dc8dcbff8a38730 \
-    --hash=sha256:981126811329c1eaf55611b405800b724eb0b3dcc7761c7868477e32337df161
+amsterdam-schema-tools[django]==8.3.4 \
+    --hash=sha256:78de228fa078a7dde016b3980063926a1b5522e6136c67b18440cb23a89f4df8 \
+    --hash=sha256:c69f35c6f062565a2f4ffb24d4c9db20b2dcd880577ee89a6b629c4119d677f8
     # via -r requirements.in
 argparse==1.4.0 \
     --hash=sha256:62b089a55be1d8949cd2bc7e0df0bddb9e028faefc8c32038cc84862aefdd6e4 \
@@ -44,9 +44,9 @@ azure-core-tracing-opentelemetry==1.0.0b12 \
     --hash=sha256:38fd42709f1cc4bbc4f2797008b1c30a6a01617e49910c05daa3a0d0c65053ac \
     --hash=sha256:bb454142440bae11fd9d68c7c1d67ae38a1756ce808c5e4d736730a7b4b04144
     # via azure-monitor-opentelemetry
-azure-identity==1.24.0 \
-    --hash=sha256:6c3a40b2a70af831e920b89e6421e8dcd4af78a0cb38b9642d86c67643d4930c \
-    --hash=sha256:9e04997cde0ab02ed66422c74748548e620b7b29361c72ce622acab0267ff7c4
+azure-identity==1.25.0 \
+    --hash=sha256:4177df34d684cddc026e6cf684e1abb57767aa9d84e7f2129b080ec45eee7733 \
+    --hash=sha256:becaec086bbdf8d1a6aa4fb080c2772a0f824a97d50c29637ec8cc4933f1e82d
     # via
     #   -r requirements.in
     #   azure-monitor-opentelemetry-exporter
@@ -420,9 +420,9 @@ django-filter==25.1 \
     --hash=sha256:1ec9eef48fa8da1c0ac9b411744b16c3f4c31176c867886e4c48da369c407153 \
     --hash=sha256:4fa48677cf5857b9b1347fed23e355ea792464e0fe07244d1fdfb8a806215b80
     # via djangorestframework-gis
-django-gisserver==2.1.1 \
-    --hash=sha256:62cd59ab93628ddcb17d12fe50a9916b335842f616773a89df588eba9f114e34 \
-    --hash=sha256:cdd7d360a3a5689201a36d2806c3c2104c7f4a673034f73856b2d2ad8224720f
+django-gisserver==2.1.2 \
+    --hash=sha256:434461f9faa603e9c1a296e8f8f34b07d59a801b5719b2d6bcdcfaa9925c9bd2 \
+    --hash=sha256:707bd14672dd7ea2e3e92647d4c52b5d1ccfc9633addf7ade3ab5eec5509bb02
     # via
     #   -r requirements.in
     #   amsterdam-schema-tools
@@ -1583,9 +1583,9 @@ rpds-py==0.25.1 \
     # via
     #   jsonschema
     #   referencing
-sentry-sdk==2.37.1 \
-    --hash=sha256:531751da91aa62a909b42a7be155b41f6bb0de9df6ae98441d23b95de2f98475 \
-    --hash=sha256:baaaea6608ed3a639766a69ded06b254b106d32ad9d180bdbe58f3db9364592b
+sentry-sdk==2.38.0 \
+    --hash=sha256:2324aea8573a3fa1576df7fb4d65c4eb8d9929c8fa5939647397a07179eef8d0 \
+    --hash=sha256:792d2af45e167e2f8a3347143f525b9b6bac6f058fb2014720b40b84ccbeb985
     # via -r requirements.in
 shapely==2.1.1 \
     --hash=sha256:04e4c12a45a1d70aeb266618d8cf81a2de9c4df511b63e105b90bfdfb52146de \
