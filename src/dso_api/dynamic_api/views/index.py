@@ -6,7 +6,7 @@ from collections.abc import Iterable
 from django.urls import NoReverseMatch
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from schematools.contrib.django.models import Dataset
+from schematools.contrib.django.models import Dataset, DatasetSchema
 
 from dso_api.dynamic_api.constants import DEFAULT
 from dso_api.dynamic_api.datasets import get_active_datasets
@@ -54,7 +54,7 @@ class APIIndexView(APIView):
             ] + [
                 self._build_version_endpoints(base, dataset_id, vmajor, suffix="-version")
                 for vmajor, vschema in ds.schema.versions.items()
-                if vschema.status.value != "niet_beschikbaar"
+                if vschema.status != DatasetSchema.Status.niet_beschikbaar
             ]
         except NoReverseMatch as e:
             logger.warning("dataset %s: %s", dataset_id, e)
