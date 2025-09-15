@@ -282,6 +282,19 @@ def test_openapi_json_v1(api_client, afval_dataset, fietspaaltjes_dataset, fille
 
 
 @pytest.mark.django_db
+def test_openapi_json_v_niet_beschikbaar(
+    api_client, afval_dataset, fietspaaltjes_dataset_niet_beschikbaar, filled_router, caplog
+):
+    """Prove that endpoint for a niet_beschikbare version is not created"""
+    caplog.set_level(logging.WARNING)
+
+    url = "/v1/fietspaaltjes/v2"
+
+    response = api_client.get(url)
+    assert response.status_code == 404
+
+
+@pytest.mark.django_db
 def test_openapi_parkeren_json(api_client, parkeervakken_dataset, filled_router, caplog):
     """Prove that the OpenAPI page can be rendered."""
     caplog.set_level(logging.WARNING)

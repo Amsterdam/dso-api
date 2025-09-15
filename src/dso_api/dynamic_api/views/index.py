@@ -54,7 +54,7 @@ class APIIndexView(APIView):
             ] + [
                 self._build_version_endpoints(base, dataset_id, vmajor, suffix="-version")
                 for vmajor, vschema in ds.schema.versions.items()
-                if vschema.status.value == "beschikbaar"
+                if vschema.status.value != "niet_beschikbaar"
             ]
         except NoReverseMatch as e:
             logger.warning("dataset %s: %s", dataset_id, e)

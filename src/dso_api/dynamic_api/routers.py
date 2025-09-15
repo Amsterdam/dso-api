@@ -405,7 +405,12 @@ class DynamicRouter(DefaultRouter):
                     kwargs={"dataset_name": dataset_id},
                 )
             )
-            for version in dataset.schema.versions:
+            for version, vschema in dataset.schema.versions.items():
+
+                # Skip niet_beschikbare versions
+                if vschema.status.value == "niet_beschikbaar":
+                    continue
+
                 results.append(
                     path(
                         f"/{dataset.path}/{version}",
