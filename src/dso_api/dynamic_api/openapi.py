@@ -192,7 +192,7 @@ def get_openapi_view(dataset, version: str | None = None, response_format: str =
     for vmajor, vschema in dataset_schema.versions.items():
 
         # Skip niet_beschikbare versions
-        if vschema.status.value == "niet_beschikbaar":
+        if vschema.status == DatasetSchema.Status.niet_beschikbaar:
             continue
         versions[f"versie {vmajor}"] = urljoin(
             settings.DATAPUNT_API_URL,  # to preserve hostname

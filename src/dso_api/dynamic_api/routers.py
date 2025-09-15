@@ -37,7 +37,7 @@ from django.urls import NoReverseMatch, URLPattern, path, reverse
 from django.views.generic import RedirectView
 from rest_framework.routers import DefaultRouter, Route
 from schematools.contrib.django.factories import remove_dynamic_models
-from schematools.contrib.django.models import Dataset
+from schematools.contrib.django.models import Dataset, DatasetSchema
 from schematools.naming import to_snake_case
 
 from .constants import DEFAULT
@@ -408,7 +408,7 @@ class DynamicRouter(DefaultRouter):
             for version, vschema in dataset.schema.versions.items():
 
                 # Skip niet_beschikbare versions
-                if vschema.status.value == "niet_beschikbaar":
+                if vschema.status == DatasetSchema.Status.niet_beschikbaar:
                     continue
 
                 results.append(
