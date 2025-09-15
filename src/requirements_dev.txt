@@ -4,7 +4,7 @@
 #
 #    pip-compile --output-file=requirements_dev.txt requirements_dev.in
 #
-amsterdam-schema-tools[django]==8.3.2
+amsterdam-schema-tools[django]==8.3.4
     # via -r ./requirements.in
 argparse==1.4.0
     # via uwsgi-readiness-check
@@ -30,7 +30,7 @@ azure-core==1.34.0
     #   msrest
 azure-core-tracing-opentelemetry==1.0.0b12
     # via azure-monitor-opentelemetry
-azure-identity==1.24.0
+azure-identity==1.25.0
     # via
     #   -r ./requirements.in
     #   azure-monitor-opentelemetry-exporter
@@ -125,7 +125,7 @@ django-extensions==4.1
     # via -r requirements_dev.in
 django-filter==25.1
     # via djangorestframework-gis
-django-gisserver==2.1.1
+django-gisserver==2.1.2
     # via
     #   -r ./requirements.in
     #   amsterdam-schema-tools
@@ -502,9 +502,9 @@ rpds-py==0.25.1
     # via
     #   jsonschema
     #   referencing
-ruff==0.12.12
+ruff==0.13.0
     # via -r requirements_dev.in
-sentry-sdk==2.37.1
+sentry-sdk==2.38.0
     # via -r ./requirements.in
 shapely==2.1.1
     # via
