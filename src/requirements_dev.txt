@@ -4,7 +4,7 @@
 #
 #    pip-compile --output-file=requirements_dev.txt requirements_dev.in
 #
-amsterdam-schema-tools[django]==8.3.4
+amsterdam-schema-tools[django]==8.3.5
     # via -r ./requirements.in
 argparse==1.4.0
     # via uwsgi-readiness-check
@@ -40,7 +40,7 @@ azure-monitor-opentelemetry-exporter==1.0.0b40
     # via azure-monitor-opentelemetry
 bandit==1.8.6
     # via -r ./requirements.in
-black==25.1.0
+black==25.9.0
     # via -r requirements_dev.in
 build==1.2.2.post1
     # via
@@ -82,7 +82,7 @@ datadiensten-apikeyclient==0.6.0
     # via -r ./requirements.in
 datapunt-authorization-django==1.6.2
     # via -r ./requirements.in
-debugpy==1.8.16
+debugpy==1.8.17
     # via -r requirements_dev.in
 decorator==5.2.1
     # via jsonpath-rw
@@ -113,7 +113,7 @@ django==4.2.24
     #   djangorestframework
     #   djangorestframework-gis
     #   drf-spectacular
-django-cors-headers==4.8.0
+django-cors-headers==4.9.0
     # via -r ./requirements.in
 django-debug-toolbar==6.0.0
     # via -r requirements_dev.in
@@ -459,6 +459,8 @@ python-string-utils==1.0.0
     # via
     #   -r ./requirements.in
     #   amsterdam-schema-tools
+pytokens==0.1.10
+    # via black
 pyyaml==6.0.2
     # via
     #   bandit
@@ -502,7 +504,7 @@ rpds-py==0.25.1
     # via
     #   jsonschema
     #   referencing
-ruff==0.13.0
+ruff==0.13.1
     # via -r requirements_dev.in
 sentry-sdk==2.38.0
     # via -r ./requirements.in
@@ -565,7 +567,7 @@ webcolors==24.11.1
     # via jsonschema
 wheel==0.45.1
     # via pip-tools
-whitenoise==6.10.0
+whitenoise==6.11.0
     # via -r ./requirements.in
 wrapt==1.17.2
     # via
