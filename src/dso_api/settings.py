@@ -21,7 +21,6 @@ DJANGO_LOG_LEVEL = env.str("DJANGO_LOG_LEVEL", "INFO")
 DSO_API_LOG_LEVEL = env.str("DSO_API_LOG_LEVEL", "INFO")
 DSO_API_AUDIT_LOG_LEVEL = env.str("DSO_API_AUDIT_LOG_LEVEL", "INFO")
 SENTRY_BLOCKED_PATHS: Final[list[str]] = env.list("SENTRY_BLOCKED_PATHS", default=[])
-ENABLE_REDIS = env.bool("ENABLE_REDIS", False)
 
 STATIC_HOST = env.str("STATIC_HOST", "")
 STATIC_URL = f"{STATIC_HOST}/v1/static/"
@@ -187,26 +186,11 @@ if _USE_SECRET_STORE or CLOUD_ENV.startswith("azure"):
     if len(DATABASES) > 1:
         DATABASE_ROUTERS = ["dso_api.router.DatabaseRouter"]
 
-    if ENABLE_REDIS:
-        # Configure cache from a secret, so we cannot use CACHE_URL
-        # because that would expose redis passwd in an env var.
-        redis_password = Path(env.str("REDIS_PASSWD_PATH")).read_text()
-        redis_host = env.str("REDIS_HOSTNAME")
-        redis_port = env.int("REDIS_PORT", 6379)
-        CACHES = {
-            "default": {
-                "BACKEND": "django_redis.cache.RedisCache",
-                # "LOCATION": "redis://username:password@127.0.0.1:6379",
-                # We leave out the username, defaults to `default` for redis
-                "LOCATION": f"redis://:{redis_password}@{redis_host}:{redis_port}",
-            }
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.dummy.DummyCache",
         }
-    else:
-        CACHES = {
-            "default": {
-                "BACKEND": "django.core.cache.backends.dummy.DummyCache",
-            }
-        }
+    }
 
 else:
     # Regular development
