@@ -30,8 +30,6 @@ services:
     depends_on:
       database:
         condition: service_healthy
-      redis:
-        condition: service_started
     environment:
       UWSGI_HTTP_SOCKET: ":8000"
       UWSGI_MODULE: "dso_api.wsgi"
@@ -68,9 +66,3 @@ services:
     command: >
       /bin/bash -c "sh /app/initialize_db.sh
       && uwsgi --py-auto-reload=1 --enable-threads --lazy-apps --buffer-size=65535"
-  redis:
-    image: 'bitnami/redis:latest'
-    environment:
-      - ALLOW_EMPTY_PASSWORD=yes
-    ports:
-      - '6379:6379'
