@@ -401,7 +401,6 @@ django==4.2.24 \
     #   django-gisserver
     #   django-healthchecks
     #   django-postgres-unlimited-varchar
-    #   django-redis
     #   django-vectortiles
     #   djangorestframework
     #   djangorestframework-gis
@@ -433,10 +432,6 @@ django-healthchecks==1.5.0 \
 django-postgres-unlimited-varchar==1.1.2 \
     --hash=sha256:3ddac6bc5b618341d6e2ef8b7dcc1bd737713e668e15d956dacb987019f69081 \
     --hash=sha256:fc942e8d9ae9d9197471ea7ed96c58b2a7a301f83d88b89009df603904185738
-    # via -r requirements.in
-django-redis==6.0.0 \
-    --hash=sha256:20bf0063a8abee567eb5f77f375143c32810c8700c0674ced34737f8de4e36c0 \
-    --hash=sha256:2d9cb12a20424a4c4dde082c6122f486628bae2d9c2bee4c0126a4de7fda00dd
     # via -r requirements.in
 django-vectortiles==1.0.2 \
     --hash=sha256:579e721b26f6168a029c112c42e2b9290c2209c80f669caf7ea4be446e202715 \
@@ -1413,10 +1408,6 @@ pyyaml==6.0.2 \
     #   bandit
     #   drf-spectacular
     #   jsonschema-path
-redis==6.2.0 \
-    --hash=sha256:c8ddf316ee0aab65f04a11229e94a64b2618451dab7a67cb2f77eb799d872d5e \
-    --hash=sha256:e821f129b75dde6cb99dd35e5c76e8c49512a5a0d8dfdc560b2fbd44b85ca977
-    # via django-redis
 referencing==0.36.2 \
     --hash=sha256:df2e89862cd09deabbdba16944cc3f10feb6b3e6f18e902f7cc25609a34775aa \
     --hash=sha256:e8699adbbf8b5c7de96d8ffa0eb5c158b3beafce084968e2ea8bb08c6794dcd0

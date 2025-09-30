@@ -108,7 +108,6 @@ django==4.2.24
     #   django-gisserver
     #   django-healthchecks
     #   django-postgres-unlimited-varchar
-    #   django-redis
     #   django-vectortiles
     #   djangorestframework
     #   djangorestframework-gis
@@ -132,8 +131,6 @@ django-gisserver==2.2.0
 django-healthchecks==1.5.0
     # via -r ./requirements.in
 django-postgres-unlimited-varchar==1.1.2
-    # via -r ./requirements.in
-django-redis==6.0.0
     # via -r ./requirements.in
 django-vectortiles==1.0.2
     # via -r ./requirements.in
@@ -465,8 +462,6 @@ pyyaml==6.0.2
     #   drf-spectacular
     #   jsonschema-path
     #   pre-commit
-redis==6.2.0
-    # via django-redis
 referencing==0.36.2
     # via
     #   jsonschema
