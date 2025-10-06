@@ -129,10 +129,8 @@ class DatasetWFSIndexView(APIIndexView):
             "header": header or f"Versie {version}",
             "wfs_url": base + wfs_url,
             "doc_url": base + wfs_url,
-            "documentation_url": base + wfs_url,  # For catalog
             "api_url": base + api_url,
             "mvt_url": base + mvt_url,
-            "specification_url": base + wfs_url,  # For catalog
         }
 
 

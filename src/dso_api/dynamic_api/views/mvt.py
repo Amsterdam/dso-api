@@ -57,10 +57,8 @@ class DatasetMVTIndexView(APIIndexView):
             "header": header or f"Versie {version}",
             "mvt_url": base + mvt_url,
             "doc_url": f"{base}/v1/docs/generic/gis.html",
-            "documentation_url": f"{base}/v1/docs/generic/gis.html",  # For catalog
             "api_url": base + api_url,
             "wfs_url": base + wfs_url,
-            "specification_url": base + mvt_url,  # For catalog
         }
 
 

@@ -91,9 +91,7 @@ class DynamicAPIIndexView(APIIndexView):
         return {
             "header": header or f"Versie {version}",
             "api_url": base + api_url,
-            "specification_url": base + api_url,  # For catalog
             "doc_url": base + docs_url,
-            "documentation_url": base + docs_url,  # For catalog
             "mvt_url": base + mvt_url,
             "wfs_url": base + wfs_url,
         }
