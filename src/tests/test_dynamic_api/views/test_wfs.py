@@ -33,15 +33,6 @@ class TestDatasetWFSIndexView:
                         "pay_per_use": False,
                         "license": "CC0 1.0",
                     },
-                    "environments": [
-                        {
-                            "api_url": f"{BASE}/v1/afvalwegingen",
-                            "doc_url": f"{BASE}/v1/wfs/afvalwegingen",
-                            "header": "Standaardversie (v1)",
-                            "mvt_url": f"{BASE}/v1/mvt/afvalwegingen",
-                            "wfs_url": f"{BASE}/v1/wfs/afvalwegingen",
-                        }
-                    ],
                     "api_authentication": ["OPENBAAR"],
                     "api_type": "WFS",
                     "organization_name": "Gemeente Amsterdam",
@@ -79,15 +70,6 @@ class TestDatasetWFSIndexView:
                         "pay_per_use": False,
                         "license": None,
                     },
-                    "environments": [
-                        {
-                            "api_url": f"{BASE}/v1/fietspaaltjes",
-                            "doc_url": f"{BASE}/v1/wfs/fietspaaltjes",
-                            "header": "Standaardversie (v1)",
-                            "mvt_url": f"{BASE}/v1/mvt/fietspaaltjes",
-                            "wfs_url": f"{BASE}/v1/wfs/fietspaaltjes",
-                        }
-                    ],
                     "api_authentication": ["OPENBAAR"],
                     "api_type": "WFS",
                     "organization_name": "Gemeente Amsterdam",

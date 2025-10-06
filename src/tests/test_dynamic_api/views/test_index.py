@@ -29,15 +29,6 @@ def test_api_index_view(
                     "pay_per_use": False,
                     "license": "CC0 1.0",
                 },
-                "environments": [
-                    {
-                        "api_url": f"{BASE}/v1/afvalwegingen",
-                        "doc_url": f"{BASE}/v1/docs/datasets/afvalwegingen.html",
-                        "header": "Standaardversie (v1)",
-                        "mvt_url": f"{BASE}/v1/mvt/afvalwegingen",
-                        "wfs_url": f"{BASE}/v1/wfs/afvalwegingen",
-                    },
-                ],
                 "versions": [
                     {
                         "api_url": f"{BASE}/v1/afvalwegingen",
@@ -75,15 +66,6 @@ def test_api_index_view(
                     "pay_per_use": False,
                     "license": None,
                 },
-                "environments": [
-                    {
-                        "api_url": f"{BASE}/v1/fietspaaltjes",
-                        "doc_url": f"{BASE}/v1/docs/datasets/fietspaaltjes.html",
-                        "header": "Standaardversie (v1)",
-                        "mvt_url": f"{BASE}/v1/mvt/fietspaaltjes",
-                        "wfs_url": f"{BASE}/v1/wfs/fietspaaltjes",
-                    },
-                ],
                 "versions": [
                     {
                         "api_url": f"{BASE}/v1/fietspaaltjes",
@@ -167,15 +149,6 @@ def test_api_index_subpath_view(
                     "pay_per_use": False,
                     "license": "CC0 1.0",
                 },
-                "environments": [
-                    {
-                        "api_url": f"{BASE}/v1/sub/path/afvalwegingen",
-                        "doc_url": f"{BASE}/v1/docs/datasets/sub/path/afvalwegingen.html",
-                        "header": "Standaardversie (v1)",
-                        "mvt_url": f"{BASE}/v1/mvt/sub/path/afvalwegingen",
-                        "wfs_url": f"{BASE}/v1/wfs/sub/path/afvalwegingen",
-                    },
-                ],
                 "versions": [
                     {
                         "api_url": f"{BASE}/v1/sub/path/afvalwegingen",
@@ -209,15 +182,6 @@ def test_api_index_subpath_view(
                 "description": "",
                 "tags": [],
                 "terms_of_use": {"government_only": False, "pay_per_use": False, "license": None},
-                "environments": [
-                    {
-                        "api_url": f"{BASE}/v1/sub/fietspaaltjes",
-                        "doc_url": f"{BASE}/v1/docs/datasets/sub/fietspaaltjes.html",
-                        "header": "Standaardversie (v1)",
-                        "mvt_url": f"{BASE}/v1/mvt/sub/fietspaaltjes",
-                        "wfs_url": f"{BASE}/v1/wfs/sub/fietspaaltjes",
-                    },
-                ],
                 "versions": [
                     {
                         "api_url": f"{BASE}/v1/sub/fietspaaltjes",
@@ -261,15 +225,6 @@ def test_api_index_subpath_view(
                     "pay_per_use": False,
                     "license": "CC0 1.0",
                 },
-                "environments": [
-                    {
-                        "api_url": f"{BASE}/v1/sub/path/afvalwegingen",
-                        "doc_url": f"{BASE}/v1/docs/datasets/sub/path/afvalwegingen.html",
-                        "header": "Standaardversie (v1)",
-                        "mvt_url": f"{BASE}/v1/mvt/sub/path/afvalwegingen",
-                        "wfs_url": f"{BASE}/v1/wfs/sub/path/afvalwegingen",
-                    },
-                ],
                 "versions": [
                     {
                         "api_url": f"{BASE}/v1/sub/path/afvalwegingen",
