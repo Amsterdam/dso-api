@@ -37,10 +37,8 @@ class TestDatasetWFSIndexView:
                         {
                             "api_url": f"{BASE}/v1/afvalwegingen",
                             "doc_url": f"{BASE}/v1/wfs/afvalwegingen",
-                            "documentation_url": f"{BASE}/v1/wfs/afvalwegingen",
                             "header": "Standaardversie (v1)",
                             "mvt_url": f"{BASE}/v1/mvt/afvalwegingen",
-                            "specification_url": f"{BASE}/v1/wfs/afvalwegingen",
                             "wfs_url": f"{BASE}/v1/wfs/afvalwegingen",
                         }
                     ],
@@ -56,19 +54,15 @@ class TestDatasetWFSIndexView:
                         {
                             "api_url": f"{BASE}/v1/afvalwegingen",
                             "doc_url": f"{BASE}/v1/wfs/afvalwegingen",
-                            "documentation_url": f"{BASE}/v1/wfs/afvalwegingen",
                             "header": "Standaardversie (v1)",
                             "mvt_url": f"{BASE}/v1/mvt/afvalwegingen",
-                            "specification_url": f"{BASE}/v1/wfs/afvalwegingen",
                             "wfs_url": f"{BASE}/v1/wfs/afvalwegingen",
                         },
                         {
                             "api_url": f"{BASE}/v1/afvalwegingen/v1",
                             "doc_url": f"{BASE}/v1/wfs/afvalwegingen/v1",
-                            "documentation_url": f"{BASE}/v1/wfs/afvalwegingen/v1",
                             "header": "Versie v1",
                             "mvt_url": f"{BASE}/v1/mvt/afvalwegingen/v1",
-                            "specification_url": f"{BASE}/v1/wfs/afvalwegingen/v1",
                             "wfs_url": f"{BASE}/v1/wfs/afvalwegingen/v1",
                         },
                     ],
@@ -89,10 +83,8 @@ class TestDatasetWFSIndexView:
                         {
                             "api_url": f"{BASE}/v1/fietspaaltjes",
                             "doc_url": f"{BASE}/v1/wfs/fietspaaltjes",
-                            "documentation_url": f"{BASE}/v1/wfs/fietspaaltjes",
                             "header": "Standaardversie (v1)",
                             "mvt_url": f"{BASE}/v1/mvt/fietspaaltjes",
-                            "specification_url": f"{BASE}/v1/wfs/fietspaaltjes",
                             "wfs_url": f"{BASE}/v1/wfs/fietspaaltjes",
                         }
                     ],
@@ -108,19 +100,15 @@ class TestDatasetWFSIndexView:
                         {
                             "api_url": f"{BASE}/v1/fietspaaltjes",
                             "doc_url": f"{BASE}/v1/wfs/fietspaaltjes",
-                            "documentation_url": f"{BASE}/v1/wfs/fietspaaltjes",
                             "header": "Standaardversie (v1)",
                             "mvt_url": f"{BASE}/v1/mvt/fietspaaltjes",
-                            "specification_url": f"{BASE}/v1/wfs/fietspaaltjes",
                             "wfs_url": f"{BASE}/v1/wfs/fietspaaltjes",
                         },
                         {
                             "api_url": f"{BASE}/v1/fietspaaltjes/v1",
                             "doc_url": f"{BASE}/v1/wfs/fietspaaltjes/v1",
-                            "documentation_url": f"{BASE}/v1/wfs/fietspaaltjes/v1",
                             "header": "Versie v1",
                             "mvt_url": f"{BASE}/v1/mvt/fietspaaltjes/v1",
-                            "specification_url": f"{BASE}/v1/wfs/fietspaaltjes/v1",
                             "wfs_url": f"{BASE}/v1/wfs/fietspaaltjes/v1",
                         },
                     ],
