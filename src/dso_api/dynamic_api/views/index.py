@@ -94,7 +94,6 @@ class APIIndexView(APIView):
                     "license": ds.schema.license,
                 },
                 "versions": versions,
-                "environments": [versions[0]] if versions else [],  # For catalog
                 "api_authentication": list(ds.schema.auth) or None,
                 "api_type": self.api_type,
                 "organization_name": "Gemeente Amsterdam",

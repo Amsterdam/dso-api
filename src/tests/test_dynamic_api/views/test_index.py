@@ -29,34 +29,19 @@ def test_api_index_view(
                     "pay_per_use": False,
                     "license": "CC0 1.0",
                 },
-                "environments": [
-                    {
-                        "api_url": f"{BASE}/v1/afvalwegingen",
-                        "doc_url": f"{BASE}/v1/docs/datasets/afvalwegingen.html",
-                        "documentation_url": f"{BASE}/v1/docs/datasets/afvalwegingen.html",
-                        "header": "Standaardversie (v1)",
-                        "mvt_url": f"{BASE}/v1/mvt/afvalwegingen",
-                        "specification_url": f"{BASE}/v1/afvalwegingen",
-                        "wfs_url": f"{BASE}/v1/wfs/afvalwegingen",
-                    },
-                ],
                 "versions": [
                     {
                         "api_url": f"{BASE}/v1/afvalwegingen",
                         "doc_url": f"{BASE}/v1/docs/datasets/afvalwegingen.html",
-                        "documentation_url": f"{BASE}/v1/docs/datasets/afvalwegingen.html",
                         "header": "Standaardversie (v1)",
                         "mvt_url": f"{BASE}/v1/mvt/afvalwegingen",
-                        "specification_url": f"{BASE}/v1/afvalwegingen",
                         "wfs_url": f"{BASE}/v1/wfs/afvalwegingen",
                     },
                     {
                         "api_url": f"{BASE}/v1/afvalwegingen/v1",
                         "doc_url": f"{BASE}/v1/docs/datasets/afvalwegingen@v1.html",
-                        "documentation_url": f"{BASE}/v1/docs/datasets/afvalwegingen@v1.html",
                         "header": "Versie v1",
                         "mvt_url": f"{BASE}/v1/mvt/afvalwegingen/v1",
-                        "specification_url": f"{BASE}/v1/afvalwegingen/v1",
                         "wfs_url": f"{BASE}/v1/wfs/afvalwegingen/v1",
                     },
                 ],
@@ -81,34 +66,19 @@ def test_api_index_view(
                     "pay_per_use": False,
                     "license": None,
                 },
-                "environments": [
-                    {
-                        "api_url": f"{BASE}/v1/fietspaaltjes",
-                        "doc_url": f"{BASE}/v1/docs/datasets/fietspaaltjes.html",
-                        "documentation_url": f"{BASE}/v1/docs/datasets/fietspaaltjes.html",
-                        "header": "Standaardversie (v1)",
-                        "mvt_url": f"{BASE}/v1/mvt/fietspaaltjes",
-                        "specification_url": f"{BASE}/v1/fietspaaltjes",
-                        "wfs_url": f"{BASE}/v1/wfs/fietspaaltjes",
-                    },
-                ],
                 "versions": [
                     {
                         "api_url": f"{BASE}/v1/fietspaaltjes",
                         "doc_url": f"{BASE}/v1/docs/datasets/fietspaaltjes.html",
-                        "documentation_url": f"{BASE}/v1/docs/datasets/fietspaaltjes.html",
                         "header": "Standaardversie (v1)",
                         "mvt_url": f"{BASE}/v1/mvt/fietspaaltjes",
-                        "specification_url": f"{BASE}/v1/fietspaaltjes",
                         "wfs_url": f"{BASE}/v1/wfs/fietspaaltjes",
                     },
                     {
                         "api_url": f"{BASE}/v1/fietspaaltjes/v1",
                         "doc_url": f"{BASE}/v1/docs/datasets/fietspaaltjes@v1.html",
-                        "documentation_url": f"{BASE}/v1/docs/datasets/fietspaaltjes@v1.html",
                         "header": "Versie v1",
                         "mvt_url": f"{BASE}/v1/mvt/fietspaaltjes/v1",
-                        "specification_url": f"{BASE}/v1/fietspaaltjes/v1",
                         "wfs_url": f"{BASE}/v1/wfs/fietspaaltjes/v1",
                     },
                 ],
@@ -179,37 +149,19 @@ def test_api_index_subpath_view(
                     "pay_per_use": False,
                     "license": "CC0 1.0",
                 },
-                "environments": [
-                    {
-                        "api_url": f"{BASE}/v1/sub/path/afvalwegingen",
-                        "doc_url": f"{BASE}/v1/docs/datasets/sub/path/afvalwegingen.html",
-                        "documentation_url": f"{BASE}/v1/docs/datasets/"
-                        "sub/path/afvalwegingen.html",
-                        "header": "Standaardversie (v1)",
-                        "mvt_url": f"{BASE}/v1/mvt/sub/path/afvalwegingen",
-                        "specification_url": f"{BASE}/v1/sub/path/afvalwegingen",
-                        "wfs_url": f"{BASE}/v1/wfs/sub/path/afvalwegingen",
-                    },
-                ],
                 "versions": [
                     {
                         "api_url": f"{BASE}/v1/sub/path/afvalwegingen",
                         "doc_url": f"{BASE}/v1/docs/datasets/sub/path/afvalwegingen.html",
-                        "documentation_url": f"{BASE}/v1/docs/datasets/"
-                        "sub/path/afvalwegingen.html",
                         "header": "Standaardversie (v1)",
                         "mvt_url": f"{BASE}/v1/mvt/sub/path/afvalwegingen",
-                        "specification_url": f"{BASE}/v1/sub/path/afvalwegingen",
                         "wfs_url": f"{BASE}/v1/wfs/sub/path/afvalwegingen",
                     },
                     {
                         "api_url": f"{BASE}/v1/sub/path/afvalwegingen/v1",
                         "doc_url": f"{BASE}/v1/docs/datasets/sub/path/afvalwegingen@v1.html",
-                        "documentation_url": f"{BASE}/v1/docs/datasets/"
-                        "sub/path/afvalwegingen@v1.html",
                         "header": "Versie v1",
                         "mvt_url": f"{BASE}/v1/mvt/sub/path/afvalwegingen/v1",
-                        "specification_url": f"{BASE}/v1/sub/path/afvalwegingen/v1",
                         "wfs_url": f"{BASE}/v1/wfs/sub/path/afvalwegingen/v1",
                     },
                 ],
@@ -230,34 +182,19 @@ def test_api_index_subpath_view(
                 "description": "",
                 "tags": [],
                 "terms_of_use": {"government_only": False, "pay_per_use": False, "license": None},
-                "environments": [
-                    {
-                        "api_url": f"{BASE}/v1/sub/fietspaaltjes",
-                        "doc_url": f"{BASE}/v1/docs/datasets/sub/fietspaaltjes.html",
-                        "documentation_url": f"{BASE}/v1/docs/datasets/sub/fietspaaltjes.html",
-                        "header": "Standaardversie (v1)",
-                        "mvt_url": f"{BASE}/v1/mvt/sub/fietspaaltjes",
-                        "specification_url": f"{BASE}/v1/sub/fietspaaltjes",
-                        "wfs_url": f"{BASE}/v1/wfs/sub/fietspaaltjes",
-                    },
-                ],
                 "versions": [
                     {
                         "api_url": f"{BASE}/v1/sub/fietspaaltjes",
                         "doc_url": f"{BASE}/v1/docs/datasets/sub/fietspaaltjes.html",
-                        "documentation_url": f"{BASE}/v1/docs/datasets/sub/fietspaaltjes.html",
                         "header": "Standaardversie (v1)",
                         "mvt_url": f"{BASE}/v1/mvt/sub/fietspaaltjes",
-                        "specification_url": f"{BASE}/v1/sub/fietspaaltjes",
                         "wfs_url": f"{BASE}/v1/wfs/sub/fietspaaltjes",
                     },
                     {
                         "api_url": f"{BASE}/v1/sub/fietspaaltjes/v1",
                         "doc_url": f"{BASE}/v1/docs/datasets/sub/fietspaaltjes@v1.html",
-                        "documentation_url": f"{BASE}/v1/docs/datasets/sub/fietspaaltjes@v1.html",
                         "header": "Versie v1",
                         "mvt_url": f"{BASE}/v1/mvt/sub/fietspaaltjes/v1",
-                        "specification_url": f"{BASE}/v1/sub/fietspaaltjes/v1",
                         "wfs_url": f"{BASE}/v1/wfs/sub/fietspaaltjes/v1",
                     },
                 ],
@@ -288,37 +225,19 @@ def test_api_index_subpath_view(
                     "pay_per_use": False,
                     "license": "CC0 1.0",
                 },
-                "environments": [
-                    {
-                        "api_url": f"{BASE}/v1/sub/path/afvalwegingen",
-                        "doc_url": f"{BASE}/v1/docs/datasets/sub/path/afvalwegingen.html",
-                        "documentation_url": f"{BASE}/v1/docs/datasets/"
-                        "sub/path/afvalwegingen.html",
-                        "header": "Standaardversie (v1)",
-                        "mvt_url": f"{BASE}/v1/mvt/sub/path/afvalwegingen",
-                        "specification_url": f"{BASE}/v1/sub/path/afvalwegingen",
-                        "wfs_url": f"{BASE}/v1/wfs/sub/path/afvalwegingen",
-                    },
-                ],
                 "versions": [
                     {
                         "api_url": f"{BASE}/v1/sub/path/afvalwegingen",
                         "doc_url": f"{BASE}/v1/docs/datasets/sub/path/afvalwegingen.html",
-                        "documentation_url": f"{BASE}/v1/docs/datasets/"
-                        "sub/path/afvalwegingen.html",
                         "header": "Standaardversie (v1)",
                         "mvt_url": f"{BASE}/v1/mvt/sub/path/afvalwegingen",
-                        "specification_url": f"{BASE}/v1/sub/path/afvalwegingen",
                         "wfs_url": f"{BASE}/v1/wfs/sub/path/afvalwegingen",
                     },
                     {
                         "api_url": f"{BASE}/v1/sub/path/afvalwegingen/v1",
                         "doc_url": f"{BASE}/v1/docs/datasets/sub/path/afvalwegingen@v1.html",
-                        "documentation_url": f"{BASE}/v1/docs/datasets/"
-                        "sub/path/afvalwegingen@v1.html",
                         "header": "Versie v1",
                         "mvt_url": f"{BASE}/v1/mvt/sub/path/afvalwegingen/v1",
-                        "specification_url": f"{BASE}/v1/sub/path/afvalwegingen/v1",
                         "wfs_url": f"{BASE}/v1/wfs/sub/path/afvalwegingen/v1",
                     },
                 ],
