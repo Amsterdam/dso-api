@@ -20,6 +20,7 @@ def profile1_mandatory():
         ProfileSchema.from_dict(
             {
                 "name": "parkeerwacht-filter1",
+                "id": "parkeerwacht-filter1",
                 "scopes": ["PROFIEL/SCOPE"],
                 "datasets": {
                     "parkeervakken": {
@@ -46,6 +47,7 @@ def profile2_mandatory():
         ProfileSchema.from_dict(
             {
                 "name": "parkeerwacht-filter2",
+                "id": "parkeerwacht-filter2",
                 "scopes": ["PROFIEL2/SCOPE"],
                 "datasets": {
                     "parkeervakken": {
@@ -71,6 +73,7 @@ def profile_limited_soort():
         ProfileSchema.from_dict(
             {
                 "name": "parkeerwacht-limited1",
+                "id": "parkeerwacht-limited1",
                 "scopes": ["PROFIEL/SCOPE"],
                 "datasets": {
                     "parkeervakken": {
@@ -99,6 +102,7 @@ def profile_limited_type():
         ProfileSchema.from_dict(
             {
                 "name": "parkeerwacht-limited2",
+                "id": "parkeerwacht-limited2",
                 "scopes": ["PROFIEL2/SCOPE"],
                 "datasets": {
                     "parkeervakken": {
@@ -126,6 +130,7 @@ def profiles_may():
         ProfileSchema.from_dict(
             {
                 "name": "mag_niet",
+                "id": "mag_niet",
                 "scopes": ["MAY/NOT"],
                 "datasets": {
                     "parkeervakken": {
@@ -146,6 +151,7 @@ def profiles_may():
         ProfileSchema.from_dict(
             {
                 "name": "mag_wel",
+                "id": "mag_wel",
                 "scopes": ["MAY/ENTER"],
                 "datasets": {
                     "parkeervakken": {
@@ -167,6 +173,7 @@ def profiles_may():
         ProfileSchema.from_dict(
             {
                 "name": "alleen_volgnummer",
+                "id": "alleen_volgnummer",
                 "scopes": ["ONLY/VOLGNUMMER"],
                 "datasets": {
                     "parkeervakken": {
