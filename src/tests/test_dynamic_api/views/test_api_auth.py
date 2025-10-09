@@ -390,6 +390,7 @@ class TestAuth:
             ProfileSchema.from_dict(
                 {
                     "name": "brk_readall",
+                    "id": "brk_readall",
                     "scopes": ["BRK/RSN"],
                     "datasets": {
                         "afvalwegingen": {
