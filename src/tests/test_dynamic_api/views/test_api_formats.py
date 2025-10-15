@@ -134,7 +134,7 @@ class TestFormats:
             "id": "c1",
             "title": "c1",
         }
-        schema = "https://schemas.data.amsterdam.nl/datasets/afvalwegingen/containers/v1"
+        schema = "https://schemas.data.amsterdam.nl/datasets/afvalwegingen/containers/v1.0.0"
 
         page = {
             "_embedded": {

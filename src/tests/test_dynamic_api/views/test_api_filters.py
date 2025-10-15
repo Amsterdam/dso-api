@@ -415,7 +415,9 @@ class TestFilterFieldTypes:
             "movie": [
                 {
                     "_links": {
-                        "schema": ("https://schemas.data.amsterdam.nl/datasets/movies/movie/v0"),
+                        "schema": (
+                            "https://schemas.data.amsterdam.nl/datasets/movies/movie/v0.0.0"
+                        ),
                         "self": {
                             "href": "http://testserver/v1/movies/movie/3",
                             "id": 3,

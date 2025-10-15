@@ -31,7 +31,7 @@ class TestEmbedTemporalTables:
                     "volgnummer": 1,
                 },
                 "onderdeelVanGGWGebieden": [],
-                "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/buurten/v1",
+                "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/buurten/v1.0.0",
                 "self": {
                     "href": "http://testserver/v1/gebieden/buurten/03630000000078?volgnummer=2",
                     "identificatie": "03630000000078",
@@ -52,7 +52,7 @@ class TestEmbedTemporalTables:
                 "ligtInWijk": {
                     "_links": {
                         "schema": (
-                            "https://schemas.data.amsterdam.nl/datasets/gebieden/wijken/v1"
+                            "https://schemas.data.amsterdam.nl/datasets/gebieden/wijken/v1.0.0"
                         ),
                         "self": {
                             "href": (
@@ -93,7 +93,7 @@ class TestEmbedTemporalTables:
                             "_links": {
                                 "schema": (
                                     "https://schemas.data.amsterdam.nl"
-                                    "/datasets/gebieden/stadsdelen/v1"
+                                    "/datasets/gebieden/stadsdelen/v1.0.0"
                                 ),
                                 "self": {
                                     "href": (
@@ -133,7 +133,7 @@ class TestEmbedTemporalTables:
 
         assert data == {
             "_links": {
-                "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/stadsdelen/v1",
+                "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/stadsdelen/v1.0.0",
                 "self": {
                     "href": "http://testserver/v1/gebieden/stadsdelen/03630000000018?volgnummer=1",  # noqa: E501
                     "identificatie": "03630000000018",
@@ -169,7 +169,7 @@ class TestEmbedTemporalTables:
                                 "count": 0,
                                 "href": "http://testserver/v1/gebieden/buurten?ligtInWijkId=03630012052035.1",  # noqa: E501
                             },
-                            "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/wijken/v1",  # noqa: E501
+                            "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/wijken/v1.0.0",  # noqa: E501
                             "self": {
                                 "href": "http://testserver/v1/gebieden/wijken/03630012052035?volgnummer=1",  # noqa: E501
                                 "identificatie": "03630012052035",
@@ -210,7 +210,9 @@ class TestEmbedTemporalTables:
                 "panden": [
                     {
                         "_links": {
-                            "schema": ("https://schemas.data.amsterdam.nl/datasets/bag/panden/v1"),
+                            "schema": (
+                                "https://schemas.data.amsterdam.nl/datasets/bag/panden/v1.0.0"
+                            ),
                             "self": {
                                 "href": (
                                     "http://testserver/v1/bag/panden/0363100012061164"
@@ -250,7 +252,7 @@ class TestEmbedTemporalTables:
                     {
                         "_links": {
                             "schema": (
-                                "https://schemas.data.amsterdam.nl/datasets/gebieden/bouwblokken/v1"
+                                "https://schemas.data.amsterdam.nl/datasets/gebieden/bouwblokken/v1.0.0"
                             ),
                             "self": {
                                 "href": (
@@ -281,7 +283,7 @@ class TestEmbedTemporalTables:
                             "ligtInBuurt": {
                                 "_links": {
                                     "schema": (
-                                        "https://schemas.data.amsterdam.nl/datasets/gebieden/buurten/v1"
+                                        "https://schemas.data.amsterdam.nl/datasets/gebieden/buurten/v1.0.0"
                                     ),
                                     "self": {
                                         "href": (
@@ -315,7 +317,7 @@ class TestEmbedTemporalTables:
                                             "ligtInStadsdeel": {
                                                 "_links": {
                                                     "schema": (
-                                                        "https://schemas.data.amsterdam.nl/datasets/gebieden/stadsdelen/v1"
+                                                        "https://schemas.data.amsterdam.nl/datasets/gebieden/stadsdelen/v1.0.0"
                                                     ),
                                                     "self": {
                                                         "href": (
@@ -342,7 +344,7 @@ class TestEmbedTemporalTables:
                                         },
                                         "_links": {
                                             "schema": (
-                                                "https://schemas.data.amsterdam.nl/datasets/gebieden/wijken/v1"
+                                                "https://schemas.data.amsterdam.nl/datasets/gebieden/wijken/v1.0.0"
                                             ),
                                             "self": {
                                                 "href": (
@@ -419,7 +421,7 @@ class TestEmbedTemporalTables:
                     "volgnummer": 1,
                 },
                 "onderdeelVanGGWGebieden": [],
-                "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/buurten/v1",
+                "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/buurten/v1.0.0",
                 "self": {
                     "href": "http://testserver/v1/gebieden/buurten/03630000000078?volgnummer=2",
                     "identificatie": "03630000000078",
@@ -464,7 +466,7 @@ class TestEmbedTemporalTables:
                     # Main response
                     {
                         "_links": {
-                            "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/buurten/v1",  # noqa: E501
+                            "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/buurten/v1.0.0",  # noqa: E501
                             "self": {
                                 "href": "http://testserver/v1/gebieden/buurten/03630000000078?_format=json&volgnummer=2",  # noqa: E501
                                 "identificatie": "03630000000078",
@@ -493,7 +495,7 @@ class TestEmbedTemporalTables:
                     # Embedded object in next section
                     {
                         "_links": {
-                            "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/wijken/v1",  # noqa: E501
+                            "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/wijken/v1.0.0",  # noqa: E501
                             "self": {
                                 "href": "http://testserver/v1/gebieden/wijken/03630012052035?_format=json&volgnummer=1",  # noqa: E501
                                 "identificatie": "03630012052035",
@@ -522,7 +524,7 @@ class TestEmbedTemporalTables:
                             # Nested embedding (1 level)
                             "ligtInStadsdeel": {
                                 "_links": {
-                                    "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/stadsdelen/v1",  # noqa: E501
+                                    "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/stadsdelen/v1.0.0",  # noqa: E501
                                     "self": {
                                         "href": "http://testserver/v1/gebieden/stadsdelen/03630000000018?_format=json&volgnummer=1",  # noqa: E501
                                         "identificatie": "03630000000018",
@@ -585,7 +587,7 @@ class TestEmbedTemporalTables:
         assert response.status_code == 200, data
 
         assert data["_links"] == {
-            "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/ggwgebieden/v1",
+            "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/ggwgebieden/v1.0.0",
             "self": {
                 "href": "http://testserver/v1/gebieden/ggwgebieden/03630950000000?volgnummer=1",
                 "identificatie": "03630950000000",
@@ -609,7 +611,7 @@ class TestEmbedTemporalTables:
                     # In a detail view, the main object is not found in _embedded.
                     # It should also include the active object only.
                     "_links": {
-                        "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/buurten/v1",  # noqa: E501
+                        "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/buurten/v1.0.0",  # noqa: E501
                         "self": {
                             "href": "http://testserver/v1/gebieden/buurten/03630000000078?volgnummer=2",  # noqa: E501
                             "identificatie": "03630000000078",
@@ -648,7 +650,7 @@ class TestEmbedTemporalTables:
             "ggwgebieden": [
                 {
                     "_links": {
-                        "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/ggwgebieden/v1",  # noqa: E501
+                        "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/ggwgebieden/v1.0.0",  # noqa: E501
                         "self": {
                             "href": "http://testserver/v1/gebieden/ggwgebieden/03630950000000?volgnummer=1",  # noqa: E501
                             "title": "03630950000000.1",
@@ -678,7 +680,7 @@ class TestEmbedTemporalTables:
                 # The embedded object, via an M2M relation
                 {
                     "_links": {
-                        "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/buurten/v1",  # noqa: E501
+                        "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/buurten/v1.0.0",  # noqa: E501
                         "self": {
                             "href": "http://testserver/v1/gebieden/buurten/03630000000078?volgnummer=2",  # noqa: E501
                             "title": "03630000000078.2",
@@ -723,7 +725,7 @@ class TestEmbedTemporalTables:
             "buurten": [
                 {
                     "_links": {
-                        "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/buurten/v1",  # noqa: E501
+                        "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/buurten/v1.0.0",  # noqa: E501
                         "self": {
                             "href": "http://testserver/v1/gebieden/buurten/03630000000078?volgnummer=2",  # noqa: E501
                             "identificatie": "03630000000078",
@@ -753,7 +755,7 @@ class TestEmbedTemporalTables:
             "onderdeelVanGGWGebieden": [
                 {
                     "_links": {
-                        "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/ggwgebieden/v1",  # noqa: E501
+                        "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/ggwgebieden/v1.0.0",  # noqa: E501
                         "self": {
                             "href": "http://testserver/v1/gebieden/ggwgebieden/03630950000000?volgnummer=1",  # noqa: E501
                             "identificatie": "03630950000000",
@@ -793,7 +795,7 @@ class TestEmbedTemporalTables:
         assert response.status_code == 200, data
         assert dict(data["_embedded"]["ggpgebieden"][0]) == {
             "_links": {
-                "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/ggpgebieden/v1",  # noqa: E501
+                "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/ggpgebieden/v1.0.0",  # noqa: E501
                 "self": {
                     "href": "http://testserver/v1/gebieden/ggpgebieden/03630950000000?volgnummer=1",  # noqa: E501
                     "title": "03630950000000.1",
@@ -842,7 +844,7 @@ class TestEmbedTemporalTables:
                     "title": "03630000000078",
                     "identificatie": "03630000000078",
                 },
-                "schema": "https://schemas.data.amsterdam.nl/datasets/meldingen/statistieken/v1",  # noqa: E501
+                "schema": "https://schemas.data.amsterdam.nl/datasets/meldingen/statistieken/v1.0.0",  # noqa: E501
                 "self": {
                     "href": "http://testserver/v1/meldingen/statistieken/1",
                     "title": "1",
@@ -866,7 +868,7 @@ class TestEmbedTemporalTables:
         assert response.status_code == 200, data
         assert data == {
             "_links": {
-                "schema": "https://schemas.data.amsterdam.nl/datasets/meldingen/statistieken/v1",  # noqa: E501
+                "schema": "https://schemas.data.amsterdam.nl/datasets/meldingen/statistieken/v1.0.0",  # noqa: E501
                 "self": {
                     "href": "http://testserver/v1/meldingen/statistieken/1",
                     "title": "1",
@@ -883,7 +885,7 @@ class TestEmbedTemporalTables:
             "_embedded": {
                 "buurt": {
                     "_links": {
-                        "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/buurten/v1",  # noqa: E501
+                        "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/buurten/v1.0.0",  # noqa: E501
                         "self": {
                             "href": "http://testserver/v1/gebieden/buurten/03630000000078?volgnummer=2",  # noqa: E501
                             "title": "03630000000078.2",
