@@ -44,9 +44,9 @@ azure-core-tracing-opentelemetry==1.0.0b12 \
     --hash=sha256:38fd42709f1cc4bbc4f2797008b1c30a6a01617e49910c05daa3a0d0c65053ac \
     --hash=sha256:bb454142440bae11fd9d68c7c1d67ae38a1756ce808c5e4d736730a7b4b04144
     # via azure-monitor-opentelemetry
-azure-identity==1.25.0 \
-    --hash=sha256:4177df34d684cddc026e6cf684e1abb57767aa9d84e7f2129b080ec45eee7733 \
-    --hash=sha256:becaec086bbdf8d1a6aa4fb080c2772a0f824a97d50c29637ec8cc4933f1e82d
+azure-identity==1.25.1 \
+    --hash=sha256:87ca8328883de6036443e1c37b40e8dc8fb74898240f61071e09d2e369361456 \
+    --hash=sha256:e9edd720af03dff020223cd269fa3a61e8f345ea75443858273bcb44844ab651
     # via
     #   -r requirements.in
     #   azure-monitor-opentelemetry-exporter
@@ -66,9 +66,9 @@ build==1.2.2.post1 \
     --hash=sha256:1d61c0887fa860c01971625baae8bdd338e517b836a2f70dd1f7aa3a6b2fc5b5 \
     --hash=sha256:b36993e92ca9375a219c99e606a122ff365a760a2d4bba0caa09bd5278b608b7
     # via datadiensten-apikeyclient
-cachetools==6.2.0 \
-    --hash=sha256:1c76a8960c0041fcc21097e357f882197c79da0dbff766e7317890a65d7d8ba6 \
-    --hash=sha256:38b328c0889450f05f5e120f56ab68c8abaf424e1275522b138ffc93253f7e32
+cachetools==6.2.1 \
+    --hash=sha256:09868944b6dde876dfd44e1d47e18484541eaf12f26f29b7af91b26cc892d701 \
+    --hash=sha256:3f391e4bd8f8bf0931169baf7456cc822705f4e2a31f840d218f445b9a854201
     # via -r requirements.in
 certifi==2025.6.15 \
     --hash=sha256:2e0c7ce7cb5d8f8634ca55d2ba7e6ec2689a2fd6537d8dec1296a477a4910057 \
@@ -439,9 +439,9 @@ django==4.2.25 \
     #   djangorestframework
     #   djangorestframework-gis
     #   drf-spectacular
-django-cors-headers==4.8.0 \
-    --hash=sha256:0a12a2efcd59a3cea741e44db8ab589e929949de5bc4cdf35a29c6ae77297686 \
-    --hash=sha256:3b883f4c6d07848673218456a5e070d8ab51f97341c1f27d0242ca167e7272ab
+django-cors-headers==4.9.0 \
+    --hash=sha256:15c7f20727f90044dcee2216a9fd7303741a864865f0c3657e28b7056f61b449 \
+    --hash=sha256:fe5d7cb59fdc2c8c646ce84b727ac2bca8912a247e6e68e1fb507372178e59e8
     # via -r requirements.in
 django-environ==0.12.0 \
     --hash=sha256:227dc891453dd5bde769c3449cf4a74b6f2ee8f7ab2361c93a07068f4179041a \
@@ -453,9 +453,9 @@ django-filter==25.1 \
     --hash=sha256:1ec9eef48fa8da1c0ac9b411744b16c3f4c31176c867886e4c48da369c407153 \
     --hash=sha256:4fa48677cf5857b9b1347fed23e355ea792464e0fe07244d1fdfb8a806215b80
     # via djangorestframework-gis
-django-gisserver==2.2.0 \
-    --hash=sha256:a6a5696f28c363b1f9933c76952e827464d9250d8ff5762a29e581bd1092ca0a \
-    --hash=sha256:f3a0bf823e3ebf34479a5819ed38e6dd52eb6e2646d546445bccec117f7b4809
+django-gisserver==2.2.1 \
+    --hash=sha256:83bda613ea26a401a9ab9fb306e58bb631e9d61fe5a31521e1c15866e928c505 \
+    --hash=sha256:eab4cd641cc3ea27b779650d5837397c0ca3f5e1e46844428769af794123b3b7
     # via
     #   -r requirements.in
     #   amsterdam-schema-tools
@@ -1608,9 +1608,9 @@ rpds-py==0.25.1 \
     # via
     #   jsonschema
     #   referencing
-sentry-sdk==2.38.0 \
-    --hash=sha256:2324aea8573a3fa1576df7fb4d65c4eb8d9929c8fa5939647397a07179eef8d0 \
-    --hash=sha256:792d2af45e167e2f8a3347143f525b9b6bac6f058fb2014720b40b84ccbeb985
+sentry-sdk==2.42.0 \
+    --hash=sha256:1a7986e638306ff158f52dd47d9480a4055e6c289388caa90628acb2563fe7bd \
+    --hash=sha256:91c69c9372fb5fb4df0ac39456ccf7286f0428b3ee1cdd389f9dd36c04e0f5c9
     # via -r requirements.in
 shapely==2.1.1 \
     --hash=sha256:04e4c12a45a1d70aeb266618d8cf81a2de9c4df511b63e105b90bfdfb52146de \
@@ -1782,9 +1782,9 @@ webcolors==24.11.1 \
     --hash=sha256:515291393b4cdf0eb19c155749a096f779f7d909f7cceea072791cb9095b92e9 \
     --hash=sha256:ecb3d768f32202af770477b8b65f318fa4f566c22948673a977b00d589dd80f6
     # via jsonschema
-whitenoise==6.10.0 \
-    --hash=sha256:7b7e53de65d749cb1ce4a7100e751d9742e323b52746f9f93944c0d348ea2d02 \
-    --hash=sha256:bad74a40b33b055ba59731b6048dd08d5647f273b72bef922aa43ddd287b02da
+whitenoise==6.11.0 \
+    --hash=sha256:0f5bfce6061ae6611cd9396a8231e088722e4fc67bc13a111be74c738d99375f \
+    --hash=sha256:b2aeb45950597236f53b5342b3121c5de69c8da0109362aee506ce88e022d258
     # via -r requirements.in
 wrapt==1.17.2 \
     --hash=sha256:08e7ce672e35efa54c5024936e559469436f8b8096253404faeb54d2a878416f \
