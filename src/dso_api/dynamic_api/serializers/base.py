@@ -488,8 +488,7 @@ class DynamicLinksSerializer(FieldAccessMixin, DSOModelSerializerBase):
         dataset_path = "/".join(
             [to_snake_case(part) for part in instance.get_dataset_path().split("/")]
         )
-        version = str(instance._table_schema.version).split(".")[0]
-        return f"https://schemas.data.amsterdam.nl/datasets/{dataset_path}/{table}/v{version}"
+        return f"https://schemas.data.amsterdam.nl/datasets/{dataset_path}/{table}/{instance._table_schema.version.vmajor}"
 
     def to_representation(self, instance):
         """Copy of `to_representation` of superclass with extra auth checks.
