@@ -119,7 +119,7 @@ class TestMandatoryFilterSet:
         assert parkeervak_data == {
             "_links": {
                 "schema": (
-                    "https://schemas.data.amsterdam.nl/datasets/parkeervakken/parkeervakken/v1.0.0"
+                    "https://schemas.data.amsterdam.nl/datasets/parkeervakken/parkeervakken/v1"
                 ),
                 "self": {"href": "http://testserver/v1/parkeervakken/parkeervakken/1", "id": "1"},
             },
