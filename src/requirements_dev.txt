@@ -447,7 +447,7 @@ python-dateutil==2.9.0.post0
     # via
     #   amsterdam-schema-tools
     #   arrow
-python-json-logger==3.3.0
+python-json-logger==4.0.0
     # via -r ./requirements.in
 python-owasp-zap-v2-4==0.1.0
     # via -r ./requirements.in
