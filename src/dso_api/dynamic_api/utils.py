@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Iterable
+from datetime import datetime
 from functools import lru_cache
 
 from django.db import models
@@ -15,7 +16,7 @@ from schematools.naming import to_snake_case
 from schematools.permissions import UserScopes
 from schematools.types import DatasetFieldSchema
 
-from dso_api.dynamic_api.constants import DEFAULT
+from dso_api.dynamic_api.constants import DEFAULT, STATUS
 from rest_framework_dso.fields import GeoJSONIdentifierField
 
 # We rely on the greedyness of the first pattern `.*`
@@ -204,3 +205,10 @@ def limit_queryset_for_scopes(
     if len(fields_list) - 1 > len(available_field_names):
         queryset = queryset.only(*available_field_names)
     return queryset
+
+
+def get_status_description(status: str, end_support_date: datetime.date | None = None) -> str:
+    status_description = STATUS.get(status)
+    if status == "superseded":
+        status_description += f": einde support {end_support_date.strftime('%d-%m-%Y')}"
+    return status_description

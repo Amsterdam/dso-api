@@ -38,14 +38,14 @@
   "defaultVersion": "v1",
   "versions": {
     "v1": {
-      "status": "beschikbaar",
-      "lifecycleStatus": "stable",
+      "enableAPI": true,
+      "status": "stable",
       "version": "2.1.0",
       "tables": [
         {
           "id": "cluster",
           "version": "2.0.0",
-          "lifecycleStatus": "stable",
+          "status": "stable",
           "type": "table",
           "provenance": "afval_api_cluster",
           "schema": {

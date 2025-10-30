@@ -37,7 +37,7 @@ from django.urls import NoReverseMatch, URLPattern, path, reverse
 from django.views.generic import RedirectView
 from rest_framework.routers import DefaultRouter, Route
 from schematools.contrib.django.factories import remove_dynamic_models
-from schematools.contrib.django.models import Dataset, DatasetSchema
+from schematools.contrib.django.models import Dataset
 from schematools.naming import to_snake_case
 
 from .constants import DEFAULT
@@ -81,7 +81,13 @@ class DynamicAPIIndexView(APIIndexView):
         return datasets
 
     def _build_version_endpoints(
-        self, base: str, dataset_id: str, version: str, header: str | None = None, suffix: str = ""
+        self,
+        base: str,
+        dataset_id: str,
+        version: str,
+        status: str,
+        header: str | None = None,
+        suffix: str = "",
     ):
         kwargs = {"dataset_name": dataset_id, "dataset_version": version}
         mvt_url = reverse(f"dynamic_api:mvt{suffix}", kwargs=kwargs)
@@ -90,6 +96,7 @@ class DynamicAPIIndexView(APIIndexView):
         docs_url = reverse(f"dynamic_api:docs-dataset{suffix}", kwargs=kwargs)
         return {
             "header": header or f"Versie {version}",
+            "status": status,
             "api_url": base + api_url,
             "doc_url": base + docs_url,
             "mvt_url": base + mvt_url,
@@ -141,7 +148,7 @@ class DynamicRouter(DefaultRouter):
 
         try:
             self._initialize_viewsets()
-        except Exception:  # noqa: B902
+        except Exception:
             # Cleanup a half-initialized state that would mess up the application.
             # This happens in runserver's autoreload mode. The BaseReloader.run() code
             # silences all URLConf exceptions in a `try: import urlconf; catch Exception: pass`.
@@ -405,8 +412,8 @@ class DynamicRouter(DefaultRouter):
             )
             for version, vschema in dataset.schema.versions.items():
 
-                # Skip niet_beschikbare versions
-                if vschema.status == DatasetSchema.Status.niet_beschikbaar:
+                # Skip versions with API disabled
+                if not vschema.enable_api:
                     continue
 
                 results.append(

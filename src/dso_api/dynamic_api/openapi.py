@@ -34,6 +34,7 @@ from rest_framework_dso.openapi import DSOSchemaGenerator
 from rest_framework_dso.renderers import BrowsableAPIRenderer, HALJSONRenderer
 
 from .datasets import get_active_datasets
+from .utils import get_status_description
 
 logger = logging.getLogger(__name__)
 
@@ -183,21 +184,44 @@ def get_openapi_view(dataset, version: str | None = None, response_format: str =
 
     # Specific data to override in the OpenAPI
     docfile = f"{dataset.path}@{version}" if version else dataset.path
+    default_version = dataset_schema.get_version(dataset_schema.default_version)
     versions = {
-        f"standaard ({dataset.default_version})": urljoin(
-            settings.DATAPUNT_API_URL,  # to preserve hostname
-            f"/v1/{dataset.path}",
-        )
+        "default": {
+            "url": urljoin(
+                settings.DATAPUNT_API_URL, f"/v1/{dataset.path}"  # to preserve hostname
+            ),
+            "status": default_version.status.name,
+            "endSupportDate": (
+                default_version.end_support_date.strftime("%d-%m-%Y")
+                if default_version.end_support_date
+                else None
+            ),
+            "status_description": get_status_description(
+                status=default_version.status.name,
+                end_support_date=default_version.end_support_date,
+            ),
+            "default": default_version.is_default,
+        }
     }
     for vmajor, vschema in dataset_schema.versions.items():
 
-        # Skip niet_beschikbare versions
-        if vschema.status == DatasetSchema.Status.niet_beschikbaar:
+        # Skip versions with API disabled
+        if not vschema.enable_api:
             continue
-        versions[f"versie {vmajor}"] = urljoin(
-            settings.DATAPUNT_API_URL,  # to preserve hostname
-            f"/v1/{dataset.path}/{vmajor}",
-        )
+        versions[f"{vmajor}"] = {
+            "url": urljoin(
+                settings.DATAPUNT_API_URL, f"/v1/{dataset.path}/{vmajor}"  # to preserve hostname
+            ),
+            "status": vschema.status.name,
+            "endSupportDate": (
+                vschema.end_support_date.strftime("%d-%m-%Y") if vschema.end_support_date else None
+            ),
+            "statusDescription": get_status_description(
+                status=vschema.status.name,
+                end_support_date=vschema.end_support_date,
+            ),
+            "default": vschema.is_default,
+        }
 
     openapi_overrides = {
         "info": {

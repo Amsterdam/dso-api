@@ -18,10 +18,14 @@ const FORMATTER = (rawJson) => {
         <p class='dataset-api-authentication'><b>Autorisatie</b>: ${dataset.api_authentication}</p>`
         const linksForAllVersions = dataset.versions.reduce(
             (result, version) => {
-                const { header, ...urls } = version
+                const { header, status, ...urls } = version
+                if(header.includes("Ongeversioneerde")) {
+                    return result
+                }
                 return (
                     result +
                     `<h4 class='dataset-version'>${header}</h4>` +
+                    `<span class='status'>${status}</span>` +
                     createLinksForVersion(urls)
                 )
             },

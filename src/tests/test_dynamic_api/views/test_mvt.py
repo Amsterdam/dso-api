@@ -33,7 +33,6 @@ class TestDatasetMVTIndexView:
                     "id": "afvalwegingen",
                     "short_name": "afvalwegingen",
                     "service_name": "Afvalwegingen",
-                    "status": "beschikbaar",
                     "description": "unit testing version of afvalwegingen",
                     "tags": [],
                     "terms_of_use": {
@@ -43,18 +42,20 @@ class TestDatasetMVTIndexView:
                     },
                     "versions": [
                         {
-                            "api_url": f"{BASE}/v1/afvalwegingen",
-                            "doc_url": f"{BASE}/v1/docs/generic/gis.html",
-                            "header": "Standaardversie (v1)",
-                            "mvt_url": f"{BASE}/v1/mvt/afvalwegingen",
-                            "wfs_url": f"{BASE}/v1/wfs/afvalwegingen",
-                        },
-                        {
                             "api_url": f"{BASE}/v1/afvalwegingen/v1",
                             "doc_url": f"{BASE}/v1/docs/generic/gis.html",
-                            "header": "Versie v1",
+                            "header": "Aanbevolen versie (v1)",
+                            "status": "stabiel",
                             "mvt_url": f"{BASE}/v1/mvt/afvalwegingen/v1",
                             "wfs_url": f"{BASE}/v1/wfs/afvalwegingen/v1",
+                        },
+                        {
+                            "api_url": f"{BASE}/v1/afvalwegingen",
+                            "doc_url": f"{BASE}/v1/docs/generic/gis.html",
+                            "header": "Ongeversioneerde versie (v1)",
+                            "status": "stabiel",
+                            "mvt_url": f"{BASE}/v1/mvt/afvalwegingen",
+                            "wfs_url": f"{BASE}/v1/wfs/afvalwegingen",
                         },
                     ],
                     "api_authentication": ["OPENBAAR"],
@@ -70,7 +71,6 @@ class TestDatasetMVTIndexView:
                     "id": "fietspaaltjes",
                     "short_name": "fietspaaltjes",
                     "service_name": "fietspaaltjes",
-                    "status": "beschikbaar",
                     "description": "",
                     "tags": [],
                     "terms_of_use": {
@@ -80,18 +80,20 @@ class TestDatasetMVTIndexView:
                     },
                     "versions": [
                         {
-                            "api_url": f"{BASE}/v1/fietspaaltjes",
-                            "doc_url": f"{BASE}/v1/docs/generic/gis.html",
-                            "header": "Standaardversie (v1)",
-                            "mvt_url": f"{BASE}/v1/mvt/fietspaaltjes",
-                            "wfs_url": f"{BASE}/v1/wfs/fietspaaltjes",
-                        },
-                        {
                             "api_url": f"{BASE}/v1/fietspaaltjes/v1",
                             "doc_url": f"{BASE}/v1/docs/generic/gis.html",
-                            "header": "Versie v1",
+                            "header": "Aanbevolen versie (v1)",
+                            "status": "stabiel",
                             "mvt_url": f"{BASE}/v1/mvt/fietspaaltjes/v1",
                             "wfs_url": f"{BASE}/v1/wfs/fietspaaltjes/v1",
+                        },
+                        {
+                            "api_url": f"{BASE}/v1/fietspaaltjes",
+                            "doc_url": f"{BASE}/v1/docs/generic/gis.html",
+                            "header": "Ongeversioneerde versie (v1)",
+                            "status": "stabiel",
+                            "mvt_url": f"{BASE}/v1/mvt/fietspaaltjes",
+                            "wfs_url": f"{BASE}/v1/wfs/fietspaaltjes",
                         },
                     ],
                     "api_authentication": ["OPENBAAR"],

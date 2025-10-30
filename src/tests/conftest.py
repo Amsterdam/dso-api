@@ -931,31 +931,29 @@ def fietspaaltjes_data_no_display(fietspaaltjes_model_no_display):
 
 # start niet beschikbaar
 @pytest.fixture()
-def fietspaaltjes_schema_niet_beschikbaar(schema_loader) -> DatasetSchema:
-    return schema_loader.get_dataset_from_file("fietspaaltjes_niet_beschikbaar.json")
+def fietspaaltjes_schema_disable_api(schema_loader) -> DatasetSchema:
+    return schema_loader.get_dataset_from_file("fietspaaltjes_disable_api.json")
 
 
 @pytest.fixture()
-def fietspaaltjes_model_niet_beschikbaar(fietspaaltjes_dataset_niet_beschikbaar, dynamic_models):
-    return dynamic_models["fietspaaltjesnietbeschikbaar"]["fietspaaltjesnietbeschikbaar"]
+def fietspaaltjes_model_disable_api(fietspaaltjes_dataset_disable_api, dynamic_models):
+    return dynamic_models["fietspaaltjesdisableapi"]["fietspaaltjesdisableapi"]
 
 
 @pytest.fixture()
-def fietspaaltjes_dataset_niet_beschikbaar(fietspaaltjes_schema_niet_beschikbaar) -> Dataset:
-    return Dataset.create_for_schema(fietspaaltjes_schema_niet_beschikbaar)
+def fietspaaltjes_dataset_disable_api(fietspaaltjes_schema_disable_api) -> Dataset:
+    return Dataset.create_for_schema(fietspaaltjes_schema_disable_api)
 
 
 @pytest.fixture()
 def fietspaaltjes_dataset_subpath_niet_beschikbaar(
-    fietspaaltjes_schema_niet_beschikbaar,
+    fietspaaltjes_schema_disable_api,
 ) -> Dataset:
-    return Dataset.create_for_schema(
-        fietspaaltjes_schema_niet_beschikbaar, path="sub/fietspaaltjes"
-    )
+    return Dataset.create_for_schema(fietspaaltjes_schema_disable_api, path="sub/fietspaaltjes")
 
 
 @pytest.fixture()
-def fietspaaltjes_data_niet_beschikbaar(fietspaaltjes_model_niet_beschikbaar):
+def fietspaaltjes_data_disable_api(fietspaaltjes_model_disable_api):
     return fietspaaltjes_model.objects.create(
         id="Fietsplaatje record met display",
         geometry="POINT (123207.6558130105 486624.6399002579)",
