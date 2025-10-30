@@ -9,8 +9,8 @@
   "defaultVersion": "v1",
   "versions": {
     "v1": {
-      "status": "beschikbaar",
-      "lifecycleStatus": "stable",
+      "enableAPI": true,
+      "status": "stable",
       "version": "0.0.1",
       "tables": [
         {
@@ -122,13 +122,13 @@
               }
             }
           },
-          "lifecycleStatus": "stable"
+          "status": "stable"
         }
       ]
     },
     "v2": {
-      "status": "niet_beschikbaar",
-      "lifecycleStatus": "stable",
+      "enableAPI": false,
+      "status": "stable",
       "version": "2.0.1",
       "tables": [
         {
@@ -240,7 +240,7 @@
               }
             }
           },
-          "lifecycleStatus": "stable"
+          "status": "stable"
         }
       ]
     }

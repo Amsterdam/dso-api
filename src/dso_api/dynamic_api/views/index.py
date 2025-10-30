@@ -6,10 +6,11 @@ from collections.abc import Iterable
 from django.urls import NoReverseMatch
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from schematools.contrib.django.models import Dataset, DatasetSchema
+from schematools.contrib.django.models import Dataset
 
 from dso_api.dynamic_api.constants import DEFAULT
 from dso_api.dynamic_api.datasets import get_active_datasets
+from dso_api.dynamic_api.utils import get_status_description
 from rest_framework_dso.renderers import BrowsableAPIRenderer, HALJSONRenderer
 
 logger = logging.getLogger(__name__)
@@ -37,7 +38,13 @@ class APIIndexView(APIView):
         return get_active_datasets().order_by("name")
 
     def _build_version_endpoints(
-        self, base: str, dataset_id: str, version: str, header: str | None = None, suffix: str = ""
+        self,
+        base: str,
+        dataset_id: str,
+        version: str,
+        status: str,
+        header: str | None = None,
+        suffix: str = "",
     ):
         raise NotImplementedError()
 
@@ -46,16 +53,46 @@ class APIIndexView(APIView):
             return []
         try:
             dataset_id = ds.schema.id
+            default_version_status = get_status_description(
+                status=ds.schema.get_version(ds.default_version).status.name,
+                end_support_date=ds.schema.get_version(ds.default_version).end_support_date,
+            )
 
-            return [
-                self._build_version_endpoints(
-                    base, dataset_id, DEFAULT, f"Standaardversie ({ds.default_version})"
-                )
-            ] + [
-                self._build_version_endpoints(base, dataset_id, vmajor, suffix="-version")
-                for vmajor, vschema in ds.schema.versions.items()
-                if vschema.status != DatasetSchema.Status.niet_beschikbaar
-            ]
+            return (
+                [
+                    self._build_version_endpoints(
+                        base,
+                        dataset_id,
+                        str(ds.default_version),
+                        default_version_status,
+                        f"Aanbevolen versie ({ds.default_version})",
+                        suffix="-version",
+                    )
+                ]
+                + [
+                    self._build_version_endpoints(
+                        base,
+                        dataset_id,
+                        vmajor,
+                        get_status_description(
+                            status=vschema.status.name,
+                            end_support_date=vschema.end_support_date,
+                        ),
+                        suffix="-version",
+                    )
+                    for vmajor, vschema in ds.schema.versions.items()
+                    if vschema.enable_api and vmajor != ds.default_version
+                ]
+                + [
+                    self._build_version_endpoints(
+                        base,
+                        dataset_id,
+                        DEFAULT,
+                        default_version_status,
+                        f"Ongeversioneerde versie ({ds.default_version})",
+                    )
+                ]
+            )
         except NoReverseMatch as e:
             logger.warning("dataset %s: %s", dataset_id, e)
             return []
@@ -85,7 +122,6 @@ class APIIndexView(APIView):
                 "id": ds.schema.id,
                 "short_name": ds.name,
                 "service_name": ds.schema.title or ds.name,
-                "status": ds.schema["status"],
                 "description": ds.schema.description or "",
                 "tags": ds.schema.get("theme", []),
                 "terms_of_use": {

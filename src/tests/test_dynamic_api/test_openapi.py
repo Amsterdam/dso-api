@@ -283,7 +283,7 @@ def test_openapi_json_v1(api_client, afval_dataset, fietspaaltjes_dataset, fille
 
 @pytest.mark.django_db
 def test_openapi_json_v_niet_beschikbaar(
-    api_client, afval_dataset, fietspaaltjes_dataset_niet_beschikbaar, filled_router, caplog
+    api_client, afval_dataset, fietspaaltjes_dataset_disable_api, filled_router, caplog
 ):
     """Prove that endpoint for a niet_beschikbare version is not created"""
     caplog.set_level(logging.WARNING)

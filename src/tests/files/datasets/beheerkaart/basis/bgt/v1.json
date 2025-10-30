@@ -29,5 +29,5 @@
     },
     "mainGeometry": "geometrie"
   },
-  "lifecycleStatus": "stable"
+  "status": "stable"
 }

@@ -282,3 +282,22 @@ input:invalid {
 blockquote {
     border-color: #ec0101;
 }
+
+.dataset-version {
+    margin-bottom: 0;
+}
+
+.status {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.dataset-version-alert {
+    background-color: #fff;
+    border: 4px solid #ff9100;
+    margin-bottom: 20px;
+    padding: 10px;
+    word-break: normal;
+}

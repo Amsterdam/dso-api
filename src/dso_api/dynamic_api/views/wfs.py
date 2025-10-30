@@ -120,7 +120,13 @@ class DatasetWFSIndexView(APIIndexView):
         ]
 
     def _build_version_endpoints(
-        self, base: str, dataset_id: str, version: str, header: str | None = None, suffix: str = ""
+        self,
+        base: str,
+        dataset_id: str,
+        version: str,
+        status: str,
+        header: str | None = None,
+        suffix: str = "",
     ):
         kwargs = {"dataset_name": dataset_id, "dataset_version": version}
         mvt_url = reverse(f"dynamic_api:mvt{suffix}", kwargs=kwargs)
@@ -128,6 +134,7 @@ class DatasetWFSIndexView(APIIndexView):
         api_url = reverse(f"dynamic_api:openapi{suffix}", kwargs=kwargs)
         return {
             "header": header or f"Versie {version}",
+            "status": status,
             "wfs_url": base + wfs_url,
             "doc_url": base + wfs_url,
             "api_url": base + api_url,

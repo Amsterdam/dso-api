@@ -7,8 +7,8 @@
   "defaultVersion": "v1",
   "versions": {
     "v1": {
-      "status": "beschikbaar",
-      "lifecycleStatus": "stable",
+      "enableAPI": true,
+      "status": "stable",
       "version": "0.0.1",
       "tables": [
         {
@@ -48,7 +48,7 @@
               }
             }
           },
-          "lifecycleStatus": "stable"
+          "status": "stable"
         },
         {
           "id": "ligplaatsen",
@@ -85,7 +85,7 @@
               }
             }
           },
-          "lifecycleStatus": "stable"
+          "status": "stable"
         }
       ]
     }
