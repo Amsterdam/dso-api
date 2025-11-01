@@ -577,7 +577,18 @@ class DSOSerializer(ExpandableSerializer, serializers.Serializer):
                 if request.response_content_crs is None:
                     request.response_content_crs = self._get_crs(instance)
 
-        return super().to_representation(instance)
+        representation = super().to_representation(instance)
+
+        if rls := self.table_schema.rls:
+            user_scope = self.context["request"].user_scopes
+            source_value = representation[rls.source]
+            # get the required scope. In case the source_value is empty, we default to table auth.
+            required_scope = rls.auth_map[source_value] or self.table_schema.auth
+            if not user_scope.has_any_scope(required_scope):
+                for field in rls.targets:
+                    representation[field] = None
+
+        return representation
 
     def _apply_crs(self, instance, accept_crs: CRS):
         """Make sure all geofields use the same CRS."""
