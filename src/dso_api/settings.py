@@ -151,7 +151,9 @@ if _USE_SECRET_STORE or CLOUD_ENV.startswith("azure"):
             "PASSWORD": pgpassword,
             "HOST": env.str("PGHOST"),
             "PORT": env.str("PGPORT"),
-            "DISABLE_SERVER_SIDE_CURSORS": True,
+            # Turned off to prevent memory issues when exporting large datasets.
+            # When disabled the iterator did not use chunks to fetch the data.
+            "DISABLE_SERVER_SIDE_CURSORS": env.bool("DISABLE_SERVER_SIDE_CURSORS", False),
             "OPTIONS": {
                 "sslmode": env.str("PGSSLMODE", default="require"),
             },
@@ -173,7 +175,9 @@ if _USE_SECRET_STORE or CLOUD_ENV.startswith("azure"):
                         "PASSWORD": pgpassword,
                         "HOST": env.str(f"PGHOST_REPLICA_{replica_count}"),
                         "PORT": env.str("PGPORT"),
-                        "DISABLE_SERVER_SIDE_CURSORS": True,
+                        "DISABLE_SERVER_SIDE_CURSORS": env.bool(
+                            "DISABLE_SERVER_SIDE_CURSORS", False
+                        ),
                         "OPTIONS": {
                             "sslmode": env.str("PGSSLMODE", default="require"),
                         },
@@ -202,7 +206,11 @@ else:
         ),
     }
     DATABASES["default"].setdefault("OPTIONS", {})
-    DATABASES["default"].setdefault("DISABLE_SERVER_SIDE_CURSORS", True)
+    # Turned off to prevent memory issues when exporting large datasets.
+    # When disabled the iterator did not use chunks to fetch the data.
+    DATABASES["default"].setdefault(
+        "DISABLE_SERVER_SIDE_CURSORS", env.bool("DISABLE_SERVER_SIDE_CURSORS", False)
+    )
     DATABASE_SET_ROLE = env.bool("DATABASE_SET_ROLE", False)
 
 DATABASES["default"]["OPTIONS"]["application_name"] = "DSO-API"
