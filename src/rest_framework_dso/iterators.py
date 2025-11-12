@@ -16,7 +16,6 @@ This includes:
 
 from __future__ import annotations
 
-import itertools
 import logging
 from collections import defaultdict
 from collections.abc import Callable, Iterable, Iterator
@@ -335,4 +334,16 @@ def peek_iterable(generator):
     except StopIteration:
         return None, iterable
 
-    return item, itertools.chain([item], iterable)
+    return item, chain([item], iterable)
+
+
+def chain(*iterables):
+    """
+    Re-implement chain from itertools to return a generator instead of an iterable. This fixes
+    an issue down the line in `rest_framework_dso.serializers` where the return value of data
+    is evaluated to be a generator to return a generator for a streaming response.
+    """
+    ret = None
+    for it in iterables:
+        ret = yield from it
+    return ret
