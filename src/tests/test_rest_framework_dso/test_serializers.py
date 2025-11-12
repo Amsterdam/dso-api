@@ -5,7 +5,8 @@ from rest_framework.request import Request
 
 from rest_framework_dso.crs import CRS84, RD_NEW
 from rest_framework_dso.pagination import DSOPageNumberPagination
-from rest_framework_dso.renderers import HALJSONRenderer
+from rest_framework_dso.renderers import CSVRenderer, HALJSONRenderer
+from rest_framework_dso.serializer_helpers import ReturnGenerator
 from tests.utils import normalize_data, read_response_json
 
 from .models import Movie
@@ -321,3 +322,19 @@ def test_location_transform_input(drf_request, location):
 
     # Serializer assigned 'response_content_crs' (used accept_crs)
     assert drf_request.response_content_crs == CRS84
+
+
+@pytest.mark.django_db
+def test_serializer_csv_is_streaming(drf_request, movie):
+    """Prove that the serializer returns streaming data for csv output"""
+
+    drf_request.accepted_renderer = CSVRenderer()
+
+    serializer = MovieSerializer(
+        Movie.objects.all(),
+        many=True,
+        fields_to_expand=["actors", "category"],
+        context={"request": drf_request},
+    )
+
+    assert isinstance(serializer.data, ReturnGenerator)
