@@ -1,6 +1,10 @@
+from importlib.metadata import version
+
 from django.http import HttpRequest
+from packaging.version import parse
 from schematools.contrib.django.models import Profile
 from schematools.permissions import UserScopes
+from schematools.permissions.auth import RLA_SCOPE
 
 from dso_api.dbroles import DatabaseRoles
 
@@ -14,6 +18,10 @@ class AuthMiddleware:
         self._get_response = get_response
         # Load the profiles once on startup of the application (just like datasets are read once).
         self._all_profiles = [p.schema for p in Profile.objects.all()]
+        # Row level auth requires schema-tools>=8.7.0
+        RLA_NEEDED_VERSION = parse("8.7.1")
+        has_rla_feature = parse(version("amsterdam-schema-tools")) >= RLA_NEEDED_VERSION
+        self.feature_scopes = [RLA_SCOPE] if has_rla_feature else []
 
     def __call__(self, request: HttpRequest):
         # OPTIONS requests have no get_token_scopes, but don't need a UserScopes either.
@@ -23,6 +31,7 @@ class AuthMiddleware:
             # checks and to enable more precise logging.
             # get_token_scopes is a data attribute, not a method.
             scopes = request.get_token_scopes or []
+            scopes.extend(self.feature_scopes)
             request.user_scopes = UserScopes(request.GET, scopes, self._all_profiles)
 
         # The token subject contains the username/email address of the user (on Azure)
