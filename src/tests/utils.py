@@ -47,6 +47,20 @@ def patch_table_auth(schema: DatasetSchema, table_id, *, auth: list[str]):
     model.table_schema()["auth"] = auth
 
 
+def patch_table_row_level_auth(schema: DatasetSchema, table_id, *, rla: dict):
+    schema.get_table_by_id(table_id)
+    raw_table, vmajor = next(
+        (t, vmajor)
+        for vmajor, version in schema["versions"].items()
+        for t in version["tables"]
+        if t["id"] == table_id
+    )
+    raw_table["rowLevelAuth"] = rla
+
+    model = apps.get_model(f"{schema.id}_{vmajor}", table_id)
+    model.table_schema()["rowLevelAuth"] = rla
+
+
 def patch_field_auth(
     schema: DatasetSchema,
     table_id,
