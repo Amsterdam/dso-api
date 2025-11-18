@@ -335,6 +335,27 @@ class DynamicSerializer(FieldAccessMixin, DSOModelSerializer):
 
     table_schema: DatasetTableSchema = None
 
+    def to_representation(self, instance):
+        """Before sending things on to the client, we want to perform row level authorisation
+        checks to sets fields to None if the user does not have the required extra authorization.
+        """
+        representation = super().to_representation(instance)
+
+        if rla := self.table_schema.rla:
+            user_scope = self.context["request"].user_scopes
+            source_value = representation[rla.source]
+            # get the required scope. In case the source_value is empty, we default to table auth.
+            required_scope = (
+                frozenset(scope.id for scope in rla.auth_map[source_value])
+                or self.table_schema.auth
+            )
+
+            if not user_scope.has_any_scope(required_scope):
+                for field in rla.targets:
+                    representation[field] = None
+
+        return representation
+
     @cached_property
     def expanded_fields(self) -> list[EmbeddedFieldMatch]:
         """Filter unauthorized fields from the matched expands."""
