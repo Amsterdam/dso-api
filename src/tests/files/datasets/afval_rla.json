@@ -1,0 +1,158 @@
+{
+  "id": "afvalwegingen_rla",
+  "type": "dataset",
+  "title": "Afvalwegingen",
+  "description": "unit testing version of afvalwegingen",
+  "publisher": "Nobody",
+  "license": "CC0 1.0",
+  "crs": "EPSG:28992",
+  "defaultVersion": "v1",
+  "versions": {
+    "v1": {
+      "status": "beschikbaar",
+      "lifecycleStatus": "stable",
+      "version": "0.0.1",
+      "tables": [
+        {
+          "id": "containers",
+          "type": "table",
+          "version": "1.0.0",
+          "schema": {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "schema"
+            ],
+            "display": "id",
+            "properties": {
+              "id": {
+                "type": "integer",
+                "description": "Container-ID"
+              },
+              "schema": {
+                "$ref": "https://schemas.data.amsterdam.nl/schema@v3.1.0#/definitions/schema"
+              },
+              "cluster": {
+                "type": "string",
+                "relation": "afvalwegingen_rla:clusters",
+                "description": "Cluster-ID"
+              },
+              "serienummer": {
+                "type": "string",
+                "description": "Serienummer van container"
+              },
+              "hideConfidentialInfo": {
+                "type": "boolean",
+                "description": "Gebruikt voor testen Row Level Authorisation"
+              },
+              "eigenaarNaam": {
+                "type": "string",
+                "description": "Naam van eigenaar"
+              },
+              "eigenaarDetails": {
+                "type": "object",
+                "properties": {
+                  "telefoonnummer": {
+                    "type": "string"
+                  },
+                  "bsn": {
+                    "type": "string"
+                  }
+                }
+              },
+              "datumCreatie": {
+                "type": "string",
+                "format": "date",
+                "description": "Datum aangemaakt"
+              },
+              "datumLeegmaken": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Datum leeggemaakt"
+              },
+              "geometry": {
+                "$ref": "https://geojson.org/schema/Point.json",
+                "description": "Geometrie"
+              }
+            }
+          },
+          "lifecycleStatus": "stable"
+        },
+        {
+          "id": "clusters",
+          "type": "table",
+          "version": "1.0.0",
+          "auth": [
+            "BAG/R"
+          ],
+          "schema": {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "schema"
+            ],
+            "display": "id",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "schema": {
+                "$ref": "https://schemas.data.amsterdam.nl/schema@v3.1.0#/definitions/schema"
+              },
+              "status": {
+                "type": "string",
+                "description": "Status"
+              },
+              "hideConfidentialInfo": {
+                "type": "boolean",
+                "description": "Gebruikt voor testen Row Level Authorisation"
+              },
+              "geheimVeld": {
+                "type": "string",
+                "description": "******"
+              }
+            }
+          },
+          "lifecycleStatus": "stable"
+        },
+        {
+          "id": "adresLoopafstand",
+          "type": "table",
+          "version": "1.0.0",
+          "schema": {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "schema"
+            ],
+            "display": "id",
+            "properties": {
+              "id": {
+                "type": "integer",
+                "description": "row identifier"
+              },
+              "schema": {
+                "$ref": "https://schemas.data.amsterdam.nl/schema@v3.1.0#/definitions/schema"
+              },
+              "serienummer": {
+                "type": "string",
+                "description": "some serienumber"
+              },
+              "geometry": {
+                "$ref": "https://geojson.org/schema/Point.json",
+                "description": "Geometrie"
+              }
+            }
+          },
+          "lifecycleStatus": "stable"
+        }
+      ]
+    }
+  }
+}

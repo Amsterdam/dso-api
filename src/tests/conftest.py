@@ -347,8 +347,18 @@ def afval_schema(schema_loader) -> DatasetSchema:
 
 
 @pytest.fixture()
+def afval_schema_rla(schema_loader) -> DatasetSchema:
+    return schema_loader.get_dataset_from_file("afval_rla.json")
+
+
+@pytest.fixture()
 def afval_dataset(afval_schema) -> Dataset:
     return Dataset.create_for_schema(afval_schema)
+
+
+@pytest.fixture()
+def afval_dataset_rla(afval_schema_rla) -> Dataset:
+    return Dataset.create_for_schema(afval_schema_rla)
 
 
 @pytest.fixture()
@@ -369,13 +379,30 @@ def afval_cluster_model(afval_dataset, dynamic_models):
 
 
 @pytest.fixture()
+def afval_cluster_model_rla(afval_dataset_rla, dynamic_models):
+    return dynamic_models["afvalwegingen_rla"]["clusters"]
+
+
+@pytest.fixture()
 def afval_cluster(afval_cluster_model):
     return afval_cluster_model.objects.create(id="c1", status="valid")
 
 
 @pytest.fixture()
+def afval_cluster_rla(afval_cluster_model_rla):
+    return afval_cluster_model_rla.objects.create(
+        id="c2", status="valid", hide_confidential_info=True, geheim_veld="GEHEIM"
+    )
+
+
+@pytest.fixture()
 def afval_container_model(afval_dataset, dynamic_models):
     return dynamic_models["afvalwegingen"]["containers"]
+
+
+@pytest.fixture()
+def afval_container_model_rla(afval_dataset_rla, dynamic_models):
+    return dynamic_models["afvalwegingen_rla"]["containers"]
 
 
 @pytest.fixture()
@@ -394,6 +421,23 @@ def afval_container(afval_container_model, afval_cluster):
         datum_leegmaken=datetime(2021, 1, 3, 12, 13, 14, tzinfo=get_current_timezone()),
         cluster=afval_cluster,
         geometry=DAM_SQUARE_POINT_NO_SRID,
+    )
+
+
+@pytest.fixture()
+def afval_container_rla(afval_container_model_rla, afval_cluster_rla):
+    return afval_container_model_rla.objects.create(
+        id=2,
+        serienummer="foobar-234",
+        eigenaar_naam="Dataservices",
+        # set to fixed dates to the CSV export can also check for desired formatting
+        datum_creatie=date(2021, 1, 3),
+        datum_leegmaken=datetime(2021, 1, 3, 12, 13, 14, tzinfo=get_current_timezone()),
+        cluster=afval_cluster_rla,
+        geometry=DAM_SQUARE_POINT_NO_SRID,
+        hide_confidential_info=True,
+        eigenaar_details_telefoonnummer="02067777777",
+        eigenaar_details_bsn="123456789",
     )
 
 
