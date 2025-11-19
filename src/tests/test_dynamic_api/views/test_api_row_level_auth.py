@@ -58,6 +58,31 @@ class TestRowLevelAuth:
             for target in rla["targets"]:
                 assert container[target] is not None
 
+    @pytest.mark.parametrize("scopes", [["BAG/R"], ["BAG/R", "RLA"]])
+    def test_row_level_auth_400_if_requested_fields_doesnt_include_rla_source(
+        self, api_client, fetch_auth_token, afval_schema_rla, afval_container_rla, scopes
+    ):
+        rla = {
+            "source": "hideConfidentialInfo",
+            "targets": ["serienummer", "eigenaarNaam"],
+            "authMap": {"true": ["RLA"], "false": []},
+        }
+        patch_table_row_level_auth(
+            afval_schema_rla,
+            "containers",
+            rla=rla,
+        )
+        url = reverse(
+            "dynamic_api:afvalwegingen_rla-containers-detail", args=[afval_container_rla.id]
+        )
+        header = {"HTTP_AUTHORIZATION": f"Bearer {fetch_auth_token(scopes)}"}
+        response = api_client.get(url, **header, data={"_fields": "serienummer,eigenaarNaam,id"})
+        assert response.status_code == 400
+        assert (
+            response.data["detail"] == "Row level auth source value not found,"
+            "did you forget to include this in the _fields?"
+        )
+
     def test_row_level_auth_sets_fields_to_none_if_unauthorized_detail_view(
         self,
         api_client,
