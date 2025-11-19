@@ -54,7 +54,6 @@ certifi==2025.6.15
     #   msrest
     #   pyproj
     #   requests
-    #   sentry-sdk
 cffi==2.0.0
     # via cryptography
 cfgv==3.4.0
@@ -501,8 +500,6 @@ rpds-py==0.25.1
     #   referencing
 ruff==0.14.0
     # via -r requirements_dev.in
-sentry-sdk==2.42.0
-    # via -r ./requirements.in
 shapely==2.1.1
     # via
     #   amsterdam-schema-tools
@@ -549,7 +546,6 @@ urllib3==2.5.0
     # via
     #   -r ./requirements.in
     #   requests
-    #   sentry-sdk
 urllib3-mock==0.3.3
     # via -r ./requirements.in
 uwsgi-readiness-check==0.2.0
