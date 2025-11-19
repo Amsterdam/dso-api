@@ -1,7 +1,7 @@
 import pytest
 from django.urls import reverse
 
-from tests.utils import patch_table_row_level_auth
+from tests.utils import patch_table_row_level_auth, read_response_xml, xml_element_to_dict
 
 
 @pytest.mark.django_db
@@ -247,3 +247,52 @@ class TestRowLevelAuth:
         embedded_cluster = response.data["_embedded"]["cluster"]
 
         assert embedded_cluster["geheimVeld"] is not None
+
+    @pytest.mark.parametrize("scopes", [[], ["RLA"]])
+    def test_wfs_row_level_omits_fields_regardless_of_auth(
+        self,
+        api_client,
+        afval_schema_rla,
+        afval_dataset_rla,
+        afval_container_rla,
+        afval_cluster_rla,
+        fetch_auth_token,
+        filled_router,
+        scopes,
+    ):
+        rla = {
+            "source": "hideConfidentialInfo",
+            "targets": ["eigenaarDetails.telefoonnummer", "eigenaarDetails.bsn"],
+            "authMap": {"true": ["RLA"], "false": []},
+        }
+        patch_table_row_level_auth(
+            afval_schema_rla,
+            "containers",
+            rla=rla,
+        )
+        url = (
+            "/v1/wfs/afvalwegingen_rla"
+            "?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=containers"
+            "&OUTPUTFORMAT=application/gml+xml"
+        )
+        header = {"HTTP_AUTHORIZATION": f"Bearer {fetch_auth_token(scopes)}"}
+        response = api_client.get(url, **header)
+        assert response.status_code == 200
+
+        xml_root = read_response_xml(response)
+        data = xml_element_to_dict(xml_root[0][0])
+        # the fields from rla.targets are omitted
+        assert data == {
+            "boundedBy": {
+                "Envelope": [{"lowerCorner": "121389 487369"}, {"upperCorner": "121389 487369"}]
+            },
+            "geometry": {"Point": {"pos": "121389 487369"}},
+            "cluster_id": "c2",
+            "id": "2",
+            "datum_creatie": "2021-01-03",
+            "datum_leegmaken": "2021-01-03T11:13:14+00:00",
+            "eigenaar_naam": "Dataservices",
+            "hide_confidential_info": "true",
+            "name": "2",
+            "serienummer": "foobar-234",
+        }

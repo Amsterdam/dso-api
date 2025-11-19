@@ -44,7 +44,8 @@ from gisserver.geometries import CRS
 from gisserver.parsers import wfs20
 from gisserver.views import WFSView
 from schematools.contrib.django.models import DynamicModel
-from schematools.types import DatasetTableSchema
+from schematools.naming import toCamelCase
+from schematools.types import DatasetTableSchema, RowLevelAuthorisation
 
 from dso_api.dynamic_api.constants import DEFAULT
 from dso_api.dynamic_api.datasets import get_active_datasets
@@ -323,10 +324,17 @@ class DatasetWFSView(CheckModelPermissionsMixin, WFSView):
         fields = []
         other_geo_fields = []
         is_index_view = self.is_index_request()
+        print([field.name for field in model._meta.get_fields()])
         for model_field in model._meta.get_fields():  # type models.Field
             if not is_index_view and not self.request.user_scopes.has_field_access(
                 model.get_field_schema(model_field)
             ):
+                continue
+
+            # When there is Row Level Auth, we omit the field.
+            rla: RowLevelAuthorisation | None = model.table_schema().rla
+            print(rla)
+            if rla is not None and toCamelCase(model_field.name) in rla.targets:
                 continue
 
             if isinstance(model_field, models.ForeignKey):
