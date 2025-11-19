@@ -348,7 +348,7 @@ class DynamicSerializer(FieldAccessMixin, DSOModelSerializer):
                 # user requested _fields which did not include the source
                 raise ParseError(
                     detail="Row level auth source value not found,"
-                    "did you forget to include this in the _fields?"
+                    f"did you forget to include '{rla.source}' in the _fields?"
                 )
             # get the required scope. In case the source_value is empty, we default to table auth.
             required_scope = (
