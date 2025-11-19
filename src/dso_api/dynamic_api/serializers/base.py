@@ -343,7 +343,13 @@ class DynamicSerializer(FieldAccessMixin, DSOModelSerializer):
 
         if rla := self.table_schema.rla:
             user_scope = self.context["request"].user_scopes
-            source_value = representation[rla.source]
+            source_value = representation.get(rla.source)
+            if source_value is None:
+                # user requested _fields which did not include the source
+                raise ParseError(
+                    detail="Row level auth source value not found,"
+                    "did you forget to include this in the _fields?"
+                )
             # get the required scope. In case the source_value is empty, we default to table auth.
             required_scope = (
                 frozenset(scope.id for scope in rla.auth_map[source_value])
