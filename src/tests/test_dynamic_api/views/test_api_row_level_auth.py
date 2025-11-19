@@ -127,7 +127,7 @@ class TestRowLevelAuth:
         assert response.status_code == 400
         assert (
             response.data["detail"] == "Row level auth source value not found,"
-            "did you forget to include this in the _fields?"
+            "did you forget to include 'hideConfidentialInfo' in the _fields?"
         )
 
     def test_row_level_auth_sets_fields_to_none_if_unauthorized_detail_view(
