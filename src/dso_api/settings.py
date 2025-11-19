@@ -1,4 +1,3 @@
-import logging
 import os
 import sys
 from pathlib import Path
@@ -224,28 +223,8 @@ ANONYMOUS_APP_NAME = "DSO-openbaar"
 
 locals().update(env.email_url(default="smtp://"))
 
-SENTRY_DSN = env.str("SENTRY_DSN", default="")
-if SENTRY_DSN:
-    import sentry_sdk.utils
-    from sentry_sdk.integrations.django import DjangoIntegration
-    from sentry_sdk.integrations.logging import LoggingIntegration
-
-    from dso_api.sentry import before_send
-
-    sentry_sdk.init(
-        dsn=SENTRY_DSN,
-        environment="dso-api",
-        before_send=before_send,
-        integrations=[
-            LoggingIntegration(event_level=logging.WARNING),
-            DjangoIntegration(),
-        ],
-    )
-    sentry_sdk.utils.MAX_STRING_LENGTH = 2048  # for WFS FILTER exceptions
 
 # -- Logging
-
-
 class CustomJsonFormatter(jsonlogger.JsonFormatter):
     def __init__(self, *args, **kwargs):
         # Make sure some 'extra' fields are not included:
