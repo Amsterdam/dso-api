@@ -324,7 +324,6 @@ class DatasetWFSView(CheckModelPermissionsMixin, WFSView):
         fields = []
         other_geo_fields = []
         is_index_view = self.is_index_request()
-        print([field.name for field in model._meta.get_fields()])
         for model_field in model._meta.get_fields():  # type models.Field
             if not is_index_view and not self.request.user_scopes.has_field_access(
                 model.get_field_schema(model_field)
@@ -333,7 +332,6 @@ class DatasetWFSView(CheckModelPermissionsMixin, WFSView):
 
             # When there is Row Level Auth, we omit the field.
             rla: RowLevelAuthorisation | None = model.table_schema().rla
-            print(rla)
             if rla is not None and toCamelCase(model_field.name) in rla.targets:
                 continue
 
