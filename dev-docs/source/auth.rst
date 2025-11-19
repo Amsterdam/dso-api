@@ -14,9 +14,10 @@ package.
 Authorization Rulesets
 ----------------------
 
-There are two mechanisms for authorization on schema level:
+There are three mechanisms for authorization on schema level:
 
 * The ``auth`` fields in the Amsterdam Schema restrict access to resources.
+* Row level authorization defined in the schema.
 * The profiles grant permissions, which were restricted by the schema.
 
 Schema Files
@@ -61,6 +62,18 @@ Let's say, avoid retrieving all properties owned by a real estate owner.
    If someone manages to dump the whole table, they can off course still query everything within their local copy.
    Hence, it is generally better to restrict access to a field entirely using ``auth`` instead.
    The ``filterAuth`` feature is useful for well-monitored internal data, that is already protected using the ``auth`` field.
+
+Row level authorization
+~~~~~~~~~~~~~~~~~~~~~~~
+
+A table can define row level authorization in the ``rowLevelAuth`` object. This is used
+for conditionally restricting the fields the user can see/query based on a flag defined
+within the same schema. This is generally used for further restricting access to
+sensitive data. If the authorization does not match, the fields are nulled in the response for
+those rows that have the flag set. It is also impossible to filter on these fields.
+
+Requesting specific fields with the ``_fields`` query parameter is also limited, as the
+flag field (the ``rowLevelAuth.source``) needs to be included.
 
 Profiles
 ~~~~~~~~
