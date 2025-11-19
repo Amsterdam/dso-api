@@ -155,8 +155,7 @@ class DatasetMVTView(CheckModelPermissionsMixin, StreamingMVTView):
         # We always include the identifier fields
         identifiers = schema.identifier_fields
         tile_fields = tuple(id.name for id in identifiers)
-
-        for field in schema.fields:
+        for field in schema.get_fields(include_subfields=True):
             if (
                 not user_scopes.has_field_access(field)
                 or self.zoom < schema.min_zoom
@@ -168,6 +167,10 @@ class DatasetMVTView(CheckModelPermissionsMixin, StreamingMVTView):
             # We may have to use the db_name, because that usually has a suffix not
             # available on field.name.
             field_name = toCamelCase(field.db_name) if field.is_relation else field.name
+
+            # When there is Row Level Auth, we omit the field.
+            if schema.rla is not None and field_name in schema.rla.targets:
+                continue
 
             # We exclude the main geometry and `schema` fields.
             if (
