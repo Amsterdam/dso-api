@@ -337,7 +337,7 @@ class DynamicSerializer(FieldAccessMixin, DSOModelSerializer):
 
     def to_representation(self, instance):
         """Before sending things on to the client, we want to perform row level authorisation
-        checks to sets fields to None if the user does not have the required extra authorization.
+        checks, to set fields to None if the user does not have the required extra authorization.
         """
         representation = super().to_representation(instance)
 
