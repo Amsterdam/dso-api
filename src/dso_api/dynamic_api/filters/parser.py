@@ -16,7 +16,7 @@ from django.db import models
 from django.db.models import Q
 from django.utils.datastructures import MultiValueDict
 from gisserver.geometries import CRS
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from schematools.exceptions import SchemaObjectNotFound
 from schematools.permissions import UserScopes
 from schematools.types import AdditionalRelationSchema, DatasetFieldSchema, DatasetTableSchema
@@ -237,6 +237,15 @@ class QueryFilterEngine:
         filters = Q()
         any_is_many = False
         for filter_input in self.filter_inputs:
+            if (rla := table_schema.rla) is not None:
+                # Ensure user has all the scopes needed.
+                required_scope = frozenset(
+                    {s.id for s in rla.auth_map[True]} | {s.id for s in rla.auth_map[False]}
+                )
+                if not self.user_scopes.has_all_scopes(required_scope):
+                    raise PermissionDenied(
+                        detail=f"Cannot filter on {filter_input}, not authorized."
+                    )
             if table_schema.temporal and filter_input.key in table_schema.temporal.dimensions:
                 # Skip handling of temporal fields, is handled elsewhere.
                 continue

@@ -58,6 +58,53 @@ class TestRowLevelAuth:
             for target in rla["targets"]:
                 assert container[target] is not None
 
+    def test_row_level_auth_cannot_filter_on_target_fields_when_unauthorized(
+        self,
+        api_client,
+        fetch_auth_token,
+        afval_schema_rla,
+        afval_container_rla,
+    ):
+        rla = {
+            "source": "hideConfidentialInfo",
+            "targets": ["serienummer", "eigenaarNaam"],
+            "authMap": {"true": ["RLA"], "false": []},
+        }
+        patch_table_row_level_auth(
+            afval_schema_rla,
+            "containers",
+            rla=rla,
+        )
+        url = reverse("dynamic_api:afvalwegingen_rla-containers-list")
+
+        response = api_client.get(url, data={"eigenaarNaam": "Dataservices"})
+        assert response.status_code == 403
+        assert response.data["detail"] == "Cannot filter on eigenaarNaam, not authorized."
+
+    def test_row_level_auth_can_filter_on_target_fields_when_authorized(
+        self,
+        api_client,
+        fetch_auth_token,
+        afval_schema_rla,
+        afval_container_rla,
+    ):
+        rla = {
+            "source": "hideConfidentialInfo",
+            "targets": ["serienummer", "eigenaarNaam"],
+            "authMap": {"true": ["RLA"], "false": []},
+        }
+        patch_table_row_level_auth(
+            afval_schema_rla,
+            "containers",
+            rla=rla,
+        )
+        url = reverse("dynamic_api:afvalwegingen_rla-containers-list")
+        header = {"HTTP_AUTHORIZATION": f"Bearer {fetch_auth_token(["RLA"])}"}
+        response = api_client.get(url, data={"eigenaarNaam": "Dataservices"}, **header)
+        assert response.status_code == 200
+        containers = list(response.data["_embedded"]["containers"])
+        assert len(containers) == 1
+
     @pytest.mark.parametrize("scopes", [["BAG/R"], ["BAG/R", "RLA"]])
     def test_row_level_auth_400_if_requested_fields_doesnt_include_rla_source(
         self, api_client, fetch_auth_token, afval_schema_rla, afval_container_rla, scopes
