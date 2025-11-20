@@ -30,8 +30,8 @@ class AuthMiddleware:
             # instead of is_authorized_for, to get more control over authorization
             # checks and to enable more precise logging.
             # get_token_scopes is a data attribute, not a method.
-            scopes = request.get_token_scopes or []
-            scopes.extend(self.feature_scopes)
+            scopes = set(request.get_token_scopes or [])
+            scopes.update(self.feature_scopes)
             request.user_scopes = UserScopes(request.GET, scopes, self._all_profiles)
 
         # The token subject contains the username/email address of the user (on Azure)
