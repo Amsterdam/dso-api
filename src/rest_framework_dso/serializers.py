@@ -46,7 +46,7 @@ from rest_framework_dso.embedding import (
 from rest_framework_dso.exceptions import HumanReadableGDALException
 from rest_framework_dso.iterators import ObservableIterator, peek_iterable
 from rest_framework_dso.serializer_helpers import ReturnGenerator
-from rest_framework_dso.utils import get_serializer_relation_lookups
+from rest_framework_dso.utils import get_serializer_relation_lookups, group_dotted_names
 
 logger = logging.getLogger(__name__)
 
@@ -745,3 +745,78 @@ class HALRawIdentifierLinkSerializer(serializers.Serializer):
     This information is necessary to determine the runtime behavior,
     for example when resolving the prefetch lookups for a queryset.
     """
+
+
+class DSOQueryParamSerializer(serializers.Serializer):
+    _format = serializers.CharField(required=False)
+    _fields = serializers.CharField(required=False)
+    _expand = serializers.BooleanField(required=False)
+    _expandScope = serializers.CharField(required=False)
+
+    def __init__(self, instance=None, data=empty, model=None, **kwargs):
+        super().__init__(instance, data, **kwargs)
+        self.table_schema = model.table_schema()
+
+    def validate(self, data):
+        requested_fields = data.get("_fields")
+        if not requested_fields:
+            return data
+        format = data.get("_format", "json")
+        if format != "json":
+            return data
+        if data.get("_expand"):
+            fields = group_dotted_names(requested_fields.split(","))
+            self.validate_expand(fields)
+        elif data.get("_expandScope"):
+            fields = group_dotted_names(requested_fields.split(","))
+            expand_paths = group_dotted_names(data.get("_expandScope").split(","))
+            self.validate_expand_scope(fields, expand_paths)
+        return data
+
+    def validate_expand(self, fields):
+        for field, subfields in fields.items():
+            field_schema = self.table_schema.get_field_by_id(field)
+            if subfields and field_schema.is_relation and field_schema.related_table.is_temporal:
+                related_table = field_schema.related_table
+                needed_fields = [
+                    related_table.temporal.identifier,
+                    *related_table.identifier,
+                    related_table.display_field.python_name,
+                    *[
+                        f.id
+                        for f in related_table.fields
+                        if f.is_relation and f.related_table.is_temporal
+                    ],
+                ]
+                missing_fields = {f"{field}.{nf}" for nf in needed_fields if nf not in subfields}
+                if missing_fields:
+                    raise serializers.ValidationError(
+                        "_fields and _expand(Scope) together require temporal relation "
+                        f"{field} to include the following field(s): "
+                        f"{(", ").join(missing_fields)}."
+                        f"You may consider not using dotted fields, i.e. `_fields={field}`."
+                    )
+
+    def validate_expand_scope(self, fields, expand_paths):
+        for field, subfields in fields.items():
+            if not expand_paths.get(field):
+                continue
+            for path in expand_paths[field]:
+                if subfields and path not in subfields:
+                    raise serializers.ValidationError(
+                        f"Field {path} from _expandScope is not requested in "
+                        "the _fields parameter."
+                    )
+
+            field_schema = self.table_schema.get_field_by_id(field)
+            if subfields and field_schema.is_relation and field_schema.related_table.is_temporal:
+                related_table = field_schema.related_table
+                needed_fields = {*related_table.identifier} - {related_table.temporal.identifier}
+                missing_fields = {f"{field}.{nf}" for nf in needed_fields if nf not in subfields}
+                if missing_fields:
+                    raise serializers.ValidationError(
+                        "_fields and _expand(Scope) together require temporal relation "
+                        f"{field} to include the following field(s): "
+                        f"{(", ").join(missing_fields)}. "
+                        f"You may consider not using dotted fields, i.e. `_fields={field}`."
+                    )
