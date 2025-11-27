@@ -14,7 +14,7 @@ dl.row dd {
     margin-bottom: 0.2rem;
 }
 
-dt.col-xs-2 { width: 13%; } /* custom width */
+dt.col-xs-2 { width: 13%; min-width: 120px;} /* custom width */
 dt.col-xs-1 + dd { margin-left: 8.33%; max-width: 70%; }
 dt.col-xs-2 + dd { margin-left: 13%; max-width: 70%; }
 dl.row dd::after {
