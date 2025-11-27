@@ -413,6 +413,13 @@ class DynamicSerializer(FieldAccessMixin, DSOModelSerializer):
             # Need to snakecase here, we feed this to the queryset.only()
             # that is expecting snakecased names.
             fields_subset = [to_snake_case(fn) for fn in fields_to_display.includes]
+
+        # This adds the display field and temporal sequence identifier, to ensure
+        # that expanded links still work.
+        if embedded_field.related_model.is_temporal():
+            table_schema = embedded_field.related_model.table_schema()
+            fields_subset.extend([table_schema.temporal.identifier, table_schema.display_field.id])
+
         if embedded_field.is_loose:
             # Loose relations always point to a temporal object. In this case, the link happens on
             # the first key only, and the temporal slice makes sure that a second WHERE condition
