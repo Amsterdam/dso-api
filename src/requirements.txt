@@ -58,9 +58,9 @@ azure-monitor-opentelemetry-exporter==1.0.0b40 \
     --hash=sha256:304fcda99499fb679e701d0bd034e3a8787b146548fd05154056fd0453796303 \
     --hash=sha256:4727aff433df0fe991cb98a8a7d51358d67bc59908ddd9c024b2e916c854053b
     # via azure-monitor-opentelemetry
-bandit==1.9.1 \
-    --hash=sha256:0a1f34c04f067ee28985b7854edaa659c9299bd71e1b7e18236e46cccc79720b \
-    --hash=sha256:6dbafd1a51e276e065404f06980d624bad142344daeac3b085121fcfd117b7cf
+bandit==1.9.2 \
+    --hash=sha256:32410415cd93bf9c8b91972159d5cf1e7f063a9146d70345641cd3877de348ce \
+    --hash=sha256:bda8d68610fc33a6e10b7a8f1d61d92c8f6c004051d5e946406be1fb1b16a868
     # via -r requirements.in
 build==1.2.2.post1 \
     --hash=sha256:1d61c0887fa860c01971625baae8bdd338e517b836a2f70dd1f7aa3a6b2fc5b5 \
@@ -1285,9 +1285,9 @@ psutil==7.0.0 \
     --hash=sha256:a5f098451abc2828f7dc6b58d44b532b22f2088f4999a937557b603ce72b1993 \
     --hash=sha256:ba3fcef7523064a6c9da440fc4d6bd07da93ac726b5733c29027d7dc95b39d99
     # via azure-monitor-opentelemetry-exporter
-psycopg==3.2.12 \
-    --hash=sha256:85c08d6f6e2a897b16280e0ff6406bef29b1327c045db06d21f364d7cd5da90b \
-    --hash=sha256:8a1611a2d4c16ae37eada46438be9029a35bb959bb50b3d0e1e93c0f3d54c9ee
+psycopg==3.2.13 \
+    --hash=sha256:309adaeda61d44556046ec9a83a93f42bbe5310120b1995f3af49ab6d9f13c1d \
+    --hash=sha256:a481374514f2da627157f767a9336705ebefe93ea7a0522a6cbacba165da179a
     # via
     #   -r requirements.in
     #   amsterdam-schema-tools

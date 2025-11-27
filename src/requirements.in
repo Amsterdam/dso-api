@@ -25,7 +25,7 @@ openapi-spec-validator == 0.7.2
 # Version should match with opentelemetry subdependency:
 opentelemetry-instrumentation-psycopg == 0.52b1
 orjson == 3.11.4
-psycopg == 3.2.12
+psycopg == 3.2.13
 pygments == 2.19.2
 python-json-logger==3.3.0
 python-string-utils == 1.0.0
@@ -43,7 +43,7 @@ uwsgitop == 0.12
 uwsgi-readiness-check == 0.2.0
 
 # Testing
-bandit == 1.9.1
+bandit == 1.9.2
 # 45.0.3 caused pip to install the whole rust toolchain on Debian, slowing everything and needing more firewall rules
 cryptography >= 45.0.4, !=45.0.3
 flake8 == 7.3.0
