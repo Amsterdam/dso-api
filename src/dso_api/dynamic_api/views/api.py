@@ -29,6 +29,7 @@ from dso_api.dynamic_api import filters, permissions, serializers
 from dso_api.dynamic_api.constants import DEFAULT
 from dso_api.dynamic_api.temporal import TemporalTableQuery
 from dso_api.dynamic_api.utils import limit_queryset_for_scopes
+from rest_framework_dso.serializers import DSOQueryParamSerializer
 from rest_framework_dso.views import DSOViewMixin
 
 logger = logging.getLogger(__name__)
@@ -120,7 +121,11 @@ class DynamicApiViewSet(DSOViewMixin, viewsets.ReadOnlyModelViewSet):
             self.model.table_schema().get_fields(include_subfields=True),
             queryset,
         )
-
+        # validate some combinations of query params.
+        query_param_serializer = DSOQueryParamSerializer(
+            data=self.request.query_params, model=self.model
+        )
+        query_param_serializer.is_valid(raise_exception=True)
         # Apply the ?geldigOp=... filters, unless ?volgnummer=.. is requested.
         # The version_value is checked for here, as the TemporalTableQuery can be
         # checked for a sub object too.
