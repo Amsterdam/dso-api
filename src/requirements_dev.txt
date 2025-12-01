@@ -4,7 +4,7 @@
 #
 #    pip-compile --output-file=requirements_dev.txt requirements_dev.in
 #
-amsterdam-schema-tools[django]==8.7.1
+amsterdam-schema-tools[django]==8.7.2
     # via -r ./requirements.in
 argparse==1.4.0
     # via uwsgi-readiness-check
@@ -38,7 +38,7 @@ azure-monitor-opentelemetry==1.6.12
     # via -r ./requirements.in
 azure-monitor-opentelemetry-exporter==1.0.0b40
     # via azure-monitor-opentelemetry
-bandit==1.9.1
+bandit==1.9.2
     # via -r ./requirements.in
 black==25.11.0
     # via -r requirements_dev.in
@@ -393,13 +393,13 @@ pluggy==1.6.0
     #   pytest-cov
 ply==3.11
     # via jsonpath-rw
-pre-commit==4.4.0
+pre-commit==4.5.0
     # via -r requirements_dev.in
 protobuf==6.33.1
     # via mapbox-vector-tile
 psutil==7.0.0
     # via azure-monitor-opentelemetry-exporter
-psycopg==3.2.12
+psycopg==3.3.0
     # via
     #   -r ./requirements.in
     #   amsterdam-schema-tools
@@ -498,7 +498,7 @@ rpds-py==0.25.1
     # via
     #   jsonschema
     #   referencing
-ruff==0.14.5
+ruff==0.14.7
     # via -r requirements_dev.in
 shapely==2.1.1
     # via
