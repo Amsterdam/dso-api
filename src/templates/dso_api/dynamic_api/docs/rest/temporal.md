@@ -111,6 +111,31 @@ geeft de eerste versie van deze buurt:
         "registratiedatum": "2010-05-01T00:00:00",
     }
 
+Dezelfde informatie is ook bereikbaar met een punt in de
+[url](https://api.data.amsterdam.nl/v1/gebieden/buurten/03630000000477.1):
+
+    {
+        "_links": {
+            ...
+            "self": {
+                "href": "https://api.data.amsterdam.nl/v1/gebieden/buurten/03630000000477.1",
+                "title": "03630000000477.1",
+                "volgnummer": 1,
+                "identificatie": "03630000000477"
+            },
+            ...
+        },
+        "id": "03630000000477.1"
+        "code": "R88a",
+        "naam": "Riekerpolder",
+        ...
+        "beginGeldigheid": "2006-06-16",
+        "eindGeldigheid": "2010-05-01",
+        "registratiedatum": "2010-05-01T00:00:00",
+    }
+
+NB: de `href` in de links bevat in dit geval ook een punt, voor consistentie.
+
 ## Filtering op basis van geldigheidsdatum
 
 Objecten binnen een temporele dataset mogen gefilterd worden op basis
