@@ -103,6 +103,18 @@ class TestTemporalViews:
 
         assert response.status_code == 200, data
         assert data["_links"]["self"]["volgnummer"] == 1, response.data
+        assert data["_links"]["self"]["href"].endswith(f"{identificatie}?volgnummer=1")
+
+    def test_details_can_be_retrieved_with_id_dot_version(self, api_client, stadsdelen):
+        """Prove that object can be requested by identification and version."""
+        identificatie = stadsdelen[0].identificatie
+        url = reverse("dynamic_api:gebieden-stadsdelen-detail", args=(f"{identificatie}.1",))
+        response = api_client.get(url)
+        data = read_response_json(response)
+
+        assert response.status_code == 200, data
+        assert data["_links"]["self"]["volgnummer"] == 1, response.data
+        assert data["_links"]["self"]["href"].endswith(f"{identificatie}.1")
 
     def test_serializer_temporal_request_corrects_link_to_temporal(
         self, api_client, gebied, buurt, filled_router
