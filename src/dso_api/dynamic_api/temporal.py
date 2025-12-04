@@ -42,10 +42,12 @@ class TemporalTableQuery:
         return self.is_versioned
 
     @classmethod
-    def from_request(cls, request: Request, table_schema: DatasetTableSchema):
+    def from_request(
+        cls, request: Request, table_schema: DatasetTableSchema, pk: str | None = None
+    ):
         """Construct the object using all information found in the request object."""
         request_date = get_request_date(request)
-        return cls.from_query(request_date, request.GET, request.user_scopes, table_schema)
+        return cls.from_query(request_date, request.GET, request.user_scopes, table_schema, pk)
 
     @classmethod
     def from_query(
@@ -54,6 +56,7 @@ class TemporalTableQuery:
         query: dict[str, str],
         user_scopes: UserScopes,
         table_schema: DatasetTableSchema,
+        pk: str | None = None,
     ):
         """Construct the object without having to use a request object."""
         if table_schema.temporal is None:
@@ -62,6 +65,8 @@ class TemporalTableQuery:
             # See if a filter is made on a specific version
             version_field = table_schema.temporal.identifier_field  # e.g. "volgnummer"
             version_value = query.get(version_field.name, None)
+            if not version_value and pk is not None and "." in pk:
+                version_value = pk.split(".")[1]
             if version_value:
                 check_filter_field_access(version_field.id, version_field, user_scopes)
 
