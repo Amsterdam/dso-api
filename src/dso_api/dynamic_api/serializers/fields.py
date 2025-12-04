@@ -100,18 +100,28 @@ class TemporalHyperlinkedRelatedField(serializers.HyperlinkedRelatedField):
                 id_version = "*"
             else:
                 raise
+        if "." in request.parser_context.get("kwargs", {}).get("pk", ""):
+            # We use a dotted compound key
+            base_url = self.reverse(
+                view_name,
+                kwargs={self.lookup_url_kwarg: f"{id_value}.{id_version}"},
+                request=request,
+                format=format,
+            )
+            return URL(base_url)
+        else:
+            # We respect the query params
+            base_url = self.reverse(
+                view_name, kwargs={self.lookup_url_kwarg: id_value}, request=request, format=format
+            )
 
-        base_url = self.reverse(
-            view_name, kwargs={self.lookup_url_kwarg: id_value}, request=request, format=format
-        )
-
-        temporal = TemporalTableQuery.from_request(request, self.table_schema)
-        url_args = (
-            temporal.url_parameters  # e.g. {"geldigOp": ...}
-            if temporal.slice_dimension
-            else {self.table_schema.temporal.identifier: id_version}
-        )
-        return URL(base_url) // url_args
+            temporal = TemporalTableQuery.from_request(request, self.table_schema)
+            url_args = (
+                temporal.url_parameters  # e.g. {"geldigOp": ...}
+                if temporal.slice_dimension
+                else {self.table_schema.temporal.identifier: id_version}
+            )
+            return URL(base_url) // url_args
 
 
 class TemporalReadOnlyField(serializers.ReadOnlyField):
