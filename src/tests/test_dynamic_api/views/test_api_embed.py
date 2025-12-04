@@ -25,7 +25,7 @@ class TestEmbedTemporalTables:
         assert data == {
             "_links": {
                 "ligtInWijk": {
-                    "href": "http://testserver/v1/gebieden/wijken/03630012052035?volgnummer=1",
+                    "href": "http://testserver/v1/gebieden/wijken/03630012052035.1",
                     "identificatie": "03630012052035",
                     "title": "Burgwallen-Nieuwe Zijde",
                     "volgnummer": 1,
@@ -33,7 +33,7 @@ class TestEmbedTemporalTables:
                 "onderdeelVanGGWGebieden": [],
                 "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/buurten/v1",
                 "self": {
-                    "href": "http://testserver/v1/gebieden/buurten/03630000000078?volgnummer=2",
+                    "href": "http://testserver/v1/gebieden/buurten/03630000000078.2",
                     "identificatie": "03630000000078",
                     "title": "03630000000078.2",
                     "volgnummer": 2,
@@ -55,9 +55,7 @@ class TestEmbedTemporalTables:
                             "https://schemas.data.amsterdam.nl/datasets/gebieden/wijken/v1"
                         ),
                         "self": {
-                            "href": (
-                                "http://testserver/v1/gebieden/wijken/03630012052035?volgnummer=1"
-                            ),
+                            "href": ("http://testserver/v1/gebieden/wijken/03630012052035.1"),
                             "identificatie": "03630012052035",
                             "title": "Burgwallen-Nieuwe Zijde",
                             "volgnummer": 1,
@@ -71,10 +69,7 @@ class TestEmbedTemporalTables:
                             ),
                         },
                         "ligtInStadsdeel": {
-                            "href": (
-                                "http://testserver/v1/gebieden/stadsdelen/03630000000018"
-                                "?volgnummer=1"
-                            ),
+                            "href": ("http://testserver/v1/gebieden/stadsdelen/03630000000018.1"),
                             "identificatie": "03630000000018",
                             "title": "03630000000018.1",
                             "volgnummer": 1,
@@ -97,8 +92,7 @@ class TestEmbedTemporalTables:
                                 ),
                                 "self": {
                                     "href": (
-                                        "http://testserver/v1/gebieden/stadsdelen/03630000000018"
-                                        "?volgnummer=1"
+                                        "http://testserver/v1/gebieden/stadsdelen/03630000000018.1"
                                     ),
                                     "identificatie": "03630000000018",
                                     "title": "03630000000018.1",
@@ -135,14 +129,14 @@ class TestEmbedTemporalTables:
             "_links": {
                 "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/stadsdelen/v1",
                 "self": {
-                    "href": "http://testserver/v1/gebieden/stadsdelen/03630000000018?volgnummer=1",  # noqa: E501
+                    "href": "http://testserver/v1/gebieden/stadsdelen/03630000000018.1",  # noqa: E501
                     "identificatie": "03630000000018",
                     "title": "03630000000018.1",
                     "volgnummer": 1,
                 },
                 "wijken": [
                     {
-                        "href": "http://testserver/v1/gebieden/wijken/03630012052035?volgnummer=1",  # noqa: E501
+                        "href": "http://testserver/v1/gebieden/wijken/03630012052035.1",  # noqa: E501
                         "identificatie": "03630012052035",
                         "title": "Burgwallen-Nieuwe Zijde",
                         "volgnummer": 1,
@@ -171,7 +165,7 @@ class TestEmbedTemporalTables:
                             },
                             "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/wijken/v1",  # noqa: E501
                             "self": {
-                                "href": "http://testserver/v1/gebieden/wijken/03630012052035?volgnummer=1",  # noqa: E501
+                                "href": "http://testserver/v1/gebieden/wijken/03630012052035.1",  # noqa: E501
                                 "identificatie": "03630012052035",
                                 "title": "Burgwallen-Nieuwe Zijde",
                                 "volgnummer": 1,
@@ -413,7 +407,7 @@ class TestEmbedTemporalTables:
         assert data == {
             "_links": {
                 "ligtInWijk": {
-                    "href": "http://testserver/v1/gebieden/wijken/03630012052035?volgnummer=1",
+                    "href": "http://testserver/v1/gebieden/wijken/03630012052035.1",
                     "identificatie": "03630012052035",
                     "title": "Burgwallen-Nieuwe Zijde",
                     "volgnummer": 1,
@@ -421,7 +415,7 @@ class TestEmbedTemporalTables:
                 "onderdeelVanGGWGebieden": [],
                 "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/buurten/v1",
                 "self": {
-                    "href": "http://testserver/v1/gebieden/buurten/03630000000078?volgnummer=2",
+                    "href": "http://testserver/v1/gebieden/buurten/03630000000078.2",
                     "identificatie": "03630000000078",
                     "title": "03630000000078.2",
                     "volgnummer": 2,
@@ -587,7 +581,7 @@ class TestEmbedTemporalTables:
         assert data["_links"] == {
             "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/ggwgebieden/v1",
             "self": {
-                "href": "http://testserver/v1/gebieden/ggwgebieden/03630950000000?volgnummer=1",
+                "href": "http://testserver/v1/gebieden/ggwgebieden/03630950000000.1",
                 "identificatie": "03630950000000",
                 "title": "03630950000000.1",
                 "volgnummer": 1,
@@ -596,7 +590,7 @@ class TestEmbedTemporalTables:
                 # Only the current active object, not the historical one!
                 # This happens in the DynamicListSerializer.get_attribute() logic.
                 {
-                    "href": "http://testserver/v1/gebieden/buurten/03630000000078?volgnummer=2",
+                    "href": "http://testserver/v1/gebieden/buurten/03630000000078.2",
                     "identificatie": "03630000000078",
                     "title": "03630000000078.2",
                     "volgnummer": 2,
@@ -611,7 +605,7 @@ class TestEmbedTemporalTables:
                     "_links": {
                         "schema": "https://schemas.data.amsterdam.nl/datasets/gebieden/buurten/v1",  # noqa: E501
                         "self": {
-                            "href": "http://testserver/v1/gebieden/buurten/03630000000078?volgnummer=2",  # noqa: E501
+                            "href": "http://testserver/v1/gebieden/buurten/03630000000078.2",  # noqa: E501
                             "identificatie": "03630000000078",
                             "title": "03630000000078.2",
                             "volgnummer": 2,
