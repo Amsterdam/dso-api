@@ -121,7 +121,8 @@ class TestTemporalViews:
     ):
         """Prove that in case of temporal request links to objects will have request date.
         Allowing follow up date filtering further."""
-        url = reverse("dynamic_api:gebieden-ggwgebieden-detail", args=(gebied.id,))
+
+        url = reverse("dynamic_api:gebieden-ggwgebieden-detail", args=(gebied.identificatie,))
         response = api_client.get(url, {"geldigOp": "2014-05-01"})
         data = read_response_json(response)
 
