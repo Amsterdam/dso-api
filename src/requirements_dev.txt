@@ -5,7 +5,7 @@
 #    pip-compile --output-file=requirements_dev.txt requirements_dev.in
 #
 amsterdam-schema-tools[django]==8.7.2
-    # via -r requirements.in
+    # via -r ./requirements.in
 argparse==1.4.0
     # via uwsgi-readiness-check
 arrow==1.3.0
@@ -32,14 +32,14 @@ azure-core-tracing-opentelemetry==1.0.0b12
     # via azure-monitor-opentelemetry
 azure-identity==1.25.1
     # via
-    #   -r requirements.in
+    #   -r ./requirements.in
     #   azure-monitor-opentelemetry-exporter
 azure-monitor-opentelemetry==1.6.12
-    # via -r requirements.in
+    # via -r ./requirements.in
 azure-monitor-opentelemetry-exporter==1.0.0b40
     # via azure-monitor-opentelemetry
 bandit==1.9.2
-    # via -r requirements.in
+    # via -r ./requirements.in
 black==25.11.0
     # via -r requirements_dev.in
 build==1.2.2.post1
@@ -47,7 +47,7 @@ build==1.2.2.post1
     #   datadiensten-apikeyclient
     #   pip-tools
 cachetools==6.2.2
-    # via -r requirements.in
+    # via -r ./requirements.in
 certifi==2025.6.15
     # via
     #   django-healthchecks
@@ -72,15 +72,15 @@ coverage[toml]==7.10.7
     # via pytest-cov
 cryptography==46.0.3
     # via
-    #   -r requirements.in
+    #   -r ./requirements.in
     #   azure-identity
     #   jwcrypto
     #   msal
     #   pyjwt
 datadiensten-apikeyclient==0.6.0
-    # via -r requirements.in
+    # via -r ./requirements.in
 datapunt-authorization-django==1.6.2
-    # via -r requirements.in
+    # via -r ./requirements.in
 debugpy==1.8.17
     # via -r requirements_dev.in
 decorator==5.2.1
@@ -97,7 +97,7 @@ distlib==0.3.9
     # via virtualenv
 django==4.2.27
     # via
-    #   -r requirements.in
+    #   -r ./requirements.in
     #   amsterdam-schema-tools
     #   datapunt-authorization-django
     #   django-cors-headers
@@ -112,12 +112,12 @@ django==4.2.27
     #   djangorestframework-gis
     #   drf-spectacular
 django-cors-headers==4.9.0
-    # via -r requirements.in
+    # via -r ./requirements.in
 django-debug-toolbar==6.1.0
     # via -r requirements_dev.in
 django-environ==0.12.0
     # via
-    #   -r requirements.in
+    #   -r ./requirements.in
     #   amsterdam-schema-tools
 django-extensions==4.1
     # via -r requirements_dev.in
@@ -125,26 +125,26 @@ django-filter==25.1
     # via djangorestframework-gis
 django-gisserver==2.2.2
     # via
-    #   -r requirements.in
+    #   -r ./requirements.in
     #   amsterdam-schema-tools
 django-healthchecks==1.5.0
-    # via -r requirements.in
+    # via -r ./requirements.in
 django-postgres-unlimited-varchar==1.1.2
-    # via -r requirements.in
+    # via -r ./requirements.in
 django-vectortiles==1.0.2
-    # via -r requirements.in
+    # via -r ./requirements.in
 djangorestframework==3.16.1
     # via
-    #   -r requirements.in
+    #   -r ./requirements.in
     #   djangorestframework-csv
     #   djangorestframework-gis
     #   drf-spectacular
 djangorestframework-csv==3.0.2
-    # via -r requirements.in
+    # via -r ./requirements.in
 djangorestframework-gis==1.2.0
-    # via -r requirements.in
+    # via -r ./requirements.in
 drf-spectacular==0.29.0
-    # via -r requirements.in
+    # via -r ./requirements.in
 factory-boy==3.3.3
     # via amsterdam-schema-tools
 faker==37.4.0
@@ -155,23 +155,23 @@ fixedint==0.1.6
     # via azure-monitor-opentelemetry-exporter
 flake8==7.3.0
     # via
-    #   -r requirements.in
+    #   -r ./requirements.in
     #   flake8-colors
     #   flake8-debugger
     #   flake8-raise
 flake8-blind-except==0.2.1
-    # via -r requirements.in
+    # via -r ./requirements.in
 flake8-colors==0.1.9
-    # via -r requirements.in
+    # via -r ./requirements.in
 flake8-debugger==4.1.2
-    # via -r requirements.in
+    # via -r ./requirements.in
 flake8-raise==0.0.5
-    # via -r requirements.in
+    # via -r ./requirements.in
 fqdn==1.5.1
     # via jsonschema
 geoalchemy2==0.18.1
     # via
-    #   -r requirements.in
+    #   -r ./requirements.in
     #   amsterdam-schema-tools
 greenlet==3.2.3
     # via sqlalchemy
@@ -203,7 +203,7 @@ jsonref==1.1.0
     # via mappyfile
 jsonschema[format]==4.25.1
     # via
-    #   -r requirements.in
+    #   -r ./requirements.in
     #   amsterdam-schema-tools
     #   drf-spectacular
     #   mappyfile
@@ -223,14 +223,14 @@ lazy-object-proxy==1.11.0
     # via openapi-spec-validator
 lru-dict==1.4.1
     # via
-    #   -r requirements.in
+    #   -r ./requirements.in
     #   django-gisserver
 mapbox-vector-tile==2.2.0
-    # via -r requirements.in
+    # via -r ./requirements.in
 mappyfile==1.0.2
     # via amsterdam-schema-tools
 markdown==3.10
-    # via -r requirements.in
+    # via -r ./requirements.in
 markdown-it-py==3.0.0
     # via rich
 markupsafe==3.0.2
@@ -243,11 +243,11 @@ mercantile==1.2.1
     # via django-vectortiles
 more-ds==0.0.6
     # via
-    #   -r requirements.in
+    #   -r ./requirements.in
     #   amsterdam-schema-tools
 more-itertools==10.8.0
     # via
-    #   -r requirements.in
+    #   -r ./requirements.in
     #   amsterdam-schema-tools
 msal==1.32.3
     # via
@@ -268,7 +268,7 @@ oauthlib==3.2.2
 openapi-schema-validator==0.6.3
     # via openapi-spec-validator
 openapi-spec-validator==0.7.2
-    # via -r requirements.in
+    # via -r ./requirements.in
 opentelemetry-api==1.31.1
     # via
     #   azure-core-tracing-opentelemetry
@@ -313,7 +313,7 @@ opentelemetry-instrumentation-fastapi==0.52b1
 opentelemetry-instrumentation-flask==0.52b1
     # via azure-monitor-opentelemetry
 opentelemetry-instrumentation-psycopg==0.52b1
-    # via -r requirements.in
+    # via -r ./requirements.in
 opentelemetry-instrumentation-psycopg2==0.52b1
     # via azure-monitor-opentelemetry
 opentelemetry-instrumentation-requests==0.52b1
@@ -360,7 +360,7 @@ orderly-set==5.4.1
     # via deepdiff
 orjson==3.11.4
     # via
-    #   -r requirements.in
+    #   -r ./requirements.in
     #   amsterdam-schema-tools
     #   django-gisserver
 packaging==25.0
@@ -401,10 +401,10 @@ psutil==7.0.0
     # via azure-monitor-opentelemetry-exporter
 psycopg==3.3.0
     # via
-    #   -r requirements.in
+    #   -r ./requirements.in
     #   amsterdam-schema-tools
 pur==7.3.3
-    # via -r requirements.in
+    # via -r ./requirements.in
 pyclipper==1.3.0.post6
     # via mapbox-vector-tile
 pycodestyle==2.14.0
@@ -417,7 +417,7 @@ pyflakes==3.4.0
     # via flake8
 pygments==2.19.2
     # via
-    #   -r requirements.in
+    #   -r ./requirements.in
     #   pytest
     #   rich
 pyjwt[crypto]==2.8.0
@@ -433,14 +433,14 @@ pyproject-hooks==1.2.0
     #   pip-tools
 pytest==8.4.2
     # via
-    #   -r requirements.in
+    #   -r ./requirements.in
     #   pytest-cov
     #   pytest-django
     #   pytest-sugar
 pytest-cov==7.0.0
-    # via -r requirements.in
+    # via -r ./requirements.in
 pytest-django==4.11.1
-    # via -r requirements.in
+    # via -r ./requirements.in
 pytest-sugar==1.1.1
     # via -r requirements_dev.in
 python-dateutil==2.9.0.post0
@@ -448,12 +448,12 @@ python-dateutil==2.9.0.post0
     #   amsterdam-schema-tools
     #   arrow
 python-json-logger==3.3.0
-    # via -r requirements.in
+    # via -r ./requirements.in
 python-owasp-zap-v2-4==0.1.0
-    # via -r requirements.in
+    # via -r ./requirements.in
 python-string-utils==1.0.0
     # via
-    #   -r requirements.in
+    #   -r ./requirements.in
     #   amsterdam-schema-tools
 pytokens==0.3.0
     # via black
@@ -472,7 +472,7 @@ remote-pdb==2.1.0
     # via amsterdam-schema-tools
 requests==2.32.5
     # via
-    #   -r requirements.in
+    #   -r ./requirements.in
     #   amsterdam-schema-tools
     #   azure-core
     #   datadiensten-apikeyclient
@@ -542,16 +542,16 @@ uri-template==1.3.0
     # via jsonschema
 uritemplate==4.2.0
     # via drf-spectacular
-urllib3==2.5.0
+urllib3==2.6.0
     # via
-    #   -r requirements.in
+    #   -r ./requirements.in
     #   requests
 urllib3-mock==0.3.3
-    # via -r requirements.in
+    # via -r ./requirements.in
 uwsgi-readiness-check==0.2.0
-    # via -r requirements.in
+    # via -r ./requirements.in
 uwsgitop==0.12
-    # via -r requirements.in
+    # via -r ./requirements.in
 virtualenv==20.31.2
     # via pre-commit
 webcolors==24.11.1
@@ -559,7 +559,7 @@ webcolors==24.11.1
 wheel==0.45.1
     # via pip-tools
 whitenoise==6.11.0
-    # via -r requirements.in
+    # via -r ./requirements.in
 wrapt==1.17.2
     # via
     #   deprecated
@@ -570,7 +570,7 @@ zaproxy==0.4.0
     # via python-owasp-zap-v2-4
 zipp==3.23.0
     # via
-    #   -r requirements.in
+    #   -r ./requirements.in
     #   importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
