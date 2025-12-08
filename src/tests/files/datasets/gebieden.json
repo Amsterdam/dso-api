@@ -475,7 +475,7 @@
               "identificatie",
               "volgnummer"
             ],
-            "display": "id",
+            "display": "opgemaakteNaam",
             "additionalRelations": {
               "wijken": {
                 "table": "wijken",
@@ -503,6 +503,10 @@
               "naam": {
                 "type": "string",
                 "description": "De naam van het object."
+              },
+              "opgemaakteNaam": {
+                "type": "string",
+                "description": "De opgemaakte naam van het object. Gebruikt om een displaynaam met camelCase te testen"
               },
               "code": {
                 "type": "string",

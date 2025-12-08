@@ -71,7 +71,7 @@ class TestEmbedTemporalTables:
                         "ligtInStadsdeel": {
                             "href": ("http://testserver/v1/gebieden/stadsdelen/03630000000018.1"),
                             "identificatie": "03630000000018",
-                            "title": "03630000000018.1",
+                            "title": "Centrum",
                             "volgnummer": 1,
                         },
                     },
@@ -95,7 +95,7 @@ class TestEmbedTemporalTables:
                                         "http://testserver/v1/gebieden/stadsdelen/03630000000018.1"
                                     ),
                                     "identificatie": "03630000000018",
-                                    "title": "03630000000018.1",
+                                    "title": "Centrum",
                                     "volgnummer": 1,
                                 },
                                 # wijken is excluded (repeated relation)
@@ -110,6 +110,7 @@ class TestEmbedTemporalTables:
                             "volgnummer": 1,
                             "ligtInGemeenteIdentificatie": None,
                             "naam": "Centrum",
+                            "opgemaakteNaam": "Centrum",
                             "registratiedatum": None,
                         }
                     },
@@ -131,7 +132,7 @@ class TestEmbedTemporalTables:
                 "self": {
                     "href": "http://testserver/v1/gebieden/stadsdelen/03630000000018.1",  # noqa: E501
                     "identificatie": "03630000000018",
-                    "title": "03630000000018.1",
+                    "title": "Centrum",
                     "volgnummer": 1,
                 },
                 "wijken": [
@@ -147,6 +148,7 @@ class TestEmbedTemporalTables:
             "volgnummer": 1,
             "code": "A",
             "naam": "Centrum",
+            "opgemaakteNaam": "Centrum",
             "geometrie": None,
             "documentdatum": None,
             "documentnummer": None,
@@ -316,7 +318,7 @@ class TestEmbedTemporalTables:
                                                             "http://testserver/v1/gebieden/stadsdelen/03630000000018?volgnummer=1"
                                                         ),
                                                         "identificatie": "03630000000018",
-                                                        "title": "03630000000018.1",
+                                                        "title": "Centrum",
                                                         "volgnummer": 1,
                                                     },
                                                     # wijken is excluded (repeated relation)
@@ -331,6 +333,7 @@ class TestEmbedTemporalTables:
                                                 "volgnummer": 1,
                                                 "ligtInGemeenteIdentificatie": None,
                                                 "naam": "Centrum",
+                                                "opgemaakteNaam": "Centrum",
                                                 "registratiedatum": None,
                                             }
                                         },
@@ -357,7 +360,7 @@ class TestEmbedTemporalTables:
                                                     "http://testserver/v1/gebieden/stadsdelen/03630000000018?volgnummer=1"
                                                 ),
                                                 "identificatie": "03630000000018",
-                                                "title": "03630000000018.1",
+                                                "title": "Centrum",
                                                 "volgnummer": 1,
                                             },
                                         },
@@ -501,7 +504,7 @@ class TestEmbedTemporalTables:
                             "ligtInStadsdeel": {
                                 "href": "http://testserver/v1/gebieden/stadsdelen/03630000000018?_format=json&volgnummer=1",  # noqa: E501
                                 "identificatie": "03630000000018",
-                                "title": "03630000000018.1",
+                                "title": "Centrum",
                                 "volgnummer": 1,
                             },
                         },
@@ -520,7 +523,7 @@ class TestEmbedTemporalTables:
                                     "self": {
                                         "href": "http://testserver/v1/gebieden/stadsdelen/03630000000018?_format=json&volgnummer=1",  # noqa: E501
                                         "identificatie": "03630000000018",
-                                        "title": "03630000000018.1",
+                                        "title": "Centrum",
                                         "volgnummer": 1,
                                     },
                                     # wijken is excluded here (forward/reverse relation loop)
@@ -535,6 +538,7 @@ class TestEmbedTemporalTables:
                                 "volgnummer": 1,
                                 "ligtInGemeenteIdentificatie": None,
                                 "naam": "Centrum",
+                                "opgemaakteNaam": "Centrum",
                                 "registratiedatum": None,
                             }
                         },
