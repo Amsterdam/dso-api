@@ -418,7 +418,9 @@ class DynamicSerializer(FieldAccessMixin, DSOModelSerializer):
         # that expanded links still work.
         if embedded_field.related_model.is_temporal():
             table_schema = embedded_field.related_model.table_schema()
-            fields_subset.extend([table_schema.temporal.identifier, table_schema.display_field.id])
+            fields_subset.extend(
+                [table_schema.temporal.identifier, table_schema.display_field.db_name]
+            )
 
         if embedded_field.is_loose:
             # Loose relations always point to a temporal object. In this case, the link happens on
