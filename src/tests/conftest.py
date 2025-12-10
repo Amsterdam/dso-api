@@ -1098,6 +1098,27 @@ def gebieden_dataset(_gebieden_dataset, woningbouwplannen_dataset) -> Dataset:
 
 
 @pytest.fixture()
+def gebieden_ar_models(gebieden_ar_dataset, dynamic_models):
+    return dynamic_models["gebieden_ar"]
+
+
+@pytest.fixture()
+def gebieden_ar_schema(schema_loader) -> DatasetSchema:
+    return schema_loader.get_dataset_from_file("gebieden_ar.json")
+
+
+@pytest.fixture()
+def _gebieden_ar_dataset(gebieden_ar_schema) -> Dataset:
+    """Internal"""
+    return Dataset.create_for_schema(gebieden_ar_schema)
+
+
+@pytest.fixture()
+def gebieden_ar_dataset(_gebieden_ar_dataset) -> Dataset:
+    return _gebieden_ar_dataset
+
+
+@pytest.fixture()
 def bag_schema(schema_loader) -> DatasetSchema:
     return schema_loader.get_dataset_from_file("bag.json")
 

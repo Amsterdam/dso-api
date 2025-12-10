@@ -1,0 +1,261 @@
+{
+  "type": "dataset",
+  "id": "gebieden_ar",
+  "title": "gebieden_ar",
+  "publisher": "Nobody",
+  "identifier": "identificatie",
+  "description": "dataset to test additional relations",
+  "crs": "EPSG:28992",
+  "defaultVersion": "v1",
+  "versions": {
+    "v1": {
+      "status": "beschikbaar",
+      "lifecycleStatus": "stable",
+      "version": "0.0.1",
+      "tables": [
+        {
+          "id": "buurten",
+          "type": "table",
+          "version": "1.0.0",
+          "temporal": {
+            "identifier": "volgnummer",
+            "dimensions": {
+              "geldigOp": [
+                "beginGeldigheid",
+                "eindGeldigheid"
+              ]
+            }
+          },
+          "zoom": {
+            "min": 12,
+            "max": 16
+          },
+          "schema": {
+            "$id": "https://github.com/Amsterdam/schemas/gebieden/buurten.json",
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "type": "object",
+            "additionalProperties": false,
+            "mainGeometry": "geometrie",
+            "identifier": [
+              "identificatie",
+              "volgnummer"
+            ],
+            "required": [
+              "schema",
+              "identificatie",
+              "volgnummer"
+            ],
+            "display": "id",
+            "properties": {
+              "schema": {
+                "$ref": "https://schemas.data.amsterdam.nl/schema@v3.1.0#/definitions/schema"
+              },
+              "volgnummer": {
+                "type": "integer",
+                "description": "Uniek volgnummer van de toestand van het object."
+              },
+              "identificatie": {
+                "type": "string",
+                "description": "Unieke identificatie van het object."
+              },
+              "naam": {
+                "type": "string",
+                "description": "De naam van het object."
+              },
+              "beginGeldigheid": {
+                "type": "string",
+                "format": "date",
+                "description": "De datum waarop het object is gecre\u00eberd."
+              },
+              "eindGeldigheid": {
+                "type": "string",
+                "format": "date",
+                "description": "De datum waarop het object is komen te vervallen."
+              },
+              "ligtInWijk": {
+                "type": "object",
+                "properties": {
+                  "identificatie": {
+                    "type": "string"
+                  },
+                  "volgnummer": {
+                    "type": "integer"
+                  }
+                },
+                "relation": "gebieden_ar:wijken",
+                "description": "De wijk waar de buurt in ligt."
+              },
+              "ligtInStadsdeel": {
+                "type": "object",
+                "properties": {
+                  "identificatie": {
+                    "type": "string"
+                  },
+                  "volgnummer": {
+                    "type": "integer"
+                  }
+                },
+                "relation": "gebieden_ar:stadsdelen",
+                "description": "Het stadsdeel waar de buurt in ligt."
+              },
+              "geometrie": {
+                "$ref": "https://geojson.org/schema/Geometry.json",
+                "description": "Geometrische beschrijving van een object."
+              }
+            }
+          },
+          "lifecycleStatus": "stable"
+        },
+        {
+          "id": "wijken",
+          "type": "table",
+          "version": "1.0.0",
+          "temporal": {
+            "identifier": "volgnummer",
+            "dimensions": {
+              "geldigOp": [
+                "beginGeldigheid",
+                "eindGeldigheid"
+              ]
+            }
+          },
+          "schema": {
+            "$id": "https://github.com/Amsterdam/schemas/gebieden/wijken.json",
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "type": "object",
+            "additionalProperties": false,
+            "mainGeometry": "geometrie",
+            "identifier": [
+              "identificatie",
+              "volgnummer"
+            ],
+            "required": [
+              "schema",
+              "identificatie",
+              "volgnummer"
+            ],
+            "display": "naam",
+            "additionalRelations": {
+              "buurt": {
+                "table": "buurten",
+                "field": "ligtInWijk",
+                "format": "summary"
+              }
+            },
+            "properties": {
+              "schema": {
+                "$ref": "https://schemas.data.amsterdam.nl/schema@v3.1.0#/definitions/schema"
+              },
+              "identificatie": {
+                "type": "string",
+                "description": "Unieke identificatie van het object."
+              },
+              "volgnummer": {
+                "type": "integer",
+                "description": "Uniek volgnummer van de toestand van het object."
+              },
+              "naam": {
+                "type": "string",
+                "description": "De naam van het object."
+              },
+              "beginGeldigheid": {
+                "type": "string",
+                "format": "date",
+                "description": "De datum waarop het object is gecre\u00eberd."
+              },
+              "eindGeldigheid": {
+                "type": "string",
+                "format": "date",
+                "description": "De datum waarop het object is komen te vervallen."
+              },
+              "ligtInStadsdeel": {
+                "type": "object",
+                "properties": {
+                  "identificatie": {
+                    "type": "string"
+                  },
+                  "volgnummer": {
+                    "type": "integer"
+                  }
+                },
+                "relation": "gebieden_ar:stadsdelen",
+                "description": "Het stadsdeel waar de wijk in ligt."
+              }
+            }
+          },
+          "lifecycleStatus": "stable"
+        },
+        {
+          "id": "stadsdelen",
+          "type": "table",
+          "version": "1.0.0",
+          "temporal": {
+            "identifier": "volgnummer",
+            "dimensions": {
+              "geldigOp": [
+                "beginGeldigheid",
+                "eindGeldigheid"
+              ]
+            }
+          },
+          "schema": {
+            "$id": "https://github.com/Amsterdam/schemas/gebieden/stadsdelen.json",
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "type": "object",
+            "additionalProperties": false,
+            "mainGeometry": "geometrie",
+            "identifier": [
+              "identificatie",
+              "volgnummer"
+            ],
+            "required": [
+              "schema",
+              "identificatie",
+              "volgnummer"
+            ],
+            "display": "naam",
+            "additionalRelations": {
+              "wijken": {
+                "table": "wijken",
+                "field": "ligtInStadsdeel",
+                "format": "summary"
+              }
+            },
+            "properties": {
+              "schema": {
+                "$ref": "https://schemas.data.amsterdam.nl/schema@v3.1.0#/definitions/schema"
+              },
+              "identificatie": {
+                "type": "string",
+                "description": "Unieke identificatie van het object."
+              },
+              "volgnummer": {
+                "type": "integer",
+                "description": "Uniek volgnummer van de toestand van het object."
+              },
+              "naam": {
+                "type": "string",
+                "description": "De naam van het object."
+              },
+              "beginGeldigheid": {
+                "type": "string",
+                "format": "date",
+                "description": "De datum waarop het object is gecre\u00eberd."
+              },
+              "eindGeldigheid": {
+                "type": "string",
+                "format": "date",
+                "description": "De datum waarop het object is komen te vervallen."
+              },
+              "geometrie": {
+                "$ref": "https://geojson.org/schema/Polygon.json",
+                "description": "Geometrische beschrijving van een object."
+              }
+            }
+          },
+          "lifecycleStatus": "stable"
+        }
+      ]
+    }
+  }
+}

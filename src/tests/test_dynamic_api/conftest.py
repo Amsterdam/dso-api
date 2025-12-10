@@ -79,3 +79,56 @@ def wijk(gebieden_models, stadsdelen):
         naam="Sloterdijk",
         ligt_in_stadsdeel=stadsdelen[1],
     )
+
+
+@pytest.fixture()
+def stadsdelen_ar(gebieden_ar_models):
+    """
+    Create Stadsdeel Zuidoost.
+    """
+    Stadsdeel = gebieden_ar_models["stadsdelen"]
+    stadsdeel = Stadsdeel.objects.create(
+        id="03630000000016.1",
+        identificatie="03630000000016",
+        volgnummer=1,
+        begin_geldigheid=date(2006, 6, 1),
+        eind_geldigheid=date(2015, 1, 1),
+        naam="Zuidoost",
+    )
+
+    stadsdeel_v2 = Stadsdeel.objects.create(
+        id="03630000000016.2",
+        identificatie="03630000000016",
+        volgnummer=2,
+        begin_geldigheid=date(2015, 1, 1),
+        eind_geldigheid=None,
+        naam="Zuidoost",
+    )
+    return [stadsdeel, stadsdeel_v2]
+
+
+@pytest.fixture()
+def wijk_ar(gebieden_ar_models, stadsdelen_ar):
+    Wijk = gebieden_ar_models["wijken"]
+    return Wijk.objects.create(
+        id="03630012052022.1",
+        identificatie="03630012052022",
+        volgnummer=1,
+        begin_geldigheid=date(2015, 1, 1),
+        naam="Sloterdijk",
+        ligt_in_stadsdeel=stadsdelen_ar[1],
+    )
+
+
+@pytest.fixture()
+def buurt_ar(gebieden_ar_models, stadsdelen_ar, wijk_ar):
+    Buurt = gebieden_ar_models["buurten"]
+    return Buurt.objects.create(
+        id="03630000000078.1",
+        identificatie="03630000000078",
+        volgnummer=1,
+        begin_geldigheid=date(2014, 2, 20),
+        naam="Kop Zeedijk",
+        ligt_in_wijk=wijk_ar,
+        ligt_in_stadsdeel=stadsdelen_ar[1],
+    )
