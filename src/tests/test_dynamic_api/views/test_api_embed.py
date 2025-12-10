@@ -1155,6 +1155,21 @@ class TestEmbedTemporalTables:
             for field in missing_fields:
                 assert field in response.data["invalid-params"][0]["reason"]
 
+    def test_expandScope_and_additional_relation_in_fields(
+        self, api_client, buurt_ar, wijk_ar, stadsdelen_ar
+    ):
+        url = reverse("dynamic_api:gebieden_ar-buurten-detail", args=[buurt_ar.id])
+        response = api_client.get(
+            url, {"_expandScope": "ligtInStadsdeel", "_fields": "ligtInStadsdeel.wijken"}
+        )
+        assert response.status_code == 200
+        result = read_response_json(response)
+        assert "wijken" in result["_embedded"]["ligtInStadsdeel"]["_links"]
+        assert result["_embedded"]["ligtInStadsdeel"]["_links"]["wijken"]["count"] == 1
+        assert result["_embedded"]["ligtInStadsdeel"]["_links"]["wijken"]["href"].endswith(
+            f"wijken?ligtInStadsdeelId={stadsdelen_ar[1].id}"
+        )
+
 
 def assert_field_in_response(field: str, data: dict):
     field_path_parts = field.split(".")
