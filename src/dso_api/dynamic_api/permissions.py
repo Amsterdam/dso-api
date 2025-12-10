@@ -3,6 +3,7 @@ import logging
 from django.core.exceptions import PermissionDenied
 from rest_framework import permissions
 from rest_framework.viewsets import ViewSetMixin
+from schematools.exceptions import DatasetFieldNotFound
 from schematools.permissions import UserScopes
 from schematools.types import DatasetFieldSchema
 
@@ -51,11 +52,23 @@ def _get_table_fields_perm(expanded_field: EmbeddedFieldMatch, user_scopes: User
     if fields_to_display.allow_all:
         return user_scopes.has_table_fields_access(table_schema)
 
-    included_fields = [
-        table_schema.get_field_by_id(field_id) for field_id in fields_to_display.includes
-    ]
+    included_fields = []
+    included_relations = []
 
-    return all(user_scopes.has_field_access(schema_field) for schema_field in included_fields)
+    for field_id in fields_to_display.includes:
+        try:
+            included_fields.append(table_schema.get_field_by_id(field_id))
+        except DatasetFieldNotFound:
+            try:
+                included_relations.append(table_schema.get_additional_relation_by_id(field_id))
+            except DatasetFieldNotFound:
+                raise
+
+    return all(
+        user_scopes.has_field_access(schema_field) for schema_field in included_fields
+    ) and all(
+        user_scopes.has_table_access(relation.related_table) for relation in included_relations
+    )
 
 
 def filter_unauthorized_expands(
