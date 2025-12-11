@@ -442,8 +442,8 @@ class TestFormats:
         assert response.status_code == 200
         response_data = [row.decode("utf-8") for row in response.streaming_content]
         assert response_data == [
-            "Identificatie,Volgnummer,Registratiedatum,Opgemaaktenaam,Begingeldigheid,"
-            "Eindgeldigheid,Ligtingemeenteidentificatie,Geometrie\r\n"
+            "Identificatie,Volgnummer,Registratiedatum,Begingeldigheid,Eindgeldigheid,"
+            "Ligtingemeenteidentificatie,Geometrie\r\n"
         ]
 
     def test_csv_exclude_fields_without_header(
@@ -645,8 +645,8 @@ class TestFormats:
         assert response.status_code == 200
         response_data = [row.decode("utf-8") for row in response.streaming_content]
         assert response_data == [
-            "identificatie,volgnummer,registratiedatum,opgemaakteNaam,beginGeldigheid,"
-            "eindGeldigheid,ligtInGemeenteIdentificatie,geometrie\r\n"
+            "identificatie,volgnummer,registratiedatum,beginGeldigheid,eindGeldigheid,"
+            "ligtInGemeenteIdentificatie,geometrie\r\n"
         ]
 
     def test_csv_exclude_include_400(self, api_client, gebieden_dataset, filled_router):

@@ -371,11 +371,7 @@ class TestDynamicSerializer:
         stadsdelen_model = gebieden_models["stadsdelen"]
         wijken_model = gebieden_models["wijken"]
         stadsdeel = stadsdelen_model.objects.create(
-            id="0363.1",
-            identificatie="0363",
-            naam="Stadsdeel",
-            volgnummer=1,
-            opgemaakte_naam="Stadsdeel",
+            id="0363.1", identificatie="0363", naam="Stadsdeel", volgnummer=1
         )
         wijken_model.objects.create(
             id="03630000000001.1",
@@ -394,7 +390,7 @@ class TestDynamicSerializer:
             "_links": {
                 "self": {
                     "href": "http://testserver/v1/gebieden/stadsdelen/0363?volgnummer=1",
-                    "title": "Stadsdeel",
+                    "title": "0363.1",
                     "volgnummer": 1,
                     "identificatie": "0363",
                 },
@@ -411,7 +407,6 @@ class TestDynamicSerializer:
             "identificatie": "0363",
             "volgnummer": 1,
             "naam": "Stadsdeel",
-            "opgemaakteNaam": "Stadsdeel",
             "code": None,
             "eindGeldigheid": None,
             "beginGeldigheid": None,
