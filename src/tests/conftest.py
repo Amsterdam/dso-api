@@ -1313,7 +1313,6 @@ def stadsdelen_data(stadsdelen_model) -> DynamicModel:
         begin_geldigheid=DATE_2021_FEB,
         naam="Centrum",
         code="A",
-        opgemaakte_naam="Centrum",
     )
 
 

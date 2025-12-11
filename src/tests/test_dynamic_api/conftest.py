@@ -17,7 +17,6 @@ def stadsdelen(gebieden_models):
         begin_geldigheid=date(2006, 6, 1),
         eind_geldigheid=date(2015, 1, 1),
         naam="Zuidoost",
-        opgemaakte_naam="Zuidoost",
     )
 
     stadsdeel_v2 = Stadsdeel.objects.create(
@@ -28,7 +27,6 @@ def stadsdelen(gebieden_models):
         begin_geldigheid=date(2015, 1, 1),
         eind_geldigheid=None,
         naam="Zuidoost",
-        opgemaakte_naam="Zuidoost",
     )
     return [stadsdeel, stadsdeel_v2]
 
