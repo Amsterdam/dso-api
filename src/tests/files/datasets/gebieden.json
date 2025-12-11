@@ -214,7 +214,7 @@
               "identificatie",
               "volgnummer"
             ],
-            "display": "naam",
+            "display": "id",
             "additionalRelations": {
               "buurt": {
                 "table": "buurten",

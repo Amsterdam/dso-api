@@ -376,7 +376,6 @@ class TestDynamicSerializer:
         wijken_model.objects.create(
             id="03630000000001.1",
             identificatie="03630000000001",
-            naam="Burgwallen-Oude Zijde",
             volgnummer=1,
             ligt_in_stadsdeel=stadsdeel,
         )
@@ -398,7 +397,7 @@ class TestDynamicSerializer:
                 "wijken": [
                     {
                         "href": "http://testserver/v1/gebieden/wijken/03630000000001?volgnummer=1",
-                        "title": "Burgwallen-Oude Zijde",
+                        "title": "03630000000001.1",
                         "volgnummer": 1,
                         "identificatie": "03630000000001",
                     }
