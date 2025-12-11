@@ -770,7 +770,6 @@ class DSOQueryParamSerializer(serializers.Serializer):
         elif data.get("_expandScope"):
             fields = group_dotted_names(requested_fields.split(","))
             expand_paths = group_dotted_names(data.get("_expandScope").split(","))
-            self.validate_nested_expand_scope(expand_paths)
             self.validate_expand_scope(fields, expand_paths)
         return data
 
@@ -792,7 +791,7 @@ class DSOQueryParamSerializer(serializers.Serializer):
                 missing_fields = {f"{field}.{nf}" for nf in needed_fields if nf not in subfields}
                 if missing_fields:
                     raise serializers.ValidationError(
-                        "_fields and _expand together require temporal relation "
+                        "_fields and _expand(Scope) together require temporal relation "
                         f"{field} to include the following field(s): "
                         f"{(", ").join(missing_fields)}."
                         f"You may consider not using dotted fields, i.e. `_fields={field}`."
@@ -805,7 +804,7 @@ class DSOQueryParamSerializer(serializers.Serializer):
             for path in expand_paths[field]:
                 if subfields and path not in subfields:
                     raise serializers.ValidationError(
-                        f"Field {field}.{path} from _expandScope is not requested in "
+                        f"Field {path} from _expandScope is not requested in "
                         "the _fields parameter."
                     )
 
@@ -821,17 +820,3 @@ class DSOQueryParamSerializer(serializers.Serializer):
                         f"{(", ").join(missing_fields)}. "
                         f"You may consider not using dotted fields, i.e. `_fields={field}`."
                     )
-
-    def validate_nested_expand_scope(self, expand_paths):
-        for path, subpaths in expand_paths.items():
-            if not subpaths:
-                continue
-            field_schema = self.table_schema.get_field_by_id(path)
-            if field_schema.is_relation:
-                related_table = field_schema.related_table
-                for subpath in subpaths:
-                    if related_table.get_field_by_id(subpath).is_relation:
-                        raise serializers.ValidationError(
-                            "_fields and _expandScope can only handle 1 level of expansion,"
-                            f"{path}.{subpath} is a relation."
-                        )

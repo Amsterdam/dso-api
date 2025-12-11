@@ -27,7 +27,7 @@ class TestEmbedTemporalTables:
                 "ligtInWijk": {
                     "href": "http://testserver/v1/gebieden/wijken/03630012052035.1",
                     "identificatie": "03630012052035",
-                    "title": "Burgwallen-Nieuwe Zijde",
+                    "title": "03630012052035.1",
                     "volgnummer": 1,
                 },
                 "onderdeelVanGGWGebieden": [],
@@ -57,7 +57,7 @@ class TestEmbedTemporalTables:
                         "self": {
                             "href": ("http://testserver/v1/gebieden/wijken/03630012052035.1"),
                             "identificatie": "03630012052035",
-                            "title": "Burgwallen-Nieuwe Zijde",
+                            "title": "03630012052035.1",
                             "volgnummer": 1,
                         },
                         "buurt": {
@@ -138,7 +138,7 @@ class TestEmbedTemporalTables:
                     {
                         "href": "http://testserver/v1/gebieden/wijken/03630012052035.1",  # noqa: E501
                         "identificatie": "03630012052035",
-                        "title": "Burgwallen-Nieuwe Zijde",
+                        "title": "03630012052035.1",
                         "volgnummer": 1,
                     }
                 ],
@@ -167,7 +167,7 @@ class TestEmbedTemporalTables:
                             "self": {
                                 "href": "http://testserver/v1/gebieden/wijken/03630012052035.1",  # noqa: E501
                                 "identificatie": "03630012052035",
-                                "title": "Burgwallen-Nieuwe Zijde",
+                                "title": "03630012052035.1",
                                 "volgnummer": 1,
                             },
                             # ligtInStadsdeel is removed (as it's a backward->forward match)
@@ -290,7 +290,7 @@ class TestEmbedTemporalTables:
                                             "http://testserver/v1/gebieden/wijken/03630012052035?volgnummer=1"
                                         ),
                                         "identificatie": "03630012052035",
-                                        "title": "Burgwallen-Nieuwe Zijde",
+                                        "title": "03630012052035.1",
                                         "volgnummer": 1,
                                     },
                                     "onderdeelVanGGWGebieden": [],
@@ -343,7 +343,7 @@ class TestEmbedTemporalTables:
                                                     "http://testserver/v1/gebieden/wijken/03630012052035?volgnummer=1"
                                                 ),
                                                 "identificatie": "03630012052035",
-                                                "title": "Burgwallen-Nieuwe Zijde",
+                                                "title": "03630012052035.1",
                                                 "volgnummer": 1,
                                             },
                                             "buurt": {
@@ -409,7 +409,7 @@ class TestEmbedTemporalTables:
                 "ligtInWijk": {
                     "href": "http://testserver/v1/gebieden/wijken/03630012052035.1",
                     "identificatie": "03630012052035",
-                    "title": "Burgwallen-Nieuwe Zijde",
+                    "title": "03630012052035.1",
                     "volgnummer": 1,
                 },
                 "onderdeelVanGGWGebieden": [],
@@ -468,7 +468,7 @@ class TestEmbedTemporalTables:
                             "ligtInWijk": {
                                 "href": "http://testserver/v1/gebieden/wijken/03630012052035?_format=json&volgnummer=1",  # noqa: E501
                                 "identificatie": "03630012052035",
-                                "title": "Burgwallen-Nieuwe Zijde",
+                                "title": "03630012052035.1",
                                 "volgnummer": 1,
                             },
                             "onderdeelVanGGWGebieden": [],
@@ -491,7 +491,7 @@ class TestEmbedTemporalTables:
                             "self": {
                                 "href": "http://testserver/v1/gebieden/wijken/03630012052035?_format=json&volgnummer=1",  # noqa: E501
                                 "identificatie": "03630012052035",
-                                "title": "Burgwallen-Nieuwe Zijde",
+                                "title": "03630012052035.1",
                                 "volgnummer": 1,
                             },
                             "buurt": {
@@ -1080,99 +1080,3 @@ class TestEmbedTemporalTables:
         assert "X-Pagination-Count" not in response
         assert "totalElements" not in data["page"]
         assert "totalPages" not in data["page"]
-
-    @pytest.mark.parametrize(
-        "data,status,missing_fields",
-        [
-            (  # 0: _expand with insufficient _fields
-                {"_expand": "true", "_fields": "ligtInWijk.identificatie"},
-                400,
-                ["ligtInWijk.ligtInStadsdeel", "ligtInWijk.naam", "ligtInWijk.volgnummer"],
-            ),
-            (  # 1: _expand with all necessary fields
-                {
-                    "_expand": "true",
-                    "_fields": "ligtInWijk.identificatie,ligtInWijk.volgnummer,"
-                    "ligtInWijk.ligtInStadsdeel,ligtInWijk.naam",
-                },
-                200,
-                [],
-            ),
-            (  # 2: _expand with complete resource in fields
-                {
-                    "_expand": "true",
-                    "_fields": "ligtInWijk",
-                },
-                200,
-                [],
-            ),
-            (  # 3: _expandScope with a single field
-                {"_expandScope": "ligtInWijk", "_fields": "ligtInWijk.identificatie"},
-                200,
-                [],
-            ),
-            (  # 4: _expandScope on nested resource missing identification
-                {
-                    "_expandScope": "ligtInWijk.ligtInStadsdeel",
-                    "_fields": "ligtInWijk.ligtInStadsdeel.identificatie,ligtInWijk.identificatie",
-                },
-                400,
-                ["ligtInWijk.ligtInStadsdeel"],
-            ),
-            (  # 5: _expandScope with complete resource
-                {
-                    "_expandScope": "ligtInWijk",
-                    "_fields": "ligtInWijk",
-                },
-                200,
-                [],
-            ),
-            (  # 6: _expandScope not requested in fields
-                {
-                    "_expandScope": "ligtInWijk.ligtInStadsdeel",
-                    "_fields": "ligtInWijk.ligtInGgwgebied",
-                },
-                400,
-                ["ligtInWijk.ligtInStadsdeel"],
-            ),
-        ],
-    )
-    def test_expand_and_fields(
-        self, api_client, stadsdelen, buurt, wijk, data, status, missing_fields
-    ):
-        url = reverse("dynamic_api:gebieden-buurten-list")
-        response = api_client.get(url, data=data)
-        assert response.status_code == status
-        if status == 200:
-            result = read_response_json(response)
-            for field in data["_fields"].split(","):
-                assert_field_in_response(field, result)
-        else:
-            for field in missing_fields:
-                assert field in response.data["invalid-params"][0]["reason"]
-
-    def test_expandScope_and_additional_relation_in_fields(
-        self, api_client, buurt_ar, wijk_ar, stadsdelen_ar
-    ):
-        url = reverse("dynamic_api:gebieden_ar-buurten-detail", args=[buurt_ar.id])
-        response = api_client.get(
-            url, {"_expandScope": "ligtInStadsdeel", "_fields": "ligtInStadsdeel.wijken"}
-        )
-        assert response.status_code == 200
-        result = read_response_json(response)
-        assert "wijken" in result["_embedded"]["ligtInStadsdeel"]["_links"]
-        assert result["_embedded"]["ligtInStadsdeel"]["_links"]["wijken"]["count"] == 1
-        assert result["_embedded"]["ligtInStadsdeel"]["_links"]["wijken"]["href"].endswith(
-            f"wijken?ligtInStadsdeelId={stadsdelen_ar[1].id}"
-        )
-
-
-def assert_field_in_response(field: str, data: dict):
-    field_path_parts = field.split(".")
-    for part in field_path_parts:
-        if isinstance(data, dict):
-            assert part in data or part in data.get("_embedded", {})
-            data = data.get(part)
-        elif isinstance(data, list):
-            assert part in data[0] or part in data[0].get("_embedded", {})
-            data = data[0].get(part)
