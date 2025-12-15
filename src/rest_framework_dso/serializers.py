@@ -765,10 +765,16 @@ class DSOQueryParamSerializer(serializers.Serializer):
         if format != "json":
             return data
         if data.get("_expand"):
-            fields = group_dotted_names(requested_fields.split(","))
+            # excluded fields are omitted
+            fields = group_dotted_names(
+                [f for f in requested_fields.split(",") if not f.startswith("-")]
+            )
             self.validate_expand(fields)
         elif data.get("_expandScope"):
-            fields = group_dotted_names(requested_fields.split(","))
+            # excluded fields are omitted
+            fields = group_dotted_names(
+                [f for f in requested_fields.split(",") if not f.startswith("-")]
+            )
             expand_paths = group_dotted_names(data.get("_expandScope").split(","))
             self.validate_nested_expand_scope(expand_paths)
             self.validate_expand_scope(fields, expand_paths)
