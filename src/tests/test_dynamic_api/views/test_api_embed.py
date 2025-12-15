@@ -1155,13 +1155,107 @@ class TestEmbedTemporalTables:
             for field in missing_fields:
                 assert field in response.data["invalid-params"][0]["reason"]
 
+    def test_expand_and_excluded_fields_top_level(self, api_client, stadsdelen, buurt, wijk):
+        data = {
+            "_expandScope": "ligtInWijk",
+            "_fields": "-naam,-code,-geometrie,ligtInWijk.code,ligtInWijk.naam,"
+            "ligtInWijk.beginGeldigheid",
+        }
+        url = reverse("dynamic_api:gebieden-buurten-list")
+        response = api_client.get(url, data=data)
+        assert response.status_code == 200
+        result = read_response_json(response)
+        # excluded fields on top level and fields not included in embed are omitted.
+        for field in [
+            "buurten.naam",
+            "buurten.code",
+            "buurten.geometrie",
+            "ligtInWijk.eindGeldigheid",
+            "ligtInWijk.volgnummer",
+            "ligtInWijk.identificatie",
+        ]:
+            with pytest.raises(AssertionError):
+                assert_field_in_response(field, result)
+
+        # Other top level fields and included fields of embed are present.
+        for field in [
+            "buurten.identificatie",
+            "buurten.volgnummer",
+            "buurten.beginGeldigheid",
+            "buurten.eindGeldigheid",
+            "ligtInWijk.beginGeldigheid",
+            "ligtInWijk.naam",
+            "ligtInWijk.code",
+        ]:
+            assert_field_in_response(field, result)
+
+    def test_expand_and_excluded_fields_on_embed(self, api_client, stadsdelen, buurt, wijk):
+        data = {
+            "_expandScope": "ligtInWijk",
+            "_fields": "identificatie,-ligtInWijk.code,-ligtInWijk.naam,"
+            "-ligtInWijk.beginGeldigheid",
+        }
+        url = reverse("dynamic_api:gebieden-buurten-list")
+        response = api_client.get(url, data=data)
+        assert response.status_code == 200
+        result = read_response_json(response)
+        # excluded fields are omitted
+        for field in ["ligtInWijk.code", "ligtInWijk.naam", "ligtInWijk.beginGeldigheid"]:
+            with pytest.raises(AssertionError):
+                assert_field_in_response(field, result)
+
+        # requested field on top level + other fields on embed are there
+        for field in [
+            "buurten.identificatie",
+            "ligtInWijk.eindGeldigheid",
+            "ligtInWijk.volgnummer",
+            "ligtInWijk.identificatie",
+        ]:
+            assert_field_in_response(field, result)
+
+    def test_expand_and_excluded_fields_top_level_and_embed(
+        self, api_client, stadsdelen, buurt, wijk
+    ):
+        data = {
+            "_expandScope": "ligtInWijk",
+            "_fields": "-naam,-code,-geometrie,-ligtInWijk.code,-ligtInWijk.naam,"
+            "-ligtInWijk.beginGeldigheid",
+        }
+        url = reverse("dynamic_api:gebieden-buurten-list")
+        response = api_client.get(url, data=data)
+        assert response.status_code == 200
+        result = read_response_json(response)
+        # All excluded fields are omitted
+        for field in [
+            "buurten.naam",
+            "buurten.code",
+            "buurten.geometrie",
+            "ligtInWijk.code",
+            "ligtInWijk.naam",
+            "ligtInWijk.beginGeldigheid",
+        ]:
+            with pytest.raises(AssertionError):
+                assert_field_in_response(field, result)
+
+        # other fields are present
+        for field in [
+            "buurten.identificatie",
+            "buurten.volgnummer",
+            "buurten.beginGeldigheid",
+            "buurten.eindGeldigheid",
+            "ligtInWijk.eindGeldigheid",
+            "ligtInWijk.volgnummer",
+            "ligtInWijk.identificatie",
+        ]:
+            assert_field_in_response(field, result)
+
 
 def assert_field_in_response(field: str, data: dict):
     field_path_parts = field.split(".")
     for part in field_path_parts:
         if isinstance(data, dict):
             assert part in data or part in data.get("_embedded", {})
-            data = data.get(part)
+            data = data.get(part) or data.get("_embedded", {}).get(part)
         elif isinstance(data, list):
             assert part in data[0] or part in data[0].get("_embedded", {})
-            data = data[0].get(part)
+            data = data[0].get(part) or data[0].get("_embedded", {}).get(part)
