@@ -11,7 +11,7 @@ djangorestframework-gis == 1.2.0
 amsterdam-schema-tools[django] == 8.7.2
 azure-identity == 1.25.1
 azure-monitor-opentelemetry == 1.6.12
-cachetools == 6.2.2
+cachetools == 6.2.3
 datadiensten-apikeyclient == 0.6.0
 datapunt-authorization-django==1.6.2
 drf-spectacular == 0.29.0
@@ -24,13 +24,13 @@ more-itertools == 10.8.0
 openapi-spec-validator == 0.7.2
 # Version should match with opentelemetry subdependency:
 opentelemetry-instrumentation-psycopg == 0.52b1
-orjson == 3.11.4
-psycopg == 3.3.0
+orjson == 3.11.5
+psycopg == 3.3.2
 pygments == 2.19.2
 python-json-logger==3.3.0
 python-string-utils == 1.0.0
 requests == 2.32.5
-urllib3 == 2.6.0
+urllib3 == 2.6.2
 urllib3-mock == 0.3.3
 whitenoise == 6.11.0
 zipp == 3.23.0
