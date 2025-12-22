@@ -11,7 +11,7 @@ djangorestframework-gis == 1.2.0
 amsterdam-schema-tools[django] == 8.7.2
 azure-identity == 1.25.1
 azure-monitor-opentelemetry == 1.6.12
-cachetools == 6.2.3
+cachetools == 6.2.4
 datadiensten-apikeyclient == 0.6.0
 datapunt-authorization-django==1.6.2
 drf-spectacular == 0.29.0

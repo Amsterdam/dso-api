@@ -46,7 +46,7 @@ build==1.2.2.post1
     # via
     #   datadiensten-apikeyclient
     #   pip-tools
-cachetools==6.2.3
+cachetools==6.2.4
     # via -r ./requirements.in
 certifi==2025.6.15
     # via
@@ -81,7 +81,7 @@ datadiensten-apikeyclient==0.6.0
     # via -r ./requirements.in
 datapunt-authorization-django==1.6.2
     # via -r ./requirements.in
-debugpy==1.8.18
+debugpy==1.8.19
     # via -r requirements_dev.in
 decorator==5.2.1
     # via jsonpath-rw
@@ -393,7 +393,7 @@ pluggy==1.6.0
     #   pytest-cov
 ply==3.11
     # via jsonpath-rw
-pre-commit==4.5.0
+pre-commit==4.5.1
     # via -r requirements_dev.in
 protobuf==6.33.1
     # via mapbox-vector-tile
@@ -498,7 +498,7 @@ rpds-py==0.25.1
     # via
     #   jsonschema
     #   referencing
-ruff==0.14.9
+ruff==0.14.10
     # via -r requirements_dev.in
 shapely==2.1.1
     # via
