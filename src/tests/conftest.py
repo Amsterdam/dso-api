@@ -1117,6 +1117,27 @@ def gebieden_ar_dataset(_gebieden_ar_dataset) -> Dataset:
 
 
 @pytest.fixture()
+def gebieden_subresources_models(gebieden_subresources_dataset, dynamic_models):
+    return dynamic_models["gebieden_subresources"]
+
+
+@pytest.fixture()
+def gebieden_subresources_schema(schema_loader) -> DatasetSchema:
+    return schema_loader.get_dataset_from_file("gebieden_subresources.json")
+
+
+@pytest.fixture()
+def _gebieden_subresources_dataset(gebieden_subresources_schema) -> Dataset:
+    """Internal"""
+    return Dataset.create_for_schema(gebieden_subresources_schema)
+
+
+@pytest.fixture()
+def gebieden_subresources_dataset(_gebieden_subresources_dataset) -> Dataset:
+    return _gebieden_subresources_dataset
+
+
+@pytest.fixture()
 def bag_schema(schema_loader) -> DatasetSchema:
     return schema_loader.get_dataset_from_file("bag.json")
 
