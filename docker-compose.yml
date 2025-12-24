@@ -62,6 +62,9 @@ services:
       - ./src:/app
       - ./docs/build/html:/docs-static
       - "../amsterdam-schema/datasets:/tmp/datasets"
+      - "../amsterdam-schema/publishers:/tmp/publishers"
+      - "../amsterdam-schema/profiles:/tmp/profiles"
+      - "../amsterdam-schema/scopes:/tmp/scopes"
       - "../schema-tools:/tmp/schema-tools"
     command: >
       /bin/bash -c "sh /app/initialize_db.sh
