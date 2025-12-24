@@ -27,6 +27,7 @@ from schematools.contrib.django.models import DynamicModel
 
 from dso_api.dynamic_api import filters, permissions, serializers
 from dso_api.dynamic_api.constants import DEFAULT
+from dso_api.dynamic_api.nesting import NestedViewSetMixin
 from dso_api.dynamic_api.temporal import TemporalTableQuery
 from dso_api.dynamic_api.utils import limit_queryset_for_scopes
 from rest_framework_dso.serializers import DSOQueryParamSerializer
@@ -36,7 +37,7 @@ logger = logging.getLogger(__name__)
 
 
 @method_decorator(never_cache, name="dispatch")
-class DynamicApiViewSet(DSOViewMixin, viewsets.ReadOnlyModelViewSet):
+class DynamicApiViewSet(NestedViewSetMixin, DSOViewMixin, viewsets.ReadOnlyModelViewSet):
     """Viewset for an API, that is DSO-compatible and dynamically generated.
     Each dynamically generated model in this server will receive a viewset.
 

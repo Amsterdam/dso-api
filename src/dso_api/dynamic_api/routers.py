@@ -35,7 +35,7 @@ from django.core.exceptions import ImproperlyConfigured
 from django.db import connection
 from django.urls import NoReverseMatch, URLPattern, path, reverse
 from django.views.generic import RedirectView
-from rest_framework.routers import DefaultRouter, Route
+from rest_framework.routers import Route
 from schematools.contrib.django.factories import remove_dynamic_models
 from schematools.contrib.django.models import Dataset, DatasetSchema
 from schematools.naming import to_snake_case
@@ -43,6 +43,7 @@ from schematools.naming import to_snake_case
 from .constants import DEFAULT
 from .datasets import get_active_datasets
 from .models import SealedDynamicModel
+from .nesting import NestedDefaultRouter
 from .openapi import get_openapi_view
 from .serializers import clear_serializer_factory_cache
 from .utils import get_view_name
@@ -97,7 +98,7 @@ class DynamicAPIIndexView(APIIndexView):
         }
 
 
-class DynamicRouter(DefaultRouter):
+class DynamicRouter(NestedDefaultRouter):
     """Router that dynamically creates all views and viewsets based on the Dataset models."""
 
     def __init__(self):
@@ -141,7 +142,7 @@ class DynamicRouter(DefaultRouter):
 
         try:
             self._initialize_viewsets()
-        except Exception:  # noqa: B902
+        except Exception:
             # Cleanup a half-initialized state that would mess up the application.
             # This happens in runserver's autoreload mode. The BaseReloader.run() code
             # silences all URLConf exceptions in a `try: import urlconf; catch Exception: pass`.
@@ -291,7 +292,7 @@ class DynamicRouter(DefaultRouter):
             ),
         ]
 
-        tmp_router = DefaultRouter()
+        tmp_router = NestedDefaultRouter()
         tmp_router.routes = self.routes
 
         db_datasets = {dataset.schema.id: dataset for dataset in db_datasets}
