@@ -100,7 +100,15 @@ class TemporalHyperlinkedRelatedField(serializers.HyperlinkedRelatedField):
                 id_version = "*"
             else:
                 raise
-        if "." in request.parser_context.get("kwargs", {}).get("pk", ""):
+
+        # Determine if any of the url kwargs has a dotted compound key.
+        is_dotted = any(
+            "." in val
+            for kwarg, val in request.parser_context.get("kwargs", {}).items()
+            if kwarg.endswith("_id") or kwarg == "pk"
+        )
+
+        if is_dotted:
             # We use a dotted compound key
             base_url = self.reverse(
                 view_name,
