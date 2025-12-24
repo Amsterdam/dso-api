@@ -35,7 +35,7 @@ from django.core.exceptions import ImproperlyConfigured
 from django.db import connection
 from django.urls import NoReverseMatch, URLPattern, path, reverse
 from django.views.generic import RedirectView
-from rest_framework.routers import DefaultRouter, Route
+from rest_framework.routers import Route
 from schematools.contrib.django.factories import remove_dynamic_models
 from schematools.contrib.django.models import Dataset, DatasetSchema
 from schematools.naming import to_snake_case
@@ -43,6 +43,7 @@ from schematools.naming import to_snake_case
 from .constants import DEFAULT
 from .datasets import get_active_datasets
 from .models import SealedDynamicModel
+from .nesting import NestedDefaultRouter, NestedRegistryItem
 from .openapi import get_openapi_view
 from .serializers import clear_serializer_factory_cache
 from .utils import get_view_name
@@ -97,7 +98,7 @@ class DynamicAPIIndexView(APIIndexView):
         }
 
 
-class DynamicRouter(DefaultRouter):
+class DynamicRouter(NestedDefaultRouter):
     """Router that dynamically creates all views and viewsets based on the Dataset models."""
 
     def __init__(self):
@@ -141,7 +142,7 @@ class DynamicRouter(DefaultRouter):
 
         try:
             self._initialize_viewsets()
-        except Exception:  # noqa: B902
+        except Exception:
             # Cleanup a half-initialized state that would mess up the application.
             # This happens in runserver's autoreload mode. The BaseReloader.run() code
             # silences all URLConf exceptions in a `try: import urlconf; catch Exception: pass`.
@@ -291,7 +292,7 @@ class DynamicRouter(DefaultRouter):
             ),
         ]
 
-        tmp_router = DefaultRouter()
+        tmp_router = NestedDefaultRouter()
         tmp_router.routes = self.routes
 
         db_datasets = {dataset.schema.id: dataset for dataset in db_datasets}
@@ -317,20 +318,63 @@ class DynamicRouter(DefaultRouter):
                     if version == DEFAULT:
                         # Default version accessible without version number.
                         url_prefix = self._make_url(model.get_dataset_path(), table_id)
-                        tmp_router.register(
-                            url_prefix, viewset, basename=f"{dataset_id}-{table_id}"
-                        )
-
+                        basename = f"{dataset_id}-{table_id}"
+                        registry_item = tmp_router.register(url_prefix, viewset, basename=basename)
                     else:
                         # Determine the URL prefix for the versioned model
                         url_prefix = self._make_url(model.get_dataset_path(), table_id, version)
+                        basename = f"{dataset_id}-{version}-{table_id}"
+                        registry_item = tmp_router.register(url_prefix, viewset, basename=basename)
 
-                        logger.debug("Created viewset %s", url_prefix)
-                        tmp_router.register(
-                            url_prefix, viewset, basename=f"{dataset_id}-{version}-{table_id}"
-                        )
+                    logger.debug("Created viewset %s", url_prefix)
+                    self._build_nested_viewsets(
+                        base_model=model,
+                        basename=basename,
+                        registry_item=registry_item,
+                        all_models=models_by_name,
+                        version=version,
+                    )
 
         return tmp_router.registry
+
+    def _build_nested_viewsets(
+        self,
+        *,
+        base_model: type[DynamicModel],
+        basename: str,
+        registry_item: NestedRegistryItem,
+        all_models: dict[str, type[DynamicModel]],
+        version: str,
+        parents_query_lookups: list | None = None,
+    ):
+        table_schema = base_model.table_schema()
+        for subresource in table_schema.subresources:
+            name = subresource.table.id
+            sub_model = all_models[name]
+            sub_viewset = viewset_factory(sub_model, version)
+            basename = f"{basename}-{name}"
+            lookup_base = f"{to_snake_case(subresource.field)}"
+            if parents_query_lookups is not None:
+                parents_query_lookups = [
+                    f"{lookup_base}__{lookup}" for lookup in parents_query_lookups
+                ]
+            else:
+                parents_query_lookups = []
+            parents_query_lookups.append(f"{lookup_base}_id")
+            sub_registry_item = registry_item.register(
+                name,
+                sub_viewset,
+                basename=basename,
+                parents_query_lookups=parents_query_lookups,
+            )
+            self._build_nested_viewsets(
+                base_model=sub_model,
+                basename=basename,
+                registry_item=sub_registry_item,
+                all_models=all_models,
+                version=version,
+                parents_query_lookups=parents_query_lookups,
+            )
 
     def _build_doc_views(self, datasets: Iterable[Dataset]) -> Iterator[URLPattern]:
         for dataset in datasets:
