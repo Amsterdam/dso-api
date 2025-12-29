@@ -55,7 +55,6 @@ Voor data-eigenaren is dit waardevolle informatie.
   Deze sleutel biedt geen <a href="authorization.html">authenticatie of autorisaties</a> voor de API's.
 </aside>
 
-
 ## Functionaliteit
 
 De API's ondersteunen mogelijkheden tot:
@@ -69,6 +68,7 @@ De API's ondersteunen mogelijkheden tot:
 * [Geometrie projecties](projections.md)
 * [Autorisatie](authorization.md)
 * [Temporele Datasets](temporal.md)
+* [Subresources](subresources.md)
 
 ## De DSO Standaard
 
@@ -79,17 +79,17 @@ om een eenduidige wijze te bieden voor afnemers.
 Hierdoor kom je als technisch gebruiker o.a. de volgende elementen
 tegen:
 
-  - HAL-JSON links, zoals: `{"_links": {"self": {"href": ..., "title":
+* HAL-JSON links, zoals: `{"_links": {"self": {"href": ..., "title":
     ...}}}`
-  - Met [?_expandScope={veld1},{veld2}](embeds.md) worden relaties
+* Met [?_expandScope={veld1},{veld2}](embeds.md) worden relaties
     getoond in de `_embedded` sectie.
-  - Met [?_expand=true](embeds.md) worden alle relaties uitgevouwen
+* Met [?_expand=true](embeds.md) worden alle relaties uitgevouwen
     in de `_embedded` sectie.
-  - Met [?_fields=...](fields.md) kunnen een beperkte set van velden
+* Met [?_fields=...](fields.md) kunnen een beperkte set van velden
     opgevraagd worden.
-  - [Sortering](sort.md) met `?_sort={veldnaam},-{desc veldnaam}`
-  - [Filtering](filtering.md) op velden via de query-string.
-  - [Tijdreizen](temporal.md) met de `?geldigOp=...` parameter.
-  - [Paginering](pagination.md) en `X-Pagination-*` headers.
-  - [Geometrie projecties](projections.md) via de `Accept-Crs` header.
-  - Responses geven het object terug, zonder envelope.
+* [Sortering](sort.md) met `?_sort={veldnaam},-{desc veldnaam}`
+* [Filtering](filtering.md) op velden via de query-string.
+* [Tijdreizen](temporal.md) met de `?geldigOp=...` parameter.
+* [Paginering](pagination.md) en `X-Pagination-*` headers.
+* [Geometrie projecties](projections.md) via de `Accept-Crs` header.
+* Responses geven het object terug, zonder envelope.

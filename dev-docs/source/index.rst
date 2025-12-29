@@ -69,6 +69,7 @@ A simplified diagram of the main project dependencies:
    database
    remote
    temporal
+   subresources
    streaming
    auth
    openapi
