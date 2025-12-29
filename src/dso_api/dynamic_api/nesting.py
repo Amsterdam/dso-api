@@ -19,6 +19,10 @@ PARENT_LOOKUP = "parent_lookup_"
 
 
 class NestedRegistryItem:
+    """
+    A registry item that can register resources under it for nested routing.
+    """
+
     def __init__(self, router, parent_prefix, parent_item=None, parent_viewset=None):
         self.router = router
         self.parent_prefix = parent_prefix
@@ -66,6 +70,10 @@ class NestedRouterProtocol(Protocol):
 
 
 class NestedRouterMixin:
+    """
+    Mixin that turns a router into a router that supports nesting.
+    """
+
     def _register(self: NestedRouterProtocol, *args, **kwargs):
         return super().register(*args, **kwargs)
 
@@ -77,7 +85,9 @@ class NestedRouterMixin:
 
 
 class NestedDefaultRouter(NestedRouterMixin, DefaultRouter):
-    pass
+    """
+    Router that supports nesting.
+    """
 
 
 class NestedViewSetProtocol(Protocol):
@@ -89,6 +99,11 @@ class NestedViewSetProtocol(Protocol):
 
 
 class NestedViewSetMixin:
+    """
+    Mixin that turns a viewset into one that supports nesting. Its main function is to filter the
+    queryset on parent lookups.
+    """
+
     def get_queryset(self: NestedViewSetProtocol) -> QuerySet:
         return self.filter_queryset_by_parents_lookups(super().get_queryset())
 
