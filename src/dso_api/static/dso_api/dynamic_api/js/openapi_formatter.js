@@ -1,16 +1,5 @@
-// Format OpenAPI Specification
-// Show summary of OpenAPI Spec, in html with links to docs and endpoints.
-//
-// parameter: rawJson (OpenAPI specification JSON)
-// returns: HTML string
-
 function getDefaultVersion(versions) {
-    return Object.entries(versions).reduce((defaultVersion, [version, obj]) => {
-        if(obj.default && version !== "default") {
-            return version
-        }
-        return defaultVersion
-    }, {})
+    return Object.entries(versions).find(([version, obj]) => version !== "default" && obj.default)[0]
 }
 
 function getVersionWarning(versions, currentVersion, defaultVersion) {
@@ -28,13 +17,18 @@ function getVersionWarning(versions, currentVersion, defaultVersion) {
 }
 
 const FORMATTER = (rawJson) => {
+    // Format OpenAPI Specification
+    // Show summary of OpenAPI Spec, in html with links to docs and endpoints.
+    //
+    // parameter: rawJson (OpenAPI specification JSON)
+    // returns: HTML string
     let openApiEl = document.createElement("div")
     let requestPath = window.location.pathname
     if (requestPath.endsWith("/")) {
         requestPath = requestPath.slice(0, -1)
     }
     let versions = rawJson["x-versions"]
-    let currentVMajor = requestPath.match(/v[0-9]$/)
+    let currentVMajor = requestPath.match(/v[0-9]+$/)
     let defaultVersion = getDefaultVersion(versions)
     currentVMajor = currentVMajor ? currentVMajor.toString() : "default"
     let versionWarning = getVersionWarning(versions, currentVMajor, defaultVersion)
