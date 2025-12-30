@@ -16,6 +16,7 @@
           "id": "buurten",
           "type": "table",
           "version": "1.0.0",
+          "status": "stable",
           "temporal": {
             "identifier": "volgnummer",
             "dimensions": {
@@ -100,6 +101,7 @@
           "id": "wijken",
           "type": "table",
           "version": "1.0.0",
+          "status": "stable",
           "temporal": {
             "identifier": "volgnummer",
             "dimensions": {
@@ -179,6 +181,7 @@
           "id": "stadsdelen",
           "type": "table",
           "version": "1.0.0",
+          "status": "stable",
           "temporal": {
             "identifier": "volgnummer",
             "dimensions": {
