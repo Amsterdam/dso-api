@@ -301,3 +301,10 @@ blockquote {
     padding: 10px;
     word-break: normal;
 }
+
+.beta {
+    background-color: #ff9100;
+    border-radius: 2px;
+    color: #fff;
+    padding: 2px 5px;
+}

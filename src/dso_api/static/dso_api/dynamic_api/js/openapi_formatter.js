@@ -40,6 +40,9 @@ const FORMATTER = (rawJson) => {
     let versionWarning = getVersionWarning(versions, currentVMajor, defaultVersion)
     let currentVersion = versions[currentVMajor]
 
+    let alternateVersions = Object.entries(rawJson["x-versions"])
+        .filter(([version, obj]) => (version !== "default" && version !== currentVMajor))
+
     openApiEl.innerHTML = `
       <h3>OpenAPI ${rawJson.info.title}</h3>
       <b>Huidige versie</b>
@@ -48,9 +51,8 @@ const FORMATTER = (rawJson) => {
         <a href="${currentVersion.url}">${currentVersion.url}</a> (${currentVersion.statusDescription})
       </p>
       ${versionWarning ? `<div class="dataset-version-alert">${versionWarning}</div>` : ""}
-      <b>Alternatieve versies</b>
-      ${Object.entries(rawJson["x-versions"])
-        .filter(([version, obj]) => (version !== "default" && version !== currentVMajor))
+      ${alternateVersions.length > 0 ? `<b>Alternatieve versies</b>` : ""}
+      ${alternateVersions
           .map(([version, obj]) => {
             return `
               <p>
@@ -67,6 +69,7 @@ const FORMATTER = (rawJson) => {
         }" style="display:inline-block">${rawJson.externalDocs.url}</a></dd>
       </p>
       <h3>Paths:</h3>
+      ${currentVersion.pathsUnderDevelopment ? `<p>Paden met het <span class="beta">beta</span> label zijn nog in ontwikkeling en zijn nog niet geschikt voor productie-omgevingen.</p>` : ""}
     `
 
     // Add a link for each path
@@ -76,12 +79,15 @@ const FORMATTER = (rawJson) => {
     Object.keys(rawJson.paths).forEach((path) => {
         Object.keys(rawJson.paths[path]).forEach((method) => {
             let endpointEl = document.createElement("div")
+            let tableId = path.match('^\/([^\/]+)')[1]
+            let status = currentVersion.paths[tableId]
             endpointEl.className = "endpoint"
 
             endpointEl.innerHTML = `
           <p>
             <div class='request-method get' style="display:inline-block">${method}</div>
             <a href="${requestPath}${path}" style="display:inline-block" class='path'>${path}</a>
+            ${status === "under_development" ? `<span class="beta">beta</span>` : ""}
           </p>
         `
             pathsEl.appendChild(endpointEl)

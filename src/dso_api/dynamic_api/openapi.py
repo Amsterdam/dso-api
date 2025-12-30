@@ -185,6 +185,7 @@ def get_openapi_view(dataset, version: str | None = None, response_format: str =
     # Specific data to override in the OpenAPI
     docfile = f"{dataset.path}@{version}" if version else dataset.path
     default_version = dataset_schema.get_version(dataset_schema.default_version)
+    paths = {t.id: t.status.value for t in default_version.tables}
     versions = {
         "default": {
             "url": urljoin(
@@ -196,11 +197,13 @@ def get_openapi_view(dataset, version: str | None = None, response_format: str =
                 if default_version.end_support_date
                 else None
             ),
-            "status_description": get_status_description(
+            "statusDescription": get_status_description(
                 status=default_version.status.name,
                 end_support_date=default_version.end_support_date,
             ),
             "default": default_version.is_default,
+            "paths": {t.id: t.status.value for t in default_version.tables},
+            "pathsUnderDevelopment": "under_development" in paths.values(),
         }
     }
     for vmajor, vschema in dataset_schema.versions.items():
@@ -208,6 +211,7 @@ def get_openapi_view(dataset, version: str | None = None, response_format: str =
         # Skip versions with API disabled
         if not vschema.enable_api:
             continue
+        paths = {t.id: t.status.value for t in vschema.tables}
         versions[f"{vmajor}"] = {
             "url": urljoin(
                 settings.DATAPUNT_API_URL, f"/v1/{dataset.path}/{vmajor}"  # to preserve hostname
@@ -221,6 +225,8 @@ def get_openapi_view(dataset, version: str | None = None, response_format: str =
                 end_support_date=vschema.end_support_date,
             ),
             "default": vschema.is_default,
+            "paths": {t.id: t.status.value for t in vschema.tables},
+            "pathsUnderDevelopment": "under_development" in paths.values(),
         }
 
     openapi_overrides = {
