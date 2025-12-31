@@ -266,6 +266,36 @@ def test_openapi_json(api_client, afval_dataset, fietspaaltjes_dataset, filled_r
 
 
 @pytest.mark.django_db
+def test_openapi_json_subresources(api_client, gebieden_subresources_dataset, filled_router):
+    """Assert that nested paths are in the openapi json."""
+    url = reverse(
+        "dynamic_api:openapi-version",
+        kwargs={"dataset_name": "gebieden_subresources"},
+    )
+    response = api_client.get(url)
+    assert response.status_code == 200
+    schema = response.data
+
+    openapi_spec_validator.validate_spec(schema)
+    # Prove that only afvalwegingen are part of this OpenAPI page:
+    paths = sorted(schema["paths"].keys())
+    assert paths == [
+        "/buurten",
+        "/buurten/{id}",
+        "/stadsdelen",
+        "/stadsdelen/{id}",
+        "/stadsdelen/{stadsdeel_id}/wijken",
+        "/stadsdelen/{stadsdeel_id}/wijken/{id}",
+        "/stadsdelen/{stadsdeel_id}/wijken/{wijk_id}/buurten",
+        "/stadsdelen/{stadsdeel_id}/wijken/{wijk_id}/buurten/{id}",
+        "/wijken",
+        "/wijken/{id}",
+        "/wijken/{wijk_id}/buurten",
+        "/wijken/{wijk_id}/buurten/{id}",
+    ]
+
+
+@pytest.mark.django_db
 def test_openapi_json_v1(api_client, afval_dataset, fietspaaltjes_dataset, filled_router, caplog):
     """Prove that the OpenAPI page can be rendered."""
     caplog.set_level(logging.WARNING)
