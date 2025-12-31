@@ -74,7 +74,7 @@ def test_openapi_json(api_client, afval_dataset, fietspaaltjes_dataset, filled_r
     assert response["content-type"] == "application/vnd.oai.openapi+json"
     schema = response.data
 
-    openapi_spec_validator.validate_spec(schema)
+    openapi_spec_validator.validate(schema)
 
     # Prove that the main info block is correctly rendered
     assert schema["info"] == {
@@ -96,6 +96,9 @@ def test_openapi_json(api_client, afval_dataset, fietspaaltjes_dataset, filled_r
         "/containers",
         "/containers/{id}",
     ]
+    # Prove that path's operation id does not end in _slash
+    for path in paths:
+        assert not schema["paths"][path]["get"]["operationId"].endswith("_slash")
 
     # Prove that the oauth model is exposed
     assert schema["components"]["securitySchemes"]["oauth2"]["type"] == "oauth2"
@@ -263,6 +266,35 @@ def test_openapi_json(api_client, afval_dataset, fietspaaltjes_dataset, filled_r
 
     log_messages = [m for m in caplog.messages if "DisableMigrations" not in m]
     assert not log_messages, caplog.messages
+
+
+@pytest.mark.django_db
+def test_openapi_json_subresources(api_client, gebieden_subresources_dataset, filled_router):
+    """Assert that nested paths are in the openapi json."""
+    url = reverse(
+        "dynamic_api:openapi-version",
+        kwargs={"dataset_name": "gebieden_subresources"},
+    )
+    response = api_client.get(url)
+    assert response.status_code == 200
+    schema = response.data
+
+    # Prove that only afvalwegingen are part of this OpenAPI page:
+    paths = sorted(schema["paths"].keys())
+    assert paths == [
+        "/buurten",
+        "/buurten/{id}",
+        "/stadsdelen",
+        "/stadsdelen/{id}",
+        "/stadsdelen/{stadsdeel_id}/wijken",
+        "/stadsdelen/{stadsdeel_id}/wijken/{id}",
+        "/stadsdelen/{stadsdeel_id}/wijken/{wijk_id}/buurten",
+        "/stadsdelen/{stadsdeel_id}/wijken/{wijk_id}/buurten/{id}",
+        "/wijken",
+        "/wijken/{id}",
+        "/wijken/{wijk_id}/buurten",
+        "/wijken/{wijk_id}/buurten/{id}",
+    ]
 
 
 @pytest.mark.django_db
