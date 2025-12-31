@@ -96,6 +96,9 @@ def test_openapi_json(api_client, afval_dataset, fietspaaltjes_dataset, filled_r
         "/containers",
         "/containers/{id}",
     ]
+    # Prove that path's operation id does not end in _slash
+    for path in paths:
+        assert not schema["paths"][path]["get"]["operationId"].endswith("_slash")
 
     # Prove that the oauth model is exposed
     assert schema["components"]["securitySchemes"]["oauth2"]["type"] == "oauth2"

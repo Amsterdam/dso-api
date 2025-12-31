@@ -142,16 +142,15 @@ class DynamicApiSchemaGenerator(DSOSchemaGenerator):
             original_paths = schema.get("paths", {})
             modified_paths = {}
             for path, path_item in original_paths.items():
-                # Ensure path starts with '/' and remove trailing slash for consistent
-                # comparison with current_doc_dir
+                # Since all paths exist both with and without trailing slash, we skip those with.
+                if path.endswith("/"):
+                    continue
+                # Ensure path starts with '/' for consistent comparison with current_doc_dir
                 absolute_path = path if path.startswith("/") else "/" + path
-                absolute_path = absolute_path.rstrip("/")
                 # Check if the path starts with the directory of the current doc
                 if absolute_path.startswith(current_doc_dir):
                     # e.g. /v1/aardgasverbruik/mra_liander/ -> /mra_liander
                     relative_path = absolute_path.replace(cleaned_path, "")
-                    if relative_path.endswith("/"):
-                        relative_path = relative_path[:-1]
                     if not relative_path.startswith("/"):
                         relative_path = "/" + relative_path
                     # We don't show paths of different versions
