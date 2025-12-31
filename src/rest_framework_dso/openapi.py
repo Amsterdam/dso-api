@@ -7,6 +7,7 @@ This also inludes exposing geometery type classes in the OpenAPI schema.
 """
 
 import logging
+import re
 
 from django.contrib.gis.db import models as gis_models
 from drf_spectacular import generators, openapi
@@ -196,6 +197,16 @@ class DSOSchemaGenerator(generators.SchemaGenerator):
             },
         },
     }
+
+    def coerce_path(self, path, method, view):
+        """Clean up parent_lookup url args added for nested routes.
+
+        We take the last part together with the (always available) _id suffix, i.e.
+        both `parent_lookup_ligt_in_stadsdeel_id` and `parent_lookup_stadsdeel_id` become
+        `stadsdeel_id`.
+        """
+        path = super().coerce_path(path, method, view)
+        return re.sub(pattern=r"\{parent_lookup[\w]*}", repl=r"{id}", string=path)
 
     def has_view_permissions(self, *args, **kwargs):
         """Schemas are public, so this is always true."""
