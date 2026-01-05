@@ -62,6 +62,10 @@ bandit==1.9.2 \
     --hash=sha256:32410415cd93bf9c8b91972159d5cf1e7f063a9146d70345641cd3877de348ce \
     --hash=sha256:bda8d68610fc33a6e10b7a8f1d61d92c8f6c004051d5e946406be1fb1b16a868
     # via -r requirements.in
+beautifulsoup4==4.14.3 \
+    --hash=sha256:0918bfe44902e6ad8d57732ba310582e98da931428d231a5ecb9e7c703a735bb \
+    --hash=sha256:6292b1c5186d356bba669ef9f7f051757099565ad9ada5dd630bd9de5fa7fb86
+    # via -r requirements.in
 build==1.2.2.post1 \
     --hash=sha256:1d61c0887fa860c01971625baae8bdd338e517b836a2f70dd1f7aa3a6b2fc5b5 \
     --hash=sha256:b36993e92ca9375a219c99e606a122ff365a760a2d4bba0caa09bd5278b608b7
@@ -1716,6 +1720,10 @@ six==1.17.0 \
     #   python-dateutil
     #   rfc3339-validator
     #   zaproxy
+soupsieve==2.8.1 \
+    --hash=sha256:4cf733bc50fa805f5df4b8ef4740fc0e0fa6218cf3006269afd3f9d6d80fd350 \
+    --hash=sha256:a11fe2a6f3d76ab3cf2de04eb339c1be5b506a8a47f2ceb6d139803177f85434
+    # via beautifulsoup4
 sqlalchemy==2.0.41 \
     --hash=sha256:023b3ee6169969beea3bb72312e44d8b7c27c75b347942d943cf49397b7edeb5 \
     --hash=sha256:03968a349db483936c249f4d9cd14ff2c296adfa1290b660ba6516f973139582 \
@@ -1795,6 +1803,7 @@ typing-extensions==4.14.0 \
     # via
     #   azure-core
     #   azure-identity
+    #   beautifulsoup4
     #   jwcrypto
     #   opentelemetry-sdk
     #   sqlalchemy
