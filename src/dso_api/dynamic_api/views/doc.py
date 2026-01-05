@@ -373,6 +373,7 @@ def _table_context(ds: Dataset, table: DatasetTableSchema, dataset_version: str)
         "expands": _make_table_expands(table),
         "source": table,
         "has_geometry": table.has_geometry_fields,
+        "subresources": _make_table_subresources(table, uri),
     }
 
 
@@ -408,6 +409,16 @@ def _make_table_expands(table: DatasetTableSchema):
     )
 
     return sorted(expands, key=operator.itemgetter("id"))
+
+
+def _make_table_subresources(table: DatasetTableSchema, base_url: str) -> dict[str, str]:
+    result = {}
+    for subresource in table.subresources:
+        url = f"{base_url}/{{{to_snake_case(table.id)}_id}}/{to_snake_case(subresource.table.id)}"
+        result[subresource.table.id] = url
+        # merge subresource's subresources
+        result = result | _make_table_subresources(subresource.table, url)
+    return result
 
 
 def _list_fields(table_fields) -> list[DatasetFieldSchema]:

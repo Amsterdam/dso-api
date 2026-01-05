@@ -138,6 +138,27 @@
           {% endfor %}
         </tbody>
       </table>
+      {% endif %}
+
+      {% if table_data.subresources %}
+      <h4>Onderliggende tabellen</h4>
+      <p>De volgende tabellen zijn beschikbaar op geneste routes:</p>
+      <table class="table table-striped" id="{{table_data.id}}-subresources">
+        <thead>
+          <tr>
+            <th>Tabel</th>
+            <th>REST URI</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for name, uri in table_data.subresources.items %}
+            <tr>
+              <td><a href="#{{name}}">{{name}}</a></td>
+              <td><a href="{{uri}}">{{uri}}</a></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     {% endif %}
   {% endfor %}
 {% endblock %}
