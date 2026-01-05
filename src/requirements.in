@@ -11,6 +11,7 @@ djangorestframework-gis == 1.2.0
 amsterdam-schema-tools[django] == 9.1.1
 azure-identity == 1.25.1
 azure-monitor-opentelemetry == 1.6.12
+beautifulsoup4==4.14.3
 cachetools == 6.2.4
 datadiensten-apikeyclient == 0.6.0
 datapunt-authorization-django==1.6.2

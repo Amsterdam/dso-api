@@ -41,7 +41,7 @@ azure-monitor-opentelemetry-exporter==1.0.0b40
 bandit==1.9.2
     # via -r requirements.in
 beautifulsoup4==4.14.3
-    # via -r requirements_dev.in
+    # via -r requirements.in
 black==25.12.0
     # via -r requirements_dev.in
 build==1.2.2.post1
