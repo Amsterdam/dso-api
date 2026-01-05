@@ -1,6 +1,7 @@
 """Tests for generated dataset documentation."""
 
 import pytest
+from bs4 import BeautifulSoup
 from django.urls import reverse
 
 
@@ -56,6 +57,50 @@ def test_dataset(api_client, filled_router, gebieden_dataset):
     # Disabled for now because of issues with schema loaders.
     # assert "<strong>Uitgever:</strong> Nobody" in content
     # assert "publisher/" not in content
+
+
+@pytest.mark.django_db
+def test_subresources_available_in_docs(api_client, gebieden_subresources_dataset, filled_router):
+    """Assert that subresources are shown in the documentation for a dataset.
+
+    The `gebieden_subresources` fixture has the following structure:
+    - stadsdelen
+        - wijken
+            - buurten
+    """
+    url = reverse(
+        "dynamic_api:docs-dataset",
+        kwargs={"dataset_name": "gebieden_subresources"},
+    )
+    response = api_client.get(url)
+    assert response.status_code == 200
+    soup = BeautifulSoup(response.rendered_content, "html.parser")
+
+    # Both stadsdelen and wijken should have a subresources tabel
+    assert len(soup.find_all(string="Onderliggende tabellen")) == 2
+
+    # Stadsdelen subresource lists both wijken and buurten.
+    stadsdelen_subresources = (
+        soup.find("table", id="stadsdelen-subresources").find("tbody").find_all("tr")
+    )
+    assert len(stadsdelen_subresources) == 2
+    wijken = stadsdelen_subresources[0]
+    assert wijken.find("a", href="#wijken").string == "wijken"
+    wijken_url = "/v1/gebieden_subresources/stadsdelen/{stadsdelen_id}/wijken"
+    assert wijken.find("a", href=wijken_url).string == wijken_url
+
+    buurten = stadsdelen_subresources[1]
+    assert buurten.find("a", href="#buurten").string == "buurten"
+    buurten_url = "/v1/gebieden_subresources/stadsdelen/{stadsdelen_id}/wijken/{wijken_id}/buurten"
+    assert buurten.find("a", href=buurten_url).string == buurten_url
+
+    # Wijken subresource lists only buurten.
+    wijken_subresources = soup.find("table", id="wijken-subresources").find("tbody").find_all("tr")
+    assert len(wijken_subresources) == 1
+    buurten = wijken_subresources[0]
+    assert buurten.find("a", href="#buurten").string == "buurten"
+    buurten_url = "/v1/gebieden_subresources/wijken/{wijken_id}/buurten"
+    assert buurten.find("a", href=buurten_url).string == buurten_url
 
 
 @pytest.mark.django_db
