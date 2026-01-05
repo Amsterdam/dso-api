@@ -40,6 +40,8 @@ azure-monitor-opentelemetry-exporter==1.0.0b40
     # via azure-monitor-opentelemetry
 bandit==1.9.2
     # via -r requirements.in
+beautifulsoup4==4.14.3
+    # via -r requirements_dev.in
 black==25.12.0
     # via -r requirements_dev.in
 build==1.2.2.post1
@@ -511,6 +513,8 @@ six==1.17.0
     #   python-dateutil
     #   rfc3339-validator
     #   zaproxy
+soupsieve==2.8.1
+    # via beautifulsoup4
 sqlalchemy==2.0.41
     # via
     #   amsterdam-schema-tools
@@ -533,6 +537,7 @@ typing-extensions==4.14.0
     # via
     #   azure-core
     #   azure-identity
+    #   beautifulsoup4
     #   jwcrypto
     #   opentelemetry-sdk
     #   sqlalchemy
