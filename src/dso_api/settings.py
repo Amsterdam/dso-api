@@ -57,6 +57,7 @@ CSRF_COOKIE_SECURE = env.bool("CSRF_COOKIE_SECURE", not DEBUG)
 INTERNAL_IPS = ("127.0.0.1",)
 
 TIME_ZONE = "Europe/Amsterdam"
+USE_TZ = False
 
 # -- Application definition
 

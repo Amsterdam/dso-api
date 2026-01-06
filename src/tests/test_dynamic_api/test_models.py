@@ -1,7 +1,6 @@
 import pytest
 from django.contrib.gis.db import models
 from schematools.contrib.django.factories import DjangoModelFactory
-from schematools.contrib.django.fields import UnlimitedCharField
 
 
 @pytest.mark.django_db
@@ -22,7 +21,7 @@ def test_model_factory_fields(afval_dataset):
     }
     assert meta.get_field("id").primary_key
     assert isinstance(meta.get_field("cluster_id"), models.ForeignKey)
-    assert isinstance(meta.get_field("eigenaar_naam"), UnlimitedCharField)
+    assert isinstance(meta.get_field("eigenaar_naam"), models.CharField)
     assert isinstance(meta.get_field("datum_creatie"), models.DateField)
     assert isinstance(meta.get_field("datum_leegmaken"), models.DateTimeField)
     geo_field = meta.get_field("geometry")
@@ -34,7 +33,7 @@ def test_model_factory_fields(afval_dataset):
     model_cls = factory.build_model(table_with_id_as_string)
     meta = model_cls._meta
     assert meta.get_field("id").primary_key
-    assert isinstance(meta.get_field("id"), UnlimitedCharField)
+    assert isinstance(meta.get_field("id"), models.CharField)
 
 
 @pytest.mark.django_db
