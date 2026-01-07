@@ -367,7 +367,7 @@ def _table_context(ds: Dataset, table: DatasetTableSchema, dataset_version: str)
         "uri": uri,
         "exports": exports,
         "description": table.get("description"),
-        "fields": [ctx for field in fields for ctx in _get_field_context(field, wfs=False)],
+        "fields": [ctx for field in fields for ctx in _get_field_context(field)],
         "filters": filters,
         "auth": _fix_auth(table.auth | table.dataset.auth),
         "expands": _make_table_expands(table),
@@ -464,7 +464,7 @@ def _field_data(field: DatasetFieldSchema):
     return type, value_example, lookups
 
 
-def _get_field_context(field: DatasetFieldSchema, wfs: bool) -> Iterable[dict[str, Any]]:
+def _get_field_context(field: DatasetFieldSchema) -> Iterable[dict[str, Any]]:
     """Get context data for a field."""
     type, _, _ = _field_data(field)
     description = field.description
@@ -479,7 +479,7 @@ def _get_field_context(field: DatasetFieldSchema, wfs: bool) -> Iterable[dict[st
     yield {
         "id": field.id,
         # WFS uses the ORM names of fields.
-        "name": _get_dotted_python_name(field) if wfs else _get_dotted_api_name(field),
+        "name": _get_dotted_api_name(field),
         "title": field.title,
         "is_identifier": field.is_identifier_part,
         "is_deprecated": False,
@@ -489,34 +489,6 @@ def _get_field_context(field: DatasetFieldSchema, wfs: bool) -> Iterable[dict[st
         "source": field,
         "auth": auth,
     }
-
-    if not field.relation or not wfs:
-        return
-
-    # Yield another context for relations with the old "Id" suffix.
-    yield {
-        "id": field.id,
-        "name": field.id + "Id",
-        "is_identifier": field.is_identifier_part,
-        "is_deprecated": True,
-        "is_relation": True,
-        "type": (type or "").capitalize(),
-        "description": description or "",
-        "source": field,
-        "auth": auth,
-    }
-
-
-def _get_dotted_python_name(field: DatasetFieldSchema) -> str:
-    snake_name = to_snake_case(field.id)
-
-    parent_field = field.parent_field
-    while parent_field is not None:
-        parent_snake_name = to_snake_case(parent_field.id)
-        snake_name = f"{parent_snake_name}.{snake_name}"
-        parent_field = parent_field.parent_field
-
-    return snake_name
 
 
 def _get_dotted_api_name(field: DatasetFieldSchema) -> str:

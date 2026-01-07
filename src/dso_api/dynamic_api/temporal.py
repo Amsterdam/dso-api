@@ -134,21 +134,6 @@ class TemporalTableQuery:
                 f"Invalid date or date-time format for '{dimension}' parameter!"
             ) from None
 
-    def filter_object_version(self, queryset: models.QuerySet) -> models.QuerySet:
-        """Apply an object-level filter such as "?volgnummer=...".
-        This should only be called for the top-level object.
-        """
-        if queryset.model.table_schema() != self.table_schema:
-            raise ValueError("QuerySet model type does not match")
-
-        if not self.is_versioned:
-            return queryset
-        elif self.version_value is None:
-            return self.filter_queryset(queryset)
-        else:
-            # Query on the second field (e.g. "volgnummer").
-            return queryset.filter(**{self.table_schema.temporal.identifier: self.version_value})
-
     def filter_queryset(self, queryset: models.QuerySet) -> models.QuerySet:
         """Apply temporal filtering to the queryset, based on the request parameters."""
         if queryset.model.table_schema() != self.table_schema:

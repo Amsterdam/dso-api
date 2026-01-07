@@ -363,28 +363,6 @@ def _get_patterns(matcher: Callable[[APIView], bool], patterns: list | None = No
     return matches
 
 
-def merge_openapi_schemas(schemas: list[dict]) -> dict:
-    """Merge multiple OpenAPI schemas into a single one."""
-    if not schemas:
-        return {}
-
-    combined_schema = copy.deepcopy(schemas[0])
-
-    for schema in schemas[1:]:
-        for path, path_item in schema.get("paths", {}).items():
-            if path not in combined_schema["paths"]:
-                combined_schema["paths"][path] = path_item
-            else:
-                combined_schema["paths"][path].update(path_item)
-
-        for comp_type, components in schema.get("components", {}).items():
-            if comp_type not in combined_schema["components"]:
-                combined_schema["components"][comp_type] = {}
-            combined_schema["components"][comp_type].update(components)
-
-    return combined_schema
-
-
 class CombinedSchemaView(APIView):
     """
     View that generates a combined OpenAPI schema for all active datasets.

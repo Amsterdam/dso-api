@@ -93,8 +93,11 @@ class APIIndexView(APIView):
                     )
                 ]
             )
-        except NoReverseMatch as e:
-            logger.warning("dataset %s: %s", dataset_id, e)
+        except NoReverseMatch as e:  # pragma: no-cover
+            # Don't let datasets break each other and the entire page.
+            logger.exception(
+                "Internal URL resolving is broken for schema {%s}: {%s}", dataset_id, str(e)
+            )
             return []
 
     def get(self, request, *args, **kwargs):
@@ -107,17 +110,6 @@ class APIIndexView(APIView):
 
         result = {"datasets": {}}
         for ds in datasets:
-            # Don't let datasets break each other and the entire page.
-            try:
-                versions = self.get_version_endpoints(ds, base)
-            except NoReverseMatch as e:
-                # Due to too many of these issues, avoid breaking the whole index listing for this.
-                # Plus, having the front page give a 500 error is not that nice.
-                logging.exception(
-                    "Internal URL resolving is broken for schema {%s}: {%s}", ds.schema.id, str(e)
-                )
-                versions = []
-
             result["datasets"][ds.schema.id] = {
                 "id": ds.schema.id,
                 "short_name": ds.name,
@@ -129,7 +121,7 @@ class APIIndexView(APIView):
                     "pay_per_use": False,
                     "license": ds.schema.license,
                 },
-                "versions": versions,
+                "versions": self.get_version_endpoints(ds, base),
                 "api_authentication": list(ds.schema.auth) or None,
                 "api_type": self.api_type,
                 "organization_name": "Gemeente Amsterdam",

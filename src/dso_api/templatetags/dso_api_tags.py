@@ -11,16 +11,6 @@ def print_scopes(*schema_objects):
         if schema_object == "":
             raise TemplateSyntaxError("Variable not found for {% print_scopes %}")
 
-        auth = schema_object.auth  # can't use .scopes for DatabaseSchemaLoader
-        if isinstance(auth, str):
-            all_auth.add(auth)
-        else:
-            # Handle inconsistencies in auth objects here for now.
-            # Should be fixed in schematools
-            for scope in auth:
-                if isinstance(scope, dict):
-                    all_auth.add(scope.get("name", scope["id"]))
-                else:
-                    all_auth.add(str(scope))
+        all_auth.update(schema_object.auth)
 
-    return ", ".join(all_auth - {"OPENBAAR", "Openbaar"}) or "Geen; dit is openbare data."
+    return ", ".join(sorted(all_auth - {"OPENBAAR", "Openbaar"})) or "Geen; dit is openbare data."
