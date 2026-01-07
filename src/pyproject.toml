@@ -10,7 +10,7 @@ addopts = [
     "--reuse-db",
     "--ds=tests.settings",
     "--cov",
-    "--cov-fail-under=87",
+    "--cov-fail-under=91",
 ]
 norecursedirs = ["node_modules", ".tox", ".git"]
 filterwarnings = [
@@ -26,6 +26,15 @@ source = ["src"]
 omit = ["*/migrations/*.py", "*/tests/*"]
 plugins = ["django_coverage_plugin"]
 
+[tool.coverage.report]
+exclude_also = [
+    "if settings.DEBUG:",
+    'if "debug_toolbar" in settings.INSTALLED_APPS:',
+    "raise NotImplementedError",
+    "logger",
+    "warnings.warn",
+    "def __getstate__"
+]
 
 # ==== black ====
 [tool.black]

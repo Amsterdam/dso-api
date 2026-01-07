@@ -143,7 +143,7 @@ class SerializerAssemblyLine:
         }
         self.deprecate_fields = []
 
-    def __repr__(self):
+    def __repr__(self):  # pragma: no-cover
         """Give a better overview during debugging which layer a function constructs."""
         table_id = self.class_attrs["table_schema"].qualified_id
         factory_function = self.class_attrs["_factory_function"]

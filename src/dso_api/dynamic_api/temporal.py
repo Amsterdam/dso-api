@@ -75,7 +75,7 @@ class TemporalTableQuery:
             slice_value = None
             for dimension, slice_range_fields in table_schema.temporal.dimensions.items():
                 if date_value := query.get(dimension):
-                    if slice_dimension is not None:
+                    if slice_dimension is not None:  # pragma: no cover
                         # There is basically no point in combining temporal dimensions,
                         # and if this is really a requested feature, it can be implemented.
                         raise ValidationError(
