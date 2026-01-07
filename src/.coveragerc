@@ -1,3 +1,11 @@
 [run]
-source = ./
-omit = */migrations/*
+branch = True
+omit =
+    */migrations/*.py
+    settings.py
+    tests/*
+plugins =
+    django_coverage_plugin
+
+[report]
+fail_under = 88

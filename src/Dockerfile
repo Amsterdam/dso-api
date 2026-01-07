@@ -37,5 +37,10 @@ ENV DJANGO_SETTINGS_MODULE=dso_api.settings DJANGO_DEBUG=false DSO_STATIC_DIR=/s
 RUN python manage.py collectstatic --noinput
 
 EXPOSE 8000
+
+# Give dsoapi the same UID as github actions runner.
+USER root
+RUN usermod --uid 1001 dsoapi
+
 USER dsoapi
 CMD ["uwsgi"]
