@@ -113,12 +113,12 @@ class TestDatasetWFSIndexView:
 class TestDatasetWFSView:
     """Prove that the WFS server logic is properly integrated in the dynamic models."""
 
-    def test_html_view(self, client, filled_router, fietspaaltjes_dataset):
+    def test_html_view(self, client, filled_router, gebieden_dataset):
         """Assert that fietspaaltjes has WFS docs."""
-        fietspaaltjes_doc = reverse("dynamic_api:wfs", kwargs={"dataset_name": "fietspaaltjes"})
-        assert fietspaaltjes_doc
+        gebieden_doc = reverse("dynamic_api:wfs", kwargs={"dataset_name": "gebieden"})
+        assert gebieden_doc
 
-        response = client.get(fietspaaltjes_doc, headers={"Accept": "text/html"})
+        response = client.get(gebieden_doc, headers={"Accept": "text/html"})
         assert response.status_code == 200
         content = response.content.decode("utf-8")
 
@@ -132,6 +132,17 @@ class TestDatasetWFSView:
             "/v1/wfs/afvalwegingen"
             "?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=app:containers"
             "&OUTPUTFORMAT=application/gml+xml"
+        )
+        response = api_client.get(wfs_url)
+        assert response.status_code == 200, response.content
+
+    def test_wfs_view_with_relations(
+        self, api_client, gebieden_dataset, stadsdelen_data, wijken_data, buurten_data
+    ):
+        wfs_url = (
+            "/v1/wfs/gebieden"
+            "?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=buurten"
+            "&OUTPUTFORMAT=application/gml+xml&expand=ligt_in_stadsdeel&embed=ligt_in_wijk"
         )
         response = api_client.get(wfs_url)
         assert response.status_code == 200, response.content

@@ -55,7 +55,7 @@ def search_index(_request) -> HttpResponse:
     index = {}
     for ds in Dataset.objects.api_enabled().db_enabled():
         try:
-            uri = reverse("dynamic_api:docs", kwargs={"dataset_name": ds.schema.id})
+            uri = reverse("dynamic_api:docs-dataset", kwargs={"dataset_name": ds.schema.id})
         except NoReverseMatch as e:
             logger.warning("dataset %s: %s", ds.schema.id, e)
             continue

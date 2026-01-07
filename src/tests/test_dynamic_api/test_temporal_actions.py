@@ -43,6 +43,14 @@ class TestTemporalViews:
         stadsdelen = data["_embedded"]["stadsdelen"]
         assert stadsdelen[0]["_links"]["self"]["volgnummer"] == 2, stadsdelen[0]
 
+    @pytest.mark.parametrize("datestring", ["2015-13-01", "T "])
+    def test_filtered_list_fails_on_wrong_date(self, api_client, stadsdelen, buurt, datestring):
+        """Prove that date filter displays only active-on-that-date objects."""
+        url = reverse("dynamic_api:gebieden-stadsdelen-list")
+        response = api_client.get(f"{url}?geldigOp={datestring}")
+
+        assert response.status_code == 400
+
     def test_additionalrelations_works_and_has_temporary_param(
         self, api_client, stadsdelen, wijk, buurt, router
     ):

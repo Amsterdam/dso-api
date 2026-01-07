@@ -1,5 +1,22 @@
 import pytest
 from django.urls import NoReverseMatch, reverse
+from schematools.contrib.django.models import Dataset
+
+
+@pytest.mark.django_db
+def test_empty_router_can_add_routes(router, gebieden_schema):
+    router.initialize()
+    router_urls = [p.name for p in router.urls]
+    assert router_urls == ["api-root"]
+
+    Dataset.create_for_schema(schema=gebieden_schema)
+    router.reload()
+    router_urls = [p.name for p in router.urls]
+    some_expected_urls = ["gebieden-stadsdelen-list", "gebieden-v1-buurten-detail", "openapi"]
+    for url in some_expected_urls:
+        assert url in router_urls
+
+    assert not router._has_model_errors()
 
 
 @pytest.mark.django_db

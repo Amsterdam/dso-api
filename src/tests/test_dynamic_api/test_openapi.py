@@ -60,8 +60,53 @@ def test_openapi_swagger_disable(
     assert response.status_code == 404
 
 
+@pytest.mark.parametrize("ext", ["json", "yaml"])
 @pytest.mark.django_db
-def test_openapi_json(api_client, afval_dataset, fietspaaltjes_dataset, filled_router, caplog):
+def test_openapi_formats(api_client, afval_dataset, fietspaaltjes_dataset, filled_router, ext):
+    url = reverse(f"dynamic_api:schema-{ext}")
+    response = api_client.get(url)
+    assert response.status_code == 200
+    assert response["content-type"] == f"application/{ext}"
+    assert response["Content-Disposition"] == f'attachment; filename="openapi.{ext}"'
+
+    expected_paths = [
+        "/afvalwegingen/adres_loopafstand",
+        "/afvalwegingen/adres_loopafstand/{id}",
+        "/afvalwegingen/clusters",
+        "/afvalwegingen/clusters/{id}",
+        "/afvalwegingen/containers",
+        "/afvalwegingen/containers/{id}",
+        "/fietspaaltjes/fietspaaltjes",
+        "/fietspaaltjes/fietspaaltjes/{id}",
+    ]
+    for path in expected_paths:
+        assert path in response.data["paths"]
+
+
+@pytest.mark.parametrize("ext", ["json", "yaml"])
+@pytest.mark.django_db
+def test_openapi_dataset_formats(api_client, afval_dataset, filled_router, ext):
+    url = reverse(f"dynamic_api:openapi-{ext}", kwargs={"dataset_name": "afvalwegingen"})
+    response = api_client.get(url)
+    assert response.status_code == 200
+    suffix = "" if ext == "yaml" else "+json"
+    assert response["content-type"] == f"application/vnd.oai.openapi{suffix}"
+    assert response["Content-Disposition"] == f'attachment; filename="openapi.{ext}"'
+
+    expected_paths = [
+        "/adres_loopafstand",
+        "/adres_loopafstand/{id}",
+        "/clusters",
+        "/clusters/{id}",
+        "/containers",
+        "/containers/{id}",
+    ]
+    for path in expected_paths:
+        assert path in response.data["paths"]
+
+
+@pytest.mark.django_db
+def test_openapi_dataset(api_client, afval_dataset, fietspaaltjes_dataset, filled_router, caplog):
     """Prove that the OpenAPI page can be rendered."""
     caplog.set_level(logging.WARNING)
 
