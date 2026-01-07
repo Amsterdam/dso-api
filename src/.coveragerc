@@ -8,4 +8,11 @@ plugins =
     django_coverage_plugin
 
 [report]
-fail_under = 88
+fail_under = 91
+exclude_also =
+    if "debug_toolbar" in settings.INSTALLED_APPS:
+    if settings.DEBUG:
+    raise NotImplementedError
+    logger
+    warnings.warn
+    def __getstate__
