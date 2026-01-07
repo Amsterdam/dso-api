@@ -8,7 +8,9 @@ testpaths = ["tests"]
 addopts = [
     "--nomigrations",
     "--reuse-db",
-    "--ds=tests.settings"
+    "--ds=tests.settings",
+    "--cov",
+    "--cov-fail-under=87",
 ]
 norecursedirs = ["node_modules", ".tox", ".git"]
 filterwarnings = [
@@ -20,8 +22,8 @@ filterwarnings = [
 # ==== Coverage ====
 [tool.coverage.run]
 branch = true
-source = ["gisserver"]
-omit = ["*/migrations/*.py", "*/test*.py", "*/tests/*"]
+source = ["src"]
+omit = ["*/migrations/*.py", "*/tests/*"]
 plugins = ["django_coverage_plugin"]
 
 
