@@ -44,3 +44,15 @@ def test_model_factory_relations(afval_dataset):
     cluster_fk = models["containers"]._meta.get_field("cluster")
     # Cannot compare using identity for dynamically generated classes
     assert cluster_fk.related_model._table_schema.id == models["clusters"]._table_schema.id
+
+
+@pytest.mark.django_db
+def test_sealed_model_can_refresh_fields(afval_container):
+    # should not raise
+    afval_container.refresh_from_db(fields=["serienummer", "geometry"])
+
+
+@pytest.mark.django_db
+def test_sealed_model_raises_on_unavailable_fields(afval_container):
+    with pytest.raises(RuntimeError, match="Deferred attribute access"):
+        afval_container.refresh_from_db(fields=["non_existing_field"])

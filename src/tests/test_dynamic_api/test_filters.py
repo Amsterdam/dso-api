@@ -7,6 +7,7 @@ import pytest
 from django.apps import apps
 from django.http import QueryDict
 from django.utils.timezone import now
+from gisserver.geometries import CRS
 from rest_framework.exceptions import ValidationError
 from schematools.contrib.django.models import Dataset
 from schematools.permissions import UserScopes
@@ -437,12 +438,19 @@ def test_parse_point_invalid(value):
         '{"type": "Point"}',
         '{"coordinates": [1,2]}',
         '{"type": "Invalid", "coordinates": [1,2]}',
+        # Wrong type
+        "LINESTRING(((0, 0), (1, 1)))",
     ],
 )
 def test_str2geo_invalid(value):
     """Test str2geo with invalid input formats."""
     with pytest.raises(ValidationError):
         str2geo(value)
+
+
+def test_str2geo_invalid_28892():
+    with pytest.raises(ValidationError):
+        str2geo("POLYGON((-1.0 0.0, 10.0 0.0, 10.0 10.0))", CRS.from_srid(28892))
 
 
 @pytest.mark.parametrize(

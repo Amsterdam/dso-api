@@ -1,6 +1,6 @@
 import pytest
 from django.db import connection
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.request import Request
 
 from rest_framework_dso.crs import CRS84, RD_NEW
@@ -19,6 +19,7 @@ def test_serializer_single(drf_request, movie):
     serializer = MovieSerializer(
         instance=movie, fields_to_expand=["actors", "category"], context={"request": drf_request}
     )
+    assert serializer.category.attname == "category_id"
 
     data = normalize_data(serializer.data)
     assert data == {
@@ -183,6 +184,10 @@ def test_pagination_links(drf_request, movie):
         "self": {"href": "http://testserver/v1/dummy/"},
         "previous": {"href": "http://testserver/v1/dummy/?page=2"},
     }
+
+    # Illegal page number raises
+    with pytest.raises(NotFound):
+        _setup_paginator(page=2.5)
 
 
 @pytest.mark.django_db

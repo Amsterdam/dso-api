@@ -36,6 +36,18 @@ class TestFieldsToDisplay:
         sublevel = root.as_nested("person")
         assert set(sublevel.includes) == {"name", "id"}
 
+    def test_grouping_only_subfields(self):
+        """Prove that sublevel fields are properly grouped."""
+        root = FieldsToDisplay(["person.name", "person.id"])
+        assert bool(root)
+        assert root.includes == set()
+        assert set(root.children) == {"person"}
+        assert repr(root) == "<FieldsToDisplay: allow all, children=['person']>"
+
+    def test_grouping_invalid(self):
+        with pytest.raises(ValidationError):
+            FieldsToDisplay(["person.-name"])
+
     def test_grouping_exclusions(self):
         """Prove that sublevel fields are properly grouped."""
         root = FieldsToDisplay(["person", "person.name", "-person.pet.name", "address"])
@@ -49,6 +61,9 @@ class TestFieldsToDisplay:
         assert set(person.children) == {"pet"}
         person_name = person.as_nested("name")
         assert person_name is ALLOW_ALL_FIELDS_TO_DISPLAY  # further nesting is also allowed
+        assert (
+            repr(person) == "<FieldsToDisplay: prefix=person., include=['name'], children=['pet']>"
+        )
 
         # Unmentioned nestings receive the same treatment as other fields
         assert person.as_nested("unknown") is DENY_SUB_FIELDS_TO_DISPLAY
@@ -56,6 +71,7 @@ class TestFieldsToDisplay:
         pet = person.as_nested("pet")
         assert set(pet.includes) == set()
         assert set(pet.excludes) == {"name"}
+        assert repr(pet) == "<FieldsToDisplay: prefix=pet., exclude=['name'], children=[]>"
 
         pet_name = pet.as_nested("name")
         assert pet_name is DENY_SUB_FIELDS_TO_DISPLAY  # further nesting is also denied

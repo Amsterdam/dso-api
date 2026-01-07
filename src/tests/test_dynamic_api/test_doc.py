@@ -6,6 +6,22 @@ from django.urls import reverse
 
 
 @pytest.mark.django_db
+def test_search(api_client):
+    response = api_client.get("/v1/docs/search.html?q=bomen")
+    assert response.status_code == 200
+    assert response["content-type"] == "text/html; charset=utf-8"
+
+
+@pytest.mark.django_db
+def test_search_index(api_client, afval_dataset, filled_router):
+    response = api_client.get("/v1/docs/searchindex.json")
+    assert response.status_code == 200
+    assert response["content-type"] == "application/json"
+    json_data = response.json()
+    assert "/v1/docs/datasets/afvalwegingen.html" in json_data
+
+
+@pytest.mark.django_db
 def test_generic(api_client):
     """Quick test for the generic docs (Markdown rendering)."""
     index = reverse("dynamic_api:docs-generic", kwargs={"category": "rest", "topic": "index"})
