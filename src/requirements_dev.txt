@@ -71,7 +71,9 @@ click==8.2.1
     #   pip-tools
     #   pur
 coverage[toml]==7.10.7
-    # via pytest-cov
+    # via
+    #   django-coverage-plugin
+    #   pytest-cov
 cryptography==46.0.3
     # via
     #   -r requirements.in
@@ -103,6 +105,7 @@ django==5.2.9
     #   amsterdam-schema-tools
     #   datapunt-authorization-django
     #   django-cors-headers
+    #   django-coverage-plugin
     #   django-debug-toolbar
     #   django-extensions
     #   django-filter
@@ -113,6 +116,8 @@ django==5.2.9
     #   djangorestframework-gis
     #   drf-spectacular
 django-cors-headers==4.9.0
+    # via -r requirements.in
+django-coverage-plugin==3.2.0
     # via -r requirements.in
 django-debug-toolbar==6.1.0
     # via -r requirements_dev.in
