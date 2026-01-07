@@ -27,7 +27,7 @@ jobs:
       run: docker compose -f "docker-compose.yml" up -d --build
 
     - name: Run tests
-      run: docker compose exec -T web pytest -v --ds=tests.settings --show-capture=no
+      run: docker compose exec -T web pytest -v --ds=tests.settings --show-capture=no --cov --cov-report=term:skip-covered --cov-config=.coveragerc
 
     - name: Stop containers
       if: always()
