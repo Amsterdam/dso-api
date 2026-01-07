@@ -375,7 +375,9 @@ coverage[toml]==7.10.7 \
     --hash=sha256:f7941f6f2fe6dd6807a1208737b8a0cbcf1cc6d7b07d24998ad2d63590868260 \
     --hash=sha256:fc04cc7a3db33664e0c2d10eb8990ff6b3536f6842c9590ae8da4c614b9ed05a \
     --hash=sha256:fff7b9c3f19957020cac546c70025331113d2e61537f6e2441bc7657913de7d3
-    # via pytest-cov
+    # via
+    #   django-coverage-plugin
+    #   pytest-cov
 cryptography==46.0.3 \
     --hash=sha256:00a5e7e87938e5ff9ff5447ab086a5706a957137e6e433841e9d24f38a065217 \
     --hash=sha256:01ca9ff2885f3acc98c29f1860552e37f6d7c7d013d7334ff2a9de43a449315d \
@@ -471,6 +473,7 @@ django==5.2.9 \
     #   amsterdam-schema-tools
     #   datapunt-authorization-django
     #   django-cors-headers
+    #   django-coverage-plugin
     #   django-filter
     #   django-gisserver
     #   django-healthchecks
@@ -481,6 +484,10 @@ django==5.2.9 \
 django-cors-headers==4.9.0 \
     --hash=sha256:15c7f20727f90044dcee2216a9fd7303741a864865f0c3657e28b7056f61b449 \
     --hash=sha256:fe5d7cb59fdc2c8c646ce84b727ac2bca8912a247e6e68e1fb507372178e59e8
+    # via -r requirements.in
+django-coverage-plugin==3.2.0 \
+    --hash=sha256:0e1460294ecd4b192bd09788ab9ad9380d9b8c9b45925b408ce6c620ac352585 \
+    --hash=sha256:a4a9400c784c86f1ba53a73c336508e07316c92345b34a0eb0b22b3b14cdbdd6
     # via -r requirements.in
 django-environ==0.12.0 \
     --hash=sha256:227dc891453dd5bde769c3449cf4a74b6f2ee8f7ab2361c93a07068f4179041a \
