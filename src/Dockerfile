@@ -1,4 +1,4 @@
-FROM python:3.13-bookworm AS builder
+FROM python:3.14-bookworm AS builder
 LABEL org.opencontainers.image.authors="datapunt@amsterdam.nl"
 
 RUN apt update && apt install --no-install-recommends -y \
@@ -15,7 +15,7 @@ RUN python -m pip install -U pip \
 RUN python -m pip -v install --no-cache-dir --no-deps -r $PIP_REQUIREMENTS
 
 # Start runtime image
-FROM python:3.13-slim-bookworm AS runtime
+FROM python:3.14-slim-bookworm AS runtime
 RUN useradd -U -r dsoapi
 RUN apt update && apt install --no-install-recommends -y \
     curl \
@@ -28,7 +28,7 @@ RUN apt update && apt install --no-install-recommends -y \
 
 # Copy python build artifacts from builder image
 COPY --from=builder /usr/local/bin/ /usr/local/bin/
-COPY --from=builder /usr/local/lib/python3.13/site-packages/ /usr/local/lib/python3.13/site-packages/
+COPY --from=builder /usr/local/lib/python3.14/site-packages/ /usr/local/lib/python3.14/site-packages/
 
 WORKDIR /app
 COPY . ./
