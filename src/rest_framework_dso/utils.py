@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from django.utils.functional import LazyObject, empty
 from rest_framework import serializers
 

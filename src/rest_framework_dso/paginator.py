@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import warnings
 
 from django.core.paginator import EmptyPage, PageNotAnInteger

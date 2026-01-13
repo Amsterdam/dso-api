@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import pytest
 from django.core.exceptions import PermissionDenied
 from rest_framework.exceptions import ValidationError

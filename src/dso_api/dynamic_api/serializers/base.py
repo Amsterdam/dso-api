@@ -20,8 +20,6 @@ The call to `:func:`~dso_api.dynamic_api.serializers.serializer_factory`
 constructs the derived classes for each dataset.
 """
 
-from __future__ import annotations
-
 import logging
 from collections import OrderedDict
 from collections.abc import Callable, Iterable

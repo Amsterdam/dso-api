@@ -44,7 +44,7 @@ target-version = ['py38']
 # ==== ruff ====
 [tool.ruff]
 line-length = 99
-target-version = "py38"
+target-version = "py314"
 
 [tool.ruff.lint]
 select = [
