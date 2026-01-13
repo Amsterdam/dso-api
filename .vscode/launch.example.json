@@ -14,8 +14,8 @@
                     "remoteRoot": "/app"
                 },
                 {
-                    "localRoot": "~/.pyenv/versions/3.13.1/envs/venv3.13.1/lib/python3.13/site-packages/",
-                    "remoteRoot": "/usr/local/lib/python3.13/site-packag"
+                    "localRoot": "~/.pyenv/versions/3.14.1/envs/dso/lib/python3.14/site-packages/",
+                    "remoteRoot": "/usr/local/lib/python3.14/site-packages"
                 }
             ]
         }
