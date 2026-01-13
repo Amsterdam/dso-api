@@ -18,8 +18,6 @@ Note that when switching to a role, another ``SET ROLE`` command is still possib
 because the current user doesn't change; only the current role does.
 """
 
-from __future__ import annotations
-
 import logging
 import re
 from urllib.parse import urlparse

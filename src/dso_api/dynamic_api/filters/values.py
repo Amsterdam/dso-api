@@ -1,7 +1,5 @@
 """Conversion of query-string values to Python types."""
 
-from __future__ import annotations
-
 import logging
 import math
 import re

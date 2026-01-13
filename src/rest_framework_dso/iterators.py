@@ -14,8 +14,6 @@ This includes:
 * :class:`ChunkedQuerySetIterator` allows prefetching objects on iterated chunks.
 """
 
-from __future__ import annotations
-
 import logging
 from collections import defaultdict
 from collections.abc import Callable, Iterable, Iterator
@@ -151,25 +149,6 @@ class ChunkedQuerySetIterator(Iterable[M]):
         return all_restored
 
 
-@lru_cache
-def _create_observable_queryset_subclass(
-    queryset_class: type[Q],
-) -> type[Q] | type[ObservableQuerySet]:
-    """Insert the ObservableQuerySet into a QuerySet subclass, as if it's a mixin.
-    This creates a custom subclass, that inherits both ObservableQuerySet and the QuerySet class.
-
-    Otherwise, custom methods on the queryset class are lost after
-    wrapping the queryset into an observable queryset,
-    """
-    if queryset_class is QuerySet:
-        # No need to create a custom class.
-        return ObservableQuerySet
-    else:
-        # Extend from both:
-        name = queryset_class.__name__.replace("QuerySet", "") + "ObservableQuerySet"
-        return type(name, (ObservableQuerySet, queryset_class), {})
-
-
 class ObservableQuerySet(QuerySet):
     """A QuerySet that has observable iterators.
 
@@ -251,6 +230,25 @@ class ObservableQuerySet(QuerySet):
 
         self._obs_iterator = iterator
         return iterator
+
+
+@lru_cache
+def _create_observable_queryset_subclass[Q](
+    queryset_class: type[Q],
+) -> type[Q] | type[ObservableQuerySet]:
+    """Insert the ObservableQuerySet into a QuerySet subclass, as if it's a mixin.
+    This creates a custom subclass, that inherits both ObservableQuerySet and the QuerySet class.
+
+    Otherwise, custom methods on the queryset class are lost after
+    wrapping the queryset into an observable queryset,
+    """
+    if queryset_class is QuerySet:
+        # No need to create a custom class.
+        return ObservableQuerySet
+    else:
+        # Extend from both:
+        name = queryset_class.__name__.replace("QuerySet", "") + "ObservableQuerySet"
+        return type(name, (ObservableQuerySet, queryset_class), {})
 
 
 class ObservableIterator(Iterator[T]):

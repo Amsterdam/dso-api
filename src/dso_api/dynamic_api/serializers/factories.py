@@ -19,8 +19,6 @@ that the user doesn't have access to. DRF supports that by making a deepcopy
 of the declared fields, so per-request changes don't affect the static class.
 """
 
-from __future__ import annotations
-
 import logging
 from typing import TypeVar, cast
 

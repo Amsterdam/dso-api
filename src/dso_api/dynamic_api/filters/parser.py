@@ -3,8 +3,6 @@
 This translates a query-string into ORM lookups using the Amsterdam Schema definitions.
 """
 
-from __future__ import annotations
-
 import operator
 from datetime import datetime
 from functools import reduce

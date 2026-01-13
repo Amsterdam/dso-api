@@ -5,8 +5,6 @@ during the rendering. Instead of having to load the main results in memory for a
 the main objects are inspected while they are consumed by the output stream.
 """
 
-from __future__ import annotations
-
 import logging
 from collections.abc import Iterator
 from copy import copy

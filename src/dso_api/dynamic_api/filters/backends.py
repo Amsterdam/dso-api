@@ -5,8 +5,6 @@ that allows adapting the QuerySet before the view/serializer starts.
 This gives a chance to add filtering and ordering to the queryset.
 """
 
-from __future__ import annotations
-
 from rest_framework.filters import BaseFilterBackend, OrderingFilter
 
 from dso_api.dynamic_api.filters import openapi

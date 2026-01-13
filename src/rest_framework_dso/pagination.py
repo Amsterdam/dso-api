@@ -4,8 +4,6 @@ This is essentially HAL-JSON style pagination as described in:
 https://tools.ietf.org/html/draft-kelly-json-hal-08
 """
 
-from __future__ import annotations
-
 from django.core.paginator import InvalidPage
 from rest_framework import pagination
 from rest_framework.exceptions import NotFound, PermissionDenied

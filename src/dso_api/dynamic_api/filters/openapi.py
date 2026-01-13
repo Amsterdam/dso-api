@@ -5,8 +5,6 @@ More fields as possible, since relations can be followed.
 Those fields are not included here.
 """
 
-from __future__ import annotations
-
 import re
 
 from schematools.types import DatasetFieldSchema, DatasetTableSchema, Temporal

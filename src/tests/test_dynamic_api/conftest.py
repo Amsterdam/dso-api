@@ -1,4 +1,4 @@
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 
 import pytest
 
@@ -13,7 +13,7 @@ def stadsdelen(gebieden_models):
         id="03630000000016.1",
         identificatie="03630000000016",
         volgnummer=1,
-        registratiedatum=datetime(2006, 6, 12, 5, 40, 12, tzinfo=timezone.utc),
+        registratiedatum=datetime(2006, 6, 12, 5, 40, 12, tzinfo=UTC),
         begin_geldigheid=date(2006, 6, 1),
         eind_geldigheid=date(2015, 1, 1),
         naam="Zuidoost",
@@ -24,7 +24,7 @@ def stadsdelen(gebieden_models):
         id="03630000000016.2",
         identificatie="03630000000016",
         volgnummer=2,
-        registratiedatum=datetime(2015, 1, 1, 5, 40, 12, tzinfo=timezone.utc),
+        registratiedatum=datetime(2015, 1, 1, 5, 40, 12, tzinfo=UTC),
         begin_geldigheid=date(2015, 1, 1),
         eind_geldigheid=None,
         naam="Zuidoost",
@@ -43,7 +43,7 @@ def gebied(gebieden_models, stadsdelen, buurt):
         id="03630950000019.1",
         identificatie="03630950000019",
         volgnummer=1,
-        registratiedatum=datetime(2015, 1, 1, 5, 40, 12, tzinfo=timezone.utc),
+        registratiedatum=datetime(2015, 1, 1, 5, 40, 12, tzinfo=UTC),
         begin_geldigheid=date(2014, 2, 20),
         naam="Bijlmer-Centrum",
     )

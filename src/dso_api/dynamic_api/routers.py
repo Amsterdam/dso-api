@@ -20,8 +20,6 @@ the :func:`~schematools.contrib.django.factories.DjangoModelFactory.build_models
 :func:`~dso_api.dynamic_api.views.viewset_factory`.
 """
 
-from __future__ import annotations
-
 import logging
 from collections import defaultdict
 from collections.abc import Iterable, Iterator

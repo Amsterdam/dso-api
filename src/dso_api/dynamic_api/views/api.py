@@ -11,8 +11,6 @@ for the specific model/endpoint. The same two-step logic can be found in the ser
 and model layer of this application.
 """
 
-from __future__ import annotations
-
 import logging
 from functools import cached_property
 
