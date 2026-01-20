@@ -1,6 +1,6 @@
 -r ./requirements.in
 
-black==25.12.0
+black==26.1.0
 ruff==0.14.13
 pytest-sugar==1.1.1
 termcolor==3.3.0
