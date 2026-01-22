@@ -375,6 +375,7 @@ packaging==25.0
     #   opentelemetry-instrumentation
     #   opentelemetry-instrumentation-flask
     #   pytest
+    #   wheel
 pathable==0.4.4
     # via jsonschema-path
 pathspec==1.0.3
@@ -565,7 +566,7 @@ virtualenv==20.36.1
     # via pre-commit
 webcolors==24.11.1
     # via jsonschema
-wheel==0.45.1
+wheel==0.46.2
     # via pip-tools
 whitenoise==6.11.0
     # via -r ./requirements.in
