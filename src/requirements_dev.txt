@@ -48,7 +48,7 @@ build==1.2.2.post1
     # via
     #   datadiensten-apikeyclient
     #   pip-tools
-cachetools==6.2.4
+cachetools==6.2.5
     # via -r ./requirements.in
 certifi==2025.6.15
     # via
@@ -119,7 +119,7 @@ django-cors-headers==4.9.0
     # via -r ./requirements.in
 django-coverage-plugin==3.2.0
     # via -r ./requirements.in
-django-debug-toolbar==6.1.0
+django-debug-toolbar==6.2.0
     # via -r requirements_dev.in
 django-environ==0.12.0
     # via
@@ -231,7 +231,7 @@ mapbox-vector-tile==2.2.0
     # via -r ./requirements.in
 mappyfile==1.0.2
     # via amsterdam-schema-tools
-markdown==3.10
+markdown==3.10.1
     # via -r ./requirements.in
 markdown-it-py==3.0.0
     # via rich
@@ -505,7 +505,7 @@ rpds-py==0.25.1
     # via
     #   jsonschema
     #   referencing
-ruff==0.14.13
+ruff==0.14.14
     # via -r requirements_dev.in
 shapely==2.1.2
     # via

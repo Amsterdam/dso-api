@@ -11,14 +11,14 @@ amsterdam-schema-tools[django] == 9.1.6
 azure-identity == 1.25.1
 azure-monitor-opentelemetry == 1.6.12
 beautifulsoup4==4.14.3
-cachetools == 6.2.4
+cachetools == 6.2.5
 datadiensten-apikeyclient == 0.6.0
 datapunt-authorization-django==1.7.0
 drf-spectacular == 0.29.0
 Geoalchemy2 == 0.18.1
 jsonschema == 4.26.0
 lru_dict == 1.4.1
-Markdown == 3.10
+Markdown == 3.10.1
 more-ds == 0.0.6
 more-itertools == 10.8.0
 numpy == 2.4.1
