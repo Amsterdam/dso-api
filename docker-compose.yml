@@ -47,7 +47,9 @@ services:
       AZURE_APPI_CONNECTION_STRING: "${AZURE_APPI_CONNECTION_STRING}"
       OAUTH_CLIENT_ID: "${OAUTH_CLIENT_ID}"
       OAUTH_JWKS_URL: "${OAUTH_JWKS_URL}"
-      PUB_JWKS: "$(cat src/jwks_test.json)"
+      OAUTH_JWKS_URLS: "${OAUTH_JWKS_URLS}"
+      OAUTH_CHECK_CLAIMS: "${OAUTH_CHECK_CLAIMS}"
+      PUB_JWKS: "${PUB_JWKS}"
       OAUTH_URL:  "${OAUTH_URL}"
       CLOUD_ENV: "${CLOUD_ENV}"
       DATAPUNT_API_URL: "${DATAPUNT_API_URL}"
@@ -66,6 +68,7 @@ services:
       - "../amsterdam-schema/profiles:/tmp/profiles"
       - "../amsterdam-schema/scopes:/tmp/scopes"
       - "../schema-tools:/tmp/schema-tools"
+      - "../authorization_django:/tmp/authorization_django"
     command: >
       /bin/bash -c "sh /app/initialize_db.sh
       && uwsgi --py-auto-reload=1 --enable-threads --lazy-apps --buffer-size=65535"

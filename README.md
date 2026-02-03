@@ -42,13 +42,17 @@ The following environment variables are useful for configuring a local developme
     Default is the `schemas` container in the compose file.
 * `DATASETS_INCLUDE`: A comma separated lists of datasets to expose using the API or to generate mock data for.
     Default: `None` (expose all loaded datasets).
-* `DATASETS_INCLUDE`: A comma separated lists of datasets to expose using the API or to generate mock data for.
-    Default: `None` (expose all loaded datasets).
 
 To connect to an authentication provider, set up the following environment variables:
 * `OAUTH_CLIENT_ID`: The client id of the application
 * `OAUTH_JWKS_URL`: The JWKS URL of the authentication provider.
 * `OAUTH_URL`:  The auth URL of the authentication provider.
+
+When supporting multiple authentication providers, set up these environment variables:
+* `OAUTH_JWKS_URLS`: List of the JWKS URLs of the authentication providers (when supporting multiple).
+* `OAUTH_CHECK_CLAIMS`: Dict containing the `aud` (audience) and `iss` (issuer) JWT claims  e.g. "iss=...,aud=..."
+
+For all authentication providers exept Keycloak these `aud` and `iss` claims need to be verified in the authorization_django middleware
 
 #### Example
 A local setup using the production dataset schema's with mock data:
