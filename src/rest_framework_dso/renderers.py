@@ -117,6 +117,7 @@ class BrowsableAPIRenderer(RendererMixin, renderers.BrowsableAPIRenderer):
         # Maintain compatibility with other types of ViewSets
         context["authorization_grantor"] = getattr(context["view"], "authorization_grantor", None)
         context["oauth_url"] = settings.OAUTH_URL
+        context["oauth_url_entra"] = settings.OAUTH_URL_ENTRA
 
         # Insert formatter into context
         if (

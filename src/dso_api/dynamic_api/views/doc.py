@@ -181,6 +181,7 @@ class DatasetDocView(TemplateView):
                 "main_title": main_title,
                 "tables": tables,
                 "oauth_url": settings.OAUTH_URL,
+                "oauth_url_entra": settings.OAUTH_URL_ENTRA,
                 "swagger_url": reverse(
                     f"dynamic_api:openapi{pattern_suffix}",
                     kwargs={"dataset_name": ds_schema.id, "dataset_version": dataset_version},

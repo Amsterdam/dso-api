@@ -42,6 +42,10 @@ SCHEMA_DEFS_URL = env.str("SCHEMA_DEFS_URL", "https://schemas.data.amsterdam.nl/
 OAUTH_URL = env.str(
     "OAUTH_URL", "https://iam.amsterdam.nl/auth/realms/datapunt-ad/protocol/openid-connect/"
 )
+OAUTH_URL_ENTRA = env.str(
+    "OAUTH_URL_ENTRA",
+    "https://login.microsoftonline.com/72fca1b1-2c2e-4376-a445-294d80196804/oauth2/authorize",
+)
 OAUTH_DEFAULT_SCOPE = env.str("OAUTH_DEFAULT_SCOPE", None)
 OAUTH_CLIENT_ID = os.getenv("OAUTH_CLIENT_ID", "dso-api-open-api")
 
