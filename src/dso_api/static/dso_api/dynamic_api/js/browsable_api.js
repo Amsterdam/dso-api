@@ -269,6 +269,20 @@ function authorize() {
     window.open(authUrl, "_blank")
 }
 
+function authorizeEntra() {
+    // Start authorization flow
+    authUrl = new URL(OAUTHURI_ENTRA)
+    if (oaSpec) {
+        authUrl = new URL(
+            oaSpec.components.securitySchemes.oauth2.flows.implicit.authorizationUrl
+        )
+    }
+    authUrl.searchParams.set("client_id", CLIENTID)
+    authUrl.searchParams.set("redirect_uri", REDIRECTURI)
+    authUrl.searchParams.set("response_type", "token")
+    window.open(authUrl, "_blank")
+}
+
 function getRequestSettings(type = "params") {
     // Get query parameter or header request settings from the form.
     let paramsEl = document.getElementById("request-" + type)

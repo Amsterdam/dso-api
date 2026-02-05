@@ -61,6 +61,15 @@ function authorize() {
     window.open(authUrl, "_blank")
 }
 
+function authorizeEntra() {
+    // Start authorization flow for Entra ID
+    authUrl = new URL(OAUTHURI_ENTRA)
+    authUrl.searchParams.set("client_id", CLIENTID)
+    authUrl.searchParams.set("redirect_uri", REDIRECTURI)
+    authUrl.searchParams.set("response_type", "token")
+    window.open(authUrl, "_blank")
+}
+
 async function getData(blobUrl, headers) {
     await fetch(blobUrl, { method: "GET", headers })
         .then((response) => {

@@ -26,7 +26,8 @@
 {% include "dso_api/dynamic_api/_apikey_banner.html" %}
 
 <div class="content-main" role="main"  aria-label="{% trans "main content" %}">
-  <btn id="authorize-btn" class="btn btn-primary {% if not oauth_url %}disabled{% endif %}" onclick="authorize()">Authorize</btn>
+  <btn id="authorize-btn" class="btn btn-primary {% if not oauth_url %}disabled{% endif %}" onclick="authorize()">Authorize KeyCloak</btn>
+  <btn id="authorize-btn" class="btn btn-primary {% if not oauth_url_entra %}disabled{% endif %}" onclick="authorizeEntra()">Authorize Entra ID</btn>
   <div class="page-header">
     <h1>{{ name }}</h1>
     <h5>Bronhouder: {{ authorization_grantor|default_if_none:"Onbekend"}}</h5>
@@ -360,6 +361,7 @@
   const CLIENTID = "dso-api-open-api";
   const REDIRECTURI = window.location.origin + "/v1/oauth2-redirect.html";
   const OAUTHURI = "{{ oauth_url }}"
+  const OAUTHURI_ENTRA = "{{ oauth_url_entra }}"
 </script>
 <script src="{% static "dso_api/dynamic_api/js/browsable_api.js" %}"></script>
 <script src="{% static "rest_framework/js/jquery-3.7.1.min.js" %}"></script>
