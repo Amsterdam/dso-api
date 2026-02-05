@@ -400,7 +400,7 @@ ply==3.11
     # via jsonpath-rw
 pre-commit==4.5.1
     # via -r requirements_dev.in
-protobuf==6.33.1
+protobuf==6.33.5
     # via mapbox-vector-tile
 psutil==7.0.0
     # via azure-monitor-opentelemetry-exporter
