@@ -118,6 +118,7 @@ class BrowsableAPIRenderer(RendererMixin, renderers.BrowsableAPIRenderer):
         context["authorization_grantor"] = getattr(context["view"], "authorization_grantor", None)
         context["oauth_url"] = settings.OAUTH_URL
         context["oauth_url_entra"] = settings.OAUTH_URL_ENTRA
+        context["oauth_clientid_entra"] = settings.OAUTH_CLIENT_ID_ENTRA
 
         # Insert formatter into context
         if (

@@ -277,9 +277,10 @@ function authorizeEntra() {
             oaSpec.components.securitySchemes.oauth2.flows.implicit.authorizationUrl
         )
     }
-    authUrl.searchParams.set("client_id", CLIENTID)
+    authUrl.searchParams.set("client_id", CLIENTID_ENTRA)
     authUrl.searchParams.set("redirect_uri", REDIRECTURI)
-    authUrl.searchParams.set("response_type", "token")
+    authUrl.searchParams.set("response_type", "code")
+    authUrl.searchParams.set("scope", `${CLIENTID_ENTRA}/.default`)
     window.open(authUrl, "_blank")
 }
 
@@ -899,6 +900,7 @@ function onParamKeySet(event) {
 }
 
 function parseJwt(token) {
+    console.log(token)
     let base64Url = token.split(".")[1]
     let base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/")
     let jsonPayload = decodeURIComponent(
