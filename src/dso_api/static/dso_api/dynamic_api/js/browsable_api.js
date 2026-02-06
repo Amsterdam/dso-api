@@ -1094,6 +1094,7 @@ function setHeaders(headers = null) {
             )
         }
         let token = JSON.parse(window.localStorage.getItem("authToken"))
+        console.log(token)
         if (token) {
             addSetting(
                 "Authorization",
