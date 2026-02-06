@@ -63,10 +63,10 @@ function authorize() {
 
 function authorizeEntra() {
     // Start authorization flow for Entra ID
-    authUrl = new URL(OAUTHURI_ENTRA)
-    authUrl.searchParams.set("client_id", CLIENTID)
+    authUrl.searchParams.set("client_id", CLIENTID_ENTRA)
     authUrl.searchParams.set("redirect_uri", REDIRECTURI)
-    authUrl.searchParams.set("response_type", "token")
+    authUrl.searchParams.set("response_type", "code")
+    authUrl.searchParams.set("scope", "d56aefb3-b590-4e74-8140-9f0c465d3135/.default")
     window.open(authUrl, "_blank")
 }
 
