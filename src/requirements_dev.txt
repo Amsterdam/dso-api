@@ -4,7 +4,7 @@
 #
 #    pip-compile --output-file=requirements_dev.txt requirements_dev.in
 #
-amsterdam-schema-tools[django]==9.1.9
+amsterdam-schema-tools[django]==9.1.10
     # via -r ./requirements.in
 argparse==1.4.0
     # via uwsgi-readiness-check
@@ -81,9 +81,9 @@ cryptography==46.0.4
     #   jwcrypto
     #   msal
     #   pyjwt
-datadiensten-apikeyclient==0.6.0
+datadiensten-apikeyclient==0.7.1
     # via -r ./requirements.in
-datapunt-authorization-django==1.7.0
+datapunt-authorization-django==1.8.0
     # via -r ./requirements.in
 debugpy==1.8.20
     # via -r requirements_dev.in
@@ -129,7 +129,7 @@ django-extensions==4.1
     # via -r requirements_dev.in
 django-filter==25.1
     # via djangorestframework-gis
-django-gisserver==2.3.0
+django-gisserver==2.3.1
     # via
     #   -r ./requirements.in
     #   amsterdam-schema-tools
@@ -231,7 +231,7 @@ mapbox-vector-tile==2.2.0
     # via -r ./requirements.in
 mappyfile==1.0.2
     # via amsterdam-schema-tools
-markdown==3.10.1
+markdown==3.10.2
     # via -r ./requirements.in
 markdown-it-py==3.0.0
     # via rich
@@ -425,7 +425,7 @@ pygments==2.19.2
     #   -r ./requirements.in
     #   pytest
     #   rich
-pyjwt[crypto]==2.8.0
+pyjwt[crypto]==2.10.1
     # via
     #   datadiensten-apikeyclient
     #   msal
@@ -505,7 +505,7 @@ rpds-py==0.25.1
     # via
     #   jsonschema
     #   referencing
-ruff==0.14.14
+ruff==0.15.0
     # via -r requirements_dev.in
 shapely==2.1.2
     # via
