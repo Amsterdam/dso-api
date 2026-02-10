@@ -434,9 +434,9 @@ cryptography==46.0.4 \
     #   jwcrypto
     #   msal
     #   pyjwt
-datadiensten-apikeyclient==0.6.0 \
-    --hash=sha256:4988b82e27886b31ed1d935d00e814cc9cfca4d4df5dc589c598f22433c010e0 \
-    --hash=sha256:6dab4a24c5c72028d57feb4d259b0a7df29da66e7709c7e68fd9ebace8959cb7
+datadiensten-apikeyclient==0.7.1 \
+    --hash=sha256:14737b73f6a401a3eea87cdfa2c7d9bf973691e9492cba045d2e1cd7c0da0d9a \
+    --hash=sha256:fc298ffa2d54a467d2e2c534621e4c120aa7f100b58fa51d1ccce381f08efe69
     # via -r requirements.in
 datapunt-authorization-django==1.8.0 \
     --hash=sha256:4294d0d4850b066a92776dff72f60c611536690f829e2d19d8cb9b5a9abc8352 \
@@ -494,9 +494,9 @@ django-filter==25.1 \
     --hash=sha256:1ec9eef48fa8da1c0ac9b411744b16c3f4c31176c867886e4c48da369c407153 \
     --hash=sha256:4fa48677cf5857b9b1347fed23e355ea792464e0fe07244d1fdfb8a806215b80
     # via djangorestframework-gis
-django-gisserver==2.3.0 \
-    --hash=sha256:da22f095b4869c3854dbc38000099eef75e7b8750c1791d5623700bca719a965 \
-    --hash=sha256:dce78549c3aebc0f7075db447fcb7cb86b772ca7138ea1e69e0fd570ceab87be
+django-gisserver==2.3.1 \
+    --hash=sha256:3852e81c0c3e9924f1118e967ea9e87d4d9de7b36717da56385b85725ffcac59 \
+    --hash=sha256:4ce4c2e5a9cf613a99dd9a1b6e23d5c24022a8186e9482bab3201c7f6920b919
     # via
     #   -r requirements.in
     #   amsterdam-schema-tools
@@ -771,9 +771,9 @@ mappyfile==1.0.2 \
     --hash=sha256:43ada1b98cfc0fd670e6f384d74b15f6601aadb5ab9e1f1d506e839a37a9b8dc \
     --hash=sha256:695c9a8841ce3e8fef49314f9873d7efda2544dea0825b6550540d9a7e650ceb
     # via amsterdam-schema-tools
-markdown==3.10.1 \
-    --hash=sha256:1c19c10bd5c14ac948c53d0d762a04e2fa35a6d58a6b7b1e6bfcbe6fefc0001a \
-    --hash=sha256:867d788939fe33e4b736426f5b9f651ad0c0ae0ecf89df0ca5d1176c70812fe3
+markdown==3.10.2 \
+    --hash=sha256:994d51325d25ad8aa7ce4ebaec003febcce822c3f8c911e3b17c52f7f589f950 \
+    --hash=sha256:e91464b71ae3ee7afd3017d9f358ef0baf158fd9a298db92f1d4761133824c36
     # via -r requirements.in
 markdown-it-py==3.0.0 \
     --hash=sha256:355216845c60bd96232cd8d8c40e8f9765cc86f46880e43a8fd22dc1a1a8cab1 \
@@ -1312,9 +1312,9 @@ pygments==2.19.2 \
     #   -r requirements.in
     #   pytest
     #   rich
-pyjwt[crypto]==2.8.0 \
-    --hash=sha256:57e28d156e3d5c10088e0c68abb90bfac3df82b40a71bd0daa20c65ccd5c23de \
-    --hash=sha256:59127c392cc44c2da5bb3192169a91f429924e17aff6534d70fdc02ab3e04320
+pyjwt[crypto]==2.10.1 \
+    --hash=sha256:3cc5772eb20009233caf06e9d8a0577824723b44e6648ee0a2aedb6cf9381953 \
+    --hash=sha256:dcdd193e30abefd5debf142f9adfcdd2b58004e644f25406ffaebd50bd98dacb
     # via
     #   datadiensten-apikeyclient
     #   msal
