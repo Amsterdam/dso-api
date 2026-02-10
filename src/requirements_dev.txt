@@ -4,7 +4,7 @@
 #
 #    pip-compile --output-file=requirements_dev.txt requirements_dev.in
 #
-amsterdam-schema-tools[django]==9.1.9
+amsterdam-schema-tools[django]==9.1.11
     # via -r requirements.in
 argparse==1.4.0
     # via uwsgi-readiness-check
@@ -524,8 +524,9 @@ sqlalchemy==2.0.41
     # via
     #   amsterdam-schema-tools
     #   geoalchemy2
-sqlparse==0.5.3
+sqlparse==0.5.5
     # via
+    #   amsterdam-schema-tools
     #   django
     #   django-debug-toolbar
 stevedore==5.4.1
