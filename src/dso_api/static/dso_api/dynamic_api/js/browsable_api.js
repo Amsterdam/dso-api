@@ -28,6 +28,19 @@ var dsoShowToken = (token) => {}
 var oaParams = null
 var oaSpec = null
 
+// Entra ID authorization config
+const msalConfig = {
+    auth: {
+        clientId: CLIENTID_ENTRA,
+        authority: 'https://login.microsoftonline.com/72fca1b1-2c2e-4376-a445-294d80196804',
+        redirectUri: window.location.origin + '/v1',
+    }
+};
+
+// Entra ID module init
+const msalInstance = new msal.PublicClientApplication(msalConfig);
+let isInitialized = false;
+
 if (document.readyState != "loading") {
     onPageLoad()
 }
@@ -69,6 +82,10 @@ function onPageLoad() {
         // Update PAGEURL
         PAGEURL = newUrl
     }
+
+    // Check if token is received when redirected from Entra log in
+    document.addEventListener('DOMContentLoaded', initializeMsal);
+    initializeMsal();
 
     setURL(PAGEURL.href)
     setParams()
@@ -269,19 +286,67 @@ function authorize() {
     window.open(authUrl, "_blank")
 }
 
-function authorizeEntra() {
-    // Start authorization flow
-    authUrl = new URL(OAUTHURI_ENTRA)
-    if (oaSpec) {
-        authUrl = new URL(
-            oaSpec.components.securitySchemes.oauth2.flows.implicit.authorizationUrl
-        )
+
+async function initializeMsal() {
+    console.log("Checking if msal is initialised")
+    if (isInitialized) return;
+
+    try {
+        console.log("Awaitng handleRedirectPromise:")
+        const response = await msalInstance.handleRedirectPromise();
+        if (response) {
+            console.log('Login complete, token saved');
+            console.log(response)
+            let token = response
+            window.localStorage.setItem("authToken", JSON.stringify(token))
+            addSetting("Authorization", "Bearer " + token.accessToken)
+            showHeaders()
+        }
+        else {
+            console.log("No response")
+        }
+    } catch (error) {
+        console.error('Redirect processing failed:');
+        console.log(error)
     }
-    authUrl.searchParams.set("client_id", CLIENTID_ENTRA)
-    authUrl.searchParams.set("redirect_uri", REDIRECTURI)
-    authUrl.searchParams.set("response_type", "code")
-    authUrl.searchParams.set("scope", `${CLIENTID_ENTRA}/.default`)
-    window.open(authUrl, "_blank")
+    isInitialized = true;
+}
+
+
+async function authorizeEntra() {
+    console.log("AuthorizeEntra button pressed!")
+    const request = {scopes: [`${CLIENTID_ENTRA}/.default`]}
+    try {
+        const accounts = msalInstance.getAllAccounts();
+        console.log(accounts)
+        if (accounts.length === 0) {
+            console.log("Calling loginRedirect")
+            await msalInstance.loginRedirect({
+                scopes: [`${CLIENTID_ENTRA}/.default`]
+            });
+        }
+        else if (accounts.length === 1) {
+            console.log("Found 1 account")
+            console.log(accounts[0])
+            request.account = accounts[0]
+            try {
+                console.log("Trying acquireTokenRedirect")
+                await msalInstance.acquireTokenRedirect(request)
+            } catch (error) {
+                console.log("Retrieving access token failed")
+                console.log(error)
+            }
+        }
+        else {
+            console.log("Found multiple accounts, clearing session storage")
+            sessionStorage.clear();
+        }
+    } catch (error) {
+        console.log(error)
+        if (error.errorCode === 'interaction_in_progress') {
+            sessionStorage.clear();
+        }
+    }
 }
 
 function getRequestSettings(type = "params") {
@@ -900,7 +965,6 @@ function onParamKeySet(event) {
 }
 
 function parseJwt(token) {
-    console.log(token)
     let base64Url = token.split(".")[1]
     let base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/")
     let jsonPayload = decodeURIComponent(
@@ -1058,7 +1122,8 @@ function setInfoBubble(element) {
             (new Date(token.exp * 1000) - new Date()) / 60000
         )
         expiredText = `Exp:${minutesRemaining}min`
-        summary = `${token.preferred_username} ${
+        var username = (token.preferred_username) ? token.preferred_username : token.upn
+        summary = `${username} ${
             isExpired ? "Expired" : expiredText
         } `
         infoEl.innerHTML = `<div class="summary">${summary}</div>`
@@ -1097,7 +1162,7 @@ function setHeaders(headers = null) {
         if (token) {
             addSetting(
                 "Authorization",
-                "Bearer " + token.access_token,
+                "Bearer " + accessToken,
                 "eq",
                 "header",
                 false

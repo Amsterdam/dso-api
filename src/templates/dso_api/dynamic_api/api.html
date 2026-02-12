@@ -24,6 +24,11 @@
 
 {% block content %}
 {% include "dso_api/dynamic_api/_apikey_banner.html" %}
+<!-- MSAL CDN (v2.x; latest stable for browser globals as of 2026) -->
+<script src="https://alcdn.msauth.net/browser/2.3.0/js/msal-browser.min.js"
+        crossorigin="anonymous"
+        integrity="sha384-o+Sncs5XJ3NEAeriM/FV8YGZrh7mZk4GfNutRTbYjsDNJxb7caCLeqiDabistgwW">
+</script>
 
 <div class="content-main" role="main"  aria-label="{% trans "main content" %}">
   <btn id="authorize-btn" class="btn btn-primary {% if not oauth_url %}disabled{% endif %}" onclick="authorize()">Authorize KeyCloak</btn>

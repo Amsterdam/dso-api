@@ -127,3 +127,4 @@ docker-compose.override.y*ml
 
 # static files
 */static/*
+*/node_modules/*
