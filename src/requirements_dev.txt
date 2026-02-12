@@ -83,7 +83,7 @@ cryptography==46.0.5
     #   pyjwt
 datadiensten-apikeyclient==0.6.0
     # via -r requirements.in
-datapunt-authorization-django==1.8.0
+datapunt-authorization-django==1.7.0
     # via -r requirements.in
 debugpy==1.8.20
     # via -r requirements_dev.in
