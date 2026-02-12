@@ -124,3 +124,6 @@ ENV/
 # Docker
 docker-compose.override.*.y*ml
 docker-compose.override.y*ml
+
+# static files
+*/static/*

@@ -24,9 +24,16 @@
 
 {% block content %}
 {% include "dso_api/dynamic_api/_apikey_banner.html" %}
+<!-- MSAL CDN (v2.x; latest stable for browser globals as of 2026) -->
+<script src="https://alcdn.msauth.net/browser/2.3.0/js/msal-browser.min.js"
+        crossorigin="anonymous"
+        integrity="sha384-o+Sncs5XJ3NEAeriM/FV8YGZrh7mZk4GfNutRTbYjsDNJxb7caCLeqiDabistgwW">
+</script>
 
 <div class="content-main" role="main"  aria-label="{% trans "main content" %}">
-  <btn id="authorize-btn" class="btn btn-primary {% if not oauth_url %}disabled{% endif %}" onclick="authorize()">Authorize</btn>
+  <btn id="authorize-btn" class="btn btn-primary {% if not oauth_url %}disabled{% endif %}" onclick="authorize()">Authorize KeyCloak</btn>
+  <btn style="margin-right: 5px;" id="authorize-btn" class="btn btn-primary {% if not oauth_authority_entra %}disabled{% endif %}" onclick="authorizeEntra()">Authorize Entra ID</btn>
+
   <div class="page-header">
     <h1>{{ name }}</h1>
     <h5>Bronhouder: {{ authorization_grantor|default_if_none:"Onbekend"}}</h5>
@@ -358,8 +365,10 @@
     }
   };
   const CLIENTID = "dso-api-open-api";
+  const CLIENTID_ENTRA = "{{ oauth_clientid_entra }}"
   const REDIRECTURI = window.location.origin + "/v1/oauth2-redirect.html";
   const OAUTHURI = "{{ oauth_url }}"
+  const AUTHORITY_ENTRA = "{{ oauth_authority_entra }}"
 </script>
 <script src="{% static "dso_api/dynamic_api/js/browsable_api.js" %}"></script>
 <script src="{% static "rest_framework/js/jquery-3.7.1.min.js" %}"></script>
