@@ -34,8 +34,10 @@
 </body>
 <script>
     const CLIENTID = "dso-api-open-api";
+    const CLIENTID_ENTRA = "{{ oauth_client_id_entra }}"
     const REDIRECTURI = window.location.origin + "/v1/oauth2-redirect.html";
     const OAUTHURI = "{{ oauth_url }}"
+    const OAUTHURI_ENTRA = "{{ oauth_url_entra }}"
 </script>
 <script src="{% static 'dso_api/dynamic_api/js/docs.js' %}"></script>
 </html>
