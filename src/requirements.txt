@@ -438,9 +438,9 @@ datadiensten-apikeyclient==0.6.0 \
     --hash=sha256:4988b82e27886b31ed1d935d00e814cc9cfca4d4df5dc589c598f22433c010e0 \
     --hash=sha256:6dab4a24c5c72028d57feb4d259b0a7df29da66e7709c7e68fd9ebace8959cb7
     # via -r requirements.in
-datapunt-authorization-django==2.0.0 \
-    --hash=sha256:3d6fda4d10bd221dcca3c41ba7f6d85fc892f828923be64c0ebc39ed02b88053 \
-    --hash=sha256:ad945911db5fe5172b3886758724b70cdcb1f38023aab30c38d41f119709ee80
+datapunt-authorization-django==1.8.0 \
+    --hash=sha256:4294d0d4850b066a92776dff72f60c611536690f829e2d19d8cb9b5a9abc8352 \
+    --hash=sha256:76d495a875357d6c45fcfbc981e0f18ce419b73548187b7d586fb750b41f591f
     # via -r requirements.in
 decorator==5.2.1 \
     --hash=sha256:65f266143752f734b0a7cc83c46f4618af75b8c5911b00ccb61d0ac9b6da0360 \
