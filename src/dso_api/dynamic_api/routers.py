@@ -408,8 +408,8 @@ class DynamicRouter(NestedDefaultRouter):
             # from the FeatureType definition, and not re-generated from Amsterdam Schema.
             yield path(
                 f"/docs/wfs-datasets/{dataset.path}.html",
-                RedirectView.as_view(pattern_name="wfs"),
-                kwargs={"dataset_name": dataset.id},
+                RedirectView.as_view(pattern_name="dynamic_api:wfs"),
+                kwargs={"dataset_name": dataset_id},
             )
 
     def _build_openapi_views(self, datasets: Iterable[Dataset]) -> list[URLPattern]:
