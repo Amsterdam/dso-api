@@ -34,8 +34,17 @@
 </body>
 <script>
     const CLIENTID = "dso-api-open-api";
+    const CLIENTID_ENTRA = "{{ oauth_client_id_entra }}";
+    const AUTHORITY_ENTRA = "{{ oauth_authority_entra }}";
     const REDIRECTURI = window.location.origin + "/v1/oauth2-redirect.html";
-    const OAUTHURI = "{{ oauth_url }}"
+    const OAUTHURI = "{{ oauth_url }}";
+
 </script>
-<script src="{% static 'dso_api/dynamic_api/js/docs.js' %}"></script>
+<!-- MSAL CDN (v2.x; latest stable for browser globals as of 2026) -->
+<script src="https://alcdn.msauth.net/browser/2.3.0/js/msal-browser.min.js"
+        crossorigin="anonymous"
+        integrity="sha384-o+Sncs5XJ3NEAeriM/FV8YGZrh7mZk4GfNutRTbYjsDNJxb7caCLeqiDabistgwW">
+</script>
+<script src="{% static "dso_api/dynamic_api/js/authorization.js" %}"></script>
+<script src="{% static "dso_api/dynamic_api/js/docs.js" %}"></script>
 </html>
