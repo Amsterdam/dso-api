@@ -255,20 +255,6 @@ function updatePageRequest(
         })
 }
 
-function authorize() {
-    // Start authorization flow
-    authUrl = new URL(OAUTHURI)
-    if (oaSpec) {
-        authUrl = new URL(
-            oaSpec.components.securitySchemes.oauth2.flows.implicit.authorizationUrl
-        )
-    }
-    authUrl.searchParams.set("client_id", CLIENTID)
-    authUrl.searchParams.set("redirect_uri", REDIRECTURI)
-    authUrl.searchParams.set("response_type", "token")
-    window.open(authUrl, "_blank")
-}
-
 function getRequestSettings(type = "params") {
     // Get query parameter or header request settings from the form.
     let paramsEl = document.getElementById("request-" + type)
@@ -1042,7 +1028,8 @@ function setInfoBubble(element) {
             (new Date(token.exp * 1000) - new Date()) / 60000
         )
         expiredText = `Exp:${minutesRemaining}min`
-        summary = `${token.preferred_username} ${
+        var username = (token.preferred_username) ? token.preferred_username : token.upn
+        summary = `${username} ${
             isExpired ? "Expired" : expiredText
         } `
         infoEl.innerHTML = `<div class="summary">${summary}</div>`
@@ -1079,9 +1066,10 @@ function setHeaders(headers = null) {
         }
         let token = JSON.parse(window.localStorage.getItem("authToken"))
         if (token) {
+            var access_token = (token.access_token) ? token.access_token : token.accessToken
             addSetting(
                 "Authorization",
-                "Bearer " + token.access_token,
+                "Bearer " + access_token,
                 "eq",
                 "header",
                 false

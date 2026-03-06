@@ -33,8 +33,8 @@
       <dt class="col-xs-2">GeoJSON-export:</dt><dd><a href="{{ table_data.uri }}?_format=geojson">{{ table_data.uri }}?_format=geojson</a></dd>
       {% for export_info in table_data.exports %}
         {% for ext_info in export_info %}
-            <dt class="col-xs-2">Downloadable {{ ext_info.description }}-export:</dt>
-            <dd><a href="{{ ext_info.url }}" class="{{ ext_info.kind }}">{{ ext_info.url }}</a></dd>
+            <dt class="col-xs-2">Downloadable {{ ext_info.description }}-export TESTING:</dt>
+            <dd><a href="{{ ext_info.url }}" class="confidential">{{ ext_info.url }}</a></dd>
         {% endfor %}
       {% endfor %}
     </dl>
