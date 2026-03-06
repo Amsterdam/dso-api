@@ -28,6 +28,19 @@ var dsoShowToken = (token) => {}
 var oaParams = null
 var oaSpec = null
 
+// Entra ID authorization config
+const msalConfig = {
+    auth: {
+        clientId: CLIENTID_ENTRA,
+        authority: AUTHORITY_ENTRA,
+        redirectUri: window.location.origin + '/v1',
+    }
+};
+
+// Entra ID module init
+const msalInstance = new msal.PublicClientApplication(msalConfig);
+let isInitialized = false;
+
 if (document.readyState != "loading") {
     onPageLoad()
 }
@@ -69,6 +82,10 @@ function onPageLoad() {
         // Update PAGEURL
         PAGEURL = newUrl
     }
+
+    // Check if token is received when redirected from Entra log in
+    document.addEventListener('DOMContentLoaded', initializeMsal);
+    initializeMsal();
 
     setURL(PAGEURL.href)
     setParams()
@@ -253,6 +270,78 @@ function updatePageRequest(
             setParams()
             setHeaders(headerSettings)
         })
+}
+
+function authorizeKeycloak() {
+    console.log("AuthorizeKeycloak button pressed!")
+    // Start authorization flow
+    authUrl = new URL(OAUTHURI)
+    authUrl.searchParams.set("client_id", CLIENTID)
+    authUrl.searchParams.set("redirect_uri", REDIRECTURI)
+    authUrl.searchParams.set("response_type", "token")
+    window.open(authUrl, "_blank")
+}
+
+
+async function initializeMsal() {
+    console.log("Checking if msal is initialised")
+    if (isInitialized) return;
+
+    try {
+        console.log("Awaitng handleRedirectPromise:")
+        const response = await msalInstance.handleRedirectPromise();
+        if (response) {
+            console.log('Login complete, token saved');
+            console.log(response)
+            window.localStorage.setItem("authToken", JSON.stringify(response))
+            addSetting("Authorization", "Bearer " + response.accessToken)
+            showHeaders()
+        }
+        else {
+            console.log("No response")
+        }
+    } catch (error) {
+        console.error('Redirect processing failed:');
+        console.log(error)
+    }
+    isInitialized = true;
+}
+
+
+async function authorizeEntra() {
+    console.log("AuthorizeEntra button pressed!")
+    const request = {scopes: [`${CLIENTID_ENTRA}/.default`]}
+    try {
+        const accounts = msalInstance.getAllAccounts();
+        console.log(accounts)
+        if (accounts.length === 0) {
+            console.log("Calling loginRedirect")
+            await msalInstance.loginRedirect({
+                scopes: [`${CLIENTID_ENTRA}/.default`]
+            });
+        }
+        else if (accounts.length === 1) {
+            console.log("Found 1 account")
+            console.log(accounts[0])
+            request.account = accounts[0]
+            try {
+                console.log("Trying acquireTokenRedirect")
+                await msalInstance.acquireTokenRedirect(request)
+            } catch (error) {
+                console.log("Retrieving access token failed")
+                console.log(error)
+            }
+        }
+        else {
+            console.log("Found multiple accounts, clearing session storage")
+            sessionStorage.clear();
+        }
+    } catch (error) {
+        console.log(error)
+        if (error.errorCode === 'interaction_in_progress') {
+            sessionStorage.clear();
+        }
+    }
 }
 
 function getRequestSettings(type = "params") {
@@ -1066,14 +1155,16 @@ function setHeaders(headers = null) {
         }
         let token = JSON.parse(window.localStorage.getItem("authToken"))
         if (token) {
-            var access_token = (token.access_token) ? token.access_token : token.accessToken
-            addSetting(
-                "Authorization",
-                "Bearer " + access_token,
-                "eq",
-                "header",
-                false
-            )
+            var accessToken = (token.access_token) ? token.access_token : token.accessToken
+            if (token) {
+                addSetting(
+                    "Authorization",
+                    "Bearer " + accessToken,
+                    "eq",
+                    "header",
+                    false
+                )
+            }
         }
     }
 
