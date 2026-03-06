@@ -201,6 +201,8 @@ class DatasetDocView(TemplateView):
                     if ds.has_geometry_fields
                     else None
                 ),
+                "oauth_client_id_entra": settings.OAUTH_CLIENT_ID_ENTRA,
+                "oauth_authority_entra": settings.OAUTH_AUTHORITY_ENTRA,
             }
         )
 
