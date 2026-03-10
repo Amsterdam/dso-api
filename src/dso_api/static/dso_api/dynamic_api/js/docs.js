@@ -3,6 +3,7 @@ if (document.addEventListener) {
 }
 
 // Override the same object from browsable_api.js, as this one we don't want to alter the DOM
+// This is just for Keycloak
 window.swaggerUIRedirectOauth2 = {
     state: null,
     redirectUrl: REDIRECTURI,
@@ -19,17 +20,37 @@ window.swaggerUIRedirectOauth2 = {
         const token = authorizationResult.token
         window.localStorage.setItem("authToken", JSON.stringify(token))
 
-        const alert = window.document.getElementById("auth-alert")
-        if (alert){
-            console.log(alert)
-            alert.innerHTML = "<strong>Inloggen gelukt! Je kunt de actie nu uitvoeren.</strong>"
+        // If exportURL is saved in local storage, download export
+        if (window.localStorage.getItem("exportURL")) {
+            const url = window.localStorage.getItem("exportURL")
+            getData(url, {
+                Authorization: `Bearer ${token.access_token}`,
+            })
+            window.localStorage.removeItem("exportURL")
         }
     },
 }
 
+// Entra ID authorization config
+const msalConfig = {
+    auth: {
+        clientId: CLIENTID_ENTRA,
+        authority: AUTHORITY_ENTRA,
+        redirectUri: window.location.origin + '/v1',
+    }
+};
+
+// Entra ID module init
+const msalInstance = new msal.PublicClientApplication(msalConfig);
+let isInitialized = false;
+
 
 function onPageLoad() {
     console.log("Loading doc page now!")
+    // Check if token is received when redirected from Entra log in
+    document.addEventListener('DOMContentLoaded', initializeMsal);
+    initializeMsal();
+
     confidential_links = Array.from(
         document.getElementsByClassName("confidential")
     )
@@ -67,24 +88,26 @@ function onPageLoad() {
                     })
                 } else {
                     console.log("Token is expired! Refreshing now.")
+                    window.localStorage.setItem("exportURL", url)
                     if (token.access_token) {
-                        const token = authorizeKeycloak()
-                        console.log(token)
-                        getData(url, {
-                            Authorization: `Bearer ${access_token}`,
-                        })
+                        authorizeKeycloak()
+                        //window.localStorage.setItem("authToken", JSON.stringify(response))
+
+                        //getData(url, {
+                            //Authorization: `Bearer ${access_token}`,
+                        //})
                     }
                     else {
                         console.log("Refreshing Entra token")
-                        const token = authorizeEntra()
-                        console.log(token)
-                        getData(url, {
-                            Authorization: `Bearer ${access_token}`,
-                        })
+                        authorizeEntra()
+                        //getData(url, {
+                            //Authorization: `Bearer ${access_token}`,
+                        //})
                     }
                 }
             } else {
                 console.log("No token found in local storage, please authorize with Keycloak or Entra")
+                window.localStorage.setItem("exportURL", url)
                 showAuthAlert(e)
             }
         })
@@ -93,18 +116,18 @@ function onPageLoad() {
 
 function showAuthAlert(event){
     // Show alert with authorization buttons
-    parent = event.target.parentNode.parentNode
+    const parent = event.target.parentNode.parentNode
 
-    alert = document.createElement("div")
-    alert.id = "auth-alert"
-    alert.style.backgroundColor = "#c5dcf1"
-    alert.style.borderRadius = "5px"
-    alert.style.padding = "15px"
-    alert.style.margin = "10px"
-    alert.innerHTML = "<strong>Voor deze actie moet je ingelogd zijn. Kies één van onderstaande inlogmethodes:</strong>"
-    //alert.innerHTML = "Voor deze actie moet je ingelogd zijn. Kies één van onderstaande inlogmethodes:"
+    const alert_banner = document.createElement("div")
+    alert_banner.id = "auth-alert"
+    alert_banner.style.backgroundColor = "#c5dcf1"
+    alert_banner.style.borderRadius = "5px"
+    alert_banner.style.padding = "15px"
+    alert_banner.style.margin = "10px"
+    alert_banner.innerHTML = "<strong>Voor deze actie moet je ingelogd zijn. Kies één van onderstaande inlogmethodes:</strong>"
+    //alert_banner.innerHTML = "Voor deze actie moet je ingelogd zijn. Kies één van onderstaande inlogmethodes:"
 
-    btnDiv = document.createElement("div")
+    const btnDiv = document.createElement("div")
     btnDiv.id = 'auth-btn-div'
     btnDiv.style.marginTop = "10px"
 
@@ -125,8 +148,8 @@ function showAuthAlert(event){
     kcButton.addEventListener('click', authorizeKeycloak)
     btnDiv.appendChild(kcButton)
 
-    alert.appendChild(btnDiv)
-    parent.appendChild(alert)
+    alert_banner.appendChild(btnDiv)
+    parent.appendChild(alert_banner)
 
 }
 
@@ -154,6 +177,84 @@ async function getData(blobUrl, headers) {
         .catch((error) => {
             console.error("Error downloading file:", error)
         })
-        const alert = window.document.getElementById("auth-alert")
-        alert.remove()
+        const alert_banner = window.document.getElementById("auth-alert")
+        alert_banner.remove()
+}
+
+async function initializeMsal() {
+    console.log("Checking if msal is initialised")
+    if (isInitialized) return;
+
+    try {
+        console.log("Awaitng handleRedirectPromise:")
+        const response = await msalInstance.handleRedirectPromise();
+        if (response) {
+            console.log('Login complete, token saved');
+            console.log(response)
+            window.localStorage.setItem("authToken", JSON.stringify(response))
+
+            // If exportURL is saved in local storage, download export
+            if (window.localStorage.getItem("exportURL")) {
+                const url = window.localStorage.getItem("exportURL")
+                getData(url, {
+                    Authorization: `Bearer ${response.accessToken}`,
+                })
+                window.localStorage.removeItem("exportURL")
+            }
+        }
+        else {
+            console.log("No response")
+        }
+    } catch (error) {
+        console.error('Redirect processing failed:');
+        console.log(error)
+    }
+    isInitialized = true;
+}
+
+
+async function authorizeEntra() {
+    console.log("AuthorizeEntra button pressed!")
+    const request = {scopes: [`${CLIENTID_ENTRA}/.default`]}
+    try {
+        const accounts = msalInstance.getAllAccounts();
+        console.log(accounts)
+        if (accounts.length === 0) {
+            console.log("Calling loginRedirect")
+            await msalInstance.loginRedirect({
+                scopes: [`${CLIENTID_ENTRA}/.default`]
+            });
+        }
+        else if (accounts.length === 1) {
+            console.log("Found 1 account")
+            console.log(accounts[0])
+            request.account = accounts[0]
+            try {
+                console.log("Trying acquireTokenRedirect")
+                await msalInstance.acquireTokenRedirect(request)
+            } catch (error) {
+                console.log("Retrieving access token failed")
+                console.log(error)
+            }
+        }
+        else {
+            console.log("Found multiple accounts, clearing session storage")
+            sessionStorage.clear();
+        }
+    } catch (error) {
+        console.log(error)
+        if (error.errorCode === 'interaction_in_progress') {
+            sessionStorage.clear();
+        }
+    }
+}
+
+function authorizeKeycloak() {
+    console.log("AuthorizeKeycloak button pressed!")
+    // Start authorization flow
+    authUrl = new URL(OAUTHURI)
+    authUrl.searchParams.set("client_id", CLIENTID)
+    authUrl.searchParams.set("redirect_uri", REDIRECTURI)
+    authUrl.searchParams.set("response_type", "token")
+    window.open(authUrl, "_blank")
 }
