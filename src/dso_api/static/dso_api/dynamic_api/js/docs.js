@@ -19,6 +19,8 @@ window.swaggerUIRedirectOauth2 = {
     callback: (authorizationResult) => {
         const token = authorizationResult.token
         window.localStorage.setItem("authToken", JSON.stringify(token))
+        const alert = document.getElementById("auth-alert")
+        alert.remove()
 
         // If exportURL is saved in local storage, download export
         if (window.localStorage.getItem("exportURL")) {
@@ -31,22 +33,12 @@ window.swaggerUIRedirectOauth2 = {
     },
 }
 
-// Entra ID authorization config
-const msalConfig = {
-    auth: {
-        clientId: CLIENTID_ENTRA,
-        authority: AUTHORITY_ENTRA,
-        redirectUri: window.location.origin + '/v1',
-    }
-};
-
 // Entra ID module init
 const msalInstance = new msal.PublicClientApplication(msalConfig);
 let isInitialized = false;
 
 
 function onPageLoad() {
-    console.log("Loading doc page now!")
     // Check if token is received when redirected from Entra log in
     document.addEventListener('DOMContentLoaded', initializeMsal);
     initializeMsal();
@@ -54,35 +46,19 @@ function onPageLoad() {
     confidential_links = Array.from(
         document.getElementsByClassName("confidential")
     )
-    console.log("Now logging all confidential links:")
-    console.log(confidential_links)
     confidential_links.map((link) => {
         link.addEventListener("click", (e) => {
-            console.log("Confidential link clicked!!")
             e.preventDefault()
             const url = link.href
             const token = JSON.parse(window.localStorage.getItem("authToken"))
-            console.log("Token:")
-            console.log(token)
             if (token) {
-                if (token.access_token) {
-                    // This is a Keycloak token
-                    access_token = token.access_token
-                    console.log("Keycloak token")
-                }
-                else {
-                    // This is an Etra token
-                    access_token = token.accessToken
-                    console.log("Entra token")
-                }
+                var access_token = (token.access_token) ? token.access_token : token.accessToken
                 tokenPayload = JSON.parse(
                     atob(access_token.split(".")[1])
                 )
                 const exp = new Date(tokenPayload.exp * 1000)
                 const now = new Date()
-                console.log(exp)
                 if (exp > now) {
-                    console.log("Token still valid, but showing alert for dev purposes:")
                     getData(url, {
                         Authorization: `Bearer ${access_token}`,
                     })
@@ -91,22 +67,12 @@ function onPageLoad() {
                     window.localStorage.setItem("exportURL", url)
                     if (token.access_token) {
                         authorizeKeycloak()
-                        //window.localStorage.setItem("authToken", JSON.stringify(response))
-
-                        //getData(url, {
-                            //Authorization: `Bearer ${access_token}`,
-                        //})
                     }
                     else {
-                        console.log("Refreshing Entra token")
                         authorizeEntra()
-                        //getData(url, {
-                            //Authorization: `Bearer ${access_token}`,
-                        //})
                     }
                 }
             } else {
-                console.log("No token found in local storage, please authorize with Keycloak or Entra")
                 window.localStorage.setItem("exportURL", url)
                 showAuthAlert(e)
             }
@@ -177,20 +143,14 @@ async function getData(blobUrl, headers) {
         .catch((error) => {
             console.error("Error downloading file:", error)
         })
-        const alert_banner = window.document.getElementById("auth-alert")
-        alert_banner.remove()
 }
 
 async function initializeMsal() {
-    console.log("Checking if msal is initialised")
     if (isInitialized) return;
 
     try {
-        console.log("Awaitng handleRedirectPromise:")
         const response = await msalInstance.handleRedirectPromise();
         if (response) {
-            console.log('Login complete, token saved');
-            console.log(response)
             window.localStorage.setItem("authToken", JSON.stringify(response))
 
             // If exportURL is saved in local storage, download export
@@ -202,59 +162,9 @@ async function initializeMsal() {
                 window.localStorage.removeItem("exportURL")
             }
         }
-        else {
-            console.log("No response")
-        }
     } catch (error) {
         console.error('Redirect processing failed:');
         console.log(error)
     }
     isInitialized = true;
-}
-
-
-async function authorizeEntra() {
-    console.log("AuthorizeEntra button pressed!")
-    const request = {scopes: [`${CLIENTID_ENTRA}/.default`]}
-    try {
-        const accounts = msalInstance.getAllAccounts();
-        console.log(accounts)
-        if (accounts.length === 0) {
-            console.log("Calling loginRedirect")
-            await msalInstance.loginRedirect({
-                scopes: [`${CLIENTID_ENTRA}/.default`]
-            });
-        }
-        else if (accounts.length === 1) {
-            console.log("Found 1 account")
-            console.log(accounts[0])
-            request.account = accounts[0]
-            try {
-                console.log("Trying acquireTokenRedirect")
-                await msalInstance.acquireTokenRedirect(request)
-            } catch (error) {
-                console.log("Retrieving access token failed")
-                console.log(error)
-            }
-        }
-        else {
-            console.log("Found multiple accounts, clearing session storage")
-            sessionStorage.clear();
-        }
-    } catch (error) {
-        console.log(error)
-        if (error.errorCode === 'interaction_in_progress') {
-            sessionStorage.clear();
-        }
-    }
-}
-
-function authorizeKeycloak() {
-    console.log("AuthorizeKeycloak button pressed!")
-    // Start authorization flow
-    authUrl = new URL(OAUTHURI)
-    authUrl.searchParams.set("client_id", CLIENTID)
-    authUrl.searchParams.set("redirect_uri", REDIRECTURI)
-    authUrl.searchParams.set("response_type", "token")
-    window.open(authUrl, "_blank")
 }
