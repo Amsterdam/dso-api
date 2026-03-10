@@ -7,11 +7,11 @@ django-vectortiles == 1.0.2
 djangorestframework == 3.16.1
 djangorestframework-csv == 3.0.2
 djangorestframework-gis == 1.2.0
-amsterdam-schema-tools[django] == 9.1.12
+amsterdam-schema-tools[django] == 9.1.13
 azure-identity == 1.25.2
 azure-monitor-opentelemetry == 1.6.12
 beautifulsoup4==4.14.3
-cachetools == 7.0.2
+cachetools == 7.0.4
 datadiensten-apikeyclient == 0.7.3
 datapunt-authorization-django==1.8.0
 drf-spectacular == 0.29.0
@@ -21,7 +21,7 @@ lru_dict == 1.4.1
 Markdown == 3.10.2
 more-ds == 0.0.6
 more-itertools == 10.8.0
-numpy == 2.4.2
+numpy == 2.4.3
 openapi-spec-validator == 0.7.2
 # Version should match with opentelemetry subdependency:
 opentelemetry-instrumentation-psycopg == 0.52b1

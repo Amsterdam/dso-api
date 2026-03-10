@@ -4,7 +4,7 @@
 #
 #    pip-compile --output-file=requirements_dev.txt requirements_dev.in
 #
-amsterdam-schema-tools[django]==9.1.12
+amsterdam-schema-tools[django]==9.1.13
     # via -r requirements.in
 argparse==1.4.0
     # via uwsgi-readiness-check
@@ -42,13 +42,13 @@ bandit==1.9.4
     # via -r requirements.in
 beautifulsoup4==4.14.3
     # via -r requirements.in
-black==26.1.0
+black==26.3.0
     # via -r requirements_dev.in
 build==1.2.2.post1
     # via
     #   datadiensten-apikeyclient
     #   pip-tools
-cachetools==7.0.2
+cachetools==7.0.4
     # via -r requirements.in
 certifi==2025.6.15
     # via
@@ -263,7 +263,7 @@ mypy-extensions==1.1.0
     # via black
 nodeenv==1.9.1
     # via pre-commit
-numpy==2.4.2
+numpy==2.4.3
     # via
     #   -r requirements.in
     #   shapely
@@ -462,7 +462,7 @@ python-string-utils==1.0.0
     # via
     #   -r requirements.in
     #   amsterdam-schema-tools
-pytokens==0.3.0
+pytokens==0.4.1
     # via black
 pyyaml==6.0.2
     # via
@@ -505,7 +505,7 @@ rpds-py==0.25.1
     # via
     #   jsonschema
     #   referencing
-ruff==0.15.4
+ruff==0.15.5
     # via -r requirements_dev.in
 shapely==2.1.2
     # via
