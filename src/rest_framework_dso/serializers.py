@@ -582,11 +582,18 @@ class DSOSerializer(ExpandableSerializer, serializers.Serializer):
     def _apply_crs(self, instance, accept_crs: CRS):
         """Make sure all geofields use the same CRS."""
         is_dict = isinstance(instance, dict)
+
+        # There are several datasets for which the shortnames are exposed. These have
+        # multiple fields pointing to the same geometry value, but need to be transformed
+        # only once. See dynamic_api/serializers/factories.py:EXPOSED_SHORTNAMES.
+        seen_geometry_fields = []
+
         for field in self._geometry_fields:
             geo_value = instance[field.source] if is_dict else getattr(instance, field.source)
-            if geo_value is not None:
+            if geo_value is not None and field.source not in seen_geometry_fields:
                 try:
                     accept_crs.apply_to(geo_value)
+                    seen_geometry_fields.append(field.source)
                 except GDALException as e:
                     # While there could be various reasons for this, the most common one
                     # is that the data has coordinates outside the projected bounds of the CRS.
@@ -800,7 +807,7 @@ class DSOQueryParamSerializer(serializers.Serializer):
                     raise serializers.ValidationError(
                         "_fields and _expand together require temporal relation "
                         f"{field} to include the following field(s): "
-                        f"{(", ").join(missing_fields)}."
+                        f"{(', ').join(missing_fields)}."
                         f"You may consider not using dotted fields, i.e. `_fields={field}`."
                     )
 
@@ -824,7 +831,7 @@ class DSOQueryParamSerializer(serializers.Serializer):
                     raise serializers.ValidationError(
                         "_fields and _expand(Scope) together require temporal relation "
                         f"{field} to include the following field(s): "
-                        f"{(", ").join(missing_fields)}. "
+                        f"{(', ').join(missing_fields)}. "
                         f"You may consider not using dotted fields, i.e. `_fields={field}`."
                     )
 
