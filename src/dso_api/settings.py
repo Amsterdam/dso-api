@@ -13,11 +13,11 @@ _USE_SECRET_STORE = os.path.exists("/mnt/secrets-store")
 # -- Environment
 
 BASE_DIR = Path(__file__).parents[1]
-DEBUG = env.bool("DJANGO_DEBUG", False)
+DEBUG = True
 
 CLOUD_ENV = env.str("CLOUD_ENV", "default").lower()
 DJANGO_LOG_LEVEL = env.str("DJANGO_LOG_LEVEL", "INFO")
-DSO_API_LOG_LEVEL = env.str("DSO_API_LOG_LEVEL", "INFO")
+DSO_API_LOG_LEVEL = env.str("DSO_API_LOG_LEVEL", "DEBUG")
 DSO_API_AUDIT_LOG_LEVEL = env.str("DSO_API_AUDIT_LOG_LEVEL", "INFO")
 SENTRY_BLOCKED_PATHS: Final[list[str]] = env.list("SENTRY_BLOCKED_PATHS", default=[])
 
