@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import cast
 
 import pytest
-from authorization_django import jwks
+from authorization_django.jwks import JWKSWrapper
 from django.contrib.gis.geos import GEOSGeometry, Point
 from django.core.handlers.wsgi import WSGIRequest
 from django.db import connection
@@ -831,7 +831,8 @@ def fetch_auth_token(fetch_tokendata, settings):
 
     def _fetcher(scopes, subject=settings.TEST_USER_EMAIL):
         kid = "2aedafba-8170-4064-b704-ce92b7c89cc6"
-        key = jwks.get_keyset().get_key(kid)
+        jwks = JWKSWrapper()
+        key = jwks.keyset.get_key(kid)
         token = JWT(header={"alg": "ES256", "kid": kid}, claims=fetch_tokendata(scopes, subject))
         token.make_signed_token(key)
         return token.serialize()
