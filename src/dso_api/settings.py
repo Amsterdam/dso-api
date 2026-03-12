@@ -39,9 +39,7 @@ PROFILES_URL = env.str("PROFILES_URL", "https://schemas.data.amsterdam.nl/profil
 SCHEMA_DEFS_URL = env.str("SCHEMA_DEFS_URL", "https://schemas.data.amsterdam.nl/schema")
 
 # Authorization settings
-OAUTH_URL = env.str(
-    "OAUTH_URL", "https://iam.amsterdam.nl/auth/realms/datapunt-ad/protocol/openid-connect/"
-)
+OAUTH_URL = env.str("OAUTH_URL", None)
 OAUTH_AUTHORITY_ENTRA = env.str("OAUTH_AUTHORITY_ENTRA", None)
 OAUTH_DEFAULT_SCOPE = env.str("OAUTH_DEFAULT_SCOPE", None)
 OAUTH_CLIENT_ID = os.getenv("OAUTH_CLIENT_ID", "dso-api-open-api")
