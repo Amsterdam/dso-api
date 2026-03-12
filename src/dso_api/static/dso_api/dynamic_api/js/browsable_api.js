@@ -77,7 +77,6 @@ function onPageLoad() {
     // Check if token is received when redirected from Entra log in
     document.addEventListener("DOMContentLoaded", initializeMsal)
     initializeMsal()
-
     setURL(PAGEURL.href)
     setParams()
     setHeaders()
@@ -89,6 +88,8 @@ function onPageLoad() {
             if (result.data) {
                 parseData(result.data)
             }
+            const href = PAGEURL.href.split("#")[0]
+            console.log(href)
             window.history.replaceState(
                 JSON.parse(
                     JSON.stringify({
@@ -99,7 +100,7 @@ function onPageLoad() {
                     })
                 ),
                 "",
-                PAGEURL
+                href
             )
         })
 
@@ -270,7 +271,6 @@ async function initializeMsal() {
         const response = await msalInstance.handleRedirectPromise()
         if (response) {
             isInitialized = true
-            console.log(response)
             window.localStorage.setItem("authToken", JSON.stringify(response))
             addSetting("Authorization", "Bearer " + response.accessToken)
             showHeaders()
