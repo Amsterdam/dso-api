@@ -43,14 +43,21 @@ The following environment variables are useful for configuring a local developme
 * `DATASETS_INCLUDE`: A comma separated lists of datasets to expose using the API or to generate mock data for.
     Default: `None` (expose all loaded datasets).
 
-To connect to an authentication provider, set up the following environment variables:
+To connect to an authentication provider, set up the following environment variables.
+
+For Keycloak:
 * `OAUTH_CLIENT_ID`: The client id of the application
 * `OAUTH_JWKS_URL`: The JWKS URL of the authentication provider.
 * `OAUTH_URL`:  The auth URL of the authentication provider.
 
+For Entra ID:
+* `OAUTH_CLIENT_ID_ENTRA`: The client id of the application
+* `OAUTH_JWKS_URL`: The JWKS URL of the authentication provider
+* `OAUTH_AUTHORITY_ENTRA`: The authority url of the Microsoft account
+* `OAUTH_CHECK_CLAIMS`: Dict containing the `aud` (audience) and `iss` (issuer) JWT claims  e.g. "iss=...,aud=..."
+
 When supporting multiple authentication providers, set up these environment variables:
 * `OAUTH_JWKS_URLS`: List of the JWKS URLs of the authentication providers (when supporting multiple).
-* `OAUTH_CHECK_CLAIMS`: Dict containing the `aud` (audience) and `iss` (issuer) JWT claims  e.g. "iss=...,aud=..."
 
 For all authentication providers exept Keycloak these `aud` and `iss` claims need to be verified in the authorization_django middleware
 
