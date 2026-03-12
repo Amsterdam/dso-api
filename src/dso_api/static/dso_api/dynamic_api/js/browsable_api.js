@@ -28,10 +28,9 @@ var dsoShowToken = (token) => {}
 var oaParams = null
 var oaSpec = null
 
-
 // Entra ID module init
-const msalInstance = new msal.PublicClientApplication(msalConfig);
-let isInitialized = false;
+const msalInstance = new msal.PublicClientApplication(msalConfig)
+let isInitialized = false
 
 if (document.readyState != "loading") {
     onPageLoad()
@@ -76,8 +75,8 @@ function onPageLoad() {
     }
 
     // Check if token is received when redirected from Entra log in
-    document.addEventListener('DOMContentLoaded', initializeMsal);
-    initializeMsal();
+    document.addEventListener("DOMContentLoaded", initializeMsal)
+    initializeMsal()
 
     setURL(PAGEURL.href)
     setParams()
@@ -264,25 +263,23 @@ function updatePageRequest(
         })
 }
 
-
 async function initializeMsal() {
-    if (isInitialized) return;
+    if (isInitialized) return
 
     try {
-        const response = await msalInstance.handleRedirectPromise();
+        const response = await msalInstance.handleRedirectPromise()
         if (response) {
+            isInitialized = true
             console.log(response)
             window.localStorage.setItem("authToken", JSON.stringify(response))
             addSetting("Authorization", "Bearer " + response.accessToken)
             showHeaders()
         }
     } catch (error) {
-        console.error('Entra init failed:');
+        console.error("Entra init failed:")
         console.log(error)
     }
-    isInitialized = true;
 }
-
 
 function getRequestSettings(type = "params") {
     // Get query parameter or header request settings from the form.
@@ -468,9 +465,8 @@ function addSetting(key, value, op = "eq", type = "header", active = true) {
     requestSettings
         .filter((x) => x.key == key && x.operator == op && x.active)
         .forEach((setting) => {
-            setting.element.getElementsByClassName(
-                "param-check"
-            )[0].checked = false
+            setting.element.getElementsByClassName("param-check")[0].checked =
+                false
             setting.element
                 .getElementsByClassName("param-check")[0]
                 .dispatchEvent(new Event("change"))
@@ -1057,10 +1053,8 @@ function setInfoBubble(element) {
             (new Date(token.exp * 1000) - new Date()) / 60000
         )
         expiredText = `Exp:${minutesRemaining}min`
-        var username = (token.preferred_username) ? token.preferred_username : token.upn
-        summary = `${username} ${
-            isExpired ? "Expired" : expiredText
-        } `
+        const username = token.preferred_username || token.upn
+        summary = `${username} ${isExpired ? "Expired" : expiredText} `
         infoEl.innerHTML = `<div class="summary">${summary}</div>`
         infoEl.innerHTML += `<pre>${syntaxHighlight(
             JSON.stringify(token, null, 4)
@@ -1095,16 +1089,14 @@ function setHeaders(headers = null) {
         }
         let token = JSON.parse(window.localStorage.getItem("authToken"))
         if (token) {
-            var access_token = (token.access_token) ? token.access_token : token.accessToken
-            if (token) {
-                addSetting(
-                    "Authorization",
-                    "Bearer " + access_token,
-                    "eq",
-                    "header",
-                    false
-                )
-            }
+            var accessToken = token.access_token || token.accessToken
+            addSetting(
+                "Authorization",
+                "Bearer " + accessToken,
+                "eq",
+                "header",
+                false
+            )
         }
     }
 

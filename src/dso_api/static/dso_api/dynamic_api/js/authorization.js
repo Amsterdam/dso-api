@@ -12,35 +12,32 @@ const msalConfig = {
     auth: {
         clientId: CLIENTID_ENTRA,
         authority: AUTHORITY_ENTRA,
-        redirectUri: window.location.origin + '/v1',
-    }
-};
+        redirectUri: window.location.origin + "/v1",
+    },
+}
 
 async function authorizeEntra() {
-    const request = {scopes: [`${CLIENTID_ENTRA}/.default`]}
+    const request = { scopes: [`${CLIENTID_ENTRA}/.default`] }
     try {
-        const accounts = msalInstance.getAllAccounts();
+        const accounts = msalInstance.getAllAccounts()
         if (accounts.length === 0) {
             await msalInstance.loginRedirect({
-                scopes: [`${CLIENTID_ENTRA}/.default`]
-            });
-        }
-        else if (accounts.length === 1) {
+                scopes: [`${CLIENTID_ENTRA}/.default`],
+            })
+        } else if (accounts.length === 1) {
             request.account = accounts[0]
             try {
                 await msalInstance.acquireTokenRedirect(request)
             } catch (error) {
-                console.log("Retrieving access token failed")
                 console.log(error)
             }
-        }
-        else {
-            sessionStorage.clear();
+        } else {
+            sessionStorage.clear()
         }
     } catch (error) {
         console.log(error)
-        if (error.errorCode === 'interaction_in_progress') {
-            sessionStorage.clear();
+        if (error.errorCode === "interaction_in_progress") {
+            sessionStorage.clear()
         }
     }
 }
