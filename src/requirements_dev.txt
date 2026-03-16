@@ -81,7 +81,7 @@ cryptography==46.0.5
     #   jwcrypto
     #   msal
     #   pyjwt
-datadiensten-apikeyclient==0.7.3
+datadiensten-apikeyclient==0.7.4
     # via -r requirements.in
 datapunt-authorization-django==2.0.2
     # via -r requirements.in
@@ -425,7 +425,7 @@ pygments==2.19.2
     #   -r requirements.in
     #   pytest
     #   rich
-pyjwt[crypto]==2.11.0
+pyjwt[crypto]==2.12.0
     # via
     #   datadiensten-apikeyclient
     #   msal
