@@ -4,7 +4,7 @@
 #
 #    pip-compile --output-file=requirements_dev.txt requirements_dev.in
 #
-amsterdam-schema-tools[django]==9.1.13
+amsterdam-schema-tools[django]==9.1.15
     # via -r requirements.in
 argparse==1.4.0
     # via uwsgi-readiness-check
@@ -30,7 +30,7 @@ azure-core==1.38.0
     #   msrest
 azure-core-tracing-opentelemetry==1.0.0b12
     # via azure-monitor-opentelemetry
-azure-identity==1.25.2
+azure-identity==1.25.3
     # via
     #   -r requirements.in
     #   azure-monitor-opentelemetry-exporter
@@ -48,7 +48,7 @@ build==1.2.2.post1
     # via
     #   datadiensten-apikeyclient
     #   pip-tools
-cachetools==7.0.4
+cachetools==7.0.5
     # via -r requirements.in
 certifi==2025.6.15
     # via
@@ -251,7 +251,7 @@ more-itertools==10.8.0
     # via
     #   -r requirements.in
     #   amsterdam-schema-tools
-msal==1.32.3
+msal==1.35.1
     # via
     #   azure-identity
     #   msal-extensions
@@ -505,7 +505,7 @@ rpds-py==0.25.1
     # via
     #   jsonschema
     #   referencing
-ruff==0.15.5
+ruff==0.15.6
     # via -r requirements_dev.in
 shapely==2.1.2
     # via
