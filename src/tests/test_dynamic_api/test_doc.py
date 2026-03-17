@@ -82,7 +82,7 @@ def test_subresources_available_in_docs(api_client, gebieden_subresources_datase
     The `gebieden_subresources` fixture has the following structure:
     - stadsdelen
         - wijken
-            - buurten
+            - buurten_tabel
     """
     url = reverse(
         "dynamic_api:docs-dataset",
@@ -106,16 +106,18 @@ def test_subresources_available_in_docs(api_client, gebieden_subresources_datase
     assert wijken.find("a", href=wijken_url).string == wijken_url
 
     buurten = stadsdelen_subresources[1]
-    assert buurten.find("a", href="#buurten").string == "buurten"
-    buurten_url = "/v1/gebieden_subresources/stadsdelen/{stadsdelen_id}/wijken/{wijken_id}/buurten"
+    assert buurten.find("a", href="#buurten_tabel").string == "buurten_tabel"
+    buurten_url = (
+        "/v1/gebieden_subresources/stadsdelen/{stadsdelen_id}/wijken/{wijken_id}/buurten_tabel"
+    )
     assert buurten.find("a", href=buurten_url).string == buurten_url
 
     # Wijken subresource lists only buurten.
     wijken_subresources = soup.find("table", id="wijken-subresources").find("tbody").find_all("tr")
     assert len(wijken_subresources) == 1
     buurten = wijken_subresources[0]
-    assert buurten.find("a", href="#buurten").string == "buurten"
-    buurten_url = "/v1/gebieden_subresources/wijken/{wijken_id}/buurten"
+    assert buurten.find("a", href="#buurten_tabel").string == "buurten_tabel"
+    buurten_url = "/v1/gebieden_subresources/wijken/{wijken_id}/buurten_tabel"
     assert buurten.find("a", href=buurten_url).string == buurten_url
 
 

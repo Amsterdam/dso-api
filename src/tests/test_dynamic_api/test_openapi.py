@@ -327,18 +327,18 @@ def test_openapi_json_subresources(api_client, gebieden_subresources_dataset, fi
     # Prove that only afvalwegingen are part of this OpenAPI page:
     paths = sorted(schema["paths"].keys())
     assert paths == [
-        "/buurten",
-        "/buurten/{id}",
+        "/buurten_tabel",
+        "/buurten_tabel/{id}",
         "/stadsdelen",
         "/stadsdelen/{id}",
         "/stadsdelen/{id}/wijken",
         "/stadsdelen/{id}/wijken/{id}",
-        "/stadsdelen/{id}/wijken/{id}/buurten",
-        "/stadsdelen/{id}/wijken/{id}/buurten/{id}",
+        "/stadsdelen/{id}/wijken/{id}/buurten_tabel",
+        "/stadsdelen/{id}/wijken/{id}/buurten_tabel/{id}",
         "/wijken",
         "/wijken/{id}",
-        "/wijken/{id}/buurten",
-        "/wijken/{id}/buurten/{id}",
+        "/wijken/{id}/buurten_tabel",
+        "/wijken/{id}/buurten_tabel/{id}",
     ]
 
 

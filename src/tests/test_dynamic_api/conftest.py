@@ -212,7 +212,7 @@ def buurten_subresources(gebieden_subresources_models, wijken_subresources):
     """
     Buurten, subresource van wijken.
     """
-    Buurt = gebieden_subresources_models["buurten"]
+    Buurt = gebieden_subresources_models["buurten_tabel"]
     marnixbuurt = Buurt.objects.create(
         id="03630000000078.1",
         identificatie="03630000000078",
