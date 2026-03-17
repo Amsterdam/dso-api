@@ -354,7 +354,7 @@ class DynamicRouter(NestedDefaultRouter):
     ):
         table_schema = base_model.table_schema()
         for subresource in table_schema.subresources:
-            name = subresource.table.id
+            name = to_snake_case(subresource.table.id)
             sub_model = all_models[name]
             sub_viewset = viewset_factory(sub_model, version)
             basename = f"{basename}-{name}"
