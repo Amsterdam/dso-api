@@ -13,7 +13,7 @@
       "version": "0.0.1",
       "tables": [
         {
-          "id": "buurten",
+          "id": "buurten_tabel",
           "type": "table",
           "version": "1.0.0",
           "status": "stable",
@@ -112,7 +112,7 @@
             }
           },
           "subresources": {
-            "gebieden_subresources:buurten": "ligtInWijk"
+            "gebieden_subresources:buurten_tabel": "ligtInWijk"
           },
           "schema": {
             "$id": "https://github.com/Amsterdam/schemas/gebieden/wijken.json",

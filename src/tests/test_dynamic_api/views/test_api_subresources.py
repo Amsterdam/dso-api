@@ -39,14 +39,14 @@ class TestSubResources:
         centrum = stadsdelen_subresources["centrum"]
         haarlemmerbuurt = wijken_subresources["haarlemmerbuurt"]
         url = reverse(
-            "dynamic_api:gebieden_subresources-stadsdelen-wijken-buurten-list",
+            "dynamic_api:gebieden_subresources-stadsdelen-wijken-buurten_tabel-list",
             args=[centrum.id, haarlemmerbuurt.id],
         )
 
         response = api_client.get(url)
         assert response.status_code == 200
         result = read_response_json(response)
-        result_buurten = [buurt["naam"] for buurt in result["_embedded"]["buurten"]]
+        result_buurten = [buurt["naam"] for buurt in result["_embedded"]["buurten_tabel"]]
         for buurt in buurten_subresources.values():
             assert buurt.naam in result_buurten or buurt.ligt_in_wijk != haarlemmerbuurt
 
@@ -57,7 +57,7 @@ class TestSubResources:
         haarlemmerbuurt = wijken_subresources["haarlemmerbuurt"]
         westerdokseiland = buurten_subresources["westerdokseiland"]
         url = reverse(
-            "dynamic_api:gebieden_subresources-stadsdelen-wijken-buurten-detail",
+            "dynamic_api:gebieden_subresources-stadsdelen-wijken-buurten_tabel-detail",
             args=[centrum.id, haarlemmerbuurt.id, westerdokseiland.id],
         )
 
@@ -85,11 +85,11 @@ class TestSubResources:
         centrum = stadsdelen_subresources["centrum"]
         venserpolder = wijken_subresources["venserpolder"]
         url = reverse(
-            "dynamic_api:gebieden_subresources-stadsdelen-wijken-buurten-list",
+            "dynamic_api:gebieden_subresources-stadsdelen-wijken-buurten_tabel-list",
             args=[centrum.id, venserpolder.id],
         )
 
         response = api_client.get(url)
         assert response.status_code == 200
         result = read_response_json(response)
-        assert result["_embedded"]["buurten"] == []
+        assert result["_embedded"]["buurten_tabel"] == []
