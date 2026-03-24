@@ -444,7 +444,7 @@ pytest==9.0.2
     #   pytest-cov
     #   pytest-django
     #   pytest-sugar
-pytest-cov==7.0.0
+pytest-cov==7.1.0
     # via -r requirements.in
 pytest-django==4.12.0
     # via -r requirements.in
@@ -505,7 +505,7 @@ rpds-py==0.25.1
     # via
     #   jsonschema
     #   referencing
-ruff==0.15.6
+ruff==0.15.7
     # via -r requirements_dev.in
 shapely==2.1.2
     # via
