@@ -10,6 +10,14 @@
     <dt class="col-xs-2">Uitgever:</dt><dd>{{ schema.publisher.name|default:"Cluster Digitalisering, Innovatie en Informatie (DII)" }}</dd>
     <dt class="col-xs-2">Productie:</dt><dd>{{ schema.creator|default:'-' }}</dd>
     <dt class="col-xs-2">Bronhouder:</dt><dd>{{ schema.authorizationGrantor|urlize|default:'-' }}</dd>
+    {% if exports %}
+      <dt class="col-xs-2">Exports:</dt>
+      <dd>
+        {% for filetype in exports %}
+          <a href="#exports-{{ filetype|slugify }}">{{ filetype }}</a>{% if not forloop.last %}, {% endif %}
+        {% endfor %}
+      </dd>
+    {% endif %}
   </dl>
 
   {% if dataset_has_auth %}
