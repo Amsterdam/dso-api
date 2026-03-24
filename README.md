@@ -57,7 +57,7 @@ For Entra ID:
 * `OAUTH_CHECK_CLAIMS`: Dict containing the `aud` (audience) and `iss` (issuer) JWT claims  e.g. "iss=...,aud=..."
 
 When supporting multiple authentication providers, set up these environment variables:
-* `OAUTH_JWKS_URLS`: List of the JWKS URLs DIT IS NIEUW of the authentication providers (when supporting multiple).
+* `OAUTH_JWKS_URLS`: List of the JWKS URLs DIT IS NIEUW of the authentication providers JONA CHANGE (when supporting multiple).
 
 For all authentication providers exept Keycloak these `aud` and `iss` claims need to be verified in the authorization_django middleware
 
