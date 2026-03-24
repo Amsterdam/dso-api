@@ -6,7 +6,7 @@ Example, in the shell:
     $ python ./manage.py shell
 
     >>> from devtools import get_model
-    >>> adressen = get_model("bag","v1","ligplaatsen")
+    >>> ligplaatsen = get_model("bag","ligplaatsen","v1")
 
 Methods:
 
