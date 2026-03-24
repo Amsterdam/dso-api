@@ -11,6 +11,14 @@
       "enableAPI": true,
       "status": "stable",
       "version": "0.0.1",
+      "exports": [
+        {
+          "name": "bouwblokken",
+          "filetypes": ["csv", "geojson", "gpkg", "jsonl"],
+          "scopes": ["openbaar", "fp/mdw"],
+          "tables": ["bouwblokken"]
+        }
+      ],
       "tables": [
         {
           "id": "bouwblokken",
