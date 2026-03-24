@@ -38,22 +38,22 @@
       <table class="table table-condensed">
         <thead>
           <tr>
-            <th>Type</th>
-            <th>Downloadlink</th>
+            <th>Name</th>
+            <th>Downloads</th>
             <th>Openbaar</th>
           </tr>
         </thead>
         <tbody>
-        {% for description, export_group in table_data.exports.items %}
-          {% for export in export_group %}
+        {% for name, export_group in table_data.exports.items %}
           <tr>
-            {% if forloop.first %}<td rowspan="{{ export_group|length }}">{{ description }}</td>{% endif %}
+            <td>{{ name }}{% if export_group.0.multiple %}&mdash;<em>bevat ook andere tabellen</em>{% endif %}</td>
             <td>
-                <a href="{{ export.url }}" class="{{ export.kind }}">{{ export.filename }}</a>{% if export.multiple %}&emsp;(bevat ook andere tabellen){% endif %}<br>
+              {% for export in export_group %}
+                <a href="{{ export.url }}" class="{{ export.kind }}">{{ export.description }}</a>{% if not forloop.last %}, {% endif %}
+              {% endfor %}
             </td>
-            <td>{% if export.kind == "public" %}✅{% else %}❌{% endif %}</td>
+            <td>{% if export_group.0.kind == "public" %}✅{% else %}❌{% endif %}</td>
           </tr>
-          {% endfor %}
         {% endfor %}
         </tbody>
       </table>
@@ -185,31 +185,35 @@
 
   {% if exports %}
   <h2>Exports</h2>
-  {% for filetype, export_group in exports.items %}
-  <a class="anchor" id="exports-{{ filetype|slugify }}"></a>
-  <h3>{{ filetype }}</h3>
   <table class="table table-striped">
     <thead>
       <tr>
-        <th>Downloadlink</th>
+        <th>Name</th>
+        <th>Downloadlinks</th>
         <th>Bevat gegevens van tabellen</th>
         <th>Openbaar</th>
       </tr>
     </thead>
-    <tbody></tbody>
-      {% for export in export_group %}
-        <tr>
-          <td><a href="{{ export.url }}" class="{{ export.kind }}">{{ export.filename }}</a></td>
-          <td>
-            {% for table_id, table_name in export.tables.items %}
-              <a href="#{{ table_id }}">{{ table_name }}</a>{% if not forloop.last %}, {% endif %}
-            {% endfor %}
-          </td>
-          <td>{% if export.kind == "public" %}✅{% else %}❌{% endif %}</td>
-        </tr>
+    <tbody>
+      {% for name, export_group in exports.items %}
+      <tr>
+        <td>
+          <a class="anchor" id="exports-{{ name|slugify }}"></a>{{ name }}
+        </td>
+        <td>
+          {% for export in export_group %}
+            <a href="{{ export.url }}" class="{{ export.kind }}">{{ export.description }}</a>{% if not forloop.last %}, {% endif %}
+          {% endfor %}
+        </td>
+        <td>
+          {% for table_id, table_name in export_group.0.tables.items %}
+            <a href="#{{ table_id }}">{{ table_name }}</a>{% if not forloop.last %}, {% endif %}
+          {% endfor %}
+        </td>
+        <td>{% if export_group.0.kind == "public" %}✅{% else %}❌{% endif %}</td>
+      </tr>
       {% endfor %}
     </tbody>
   </table>
-  {% endfor %}
   {% endif %}
 {% endblock %}

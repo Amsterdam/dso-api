@@ -13,8 +13,8 @@
     {% if exports %}
       <dt class="col-xs-2">Exports:</dt>
       <dd>
-        {% for filetype in exports %}
-          <a href="#exports-{{ filetype|slugify }}">{{ filetype }}</a>{% if not forloop.last %}, {% endif %}
+        {% for name in exports %}
+          <a href="#exports-{{ name|slugify }}">{{ name }}</a>{% if not forloop.last %}, {% endif %}
         {% endfor %}
       </dd>
     {% endif %}

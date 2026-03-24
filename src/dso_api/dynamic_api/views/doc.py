@@ -321,6 +321,7 @@ def _export_context(exports: list[Export]):
         url = _get_storage_url(export)
         description = FILETYPE_DESCRIPTIONS[export.filetype]
         ext_info = {
+            "name": export.name,
             "extension": export.filetype,
             "description": description,
             "filename": export.filename,
@@ -328,9 +329,9 @@ def _export_context(exports: list[Export]):
             "tables": {table_id: _format_table_id(table_id) for table_id in export.table_ids},
             "kind": "public" if export.is_public else "confidential",
         }
-        if description not in export_info:
-            export_info[description] = []
-        export_info[description].append(ext_info)
+        if export.name not in export_info:
+            export_info[export.name] = []
+        export_info[export.name].append(ext_info)
     return export_info
 
 
@@ -350,6 +351,7 @@ def _table_context(ds: Dataset, table: DatasetTableSchema, dataset_version: str)
             url = _get_storage_url(export)
             description = FILETYPE_DESCRIPTIONS[export.filetype]
             ext_info = {
+                "name": export.name,
                 "extension": export.filetype,
                 "description": description,
                 "filename": export.filename,
@@ -357,9 +359,9 @@ def _table_context(ds: Dataset, table: DatasetTableSchema, dataset_version: str)
                 "multiple": len(export.tables) > 1,
                 "kind": "public" if export.is_public else "confidential",
             }
-            if description not in exports:
-                exports[description] = []
-            exports[description].append(ext_info)
+            if export.name not in exports:
+                exports[export.name] = []
+            exports[export.name].append(ext_info)
 
     if (temporal := table.temporal) is not None:
         for name in temporal.dimensions:
