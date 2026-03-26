@@ -25,8 +25,16 @@ from markdown import Markdown
 from markdown.extensions.codehilite import CodeHiliteExtension
 from markdown.extensions.tables import TableExtension
 from schematools.contrib.django.models import Dataset
+from schematools.exports import STORAGE_FOLDER
 from schematools.naming import to_snake_case
-from schematools.types import DatasetFieldSchema, DatasetSchema, DatasetTableSchema
+from schematools.types import (
+    DatasetFieldSchema,
+    DatasetSchema,
+    DatasetTableSchema,
+    DatasetVersionSchema,
+    Export,
+    ExportFileType,
+)
 
 from dso_api.dynamic_api.constants import DEFAULT
 from dso_api.dynamic_api.filters.parser import QueryFilterEngine
@@ -161,13 +169,12 @@ class DatasetDocView(TemplateView):
         )
         dataset_version = kwargs["dataset_version"]
         ds_schema: DatasetSchema = ds.schema
+        version_schema: DatasetVersionSchema = ds_schema.get_version(
+            ds.default_version if dataset_version == DEFAULT else dataset_version
+        )
         main_title = ds_schema.title or ds_schema.db_name.replace("_", " ").capitalize()
-        tables = [
-            _table_context(ds, t, dataset_version)
-            for t in ds_schema.get_version(
-                ds.default_version if dataset_version == DEFAULT else dataset_version
-            ).tables
-        ]
+        tables = [_table_context(ds, t, dataset_version) for t in version_schema.tables]
+        exports = _export_context(version_schema.exports)
         pattern_suffix = "" if dataset_version == DEFAULT else "-version"
         context = super().get_context_data(**kwargs)
         context.update(
@@ -180,6 +187,7 @@ class DatasetDocView(TemplateView):
                 "dataset_has_auth": bool(_fix_auth(ds_schema.auth)),
                 "main_title": main_title,
                 "tables": tables,
+                "exports": exports,
                 "oauth_url": settings.OAUTH_URL,
                 "swagger_url": reverse(
                     f"dynamic_api:openapi{pattern_suffix}",
@@ -284,6 +292,48 @@ LOOKUP_CONTEXT = {
     ]
 }
 
+FILETYPE_DESCRIPTIONS: dict[ExportFileType, str] = {
+    "csv": "CSV",
+    "jsonl": "JSONLines",
+    "gpkg": "GeoPackage",
+    "geojson": "GeoJSON",
+}
+
+
+def _get_storage_url(export: Export) -> str:
+    url = f"{
+        settings.EXPORT_BASE_URI if export.is_public else settings.CONFIDENTIAL_EXPORT_BASE_URI
+    }/{STORAGE_FOLDER[export.filetype]}/{export.filename}"
+    if not url.startswith("http"):  # The settings urls may not be prefixed with https://
+        url = f"https://{url}"
+    return url
+
+
+def _format_table_id(table_id: str) -> str:
+    """Format a table id to a more human readable form."""
+    return to_snake_case(table_id).replace("_", " ").capitalize()
+
+
+def _export_context(exports: list[Export]):
+    """Get export context for the documentation."""
+    export_info = {}
+    for export in exports:
+        url = _get_storage_url(export)
+        description = FILETYPE_DESCRIPTIONS[export.filetype]
+        ext_info = {
+            "name": export.name,
+            "extension": export.filetype,
+            "description": description,
+            "filename": export.filename,
+            "url": url,
+            "tables": {table_id: _format_table_id(table_id) for table_id in export.table_ids},
+            "kind": "public" if export.is_public else "confidential",
+        }
+        if export.name not in export_info:
+            export_info[export.name] = []
+        export_info[export.name].append(ext_info)
+    return export_info
+
 
 def _table_context(ds: Dataset, table: DatasetTableSchema, dataset_version: str):
     """Collect all table data for the REST API spec."""
@@ -294,61 +344,24 @@ def _table_context(ds: Dataset, table: DatasetTableSchema, dataset_version: str)
     uri = reverse(f"dynamic_api:{dataset_name}{pattern_version}-{table_name}-list")
     fields = _list_fields(table.fields)
     filters = _get_filters(table.fields)
-    exports = []
-    version = ds.versions.get(version=vmajor)
-    # if dataset_name in settings.EXPORTED_DATASETS.split(","):
-    table_instance = version.tables.get(name=table_name)
-    if table_instance.enable_export:
-        export_info = []
-        for type_, extension, description in (
-            ("csv", "csv", "CSV"),
-            ("geopackage", "gpkg", "geopackage"),
-            ("jsonlines", "jsonl", "JSONlines"),
-            ("geojson", "geojson", "GeoJSON"),
-        ):
-            # Als FP/MDW op dataset/tabel/veld auth zit, is er een vertrouwelijke bulk link
-            if (
-                ds.auth == "FP/MDW"
-                or table_instance.auth == "FP/MDW"
-                or table_instance.fields.filter(auth="FP/MDW").exists()
-            ):
-                url = (
-                    f"{settings.CONFIDENTIAL_EXPORT_BASE_URI}/{type_}/"
-                    f"{dataset_name}_{table_name}.{extension}.zip"
-                )
-                if not url.startswith("http"):  # The settings urls are not prefixed with https://
-                    url = f"https://{url}"
-                ext_info = {
-                    "extension": extension,
-                    "type": type_,
-                    "description": description,
-                    "url": url,
-                    "kind": "confidential",
-                }
-                export_info.append(ext_info)
-
-            # Voor openbare data (ook slechts indien een subset van de velden) is er een reguliere
-            # bulk link
-            if (
-                ds.auth == "OPENBAAR"
-                and table_instance.auth == "OPENBAAR"
-                and table_instance.fields.filter(auth="OPENBAAR").exists()
-            ):
-                url = (
-                    f"{settings.EXPORT_BASE_URI}/{type_}/"
-                    f"{dataset_name}_{table_name}.{extension}.zip"
-                )
-                if not url.startswith("http"):  # The settings urls are not prefixed with https://
-                    url = f"https://{url}"
-                ext_info = {
-                    "extension": extension,
-                    "type": type_,
-                    "description": description,
-                    "url": url,
-                    "kind": "public",
-                }
-                export_info.append(ext_info)
-        exports.append(export_info)
+    exports = {}
+    version = ds.schema.get_version(vmajor)
+    for export in version.exports:
+        if table in export.tables:
+            url = _get_storage_url(export)
+            description = FILETYPE_DESCRIPTIONS[export.filetype]
+            ext_info = {
+                "name": export.name,
+                "extension": export.filetype,
+                "description": description,
+                "filename": export.filename,
+                "url": url,
+                "multiple": len(export.tables) > 1,
+                "kind": "public" if export.is_public else "confidential",
+            }
+            if export.name not in exports:
+                exports[export.name] = []
+            exports[export.name].append(ext_info)
 
     if (temporal := table.temporal) is not None:
         for name in temporal.dimensions:

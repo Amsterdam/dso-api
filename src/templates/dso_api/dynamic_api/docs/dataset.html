@@ -13,6 +13,7 @@
   <h1>{% if schema.title %}{{ schema.title }}{% else %}{{ name|title }}{% endif %}</h1>
   {% include "dso_api/dynamic_api/_dataset_metadata.html" %}
 
+
   <h2>Endpoints</h2>
   <dl class="row">
     <dt class="col-xs-2">REST OpenAPI:</dt><dd><a href="{{ swagger_url }}">{{ swagger_url }}</a></dd>
@@ -31,13 +32,32 @@
       <dt class="col-xs-2">REST URI:</dt><dd><a href="{{ table_data.uri }}">{{ table_data.uri }}</a></dd>
       <dt class="col-xs-2">CSV-export:</dt><dd><a href="{{ table_data.uri }}?_format=csv">{{ table_data.uri }}?_format=csv</a></dd>
       <dt class="col-xs-2">GeoJSON-export:</dt><dd><a href="{{ table_data.uri }}?_format=geojson">{{ table_data.uri }}?_format=geojson</a></dd>
-      {% for export_info in table_data.exports %}
-        {% for ext_info in export_info %}
-            <dt class="col-xs-2">Downloadable {{ ext_info.description }}-export:</dt>
-            <dd><a href="{{ ext_info.url }}" class="{{ ext_info.kind }}">{{ ext_info.url }}</a></dd>
-        {% endfor %}
-      {% endfor %}
     </dl>
+      {% if table_data.exports %}
+      <h4>Exports</h4>
+      <table class="table table-condensed">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Downloads</th>
+            <th>Openbaar</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for name, export_group in table_data.exports.items %}
+          <tr>
+            <td>{{ name }}{% if export_group.0.multiple %}&mdash;<em>bevat ook andere tabellen</em>{% endif %}</td>
+            <td>
+              {% for export in export_group %}
+                <a href="{{ export.url }}" class="{{ export.kind }}">{{ export.description }}</a>{% if not forloop.last %}, {% endif %}
+              {% endfor %}
+            </td>
+            <td>{% if export_group.0.kind == "public" %}✅{% else %}❌{% endif %}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    {% endif %}
 
     <p>De volgende velden zijn beschikbaar:</p>
     <table class="table table-striped">
@@ -161,4 +181,39 @@
       </table>
     {% endif %}
   {% endfor %}
+
+
+  {% if exports %}
+  <h2>Exports</h2>
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Downloadlinks</th>
+        <th>Bevat gegevens van tabellen</th>
+        <th>Openbaar</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for name, export_group in exports.items %}
+      <tr>
+        <td>
+          <a class="anchor" id="exports-{{ name|slugify }}"></a>{{ name }}
+        </td>
+        <td>
+          {% for export in export_group %}
+            <a href="{{ export.url }}" class="{{ export.kind }}">{{ export.description }}</a>{% if not forloop.last %}, {% endif %}
+          {% endfor %}
+        </td>
+        <td>
+          {% for table_id, table_name in export_group.0.tables.items %}
+            <a href="#{{ table_id }}">{{ table_name }}</a>{% if not forloop.last %}, {% endif %}
+          {% endfor %}
+        </td>
+        <td>{% if export_group.0.kind == "public" %}✅{% else %}❌{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
 {% endblock %}
