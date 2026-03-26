@@ -477,7 +477,7 @@ referencing==0.36.2
     #   jsonschema-specifications
 remote-pdb==2.1.0
     # via amsterdam-schema-tools
-requests==2.32.5
+requests==2.33.0
     # via
     #   -r requirements.in
     #   amsterdam-schema-tools
