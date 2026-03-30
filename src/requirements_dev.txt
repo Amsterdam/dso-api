@@ -4,7 +4,7 @@
 #
 #    pip-compile --output-file=requirements_dev.txt requirements_dev.in
 #
-amsterdam-schema-tools[django]==9.2.2
+amsterdam-schema-tools[django]==9.3.0
     # via -r requirements.in
 argparse==1.4.0
     # via uwsgi-readiness-check
@@ -83,7 +83,7 @@ cryptography==46.0.6
     #   pyjwt
 datadiensten-apikeyclient==0.7.4
     # via -r requirements.in
-datapunt-authorization-django==2.0.2
+datapunt-authorization-django==2.0.3
     # via -r requirements.in
 debugpy==1.8.20
     # via -r requirements_dev.in
@@ -263,7 +263,7 @@ mypy-extensions==1.1.0
     # via black
 nodeenv==1.9.1
     # via pre-commit
-numpy==2.4.3
+numpy==2.4.4
     # via
     #   -r requirements.in
     #   shapely
@@ -454,7 +454,7 @@ python-dateutil==2.9.0.post0
     # via
     #   amsterdam-schema-tools
     #   arrow
-python-json-logger==4.0.0
+python-json-logger==4.1.0
     # via -r requirements.in
 python-owasp-zap-v2-4==0.1.0
     # via -r requirements.in
@@ -477,7 +477,7 @@ referencing==0.36.2
     #   jsonschema-specifications
 remote-pdb==2.1.0
     # via amsterdam-schema-tools
-requests==2.33.0
+requests==2.33.1
     # via
     #   -r requirements.in
     #   amsterdam-schema-tools
@@ -505,7 +505,7 @@ rpds-py==0.25.1
     # via
     #   jsonschema
     #   referencing
-ruff==0.15.7
+ruff==0.15.8
     # via -r requirements_dev.in
 shapely==2.1.2
     # via
@@ -535,7 +535,7 @@ termcolor==3.3.0
     # via
     #   -r requirements_dev.in
     #   pytest-sugar
-tomli==2.4.0
+tomli==2.4.1
     # via -r requirements_dev.in
 types-python-dateutil==2.9.0.20250516
     # via arrow
