@@ -247,7 +247,7 @@ more-ds==0.0.6
     # via
     #   -r requirements.in
     #   amsterdam-schema-tools
-more-itertools==10.8.0
+more-itertools==11.0.1
     # via
     #   -r requirements.in
     #   amsterdam-schema-tools
