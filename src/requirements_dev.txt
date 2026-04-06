@@ -4,7 +4,7 @@
 #
 #    pip-compile --output-file=requirements_dev.txt requirements_dev.in
 #
-amsterdam-schema-tools[django]==9.3.0
+amsterdam-schema-tools[django]==9.3.1
     # via -r requirements.in
 argparse==1.4.0
     # via uwsgi-readiness-check
@@ -117,9 +117,9 @@ django==5.2.12
     #   drf-spectacular
 django-cors-headers==4.9.0
     # via -r requirements.in
-django-coverage-plugin==3.2.0
+django-coverage-plugin==3.2.2
     # via -r requirements.in
-django-debug-toolbar==6.2.0
+django-debug-toolbar==6.3.0
     # via -r requirements_dev.in
 django-environ==0.13.0
     # via
@@ -362,7 +362,7 @@ opentelemetry-util-http==0.52b1
     #   opentelemetry-instrumentation-wsgi
 orderly-set==5.4.1
     # via deepdiff
-orjson==3.11.7
+orjson==3.11.8
     # via
     #   -r requirements.in
     #   amsterdam-schema-tools
@@ -505,7 +505,7 @@ rpds-py==0.25.1
     # via
     #   jsonschema
     #   referencing
-ruff==0.15.8
+ruff==0.15.9
     # via -r requirements_dev.in
 shapely==2.1.2
     # via
