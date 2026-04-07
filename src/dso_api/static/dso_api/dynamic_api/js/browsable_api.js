@@ -89,7 +89,6 @@ function onPageLoad() {
                 parseData(result.data)
             }
             const href = PAGEURL.href.split("#")[0]
-            console.log(href)
             window.history.replaceState(
                 JSON.parse(
                     JSON.stringify({

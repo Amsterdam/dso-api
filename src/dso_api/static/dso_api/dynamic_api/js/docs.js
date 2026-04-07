@@ -77,7 +77,8 @@ function onPageLoad() {
 
 function showAuthAlert(event) {
     // Show alert with authorization buttons
-    const parent = event.target.parentNode.parentNode
+    const parent = event.target.parentNode.parentNode.parentNode
+
 
     const alert_banner = document.createElement("div")
     alert_banner.id = "auth-alert"
