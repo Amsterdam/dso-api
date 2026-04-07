@@ -37,9 +37,12 @@ class AuthMiddleware:
         # The token subject contains the username/email address of the user (on Azure)
         email = request.get_token_subject
         issuer = None
-        if getattr(request, "get_token_claims", None) and "email" in request.get_token_claims:
-            email = request.get_token_claims["email"]
-            issuer = request.get_token_claims["iss"]
+        if getattr(request, "get_token_claims", None):
+            if "email" in request.get_token_claims:
+                email = request.get_token_claims["email"]
+            # Entra ID tokens for system accounts don't have an email claim
+            if "iss" in request.get_token_claims:
+                issuer = request.get_token_claims["iss"]
         DatabaseRoles.set_end_user(email, issuer)
 
         return self._get_response(request)
