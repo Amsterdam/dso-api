@@ -434,9 +434,9 @@ cryptography==46.0.6 \
     #   jwcrypto
     #   msal
     #   pyjwt
-datadiensten-apikeyclient==0.7.4 \
-    --hash=sha256:09dee8d8b3dc4d2f22636d8b81b118e1bd0a88446c60e149f7e1a7889b861b2b \
-    --hash=sha256:1bc50444188a6762f8ea675ed316743ff31c7e916e4a8ee74b086db4b2cc9109
+datadiensten-apikeyclient==0.7.5 \
+    --hash=sha256:af794d2b36baca2981461ed60942780107ce91f8b800f6e9698f0e8139efceb6 \
+    --hash=sha256:f33f3b5fa1a8f3c238e23d6a009dd68eb67231d410ff1bd9fa925203df6ce07c
     # via -r requirements.in
 datapunt-authorization-django==2.0.3 \
     --hash=sha256:8aca682bec7e1b640a945323040b9f66bdf6b58e279c8bb3eb6ffd50cf9bad7f \
