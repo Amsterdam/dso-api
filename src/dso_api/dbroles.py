@@ -71,6 +71,7 @@ class DatabaseRoles:
         if user_email is None:
             user_email = cls.ANONYMOUS
         cls.current_user.email = user_email
+        cls.current_user.issuer = token_issuer
 
         # Immediately activate the user too, in case a connection was already established.
         # Otherwise, the request waits for the 'connection_created' signal.
@@ -88,6 +89,11 @@ class DatabaseRoles:
     def _get_end_user(cls) -> str | None:
         """Tell which user was selected"""
         return getattr(cls.current_user, "email", None)
+
+    @classmethod
+    def _get_issuer(cls) -> str | None:
+        """Tell which issuer gave out the token (Keycloak or Entra)"""
+        return getattr(cls.current_user, "issuer", None)
 
     @classmethod
     def _role_from_user(cls, user: str | None) -> str:
@@ -132,10 +138,15 @@ class DatabaseRoles:
             cls._set_role(user_connection, settings.ANONYMOUS_ROLE, settings.ANONYMOUS_APP_NAME)
             return
 
-        # If the token was issued by keycloak
+        # If the token was issued by keycloak or entra
         # don't set role, because database role might not exist
         # Fallback to internal role but do write user email to database logs
-        if token_issuer and urlparse(token_issuer).netloc == "iam.amsterdam.nl":
+        # As of 10-4-2026, most authenticated requests are issued by Keycloak or Entra
+        token_issuer = cls._get_issuer()
+        if token_issuer and urlparse(token_issuer).netloc in {
+            "iam.amsterdam.nl",  # Keycloak
+            "sts.windows.net",  # Entra ID
+        }:
             cls._set_role(user_connection, settings.INTERNAL_ROLE, user_email)
             return
 

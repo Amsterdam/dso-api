@@ -818,9 +818,12 @@ def vestiging_models(vestiging_dataset, dynamic_models):
 def fetch_tokendata(settings):
     """Fixture to create valid token data, scopes is flexible"""
 
-    def _fetcher(scopes, subject):
+    def _fetcher(scopes, subject, iss):
         now = int(time.time())
-        return {"iat": now, "exp": now + 30, "scopes": scopes, "sub": subject}
+        token_data = {"iat": now, "exp": now + 30, "scopes": scopes, "sub": subject}
+        if iss:
+            token_data["iss"] = iss
+        return token_data
 
     return _fetcher
 
@@ -829,11 +832,13 @@ def fetch_tokendata(settings):
 def fetch_auth_token(fetch_tokendata, settings):
     """Fixture to create an auth token, scopes is flexible"""
 
-    def _fetcher(scopes, subject=settings.TEST_USER_EMAIL):
+    def _fetcher(scopes, subject=settings.TEST_USER_EMAIL, iss=None):
         kid = "2aedafba-8170-4064-b704-ce92b7c89cc6"
         jwks = JWKSWrapper()
         key = jwks.keyset.get_key(kid)
-        token = JWT(header={"alg": "ES256", "kid": kid}, claims=fetch_tokendata(scopes, subject))
+        token = JWT(
+            header={"alg": "ES256", "kid": kid}, claims=fetch_tokendata(scopes, subject, iss)
+        )
         token.make_signed_token(key)
         return token.serialize()
 
