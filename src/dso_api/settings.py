@@ -360,12 +360,17 @@ if CLOUD_ENV.startswith("azure"):
         print("OpenTelemetry has been enabled")
 
         def response_hook(span, request, response):
-            if (
-                span.is_recording()
-                and hasattr(request, "get_token_claims")
-                and (email := request.get_token_claims.get("email", request.get_token_subject))
-            ):
-                span.set_attribute("user.AuthenticatedId", email)
+            if span.is_recording():
+                # Add user email to the trace for authenticated users.
+                if hasattr(request, "get_token_claims") and (
+                    email := request.get_token_claims.get("email", request.get_token_subject)
+                ):
+                    span.set_attribute("user.AuthenticatedId", email)
+
+                # Add API key subject to the trace.
+                # This attribute is added by ApiKeyMiddleware if a key is provided in the request.
+                if sub := getattr(request, "api_key_subject", None):
+                    span.set_attribute("user.ApiKeySubject", sub)
 
         DjangoInstrumentor().instrument(response_hook=response_hook)
         print("Django instrumentor enabled")
