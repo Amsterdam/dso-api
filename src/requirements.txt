@@ -438,9 +438,9 @@ datadiensten-apikeyclient==0.7.5 \
     --hash=sha256:af794d2b36baca2981461ed60942780107ce91f8b800f6e9698f0e8139efceb6 \
     --hash=sha256:f33f3b5fa1a8f3c238e23d6a009dd68eb67231d410ff1bd9fa925203df6ce07c
     # via -r requirements.in
-datapunt-authorization-django==2.0.3 \
-    --hash=sha256:8aca682bec7e1b640a945323040b9f66bdf6b58e279c8bb3eb6ffd50cf9bad7f \
-    --hash=sha256:8f08161fd605f7bc418f7fb65fecdfbf69a48ec5decf3837e454deda1fd14ea4
+datapunt-authorization-django==2.0.4 \
+    --hash=sha256:1d93d042e85febd2d9aa8b042dd3cd29b5633fd1726676b75b40375c9506b780 \
+    --hash=sha256:88b700739397747a6e2f89a8cb3daba0b67aaf3929d02168c8a330869af7a503
     # via -r requirements.in
 decorator==5.2.1 \
     --hash=sha256:65f266143752f734b0a7cc83c46f4618af75b8c5911b00ccb61d0ac9b6da0360 \
@@ -568,9 +568,9 @@ fqdn==1.5.1 \
     --hash=sha256:105ed3677e767fb5ca086a0c1f4bb66ebc3c100be518f0e0d755d9eae164d89f \
     --hash=sha256:3a179af3761e4df6eb2e026ff9e1a3033d3587bf980a0b1b2e1e5d08d7358014
     # via jsonschema
-geoalchemy2==0.18.4 \
-    --hash=sha256:5719e2bb040d5c406d5d03425fec87997ce9351843b053ca11373a0f5a31971b \
-    --hash=sha256:89e6680dcbb6b8d8c784dcaa889e48ab2783aa42487ee5730fdbd7a7c7ddf6ec
+geoalchemy2==0.19.0 \
+    --hash=sha256:878a5859e23ae632fe20ea35412cda40f50c94fa69c9242587574941e4d4ec32 \
+    --hash=sha256:c88be59cdb90af9d74278bdd33a5f58acb23859f0f1380726593eed0f343f4a8
     # via
     #   -r requirements.in
     #   amsterdam-schema-tools
@@ -639,9 +639,9 @@ jsonschema-specifications==2025.4.1 \
     # via
     #   jsonschema
     #   openapi-schema-validator
-jwcrypto==1.5.6 \
-    --hash=sha256:150d2b0ebbdb8f40b77f543fb44ffd2baeff48788be71f67f03566692fd55789 \
-    --hash=sha256:771a87762a0c081ae6166958a954f80848820b2ab066937dc8b8379d65b1b039
+jwcrypto==1.5.7 \
+    --hash=sha256:70204d7cca406eda8c82352e3c41ba2d946610dafd19e54403f0a1f4f18633c6 \
+    --hash=sha256:729463fefe28b6de5cf1ebfda3e94f1a1b41d2799148ef98a01cb9678ebe2bb0
     # via datapunt-authorization-django
 lark==1.2.2 \
     --hash=sha256:c2276486b02f0f1b90be155f2c8ba4a8e194d42775786db622faccd652d8e80c \
@@ -860,9 +860,9 @@ more-ds==0.0.6 \
     # via
     #   -r requirements.in
     #   amsterdam-schema-tools
-more-itertools==11.0.1 \
-    --hash=sha256:eaf287826069452a8f61026c597eae2428b2d1ba2859083abbf240b46842ce6d \
-    --hash=sha256:fefaf25b7ab08f0b45fa9f1892cae93b9fc0089ef034d39213bce15f1cc9e199
+more-itertools==11.0.2 \
+    --hash=sha256:392a9e1e362cbc106a2457d37cabf9b36e5e12efd4ebff1654630e76597df804 \
+    --hash=sha256:6e35b35f818b01f691643c6c611bc0902f2e92b46c18fffa77ae1e7c46e912e4
     # via
     #   -r requirements.in
     #   amsterdam-schema-tools

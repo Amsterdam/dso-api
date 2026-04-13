@@ -83,7 +83,7 @@ cryptography==46.0.7
     #   pyjwt
 datadiensten-apikeyclient==0.7.5
     # via -r requirements.in
-datapunt-authorization-django==2.0.3
+datapunt-authorization-django==2.0.4
     # via -r requirements.in
 debugpy==1.8.20
     # via -r requirements_dev.in
@@ -173,7 +173,7 @@ flake8-raise==0.0.5
     # via -r requirements.in
 fqdn==1.5.1
     # via jsonschema
-geoalchemy2==0.18.4
+geoalchemy2==0.19.0
     # via
     #   -r requirements.in
     #   amsterdam-schema-tools
@@ -217,7 +217,7 @@ jsonschema-specifications==2025.4.1
     # via
     #   jsonschema
     #   openapi-schema-validator
-jwcrypto==1.5.6
+jwcrypto==1.5.7
     # via datapunt-authorization-django
 lark==1.2.2
     # via mappyfile
@@ -247,7 +247,7 @@ more-ds==0.0.6
     # via
     #   -r requirements.in
     #   amsterdam-schema-tools
-more-itertools==11.0.1
+more-itertools==11.0.2
     # via
     #   -r requirements.in
     #   amsterdam-schema-tools
@@ -505,7 +505,7 @@ rpds-py==0.25.1
     # via
     #   jsonschema
     #   referencing
-ruff==0.15.9
+ruff==0.15.10
     # via -r requirements_dev.in
 shapely==2.1.2
     # via
