@@ -184,6 +184,38 @@ def test_user_switches_on_consecutive_requests(
 
 
 @pytest.mark.django_db
+@pytest.mark.parametrize("issuer", ["https://iam.amsterdam.nl", "https://sts.windows.net"])
+def test_user_with_entra_keycloak_token(
+    filled_router, api_client, activate_dbroles, fetch_auth_token, settings, issuer
+):
+    """
+    When token issuer is Entra or Keycloak,
+    the INTERNAL_ROLE (medewerker_role.filtered)
+    is used for db access
+    """
+    url = reverse("dynamic_api:movies-director-list")
+    token = fetch_auth_token(["TEST_OPENBAAR", "TEST_DIRECTOR"], iss=issuer)
+    response = api_client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
+    assert response.status_code == 200
+    assert DatabaseRoles._get_end_user() == settings.TEST_USER_EMAIL
+
+    # The user context is terminated when content is streamed so we
+    # can make assertions about the session state here
+    with connection.cursor() as c:
+        c.execute("SELECT current_user;")
+        assert c.fetchone()[0] == settings.INTERNAL_ROLE
+
+    # The test user can see directors and movie data
+    assert json.loads("".join([x.decode() for x in response.streaming_content])) == director_data
+    # Ensure the connection session context is cleaned up
+    assert DatabaseRoles._get_role(connection) is None
+
+    with connection.cursor() as c:
+        c.execute("SELECT current_user;")
+        assert c.fetchone()[0] == settings.DB_USER
+
+
+@pytest.mark.django_db
 def test_internal_user_when_subject_without_role(
     filled_router,
     api_client,
