@@ -271,7 +271,7 @@ def activate_dbroles(settings, movies_dataset, movies_data, directors_data):
                 CREATE ROLE scope_test_openbaar;
                 CREATE ROLE scope_test_director;
                 GRANT scope_test_openbaar to {0},{1},{2},{3};
-                GRANT scope_test_director to {2},{3};
+                GRANT scope_test_director to {1},{2},{3};
             """
             ).format(
                 Identifier(settings.ANONYMOUS_ROLE),
