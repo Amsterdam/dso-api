@@ -7,11 +7,11 @@ django-vectortiles == 1.0.2
 djangorestframework == 3.16.1
 djangorestframework-csv == 3.0.2
 djangorestframework-gis == 1.2.0
-amsterdam-schema-tools[django] == 9.4.0
+amsterdam-schema-tools[django] == 9.4.1
 azure-identity == 1.25.3
 azure-monitor-opentelemetry == 1.6.12
 beautifulsoup4==4.14.3
-cachetools == 7.0.5
+cachetools == 7.0.6
 datadiensten-apikeyclient == 0.7.5
 datapunt-authorization-django==2.0.4
 drf-spectacular == 0.29.0
@@ -36,7 +36,7 @@ shapely == 2.1.2
 urllib3 == 2.6.3
 urllib3-mock == 0.3.3
 whitenoise == 6.12.0
-zipp == 3.23.0
+zipp == 3.23.1
 
 # Packaging
 pur == 7.3.3

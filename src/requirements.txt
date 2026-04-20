@@ -4,9 +4,9 @@
 #
 #    pip-compile --generate-hashes --output-file=requirements.txt requirements.in
 #
-amsterdam-schema-tools[django]==9.4.0 \
-    --hash=sha256:5f6ebd6ccbb61158a1544a67f07778e0ea6ae6d4ff41e18135a3b834d871a1f3 \
-    --hash=sha256:9deac9cccc928c320f8de06a2f6321f6c390a492a0e42241ce0878e39fa2913e
+amsterdam-schema-tools[django]==9.4.1 \
+    --hash=sha256:460450aa3f0136b4c0a178705f99698a7ab2053a64c7f3bf56f5a1c611343836 \
+    --hash=sha256:75fd5c710ed8c7526fd603ad495bc37e021fd06129b98cfd55d95d9a5c1316d4
     # via -r requirements.in
 argparse==1.4.0 \
     --hash=sha256:62b089a55be1d8949cd2bc7e0df0bddb9e028faefc8c32038cc84862aefdd6e4 \
@@ -70,9 +70,9 @@ build==1.2.2.post1 \
     --hash=sha256:1d61c0887fa860c01971625baae8bdd338e517b836a2f70dd1f7aa3a6b2fc5b5 \
     --hash=sha256:b36993e92ca9375a219c99e606a122ff365a760a2d4bba0caa09bd5278b608b7
     # via datadiensten-apikeyclient
-cachetools==7.0.5 \
-    --hash=sha256:0cd042c24377200c1dcd225f8b7b12b0ca53cc2c961b43757e774ebe190fd990 \
-    --hash=sha256:46bc8ebefbe485407621d0a4264b23c080cedd913921bad7ac3ed2f26c183114
+cachetools==7.0.6 \
+    --hash=sha256:4e94956cfdd3086f12042cdd29318f5ced3893014f7d0d059bf3ead3f85b7f8b \
+    --hash=sha256:e5d524d36d65703a87243a26ff08ad84f73352adbeafb1cde81e207b456aaf24
     # via -r requirements.in
 certifi==2025.6.15 \
     --hash=sha256:2e0c7ce7cb5d8f8634ca55d2ba7e6ec2689a2fd6537d8dec1296a477a4910057 \
@@ -1926,9 +1926,9 @@ zaproxy==0.4.0 \
     --hash=sha256:b25285bc306d1ad91bc4d8b247aecfa06e0cb5e407fb3f5dd2fcf2fe38a67330 \
     --hash=sha256:dd0ae2f12597caf934189ac85e139a9a7239c2623a1051f9613f9356d4ec162c
     # via python-owasp-zap-v2-4
-zipp==3.23.0 \
-    --hash=sha256:071652d6115ed432f5ce1d34c336c0adfd6a884660d1e9712a256d3d3bd4b14e \
-    --hash=sha256:a07157588a12518c9d4034df3fbbee09c814741a33ff63c05fa29d26a2404166
+zipp==3.23.1 \
+    --hash=sha256:0b3596c50a5c700c9cb40ba8d86d9f2cc4807e9bedb06bcdf7fac85633e444dc \
+    --hash=sha256:32120e378d32cd9714ad503c1d024619063ec28aad2248dc6672ad13edfa5110
     # via
     #   -r requirements.in
     #   importlib-metadata

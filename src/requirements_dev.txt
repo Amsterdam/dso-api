@@ -4,7 +4,7 @@
 #
 #    pip-compile --output-file=requirements_dev.txt requirements_dev.in
 #
-amsterdam-schema-tools[django]==9.4.0
+amsterdam-schema-tools[django]==9.4.1
     # via -r requirements.in
 argparse==1.4.0
     # via uwsgi-readiness-check
@@ -48,7 +48,7 @@ build==1.2.2.post1
     # via
     #   datadiensten-apikeyclient
     #   pip-tools
-cachetools==7.0.5
+cachetools==7.0.6
     # via -r requirements.in
 certifi==2025.6.15
     # via
@@ -505,7 +505,7 @@ rpds-py==0.25.1
     # via
     #   jsonschema
     #   referencing
-ruff==0.15.10
+ruff==0.15.11
     # via -r requirements_dev.in
 shapely==2.1.2
     # via
@@ -579,7 +579,7 @@ wrapt==1.17.2
     #   opentelemetry-instrumentation-urllib3
 zaproxy==0.4.0
     # via python-owasp-zap-v2-4
-zipp==3.23.0
+zipp==3.23.1
     # via
     #   -r requirements.in
     #   importlib-metadata
