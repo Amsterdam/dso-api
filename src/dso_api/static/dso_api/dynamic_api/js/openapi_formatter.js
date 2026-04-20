@@ -1,5 +1,7 @@
 function getDefaultVersion(versions) {
-    return Object.entries(versions).find(([version, obj]) => version !== "default" && obj.default)[0]
+    return Object.entries(versions).find(
+        ([version, obj]) => version !== "default" && obj.default
+    )[0]
 }
 
 function getVersionWarning(versions, currentVersion, defaultVersion) {
@@ -31,11 +33,16 @@ const FORMATTER = (rawJson) => {
     let currentVMajor = requestPath.match(/v[0-9]+$/)
     let defaultVersion = getDefaultVersion(versions)
     currentVMajor = currentVMajor ? currentVMajor.toString() : "default"
-    let versionWarning = getVersionWarning(versions, currentVMajor, defaultVersion)
+    let versionWarning = getVersionWarning(
+        versions,
+        currentVMajor,
+        defaultVersion
+    )
     let currentVersion = versions[currentVMajor]
 
-    let alternateVersions = Object.entries(rawJson["x-versions"])
-        .filter(([version, obj]) => (version !== "default" && version !== currentVMajor))
+    let alternateVersions = Object.entries(rawJson["x-versions"]).filter(
+        ([version, obj]) => version !== "default" && version !== currentVMajor
+    )
 
     openApiEl.innerHTML = `
       <h3>OpenAPI ${rawJson.info.title}</h3>
@@ -48,7 +55,7 @@ const FORMATTER = (rawJson) => {
       ${alternateVersions.length > 0 ? `<b>Alternatieve versies</b>` : ""}
       ${alternateVersions
           .map(([version, obj]) => {
-            return `
+              return `
               <p>
                 <div style="display:inline-block;">Versie ${version}:</div>&emsp;
                 <a href="${obj.url}">${obj.url}</a> (${obj.statusDescription})
@@ -64,6 +71,7 @@ const FORMATTER = (rawJson) => {
       </p>
       <h3>Paths:</h3>
       ${currentVersion.pathsUnderDevelopment ? `<p>Paden met het <span class="beta">beta</span> label zijn nog in ontwikkeling en zijn nog niet geschikt voor productie-omgevingen.</p>` : ""}
+      ${currentVersion.pathsDeprecated ? `<p>Paden met het <span class="deprecated">afgeschreven</span> label zijn verouderd; de data zal niet meer worden bijgewerkt.</p>` : ""}
     `
 
     // Add a link for each path
@@ -73,7 +81,7 @@ const FORMATTER = (rawJson) => {
     Object.keys(rawJson.paths).forEach((path) => {
         Object.keys(rawJson.paths[path]).forEach((method) => {
             let endpointEl = document.createElement("div")
-            let tableId = path.match('^\/([^\/]+)')[1]
+            let tableId = path.match("^\/([^\/]+)")[1]
             let status = currentVersion.paths[tableId]
             endpointEl.className = "endpoint"
 
@@ -82,6 +90,7 @@ const FORMATTER = (rawJson) => {
             <div class='request-method get' style="display:inline-block">${method}</div>
             <a href="${requestPath}${path}" style="display:inline-block" class='path'>${path}</a>
             ${status === "under_development" ? `<span class="beta">beta</span>` : ""}
+            ${status === "deprecated" ? `<span class="deprecated">afgeschreven</span>` : ""}
           </p>
         `
             pathsEl.appendChild(endpointEl)

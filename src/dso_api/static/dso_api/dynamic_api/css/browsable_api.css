@@ -308,3 +308,10 @@ blockquote {
     color: #fff;
     padding: 2px 5px;
 }
+
+.deprecated {
+    background-color: #ff0000;
+    border-radius: 2px;
+    color: #fff;
+    padding: 2px 5px;
+}
