@@ -227,6 +227,7 @@ def get_openapi_view(dataset, version: str | None = None, response_format: str =
             "default": vschema.is_default,
             "paths": {to_snake_case(t.id): t.status.value for t in vschema.tables},
             "pathsUnderDevelopment": "under_development" in paths.values(),
+            "pathsDeprecated": "deprecated" in paths.values(),
         }
 
     openapi_overrides = {
