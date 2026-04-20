@@ -4,9 +4,9 @@
 #
 #    pip-compile --generate-hashes --output-file=requirements.txt requirements.in
 #
-amsterdam-schema-tools[django]==9.4.0 \
-    --hash=sha256:5f6ebd6ccbb61158a1544a67f07778e0ea6ae6d4ff41e18135a3b834d871a1f3 \
-    --hash=sha256:9deac9cccc928c320f8de06a2f6321f6c390a492a0e42241ce0878e39fa2913e
+amsterdam-schema-tools[django]==9.4.1 \
+    --hash=sha256:460450aa3f0136b4c0a178705f99698a7ab2053a64c7f3bf56f5a1c611343836 \
+    --hash=sha256:75fd5c710ed8c7526fd603ad495bc37e021fd06129b98cfd55d95d9a5c1316d4
     # via -r requirements.in
 argparse==1.4.0 \
     --hash=sha256:62b089a55be1d8949cd2bc7e0df0bddb9e028faefc8c32038cc84862aefdd6e4 \
