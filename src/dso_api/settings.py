@@ -362,10 +362,21 @@ if CLOUD_ENV.startswith("azure"):
         def response_hook(span, request, response):
             if span.is_recording():
                 # Add user email to the trace for authenticated users.
-                if hasattr(request, "get_token_claims") and (
-                    email := request.get_token_claims.get("email", request.get_token_subject)
-                ):
-                    span.set_attribute("user.AuthenticatedId", email)
+                if hasattr(request, "get_token_claims"):
+
+                    account = None
+                    if "email" in request.get_token_claims:  # User email in Keycloak tokens
+                        account = request.get_token_claims["email"]
+                    elif "upn" in request.get_token_claims:  # User email in Entra ID tokens
+                        account = request.get_token_claims["upn"]
+                    elif "appid" in request.get_token_claims:  # Appid for Entra ID system accounts
+                        account = request.get_token_claims["appid"]
+
+                    # If none of the above, fall back to token subject
+                    else:
+                        account = request.get_token_subject
+                    if account:
+                        span.set_attribute("account", account)
 
                 # Add API key subject to the trace.
                 # This attribute is added by ApiKeyMiddleware if a key is provided in the request.
