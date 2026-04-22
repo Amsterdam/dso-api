@@ -34,15 +34,24 @@ class AuthMiddleware:
             scopes.update(self.feature_scopes)
             request.user_scopes = UserScopes(request.GET, scopes, self._all_profiles)
 
-        # The token subject contains the username/email address of the user (on Azure)
-        email = request.get_token_subject
+        # Extract user/system account id to be used for logging
+        account = None
+        if "email" in request.get_token_claims:  # User email in Keycloak tokens
+            account = request.get_token_claims["email"]
+        elif "upn" in request.get_token_claims:  # User email in Entra ID tokens
+            account = request.get_token_claims["upn"]
+        elif "appid" in request.get_token_claims:  # Appid for Entra ID system accounts
+            account = request.get_token_claims["appid"]
+        # If none of the above, fall back to token subject
+        else:
+            account = request.get_token_subject
+        if account:
+            request.account_id = account
+
+        # Set database role with account id and issuer
         issuer = None
-        if getattr(request, "get_token_claims", None):
-            if "email" in request.get_token_claims:
-                email = request.get_token_claims["email"]
-            # Entra ID tokens for system accounts don't have an email claim
-            if "iss" in request.get_token_claims:
-                issuer = request.get_token_claims["iss"]
-        DatabaseRoles.set_end_user(email, issuer)
+        if getattr(request, "get_token_claims", None) and "iss" in request.get_token_claims:
+            issuer = request.get_token_claims["iss"]
+        DatabaseRoles.set_end_user(account, issuer)
 
         return self._get_response(request)
