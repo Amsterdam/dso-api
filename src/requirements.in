@@ -13,7 +13,7 @@ azure-monitor-opentelemetry == 1.6.12
 beautifulsoup4==4.14.3
 cachetools == 7.0.5
 datadiensten-apikeyclient == 0.7.5
-datapunt-authorization-django==2.0.4
+datapunt-authorization-django==2.1.0
 drf-spectacular == 0.29.0
 Geoalchemy2 == 0.19.0
 jsonschema == 4.26.0
