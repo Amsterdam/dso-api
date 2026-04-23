@@ -362,8 +362,8 @@ if CLOUD_ENV.startswith("azure"):
         def response_hook(span, request, response):
             if span.is_recording():
                 # Add user email / system app id to the trace for authenticated accounts
-                if hasattr(request, "account"):
-                    span.set_attribute("account", request.account)
+                if hasattr(request, "account_id"):
+                    span.set_attribute("account_id", request.account_id)
 
                 # Add API key subject to the trace.
                 # This attribute is added by ApiKeyMiddleware if a key is provided in the request.
