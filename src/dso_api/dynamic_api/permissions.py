@@ -16,16 +16,18 @@ audit_log = logging.getLogger("dso_api.audit")
 def log_access(request, access: bool):
     if access:
         audit_log.info(
-            "%s %s: access granted with %s",
+            "%s %s: access granted to %s with %s",
             request.method,
             request.path,
+            request.account_id,
             request.user_scopes,
         )
     else:
         audit_log.info(
-            "%s %s: access denied with %s",
+            "%s %s: access denied to %s with %s",
             request.method,
             request.path,
+            request.account_id,
             request.user_scopes,
         )
 

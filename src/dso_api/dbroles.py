@@ -25,12 +25,12 @@ from urllib.parse import urlparse
 from asgiref.local import Local
 from django.conf import settings
 from django.core.signals import got_request_exception, request_finished
-from django.db import DataError
 from django.db import connection as default_connection
 from django.db.backends.base.base import BaseDatabaseWrapper
 from django.db.backends.signals import connection_created
 from django.db.utils import DatabaseError
 from django.dispatch import receiver
+from psycopg.errors import DataError
 from psycopg.pq import TransactionStatus
 
 logger = logging.getLogger(__name__)
