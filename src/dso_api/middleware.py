@@ -36,7 +36,6 @@ class AuthMiddleware:
 
         # Extract user account id (email address or app id)
         account_id = getattr(request, "account_id", None)
-        print(account_id)
 
         # Set database role with account id and issuer
         issuer = None

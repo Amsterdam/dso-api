@@ -19,7 +19,7 @@ def log_access(request, access: bool):
             "%s %s: access granted to %s with %s",
             request.method,
             request.path,
-            request.account_id,
+            request.account_id if request.account_id else "anonymous",
             request.user_scopes,
         )
     else:
@@ -27,7 +27,7 @@ def log_access(request, access: bool):
             "%s %s: access denied to %s with %s",
             request.method,
             request.path,
-            request.account_id,
+            request.account_id if request.account_id else "anonymous",
             request.user_scopes,
         )
 
