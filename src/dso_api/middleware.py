@@ -34,15 +34,13 @@ class AuthMiddleware:
             scopes.update(self.feature_scopes)
             request.user_scopes = UserScopes(request.GET, scopes, self._all_profiles)
 
-        # The token subject contains the username/email address of the user (on Azure)
-        email = request.get_token_subject
+        # Extract user account id (email address or app id)
+        account_id = getattr(request, "account_id", None)
+
+        # Set database role with account id and issuer
         issuer = None
-        if getattr(request, "get_token_claims", None):
-            if "email" in request.get_token_claims:
-                email = request.get_token_claims["email"]
-            # Entra ID tokens for system accounts don't have an email claim
-            if "iss" in request.get_token_claims:
-                issuer = request.get_token_claims["iss"]
-        DatabaseRoles.set_end_user(email, issuer)
+        if getattr(request, "get_token_claims", None) and "iss" in request.get_token_claims:
+            issuer = request.get_token_claims["iss"]
+        DatabaseRoles.set_end_user(account_id, issuer)
 
         return self._get_response(request)
