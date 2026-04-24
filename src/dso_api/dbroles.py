@@ -28,9 +28,9 @@ from django.core.signals import got_request_exception, request_finished
 from django.db import connection as default_connection
 from django.db.backends.base.base import BaseDatabaseWrapper
 from django.db.backends.signals import connection_created
-from django.db.utils import DatabaseError
+from django.db.utils import DatabaseError, DataError
 from django.dispatch import receiver
-from psycopg.errors import DataError
+from psycopg.errors import DataError as psycopgDataError
 from psycopg.pq import TransactionStatus
 
 logger = logging.getLogger(__name__)
@@ -155,7 +155,7 @@ class DatabaseRoles:
         try:
             # BBN2: Exact account for specific access.
             cls._set_role(user_connection, role_name, user_email)
-        except DataError as e:
+        except (DataError, psycopgDataError) as e:
             # The role didn't exist.
             if is_internal(user_email):
                 # BBN1: Internal employee, no specific account
