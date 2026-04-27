@@ -47,7 +47,7 @@ uwsgi-readiness-check == 0.2.0
 
 # Testing
 bandit == 1.9.4
-cryptography >= 46.0.3
+cryptography >= 47.0.0
 django-coverage-plugin == 3.2.2
 flake8 == 7.3.0
 flake8-blind-except == 0.2.1
