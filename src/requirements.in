@@ -22,7 +22,7 @@ Markdown == 3.10.2
 more-ds == 0.0.6
 more-itertools == 11.0.2
 numpy == 2.4.4
-openapi-spec-validator == 0.7.2
+openapi-spec-validator == 0.8.5
 # Version should match with opentelemetry subdependency:
 opentelemetry-instrumentation-psycopg == 0.52b1
 orjson == 3.11.8
@@ -39,7 +39,7 @@ whitenoise == 6.12.0
 zipp == 3.23.1
 
 # Packaging
-pur == 7.3.3
+pur == 7.4.0
 
 # Monitoring
 uwsgitop == 0.12
