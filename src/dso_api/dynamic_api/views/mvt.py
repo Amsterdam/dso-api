@@ -173,7 +173,11 @@ class DatasetMVTView(CheckModelPermissionsMixin, StreamingMVTView):
 
             # We may have to use the db_name, because that usually has a suffix not
             # available on field.name.
-            field_name = toCamelCase(field.db_name) if field.is_relation else field.name
+            field_name = (
+                toCamelCase(field.db_name)
+                if field.is_relation or field.is_subfield
+                else field.name
+            )
 
             # When there is Row Level Auth, we omit the field.
             if schema.rla is not None and field_name in schema.rla.targets:

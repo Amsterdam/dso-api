@@ -482,6 +482,8 @@ def test_mvt_content_zoom(api_client, gebieden_dataset, buurten_model, filled_ro
                         "identificatie": "03630000000078",
                         "volgnummer": 2,
                         "ligtInWijkId": "03630012052035.1",
+                        "ligtInWijkIdentificatie": "03630012052035",
+                        "ligtInWijkVolgnummer": 1,
                         "naam": "AAA v2",
                     },
                     "id": 0,
