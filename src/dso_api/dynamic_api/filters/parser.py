@@ -4,7 +4,6 @@ This translates a query-string into ORM lookups using the Amsterdam Schema defin
 """
 
 import operator
-import re
 from datetime import datetime
 from functools import reduce
 from typing import Any, NamedTuple
@@ -25,8 +24,6 @@ from dso_api.dynamic_api.permissions import check_filter_field_access
 from dso_api.dynamic_api.temporal import TemporalTableQuery, get_request_date
 
 from .values import str2bool, str2geo, str2isodate, str2number, str2time
-
-SNAKE_CASE_RE = re.compile(r"^[a-z][a-z0-9_]*$")
 
 # Lookups that have specific value types:
 
@@ -178,32 +175,44 @@ class QueryFilterEngine:
         "_csv_header",
         "_csv_separator",
     }
+    PREFIX = "Dso-"
 
     @classmethod
     def from_request(cls, request) -> QueryFilterEngine:
         """Construct the parser from the request data."""
-        qp_headers = QueryDict(mutable=True)
+        dso_headers = QueryDict(mutable=True)
 
         for key, value in request.headers.items():
-            if key.lower().startswith("qp-"):
-                raw_key = key[3:].lower()
-                normalized_key = raw_key.replace("-", "_")
+            if not key.startswith(cls.PREFIX):
+                continue
 
-                if not SNAKE_CASE_RE.match(normalized_key):
-                    # headers must be passed in snake case with a qp- prefix
-                    raise ValidationError(
-                        f"Invalid qp header '{normalized_key}'. Must be snake_case."
-                    )
+            # custom query headers are passed with a DSO- prefix
+            raw_key = key[len(cls.PREFIX) :]
 
-                qp_headers.setlist(normalized_key, [value])
+            # default operator will be "eq"
+            operator = "eq"
+
+            if raw_key.lower().endswith("-gt"):
+                operator = "gt"
+                raw_key = raw_key[:-3]
+            elif raw_key.lower().endswith("-lt"):
+                operator = "lt"
+                raw_key = raw_key[:-3]
+
+            # convert query param to camelCase
+            query_parts = raw_key.split("-")
+            query_param = query_parts[0].lower() + "".join(
+                part.capitalize() for part in query_parts[1:]
+            )
+
+            new_key = f"{query_param}[{operator}]"
+
+            dso_headers.setlist(new_key, [value])
 
         return cls(
             user_scopes=request.user_scopes,
             query=request.GET,
-            # neemt aan dat headers al een aparte DSO-filters dict heeft
-            # dus is prefix dan nog nodig ook?
-            # header_filters=request.headers #.get("DSO-Filters"),
-            qp_headers=qp_headers,
+            dso_headers=dso_headers,
             input_crs=getattr(request, "accept_crs", None),
             request_date=get_request_date(request),
         )
@@ -214,15 +223,15 @@ class QueryFilterEngine:
         query: MultiValueDict,
         input_crs: CRS,
         request_date=None,
-        qp_headers=None,
+        dso_headers=None,
     ):
         """Initialize the filtering engine using the context provided by the request."""
         self.user_scopes = user_scopes
         self.query = query
         self.input_crs = input_crs
-        self.filter_inputs = self._parse_filters(query, qp_headers)
+        self.filter_inputs = self._parse_filters(query, dso_headers)
         self.request_date = request_date
-        self.qp_headers = qp_headers
+        self.dso_headers = dso_headers
 
     def __bool__(self):
         return bool(self.filter_inputs)
@@ -230,20 +239,17 @@ class QueryFilterEngine:
     def _parse_filters(
         self,
         query: MultiValueDict,
-        qp_headers: MultiValueDict,
+        dso_headers: MultiValueDict,
     ) -> list[FilterInput]:
         """Translate raw HTTP GET parameters and custom
         header query parameters into a Python structure"""
         filters = []
 
-        # if qp_headers:
-        #     query = query.copy()
-        #     query.update(qp_headers)
-        if qp_headers:
+        if dso_headers:
             query = query.copy()
 
-            # qp_headers overwrite query
-            for key, values in qp_headers.lists():
+            for key, values in dso_headers.lists():
+                # dso_headers are leading
                 query.setlist(key, values)
 
         for key in sorted(query):

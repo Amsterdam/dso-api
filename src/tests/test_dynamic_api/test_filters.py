@@ -38,17 +38,17 @@ def test_sql_wildcards():
 
 
 def create_filter_engine(
-    query_string: str, request_scopes=(), qp_headers=None
+    query_string: str, request_scopes=(), dso_headers=None
 ) -> parser.QueryFilterEngine:
     """Simulate creation of a filter engine, based on request data."""
     get_params = QueryDict(query_string)
-    qp_headers = QueryDict(qp_headers) if qp_headers else None
+    dso_headers = QueryDict(dso_headers) if dso_headers else None
     return parser.QueryFilterEngine(
         user_scopes=UserScopes(get_params, request_scopes),
         query=get_params,
         input_crs=RD_NEW,
         request_date=now(),
-        qp_headers=qp_headers,
+        dso_headers=dso_headers,
     )
 
 
@@ -112,38 +112,38 @@ class TestFilterEngine:
         qs = engine.filter_queryset(movies_model.objects.all())
         assert {obj.name for obj in qs} == expect, str(qs.query)
 
-    def test_qp_headers(self, movies_model, movie1, movie2):
+    def test_dso_headers(self, movies_model, movie1, movie2):
         """Prove that filtering with qp headers work."""
-        engine = create_filter_engine("dateAdded[lt]=2020-3-1T23:00:00", qp_headers="name=movie1")
+        engine = create_filter_engine("dateAdded[lt]=2020-3-1T23:00:00", dso_headers="name=movie1")
         qs = engine.filter_queryset(movies_model.objects.all())
         assert {obj.name for obj in qs} == {"movie1"}
 
-    def test_qp_headers_overwrite_query(self, movies_model, movie1, movie2):
+    def test_dso_headers_overwrite_query(self, movies_model, movie1, movie2):
         """Prove that filtering with qp headers work."""
         engine = create_filter_engine(
-            "dateAdded[lt]=2020-3-1T23:00:00&name=movie2", qp_headers="name=movie1"
+            "dateAdded[lt]=2020-3-1T23:00:00&name=movie2", dso_headers="name=movie1"
         )
         qs = engine.filter_queryset(movies_model.objects.all())
         assert {obj.name for obj in qs} == {"movie1"}
 
-    def test_multiple_qp_headers(self, movies_model, movie1, movie2):
+    def test_multiple_dso_headers(self, movies_model, movie1, movie2):
         """Prove that filtering with qp headers work."""
         engine = create_filter_engine(
-            "name=movie1", qp_headers="dateAdded[lt]=2020-3-1T23:00:00&name=movie2"
+            "name=movie1", dso_headers="dateAdded[lt]=2020-3-1T23:00:00&name=movie2"
         )
         qs = engine.filter_queryset(movies_model.objects.all())
         assert {obj.name for obj in qs} == {"movie2"}
 
-    # test functionaliteit gt, lt en equals
-    # django headers expect uppercase and underscores instead of dashes
-    # test dat headers in snake case met qp- prefix moeten worden gepassed
-
-    def test_qp_headers_extraction(self, api_rf):
+    def test_dso_headers_extraction(self, api_rf):
         request = api_rf.get(
             "/test",
-            HTTP_QP_STATUS="active",
-            HTTP_QP_STATUS_ROLE="admin",
-            HTTP_OTHER_HEADER="ignore-me",
+            headers={
+                "DSO-aantal-bouwlagen": 5,
+                "DSO-status": "active",
+                "DSO-aantal-bouwlagen_gt": 2,
+                "DSO-aantal-bouwlagen_lt": 10,
+                "other-header": "ignore-me",
+            },
         )
 
         request.accept_crs = None
@@ -152,20 +152,25 @@ class TestFilterEngine:
             request_scopes=["BAG/R"],
         )
         request.request_date = now()
-        # request.headers converts it back to http style
-        # so Qp-Status-Role for example
         engine = QueryFilterEngine.from_request(request)
 
-        assert dict(engine.qp_headers.lists()) == {
-            "status": ["active"],
-            "status_role": ["admin"],
+        assert dict(engine.dso_headers.lists()) == {
+            "aantalBouwlagen[eq]": [5],
+            "status[eq]": ["active"],
+            "aantalBouwlagen[gt]": [2],
+            "aantalBouwlagen[lt]": [10],
         }
 
-    def test_qp_headers_case_insensitive(self, api_rf):
+    def test_dso_headers_case_insensitive(self, api_rf):
         request = api_rf.get(
             "/test",
-            HTTP_QP_STATUS="active",
-            HTTP_qp_type="premium",
+            headers={
+                "dso-aantal-bouwlagen": 5,
+                "DSO-status": "active",
+                "DSO-aantal-BOUWLAGEN_gt": 2,
+                "DSO-Aantal-bouwlagen_lt": 10,
+                "other-header": "ignore-me",
+            },
         )
 
         request.accept_crs = None
@@ -176,16 +181,21 @@ class TestFilterEngine:
         request.request_date = now()
         engine = QueryFilterEngine.from_request(request)
 
-        assert dict(engine.qp_headers.lists()) == {
-            "status": ["active"],
-            "type": ["premium"],
+        assert dict(engine.dso_headers.lists()) == {
+            "aantalBouwlagen[eq]": [5],
+            "status[eq]": ["active"],
+            "aantalBouwlagen[gt]": [2],
+            "aantalBouwlagen[lt]": [10],
         }
 
-    def test_non_qp_headers_ignored(self, api_rf):
+    def test_non_dso_headers_ignored(self, api_rf):
         request = api_rf.get(
             "/test",
-            HTTP_AUTHORIZATION="Bearer token",
-            HTTP_CONTENT_TYPE="application/json",
+            headers={
+                "aantal-bouwlagen": 5,
+                "status": "active",
+                "other-header": "ignore-me",
+            },
         )
 
         request.accept_crs = None
@@ -196,36 +206,7 @@ class TestFilterEngine:
         request.request_date = now()
         engine = QueryFilterEngine.from_request(request)
 
-        assert dict(engine.qp_headers.lists()) == {}
-
-    @pytest.mark.parametrize(
-        "headers, expected",
-        [
-            (
-                {"HTTP_QP_STATUS": "active"},
-                {"status": ["active"]},
-            ),
-            (
-                {"HTTP_QP_STATUS": "active", "HTTP_QP_ROLE": "admin"},
-                {"status": ["active"], "role": ["admin"]},
-            ),
-            (
-                {"HTTP_OTHER": "x"},
-                {},
-            ),
-        ],
-    )
-    def test_qp_headers_parametrized(self, api_rf, headers, expected):
-        request = api_rf.get("/test", **headers)
-        request.accept_crs = None
-        request.user_scopes = UserScopes(
-            query_params=request.GET,
-            request_scopes=["BAG/R"],
-        )
-        request.request_date = now()
-        engine = QueryFilterEngine.from_request(request)
-
-        assert dict(engine.qp_headers.lists()) == expected
+        assert dict(engine.dso_headers.lists()) == {}
 
     @pytest.mark.parametrize(
         "query,expect",
