@@ -114,7 +114,7 @@ class TestFilterEngine:
         assert {obj.name for obj in qs} == expect, str(qs.query)
 
     def test_dso_headers(self, movies_model, movie1, movie2):
-        """Prove that filtering with qp headers work."""
+        """Prove that filtering with dso headers work."""
         engine = create_filter_engine(
             "dateAdded[lt]=2020-3-1T23:00:00",
             dso_headers=MultiValueDict(
@@ -127,7 +127,7 @@ class TestFilterEngine:
         assert {obj.name for obj in qs} == {"movie1"}
 
     def test_dso_headers_overwrite_query(self, movies_model, movie1, movie2):
-        """Prove that filtering with qp headers work."""
+        """Prove that filtering with dso headers work."""
         engine = create_filter_engine(
             "dateAdded[lt]=2020-3-1T23:00:00&name=movie2",
             dso_headers=MultiValueDict(
@@ -183,6 +183,7 @@ class TestFilterEngine:
         ],
     )
     def test_dso_headers_extraction(self, api_rf, headers, expected):
+        """Prove that parsing of dso headers work."""
         request = api_rf.get("/test", headers=headers)
 
         request.accept_crs = None
