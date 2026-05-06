@@ -4,6 +4,7 @@ from datetime import date
 import pytest
 from django.apps import apps
 from django.http import QueryDict
+from django.utils.datastructures import MultiValueDict
 from django.utils.timezone import now
 from gisserver.geometries import CRS
 from rest_framework.exceptions import ValidationError
@@ -38,11 +39,11 @@ def test_sql_wildcards():
 
 
 def create_filter_engine(
-    query_string: str, request_scopes=(), dso_headers=None
+    query_string: str, request_scopes=(), dso_headers: MultiValueDict | None = None
 ) -> parser.QueryFilterEngine:
     """Simulate creation of a filter engine, based on request data."""
     get_params = QueryDict(query_string)
-    dso_headers = QueryDict(dso_headers) if dso_headers else None
+    dso_headers = MultiValueDict(dso_headers) if dso_headers else None
     return parser.QueryFilterEngine(
         user_scopes=UserScopes(get_params, request_scopes),
         query=get_params,
@@ -114,89 +115,75 @@ class TestFilterEngine:
 
     def test_dso_headers(self, movies_model, movie1, movie2):
         """Prove that filtering with qp headers work."""
-        engine = create_filter_engine("dateAdded[lt]=2020-3-1T23:00:00", dso_headers="name=movie1")
+        engine = create_filter_engine(
+            "dateAdded[lt]=2020-3-1T23:00:00",
+            dso_headers=MultiValueDict(
+                {
+                    "name": ["movie1"],
+                }
+            ),
+        )
         qs = engine.filter_queryset(movies_model.objects.all())
         assert {obj.name for obj in qs} == {"movie1"}
 
     def test_dso_headers_overwrite_query(self, movies_model, movie1, movie2):
         """Prove that filtering with qp headers work."""
         engine = create_filter_engine(
-            "dateAdded[lt]=2020-3-1T23:00:00&name=movie2", dso_headers="name=movie1"
+            "dateAdded[lt]=2020-3-1T23:00:00&name=movie2",
+            dso_headers=MultiValueDict(
+                {
+                    "name": ["movie1"],
+                }
+            ),
         )
         qs = engine.filter_queryset(movies_model.objects.all())
         assert {obj.name for obj in qs} == {"movie1"}
 
-    def test_multiple_dso_headers(self, movies_model, movie1, movie2):
-        """Prove that filtering with qp headers work."""
-        engine = create_filter_engine(
-            "name=movie1", dso_headers="dateAdded[lt]=2020-3-1T23:00:00&name=movie2"
-        )
-        qs = engine.filter_queryset(movies_model.objects.all())
-        assert {obj.name for obj in qs} == {"movie2"}
-
-    def test_dso_headers_extraction(self, api_rf):
-        request = api_rf.get(
-            "/test",
-            headers={
-                "DSO-aantal-bouwlagen": 5,
-                "DSO-status": "active",
-                "DSO-aantal-bouwlagen_gt": 2,
-                "DSO-aantal-bouwlagen_lt": 10,
-                "other-header": "ignore-me",
-            },
-        )
-
-        request.accept_crs = None
-        request.user_scopes = UserScopes(
-            query_params=request.GET,
-            request_scopes=["BAG/R"],
-        )
-        request.request_date = now()
-        engine = QueryFilterEngine.from_request(request)
-
-        assert dict(engine.dso_headers.lists()) == {
-            "aantalBouwlagen[eq]": [5],
-            "status[eq]": ["active"],
-            "aantalBouwlagen[gt]": [2],
-            "aantalBouwlagen[lt]": [10],
-        }
-
-    def test_dso_headers_case_insensitive(self, api_rf):
-        request = api_rf.get(
-            "/test",
-            headers={
-                "dso-aantal-bouwlagen": 5,
-                "DSO-status": "active",
-                "DSO-aantal-BOUWLAGEN_gt": 2,
-                "DSO-Aantal-bouwlagen_lt": 10,
-                "other-header": "ignore-me",
-            },
-        )
-
-        request.accept_crs = None
-        request.user_scopes = UserScopes(
-            query_params=request.GET,
-            request_scopes=["BAG/R"],
-        )
-        request.request_date = now()
-        engine = QueryFilterEngine.from_request(request)
-
-        assert dict(engine.dso_headers.lists()) == {
-            "aantalBouwlagen[eq]": [5],
-            "status[eq]": ["active"],
-            "aantalBouwlagen[gt]": [2],
-            "aantalBouwlagen[lt]": [10],
-        }
-
-    def test_non_dso_headers_ignored(self, api_rf):
-        request = api_rf.get(
-            "/test",
-            headers={
-                "aantal-bouwlagen": 5,
-                "status": "active",
-                "other-header": "ignore-me",
-            },
-        )
+    @pytest.mark.parametrize(
+        "headers, expected",
+        [
+            (
+                {
+                    "DSO-aantal-bouwlagen": 5,
+                    "DSO-status": "active",
+                    "DSO-aantal-bouwlagen.gt": 2,
+                    "DSO-aantal-bouwlagen.lt": 10,
+                    "other-header": "ignore-me",
+                },
+                {
+                    "aantalBouwlagen[eq]": [5],
+                    "status[eq]": ["active"],
+                    "aantalBouwlagen[gt]": [2],
+                    "aantalBouwlagen[lt]": [10],
+                },
+            ),
+            (
+                {
+                    "dso-aantal-bouwlagen": 5,
+                    "DSO-status": "active",
+                    "DSO-aantal-BOUWLAGEN.gt": 2,
+                    "DSO-Aantal-bouwlagen.lt": 10,
+                    "other-header": "ignore-me",
+                },
+                {
+                    "aantalBouwlagen[eq]": [5],
+                    "status[eq]": ["active"],
+                    "aantalBouwlagen[gt]": [2],
+                    "aantalBouwlagen[lt]": [10],
+                },
+            ),
+            (
+                {
+                    "aantal-bouwlagen": 5,
+                    "status": "active",
+                    "other-header": "ignore-me",
+                },
+                {},
+            ),
+        ],
+    )
+    def test_dso_headers_extraction(self, api_rf, headers, expected):
+        request = api_rf.get("/test", headers=headers)
 
         request.accept_crs = None
         request.user_scopes = UserScopes(
@@ -204,9 +191,10 @@ class TestFilterEngine:
             request_scopes=["BAG/R"],
         )
         request.request_date = now()
+
         engine = QueryFilterEngine.from_request(request)
 
-        assert dict(engine.dso_headers.lists()) == {}
+        assert dict(engine.dso_headers.lists()) == expected
 
     @pytest.mark.parametrize(
         "query,expect",

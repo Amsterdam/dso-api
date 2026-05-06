@@ -12,11 +12,11 @@ from django.core.exceptions import FieldError
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import models
 from django.db.models import Q
-from django.http import QueryDict
 from django.utils.datastructures import MultiValueDict
 from gisserver.geometries import CRS
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from schematools.exceptions import SchemaObjectNotFound
+from schematools.naming import toCamelCase
 from schematools.permissions import UserScopes
 from schematools.types import AdditionalRelationSchema, DatasetFieldSchema, DatasetTableSchema
 
@@ -175,35 +175,33 @@ class QueryFilterEngine:
         "_csv_header",
         "_csv_separator",
     }
-    PREFIX = "Dso-"
+    HEADER_PARAMS_PREFIX = "Dso-"
 
     @classmethod
     def from_request(cls, request) -> QueryFilterEngine:
         """Construct the parser from the request data."""
-        dso_headers = QueryDict(mutable=True)
+        dso_headers = MultiValueDict()
 
         for key, value in request.headers.items():
-            if not key.startswith(cls.PREFIX):
+            if not key.startswith(cls.HEADER_PARAMS_PREFIX):
                 continue
 
             # custom query headers are passed with a DSO- prefix
-            raw_key = key[len(cls.PREFIX) :]
+            raw_key = key[len(cls.HEADER_PARAMS_PREFIX) :]
 
             # default operator will be "eq"
             operator = "eq"
 
-            if raw_key.lower().endswith("-gt"):
+            if raw_key.lower().endswith(".gt"):
                 operator = "gt"
                 raw_key = raw_key[:-3]
-            elif raw_key.lower().endswith("-lt"):
+            elif raw_key.lower().endswith(".lt"):
                 operator = "lt"
                 raw_key = raw_key[:-3]
 
             # convert query param to camelCase
-            query_parts = raw_key.split("-")
-            query_param = query_parts[0].lower() + "".join(
-                part.capitalize() for part in query_parts[1:]
-            )
+            query_part = raw_key.replace("-", "")
+            query_param = toCamelCase(query_part)
 
             new_key = f"{query_param}[{operator}]"
 
@@ -223,7 +221,7 @@ class QueryFilterEngine:
         query: MultiValueDict,
         input_crs: CRS,
         request_date=None,
-        dso_headers=None,
+        dso_headers: MultiValueDict | None = None,
     ):
         """Initialize the filtering engine using the context provided by the request."""
         self.user_scopes = user_scopes
@@ -239,15 +237,14 @@ class QueryFilterEngine:
     def _parse_filters(
         self,
         query: MultiValueDict,
-        dso_headers: MultiValueDict,
+        dso_headers: MultiValueDict | None = None,
     ) -> list[FilterInput]:
         """Translate raw HTTP GET parameters and custom
         header query parameters into a Python structure"""
         filters = []
+        query = MultiValueDict(query.lists())
 
         if dso_headers:
-            query = query.copy()
-
             for key, values in dso_headers.lists():
                 # dso_headers are leading
                 query.setlist(key, values)
