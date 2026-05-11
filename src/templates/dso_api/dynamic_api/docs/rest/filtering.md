@@ -35,14 +35,14 @@ curl 'https://api.data.amsterdam.nl/v1/bag/verblijfsobjecten/?gebruiksdoel.code=
 ## Filteren via custom headers
 Er kan ook gefilterd worden op attributen via custom headers. Deze
 headers moeten dan wel geprefixed zijn met "DSO-" om verwarring
-met andere headers te voorkomen. Via headers zijn operatoren lt
-(less than), equals (dit is de default) en gt (greater than) mogelijk.
+met andere headers te voorkomen. Als er geen operatoren worden
+meegegeven is de default operator gelijk aan equals.
 
 Deze query headers worden verwacht in een volgend soort structuur:
 ``` bash
 DSO-aantal-bouwlagen
-DSO-aantal-bouwlagen.gt
-DSO-aantal-bouwlagen.lt
+DSO-aantal-bouwlagen.gte
+DSO-naam.like
 ```
 
 ## Filteren in relaties

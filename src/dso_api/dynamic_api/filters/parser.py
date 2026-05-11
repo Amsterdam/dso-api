@@ -192,12 +192,11 @@ class QueryFilterEngine:
             # default operator will be "eq"
             operator = "eq"
 
-            if raw_key.lower().endswith(".gt"):
-                operator = "gt"
-                raw_key = raw_key[:-3]
-            elif raw_key.lower().endswith(".lt"):
-                operator = "lt"
-                raw_key = raw_key[:-3]
+            # split on operator if passed
+            parts = raw_key.rsplit(".", 1)
+
+            if len(parts) == 2:
+                raw_key, operator = parts[0], parts[1].lower()
 
             # convert query param to camelCase
             query_part = raw_key.replace("-", "")
