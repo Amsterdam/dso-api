@@ -148,6 +148,8 @@ class TestFilterEngine:
                     "DSO-status": "active",
                     "DSO-aantal-bouwlagen.gt": 2,
                     "DSO-aantal-bouwlagen.lt": 10,
+                    "DSO-per-jaar-per-m2.isnull": "true",
+                    "DSO-numbers-33-in-the-middle-44.like": "somestring",
                     "other-header": "ignore-me",
                 },
                 {
@@ -155,6 +157,8 @@ class TestFilterEngine:
                     "status[eq]": ["active"],
                     "aantalBouwlagen[gt]": [2],
                     "aantalBouwlagen[lt]": [10],
+                    "perJaarPerM2[isnull]": ["true"],
+                    "numbers33InTheMiddle44[like]": ["somestring"],
                 },
             ),
             (
