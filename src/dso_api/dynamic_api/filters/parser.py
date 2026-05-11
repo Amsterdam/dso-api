@@ -16,6 +16,7 @@ from django.utils.datastructures import MultiValueDict
 from gisserver.geometries import CRS
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from schematools.exceptions import SchemaObjectNotFound
+from schematools.naming import toCamelCase
 from schematools.permissions import UserScopes
 from schematools.types import AdditionalRelationSchema, DatasetFieldSchema, DatasetTableSchema
 
@@ -174,33 +175,78 @@ class QueryFilterEngine:
         "_csv_header",
         "_csv_separator",
     }
+    HEADER_PARAMS_PREFIX = "Dso-"
 
     @classmethod
     def from_request(cls, request) -> QueryFilterEngine:
         """Construct the parser from the request data."""
+        dso_headers = MultiValueDict()
+
+        for key, value in request.headers.items():
+            if not key.startswith(cls.HEADER_PARAMS_PREFIX):
+                continue
+
+            # custom query headers are passed with a DSO- prefix
+            raw_key = key[len(cls.HEADER_PARAMS_PREFIX) :]
+
+            # default operator will be "eq"
+            operator = "eq"
+
+            # split on operator if passed
+            parts = raw_key.rsplit(".", 1)
+
+            if len(parts) == 2:
+                raw_key, operator = parts[0], parts[1].lower()
+
+            # convert query param to camelCase
+            query_part = raw_key.replace("-", "")
+            query_param = toCamelCase(query_part)
+
+            new_key = f"{query_param}[{operator}]"
+
+            dso_headers.setlist(new_key, [value])
+
         return cls(
             user_scopes=request.user_scopes,
             query=request.GET,
+            dso_headers=dso_headers,
             input_crs=getattr(request, "accept_crs", None),
             request_date=get_request_date(request),
         )
 
     def __init__(
-        self, user_scopes: UserScopes, query: MultiValueDict, input_crs: CRS, request_date=None
+        self,
+        user_scopes: UserScopes,
+        query: MultiValueDict,
+        input_crs: CRS,
+        request_date=None,
+        dso_headers: MultiValueDict | None = None,
     ):
         """Initialize the filtering engine using the context provided by the request."""
         self.user_scopes = user_scopes
         self.query = query
         self.input_crs = input_crs
-        self.filter_inputs = self._parse_filters(query)
+        self.filter_inputs = self._parse_filters(query, dso_headers)
         self.request_date = request_date
+        self.dso_headers = dso_headers
 
     def __bool__(self):
         return bool(self.filter_inputs)
 
-    def _parse_filters(self, query: MultiValueDict) -> list[FilterInput]:
-        """Translate raw HTTP GET parameters into a Python structure"""
+    def _parse_filters(
+        self,
+        query: MultiValueDict,
+        dso_headers: MultiValueDict | None = None,
+    ) -> list[FilterInput]:
+        """Translate raw HTTP GET parameters and custom
+        header query parameters into a Python structure"""
         filters = []
+        query = MultiValueDict(query.lists())
+
+        if dso_headers:
+            for key, values in dso_headers.lists():
+                # dso_headers are leading
+                query.setlist(key, values)
 
         for key in sorted(query):
             if key in self.NON_FILTER_PARAMS:

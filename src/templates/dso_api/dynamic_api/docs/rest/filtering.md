@@ -32,6 +32,19 @@ kan gefilterd worden met:
 curl 'https://api.data.amsterdam.nl/v1/bag/verblijfsobjecten/?gebruiksdoel.code=1'
 ```
 
+## Filteren via custom headers
+Er kan ook gefilterd worden op attributen via custom headers. Deze
+headers moeten dan wel geprefixed zijn met "DSO-" om verwarring
+met andere headers te voorkomen. Als er geen operatoren worden
+meegegeven is de default operator gelijk aan equals.
+
+Deze query headers worden verwacht in een volgend soort structuur:
+``` bash
+DSO-aantal-bouwlagen
+DSO-aantal-bouwlagen.gte
+DSO-naam.like
+```
+
 ## Filteren in relaties
 
 De relaties, en attributen van relaties, kunnen gebruikt worden in
