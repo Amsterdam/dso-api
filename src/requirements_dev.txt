@@ -494,7 +494,7 @@ referencing==0.37.0
     #   openapi-schema-validator
 remote-pdb==2.1.0
     # via amsterdam-schema-tools
-requests==2.33.1
+requests==2.34.0
     # via
     #   -r requirements.in
     #   amsterdam-schema-tools
