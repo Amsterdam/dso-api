@@ -78,6 +78,49 @@ class TestFilterParsing:
         reason = response.data["invalid-params"][0]["reason"]
         assert param in reason
 
+    @staticmethod
+    def test_transform_crs_without_header(
+        api_client,
+        parkeervakken_dataset,
+        filled_router,
+    ):
+        response = api_client.get(
+            "/v1/parkeervakken/parkeervakken/?geometry[intersects]="
+            "POLYGON((119814 485931,"
+            "121814 485931,"
+            "121814 487931,"
+            "119814 487931,"
+            "119814 485931))",
+        )
+        data = read_response_json(response)
+        assert response.status_code == 400, data
+        assert response.data["invalid-params"] == [
+            {
+                "type": "urn:apiexception:invalid:invalid_crs",
+                "name": "invalid_crs",
+                "reason": "Invalid coordinate reference system or transform.You may want to add "
+                "an Accept-Crs header.",
+            }
+        ]
+
+    @staticmethod
+    def test_transform_crs_with_header(
+        api_client,
+        parkeervakken_dataset,
+        filled_router,
+    ):
+        response = api_client.get(
+            "/v1/parkeervakken/parkeervakken/?geometry[intersects]="
+            "POLYGON((119814 485931,"
+            "121814 485931,"
+            "121814 487931,"
+            "119814 487931,"
+            "119814 485931))",
+            headers={"Accept-Crs": "EPSG:28992"},
+        )
+        data = read_response_json(response)
+        assert response.status_code == 200, data
+
 
 @pytest.mark.django_db
 class TestFilterFieldTypes:

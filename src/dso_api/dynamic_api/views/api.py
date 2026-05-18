@@ -15,12 +15,12 @@ import logging
 from functools import cached_property
 
 from django.db import models
-from django.db.utils import ProgrammingError
+from django.db.utils import DatabaseError, InternalError, ProgrammingError
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext as _
 from django.views.decorators.cache import never_cache
 from rest_framework import viewsets
-from rest_framework.exceptions import NotFound, PermissionDenied
+from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
 from schematools.contrib.django.models import DynamicModel
 
 from dso_api.dynamic_api import filters, permissions, serializers
@@ -70,7 +70,7 @@ class DynamicApiViewSet(NestedViewSetMixin, DSOViewMixin, viewsets.ReadOnlyModel
     def list(self, request, *args, **kwargs):
         try:
             return super().list(request, *args, **kwargs)
-        except ProgrammingError as e:
+        except (ProgrammingError, InternalError) as e:
             self._handle_db_error(e)
             raise
 
@@ -81,17 +81,26 @@ class DynamicApiViewSet(NestedViewSetMixin, DSOViewMixin, viewsets.ReadOnlyModel
             self._handle_db_error(e)
             raise
 
-    def _handle_db_error(self, e: ProgrammingError) -> None:
-        """Make sure database permission errors are gratefully handled.
-        This is a common source of 500 error issues,
-        and giving a better response to the user helps.
+    def _handle_db_error(self, e: DatabaseError) -> None:
+        """Make sure database permission errors and invalid coordinate
+        errors are gratefully handled. These are a common source of
+        500 error issues, and giving a better response to the user helps.
         """
+
         if str(e).startswith("permission denied for "):
             logger.exception("Database role has no access (while application allowed): %s", e)
             raise PermissionDenied(
                 "Database role has no access to the given tables"
                 " (schema permissions were satisfied).",
                 code="db_permission_denied",
+            ) from e
+
+        if str(e).startswith("transform"):
+            logger.warning("Invalid CRS transform requested: %s", e)
+            raise ValidationError(
+                "Invalid coordinate reference system or transform."
+                "You may want to add an Accept-Crs header.",
+                code="invalid_crs",
             ) from e
 
     def initial(self, request, *args, **kwargs):
