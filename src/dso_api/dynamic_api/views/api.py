@@ -95,10 +95,11 @@ class DynamicApiViewSet(NestedViewSetMixin, DSOViewMixin, viewsets.ReadOnlyModel
                 code="db_permission_denied",
             ) from e
 
-        if "Invalid coordinate" in str(e):
+        if str(e).startswith("transform"):
             logger.warning("Invalid CRS transform requested: %s", e)
             raise ValidationError(
-                "Invalid coordinate reference system or transform.",
+                "Invalid coordinate reference system or transform."
+                "You may want to add an Accept-Crs header.",
                 code="invalid_crs",
             ) from e
 
