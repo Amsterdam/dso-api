@@ -78,6 +78,38 @@ class TestFilterParsing:
         reason = response.data["invalid-params"][0]["reason"]
         assert param in reason
 
+    @staticmethod
+    @pytest.mark.parametrize(
+        ["query", "expect_code"],
+        [
+            (
+                "geometry[intersects]="
+                "POLYGON((119814 485931,"
+                "121814 485931,"
+                "121814 487931,"
+                "119814 487931,"
+                "119814 485931))",
+                400,
+            ),
+        ],
+    )
+    def test_crs_transform(
+        api_client,
+        parkeervakken_dataset,
+        filled_router,
+        query,
+        expect_code,
+    ):
+        response = api_client.get(f"/v1/parkeervakken/parkeervakken/?{query}")
+        data = read_response_json(response)
+        assert response.status_code == expect_code, data
+        assert response.data == {
+            "type": "urn:apiexception:invalid",
+            "title": "Invalid input.",
+            "detail": ("Invalid coordinate reference system or transform."),
+            "status": 400,
+        }
+
 
 @pytest.mark.django_db
 class TestFilterFieldTypes:
