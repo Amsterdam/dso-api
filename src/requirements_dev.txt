@@ -36,21 +36,21 @@ azure-identity==1.25.3
     # via
     #   -r requirements.in
     #   azure-monitor-opentelemetry-exporter
-azure-monitor-opentelemetry==1.8.7
+azure-monitor-opentelemetry==1.8.8
     # via -r requirements.in
-azure-monitor-opentelemetry-exporter==1.0.0b51
+azure-monitor-opentelemetry-exporter==1.0.0b52
     # via azure-monitor-opentelemetry
 bandit==1.9.4
     # via -r requirements.in
 beautifulsoup4==4.14.3
     # via -r requirements.in
-black==26.3.1
+black==26.5.1
     # via -r requirements_dev.in
 build==1.5.0
     # via
     #   datadiensten-apikeyclient
     #   pip-tools
-cachetools==7.1.1
+cachetools==7.1.3
     # via -r requirements.in
 certifi==2026.4.22
     # via
@@ -127,7 +127,7 @@ django-extensions==4.1
     # via -r requirements_dev.in
 django-filter==25.2
     # via djangorestframework-gis
-django-gisserver==2.3.1
+django-gisserver==2.4.0
     # via
     #   -r requirements.in
     #   amsterdam-schema-tools
@@ -171,7 +171,7 @@ flake8-raise==0.0.5
     # via -r requirements.in
 fqdn==1.5.1
     # via jsonschema
-geoalchemy2==0.19.0
+geoalchemy2==0.20.0
     # via
     #   -r requirements.in
     #   amsterdam-schema-tools
@@ -261,7 +261,7 @@ mypy-extensions==1.1.0
     # via black
 nodeenv==1.10.0
     # via pre-commit
-numpy==2.4.4
+numpy==2.4.6
     # via
     #   -r requirements.in
     #   shapely
@@ -494,7 +494,7 @@ referencing==0.37.0
     #   openapi-schema-validator
 remote-pdb==2.1.0
     # via amsterdam-schema-tools
-requests==2.33.1
+requests==2.34.2
     # via
     #   -r requirements.in
     #   amsterdam-schema-tools
@@ -521,7 +521,7 @@ rpds-py==0.30.0
     # via
     #   jsonschema
     #   referencing
-ruff==0.15.12
+ruff==0.15.13
     # via -r requirements_dev.in
 shapely==2.1.2
     # via
