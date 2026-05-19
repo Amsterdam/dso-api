@@ -189,20 +189,18 @@ class QueryFilterEngine:
             # custom query headers are passed with a DSO- prefix
             raw_key = key[len(cls.HEADER_PARAMS_PREFIX) :]
 
-            # default operator will be "eq"
-            operator = "eq"
-
             # split on operator if passed
             parts = raw_key.rsplit(".", 1)
 
-            if len(parts) == 2:
+            has_operator = len(parts) == 2
+
+            if has_operator:
                 raw_key, operator = parts[0], parts[1].lower()
 
             # convert query param to camelCase
-            query_part = raw_key.replace("-", "")
-            query_param = toCamelCase(query_part)
+            query_param = toCamelCase(raw_key.replace("-", ""))
 
-            new_key = f"{query_param}[{operator}]"
+            new_key = f"{query_param}[{operator}]" if has_operator else query_param
 
             dso_headers.setlist(new_key, [value])
 
