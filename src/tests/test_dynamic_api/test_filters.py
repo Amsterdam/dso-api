@@ -153,8 +153,8 @@ class TestFilterEngine:
                     "other-header": "ignore-me",
                 },
                 {
-                    "aantalBouwlagen[eq]": [5],
-                    "status[eq]": ["active"],
+                    "aantalBouwlagen": [5],
+                    "status": ["active"],
                     "aantalBouwlagen[gt]": [2],
                     "aantalBouwlagen[lt]": [10],
                     "perJaarPerM2[isnull]": ["true"],
@@ -170,8 +170,8 @@ class TestFilterEngine:
                     "other-header": "ignore-me",
                 },
                 {
-                    "aantalBouwlagen[eq]": [5],
-                    "status[eq]": ["active"],
+                    "aantalBouwlagen": [5],
+                    "status": ["active"],
                     "aantalBouwlagen[gt]": [2],
                     "aantalBouwlagen[lt]": [10],
                 },
