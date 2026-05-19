@@ -4,7 +4,7 @@
 #
 #    pip-compile --output-file=requirements_dev.txt requirements_dev.in
 #
-amsterdam-schema-tools[django]==9.6.3
+amsterdam-schema-tools[django]==9.6.4
     # via -r requirements.in
 annotated-types==0.7.0
     # via pydantic
