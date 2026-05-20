@@ -23,7 +23,7 @@ from schematools.types import AdditionalRelationSchema, DatasetFieldSchema, Data
 from dso_api.dynamic_api.permissions import check_filter_field_access
 from dso_api.dynamic_api.temporal import TemporalTableQuery, get_request_date
 
-from .values import str2bool, str2geo, str2isodate, str2number, str2time
+from .values import str2bool, str2geo, str2geodist, str2isodate, str2number, str2time
 
 # Lookups that have specific value types:
 
@@ -31,6 +31,8 @@ LOOKUP_PARSERS = {
     "isnull": str2bool,
     "isempty": str2bool,
     "like": str,  # e.g. uri is parsed as string for like.
+    # within parser?
+    "within": str2geodist,
 }
 
 # Array field lookups are not mentioned here, but handled with if/else cases
@@ -53,7 +55,7 @@ SCALAR_PARSERS = {
 # The empty value is there to indicate the field also supports no lookup operator.
 # This is mostly used by the OpenAPI generator.
 _comparison_lookups = {"", "gte", "gt", "lt", "lte", "in", "not", "isnull"}
-_polygon_lookups = {"", "contains", "isnull", "not", "intersects"}
+_polygon_lookups = {"", "contains", "isnull", "not", "intersects", "within"}
 _string_lookups = {"", "in", "isnull", "not", "isempty", "like"}
 
 ALLOWED_IDENTIFIER_LOOKUPS = {"", "in", "not", "isnull"}
@@ -68,7 +70,7 @@ ALLOWED_SCALAR_LOOKUPS = {
     "array": {"", "contains"},
     "object": set(),
     "https://geojson.org/schema/Geometry.json": _polygon_lookups,  # Assume it works.
-    "https://geojson.org/schema/Point.json": {"", "isnull", "not", "intersects"},
+    "https://geojson.org/schema/Point.json": {"", "isnull", "not", "intersects", "within"},
     "https://geojson.org/schema/Polygon.json": _polygon_lookups,
     "https://geojson.org/schema/MultiPolygon.json": _polygon_lookups,
     # Format variants for type string:
@@ -391,6 +393,11 @@ class QueryFilterEngine:
         ):
             return "iexact"
 
+        # within filter in called dwithin in postgis
+        # TODO don't hard code it? Maybe call filter dwithin everywhere?
+        if lookup == "within":
+            return "dwithin"
+
         return lookup or "exact"
 
     def _translate_raw_value(  # noqa: C901
@@ -405,6 +412,11 @@ class QueryFilterEngine:
             if lookup_parser := LOOKUP_PARSERS.get(filter_input.lookup):
                 # Some lookups have a type that is different from the field type.
                 # For example, isnull/isempty/like.
+
+                # TODO within filter
+                if field_schema.is_geo:
+                    return lookup_parser(filter_input.raw_value, self.input_crs)
+
                 return lookup_parser(filter_input.raw_value)
             elif field_schema.is_geo:
                 # Geometry fields need a CRS to handle the input
@@ -440,6 +452,7 @@ class QueryFilterEngine:
                     field_schema.is_array_of_scalars or filter_input.lookup in SPLIT_VALUE_LOOKUPS
                 )
                 values = filter_input.split_values if use_split else filter_input.raw_values
+
                 return [parser(v) for v in values]
             else:
                 return parser(filter_input.raw_value)
