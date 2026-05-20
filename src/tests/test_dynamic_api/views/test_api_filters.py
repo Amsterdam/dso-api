@@ -301,6 +301,73 @@ class TestFilterFieldTypes:
         assert response.status_code == 400, "Outside WGS84 range"
 
     @staticmethod
+    def test_geofilter_within(api_client, parkeervakken_parkeervak_model, filled_router):
+        """
+        Prove that geofilter within filters work as expected."""
+
+        parkeervakken_parkeervak_model.objects.create(
+            id="121138489006",
+            type="File",
+            soort="MULDER",
+            aantal=1.0,
+            e_type="E6b",
+            buurtcode="A05d",
+            straatnaam="Zoutkeetsgracht",
+            geometry=GEOSGeometry(
+                "POLYGON((121140.66 489048.21, 121140.72 489047.1, 121140.8 489046.9, 121140.94 "
+                "489046.74,121141.11 489046.62, 121141.31 489046.55, 121141.52 489046.53, "
+                "121134.67 489045.85, 121134.47 489047.87, 121140.66 489048.21))",
+                28992,
+            ),
+        )
+
+        # Inside using RD (string)
+        response = api_client.get(
+            "/v1/parkeervakken/parkeervakken/",
+            data={"geometry[within]": "121142,489049,100"},
+            headers={"Accept-Crs": "EPSG:28992"},
+        )
+        data = read_response_json(response)
+        print(data)
+        assert len(data["_embedded"]["parkeervakken"]) == 1, "Inside using R/D (string)"
+
+        # Inside using RD (WKT)
+        response = api_client.get(
+            "/v1/parkeervakken/parkeervakken/",
+            data={"geometry[within]": "POINT(121142 489049),100"},
+            headers={"Accept-Crs": "EPSG:28992"},
+        )
+        data = read_response_json(response)
+        print(data)
+        assert len(data["_embedded"]["parkeervakken"]) == 1, "Inside using R/D (WKT)"
+
+        # Outside using RD
+        response = api_client.get(
+            "/v1/parkeervakken/parkeervakken/",
+            data={"geometry[within]": "121200,489200,100"},
+            headers={"Accept-Crs": "EPSG:28992"},
+        )
+        data = read_response_json(response)
+        assert len(data["_embedded"]["parkeervakken"]) == 0, "Outside using R/D"
+
+        # Inside using WGS84
+        response = api_client.get(
+            "/v1/parkeervakken/parkeervakken/",
+            data={"geometry[within]": "4.890401,52.388521,100"},
+            headers={"Accept-Crs": "EPSG:4326"},
+        )
+        data = read_response_json(response)
+        assert len(data["_embedded"]["parkeervakken"]) == 1, "Inside using WGS84"
+
+        # Invalid WGS84 coords
+        response = api_client.get(
+            "/v1/parkeervakken/parkeervakken/",
+            data={"geometry[intersects]": "52.388231,48897865"},
+            headers={"Accept-Crs": "EPSG:4326"},
+        )
+        assert response.status_code == 400, "Outside WGS84 range"
+
+    @staticmethod
     def test_geofilter_intersects(api_client, parkeervakken_parkeervak_model, filled_router):
         """
         Prove that geofilter intersects filters work as expected.

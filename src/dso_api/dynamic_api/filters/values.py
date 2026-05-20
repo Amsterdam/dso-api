@@ -9,6 +9,7 @@ from decimal import Decimal
 from django.contrib.gis.gdal.error import GDALException
 from django.contrib.gis.geos import GEOSException, GEOSGeometry, Point
 from django.contrib.gis.geos.prototypes import geom  # noqa: F401
+from django.contrib.gis.measure import D
 from django.utils.dateparse import parse_datetime
 from django.utils.translation import gettext_lazy as _
 from gisserver.geometries import CRS
@@ -97,6 +98,25 @@ def str2geo(value: str, crs: CRS | None = None) -> GEOSGeometry:
         return _parse_wkt_geometry(stripped_value, srid)
     else:
         return _parse_point_geometry(stripped_value, srid)
+
+
+def str2geodist(value: str, crs: CRS | None = None) -> tuple[GEOSGeometry, D]:
+    """Convert a string with a distance value to a geometry object and a Distance object
+    Supports Point, Polygon and MultiPolygon objects in WKT or GeoJSON format.
+
+    Args:
+        value: String representation of geometry (WKT, GeoJSON, or x,y format)
+          with a distance value
+        crs: Optional coordinate reference system
+
+    Returns:
+        Tuple of GEOSGeometry object and PostGis Distance object
+    """
+    # Split value string into coordinates and distance
+    coordinates, distance = value.rsplit(",", 1)
+
+    # TODO ik hardcode hier meters, is dat goed?
+    return str2geo(coordinates, crs), D(m=distance)
 
 
 def _parse_geojson(value: str, srid: int | None) -> GEOSGeometry:
