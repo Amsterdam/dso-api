@@ -417,6 +417,16 @@ class QueryFilterEngine:
                 # or ?ligtInPanden=... references their identifier as foreign key.
                 return filter_input.raw_value
 
+            if field_schema.is_array_of_objects:
+                try:
+                    items = field_schema["items"]
+                    parser = SCALAR_PARSERS[items.get("format") or items["type"]]
+                except KeyError as e:
+                    raise ValidationError(
+                        f"Array of objects field '{filter_part.name}'"
+                        f"should be filtered on with a .subfield"
+                    ) from e
+
             if field_schema.is_array:
                 items = field_schema["items"]
                 parser = SCALAR_PARSERS[items.get("format") or items["type"]]
