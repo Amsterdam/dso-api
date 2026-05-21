@@ -21,6 +21,19 @@ class TestFilterParsing:
         assert reason == "Field 'nonexistent' does not exist"
 
     @staticmethod
+    def test_array_of_objects_field(api_client, bag_dataset, filled_router):
+        """Prove that not filtering on a subfield of an array of objects will crash."""
+        response = api_client.get("/v1/bag/verblijfsobjecten/?gebruiksdoel=test")
+        data = read_response_json(response)
+
+        assert response.status_code == HTTP_400_BAD_REQUEST, data
+        reason = data["invalid-params"][0]["reason"]
+        assert (
+            reason
+            == "Array of objects field 'gebruiksdoel' should be filtered on with a .subfield"
+        )
+
+    @staticmethod
     @pytest.mark.parametrize(
         "url",
         [

@@ -423,7 +423,7 @@ class QueryFilterEngine:
                     parser = SCALAR_PARSERS[items.get("format") or items["type"]]
                 except KeyError as e:
                     raise ValidationError(
-                        f"Array of objects field '{filter_part.name}'"
+                        f"Array of objects field '{filter_part.name}' "
                         f"should be filtered on with a .subfield"
                     ) from e
 
