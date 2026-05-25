@@ -691,6 +691,80 @@ def location() -> Location:
 
 
 @pytest.fixture()
+def all_geometries_schema(schema_loader) -> DatasetSchema:
+    return schema_loader.get_dataset_from_file("alle_geometrieen.json")
+
+
+@pytest.fixture()
+def all_geometries_dataset(all_geometries_schema) -> Dataset:
+    return Dataset.create_for_schema(all_geometries_schema)
+
+
+@pytest.fixture()
+def all_geometries_model(all_geometries_dataset, dynamic_models) -> DynamicModel:
+    return dynamic_models["alle_geometrien"]["alle_geometrien"]
+
+
+@pytest.fixture()
+def all_geometries_data(all_geometries_model):
+
+    # Point (within 100 meters of Dam Square point used in test)
+    all_geometries_model.objects.create(
+        id=1,
+        geometry=GEOSGeometry(
+            "POINT(121050 487050)",
+            srid=28992,
+        ),
+    )
+
+    # LineString
+    all_geometries_model.objects.create(
+        id=2,
+        geometry=GEOSGeometry(
+            "LINESTRING(120950 486950, 121050 487050, 121150 487150)",
+            srid=28992,
+        ),
+    )
+
+    # Polygon
+    all_geometries_model.objects.create(
+        id=3,
+        geometry=GEOSGeometry(
+            "POLYGON((120900 486900, 120900 487100, 121100 487100, 121100 486900, 120900 486900))",
+            srid=28992,
+        ),
+    )
+
+    # MultiPoint
+    all_geometries_model.objects.create(
+        id=4,
+        geometry=GEOSGeometry(
+            "MULTIPOINT((121000 487000), (121050 487050), (122000 488000))", srid=28992
+        ),
+    )
+
+    # MultiLineString
+    all_geometries_model.objects.create(
+        id=5,
+        geometry=GEOSGeometry(
+            "MULTILINESTRING((120950 486950, 121050 487050), (123000 486000, 124000 486000))",
+            srid=28992,
+        ),
+    )
+
+    # MultiLineString
+    all_geometries_model.objects.create(
+        id=6,
+        geometry=GEOSGeometry(
+            "MULTIPOLYGON(((120900 486900, 120900 487100, 121100 487100, 121100 486900, "
+            "120900 486900)), ((125000 485000, 125000 485500, 125500 485500, 125500 485000,"
+            " 125000 485000)))",
+            srid=28992,
+        ),
+    )
+
+
+@pytest.fixture()
 def parkeervakken_schema(schema_loader) -> DatasetSchema:
     return schema_loader.get_dataset_from_file("parkeervakken.json")
 

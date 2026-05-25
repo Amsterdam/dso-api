@@ -31,7 +31,6 @@ LOOKUP_PARSERS = {
     "isnull": str2bool,
     "isempty": str2bool,
     "like": str,  # e.g. uri is parsed as string for like.
-    # within parser?
     "within": str2geodist,
 }
 
@@ -394,7 +393,6 @@ class QueryFilterEngine:
             return "iexact"
 
         # within filter in called dwithin in postgis
-        # TODO don't hard code it? Maybe call filter dwithin everywhere?
         if lookup == "within":
             return "dwithin"
 
