@@ -2244,9 +2244,9 @@ zaproxy==0.5.0 \
     --hash=sha256:3a952d7ec9af7a689a986400dcd885abf4685152119b1390ee8a42a2877636c8 \
     --hash=sha256:532125007c2381ae2d121774a7da9f69e045e040e3a448772988cc17eba472a9
     # via python-owasp-zap-v2-4
-zipp==3.23.1 \
-    --hash=sha256:0b3596c50a5c700c9cb40ba8d86d9f2cc4807e9bedb06bcdf7fac85633e444dc \
-    --hash=sha256:32120e378d32cd9714ad503c1d024619063ec28aad2248dc6672ad13edfa5110
+zipp==4.1.0 \
+    --hash=sha256:25ad4e16390cd314347dd8f1de67a2ac538ae658ed4ab9db16029c07c188e97f \
+    --hash=sha256:4cb57381f544315db7688e976e922a2b18cdb513d21cc194eb42232ba2a3e602
     # via
     #   -r requirements.in
     #   importlib-metadata
