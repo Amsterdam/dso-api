@@ -33,6 +33,7 @@ attrs==26.1.0 \
     # via
     #   jsonlines
     #   jsonschema
+    #   jsonschema-path
     #   pg-grant
     #   referencing
 azure-core==1.41.0 \
@@ -74,9 +75,9 @@ build==1.5.0 \
     --hash=sha256:13f3eecb844759ab66efec90ca17639bbf14dc06cb2fdf37a9010322d9c50a6f \
     --hash=sha256:302c22c3ba2a0fd5f3911918651341ebb3896176cbdec15bd421f80b1afc7647
     # via datadiensten-apikeyclient
-cachetools==7.1.3 \
-    --hash=sha256:135cfe944bc3c1e805505f65dae0bef375a2f96261171ab66c79ef77d0bda39d \
-    --hash=sha256:9876787e2346e20584d5cca236cb5d49d04e7193de91646f230725b2e1e8b804
+cachetools==7.1.4 \
+    --hash=sha256:323dc4127934744db5b54eb4924482d7edafbf9554e820d1531c2e08c0e4ef54 \
+    --hash=sha256:437f55a4e0c1b01a4f3077cc470e6991d47430970e36fbcb77e2be0df4fc1cd6
     # via -r requirements.in
 certifi==2026.4.22 \
     --hash=sha256:3cb2210c8f88ba2318d29b0388d1023c8492ff72ecdde4ebdaddbb13a31b1c4a \
@@ -718,9 +719,9 @@ jsonschema[format]==4.26.0 \
     #   mappyfile
     #   openapi-schema-validator
     #   openapi-spec-validator
-jsonschema-path==0.4.6 \
-    --hash=sha256:451354b5311fa955c3144e6e4e255388c751c0121c5570ec5bb9291dd42d08c9 \
-    --hash=sha256:c89eb635f4d497c9ac328eeff359c489755838806a7d033510a692e9576f5c4b
+jsonschema-path==0.5.0 \
+    --hash=sha256:2790a070bc7abb08ea3dbe4d340ece4efadf639223001f020c7503229ba068e2 \
+    --hash=sha256:493b156ba895c97602655b620a8456caa2ce08c1aa389f5a7addec065e6e855c
     # via openapi-spec-validator
 jsonschema-specifications==2025.9.1 \
     --hash=sha256:98802fee3a11ee76ecaca44429fda8a41bff98b00a0f2838151b113f210cc6fe \
@@ -1007,9 +1008,9 @@ more-ds==0.0.6 \
     # via
     #   -r requirements.in
     #   amsterdam-schema-tools
-more-itertools==11.0.2 \
-    --hash=sha256:392a9e1e362cbc106a2457d37cabf9b36e5e12efd4ebff1654630e76597df804 \
-    --hash=sha256:6e35b35f818b01f691643c6c611bc0902f2e92b46c18fffa77ae1e7c46e912e4
+more-itertools==11.1.0 \
+    --hash=sha256:48e8f4d9e7e5878571ecf6f2b4e57634f93cd474cc8cfbd2376f2d11b396e30d \
+    --hash=sha256:4b65538ae22f6fed0ce4874efd317463a7489796a0939fa66824dd542125a192
     # via
     #   -r requirements.in
     #   amsterdam-schema-tools
@@ -1107,13 +1108,13 @@ oauthlib==3.3.1 \
     --hash=sha256:0f0f8aa759826a193cf66c12ea1af1637f87b9b4622d46e866952bb022e538c9 \
     --hash=sha256:88119c938d2b8fb88561af5f6ee0eec8cc8d552b7bb1f712743136eb7523b7a1
     # via requests-oauthlib
-openapi-schema-validator==0.8.1 \
-    --hash=sha256:0f5859794c5bfa433d478dc5ac5e5768d50adc56b14380c8a6fd3a8113e89c9b \
-    --hash=sha256:4c57266ce8cbfa37bb4eb4d62cdb7d19356c3a468e3535743c4562863e1790da
+openapi-schema-validator==0.9.0 \
+    --hash=sha256:b72db64315b89d21834cd3ffef37e3e6893bc876327be2d366e8424b1029afd3 \
+    --hash=sha256:faa3bbe7c3aa8ca2087ad83f709dc3b7d920283153a570c03e24ea182558aa25
     # via openapi-spec-validator
-openapi-spec-validator==0.8.5 \
-    --hash=sha256:3669106361856934153991e30714616a294865a33f6411a4c25d1dc2d08cfbc2 \
-    --hash=sha256:93b04ef5321d5866b2502371123d86333e5c1444f051d323e02525d9e83c7622
+openapi-spec-validator==0.9.0 \
+    --hash=sha256:222fecffc7714f6d0a6ad62c0e4b66cc2b7dbfafb7b93acfc6c308abbdb51af8 \
+    --hash=sha256:6d648cff6490ebb799dcfe273792f2941c050158854c721f086599d845da78b8
     # via -r requirements.in
 opentelemetry-api==1.40.0 \
     --hash=sha256:159be641c0b04d11e9ecd576906462773eb97ae1b657730f0ecf64d32071569f \
@@ -1334,9 +1335,9 @@ packaging==26.2 \
     #   opentelemetry-instrumentation
     #   opentelemetry-instrumentation-flask
     #   pytest
-pathable==0.5.0 \
-    --hash=sha256:646e3d09491a6351a0c82632a09c02cdf70a252e73196b36d8a15ba0a114f0a6 \
-    --hash=sha256:d81938348a1cacb525e7c75166270644782c0fb9c8cecc16be033e71427e0ef1
+pathable==0.6.0 \
+    --hash=sha256:6404b8b82aef5ff0fd478934137128b99b12212ba35afdde5525ca4f8388ea58 \
+    --hash=sha256:82c4ca6c98c502ad12e0d4e9779b6210afee93c38990988c8c5d1b49bdcdf566
     # via jsonschema-path
 pause==0.3 \
     --hash=sha256:82284ec6213376f718a86a51cf1df04eaa77ce85e349bff63c0071e7db33daba

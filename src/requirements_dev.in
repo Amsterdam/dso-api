@@ -1,7 +1,7 @@
 -r ./requirements.in
 
 black==26.5.1
-ruff==0.15.13
+ruff==0.15.14
 pytest-sugar==1.1.1
 termcolor==3.3.0
 pre-commit==4.6.0
