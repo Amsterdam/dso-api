@@ -280,6 +280,11 @@ LOOKUP_CONTEXT = {
             "Test of er een intersectie is met de waarde.",
         ),
         lookup_context(
+            "within",
+            "GeoJSON of <code>POINT(x y), d</code>",
+            "Test of de waarde binnen een bepaalde afstand van een punt ligt",
+        ),
+        lookup_context(
             "isnull",
             "<code>true</code> | <code>false</code>",
             "Test op ontbrekende waarden (<code>IS NULL</code> / <code>IS NOT NULL</code>).",
