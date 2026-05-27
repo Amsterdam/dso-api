@@ -112,11 +112,25 @@ def str2geodist(value: str, crs: CRS | None = None) -> tuple[GEOSGeometry, D]:
     Returns:
         Tuple of GEOSGeometry object and PostGis Distance object
     """
-    # Split value string into coordinates and distance
-    coordinates, distance = value.rsplit(",", 1)
 
-    # TODO ik hardcode hier meters, is dat goed?
-    return str2geo(coordinates, crs), D(m=distance)
+    # Validate format of input value
+    input_params = value.split(",")
+    if len(input_params) in [2, 3]:
+        if len(input_params) == 2 and not input_params[0].startswith("POINT"):
+            raise ValidationError(
+                "Invalid input parameters. Must be x,y,d or POINT(x y),d. d "
+                "should be whole meters."
+            )
+
+        # Split value string into coordinates and distance
+        coordinates, distance = value.rsplit(",", 1)
+
+        # TODO ik hardcode hier meters, is dat goed?
+        return str2geo(coordinates, crs), D(m=distance)
+    else:
+        raise ValidationError(
+            "Invalid input parameters. Must be x,y,d or POINT(x y),d. d should be whole meters."
+        )
 
 
 def _parse_geojson(value: str, srid: int | None) -> GEOSGeometry:
