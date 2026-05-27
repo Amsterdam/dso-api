@@ -205,6 +205,7 @@ def test_openapi_dataset(api_client, afval_dataset, fietspaaltjes_dataset, fille
         "geometry[not]",
         "geometry[isnull]",
         "geometry[intersects]",
+        "geometry[within]",
         "id",
         "id[gt]",
         "id[gte]",

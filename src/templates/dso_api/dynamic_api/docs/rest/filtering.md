@@ -143,14 +143,16 @@ als `exact`. Er is geen *escaping* van de jokertekens mogelijk.
 
 ### Bij waarden met een geometrie
 
-| Operator                                            | Werking                                                | SQL Equivalent                                       |
-| --------------------------------------------------- | ------------------------------------------------------ | -----------------------------------------------------|
-| `?{geoveld}[contains]={x},{y}`                      | Geometrie moet voorkomen op een punt (intersectie)     | `ST_Intersects({geoveld}, POINT({x} {y}))`           |
-| `?{geoveld}[contains]=POINT(x y)`                   | Idem, nu in de WKT (well-known text) notatie.          | `ST_Intersects({geoveld}, POINT({x} {y}))`           |
-| `?{geoveld}[intersects]={x},{y}`                    | Geometrie moet voorkomen op een punt (intersectie)     | `ST_Intersects({geoveld}, POINT({x} {y}))`           |
-| `?{geoveld}[intersects]=POINT(x y)`                 | Idem, nu in de WKT (well-known text) notatie.          | `ST_Intersects({geoveld}, POINT({x} {y}))`           |
-| `?{geoveld}[intersects]=POLYGON ((4.89...))`        | Geometry moet overlappen met een polygon (intersectie).| `ST_Intersects({geoveld}, POLYGON ((4.89...)))`      |
-| `?{geoveld}[intersects]=MULTIPOLYGON (((4.89...)))` | Geometry moet overlappen met een MULTIPOLYGON          | `ST_Intersects({geoveld}, MULTIPOLYGON ((4.89...)))` |
+| Operator                                            | Werking                                                 | SQL Equivalent                                       |
+| --------------------------------------------------- | --------------------------------------------------------|------------------------------------------------------|
+| `?{geoveld}[contains]={x},{y}`                      | Geometrie moet voorkomen op een punt (intersectie)      | `ST_Intersects({geoveld}, POINT({x} {y}))`           |
+| `?{geoveld}[contains]=POINT(x y)`                   | Idem, nu in de WKT (well-known text) notatie.           | `ST_Intersects({geoveld}, POINT({x} {y}))`           |
+| `?{geoveld}[intersects]={x},{y}`                    | Geometrie moet voorkomen op een punt (intersectie)      | `ST_Intersects({geoveld}, POINT({x} {y}))`           |
+| `?{geoveld}[intersects]=POINT(x y)`                 | Idem, nu in de WKT (well-known text) notatie.           | `ST_Intersects({geoveld}, POINT({x} {y}))`           |
+| `?{geoveld}[intersects]=POLYGON ((4.89...))`        | Geometry moet overlappen met een polygon (intersectie). | `ST_Intersects({geoveld}, POLYGON ((4.89...)))`      |
+| `?{geoveld}[intersects]=MULTIPOLYGON (((4.89...)))` | Geometry moet overlappen met een MULTIPOLYGON           | `ST_Intersects({geoveld}, MULTIPOLYGON ((4.89...)))` |
+| `?{geoveld}[within]={x},{y},{d}`                    | Geometrie moet voorkomen binnen de straal vanaf een punt| `ST_DWithin({geoveld}, POINT({x} {y}), D={d})`       |
+| `?{geoveld}[within]=POINT(x y),{d}}`                | Idem, nu in de WKT (well-known text) notatie.           | `ST_DWithin({geoveld}, POINT({x} {y}), D={d})`       |
 
 Bij het doorzoeken van geometrievelden wordt gebruik gemaakt van de
 projectie opgegeven in de header `Accept-CRS`. Afhankelijk van de

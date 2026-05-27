@@ -44,6 +44,7 @@ OPENAPI_LOOKUP_PREFIX = {
     "not": "Exclude matches; ",
     "contains": "Should contain; ",
     "intersects": "Use WKT (POLYGON((x1 y1, x2 y2, ...))) or GeoJSON",
+    "within": "Within distance of;",
 }
 
 OPENAPI_LOOKUP_EXAMPLES = {
