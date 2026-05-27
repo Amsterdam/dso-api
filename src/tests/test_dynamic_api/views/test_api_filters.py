@@ -303,7 +303,8 @@ class TestFilterFieldTypes:
     @staticmethod
     def test_geofilter_within(api_client, all_geometries_data, filled_router):
         """
-        Prove that geofilter within filters work as expected."""
+        Prove that geofilter within filters work as expected.
+        """
 
         # Inside using RD (string)
         response = api_client.get(
@@ -312,6 +313,7 @@ class TestFilterFieldTypes:
             headers={"Accept-Crs": "EPSG:28992"},
         )
         data = read_response_json(response)
+        print(data)
         assert len(data["_embedded"]["alle_geometrien"]) == 6, "Inside using R/D (string)"
 
         returned_types = {
@@ -333,6 +335,7 @@ class TestFilterFieldTypes:
             headers={"Accept-Crs": "EPSG:28992"},
         )
         data = read_response_json(response)
+        print(data)
         assert len(data["_embedded"]["alle_geometrien"]) == 6, "Inside using R/D (WKT)"
 
         # Outside using RD
@@ -361,6 +364,33 @@ class TestFilterFieldTypes:
             headers={"Accept-Crs": "EPSG:4326"},
         )
         assert response.status_code == 400, "Outside WGS84 range"
+
+        # No distance value supplied in request
+        response = api_client.get(
+            "/v1/alle_geometrien/alle_geometrien/",
+            data={"geometry[within]": "52.388231,4.8897865"},
+            headers={"Accept-Crs": "EPSG:4326"},
+        )
+        assert response.status_code == 400, "No distance parameter provided "
+        assert "Must be x,y,d or POINT(x y),d" in response.text
+
+        # No distance value supplied in request
+        response = api_client.get(
+            "/v1/alle_geometrien/alle_geometrien/",
+            data={"geometry[within]": "121000,487000"},
+            headers={"Accept-Crs": "EPSG:4326"},
+        )
+        assert response.status_code == 400, "No distance parameter provided"
+        assert "Must be x,y,d or POINT(x y),d" in response.text
+
+        # No distance value supplied in request
+        response = api_client.get(
+            "/v1/alle_geometrien/alle_geometrien/",
+            data={"geometry[within]": "POINT(121000 487000)"},
+            headers={"Accept-Crs": "EPSG:4326"},
+        )
+        assert response.status_code == 400, "No distance parameter provided"
+        assert "Must be x,y,d or POINT(x y),d" in response.text
 
     @staticmethod
     def test_geofilter_intersects(api_client, parkeervakken_parkeervak_model, filled_router):
