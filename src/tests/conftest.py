@@ -752,7 +752,7 @@ def all_geometries_data(all_geometries_model):
         ),
     )
 
-    # MultiLineString
+    # MultiPolygon
     all_geometries_model.objects.create(
         id=6,
         geometry=GEOSGeometry(
@@ -762,6 +762,21 @@ def all_geometries_data(all_geometries_model):
             srid=28992,
         ),
     )
+
+
+@pytest.fixture()
+def drie_d_geometrie_schema(schema_loader) -> DatasetSchema:
+    return schema_loader.get_dataset_from_file("drie_d_geometrie.json")
+
+
+@pytest.fixture()
+def drie_d_geometrie_dataset(drie_d_geometrie_schema) -> Dataset:
+    return Dataset.create_for_schema(drie_d_geometrie_schema)
+
+
+@pytest.fixture()
+def drie_d_geometrie_model(drie_d_geometrie_dataset, dynamic_models) -> DynamicModel:
+    return dynamic_models["drie_d_geometrie"]["drie_d_geometrie"]
 
 
 @pytest.fixture()

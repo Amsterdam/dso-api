@@ -303,17 +303,16 @@ class TestFilterFieldTypes:
     @staticmethod
     def test_geofilter_within(api_client, all_geometries_data, filled_router):
         """
-        Prove that geofilter within filters work as expected.
+        Prove that geofilter within filters work as expected (for 2D geometries).
         """
 
         # Inside using RD (string)
         response = api_client.get(
             "/v1/alle_geometrien/alle_geometrien/",
-            data={"geometry[within]": "121000,487000,100"},
+            data={"geometry[within]": "121000,487000,1000"},
             headers={"Accept-Crs": "EPSG:28992"},
         )
         data = read_response_json(response)
-        print(data)
         assert len(data["_embedded"]["alle_geometrien"]) == 6, "Inside using R/D (string)"
 
         returned_types = {
@@ -335,7 +334,6 @@ class TestFilterFieldTypes:
             headers={"Accept-Crs": "EPSG:28992"},
         )
         data = read_response_json(response)
-        print(data)
         assert len(data["_embedded"]["alle_geometrien"]) == 6, "Inside using R/D (WKT)"
 
         # Outside using RD
@@ -354,7 +352,6 @@ class TestFilterFieldTypes:
             headers={"Accept-Crs": "EPSG:4326"},
         )
         data = read_response_json(response)
-        print(data)
         assert len(data["_embedded"]["alle_geometrien"]) == 6, "Inside using WGS84"
 
         # Invalid WGS84 coords
@@ -391,6 +388,62 @@ class TestFilterFieldTypes:
         )
         assert response.status_code == 400, "No distance parameter provided"
         assert "Must be x,y,d or POINT(x y),d" in response.text
+
+    @staticmethod
+    def test_geofilter_within_drie_d(api_client, drie_d_geometrie_model, filled_router):
+        """
+        Some tables use 3D-geometry (e.gleidingeninfrastructuur/waternetRioolleidingen)
+        LineString geometry with EPSG 7415 (Rijksdriehoek + NAP-depth)
+        We currently don't support actual 3D geometry filtering, so the z-axis is ignored and
+        the 3D fields are treated as 2D fields.
+        These tests prove that 3D LineString geometries are filtered correctly.
+        """
+
+        # Create LineString with realistic depth value -0.06 (NAP)
+        drie_d_geometrie_model.objects.create(
+            id=1,
+            geometry=GEOSGeometry(
+                "LINESTRING(120950 486950 -0.06, 121050 487050 -0.06, 121150 487150 -0.6)",
+                srid=7415,
+            ),
+        )
+        # Inside using RD (string)
+        response = api_client.get(
+            "/v1/drie_d_geometrie/drie_d_geometrie/",
+            data={"geometry[within]": "121000,487000,10"},
+            headers={"Accept-Crs": "EPSG:28992"},
+        )
+        data = read_response_json(response)
+        assert len(data["_embedded"]["drie_d_geometrie"]) == 1, "Inside using R/D+NAP (string)"
+
+        # Outside using RD (string)
+        response = api_client.get(
+            "/v1/drie_d_geometrie/drie_d_geometrie/",
+            data={"geometry[within]": "123000,489000,10"},
+            headers={"Accept-Crs": "EPSG:28992"},
+        )
+        data = read_response_json(response)
+        assert len(data["_embedded"]["drie_d_geometrie"]) == 0, "Outside using R/D+NAP (string)"
+
+        # LineString with big depth value of -50 (NAP)
+        drie_d_geometrie_model.objects.create(
+            id=2,
+            geometry=GEOSGeometry(
+                "LINESTRING(120950 486950 -0.06, 121050 487050 -50, 121150 487150 -50)",
+                srid=7415,
+            ),
+        )
+
+        # Inside using RD (string), even when cable is deeper (-50) than distance value (10)
+        # If we would use PostGis 3D filtering, this test should fail
+        response = api_client.get(
+            "/v1/drie_d_geometrie/drie_d_geometrie/",
+            data={"geometry[within]": "121000,487000,10"},
+            headers={"Accept-Crs": "EPSG:28992"},
+        )
+        data = read_response_json(response)
+        assert len(data["_embedded"]["drie_d_geometrie"]) == 2, "Outside using R/D+NAP (string)"
+        assert 2 in [item["id"] for item in data["_embedded"]["drie_d_geometrie"]]
 
     @staticmethod
     def test_geofilter_intersects(api_client, parkeervakken_parkeervak_model, filled_router):

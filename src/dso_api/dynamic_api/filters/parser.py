@@ -70,6 +70,7 @@ ALLOWED_SCALAR_LOOKUPS = {
     "object": set(),
     "https://geojson.org/schema/Geometry.json": _polygon_lookups,  # Assume it works.
     "https://geojson.org/schema/Point.json": {"", "isnull", "not", "intersects", "within"},
+    "https://geojson.org/schema/LineString.json": {"", "within"},
     "https://geojson.org/schema/Polygon.json": _polygon_lookups,
     "https://geojson.org/schema/MultiPolygon.json": _polygon_lookups,
     # Format variants for type string:
