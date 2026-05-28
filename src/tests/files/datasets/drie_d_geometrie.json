@@ -1,0 +1,45 @@
+{
+  "id": "drie_d_geometrie",
+  "type": "dataset",
+  "title": "",
+  "publisher": "Nobody",
+  "default_version": "0.0.1",
+  "crs": "EPSG:7415",
+  "defaultVersion": "v1",
+  "versions": {
+    "v1": {
+      "enableAPI": true,
+      "status": "stable",
+      "version": "0.0.1",
+      "tables": [
+        {
+          "id": "drie_d_geometrie",
+          "type": "table",
+          "version": "1.0.0",
+          "schema": {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "schema"
+            ],
+            "display": "id",
+            "properties": {
+              "id": {
+                "type": "integer",
+                "description": "uniek"
+              },
+              "geometry": {
+                "title": "Geometrie",
+                "$ref": "https://geojson.org/schema/LineString.json",
+                "description": "Geometrie in RD (epsg:7415)"
+              }
+            }
+          },
+          "status": "stable"
+        }
+      ]
+    }
+  }
+}

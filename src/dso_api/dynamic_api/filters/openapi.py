@@ -62,6 +62,9 @@ OPENAPI_TYPE_LOOKUP_EXAMPLES = {
         "": "Use x,y or POINT(x y)",  # only for no lookup
         "intersects": "Use WKT (POLYGON((x1 y1, x2 y2, ...))) or GeoJSON",
     },
+    "https://geojson.org/schema/LineString.json": {
+        "within": "Use x,y,d or WKT POINT(x y),d",
+    },
     "https://geojson.org/schema/Polygon.json": {
         "contains": "Use x,y or POINT(x y)",
         "intersects": "Use WKT (POLYGON((x1 y1, x2 y2, ...))) or GeoJSON",
