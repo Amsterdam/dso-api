@@ -125,7 +125,6 @@ def str2geodist(value: str, crs: CRS | None = None) -> tuple[GEOSGeometry, D]:
         # Split value string into coordinates and distance
         coordinates, distance = value.rsplit(",", 1)
 
-        # TODO ik hardcode hier meters, is dat goed?
         return str2geo(coordinates, crs), D(m=distance)
     else:
         raise ValidationError(

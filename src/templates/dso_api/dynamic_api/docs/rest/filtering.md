@@ -157,7 +157,7 @@ als `exact`. Er is geen *escaping* van de jokertekens mogelijk.
 * Geometrieën van het type `MultiPoint`, `LineString`, `MultiLineString`, `Polygon` en `MultiPolygon` hoeven niet volledig binnen de straal te liggen om binnen het `?{geoveld}[within]`-filter te vallen.
 Wanneer de geometrie overlapt met de straal rondom het punt, wordt deze teruggegeven door de `?{geoveld}[within]`-filter.
 
-3D-geovelden zoals velden met EPSG: 7415 (Rijksdriehoek + NAP-diepte) worden ondersteund door de `?{geoveld}[within]`-filter, maar de z-as wordt niet meegenomen in de filterin. Het veld wordt dus behandeld als een 2D-geoveld. Dit betekent bijvoorbeeld dat de diepte van kabels in de grond geen invloed heeft op de filtering.
+3D-geovelden zoals velden met EPSG: 7415 (Rijksdriehoek + NAP-diepte) worden ondersteund door de `?{geoveld}[within]`-filter, maar de z-as wordt niet meegenomen in de filtering. Het veld wordt dus behandeld als een 2D-geoveld. Dit betekent bijvoorbeeld dat de diepte van kabels in de grond geen invloed heeft op de filtering.
 
 Bij het doorzoeken van geometrievelden wordt gebruik gemaakt van de
 projectie opgegeven in de header `Accept-CRS`. Afhankelijk van de

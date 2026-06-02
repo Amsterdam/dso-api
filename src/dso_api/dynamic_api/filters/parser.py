@@ -412,7 +412,7 @@ class QueryFilterEngine:
                 # Some lookups have a type that is different from the field type.
                 # For example, isnull/isempty/like.
 
-                # TODO within filter
+                # within filter is a special case AND applies to geo fields
                 if field_schema.is_geo:
                     return lookup_parser(filter_input.raw_value, self.input_crs)
 
