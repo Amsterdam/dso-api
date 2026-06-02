@@ -44,7 +44,7 @@ OPENAPI_LOOKUP_PREFIX = {
     "not": "Exclude matches; ",
     "contains": "Should contain; ",
     "intersects": "Use WKT (POLYGON((x1 y1, x2 y2, ...))) or GeoJSON",
-    "within": "Within distance of;",
+    "within": "Within distance of; ",
 }
 
 OPENAPI_LOOKUP_EXAMPLES = {
@@ -61,6 +61,7 @@ OPENAPI_TYPE_LOOKUP_EXAMPLES = {
     "https://geojson.org/schema/Point.json": {
         "": "Use x,y or POINT(x y)",  # only for no lookup
         "intersects": "Use WKT (POLYGON((x1 y1, x2 y2, ...))) or GeoJSON",
+        "within": "Use x,y,d or WKT POINT(x y),d",
     },
     "https://geojson.org/schema/LineString.json": {
         "within": "Use x,y,d or WKT POINT(x y),d",
@@ -68,10 +69,12 @@ OPENAPI_TYPE_LOOKUP_EXAMPLES = {
     "https://geojson.org/schema/Polygon.json": {
         "contains": "Use x,y or POINT(x y)",
         "intersects": "Use WKT (POLYGON((x1 y1, x2 y2, ...))) or GeoJSON",
+        "within": "Use x,y,d or WKT POINT(x y),d",
     },
     "https://geojson.org/schema/MultiPolygon.json": {
         "contains": "Use x,y or POINT(x y)",
         "intersects": "Use WKT (POLYGON((x1 y1, x2 y2, ...))) or GeoJSON",
+        "within": "Use x,y,d or WKT POINT(x y),d",
     },
 }
 

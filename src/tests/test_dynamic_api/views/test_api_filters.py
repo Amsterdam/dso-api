@@ -368,25 +368,25 @@ class TestFilterFieldTypes:
             data={"geometry[within]": "52.388231,4.8897865"},
             headers={"Accept-Crs": "EPSG:4326"},
         )
-        assert response.status_code == 400, "No distance parameter provided "
+        assert response.status_code == 400, "No distance parameter provided (WGS84)"
         assert "Must be x,y,d or POINT(x y),d" in response.text
 
         # No distance value supplied in request
         response = api_client.get(
             "/v1/alle_geometrien/alle_geometrien/",
             data={"geometry[within]": "121000,487000"},
-            headers={"Accept-Crs": "EPSG:4326"},
+            headers={"Accept-Crs": "EPSG:28992"},
         )
-        assert response.status_code == 400, "No distance parameter provided"
+        assert response.status_code == 400, "No distance parameter provided (R/D)"
         assert "Must be x,y,d or POINT(x y),d" in response.text
 
         # No distance value supplied in request
         response = api_client.get(
             "/v1/alle_geometrien/alle_geometrien/",
             data={"geometry[within]": "POINT(121000 487000)"},
-            headers={"Accept-Crs": "EPSG:4326"},
+            headers={"Accept-Crs": "EPSG:28992"},
         )
-        assert response.status_code == 400, "No distance parameter provided"
+        assert response.status_code == 400, "No distance parameter provided (R/D WKT)"
         assert "Must be x,y,d or POINT(x y),d" in response.text
 
     @staticmethod
@@ -435,7 +435,7 @@ class TestFilterFieldTypes:
         )
 
         # Inside using RD (string), even when cable is deeper (-50) than distance value (10)
-        # If we would use PostGis 3D filtering, this test should fail
+        # If we used PostGis 3D filtering, this test should fail
         response = api_client.get(
             "/v1/drie_d_geometrie/drie_d_geometrie/",
             data={"geometry[within]": "121000,487000,10"},
