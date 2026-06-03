@@ -4,7 +4,7 @@
 #
 #    pip-compile --output-file=requirements_dev.txt requirements_dev.in
 #
-amsterdam-schema-tools[django]==9.7.0
+amsterdam-schema-tools[django]==9.8.0
     # via -r requirements.in
 annotated-types==0.7.0
     # via pydantic
@@ -88,7 +88,7 @@ datadiensten-apikeyclient==0.7.5
     # via -r requirements.in
 datapunt-authorization-django==2.1.0
     # via -r requirements.in
-debugpy==1.8.20
+debugpy==1.8.21
     # via -r requirements_dev.in
 decorator==5.2.1
     # via jsonpath-rw
@@ -522,7 +522,7 @@ rpds-py==0.30.0
     # via
     #   jsonschema
     #   referencing
-ruff==0.15.14
+ruff==0.15.15
     # via -r requirements_dev.in
 shapely==2.1.2
     # via
