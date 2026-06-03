@@ -1,7 +1,7 @@
 -r ./requirements.in
 
 black==26.5.1
-ruff==0.15.14
+ruff==0.15.15
 pytest-sugar==1.1.1
 termcolor==3.3.0
 pre-commit==4.6.0
@@ -9,4 +9,4 @@ django-debug-toolbar==6.3.0
 django-extensions==4.1
 pip-tools==7.5.3
 tomli==2.4.1
-debugpy==1.8.20
+debugpy==1.8.21
