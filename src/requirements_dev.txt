@@ -4,7 +4,7 @@
 #
 #    pip-compile --output-file=requirements_dev.txt requirements_dev.in
 #
-amsterdam-schema-tools[django]==9.8.0
+amsterdam-schema-tools[django]==9.8.2
     # via -r requirements.in
 annotated-types==0.7.0
     # via pydantic
@@ -43,7 +43,7 @@ azure-monitor-opentelemetry-exporter==1.0.0b52
     # via azure-monitor-opentelemetry
 bandit==1.9.4
     # via -r requirements.in
-beautifulsoup4==4.14.3
+beautifulsoup4==4.15.0
     # via -r requirements.in
 black==26.5.1
     # via -r requirements_dev.in
@@ -522,7 +522,7 @@ rpds-py==0.30.0
     # via
     #   jsonschema
     #   referencing
-ruff==0.15.15
+ruff==0.15.16
     # via -r requirements_dev.in
 shapely==2.1.2
     # via
