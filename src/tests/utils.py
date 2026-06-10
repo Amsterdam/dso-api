@@ -188,6 +188,27 @@ def xml_element_to_dict(element: ET.Element) -> dict:
     return result
 
 
+def xml_element_to_dict_with_lists(element: ET.Element) -> dict:
+    """Convert XML to a dict and store repeated sibling tags as lists."""
+    if not len(element):
+        local_name = element.tag.split("}")[1]
+        return {local_name: element.text}
+
+    result = {}
+    for child in element:
+        local_name = child.tag.split("}")[1]
+        value = child.text if len(child) == 0 else xml_element_to_dict_with_lists(child)
+
+        if local_name in result:
+            if not isinstance(result[local_name], list):
+                result[local_name] = [result[local_name]]
+            result[local_name].append(value)
+        else:
+            result[local_name] = value
+
+    return result
+
+
 def normalize_data(data):
     """Turn the data into normal dicts/lists.
     This consumes the generators/itertools.chain.
