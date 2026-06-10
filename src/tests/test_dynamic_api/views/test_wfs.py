@@ -5,7 +5,12 @@ import pytest
 from django.urls import reverse
 from schematools.contrib.django.db import create_tables
 
-from tests.utils import read_response, read_response_xml, xml_element_to_dict
+from tests.utils import (
+    read_response,
+    read_response_xml,
+    xml_element_to_dict,
+    xml_element_to_dict_with_lists,
+)
 
 
 @pytest.mark.django_db
@@ -146,6 +151,26 @@ class TestDatasetWFSView:
         )
         response = api_client.get(wfs_url)
         assert response.status_code == 200, response.content
+
+    def test_wfs_view_with_expand_on_many_to_many_relation(
+        self, api_client, gebieden_dataset, ggwgebieden_multiple_buurten_data
+    ):
+        wfs_url = (
+            "/v1/wfs/gebieden"
+            "?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=ggwgebieden"
+            "&OUTPUTFORMAT=application/gml+xml&expand=bestaat_uit_buurten"
+        )
+        response = api_client.get(wfs_url)
+        assert response.status_code == 200, response.content
+
+        xml_root = read_response_xml(response)
+        data = xml_element_to_dict_with_lists(xml_root[0][0])
+
+        assert len(data["bestaat_uit_buurten"]) == 2
+        assert {(buurt["id"], buurt["naam"]) for buurt in data["bestaat_uit_buurten"]} == {
+            ("03630000000078.2", "AAA v2"),
+            ("03630000000079.1", "BBB v1"),
+        }
 
     def test_wfs_view_disabled(self, api_client, disabled_afval_dataset, afval_container):
         wfs_url = (
