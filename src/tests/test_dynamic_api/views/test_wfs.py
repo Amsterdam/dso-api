@@ -9,7 +9,6 @@ from tests.utils import (
     read_response,
     read_response_xml,
     xml_element_to_dict,
-    xml_element_to_dict_with_lists,
 )
 
 
@@ -164,7 +163,7 @@ class TestDatasetWFSView:
         assert response.status_code == 200, response.content
 
         xml_root = read_response_xml(response)
-        data = xml_element_to_dict_with_lists(xml_root[0][0])
+        data = xml_element_to_dict(xml_root[0][0])
 
         assert len(data["bestaat_uit_buurten"]) == 2
         assert {(buurt["id"], buurt["naam"]) for buurt in data["bestaat_uit_buurten"]} == {
@@ -327,7 +326,7 @@ class TestDatasetWFSViewAuth:
         data = self.parse_response(response)
         assert data == {
             "boundedBy": {
-                "Envelope": [{"lowerCorner": "121389 487369"}, {"upperCorner": "121389 487369"}]
+                "Envelope": {"lowerCorner": "121389 487369", "upperCorner": "121389 487369"}
             },
             "geometry": {"Point": {"pos": "121389 487369"}},
             "id": "1",
@@ -342,7 +341,7 @@ class TestDatasetWFSViewAuth:
         data = self.parse_response(response)
         assert data == {
             "boundedBy": {
-                "Envelope": [{"lowerCorner": "121389 487369"}, {"upperCorner": "121389 487369"}]
+                "Envelope": {"lowerCorner": "121389 487369", "upperCorner": "121389 487369"}
             },
             "id": "1",
             "geometry_with_auth": {"Point": {"pos": "121389 487369"}},
@@ -409,7 +408,7 @@ class TestDatasetWFSViewAuth:
         data = self.parse_response(response)
         assert data == {
             "boundedBy": {
-                "Envelope": [{"lowerCorner": "121389 487369"}, {"upperCorner": "121389 487369"}]
+                "Envelope": {"lowerCorner": "121389 487369", "upperCorner": "121389 487369"}
             },
             "geometry_with_auth": {"Point": {"pos": "121389 487369"}},
             "id": "1",

@@ -3,7 +3,11 @@ from django.contrib.gis.geos import Point
 from django.urls import reverse
 
 from tests.test_dynamic_api.views.test_mvt import decode_mvt
-from tests.utils import patch_table_row_level_auth, read_response_xml, xml_element_to_dict
+from tests.utils import (
+    patch_table_row_level_auth,
+    read_response_xml,
+    xml_element_to_dict,
+)
 
 
 @pytest.mark.django_db
@@ -49,7 +53,7 @@ class TestRowLevelAuth:
             "containers",
             rla=rla,
         )
-        header = {"HTTP_AUTHORIZATION": f"Bearer {fetch_auth_token(["RLA"])}"}
+        header = {"HTTP_AUTHORIZATION": f"Bearer {fetch_auth_token(['RLA'])}"}
         url = reverse("dynamic_api:afvalwegingen_rla-containers-list")
         response = api_client.get(url, **header)
         assert response.status_code == 200
@@ -99,7 +103,7 @@ class TestRowLevelAuth:
             rla=rla,
         )
         url = reverse("dynamic_api:afvalwegingen_rla-containers-list")
-        header = {"HTTP_AUTHORIZATION": f"Bearer {fetch_auth_token(["RLA"])}"}
+        header = {"HTTP_AUTHORIZATION": f"Bearer {fetch_auth_token(['RLA'])}"}
         response = api_client.get(url, data={"eigenaarNaam": "Dataservices"}, **header)
         assert response.status_code == 200
         containers = list(response.data["_embedded"]["containers"])
@@ -150,7 +154,7 @@ class TestRowLevelAuth:
         url = reverse(
             "dynamic_api:afvalwegingen_rla-containers-detail", args=[afval_container_rla.id]
         )
-        header = {"HTTP_AUTHORIZATION": f"Bearer {fetch_auth_token(["BAG/R"])}"}
+        header = {"HTTP_AUTHORIZATION": f"Bearer {fetch_auth_token(['BAG/R'])}"}
         response = api_client.get(url, **header)
         assert response.status_code == 200
         for target in rla["targets"]:
@@ -173,7 +177,7 @@ class TestRowLevelAuth:
             "containers",
             rla=rla,
         )
-        header = {"HTTP_AUTHORIZATION": f"Bearer {fetch_auth_token(["RLA", "BAG/R"])}"}
+        header = {"HTTP_AUTHORIZATION": f"Bearer {fetch_auth_token(['RLA', 'BAG/R'])}"}
         url = reverse(
             "dynamic_api:afvalwegingen_rla-containers-detail", args=[afval_container_rla.id]
         )
@@ -202,7 +206,7 @@ class TestRowLevelAuth:
         url = reverse(
             "dynamic_api:afvalwegingen_rla-containers-detail", args=[afval_container_rla.id]
         )
-        header = {"HTTP_AUTHORIZATION": f"Bearer {fetch_auth_token(["BAG/R"])}"}
+        header = {"HTTP_AUTHORIZATION": f"Bearer {fetch_auth_token(['BAG/R'])}"}
         response = api_client.get(url, **header)
         assert response.status_code == 200
         assert response.data["eigenaarDetailsTelefoonnummer"] is None
@@ -225,7 +229,7 @@ class TestRowLevelAuth:
             "containers",
             rla=rla,
         )
-        header = {"HTTP_AUTHORIZATION": f"Bearer {fetch_auth_token(["RLA", "BAG/R"])}"}
+        header = {"HTTP_AUTHORIZATION": f"Bearer {fetch_auth_token(['RLA', 'BAG/R'])}"}
         url = reverse(
             "dynamic_api:afvalwegingen_rla-containers-detail", args=[afval_container_rla.id]
         )
@@ -254,7 +258,7 @@ class TestRowLevelAuth:
         url = reverse(
             "dynamic_api:afvalwegingen_rla-containers-detail", args=[afval_container_rla.id]
         )
-        header = {"HTTP_AUTHORIZATION": f"Bearer {fetch_auth_token(["BAG/R"])}"}
+        header = {"HTTP_AUTHORIZATION": f"Bearer {fetch_auth_token(['BAG/R'])}"}
         response = api_client.get(
             url,
             **header,
@@ -289,7 +293,7 @@ class TestRowLevelAuth:
         url = reverse(
             "dynamic_api:afvalwegingen_rla-containers-detail", args=[afval_container_rla.id]
         )
-        header = {"HTTP_AUTHORIZATION": f"Bearer {fetch_auth_token(["BAG/R", "RLA"])}"}
+        header = {"HTTP_AUTHORIZATION": f"Bearer {fetch_auth_token(['BAG/R', 'RLA'])}"}
         response = api_client.get(
             url,
             **header,
@@ -337,7 +341,7 @@ class TestRowLevelAuth:
         # the fields from rla.targets are omitted
         assert data == {
             "boundedBy": {
-                "Envelope": [{"lowerCorner": "121389 487369"}, {"upperCorner": "121389 487369"}]
+                "Envelope": {"lowerCorner": "121389 487369", "upperCorner": "121389 487369"}
             },
             "geometry": {"Point": {"pos": "121389 487369"}},
             "cluster_id": "c2",
