@@ -171,6 +171,35 @@ class TestDatasetWFSView:
             ("03630000000079.1", "BBB v1"),
         }
 
+    def test_wfs_view_with_expand_on_additional_relation(
+        self,
+        api_client,
+        gebieden_dataset,
+        stadsdelen_data,
+        wijken_data,
+        stadsdeel_multiple_wijken_data,
+    ):
+        wfs_url = (
+            "/v1/wfs/gebieden"
+            "?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=stadsdelen"
+            "&OUTPUTFORMAT=application/gml+xml&expand=wijken"
+        )
+        response = api_client.get(wfs_url)
+        assert response.status_code == 200, response.content
+
+        xml_root = read_response_xml(response)
+        data = xml_element_to_dict(xml_root[0][0])
+
+        wijken = data["wijken"]
+        if isinstance(wijken, dict):
+            wijken = [wijken]
+
+        assert len(wijken) == 2
+        assert {(wijk["id"], wijk["naam"]) for wijk in wijken} == {
+            ("03630012052035.1", "Burgwallen-Nieuwe Zijde"),
+            ("03630012052036.1", "Nieuwmarkt"),
+        }
+
     def test_wfs_view_disabled(self, api_client, disabled_afval_dataset, afval_container):
         wfs_url = (
             "/v1/wfs/afvalwegingen"

@@ -42,7 +42,7 @@ from gisserver.geometries import CRS
 from gisserver.parsers import wfs20
 from gisserver.views import WFSView
 from schematools.contrib.django.models import DynamicModel
-from schematools.naming import toCamelCase
+from schematools.naming import to_snake_case, toCamelCase
 from schematools.types import DatasetTableSchema, RowLevelAuthorisation
 
 from dso_api.dynamic_api.constants import DEFAULT
@@ -234,7 +234,12 @@ class DatasetWFSView(CheckModelPermissionsMixin, WFSView):
                 if field.name in seen or (table_schema.is_nested_table and field.name == "parent"):
                     continue
 
-                if isinstance(field, (models.ForeignKey, models.ManyToManyField)):
+                if (
+                    isinstance(
+                        field, (models.ForeignKey, models.ManyToManyField, models.ForeignObjectRel)
+                    )
+                    and "_rev_" not in field.name
+                ):
                     seen.add(field.name)
                     field_schema = field.model.get_field_schema(field)
                     to_table = field_schema.related_table
@@ -247,7 +252,7 @@ class DatasetWFSView(CheckModelPermissionsMixin, WFSView):
                     expands.append(
                         {
                             "expand_only": field.many_to_many,
-                            "name": field.name,
+                            "name": to_snake_case(field.name),
                             "description": to_table.description,
                             "relation_id": field_schema["relation"],
                             "target_doc": f"{wfs_doc}#feature-{to_table.id}",
@@ -370,12 +375,16 @@ class DatasetWFSView(CheckModelPermissionsMixin, WFSView):
                 isinstance(model_field, models.ManyToManyField | models.ForeignObjectRel)
                 and "_rev_" not in model_field.name
             ):
-                if model_field.name in self.expand_fields:
+                if to_snake_case(model_field.name) in self.expand_fields:
                     fields.append(
                         ComplexFeatureField(
                             model_field.name,
                             fields=self._get_expanded_fields(model_field.related_model),
-                            abstract=model_field.help_text,
+                            abstract=getattr(
+                                model_field,
+                                "help_text",
+                                getattr(model_field.remote_field, "help_text", ""),
+                            ),
                         )
                     )
                 continue
