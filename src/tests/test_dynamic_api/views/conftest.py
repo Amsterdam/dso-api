@@ -190,3 +190,57 @@ def profiles_may():
             }
         )
     )
+
+
+@pytest.fixture()
+def ggwgebieden_multiple_buurten_data(ggwgebieden_model, buurten_data, buurten_model):
+    instance = ggwgebieden_model.objects.create(
+        id="03630950000000.1",
+        identificatie="03630950000000",
+        volgnummer=1,
+        begin_geldigheid=buurten_data.begin_geldigheid,
+    )
+    extra_buurt = buurten_model.objects.create(
+        id="03630000000079.1",
+        identificatie="03630000000079",
+        volgnummer=1,
+        naam="BBB v1",
+        begin_geldigheid=buurten_data.begin_geldigheid,
+        ligt_in_wijk_id=buurten_data.ligt_in_wijk_id,
+        ligt_in_wijk_identificatie=buurten_data.ligt_in_wijk_identificatie,
+        ligt_in_wijk_volgnummer=buurten_data.ligt_in_wijk_volgnummer,
+    )
+    ggwgebieden_model.bestaat_uit_buurten.through.objects.create(
+        id=11,
+        ggwgebieden_id=instance.id,
+        ggwgebieden_identificatie=instance.identificatie,
+        ggwgebieden_volgnummer=instance.volgnummer,
+        bestaat_uit_buurten_id=buurten_data.id,
+        bestaat_uit_buurten_identificatie=buurten_data.identificatie,
+        bestaat_uit_buurten_volgnummer=buurten_data.volgnummer,
+    )
+    ggwgebieden_model.bestaat_uit_buurten.through.objects.create(
+        id=22,
+        ggwgebieden_id=instance.id,
+        ggwgebieden_identificatie=instance.identificatie,
+        ggwgebieden_volgnummer=instance.volgnummer,
+        bestaat_uit_buurten_id=extra_buurt.id,
+        bestaat_uit_buurten_identificatie=extra_buurt.identificatie,
+        bestaat_uit_buurten_volgnummer=extra_buurt.volgnummer,
+    )
+    return instance
+
+
+@pytest.fixture()
+def stadsdeel_multiple_wijken_data(wijken_data, wijken_model):
+    return wijken_model.objects.create(
+        id="03630012052036.1",
+        identificatie="03630012052036",
+        volgnummer=1,
+        begin_geldigheid=wijken_data.begin_geldigheid,
+        naam="Nieuwmarkt",
+        code="A02",
+        ligt_in_stadsdeel_id=wijken_data.ligt_in_stadsdeel_id,
+        ligt_in_stadsdeel_identificatie=wijken_data.ligt_in_stadsdeel_identificatie,
+        ligt_in_stadsdeel_volgnummer=wijken_data.ligt_in_stadsdeel_volgnummer,
+    )

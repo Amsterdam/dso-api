@@ -42,7 +42,7 @@ from gisserver.geometries import CRS
 from gisserver.parsers import wfs20
 from gisserver.views import WFSView
 from schematools.contrib.django.models import DynamicModel
-from schematools.naming import toCamelCase
+from schematools.naming import to_snake_case, toCamelCase
 from schematools.types import DatasetTableSchema, RowLevelAuthorisation
 
 from dso_api.dynamic_api.constants import DEFAULT
@@ -214,7 +214,8 @@ class DatasetWFSView(CheckModelPermissionsMixin, WFSView):
             "schema_auth": self.schema.auth,
             "dataset_has_auth": bool(self.schema.auth - {"OPENBAAR"}),
             "has_custom_schema": self.expand_fields or self.embed_fields,
-            "embeddable_fields": embeddable_fields,
+            "embeddable_fields": [f for f in embeddable_fields if not f["expand_only"]],
+            "expand_only_fields": [f for f in embeddable_fields if f["expand_only"]],
             "dataset_version": dataset_version,
             "mvt_url": reverse(f"dynamic_api:mvt{suffix}", kwargs=self.kwargs),
             "doc_url": reverse(f"dynamic_api:docs-dataset{suffix}", kwargs=self.kwargs),
@@ -233,7 +234,12 @@ class DatasetWFSView(CheckModelPermissionsMixin, WFSView):
                 if field.name in seen or (table_schema.is_nested_table and field.name == "parent"):
                     continue
 
-                if isinstance(field, models.ForeignKey):
+                if (
+                    isinstance(
+                        field, (models.ForeignKey, models.ManyToManyField, models.ForeignObjectRel)
+                    )
+                    and "_rev_" not in field.name
+                ):
                     seen.add(field.name)
                     field_schema = field.model.get_field_schema(field)
                     to_table = field_schema.related_table
@@ -245,7 +251,8 @@ class DatasetWFSView(CheckModelPermissionsMixin, WFSView):
 
                     expands.append(
                         {
-                            "name": field.name,
+                            "expand_only": field.many_to_many,
+                            "name": to_snake_case(field.name),
                             "description": to_table.description,
                             "relation_id": field_schema["relation"],
                             "target_doc": f"{wfs_doc}#feature-{to_table.id}",
@@ -320,7 +327,9 @@ class DatasetWFSView(CheckModelPermissionsMixin, WFSView):
                 features.append(feature)
         return features
 
-    def get_feature_fields(self, model, main_geometry_field_name) -> list[FeatureField]:
+    def get_feature_fields(  # noqa: C901
+        self, model, main_geometry_field_name
+    ) -> list[FeatureField]:
         """Define which fields should be exposed with the model.
 
         Instead of opting for the "__all__" value of django-gisserver,
@@ -362,6 +371,23 @@ class DatasetWFSView(CheckModelPermissionsMixin, WFSView):
                             pk_attr=field_name,
                         )
                     )
+            elif (
+                isinstance(model_field, models.ManyToManyField | models.ForeignObjectRel)
+                and "_rev_" not in model_field.name
+            ):
+                if to_snake_case(model_field.name) in self.expand_fields:
+                    fields.append(
+                        ComplexFeatureField(
+                            model_field.name,
+                            fields=self._get_expanded_fields(model_field.related_model),
+                            abstract=getattr(
+                                model_field,
+                                "help_text",
+                                getattr(model_field.remote_field, "help_text", ""),
+                            ),
+                        )
+                    )
+                continue
             elif model_field.is_relation:
                 # don't support other relations yet
                 # Note: this also needs updates in get_index_context_data()!
