@@ -229,3 +229,18 @@ def ggwgebieden_multiple_buurten_data(ggwgebieden_model, buurten_data, buurten_m
         bestaat_uit_buurten_volgnummer=extra_buurt.volgnummer,
     )
     return instance
+
+
+@pytest.fixture()
+def stadsdeel_multiple_wijken_data(wijken_data, wijken_model):
+    return wijken_model.objects.create(
+        id="03630012052036.1",
+        identificatie="03630012052036",
+        volgnummer=1,
+        begin_geldigheid=wijken_data.begin_geldigheid,
+        naam="Nieuwmarkt",
+        code="A02",
+        ligt_in_stadsdeel_id=wijken_data.ligt_in_stadsdeel_id,
+        ligt_in_stadsdeel_identificatie=wijken_data.ligt_in_stadsdeel_identificatie,
+        ligt_in_stadsdeel_volgnummer=wijken_data.ligt_in_stadsdeel_volgnummer,
+    )
