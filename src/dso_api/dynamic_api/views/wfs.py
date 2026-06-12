@@ -285,7 +285,10 @@ class DatasetWFSView(CheckModelPermissionsMixin, WFSView):
         features = []
         # For performance, only the feature types are generated that are accessed by this request
         for model in self._get_requested_models():
+            print("model:", model)
             geo_fields = self._get_geometry_fields(model)
+            print("GEO FIELDS:")
+            print(geo_fields)
             if not geo_fields:
                 continue
 
@@ -487,8 +490,14 @@ class DatasetWFSView(CheckModelPermissionsMixin, WFSView):
         # Return the geometry field with the mainGeometry field as the first item
         table_schema: DatasetTableSchema = model.table_schema()
         geometry_fields = []
+        print("main geo:")
+        print(table_schema["schema"].get("mainGeometry"))
+        print("All fields:")
         for f in model._meta.get_fields():
+            print(f.name)
             if isinstance(f, GeometryField):
+                print("Geometry field:")
+                print(f)
                 if f.name == table_schema.main_geometry_field.db_name:
                     geometry_fields.insert(0, f)
                 else:
