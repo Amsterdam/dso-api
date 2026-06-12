@@ -490,12 +490,20 @@ class DatasetWFSView(CheckModelPermissionsMixin, WFSView):
         # Return the geometry field with the mainGeometry field as the first item
         table_schema: DatasetTableSchema = model.table_schema()
         geometry_fields = []
-        print("main geo:")
-        print(table_schema["schema"].get("mainGeometry"))
+        main_geo = table_schema["schema"].get("mainGeometry")
         print("All fields:")
         for f in model._meta.get_fields():
             print(f.name)
-            if isinstance(f, GeometryField):
+
+            if main_geo and f.name.endswith(to_snake_case(main_geo)):
+                print("main geo field:")
+                print(f.name)
+                # AttributeError at /v1/wfs/monumenten/v1
+                # 'ManyToManyField' object has no attribute 'srid'
+                # waar halen we het echte veld op uit de relatie?
+                # geometry_fields.insert(0, f)
+
+            elif isinstance(f, GeometryField):
                 print("Geometry field:")
                 print(f)
                 if f.name == table_schema.main_geometry_field.db_name:
