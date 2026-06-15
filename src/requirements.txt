@@ -4,9 +4,9 @@
 #
 #    pip-compile --generate-hashes --output-file=requirements.txt requirements.in
 #
-amsterdam-schema-tools[django]==9.8.2 \
-    --hash=sha256:71a6bab3b50897c408b7ac0d089375b62057ffa8b74b5d647369e8f250682df3 \
-    --hash=sha256:eb4495f9ebc4f3a682c8a3c75b42af708a413fca3aab0e782a2a385a5f6e1084
+amsterdam-schema-tools[django]==9.8.3 \
+    --hash=sha256:74c4683e649601a8bf1f4bd66bf41f4c067c45f73cd300dd5dd0c4ca7985a1eb \
+    --hash=sha256:825be1b6b5b0d33aa9bc558b81258dd2cd4e8ae9ed777821311f2f1cbac55632
     # via -r requirements.in
 annotated-types==0.7.0 \
     --hash=sha256:1f02e8b43a8fbbc3f3e0d4f0f4bfc8131bcb4eebe8849b8e5c773f3a1c582a53 \
@@ -1664,9 +1664,9 @@ pyproject-hooks==1.2.0 \
     --hash=sha256:1e859bd5c40fae9448642dd871adf459e5e2084186e8d2c2a79a824c970da1f8 \
     --hash=sha256:9e5c6bfa8dcc30091c74b0cf803c81fdd29d94f01992a7707bc97babb1141913
     # via build
-pytest==9.0.3 \
-    --hash=sha256:2c5efc453d45394fdd706ade797c0a81091eccd1d6e4bccfcd476e2b8e0ab5d9 \
-    --hash=sha256:b86ada508af81d19edeb213c681b1d48246c1a91d304c6c81a427674c17eb91c
+pytest==9.1.0 \
+    --hash=sha256:41dd9148c08072446394cefd3d79701701335a9f4cae69ba92e39f6c7f5c061c \
+    --hash=sha256:8ebb0e7888bdf2bdfc602ec51f8f62d50200af37356c74e503c79a94f5c81f32
     # via
     #   -r requirements.in
     #   pytest-cov

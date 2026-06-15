@@ -4,7 +4,7 @@
 #
 #    pip-compile --output-file=requirements_dev.txt requirements_dev.in
 #
-amsterdam-schema-tools[django]==9.8.2
+amsterdam-schema-tools[django]==9.8.3
     # via -r requirements.in
 annotated-types==0.7.0
     # via pydantic
@@ -451,7 +451,7 @@ pyproject-hooks==1.2.0
     # via
     #   build
     #   pip-tools
-pytest==9.0.3
+pytest==9.1.0
     # via
     #   -r requirements.in
     #   pytest-cov
@@ -522,7 +522,7 @@ rpds-py==0.30.0
     # via
     #   jsonschema
     #   referencing
-ruff==0.15.16
+ruff==0.15.17
     # via -r requirements_dev.in
 shapely==2.1.2
     # via
