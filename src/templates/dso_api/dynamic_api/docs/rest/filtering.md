@@ -34,15 +34,29 @@ curl 'https://api.data.amsterdam.nl/v1/bag/verblijfsobjecten/?gebruiksdoel.code=
 
 ## Filteren via custom headers
 Er kan ook gefilterd worden op attributen via custom headers. Deze
-headers moeten dan wel geprefixed zijn met "DSO-" om verwarring
-met andere headers te voorkomen. Als er geen operatoren worden
-meegegeven is de default operator gelijk aan equals.
+headers moeten geprefixed zijn met "DSO-" gevolgd door het veldnaam
+en de operator. Als er geen operator wordt meegegeven is de
+default operator gelijk aan equals. Omdat HTTP Headers
+case-insensitive zijn, moet de camelCasing van de veldnaam worden
+aangepast naar snake-case. Dit geldt ook voor velden uit relaties.
 
-Deze query headers worden verwacht in een volgend soort structuur:
+Deze filter headers worden verwacht in de volgende structuur:
+
 ``` bash
+DSO-{veldnaam-snake-case}.{subveldnaam}|{operator}
+```
+Bijvoorbeeld:
+```
 DSO-aantal-bouwlagen
-DSO-aantal-bouwlagen.gte
-DSO-naam.like
+DSO-aantal-bouwlagen|gte
+DSO-naam|like
+DSO-gebruiksdoel.code
+```
+
+In een curl call ziet dit er dan als volgt uit:
+
+``` bash
+curl 'https://api.data.amsterdam.nl/v1/bag/verblijfsobjecten/' -H 'DSO-gebruiksdoel.code:1' -H 'DSO-naam|like:West*'
 ```
 
 ## Filteren in relaties
