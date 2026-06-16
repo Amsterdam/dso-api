@@ -478,9 +478,9 @@ cryptography==48.0.1 \
     #   jwcrypto
     #   msal
     #   pyjwt
-datadiensten-apikeyclient==0.7.5 \
-    --hash=sha256:af794d2b36baca2981461ed60942780107ce91f8b800f6e9698f0e8139efceb6 \
-    --hash=sha256:f33f3b5fa1a8f3c238e23d6a009dd68eb67231d410ff1bd9fa925203df6ce07c
+datadiensten-apikeyclient==0.7.6 \
+    --hash=sha256:aa17c6dbefe8f9a7df0a392ae343b3a3359e6b1c6bd838e9f34ad416fee202b1 \
+    --hash=sha256:ff3ac2a545637d49f633b0673312f01f00a894901d271a0651488a5a690abb15
     # via -r requirements.in
 datapunt-authorization-django==2.1.0 \
     --hash=sha256:dcf5013b2e64d3abbb75fc510eac611b7715fc0648b85792f7066e9a10635ce2 \
@@ -1594,9 +1594,9 @@ pygments==2.20.0 \
     #   -r requirements.in
     #   pytest
     #   rich
-pyjwt[crypto]==2.12.0 \
-    --hash=sha256:2f62390b667cd8257de560b850bb5a883102a388829274147f1d724453f8fb02 \
-    --hash=sha256:9bb459d1bdd0387967d287f5656bf7ec2b9a26645d1961628cda1764e087fd6e
+pyjwt[crypto]==2.13.0 \
+    --hash=sha256:41571c89ca91598c79e8ef18a2d07367d4810fbbd6f637794879baf1b7703423 \
+    --hash=sha256:66adcc2aff09b3f1bbd95fc1e1577df8ac8723c978552fd43304c8a290ac5728
     # via
     #   datadiensten-apikeyclient
     #   msal
