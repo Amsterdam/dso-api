@@ -188,19 +188,20 @@ class QueryFilterEngine:
             if not key.startswith(cls.HEADER_PARAMS_PREFIX):
                 continue
 
-            # custom query headers are passed with a DSO- prefix
+            # custom query headers are passed with a DSO- prefix and | to separate the operator
             raw_key = key[len(cls.HEADER_PARAMS_PREFIX) :]
 
             # split on operator if passed
-            parts = raw_key.rsplit(".", 1)
+            parts = raw_key.rsplit("|", 1)
 
             has_operator = len(parts) == 2
 
             if has_operator:
                 raw_key, operator = parts[0], parts[1].lower()
 
-            # convert query param to camelCase
-            query_param = toCamelCase(raw_key.replace("-", ""))
+            # Get possible nested fields to turn snake-case into camelCase
+            fields = raw_key.split(".")
+            query_param = ".".join([toCamelCase(field.replace("-", "")) for field in fields])
 
             new_key = f"{query_param}[{operator}]" if has_operator else query_param
 

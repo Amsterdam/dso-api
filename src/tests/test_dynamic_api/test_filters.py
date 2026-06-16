@@ -106,6 +106,8 @@ class TestFilterEngine:
             ("name=Movie1", {"movie1"}),
             ("name[like]=movie1", {"movie1"}),
             ("name[like]=Movie1", {"movie1"}),
+            # Relation fields
+            ("category.name=bar", {"movie1"}),
         ],
     )
     def test_filter_logic(self, movies_model, movie1, movie2, query, expect):
@@ -113,18 +115,51 @@ class TestFilterEngine:
         qs = engine.filter_queryset(movies_model.objects.all())
         assert {obj.name for obj in qs} == expect, str(qs.query)
 
-    def test_dso_headers(self, movies_model, movie1, movie2):
+    @pytest.mark.parametrize(
+        "query,expect",
+        [
+            # Date less than
+            ({"dateAdded[lt]": ["2020-02-10"]}, {"movie1"}),
+            ({"dateAdded[lt]": ["2020-03-01"]}, {"movie1"}),
+            ({"dateAdded[lte]": ["2020-03-01"]}, {"movie1", "movie2"}),
+            # Date less than full datetime
+            ({"dateAdded[lt]": ["2020-03-01T23:00:00"]}, {"movie1", "movie2"}),
+            # Date greater than
+            ({"dateAdded[gt]": ["2020-02-10"]}, {"movie2"}),
+            ({"dateAdded[gt]": ["2020-03-01"]}, set()),
+            ({"dateAdded[gte]": ["2020-3-1"]}, {"movie2"}),
+            # Test in filter
+            ({"dateAdded[in]": ["2020-2-1,2022-5-5"]}, {"movie1"}),
+            ({"dateAdded[in]": ["2020-2-1,2020-3-1,2022-5-5"]}, {"movie1", "movie2"}),
+            # Not (can be repeated for "AND NOT" testing)
+            ({"dateAdded[not]": ["2020-2-1"]}, {"movie2"}),
+            ({"dateAdded[not]": ["2020-2-1", "2020-3-1"]}, set()),
+            # # Booleans
+            ({"enjoyable": ["true"]}, {"movie1"}),
+            ({"enjoyable": ["false"]}, set()),
+            ({"enjoyable[isnull]": ["true"]}, {"movie2"}),
+            ({"enjoyable[isnull]": ["false"]}, {"movie1"}),
+            # URLs have string-like comparison operators
+            ({"url[in]": ["foobar,http://example.com/someurl"]}, {"movie2"}),
+            ({"url[like]": ["http:*"]}, {"movie2"}),
+            ({"url[isnull]": ["true"]}, {"movie1"}),
+            # Case insensitive match
+            ({"name": ["movie1"]}, {"movie1"}),
+            ({"name": ["Movie1"]}, {"movie1"}),
+            ({"name[like]": ["movie1"]}, {"movie1"}),
+            ({"name[like]": ["Movie1"]}, {"movie1"}),
+            # Relation fields
+            ({"category.name": ["bar"]}, {"movie1"}),
+        ],
+    )
+    def test_dso_headers(self, movies_model, movie1, movie2, query, expect):
         """Prove that filtering with dso headers work."""
         engine = create_filter_engine(
-            "dateAdded[lt]=2020-3-1T23:00:00",
-            dso_headers=MultiValueDict(
-                {
-                    "name": ["movie1"],
-                }
-            ),
+            "",
+            dso_headers=MultiValueDict(query),
         )
         qs = engine.filter_queryset(movies_model.objects.all())
-        assert {obj.name for obj in qs} == {"movie1"}
+        assert {obj.name for obj in qs} == expect, str(qs.query)
 
     def test_dso_headers_overwrite_query(self, movies_model, movie1, movie2):
         """Prove that filtering with dso headers work."""
@@ -145,44 +180,23 @@ class TestFilterEngine:
             (
                 {
                     "DSO-aantal-bouwlagen": 5,
-                    "DSO-status": "active",
-                    "DSO-aantal-bouwlagen.gt": 2,
-                    "DSO-aantal-bouwlagen.lt": 10,
-                    "DSO-per-jaar-per-m2.isnull": "true",
-                    "DSO-numbers-33-in-the-middle-44.like": "somestring",
+                    "dso-status": "active",
+                    "DSO-aantal-bouwlagen|gt": 2,
+                    "DSO-aantal-bouwlagen|lte": 10,
+                    "DSO-per-jaar-per-m2|isnull": "true",
+                    "DSO-numbers-33-in-the-middle-44|like": "somestring",
+                    "DSO-field.subfield.subfield|eq": "somestring",
                     "other-header": "ignore-me",
                 },
                 {
                     "aantalBouwlagen": [5],
                     "status": ["active"],
                     "aantalBouwlagen[gt]": [2],
-                    "aantalBouwlagen[lt]": [10],
+                    "aantalBouwlagen[lte]": [10],
                     "perJaarPerM2[isnull]": ["true"],
                     "numbers33InTheMiddle44[like]": ["somestring"],
+                    "field.subfield.subfield[eq]": ["somestring"],
                 },
-            ),
-            (
-                {
-                    "dso-aantal-bouwlagen": 5,
-                    "DSO-status": "active",
-                    "DSO-aantal-BOUWLAGEN.gt": 2,
-                    "DSO-Aantal-bouwlagen.lt": 10,
-                    "other-header": "ignore-me",
-                },
-                {
-                    "aantalBouwlagen": [5],
-                    "status": ["active"],
-                    "aantalBouwlagen[gt]": [2],
-                    "aantalBouwlagen[lt]": [10],
-                },
-            ),
-            (
-                {
-                    "aantal-bouwlagen": 5,
-                    "status": "active",
-                    "other-header": "ignore-me",
-                },
-                {},
             ),
         ],
     )
