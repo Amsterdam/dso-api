@@ -524,7 +524,7 @@ rpds-py==0.30.0
     # via
     #   jsonschema
     #   referencing
-ruff==0.15.18
+ruff==0.15.20
     # via -r requirements_dev.in
 shapely==2.1.2
     # via
