@@ -148,7 +148,7 @@ djangorestframework-csv==3.0.2
     # via -r requirements.in
 djangorestframework-gis==1.2.1
     # via -r requirements.in
-drf-spectacular==0.29.0
+drf-spectacular==0.30.0
     # via -r requirements.in
 factory-boy==3.3.3
     # via amsterdam-schema-tools
@@ -264,7 +264,7 @@ mypy-extensions==1.1.0
     # via black
 nodeenv==1.10.0
     # via pre-commit
-numpy==2.5.0
+numpy==2.5.1
     # via
     #   -r requirements.in
     #   shapely
