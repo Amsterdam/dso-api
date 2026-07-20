@@ -389,7 +389,7 @@ pause==0.3
     # via datadiensten-apikeyclient
 pg-grant==0.4.0
     # via amsterdam-schema-tools
-pip-tools==7.5.3
+pip-tools==7.6.0
     # via -r requirements_dev.in
 platformdirs==4.9.6
     # via
@@ -524,7 +524,7 @@ rpds-py==0.30.0
     # via
     #   jsonschema
     #   referencing
-ruff==0.15.21
+ruff==0.15.22
     # via -r requirements_dev.in
 shapely==2.1.2
     # via
