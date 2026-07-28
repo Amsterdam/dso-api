@@ -587,12 +587,7 @@ class DSOSerializer(ExpandableSerializer, serializers.Serializer):
         seen_geometry_fields = []
 
         for field in self._geometry_fields:
-            try:
-                # Resolve dotted sources (e.g. "betreft_bag_pand.geometrie") through DRF.
-                geo_value = get_attribute(instance, field.source_attrs)
-            except (AttributeError, KeyError):
-                # Nullable intermediate relation; treat as no geometry for this item.
-                geo_value = None
+            geo_value = get_attribute(instance, field.source_attrs)
             if geo_value is not None and field.source not in seen_geometry_fields:
                 try:
                     accept_crs.apply_to(geo_value)
@@ -612,12 +607,7 @@ class DSOSerializer(ExpandableSerializer, serializers.Serializer):
     def _get_crs(self, instance) -> CRS | None:
         """Find the used CRS in the geometry field(s)."""
         for field in self._geometry_fields:
-            try:
-                # Resolve dotted sources (e.g. "betreft_bag_pand.geometrie") through DRF.
-                geo_value = get_attribute(instance, field.source_attrs)
-            except (AttributeError, KeyError):
-                # Nullable intermediate relation; treat as no geometry for this item.
-                geo_value = None
+            geo_value = get_attribute(instance, field.source_attrs)
 
             if geo_value is not None:
                 # NOTE: if the same object uses multiple geometries
@@ -732,7 +722,6 @@ class DSOModelSerializer(DSOSerializer, DSOModelSerializerBase):
             else:
                 # M2M relation, include as list (no need to delay this).
                 expanded[embed_match.name] = list(result_set)
-
         return expanded
 
     def _get_prefetched_expand(self, instance, lookup, is_m2m_field):

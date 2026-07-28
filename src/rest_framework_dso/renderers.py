@@ -38,7 +38,6 @@ def get_data_serializer(data) -> Serializer | None:
         if isinstance(serializer, ListSerializer):
             # DSOListSerializer may return a dict, so have a separate check here.
             serializer = serializer.child
-
         return serializer
     else:
         return None
@@ -497,6 +496,8 @@ class GeoJSONRenderer(RendererMixin, renderers.JSONRenderer):
                 yield b",\n"
 
             # Detect the geometry field from the first feature.
+            print("First feature")
+            print(first_feature)
             geometry_field = self._find_geometry_field(first_feature)
 
             # Output all features, with separator in between.
@@ -595,6 +596,8 @@ class GeoJSONRenderer(RendererMixin, renderers.JSONRenderer):
 
     def _find_geometry_field(self, properties: dict):
         """Find the first field which contains the geometry of a feature."""
+        print("Find geometry field:")
+        print(properties.items())
         return next(
             (key for key, value in properties.items() if isinstance(value, GeoJsonDict)),
             None,

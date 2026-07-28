@@ -44,7 +44,11 @@ from schematools.types import DatasetFieldSchema, DatasetTableSchema, Temporal
 
 from dso_api.dynamic_api.constants import DEFAULT
 from dso_api.dynamic_api.utils import get_view_name
-from rest_framework_dso.fields import AbstractEmbeddedField, get_embedded_field_class
+from rest_framework_dso.fields import (
+    AbstractEmbeddedField,
+    DSOGeometryField,
+    get_embedded_field_class,
+)
 from rest_framework_dso.serializers import HALRawIdentifierLinkSerializer
 
 from . import base, fields
@@ -264,6 +268,20 @@ def serializer_factory(
         model.__name__,
         nesting_level,
     )
+
+    # If mainGeometry is a relation, add the geometry field from that relation
+    main_geo = model._table_schema.main_geometry
+    main_geo_field = model._table_schema.get_field_by_id(main_geo) if main_geo else None
+    if main_geo_field is not None and (related_table := main_geo_field.related_table):
+        # DRF source uses model attribute traversal, not database table names.
+        source_field = f"{main_geo_field.python_name}.{related_table.main_geometry}"
+        serializer_part.add_field(
+            name="geometrie",
+            field=DSOGeometryField(
+                source=source_field,
+                read_only=True,
+            ),
+        )
 
     # Parse fields for serializer
     for model_field in model._meta.get_fields():
