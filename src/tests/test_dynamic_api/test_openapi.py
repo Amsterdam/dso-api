@@ -323,10 +323,10 @@ def test_openapi_dataset_v2_endpoint(
 
     # Prove the that OpenAPI view can be found at the endpoint
     url = reverse(
-        "dynamic_api:openapi",
+        "dynamic_api:openapi-version",
         kwargs={"dataset_name": "afvalwegingen", "dataset_version": "v2"},
     )
-    assert url == "/v1/afvalwegingen"
+    assert url == "/v1/afvalwegingen/v2"
 
     response = api_client.get(url)
     assert response.status_code == 200, response.data
@@ -403,10 +403,10 @@ def test_openapi_dataset_v2_endpoint(
     }
 
     url = reverse(
-        "dynamic_api:openapi",
+        "dynamic_api:openapi-version",
         kwargs={"dataset_name": "afvalwegingen", "dataset_version": "v1"},
     )
-    assert url == "/v1/afvalwegingen"
+    assert url == "/v1/afvalwegingen/v1"
 
     response = api_client.get(url)
     assert response.status_code == 200, response.data

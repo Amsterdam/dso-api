@@ -6,6 +6,7 @@ The main logic can be found in :mod:`rest_framework_dso.openapi`.
 import copy
 import logging
 import os
+import re
 from collections.abc import Callable
 from functools import wraps
 from urllib.parse import urljoin
@@ -71,6 +72,7 @@ class OpenAPIBrowserView(APIView):
     description = None
     authorization_grantor = None
     dataset_id = None
+    dataset_version = None
     response_formatter = "openapi_formatter"
 
     def get(self, request, *args, **kwargs):
@@ -154,8 +156,8 @@ class DynamicApiSchemaGenerator(DSOSchemaGenerator):
                     if not relative_path.startswith("/"):
                         relative_path = "/" + relative_path
                     # We don't show paths of different versions
-                    # if not re.match(r"^\/v\d{1,2}\/", relative_path):
-                    modified_paths[relative_path] = path_item
+                    if not re.match(r"^\/v\d{1,2}\/", relative_path):
+                        modified_paths[relative_path] = path_item
             schema["paths"] = modified_paths
         return schema
 
@@ -255,14 +257,22 @@ def get_openapi_view(dataset, version: str | None = None, response_format: str =
         **schema_generator.schema_overrides,
     }
 
+    # dataset_version = dataset_schema.get_version(dataset_schema.default_version)
+    for vmajor, vschema in dataset_schema.versions.items():
+        # Skip versions with API disabled
+        if not vschema.enable_api:
+            continue
+        if vschema.is_default:
+            default_dataset_version = vmajor
+
     # Wrap the view in a "decorator" that shows the Swagger interface for browsers.
-    return _html_on_browser(openapi_view, dataset_schema, response_format)
+    return _html_on_browser(openapi_view, dataset_schema, default_dataset_version, response_format)
 
 
 CACHE_DURATION = 60 * 60 * 24 * 7  # Seconds.
 
 
-def _html_on_browser(openapi_view, dataset_schema, response_format: str = "json"):
+def _html_on_browser(openapi_view, dataset_schema, version: str, response_format: str = "json"):
     """A 'decorator' that shows the browsable interface on browser requests.
     This is a separate function to reduce the closure context data.
     """
@@ -310,6 +320,7 @@ def _html_on_browser(openapi_view, dataset_schema, response_format: str = "json"
                 description=dataset_schema.description or "",
                 authorization_grantor=dataset_schema.data.get("authorizationGrantor", None),
                 dataset_id=dataset_schema.id,
+                dataset_version=version,
             )(request, *args, **kwargs)
 
     return _switching_view
