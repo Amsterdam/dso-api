@@ -172,7 +172,7 @@ def test_api_index_subpath_view(
                         "status": "stabiel",
                         "api_url": f"{BASE}/v1/sub/path/afvalwegingen/v2",
                         "doc_url": f"{BASE}/v1/docs/datasets/sub/path/afvalwegingen@v2.html",
-                        "mvt_url": f"{BASE}/v1/mvt/sub/path/afvalwegingen/v3",
+                        "mvt_url": f"{BASE}/v1/mvt/sub/path/afvalwegingen/v2",
                         "wfs_url": f"{BASE}/v1/wfs/sub/path/afvalwegingen/v2",
                     },
                     {

@@ -257,13 +257,7 @@ def get_openapi_view(dataset, version: str | None = None, response_format: str =
         **schema_generator.schema_overrides,
     }
 
-    # dataset_version = dataset_schema.get_version(dataset_schema.default_version)
-    for vmajor, vschema in dataset_schema.versions.items():
-        # Skip versions with API disabled
-        if not vschema.enable_api:
-            continue
-        if vschema.is_default:
-            default_dataset_version = vmajor
+    default_dataset_version = dataset_schema.default_version
 
     # Wrap the view in a "decorator" that shows the Swagger interface for browsers.
     return _html_on_browser(openapi_view, dataset_schema, default_dataset_version, response_format)
