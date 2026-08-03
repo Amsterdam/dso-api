@@ -4,7 +4,7 @@
 #
 #    pip-compile --output-file=requirements_dev.txt requirements_dev.in
 #
-amsterdam-schema-tools[django]==9.11.1
+amsterdam-schema-tools[django]==9.12.2
     # via -r requirements.in
 annotated-types==0.7.0
     # via pydantic
@@ -232,7 +232,7 @@ mapbox-vector-tile==2.2.0
     # via -r requirements.in
 mappyfile==1.2.0
     # via amsterdam-schema-tools
-markdown==3.10.2
+markdown==3.10.3
     # via -r requirements.in
 markdown-it-py==4.2.0
     # via rich
@@ -524,7 +524,7 @@ rpds-py==0.30.0
     # via
     #   jsonschema
     #   referencing
-ruff==0.16.0
+ruff==0.16.1
     # via -r requirements_dev.in
 shapely==2.1.2
     # via
