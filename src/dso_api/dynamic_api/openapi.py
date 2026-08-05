@@ -172,7 +172,6 @@ def get_openapi_view(dataset, version: str | None = None, response_format: str =
         renderers.JSONOpenAPIRenderer if response_format == "json" else renderers.OpenAPIRenderer
     )
 
-    # for version_name, version_data in dataset_schema["versions"].items():
     # Patterns is a lazy object so it's not evaluated yet while the URLconf is being constructed.
     openapi_view = get_schema_view(
         title=dataset_schema.title or dataset_schema.id,
