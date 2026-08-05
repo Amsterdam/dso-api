@@ -77,3 +77,28 @@ class TestRenderer:
 
         # The first part of the response should be received.
         assert blocks == expected_data
+
+
+@pytest.mark.parametrize(
+    "versioned_url,expect",
+    [
+        (
+            "/v1/afvalwegingen/containers",
+            b'<a href="https://api.data.amsterdam.nl/v1/docs/datasets/afvalwegingen.html#containers">',
+        ),
+        (
+            "/v1/afvalwegingen/v1/containers",
+            b'<a href="https://api.data.amsterdam.nl/v1/docs/datasets/afvalwegingen@v1.html#containers">',
+        ),
+        (
+            "/v1/afvalwegingen/v2/containers",
+            b'<a href="https://api.data.amsterdam.nl/v1/docs/datasets/afvalwegingen@v2.html#containers">',
+        ),
+    ],
+)
+@pytest.mark.django_db
+def test_render_html(api_client, filled_router, afval_dataset, versioned_url, expect):
+    """Prove that the correct versioned urls get rendered."""
+
+    response = api_client.get(versioned_url, HTTP_ACCEPT="text/html")
+    assert expect in response.content

@@ -315,6 +315,182 @@ def test_openapi_dataset(api_client, afval_dataset, fietspaaltjes_dataset, fille
 
 
 @pytest.mark.django_db
+def test_openapi_dataset_v2_endpoint(
+    api_client, afval_dataset, fietspaaltjes_dataset, filled_router, caplog
+):
+    """Prove that the OpenAPI page is rendering the correct parameters for the given version."""
+    caplog.set_level(logging.WARNING)
+
+    # Prove the that OpenAPI view can be found at the endpoint
+    url = reverse(
+        "dynamic_api:openapi-version",
+        kwargs={"dataset_name": "afvalwegingen", "dataset_version": "v2"},
+    )
+    assert url == "/v1/afvalwegingen/v2"
+
+    response = api_client.get(url)
+    assert response.status_code == 200, response.data
+    assert response["content-type"] == "application/vnd.oai.openapi+json"
+    schema = response.data
+
+    # Prove that the main info block is correctly rendered
+    assert schema["info"] == {
+        "title": "Afvalwegingen",
+        "version": "2.0.0",
+        "description": "unit testing version of afvalwegingen",
+        "termsOfService": "https://data.amsterdam.nl/",
+        "contact": {"email": "datapunt@amsterdam.nl"},
+        "license": {"name": "CC0 1.0"},
+    }
+
+    # Prove that various filters are properly exposed.
+    afval_v2_parameters = {
+        param["name"]: param for param in schema["paths"]["/containers"]["get"]["parameters"]
+    }
+    assert set(afval_v2_parameters) == {
+        "Accept-Crs",
+        "Content-Crs",
+        "X-Api-Key",
+        "_count",
+        "_expand",
+        "_expandScope",
+        "_fields",
+        "_format",
+        "_pageSize",
+        "_sort",
+        "_csv_header",
+        "_csv_separator",
+        "cluster.id",
+        "cluster.id[in]",
+        "cluster.id[isempty]",
+        "cluster.id[isnull]",
+        "cluster.id[like]",
+        "cluster.id[not]",
+        "datumCreatie",
+        "datumCreatie[gt]",
+        "datumCreatie[gte]",
+        "datumCreatie[in]",
+        "datumCreatie[isnull]",
+        "datumCreatie[lt]",
+        "datumCreatie[lte]",
+        "datumCreatie[not]",
+        "eigenaar",
+        "eigenaar[in]",
+        "eigenaar[isempty]",
+        "eigenaar[isnull]",
+        "eigenaar[like]",
+        "eigenaar[not]",
+        "geometry",
+        "geometry[not]",
+        "geometry[isnull]",
+        "geometry[intersects]",
+        "geometry[within]",
+        "id",
+        "id[gt]",
+        "id[gte]",
+        "id[in]",
+        "id[isnull]",
+        "id[lt]",
+        "id[lte]",
+        "id[not]",
+        "page",
+        "serienummer",
+        "serienummer[in]",
+        "serienummer[isempty]",
+        "serienummer[isnull]",
+        "serienummer[like]",
+        "serienummer[not]",
+    }
+
+    url = reverse(
+        "dynamic_api:openapi-version",
+        kwargs={"dataset_name": "afvalwegingen", "dataset_version": "v1"},
+    )
+    assert url == "/v1/afvalwegingen/v1"
+
+    response = api_client.get(url)
+    assert response.status_code == 200, response.data
+    assert response["content-type"] == "application/vnd.oai.openapi+json"
+    schema = response.data
+
+    # Prove that the main info block is correctly rendered
+    assert schema["info"] == {
+        "title": "Afvalwegingen",
+        "version": "0.0.1",
+        "description": "unit testing version of afvalwegingen",
+        "termsOfService": "https://data.amsterdam.nl/",
+        "contact": {"email": "datapunt@amsterdam.nl"},
+        "license": {"name": "CC0 1.0"},
+    }
+
+    afval_v1_parameters = {
+        param["name"]: param for param in schema["paths"]["/containers"]["get"]["parameters"]
+    }
+    assert set(afval_v1_parameters) == {
+        "Accept-Crs",
+        "Content-Crs",
+        "X-Api-Key",
+        "_count",
+        "_expand",
+        "_expandScope",
+        "_fields",
+        "_format",
+        "_pageSize",
+        "_sort",
+        "_csv_header",
+        "_csv_separator",
+        "cluster.id",
+        "cluster.id[in]",
+        "cluster.id[isempty]",
+        "cluster.id[isnull]",
+        "cluster.id[like]",
+        "cluster.id[not]",
+        "datumCreatie",
+        "datumCreatie[gt]",
+        "datumCreatie[gte]",
+        "datumCreatie[in]",
+        "datumCreatie[isnull]",
+        "datumCreatie[lt]",
+        "datumCreatie[lte]",
+        "datumCreatie[not]",
+        "datumLeegmaken",
+        "datumLeegmaken[gt]",
+        "datumLeegmaken[gte]",
+        "datumLeegmaken[in]",
+        "datumLeegmaken[isnull]",
+        "datumLeegmaken[lt]",
+        "datumLeegmaken[lte]",
+        "datumLeegmaken[not]",
+        "eigenaarNaam",
+        "eigenaarNaam[in]",
+        "eigenaarNaam[isempty]",
+        "eigenaarNaam[isnull]",
+        "eigenaarNaam[like]",
+        "eigenaarNaam[not]",
+        "geometry",
+        "geometry[not]",
+        "geometry[isnull]",
+        "geometry[intersects]",
+        "geometry[within]",
+        "id",
+        "id[gt]",
+        "id[gte]",
+        "id[in]",
+        "id[isnull]",
+        "id[lt]",
+        "id[lte]",
+        "id[not]",
+        "page",
+        "serienummer",
+        "serienummer[in]",
+        "serienummer[isempty]",
+        "serienummer[isnull]",
+        "serienummer[like]",
+        "serienummer[not]",
+    }
+
+
+@pytest.mark.django_db
 def test_openapi_json_subresources(api_client, gebieden_subresources_dataset, filled_router):
     """Assert that nested paths are in the openapi json."""
     url = reverse(

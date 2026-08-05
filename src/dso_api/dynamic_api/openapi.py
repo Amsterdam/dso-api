@@ -72,6 +72,7 @@ class OpenAPIBrowserView(APIView):
     description = None
     authorization_grantor = None
     dataset_id = None
+    dataset_version = None
     response_formatter = "openapi_formatter"
 
     def get(self, request, *args, **kwargs):
@@ -255,14 +256,16 @@ def get_openapi_view(dataset, version: str | None = None, response_format: str =
         **schema_generator.schema_overrides,
     }
 
+    default_dataset_version = dataset_schema.default_version
+
     # Wrap the view in a "decorator" that shows the Swagger interface for browsers.
-    return _html_on_browser(openapi_view, dataset_schema, response_format)
+    return _html_on_browser(openapi_view, dataset_schema, default_dataset_version, response_format)
 
 
 CACHE_DURATION = 60 * 60 * 24 * 7  # Seconds.
 
 
-def _html_on_browser(openapi_view, dataset_schema, response_format: str = "json"):
+def _html_on_browser(openapi_view, dataset_schema, version: str, response_format: str = "json"):
     """A 'decorator' that shows the browsable interface on browser requests.
     This is a separate function to reduce the closure context data.
     """
@@ -310,6 +313,7 @@ def _html_on_browser(openapi_view, dataset_schema, response_format: str = "json"
                 description=dataset_schema.description or "",
                 authorization_grantor=dataset_schema.data.get("authorizationGrantor", None),
                 dataset_id=dataset_schema.id,
+                dataset_version=version,
             )(request, *args, **kwargs)
 
     return _switching_view

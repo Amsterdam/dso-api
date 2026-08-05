@@ -45,6 +45,8 @@ class DynamicApiViewSet(NestedViewSetMixin, DSOViewMixin, viewsets.ReadOnlyModel
 
     #: The dataset ID is filled in by the factory
     dataset_id = None
+
+    dataset_version = None
     #: The table ID is filled in by the factory
     table_id = None
     #: The model is filled in by the factory
@@ -236,6 +238,7 @@ def viewset_factory(model: type[DynamicModel], version: str) -> type[DynamicApiV
         "queryset": model.objects.all(),  # also for OpenAPI schema parsing.
         "serializer_class": serializer_class,
         "dataset_id": model._dataset_schema["id"],
+        "dataset_version": version,
         "table_id": model.table_schema()["id"],
         "authorization_grantor": model.get_dataset_schema().get("authorizationGrantor"),
     }
