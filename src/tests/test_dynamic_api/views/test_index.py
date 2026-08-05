@@ -126,22 +126,15 @@ def test_api_index_view_disable_api(
 
 
 @pytest.mark.django_db
-def test_api_index_subpath_view(
+def test_api_index_subdata_view(
     api_client, afval_dataset_subpath, fietspaaltjes_dataset_subpath, filled_router, drf_request
 ):
-    """Prove that the API sub index can be rendered.
-    And only the datasets on the sub path are shown.
-    """
+    """Prove that the API sub index can be rendered."""
     url_sub = reverse("dynamic_api:sub-index")
-    url_subpath = reverse("dynamic_api:sub/path-index")
     assert url_sub == "/v1/sub"
-    assert url_subpath == "/v1/sub/path"
 
     response_sub = api_client.get(url_sub)
     assert response_sub.status_code == 200, response_sub.data
-
-    response_subpath = api_client.get(url_subpath)
-    assert response_subpath.status_code == 200, response_subpath.data
 
     # Prove that response contains the correct data with both datasets
     BASE = drf_request.build_absolute_uri("/").rstrip("/")
@@ -230,7 +223,18 @@ def test_api_index_subpath_view(
         }
     }
 
+
+@pytest.mark.django_db
+def test_api_index_subpath_view(api_client, afval_dataset_subpath, filled_router, drf_request):
+    """Prove that only the datasets on the sub path are shown."""
+    url_subpath = reverse("dynamic_api:sub/path-index")
+    assert url_subpath == "/v1/sub/path"
+
+    response_subpath = api_client.get(url_subpath)
+    assert response_subpath.status_code == 200, response_subpath.data
+
     # Assert only afvalwegingen is shown on its path
+    BASE = drf_request.build_absolute_uri("/").rstrip("/")
     assert response_subpath.data == {
         "datasets": {
             "afvalwegingen": {
@@ -252,6 +256,14 @@ def test_api_index_subpath_view(
                         "doc_url": f"{BASE}/v1/docs/datasets/sub/path/afvalwegingen@v1.html",
                         "mvt_url": f"{BASE}/v1/mvt/sub/path/afvalwegingen/v1",
                         "wfs_url": f"{BASE}/v1/wfs/sub/path/afvalwegingen/v1",
+                    },
+                    {
+                        "header": "Versie v2",
+                        "status": "stabiel",
+                        "api_url": f"{BASE}/v1/sub/path/afvalwegingen/v2",
+                        "doc_url": f"{BASE}/v1/docs/datasets/sub/path/afvalwegingen@v2.html",
+                        "mvt_url": f"{BASE}/v1/mvt/sub/path/afvalwegingen/v2",
+                        "wfs_url": f"{BASE}/v1/wfs/sub/path/afvalwegingen/v2",
                     },
                     {
                         "header": "Ongeversioneerde versie (v1)",
