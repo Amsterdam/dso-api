@@ -218,7 +218,6 @@ class DSOSchemaGenerator(generators.SchemaGenerator):
         # Fix missing 'fields' that drf-spectacular doesn't read from self,
         # it only reads the 'SPECTACULAR_SETTINGS' for this.
         if self.version is not None:
-            # dit doet niks aan de path
             schema["info"]["version"] = self.version
         if self.title is not None:
             schema["info"]["title"] = self.title
