@@ -74,6 +74,47 @@
           "status": "stable"
         },
         {
+          "id": "monumenten_relatie",
+          "type": "table",
+          "auth": "OPENBAAR",
+          "version": "1.0.0",
+          "description": "Monument fixture with mainGeometry relation to BAG panden",
+          "schema": {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "type": "object",
+            "additionalProperties": false,
+            "mainGeometry": "betreftBagPand",
+            "identifier": [
+              "identificatie"
+            ],
+            "required": [
+              "schema",
+              "identificatie"
+            ],
+            "display": "identificatie",
+            "properties": {
+              "schema": {
+                "$ref": "https://schemas.data.amsterdam.nl/schema@v3.1.0#/definitions/schema"
+              },
+              "identificatie": {
+                "type": "string",
+                "description": "unieke identificatie van het object"
+              },
+              "betreftBagPand": {
+                "type": "object",
+                "properties": {
+                  "identificatie": {
+                    "type": "string"
+                  }
+                },
+                "relation": "bag:panden",
+                "description": "Verwijzing naar BAG pand; geometrie is de hoofdgeometrie."
+              }
+            }
+          },
+          "status": "stable"
+        },
+        {
           "id": "complexen",
           "type": "table",
           "auth": "OPENBAAR",

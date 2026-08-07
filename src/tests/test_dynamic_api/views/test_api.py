@@ -244,3 +244,27 @@ def test_nested_object_field_response(
     assert data["_embedded"]["panden"][0]["statusCode"] == 7
     assert data["_embedded"]["panden"][0]["statusOmschrijving"] == "Sloopvergunning verleend"
     assert data["_embedded"]["panden"][0]["bagProces"] == {"code": 1}
+
+
+@pytest.mark.django_db
+def test_main_geometry_relation(
+    api_client,
+    monumenten_dataset,
+    monumenten_relatie_data,
+    filled_router,
+):
+    """Prove related main geometry is serialized without deferred-field access warnings."""
+    url = reverse("dynamic_api:monumenten-monumenten_relatie-list")
+
+    response = api_client.get(url, data={"_fields": "identificatie,geometrie"})
+
+    data = read_response_json(response)
+    print(data)
+
+    """
+    assert response.status_code == 200, data
+
+    monument = data["_embedded"]["monumenten_relatie"][0]
+    assert monument["identificatie"] == "MONREL-1"
+    assert monument["geometrie"]["type"] == "Point"
+    """

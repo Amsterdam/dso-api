@@ -195,6 +195,14 @@ class DynamicListSerializer(DSOModelListSerializer):
         """Tell which fields the prefetch query should retrieve."""
         if isinstance(field, serializers.BaseSerializer):
             only_fields = get_serializer_source_fields(field)
+
+            # If the table's main geometry points to a related object,
+            # make sure that related geometry field is selected too.
+            # Otherwise, accessing it during serialization triggers deferred loads.
+            main_geo_field_name = self._get_main_geometry_related_field_name(model_field)
+            if main_geo_field_name is not None and main_geo_field_name not in only_fields:
+                only_fields.append(main_geo_field_name)
+
             if isinstance(model_field, models.ManyToOneRel):  # A reverse FK (ManyToOneRel)
                 # For reverse relations, the reverse foreign key needs to be provided too.
                 # Otherwise, our call to prefetch_related_objects() fails on deferred attributes.
@@ -202,6 +210,30 @@ class DynamicListSerializer(DSOModelListSerializer):
             return only_fields
         else:
             raise NotImplementedError(f"Can't determine reduced fields subset yet for: {field}")
+
+    def _get_main_geometry_related_field_name(
+        self, model_field: RelatedField | ForeignObjectRel
+    ) -> str | None:
+        """Return the related table's main geometry field name for prefetch .only()."""
+        table_schema = self.child.Meta.model.table_schema()
+        main_geometry = table_schema.main_geometry
+        if not main_geometry:
+            return None
+
+        main_geo_field_schema = table_schema.get_field_by_id(main_geometry)
+        if main_geo_field_schema.related_table is None:
+            return None
+
+        # Only apply this extra field to the main-geometry relation lookup.
+        if main_geo_field_schema.python_name != model_field.name:
+            return None
+
+        related_main_geo_field = main_geo_field_schema.related_table.main_geometry_field
+        if related_main_geo_field is None:
+            return None
+
+        # `.only()` expects ORM/model field names, not serializer source paths.
+        return related_main_geo_field.db_name
 
     @cached_property
     def expanded_fields(self) -> list[EmbeddedFieldMatch]:

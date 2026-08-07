@@ -1607,3 +1607,23 @@ def monumenten_dataset(monumenten_schema) -> Dataset:
 @pytest.fixture()
 def monumenten_models(monumenten_dataset, dynamic_models):
     return dynamic_models["monumenten"]
+
+
+@pytest.fixture()
+def monumenten_relatie_model(monumenten_dataset, bag_dataset, dynamic_models):
+    return dynamic_models["monumenten"]["monumenten_relatie"]
+
+
+@pytest.fixture()
+def monumenten_relatie_data(monumenten_relatie_model, panden_model):
+    pand = panden_model.objects.create(
+        id="0363100099999999.1",
+        identificatie="0363100099999999",
+        volgnummer=1,
+        begin_geldigheid=DATE_2021_FEB,
+        geometrie=DAM_SQUARE_POINT,
+    )
+    return monumenten_relatie_model.objects.create(
+        identificatie="MONREL-1",
+        betreft_bag_pand=pand,
+    )
