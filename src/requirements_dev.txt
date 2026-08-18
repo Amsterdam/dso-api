@@ -4,7 +4,7 @@
 #
 #    pip-compile --output-file=requirements_dev.txt requirements_dev.in
 #
-amsterdam-schema-tools[django]==9.12.4
+amsterdam-schema-tools[django]==9.12.6
     # via -r requirements.in
 annotated-types==0.7.0
     # via pydantic
@@ -120,7 +120,7 @@ django-cors-headers==4.9.0
     # via -r requirements.in
 django-coverage-plugin==3.2.2
     # via -r requirements.in
-django-debug-toolbar==7.0.0
+django-debug-toolbar==7.1.1
     # via -r requirements_dev.in
 django-environ==0.14.0
     # via
@@ -265,7 +265,7 @@ mypy-extensions==1.1.0
     # via black
 nodeenv==1.10.0
     # via pre-commit
-numpy==2.5.1
+numpy==2.5.2
     # via
     #   -r requirements.in
     #   shapely
@@ -390,7 +390,7 @@ pause==0.3
     # via datadiensten-apikeyclient
 pg-grant==0.4.0
     # via amsterdam-schema-tools
-pip-tools==7.6.0
+pip-tools==7.6.1
     # via -r requirements_dev.in
 platformdirs==4.9.6
     # via
@@ -403,7 +403,7 @@ pluggy==1.6.0
     #   pytest-cov
 ply==3.11
     # via jsonpath-rw
-pre-commit==4.6.1
+pre-commit==4.6.2
     # via -r requirements_dev.in
 protobuf==6.33.6
     # via mapbox-vector-tile
@@ -462,7 +462,7 @@ pytest==9.1.1
     #   pytest-sugar
 pytest-cov==7.1.0
     # via -r requirements.in
-pytest-django==4.13.0
+pytest-django==4.14.0
     # via -r requirements.in
 pytest-sugar==1.1.1
     # via -r requirements_dev.in
@@ -525,7 +525,7 @@ rpds-py==0.30.0
     # via
     #   jsonschema
     #   referencing
-ruff==0.16.2
+ruff==0.16.3
     # via -r requirements_dev.in
 shapely==2.1.2
     # via
