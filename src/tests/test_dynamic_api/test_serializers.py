@@ -957,6 +957,7 @@ class TestDynamicSerializer:
             "identificatie": "AB.CD",
             "ligtInMonumentenComplexId": "AB",
             "monumentnummer": 1,
+            "geometrie": None,
         }
 
     @staticmethod
@@ -1037,6 +1038,7 @@ class TestDynamicSerializer:
             "identificatie": "AB.CD",
             "ligtInMonumentenComplexId": "AB",
             "monumentnummer": 1,
+            "geometrie": None,
         }
 
     @staticmethod
@@ -1115,6 +1117,7 @@ class TestDynamicSerializer:
             "identificatie": "AB.CD",
             "ligtInMonumentenComplexId": "AB",
             "monumentnummer": 1,
+            "geometrie": None,
         }
 
     @staticmethod
