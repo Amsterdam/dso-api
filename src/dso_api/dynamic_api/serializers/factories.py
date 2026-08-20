@@ -40,7 +40,12 @@ from schematools.contrib.django.models import (
 )
 from schematools.contrib.django.signals import dynamic_models_removed
 from schematools.naming import to_snake_case, toCamelCase
-from schematools.types import DatasetFieldSchema, DatasetTableSchema, Temporal
+from schematools.types import (
+    DatasetFieldNotFound,
+    DatasetFieldSchema,
+    DatasetTableSchema,
+    Temporal,
+)
 
 from dso_api.dynamic_api.constants import DEFAULT
 from dso_api.dynamic_api.utils import get_view_name
@@ -272,19 +277,22 @@ def serializer_factory(
     # If mainGeometry exists and points to a relation, expose that related geometry as
     # a top-level "geometrie" field.
     if model._table_schema.has_main_geometry:
-        print(model._table_schema.has_main_geometry)
-        if model._table_schema.main_geometry_field.related_table:
-            source_field = _get_related_main_geometry_source(model._table_schema)
-            if source_field is not None:
-                serializer_part.add_field(
-                    name="geometrie",
-                    field=DSOGeometryField(
-                        source=source_field,
-                        read_only=True,
-                        allow_null=True,
-                        default=None,
-                    ),
-                )
+        try:
+            main_geo_field = model._table_schema.main_geometry_field
+            if main_geo_field.related_table:
+                source_field = _get_related_main_geometry_source(model._table_schema)
+                if source_field is not None:
+                    serializer_part.add_field(
+                        name="geometrie",
+                        field=DSOGeometryField(
+                            source=source_field,
+                            read_only=True,
+                            allow_null=True,
+                            default=None,
+                        ),
+                    )
+        except DatasetFieldNotFound:
+            pass
 
     # Parse fields for serializer
     for model_field in model._meta.get_fields():
