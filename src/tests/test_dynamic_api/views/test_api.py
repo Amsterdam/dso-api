@@ -244,3 +244,54 @@ def test_nested_object_field_response(
     assert data["_embedded"]["panden"][0]["statusCode"] == 7
     assert data["_embedded"]["panden"][0]["statusOmschrijving"] == "Sloopvergunning verleend"
     assert data["_embedded"]["panden"][0]["bagProces"] == {"code": 1}
+
+
+@pytest.mark.django_db
+def test_main_geometry_relation(
+    api_client,
+    monumenten_dataset,
+    monumenten_relatie_data,
+    bag_dataset,
+    filled_router,
+):
+    """Prove related main geometry is serialized without deferred-field access warnings."""
+    url = reverse("dynamic_api:monumenten-monumenten_relatie-list")
+
+    response = api_client.get(url)
+
+    data = read_response_json(response)
+    monument = data["_embedded"]["monumenten_relatie"][0]
+    assert "geometrie" in monument
+
+    # Prove that monument geometry is same value as related bag:pand object geometry
+    pand_id = monument["betreftBagPandId"]
+    url = reverse("dynamic_api:bag-panden-detail", kwargs={"pk": pand_id})
+    response = api_client.get(url)
+    pand = read_response_json(response)
+    assert monument["geometrie"] == pand["geometrie"]
+
+
+@pytest.mark.django_db
+def test_main_geometry_relation_without_related_object(
+    api_client,
+    monumenten_dataset,
+    monumenten_relatie_model,
+    filled_router,
+):
+    """Prove synthetic relation-based geometry is present as null when relation is empty."""
+    monumenten_relatie_model.objects.create(
+        identificatie="MONREL-NO-PAND",
+        betreft_bag_pand=None,
+    )
+
+    url = reverse("dynamic_api:monumenten-monumenten_relatie-list")
+    response = api_client.get(url)
+    data = read_response_json(response)
+
+    monument = next(
+        item
+        for item in data["_embedded"]["monumenten_relatie"]
+        if item["identificatie"] == "MONREL-NO-PAND"
+    )
+    assert "geometrie" in monument
+    assert monument["geometrie"] is None
