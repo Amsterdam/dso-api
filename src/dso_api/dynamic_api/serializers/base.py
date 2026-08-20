@@ -39,6 +39,7 @@ from rest_framework.fields import SkipField
 from rest_framework.relations import PKOnlyObject
 from rest_framework.utils.model_meta import RelationInfo
 from schematools.contrib.django.models import (
+    DatasetFieldNotFound,
     DynamicModel,
     LooseRelationField,
     LooseRelationManyToManyField,
@@ -197,16 +198,20 @@ class DynamicListSerializer(DSOModelListSerializer):
             only_fields = get_serializer_source_fields(field)
 
             parent_model = self.child.Meta.model
-            if (
-                parent_model._table_schema.has_main_geometry
-                and parent_model._table_schema.main_geometry_field.related_table
-            ):
-                # If this relation field is the table's related mainGeometry source,
-                # make sure that related geometry field is selected too.
-                # Otherwise, accessing it during serialization triggers deferred loads.
-                main_geo_related_db_name = self._get_main_geometry_related_db_name(model_field)
-                if main_geo_related_db_name is not None:
-                    only_fields.append(main_geo_related_db_name)
+            if parent_model._table_schema.has_main_geometry:
+                try:
+                    main_geo_field = parent_model._table_schema.main_geometry_field
+                    if main_geo_field.related_table:
+                        # If this relation field is the table's related mainGeometry source,
+                        # make sure that related geometry field is selected too.
+                        # Otherwise, accessing it during serialization triggers deferred loads.
+                        main_geo_related_db_name = self._get_main_geometry_related_db_name(
+                            model_field
+                        )
+                        if main_geo_related_db_name is not None:
+                            only_fields.append(main_geo_related_db_name)
+                except DatasetFieldNotFound:
+                    pass
 
             if isinstance(model_field, models.ManyToOneRel):  # A reverse FK (ManyToOneRel)
                 # For reverse relations, the reverse foreign key needs to be provided too.
