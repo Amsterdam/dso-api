@@ -30,7 +30,7 @@ from django.db import models
 from django.utils.functional import cached_property
 from rest_framework import serializers
 from rest_framework.exceptions import ParseError
-from rest_framework.fields import URLField, empty
+from rest_framework.fields import URLField, empty, get_attribute
 from rest_framework.serializers import BaseSerializer
 from rest_framework.utils.serializer_helpers import ReturnDict, ReturnList
 from rest_framework_gis.fields import GeometryField
@@ -581,15 +581,18 @@ class DSOSerializer(ExpandableSerializer, serializers.Serializer):
 
     def _apply_crs(self, instance, accept_crs: CRS):
         """Make sure all geofields use the same CRS."""
-        is_dict = isinstance(instance, dict)
-
         # There are several datasets for which the shortnames are exposed. These have
         # multiple fields pointing to the same geometry value, but need to be transformed
         # only once. See dynamic_api/serializers/factories.py:EXPOSED_SHORTNAMES.
         seen_geometry_fields = []
 
         for field in self._geometry_fields:
-            geo_value = instance[field.source] if is_dict else getattr(instance, field.source)
+            try:
+                # Resolve dotted sources (e.g. "betreft_bag_pand.geometrie") through DRF.
+                geo_value = get_attribute(instance, field.source_attrs)
+            except (AttributeError, KeyError):
+                # Nullable intermediate relation; treat as no geometry for this item.
+                geo_value = None
             if geo_value is not None and field.source not in seen_geometry_fields:
                 try:
                     accept_crs.apply_to(geo_value)
@@ -609,13 +612,12 @@ class DSOSerializer(ExpandableSerializer, serializers.Serializer):
     def _get_crs(self, instance) -> CRS | None:
         """Find the used CRS in the geometry field(s)."""
         for field in self._geometry_fields:
-            if isinstance(instance, dict):
-                # non-model Serializer
-                geo_value = instance.get(field.source)
-            else:
-                # ModelSerializer
-                geo_value = getattr(instance, field.source)
-
+            try:
+                # Resolve dotted sources (e.g. "betreft_bag_pand.geometrie") through DRF.
+                geo_value = get_attribute(instance, field.source_attrs)
+            except (AttributeError, KeyError):
+                # Nullable intermediate relation; treat as no geometry for this item.
+                geo_value = None
             if geo_value is not None:
                 # NOTE: if the same object uses multiple geometries
                 # with a different SRID's, this ignores such case.
