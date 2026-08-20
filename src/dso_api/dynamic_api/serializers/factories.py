@@ -44,7 +44,11 @@ from schematools.types import DatasetFieldSchema, DatasetTableSchema, Temporal
 
 from dso_api.dynamic_api.constants import DEFAULT
 from dso_api.dynamic_api.utils import get_view_name
-from rest_framework_dso.fields import AbstractEmbeddedField, get_embedded_field_class
+from rest_framework_dso.fields import (
+    AbstractEmbeddedField,
+    DSOGeometryField,
+    get_embedded_field_class,
+)
 from rest_framework_dso.serializers import HALRawIdentifierLinkSerializer
 
 from . import base, fields
@@ -265,6 +269,23 @@ def serializer_factory(
         nesting_level,
     )
 
+    # If mainGeometry exists and points to a relation, expose that related geometry as
+    # a top-level "geometrie" field.
+    if model._table_schema.has_main_geometry:
+        print(model._table_schema.has_main_geometry)
+        if model._table_schema.main_geometry_field.related_table:
+            source_field = _get_related_main_geometry_source(model._table_schema)
+            if source_field is not None:
+                serializer_part.add_field(
+                    name="geometrie",
+                    field=DSOGeometryField(
+                        source=source_field,
+                        read_only=True,
+                        allow_null=True,
+                        default=None,
+                    ),
+                )
+
     # Parse fields for serializer
     for model_field in model._meta.get_fields():
         if model_field.auto_created and isinstance(model_field, AutoFieldMixin):
@@ -296,6 +317,31 @@ def serializer_factory(
 
     # Generate Meta section and serializer class
     return serializer_part.construct_class(serializer_name, base_class=base.DynamicBodySerializer)
+
+
+def _get_related_main_geometry_source(table_schema: DatasetTableSchema) -> str | None:
+    """Return serializer source for related-table main geometry.
+
+    This is only available when the current table's mainGeometry points to a relation,
+    and the related table also defines a main geometry.
+    """
+    if not table_schema.has_main_geometry:
+        return None
+
+    main_geometry_field = table_schema.main_geometry_field
+    if main_geometry_field is None:
+        return None
+
+    related_table = main_geometry_field.related_table
+    if related_table is None:
+        return None
+
+    related_main_geometry = related_table.main_geometry_field
+    if related_main_geometry is None:
+        return None
+
+    # DRF source uses model attribute traversal, not database column names.
+    return f"{main_geometry_field.python_name}.{related_main_geometry.python_name}"
 
 
 def _validate_model(model: type[DynamicModel]):
