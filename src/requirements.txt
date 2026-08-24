@@ -593,9 +593,9 @@ datadiensten-apikeyclient==0.7.6 \
     --hash=sha256:aa17c6dbefe8f9a7df0a392ae343b3a3359e6b1c6bd838e9f34ad416fee202b1 \
     --hash=sha256:ff3ac2a545637d49f633b0673312f01f00a894901d271a0651488a5a690abb15
     # via -r requirements.in
-datapunt-authorization-django==2.1.1 \
-    --hash=sha256:bbff71142369fa9b001335453b26c438ab287f092c740d698163c27aa6bf9f2d \
-    --hash=sha256:e41a29befd821a04bd18f85ae5037663eb53f69e92e78f29aa889d4377b167ba
+datapunt-authorization-django==2.2.0 \
+    --hash=sha256:28eedf126a92d6dd57f8633baaa3a08c5f8de8a10dc1fc24878a2ec4a44ee75b \
+    --hash=sha256:df18726514f6fc17005c303c76152e017e1812595ec0a937c9145ee99080fe9f
     # via -r requirements.in
 decorator==5.2.1 \
     --hash=sha256:65f266143752f734b0a7cc83c46f4618af75b8c5911b00ccb61d0ac9b6da0360 \
@@ -1684,9 +1684,9 @@ pyflakes==3.4.0 \
     --hash=sha256:b24f96fafb7d2ab0ec5075b7350b3d2d2218eab42003821c06344973d3ea2f58 \
     --hash=sha256:f742a7dbd0d9cb9ea41e9a24a918996e8170c799fa528688d40dd582c8265f4f
     # via flake8
-pygments==2.20.0 \
-    --hash=sha256:6757cd03768053ff99f3039c1a36d6c0aa0b263438fcab17520b30a303a82b5f \
-    --hash=sha256:81a9e26dd42fd28a23a2d169d86d7ac03b46e2f8b59ed4698fb4785f946d0176
+pygments==2.21.0 \
+    --hash=sha256:2363c69b61c4a97c838da3b130dcd6468f4848992b21a82f2a63ec34377137d9 \
+    --hash=sha256:610ca751c9bc2492b38eb9a38a7fbc93edbbb2d7182edaf34e66ae493dee5c8c
     # via
     #   -r requirements.in
     #   pytest
@@ -1786,9 +1786,9 @@ python-dotenv==1.2.2 \
     --hash=sha256:1d8214789a24de455a8b8bd8ae6fe3c6b69a5e3d64aa8a8e5d68e694bbcb285a \
     --hash=sha256:2c371a91fbd7ba082c2c1dc1f8bf89ca22564a087c2c287cd9b662adde799cf3
     # via pydantic-settings
-python-json-logger==4.1.0 \
-    --hash=sha256:132994765cf75bf44554be9aa49b06ef2345d23661a96720262716438141b6b2 \
-    --hash=sha256:b396b9e3ed782b09ff9d6e4f1683d46c83ad0d35d2e407c09a9ebbf038f88195
+python-json-logger==4.2.0 \
+    --hash=sha256:158a52126fcd6869e09574d2b66272666f3dc8f468c62637ef9a1fa883719cb9 \
+    --hash=sha256:e371ebe22ec01e289850102091a2b1f6fc9e655c7f1f5f29073936756c290afa
     # via -r requirements.in
 python-owasp-zap-v2-4==0.1.0 \
     --hash=sha256:2af4252320b3b77a38712081422688e676e038306cf1f2792feed811235afa8b \
