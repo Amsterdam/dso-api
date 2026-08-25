@@ -88,7 +88,7 @@ cryptography==50.0.0
     #   pyjwt
 datadiensten-apikeyclient==0.7.6
     # via -r requirements.in
-datapunt-authorization-django==2.1.1
+datapunt-authorization-django==2.2.0
     # via -r requirements.in
 debugpy==1.8.21
     # via -r requirements_dev.in
@@ -436,7 +436,7 @@ pydantic-settings==2.14.2
     #   openapi-spec-validator
 pyflakes==3.4.0
     # via flake8
-pygments==2.20.0
+pygments==2.21.0
     # via
     #   -r requirements.in
     #   pytest
@@ -474,7 +474,7 @@ python-discovery==1.3.0
     # via virtualenv
 python-dotenv==1.2.2
     # via pydantic-settings
-python-json-logger==4.1.0
+python-json-logger==4.2.0
     # via -r requirements.in
 python-owasp-zap-v2-4==0.1.0
     # via -r requirements.in
@@ -525,7 +525,7 @@ rpds-py==0.30.0
     # via
     #   jsonschema
     #   referencing
-ruff==0.16.3
+ruff==0.16.4
     # via -r requirements_dev.in
 shapely==2.1.2
     # via
