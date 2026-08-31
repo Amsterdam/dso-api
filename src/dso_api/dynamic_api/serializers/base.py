@@ -39,6 +39,7 @@ from rest_framework.fields import SkipField
 from rest_framework.relations import PKOnlyObject
 from rest_framework.utils.model_meta import RelationInfo
 from schematools.contrib.django.models import (
+    DatasetFieldNotFound,
     DynamicModel,
     LooseRelationField,
     LooseRelationManyToManyField,
@@ -195,6 +196,23 @@ class DynamicListSerializer(DSOModelListSerializer):
         """Tell which fields the prefetch query should retrieve."""
         if isinstance(field, serializers.BaseSerializer):
             only_fields = get_serializer_source_fields(field)
+
+            parent_model = self.child.Meta.model
+            if parent_model._table_schema.has_main_geometry:
+                try:
+                    main_geo_field = parent_model._table_schema.main_geometry_field
+                    if main_geo_field.related_table:
+                        # If this relation field is the table's related mainGeometry source,
+                        # make sure that related geometry field is selected too.
+                        # Otherwise, accessing it during serialization triggers deferred loads.
+                        main_geo_related_db_name = self._get_main_geometry_related_db_name(
+                            model_field
+                        )
+                        if main_geo_related_db_name is not None:
+                            only_fields.append(main_geo_related_db_name)
+                except DatasetFieldNotFound:
+                    pass
+
             if isinstance(model_field, models.ManyToOneRel):  # A reverse FK (ManyToOneRel)
                 # For reverse relations, the reverse foreign key needs to be provided too.
                 # Otherwise, our call to prefetch_related_objects() fails on deferred attributes.
@@ -202,6 +220,28 @@ class DynamicListSerializer(DSOModelListSerializer):
             return only_fields
         else:
             raise NotImplementedError(f"Can't determine reduced fields subset yet for: {field}")
+
+    def _get_main_geometry_related_db_name(
+        self, model_field: RelatedField | ForeignObjectRel
+    ) -> str | None:
+        """Return the related model field name to include for mainGeometry relation prefetch."""
+        table_schema = self.child.Meta.model.table_schema()
+        if not table_schema.has_main_geometry:
+            return None
+
+        main_geometry_field = table_schema.main_geometry_field
+        if main_geometry_field is None or main_geometry_field.related_table is None:
+            return None
+
+        # Only apply to the relation that backs table.mainGeometry.
+        if model_field.name != main_geometry_field.python_name:
+            return None
+
+        related_main_geometry = main_geometry_field.related_table.main_geometry_field
+        if related_main_geometry is None:
+            return None
+
+        return related_main_geometry.db_name
 
     @cached_property
     def expanded_fields(self) -> list[EmbeddedFieldMatch]:

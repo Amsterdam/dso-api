@@ -239,6 +239,7 @@ class TestEmbedTemporalTables:
                         "bagProces": {"code": 1},
                         "beginGeldigheid": "2021-02-28T10:00:00",
                         "eindGeldigheid": None,
+                        "geometrie": None,
                         "heeftDossierId": "GV00000406",
                     }
                 ],
