@@ -88,7 +88,7 @@ cryptography==50.0.1
     #   pyjwt
 datadiensten-apikeyclient==0.7.6
     # via -r requirements.in
-datapunt-authorization-django==2.2.0
+datapunt-authorization-django==3.0.0
     # via -r requirements.in
 debugpy==1.8.21
     # via -r requirements_dev.in
@@ -126,6 +126,7 @@ django-environ==0.14.0
     # via
     #   -r requirements.in
     #   amsterdam-schema-tools
+    #   datapunt-authorization-django
 django-extensions==4.1
     # via -r requirements_dev.in
 django-filter==25.2
@@ -423,12 +424,13 @@ pycodestyle==2.14.0
     #   flake8-debugger
 pycparser==3.0
     # via cffi
-pydantic==2.13.4
+pydantic==2.13.5
     # via
+    #   datapunt-authorization-django
     #   openapi-schema-validator
     #   openapi-spec-validator
     #   pydantic-settings
-pydantic-core==2.46.4
+pydantic-core==2.46.5
     # via pydantic
 pydantic-settings==2.14.2
     # via
