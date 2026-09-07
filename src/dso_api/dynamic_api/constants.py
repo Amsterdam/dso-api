@@ -5,4 +5,5 @@ STATUS = {
     "under_development": "in ontwikkeling",
     "superseded": "verouderd",
     "deprecated": "afgeschreven",
+    "discontinued": "stop gezet",
 }
