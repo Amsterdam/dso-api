@@ -120,7 +120,7 @@ django-cors-headers==4.9.0
     # via -r requirements.in
 django-coverage-plugin==3.2.2
     # via -r requirements.in
-django-debug-toolbar==7.1.1
+django-debug-toolbar==8.0.0
     # via -r requirements_dev.in
 django-environ==0.14.0
     # via
