@@ -36,7 +36,7 @@ SESSION_COOKIE_SECURE = False
 jwks_key = Path(__file__).parent.parent.joinpath("jwks_test.json").read_text()
 
 DATAPUNT_AUTHZ = {
-    "TRUSTED_JWKS": [{"jwks": jwks_key, "claims": {"iss": "iss"}}],
+    "JWKS": jwks_key,
     "ALWAYS_OK": False,
     "MIN_INTERVAL_KEYSET_UPDATE": 30 * 60,  # 30 minutes
 }
