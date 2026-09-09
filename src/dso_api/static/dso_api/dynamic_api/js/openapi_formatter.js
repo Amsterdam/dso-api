@@ -72,6 +72,7 @@ const FORMATTER = (rawJson) => {
       <h3>Paths:</h3>
       ${currentVersion.pathsUnderDevelopment ? `<p>Paden met het <span class="beta">beta</span> label zijn nog in ontwikkeling en zijn nog niet geschikt voor productie-omgevingen.</p>` : ""}
       ${currentVersion.pathsDeprecated ? `<p>Paden met het <span class="deprecated">afgeschreven</span> label zijn verouderd; de data zal niet meer worden bijgewerkt.</p>` : ""}
+      ${currentVersion.pathsDiscontinued ? `<p>Paden met het <span class="discontinued">discontinued</span> label worden niet meer geupdate. Bijvoorbeeld als de achterliggende databron niet meer beschikbaar is.</p>` : ""}
     `
 
     // Add a link for each path
@@ -91,6 +92,7 @@ const FORMATTER = (rawJson) => {
             <a href="${requestPath}${path}" style="display:inline-block" class='path'>${path}</a>
             ${status === "under_development" ? `<span class="beta">beta</span>` : ""}
             ${status === "deprecated" ? `<span class="deprecated">afgeschreven</span>` : ""}
+            ${status === "discontinued" ? `<span class="discontinued">stop gezet</span>` : ""}
           </p>
         `
             pathsEl.appendChild(endpointEl)
