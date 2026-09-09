@@ -13,7 +13,7 @@ on:
     - master
 
 jobs:
-  docker:
+  tests:
     # Run tests for different PostGIS versions while we work on migrating the db.
     timeout-minutes: 10
     runs-on: ubuntu-latest
