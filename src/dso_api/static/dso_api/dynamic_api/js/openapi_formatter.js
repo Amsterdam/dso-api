@@ -92,7 +92,7 @@ const FORMATTER = (rawJson) => {
             <a href="${requestPath}${path}" style="display:inline-block" class='path'>${path}</a>
             ${status === "under_development" ? `<span class="beta">beta</span>` : ""}
             ${status === "deprecated" ? `<span class="deprecated">afgeschreven</span>` : ""}
-            ${status === "discontinued" ? `<span class="discontinued">stop gezet</span>` : ""}
+            ${status === "discontinued" ? `<span class="discontinued">stopgezet</span>` : ""}
           </p>
         `
             pathsEl.appendChild(endpointEl)
