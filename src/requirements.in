@@ -4,7 +4,7 @@ django-cors-headers == 4.9.0
 django-healthchecks == 1.5.0
 django-gisserver == 2.4.0
 django-vectortiles == 1.0.2
-djangorestframework == 3.17.2
+djangorestframework == 3.18.1
 djangorestframework-csv == 3.0.2
 djangorestframework-gis == 1.3.0
 amsterdam-schema-tools[django] == 9.12.7
@@ -22,14 +22,14 @@ Markdown == 3.10.3
 msal == 1.38.0
 more-ds == 0.0.6
 more-itertools == 11.1.0
-numpy == 2.5.2
+numpy == 2.5.3
 openapi-spec-validator == 0.9.0
 # Version should match with opentelemetry subdependency:
 opentelemetry-instrumentation-psycopg == 0.61b0
 orjson == 3.12.0
 psycopg == 3.3.4
 pygments == 2.21.0
-pyproj == 3.7.2
+pyproj == 3.8.0
 python-json-logger==4.2.0
 python-string-utils == 1.0.0
 requests == 2.34.2
