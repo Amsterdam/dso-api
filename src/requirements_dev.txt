@@ -139,7 +139,7 @@ django-healthchecks==1.5.0
     # via -r requirements.in
 django-vectortiles==1.0.2
     # via -r requirements.in
-djangorestframework==3.17.2
+djangorestframework==3.18.1
     # via
     #   -r requirements.in
     #   djangorestframework-csv
@@ -266,7 +266,7 @@ mypy-extensions==1.1.0
     # via black
 nodeenv==1.10.0
     # via pre-commit
-numpy==2.5.2
+numpy==2.5.3
     # via
     #   -r requirements.in
     #   shapely
@@ -448,7 +448,7 @@ pyjwt[crypto]==2.13.0
     #   datadiensten-apikeyclient
     #   msal
     #   pyjwt
-pyproj==3.7.2
+pyproj==3.8.0
     # via
     #   -r requirements.in
     #   django-gisserver
@@ -527,7 +527,7 @@ rpds-py==0.30.0
     # via
     #   jsonschema
     #   referencing
-ruff==0.16.6
+ruff==0.16.7
     # via -r requirements_dev.in
 shapely==2.1.2
     # via
