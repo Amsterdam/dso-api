@@ -315,3 +315,10 @@ blockquote {
     color: #fff;
     padding: 2px 5px;
 }
+
+.discontinued {
+    background-color: #a7a7a7;
+    border-radius: 2px;
+    color: #fff;
+    padding: 2px 5px;
+}
