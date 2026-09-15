@@ -4,7 +4,7 @@
 #
 #    pip-compile --output-file=requirements_dev.txt requirements_dev.in
 #
-amsterdam-schema-tools[django]==9.12.7
+amsterdam-schema-tools[django]==9.13.0
     # via -r requirements.in
 annotated-types==0.7.0
     # via pydantic
@@ -67,7 +67,7 @@ cfgv==3.5.0
     # via pre-commit
 charset-normalizer==3.4.7
     # via requests
-click==8.4.2
+click==8.5.0
     # via
     #   amsterdam-schema-tools
     #   black
@@ -409,7 +409,7 @@ protobuf==6.33.6
     # via mapbox-vector-tile
 psutil==7.2.2
     # via azure-monitor-opentelemetry-exporter
-psycopg==3.3.4
+psycopg==3.3.5
     # via
     #   -r requirements.in
     #   amsterdam-schema-tools
