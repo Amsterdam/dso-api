@@ -11,15 +11,15 @@ amsterdam-schema-tools[django] == 9.13.0
 azure-identity == 1.25.3
 azure-monitor-opentelemetry == 1.8.8
 beautifulsoup4==4.15.0
-cachetools == 7.1.7
+cachetools == 7.1.8
 datadiensten-apikeyclient == 0.7.6
-datapunt-authorization-django==2.2.0
+datapunt-authorization-django==3.0.0
 drf-spectacular == 0.30.0
 Geoalchemy2 == 0.20.0
 jsonschema == 4.26.0
 lru_dict == 1.4.1
 Markdown == 3.10.3
-msal == 1.37.0
+msal == 1.38.0
 more-ds == 0.0.6
 more-itertools == 11.1.0
 numpy == 2.5.2
@@ -48,7 +48,7 @@ uwsgi-readiness-check == 0.2.0
 
 # Testing
 bandit == 1.9.4
-cryptography >= 50.0.0
+cryptography >= 50.0.1
 django-coverage-plugin == 3.2.2
 flake8 == 7.3.0
 flake8-blind-except == 0.2.1

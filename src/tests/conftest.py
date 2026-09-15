@@ -921,10 +921,10 @@ def fetch_tokendata(settings):
 def fetch_auth_token(fetch_tokendata, settings):
     """Fixture to create an auth token, scopes is flexible"""
 
-    def _fetcher(scopes, subject=settings.TEST_USER_EMAIL, iss=None):
+    def _fetcher(scopes, subject=settings.TEST_USER_EMAIL, iss="iss"):
         kid = "2aedafba-8170-4064-b704-ce92b7c89cc6"
         jwks = JWKSWrapper()
-        key = jwks.keyset.get_key(kid)
+        key = jwks.get_key(kid)
         token = JWT(
             header={"alg": "ES256", "kid": kid}, claims=fetch_tokendata(scopes, subject, iss)
         )

@@ -1,3 +1,5 @@
+from json import loads
+
 from dso_api.settings import *  # noqa: F403, F405
 
 # The reason the settings are defined here, is to make them independent
@@ -36,7 +38,11 @@ SESSION_COOKIE_SECURE = False
 jwks_key = Path(__file__).parent.parent.joinpath("jwks_test.json").read_text()
 
 DATAPUNT_AUTHZ = {
-    "JWKS": jwks_key,
+    "TRUSTED_JWKS": [
+        {"jwks": loads(jwks_key), "claims": {"iss": "iss"}},
+        {"jwks": loads(jwks_key), "claims": {"iss": "https://iam.amsterdam.nl"}},
+        {"jwks": loads(jwks_key), "claims": {"iss": "https://sts.windows.net"}},
+    ],
     "ALWAYS_OK": False,
     "MIN_INTERVAL_KEYSET_UPDATE": 30 * 60,  # 30 minutes
 }
