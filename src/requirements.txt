@@ -669,9 +669,9 @@ djangorestframework-csv==3.0.2 \
     --hash=sha256:b269b692feda1971e1342f395a21d339c6a16d2961ff64357a9a6188f27af10f \
     --hash=sha256:d1bcfbaaeaa5145af6bb0985a36a5bbf2f853d9961c722f69c7b0c9c3bcc269a
     # via -r requirements.in
-djangorestframework-gis==1.2.1 \
-    --hash=sha256:649ad0cb361dd85f2113b1796248eb2b198a01fa3d64c5e486106224c0ad51fd \
-    --hash=sha256:73acb51918b18e484407c0fff61aca11a1f5a216fa694bc4c0c734b7097ecc77
+djangorestframework-gis==1.3.0 \
+    --hash=sha256:6e39a16f17c62cb4f4e2a6e5c0821fe257a6bf458c48933e07dbc442262ee500 \
+    --hash=sha256:f9ab54cf2f737f798fccd1f3b0501377f1053699ca421154cc3fb3edc4856366
     # via -r requirements.in
 drf-spectacular==0.30.0 \
     --hash=sha256:006cf5921ebe20a9bd24f7c846261ebbf78780be5961b0d6e87afaa82afd62ff \
