@@ -1,0 +1,25 @@
+[project]
+name = "integration-tests"
+version = "0.1.0"
+description = "Integration tests for the DSO-API"
+readme = "README.md"
+authors = [
+    { name = "Amsterdam Datapunt", email = "datapunt@amsterdam.nl" }
+]
+requires-python = ">=3.14"
+dependencies = [
+    "locust>=2.46.4",
+]
+
+[project.scripts]
+dso-test = "integration_tests.cli:cli"
+
+[build-system]
+requires = ["uv_build>=0.9.25,<0.10.0"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-root = "src"
+
+[tool.ruff.lint.isort]
+known-first-party = ["integration_tests"]

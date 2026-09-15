@@ -1,0 +1,15 @@
+include:
+  - ../docker-compose.yml
+  - web.health-check.override.yml
+services:
+  tests:
+    build:
+      context: .
+    links:
+      - web
+    depends_on:
+      web:
+        condition: service_healthy
+    environment:
+      TOKEN: "${TOKEN}"
+      DATAPUNT_API_URL: "${DATAPUNT_API_URLdock:-http://web:8000}"
