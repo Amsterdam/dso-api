@@ -261,14 +261,14 @@ def test_main_geometry_relation(
 
     data = read_response_json(response)
     monument = data["_embedded"]["monumenten_relatie"][0]
-    assert "geometrie" in monument
+    assert "geometry" in monument
 
     # Prove that monument geometry is same value as related bag:pand object geometry
     pand_id = monument["betreftBagPandId"]
     url = reverse("dynamic_api:bag-panden-detail", kwargs={"pk": pand_id})
     response = api_client.get(url)
     pand = read_response_json(response)
-    assert monument["geometrie"] == pand["geometrie"]
+    assert monument["geometry"] == pand["geometrie"]
 
 
 @pytest.mark.django_db
@@ -293,5 +293,5 @@ def test_main_geometry_relation_without_related_object(
         for item in data["_embedded"]["monumenten_relatie"]
         if item["identificatie"] == "MONREL-NO-PAND"
     )
-    assert "geometrie" in monument
-    assert monument["geometrie"] is None
+    assert "geometry" in monument
+    assert monument["geometry"] is None

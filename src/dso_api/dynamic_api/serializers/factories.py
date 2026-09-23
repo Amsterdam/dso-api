@@ -275,22 +275,20 @@ def serializer_factory(
     )
 
     # If mainGeometry exists and points to a relation, expose that related geometry as
-    # a top-level "geometrie" field.
-    if model._table_schema.has_main_geometry:
+    # a top-level "geometry" field.
+    if model._table_schema.has_relation_as_main_geometry:
         try:
-            main_geo_field = model._table_schema.main_geometry_field
-            if main_geo_field.related_table:
-                source_field = _get_related_main_geometry_source(model._table_schema)
-                if source_field is not None:
-                    serializer_part.add_field(
-                        name="geometrie",
-                        field=DSOGeometryField(
-                            source=source_field,
-                            read_only=True,
-                            allow_null=True,
-                            default=None,
-                        ),
-                    )
+            source_field = _get_related_main_geometry_source(model._table_schema)
+            if source_field is not None:
+                serializer_part.add_field(
+                    name="geometry",
+                    field=DSOGeometryField(
+                        source=source_field,
+                        read_only=True,
+                        allow_null=True,
+                        default=None,
+                    ),
+                )
         except DatasetFieldNotFound:
             pass
 
@@ -331,20 +329,16 @@ def _get_related_main_geometry_source(table_schema: DatasetTableSchema) -> str |
     """Return serializer source for related-table main geometry.
 
     This is only available when the current table's mainGeometry points to a relation,
-    and the related table also defines a main geometry.
+    and the related table also defines a mainGeometry.
     """
-    if not table_schema.has_main_geometry:
+    if not table_schema.has_relation_as_main_geometry:
         return None
 
     main_geometry_field = table_schema.main_geometry_field
     if main_geometry_field is None:
         return None
 
-    related_table = main_geometry_field.related_table
-    if related_table is None:
-        return None
-
-    related_main_geometry = related_table.main_geometry_field
+    related_main_geometry = table_schema.related_main_geometry_field
     if related_main_geometry is None:
         return None
 
