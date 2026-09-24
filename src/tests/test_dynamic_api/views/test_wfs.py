@@ -1,10 +1,14 @@
 import re
 import urllib.parse
+from collections import OrderedDict
 
 import pytest
 from django.urls import reverse
+from gisserver.exceptions import InvalidParameterValue
+from gisserver.parsers import wfs20
 from schematools.contrib.django.db import create_tables
 
+from dso_api.dynamic_api.views.wfs import DatasetWFSView
 from tests.utils import (
     read_response,
     read_response_xml,
@@ -148,6 +152,11 @@ class TestDatasetWFSView:
         response = api_client.get(wfs_url)
         assert response.status_code == 200, response.content
 
+    def test_wfs_view_invalid_dataset(self, api_client):
+        """Assert that unknown dataset endpoints return 404."""
+        response = api_client.get("/v1/wfs/does-not-exist")
+        assert response.status_code == 404
+
     def test_wfs_view_with_relations(
         self, api_client, gebieden_dataset, stadsdelen_data, wijken_data, buurten_data
     ):
@@ -158,6 +167,24 @@ class TestDatasetWFSView:
         )
         response = api_client.get(wfs_url)
         assert response.status_code == 200, response.content
+
+    def test_wfs_view_with_expand_on_foreign_key_relation(
+        self, api_client, gebieden_dataset, wijken_data, buurten_data
+    ):
+        """Assert that foreign-key expand requests include the expanded relation fields."""
+        wfs_url = (
+            "/v1/wfs/gebieden"
+            "?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=buurten"
+            "&OUTPUTFORMAT=application/gml+xml&expand=ligt_in_wijk"
+        )
+        response = api_client.get(wfs_url)
+        assert response.status_code == 200, response.content
+
+        xml_root = read_response_xml(response)
+        data = xml_element_to_dict(xml_root[0][0])
+
+        assert "ligt_in_wijk" in data
+        assert data["ligt_in_wijk"]["naam"] == "Burgwallen-Nieuwe Zijde"
 
     def test_wfs_view_with_expand_on_many_to_many_relation(
         self, api_client, gebieden_dataset, ggwgebieden_multiple_buurten_data
@@ -317,6 +344,17 @@ class TestDatasetWFSView:
 
         assert len(xml_root) == 0
 
+    def test_get_requested_models_invalid_typename(self, filled_router, afval_dataset):
+        """Assert that unknown type names are rejected during model resolution."""
+        view = DatasetWFSView()
+        view.models = OrderedDict(filled_router.all_models["afvalwegingen"]["v1"].items())
+        ows_request = wfs20.DescribeFeatureType.__new__(wfs20.DescribeFeatureType)
+        ows_request.typeNames = ["app:does_not_exist"]
+        view.ows_request = ows_request
+
+        with pytest.raises(InvalidParameterValue, match="does_not_exist"):
+            view._get_requested_models()
+
 
 @pytest.mark.django_db
 class TestDatasetWFSViewAuth:
@@ -470,3 +508,24 @@ class TestDatasetWFSViewAuth:
         )
         response = api_client.get(wfs_url)
         assert response.status_code == 200
+
+    def test_wfs_main_geometry_relation(self, api_client, monumenten_relatie_data, filled_router):
+        """Assert that WFS renders a relation-backed mainGeometry in GML responses."""
+        response = api_client.get(
+            "/v1/wfs/monumenten"
+            "?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=monumenten_relatie"
+            "&OUTPUTFORMAT=application/gml+xml"
+        )
+        assert response.status_code == 200
+
+        data = self.parse_response(response)
+        assert data == {
+            "boundedBy": {
+                "Envelope": {"lowerCorner": "121389 487369", "upperCorner": "121389 487369"}
+            },
+            "betreft_bag_pand_id": "0363100099999999.1",
+            "betreft_bag_pand_identificatie": None,
+            "geometrie": {"Point": {"pos": "121389 487369"}},
+            "identificatie": "MONREL-1",
+            "name": "MONREL-1",
+        }
