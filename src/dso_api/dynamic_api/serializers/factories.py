@@ -326,7 +326,7 @@ def serializer_factory(
 
 
 def _get_related_main_geometry_source(table_schema: DatasetTableSchema) -> str | None:
-    """Return serializer source for related-table main geometry.
+    """Return serializer source for related-table mainGeometry.
 
     This is only available when the current table's mainGeometry points to a relation,
     and the related table also defines a mainGeometry.
