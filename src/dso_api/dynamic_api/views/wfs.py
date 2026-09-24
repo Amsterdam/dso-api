@@ -27,6 +27,7 @@ The models of that dataset become WFS feature types.
 import logging
 import re
 from collections import UserList
+from dataclasses import dataclass
 
 from django.conf import settings
 from django.contrib.gis.db.models import GeometryField
@@ -42,6 +43,7 @@ from gisserver.geometries import CRS
 from gisserver.parsers import wfs20
 from gisserver.views import WFSView
 from schematools.contrib.django.models import DynamicModel
+from schematools.exceptions import DatasetFieldNotFound
 from schematools.naming import to_snake_case, toCamelCase
 from schematools.types import DatasetTableSchema, RowLevelAuthorisation
 
@@ -59,6 +61,75 @@ RE_SIMPLE_NAME = re.compile(
     r"^(?P<ns>\{[^}]+})?(?P<name>[a-z0-9_]+)(?P<variant>-[a-z0-9_]+)?$",
     re.I,
 )
+
+
+@dataclass(frozen=True)
+class RelatedMainGeometry:
+    """Describe a main geometry that is resolved through a related model.
+
+    This is a synthetic geometry descriptor used when the Amsterdam Schema
+    points ``mainGeometry`` at a relation instead of at a local geometry field.
+    It lets the WFS layer treat the related geometry like a regular geometry
+    candidate while still keeping track of the full relation path.
+    """
+
+    # Synthetic geometry descriptor used when table.mainGeometry points to a relation.
+    name: str
+    model_attribute: str
+    relative_model_attribute: str
+    srid: int
+    verbose_name: str
+    abstract: str
+
+
+class RelatedGeometryFeatureField(FeatureField):
+    """Bind a related geometry through its full path, but expose a local field name.
+
+    django-gisserver needs the full relation path during binding so it can
+    resolve the actual ``GeometryField`` on the related model. After binding,
+    the field should still appear in the WFS schema and output under its short,
+    local name.
+    """
+
+    def __init__(
+        self,
+        *args,
+        absolute_model_attribute: str,
+        relative_model_attribute: str,
+        **kwargs,
+    ):
+        """Store both the full relation path and the local geometry field name."""
+        super().__init__(*args, model_attribute=relative_model_attribute, **kwargs)
+        self._absolute_model_attribute = absolute_model_attribute
+        self._bind_model_attribute = absolute_model_attribute
+
+    def bind(
+        self,
+        model: type[models.Model],
+        parent: ComplexFeatureField | None = None,
+        feature_type: FeatureType | None = None,
+    ):
+        """Resolve the real related ``GeometryField`` during binding.
+
+        The field is normally exposed under a short local name such as
+        ``geometrie``. For binding, django-gisserver must temporarily see the
+        full relation path, for example ``betreft_bag_pand.geometrie``, so it
+        can resolve the actual field definition on the related model.
+        """
+        local_model_attribute = self.model_attribute
+        try:
+            # Temporarily expose the full relation path so FeatureField.bind()
+            # resolves the actual GeometryField on the related model.
+            self.model_attribute = self._bind_model_attribute
+            super().bind(model, parent=parent, feature_type=feature_type)
+        finally:
+            # Restore the public/local field name for schema generation and output.
+            self.model_attribute = local_model_attribute
+
+    @cached_property
+    def absolute_model_attribute(self) -> str:
+        """Return the full dotted ORM path to the related geometry field."""
+        return self._absolute_model_attribute
 
 
 class AuthenticatedFeatureType(FeatureType):
@@ -305,6 +376,13 @@ class DatasetWFSView(CheckModelPermissionsMixin, WFSView):
                 field_crs = CRS.from_srid(geo_field.srid)
                 other_crs = [c for c in crs.ALL_CRS if c.srid != field_crs.srid]
 
+                geometry_field_name = (
+                    geo_field.model_attribute
+                    if isinstance(geo_field, RelatedMainGeometry)
+                    else geo_field.name
+                )
+                queryset = self._get_feature_queryset(model, geo_field)
+
                 if i == 0:
                     name = base_name
                     title = base_title
@@ -312,13 +390,13 @@ class DatasetWFSView(CheckModelPermissionsMixin, WFSView):
                     name = f"{base_name}-{geo_field.name}"
                     title = f"{base_title} ({geo_field.verbose_name})"
                 feature = AuthenticatedFeatureType(
-                    model.objects.all(),
+                    queryset,
                     name=name,
                     title=title,
                     abstract=table_schema.description,
                     fields=fields,
                     display_field_name=model.get_display_field(),
-                    geometry_field_name=geo_field.name,
+                    geometry_field_name=geometry_field_name,
                     crs=field_crs,
                     other_crs=other_crs,
                     wfs_view=self,
@@ -326,6 +404,18 @@ class DatasetWFSView(CheckModelPermissionsMixin, WFSView):
                 )
                 features.append(feature)
         return features
+
+    def _get_feature_queryset(self, model, geo_field) -> models.QuerySet:
+        """Return the queryset used for a feature type, adding geometry aliases when needed."""
+        queryset = model.objects.all()
+        if not isinstance(geo_field, RelatedMainGeometry):
+            return queryset
+
+        # Pull the related geometry onto the base queryset under the local field
+        # name so the rest of the WFS rendering pipeline can treat it like a
+        # regular geometry field.
+        annotation_source = geo_field.model_attribute.replace(".", "__")
+        return queryset.annotate(**{geo_field.name: models.F(annotation_source)})
 
     def get_feature_fields(  # noqa: C901
         self, model, main_geometry_field_name
@@ -337,13 +427,34 @@ class DatasetWFSView(CheckModelPermissionsMixin, WFSView):
         """
         fields = []
         other_geo_fields = []
+
+        # Check if mainGeo is a relation:
+        related_main_geometry = self._get_related_main_geometry_field(
+            model, table_schema=model.table_schema()
+        )
+        if (
+            related_main_geometry is not None
+            and main_geometry_field_name == related_main_geometry.name
+        ):
+            # Expose the related table's main geometry under its original field
+            # name. A custom FeatureField is needed because binding must follow
+            # the full relation path, while the public WFS schema should still
+            # show the short/local geometry name.
+            fields.append(
+                RelatedGeometryFeatureField(
+                    related_main_geometry.name,
+                    relative_model_attribute=related_main_geometry.relative_model_attribute,
+                    absolute_model_attribute=related_main_geometry.model_attribute,
+                    abstract=related_main_geometry.abstract,
+                )
+            )
+
         is_index_view = self.is_index_request()
         for model_field in model._meta.get_fields():  # type models.Field
             if not is_index_view and not self.request.user_scopes.has_field_access(
                 model.get_field_schema(model_field)
             ):
                 continue
-
             # When there is Row Level Auth, we omit the field.
             rla: RowLevelAuthorisation | None = model.table_schema().rla
             if rla is not None and toCamelCase(model_field.name) in rla.targets:
@@ -483,17 +594,79 @@ class DatasetWFSView(CheckModelPermissionsMixin, WFSView):
             and user_scopes.has_field_access(model.get_field_schema(model_field))
         ]
 
-    def _get_geometry_fields(self, model) -> list[GeometryField]:
-        # Return the geometry field with the mainGeometry field as the first item
+    def _get_geometry_fields(self, model) -> list[GeometryField | RelatedMainGeometry]:
+        """Return the geometry fields with the mainGeometry field as the first item."""
         table_schema: DatasetTableSchema = model.table_schema()
         geometry_fields = []
-        for f in model._meta.get_fields():
-            if isinstance(f, GeometryField):
-                if f.name == table_schema.main_geometry_field.db_name:
-                    geometry_fields.insert(0, f)
-                else:
-                    geometry_fields.append(f)
+        related_main_geometry = self._get_related_main_geometry_field(
+            model, table_schema=table_schema
+        )
+
+        for field in model._meta.get_fields():
+            if not isinstance(field, GeometryField):
+                continue
+
+            if related_main_geometry is not None and (
+                table_schema.main_geometry_field is not None
+                and field.name == table_schema.main_geometry_field.db_name
+            ):
+                # The relation-backed mainGeometry replaces the regular mainGeometry field.
+                continue
+
+            if (
+                table_schema.main_geometry_field is not None
+                and field.name == table_schema.main_geometry_field.db_name
+            ):
+                geometry_fields.insert(0, field)
+            else:
+                geometry_fields.append(field)
+
+        if related_main_geometry is not None:
+            geometry_fields.insert(0, related_main_geometry)
+
         return geometry_fields
+
+    def _get_related_main_geometry_field(
+        self, model, table_schema: DatasetTableSchema
+    ) -> RelatedMainGeometry | None:
+        """Resolve a relation-backed ``mainGeometry`` into a synthetic descriptor.
+
+        Amsterdam Schema can point ``mainGeometry`` at a relation instead of at
+        a local geometry field. This method converts that schema concept into a
+        geometry descriptor that the WFS layer can handle like a regular main
+        geometry candidate.
+        """
+        if not table_schema.has_relation_as_main_geometry:
+            return None
+
+        main_geometry_field = table_schema.main_geometry_field
+        if main_geometry_field is None:
+            return None
+
+        try:
+            related_main_geometry = table_schema.related_main_geometry_field
+        except DatasetFieldNotFound:
+            return None
+
+        if related_main_geometry is None:
+            return None
+
+        relation_field = model._meta.get_field(main_geometry_field.python_name)
+        related_model = relation_field.related_model
+        related_geometry_field = related_model._meta.get_field(related_main_geometry.python_name)
+
+        # Mirror the related geometry field metadata so FeatureType can treat it
+        # like a regular main geometry candidate.
+        return RelatedMainGeometry(
+            name=related_main_geometry.python_name,
+            model_attribute=(
+                f"{main_geometry_field.python_name}.{related_main_geometry.python_name}"
+            ),
+            relative_model_attribute=related_main_geometry.python_name,
+            srid=related_geometry_field.srid,
+            verbose_name=related_geometry_field.verbose_name,
+            abstract=related_geometry_field.help_text,
+        )
 
 
 class LazyList(UserList):
