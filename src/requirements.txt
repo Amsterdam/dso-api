@@ -2227,6 +2227,9 @@ urllib3-mock==0.3.3 \
     --hash=sha256:702c90042920d771c9902b7b5b542551cc57f259078f4eada47ab4e8cdd11f1a \
     --hash=sha256:b210037029ac96beac4f3e7b54f466c394b060525ea5a824803d5f5ed14558f1
     # via -r requirements.in
+uwsgi==2.0.31 \
+    --hash=sha256:e8f8b350ccc106ff93a65247b9136f529c14bf96b936ac5b264c6ff9d0c76257
+    # via -r requirements.in
 uwsgi-readiness-check==0.2.0 \
     --hash=sha256:b8c4bfba260ec6f1937ca8d8968f2415aba82428637da17653fc04a3378d752e \
     --hash=sha256:e7a2b5a94407193bc876efd28157a45833cb69c372f7684004fa729eca2f1ab0

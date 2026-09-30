@@ -36,6 +36,7 @@ requests == 2.34.2
 shapely == 2.1.2
 urllib3 == 2.8.0
 urllib3-mock == 0.3.3
+uwsgi == 2.0.31
 whitenoise == 6.12.0
 zipp == 4.1.0
 
