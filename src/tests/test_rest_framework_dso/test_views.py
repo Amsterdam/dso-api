@@ -7,7 +7,7 @@ from rest_framework.exceptions import ErrorDetail, ValidationError
 from rest_framework.routers import SimpleRouter
 
 from rest_framework_dso import views
-from rest_framework_dso.renderers import HALJSONRenderer
+from rest_framework_dso.renderers import CSVRenderer, HALJSONRenderer
 from tests.utils import read_response, read_response_json, read_response_partial
 
 from .models import Location, Movie
@@ -22,6 +22,13 @@ class MovieDetailAPIView(views.DSOViewMixin, generics.RetrieveAPIView):
 class MovieListAPIView(views.DSOViewMixin, generics.ListAPIView):
     serializer_class = MovieSerializer
     queryset = Movie.objects.all()
+
+
+class MovieCSVListAPIView(views.DSOViewMixin, generics.ListAPIView):
+    serializer_class = MovieSerializer
+    queryset = Movie.objects.all()
+    renderer_classes = [CSVRenderer]
+    dataset_id = "movies"
 
 
 class MovieViewSet(views.DSOViewMixin, viewsets.ReadOnlyModelViewSet):
@@ -40,12 +47,21 @@ router.register("v1/viewset/movies", MovieViewSet, basename="viewset-movies")
 urlpatterns = [
     path("v1/locations", LocationListAPIView.as_view(), name="locations-list"),
     path("v1/movies", MovieListAPIView.as_view(), name="movies-list"),
+    path("v1/movies-csv", MovieCSVListAPIView.as_view(), name="movies-csv-list"),
     path("v1/movies/<pk>", MovieDetailAPIView.as_view(), name="movies-detail"),
 ] + router.get_urls()
 
 handler500 = views.server_error
 
 pytestmark = [pytest.mark.urls(__name__)]  # enable for all tests in this file
+
+
+class FakeUwsgi:
+    def __init__(self):
+        self.calls = []
+
+    def set_user_harakiri(self, seconds):
+        self.calls.append(seconds)
 
 
 @pytest.mark.django_db
@@ -216,6 +232,54 @@ class TestExpand:
             "page": {"number": 1, "size": 20},
         }
         assert response["Content-Type"] == "application/hal+json"
+
+    @pytest.mark.django_db
+    def test_csv_streaming_temporarily_relaxes_uwsgi_harakiri(
+        self, api_client, movie, settings, monkeypatch
+    ):
+        fake_uwsgi = FakeUwsgi()
+        monkeypatch.setattr(views, "_uwsgi", fake_uwsgi)
+        settings.UWSGI_HARAKIRI = 180
+        settings.UWSGI_HARAKIRI_STREAMING = 0
+        settings.UWSGI_HARAKIRI_EXEMPT_DATASETS = ["movies"]
+
+        response = api_client.get("/v1/movies-csv")
+        data = read_response(response)
+
+        assert response.status_code == 200
+        assert "name" in data
+        assert fake_uwsgi.calls == [0, 180]
+
+    @pytest.mark.django_db
+    def test_non_csv_streaming_keeps_default_uwsgi_harakiri(
+        self, api_client, movie, settings, monkeypatch
+    ):
+        fake_uwsgi = FakeUwsgi()
+        monkeypatch.setattr(views, "_uwsgi", fake_uwsgi)
+        settings.UWSGI_HARAKIRI = 180
+        settings.UWSGI_HARAKIRI_STREAMING = 0
+
+        response = api_client.get("/v1/movies")
+        read_response(response)
+
+        assert response.status_code == 200
+        assert fake_uwsgi.calls == []
+
+    @pytest.mark.django_db
+    def test_csv_streaming_non_exempt_keeps_default_uwsgi_harakiri(
+        self, api_client, movie, settings, monkeypatch
+    ):
+        fake_uwsgi = FakeUwsgi()
+        monkeypatch.setattr(views, "_uwsgi", fake_uwsgi)
+        settings.UWSGI_HARAKIRI = 180
+        settings.UWSGI_HARAKIRI_STREAMING = 0
+        settings.UWSGI_HARAKIRI_EXEMPT_DATASETS = []
+
+        response = api_client.get("/v1/movies-csv")
+        read_response(response)
+
+        assert response.status_code == 200
+        assert fake_uwsgi.calls == []
 
     @pytest.mark.parametrize(
         "params",

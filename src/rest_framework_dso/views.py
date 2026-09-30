@@ -2,6 +2,7 @@ import json
 import sys
 from inspect import isgeneratorfunction
 
+from django.conf import settings
 from django.http import HttpResponseNotFound, JsonResponse
 from django.utils.html import escape
 from gisserver.exceptions import ExternalValueError
@@ -19,6 +20,11 @@ from rest_framework_dso import crs, parsers
 from rest_framework_dso.exceptions import HumanReadableException, RemoteAPIException
 from rest_framework_dso.pagination import DSOPageNumberPagination
 from rest_framework_dso.response import StreamingResponse
+
+try:
+    import uwsgi as _uwsgi
+except ImportError:
+    _uwsgi = None
 
 W3HTMLREF = "https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.5.1"
 
@@ -344,6 +350,33 @@ class DSOViewMixin:
 
         return serializer
 
+    def _should_relax_streaming_harakiri(self, request, response) -> bool:
+        """Detect responses that should temporarily relax the uWSGI request timeout."""
+        return (
+            _uwsgi is not None
+            and getattr(response, "streaming", False)
+            and not response.exception
+            and settings.UWSGI_HARAKIRI_STREAMING != settings.UWSGI_HARAKIRI
+            and getattr(self, "dataset_id", None) in settings.UWSGI_HARAKIRI_EXEMPT_DATASETS
+            and getattr(response.accepted_renderer, "media_type", None) == "text/csv"
+        )
+
+    def _relax_streaming_harakiri(self, response):
+        """Temporarily change uWSGI harakiri while the response stream is consumed."""
+        original_streaming_content = response.streaming_content
+        streaming_harakiri = settings.UWSGI_HARAKIRI_STREAMING
+        default_harakiri = settings.UWSGI_HARAKIRI
+
+        def wrapped_streaming_content():
+            _uwsgi.set_user_harakiri(streaming_harakiri)  # ty: ignore[unresolved-attribute]
+            try:
+                yield from original_streaming_content
+            finally:
+                _uwsgi.set_user_harakiri(default_harakiri)  # ty: ignore[unresolved-attribute]
+
+        response.streaming_content = wrapped_streaming_content()
+        return response
+
     def finalize_response(self, request, response, *args, **kwargs):
         """Set the Content-Crs header if there was a geometry field.
 
@@ -370,6 +403,9 @@ class DSOViewMixin:
             except AttributeError:
                 pass
             response = response.accepted_renderer.finalize_response(response, renderer_context)
+
+        if self._should_relax_streaming_harakiri(request, response):
+            response = self._relax_streaming_harakiri(response)
 
         return response
 
