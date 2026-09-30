@@ -1,4 +1,5 @@
 import json
+import logging
 import sys
 from inspect import isgeneratorfunction
 
@@ -27,6 +28,7 @@ except ImportError:
     _uwsgi = None
 
 W3HTMLREF = "https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.5.1"
+logger = logging.getLogger(__name__)
 
 
 def get_view_name(view: APIView):
@@ -352,14 +354,41 @@ class DSOViewMixin:
 
     def _should_relax_streaming_harakiri(self, request, response) -> bool:
         """Detect responses that should temporarily relax the uWSGI request timeout."""
-        return (
-            _uwsgi is not None
-            and getattr(response, "streaming", False)
-            and not response.exception
-            and settings.UWSGI_HARAKIRI_STREAMING != settings.UWSGI_HARAKIRI
-            and getattr(self, "dataset_id", None) in settings.UWSGI_HARAKIRI_EXEMPT_DATASETS
-            and getattr(response.accepted_renderer, "media_type", None) == "text/csv"
+        has_uwsgi = _uwsgi is not None
+        is_streaming = getattr(response, "streaming", False)
+        has_exception = response.exception
+        streaming_harakiri = settings.UWSGI_HARAKIRI_STREAMING
+        default_harakiri = settings.UWSGI_HARAKIRI
+        dataset_id = getattr(self, "dataset_id", None)
+        exempt_datasets = settings.UWSGI_HARAKIRI_EXEMPT_DATASETS
+        media_type = getattr(response.accepted_renderer, "media_type", None)
+
+        should_relax = (
+            has_uwsgi
+            and is_streaming
+            and not has_exception
+            and streaming_harakiri != default_harakiri
+            and dataset_id in exempt_datasets
+            and media_type == "text/csv"
         )
+
+        logger.info(
+            "streaming_harakiri check: should_relax=%s has_uwsgi=%s streaming=%s "
+            "exception=%s dataset_id=%r exempt_datasets=%r media_type=%r "
+            "streaming_harakiri=%r default_harakiri=%r path=%s",
+            should_relax,
+            has_uwsgi,
+            is_streaming,
+            has_exception,
+            dataset_id,
+            exempt_datasets,
+            media_type,
+            streaming_harakiri,
+            default_harakiri,
+            getattr(request, "path", None),
+        )
+
+        return should_relax
 
     def _relax_streaming_harakiri(self, response):
         """Temporarily change uWSGI harakiri while the response stream is consumed."""
@@ -368,11 +397,17 @@ class DSOViewMixin:
         default_harakiri = settings.UWSGI_HARAKIRI
 
         def wrapped_streaming_content():
-            _uwsgi.set_user_harakiri(streaming_harakiri)  # ty: ignore[unresolved-attribute]
+            _uwsgi.set_user_harakiri(streaming_harakiri)
+            logger.info(
+                f"Worker {_uwsgi.opt}, options {_uwsgi.opt}, worker_id {_uwsgi.worker_id()}"
+            )  # ty: ignore[unresolved-attribute]
             try:
                 yield from original_streaming_content
             finally:
                 _uwsgi.set_user_harakiri(default_harakiri)  # ty: ignore[unresolved-attribute]
+                logger.info(
+                    f"Worker {_uwsgi.opt}, options {_uwsgi.opt}, worker_id {_uwsgi.worker_id()}"
+                )  # ty: ignore[unresolved-attribute]
 
         response.streaming_content = wrapped_streaming_content()
         return response
