@@ -4,9 +4,9 @@
 #
 #    pip-compile --generate-hashes --output-file=requirements.txt requirements.in
 #
-amsterdam-schema-tools[django]==9.13.0 \
-    --hash=sha256:06483298d4f075d486ae6a8ec9da7c733e0ee0f016749f9b33990d7376fc627a \
-    --hash=sha256:073eb58956b4d6f4a91a56e483d6f638e6f6527106c8de1e9e6176797272bd76
+amsterdam-schema-tools[django]==9.14.1 \
+    --hash=sha256:0ed505d763313b38af1d45ce63d9550e7a7c87faabb0339175aab192ad071032 \
+    --hash=sha256:d22f789d5f278c315d40049216d17049a2c8f3eda9580189506244acb9aac662
     # via -r requirements.in
 annotated-types==0.7.0 \
     --hash=sha256:1f02e8b43a8fbbc3f3e0d4f0f4bfc8131bcb4eebe8849b8e5c773f3a1c582a53 \
@@ -687,9 +687,9 @@ faker==40.15.0 \
     --hash=sha256:20f3a6ec8c266b74d4c554e34118b21c3c2056c0b4a519d15c8decb3a4e6e795 \
     --hash=sha256:71ab3c3370da9d2205ab74ffb0fd51273063ad562b3a3bb69d0026a20923e318
     # via factory-boy
-flake8==7.3.0 \
-    --hash=sha256:b9696257b9ce8beb888cdbe31cf885c90d31928fe202be0889a7cdafad32f01e \
-    --hash=sha256:fe044858146b9fc69b551a4b490d69cf960fcb78ad1edcb84e7fbb1b4a8e3872
+flake8==7.4.1 \
+    --hash=sha256:78480274a6d7289d9cb8eafeda241fac57d4ea687d26e32dfdca37b72cdeddad \
+    --hash=sha256:84ea5afcaf344487b0ea5baaebb8100f4cfaebc01f755998f75876664029f587
     # via
     #   -r requirements.in
     #   flake8-colors
@@ -1004,9 +1004,9 @@ mappyfile==1.2.0 \
     --hash=sha256:0b875a35035f6fc712b153b134de27bdcbb42f732a5a05801c9bead7a123fa72 \
     --hash=sha256:62698b7c4d10662948912f9466ea2cfa4ddf94038a20a7cd91e00e40641d7bb9
     # via amsterdam-schema-tools
-markdown==3.10.3 \
-    --hash=sha256:3589362618f743188b4d955b874402bc814f4f83f544dc207719f4baa7d9c45f \
-    --hash=sha256:fa6c92a00a4a3c98b22728c64a935ae1928250ae65058a6ded814d2cc29a4cea
+markdown==3.11 \
+    --hash=sha256:180224db6aed87ba9ce1f2781ebcd5826253de8ff637112090e24b84502bbf9f \
+    --hash=sha256:cd6c89e7eb308c8b332ed673215a52d208a43f8bacc030b1419376129408719e
     # via -r requirements.in
 markdown-it-py==4.2.0 \
     --hash=sha256:04a21681d6fbb623de53f6f364d352309d4094dd4194040a10fd51833e418d49 \
@@ -1537,9 +1537,9 @@ pyclipper==1.4.0 \
     --hash=sha256:f3672dbafbb458f1b96e1ee3e610d174acb5ace5bd2ed5d1252603bb797f2fc6 \
     --hash=sha256:fd24849d2b94ec749ceac7c34c9f01010d23b6e9d9216cf2238b8481160e703d
     # via mapbox-vector-tile
-pycodestyle==2.14.0 \
-    --hash=sha256:c4b5b517d278089ff9d0abdec919cd97262a3367449ea1c8b49b91529167b783 \
-    --hash=sha256:dd6bf7cb4ee77f8e016f9c8e74a35ddd9f67e1d5fd4184d86c3b98e07099f42d
+pycodestyle==2.15.0 \
+    --hash=sha256:12fd2f73c7b8ee8845a0431111df8faf4c1a07d6e64e2ee7f0c74014dab14181 \
+    --hash=sha256:318f5db083869b4c4dad922d0b11124fb27ab181b6730b93371da671e31bd50e
     # via
     #   flake8
     #   flake8-debugger
@@ -1683,9 +1683,9 @@ pydantic-settings==2.14.2 \
     # via
     #   openapi-schema-validator
     #   openapi-spec-validator
-pyflakes==3.4.0 \
-    --hash=sha256:b24f96fafb7d2ab0ec5075b7350b3d2d2218eab42003821c06344973d3ea2f58 \
-    --hash=sha256:f742a7dbd0d9cb9ea41e9a24a918996e8170c799fa528688d40dd582c8265f4f
+pyflakes==4.0.1 \
+    --hash=sha256:1559b701962c803eadeb9c215dbac279585367b73ac12e1f0c42868785e6caad \
+    --hash=sha256:cb4e721195b96e1792f3dfaefa02fb36a4f6253e899bbe0793f8aef6ed0065ef
     # via flake8
 pygments==2.21.0 \
     --hash=sha256:2363c69b61c4a97c838da3b130dcd6468f4848992b21a82f2a63ec34377137d9 \

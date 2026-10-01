@@ -4,7 +4,7 @@
 #
 #    pip-compile --output-file=requirements_dev.txt requirements_dev.in
 #
-amsterdam-schema-tools[django]==9.13.0
+amsterdam-schema-tools[django]==9.14.1
     # via -r requirements.in
 annotated-types==0.7.0
     # via pydantic
@@ -160,7 +160,7 @@ filelock==3.29.0
     # via
     #   python-discovery
     #   virtualenv
-flake8==7.3.0
+flake8==7.4.1
     # via
     #   -r requirements.in
     #   flake8-colors
@@ -234,7 +234,7 @@ mapbox-vector-tile==2.2.0
     # via -r requirements.in
 mappyfile==1.2.0
     # via amsterdam-schema-tools
-markdown==3.10.3
+markdown==3.11
     # via -r requirements.in
 markdown-it-py==4.2.0
     # via rich
@@ -418,7 +418,7 @@ pur==7.4.0
     # via -r requirements.in
 pyclipper==1.4.0
     # via mapbox-vector-tile
-pycodestyle==2.14.0
+pycodestyle==2.15.0
     # via
     #   flake8
     #   flake8-debugger
@@ -436,7 +436,7 @@ pydantic-settings==2.14.2
     # via
     #   openapi-schema-validator
     #   openapi-spec-validator
-pyflakes==3.4.0
+pyflakes==4.0.1
     # via flake8
 pygments==2.21.0
     # via
