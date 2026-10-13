@@ -278,7 +278,10 @@ def serializer_factory(
     # a top-level "geometry" field.
     if model._table_schema.has_relation_as_main_geometry:
         try:
-            source_field = _get_related_main_geometry_source(model._table_schema)
+            source_field = (
+                f"{model._table_schema.main_geometry_field.python_name}."
+                f"{model._table_schema.related_main_geometry_field.python_name}"
+            )
             if source_field is not None:
                 serializer_part.add_field(
                     name="geometry",
@@ -323,27 +326,6 @@ def serializer_factory(
 
     # Generate Meta section and serializer class
     return serializer_part.construct_class(serializer_name, base_class=base.DynamicBodySerializer)
-
-
-def _get_related_main_geometry_source(table_schema: DatasetTableSchema) -> str | None:
-    """Return serializer source for related-table mainGeometry.
-
-    This is only available when the current table's mainGeometry points to a relation,
-    and the related table also defines a mainGeometry.
-    """
-    if not table_schema.has_relation_as_main_geometry:
-        return None
-
-    main_geometry_field = table_schema.main_geometry_field
-    if main_geometry_field is None:
-        return None
-
-    related_main_geometry = table_schema.related_main_geometry_field
-    if related_main_geometry is None:
-        return None
-
-    # DRF source uses model attribute traversal, not database column names.
-    return f"{main_geometry_field.python_name}.{related_main_geometry.python_name}"
 
 
 def _validate_model(model: type[DynamicModel]):
