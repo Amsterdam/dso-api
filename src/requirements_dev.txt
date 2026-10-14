@@ -33,7 +33,7 @@ azure-core==1.41.0
     #   msrest
 azure-core-tracing-opentelemetry==1.0.0b13
     # via azure-monitor-opentelemetry
-azure-identity==1.26.0
+azure-identity==1.25.3
     # via
     #   -r requirements.in
     #   azure-monitor-opentelemetry-exporter
@@ -100,7 +100,7 @@ defusedxml==0.7.1
     # via django-gisserver
 distlib==0.4.0
     # via virtualenv
-django==5.2.17
+django==5.2.18
     # via
     #   -r requirements.in
     #   amsterdam-schema-tools
