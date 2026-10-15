@@ -72,5 +72,6 @@ services:
       - "../amsterdam-schema/scopes:/tmp/scopes"
       - "../schema-tools:/tmp/schema-tools"
       - "../authorization_django:/tmp/authorization_django"
+      - "../django-gisserver:/tmp/django-gisserver"
     command: >
       /bin/bash -c "sh /app/initialize_db.sh && uwsgi --py-auto-reload=1 --enable-threads --lazy-apps --buffer-size=65535"
