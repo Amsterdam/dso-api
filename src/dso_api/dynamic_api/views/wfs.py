@@ -38,7 +38,13 @@ from django.urls import reverse
 from django.utils import translation
 from django.utils.functional import cached_property
 from gisserver.exceptions import InvalidParameterValue, PermissionDenied
-from gisserver.features import ComplexFeatureField, FeatureField, FeatureType, ServiceDescription
+from gisserver.features import (
+    ComplexFeatureField,
+    FeatureField,
+    FeatureType,
+    RelatedGeometryFeatureField,
+    ServiceDescription,
+)
 from gisserver.geometries import CRS
 from gisserver.parsers import wfs20
 from gisserver.views import WFSView
@@ -64,71 +70,22 @@ RE_SIMPLE_NAME = re.compile(
 
 @dataclass(frozen=True)
 class RelatedMainGeometry:
-    """Describe a main geometry that is resolved through a related model.
+    """
+    This class is a replacement for the built in GeometryField class from Django.
 
-    This is a synthetic geometry descriptor used when the Amsterdam Schema
-    points ``mainGeometry`` at a relation instead of at a local geometry field.
-    It lets the WFS layer treat the related geometry like a regular geometry
-    candidate while still keeping track of the full relation path.
+    In _get_geometry_fields, all GeometryFields are saved to be passed onto the WFSView.
+    A mainGeometry that is a relation is not a GeometryField in Amsterdam Schema. When
+    we detect this case, we pass on this dataclass instead, to give the WFS FeatureField
+    access to the attributes below.
     """
 
-    # Synthetic geometry descriptor used when table.mainGeometry points to a relation.
     name: str
     model_attribute: str
+    annotation_source: str
     relative_model_attribute: str
     srid: int
     verbose_name: str
     abstract: str
-
-
-class RelatedGeometryFeatureField(FeatureField):
-    """Bind a related geometry through its full path, but expose a local field name.
-
-    django-gisserver needs the full relation path during binding so it can
-    resolve the actual ``GeometryField`` on the related model. After binding,
-    the field should still appear in the WFS schema and output under its short,
-    local name.
-    """
-
-    def __init__(
-        self,
-        *args,
-        absolute_model_attribute: str,
-        relative_model_attribute: str,
-        **kwargs,
-    ):
-        """Store both the full relation path and the local geometry field name."""
-        super().__init__(*args, model_attribute=relative_model_attribute, **kwargs)
-        self._absolute_model_attribute = absolute_model_attribute
-        self._bind_model_attribute = absolute_model_attribute
-
-    def bind(
-        self,
-        model: type[models.Model],
-        parent: ComplexFeatureField | None = None,
-        feature_type: FeatureType | None = None,
-    ):
-        """Resolve the real related ``GeometryField`` during binding.
-
-        The field is normally exposed under a short local name such as
-        ``geometrie``. For binding, django-gisserver must temporarily see the
-        full relation path, for example ``betreft_bag_pand.geometrie``, so it
-        can resolve the actual field definition on the related model.
-        """
-        local_model_attribute = self.model_attribute
-        try:
-            # Temporarily expose the full relation path so FeatureField.bind()
-            # resolves the actual GeometryField on the related model.
-            self.model_attribute = self._bind_model_attribute
-            super().bind(model, parent=parent, feature_type=feature_type)
-        finally:
-            # Restore the public/local field name for schema generation and output.
-            self.model_attribute = local_model_attribute
-
-    @cached_property
-    def absolute_model_attribute(self) -> str:
-        """Return the full dotted ORM path to the related geometry field."""
-        return self._absolute_model_attribute
 
 
 class AuthenticatedFeatureType(FeatureType):
@@ -410,11 +367,10 @@ class DatasetWFSView(CheckModelPermissionsMixin, WFSView):
         if not isinstance(geo_field, RelatedMainGeometry):
             return queryset
 
-        # Pull the related geometry onto the base queryset under the local field
+        # Add the related geometry to the queryset as the local field
         # name so the rest of the WFS rendering pipeline can treat it like a
         # regular geometry field.
-        annotation_source = geo_field.model_attribute.replace(".", "__")
-        return queryset.annotate(**{geo_field.name: models.F(annotation_source)})
+        return queryset.annotate(**{geo_field.name: models.F(geo_field.annotation_source)})
 
     def get_feature_fields(  # noqa: C901
         self, model, main_geometry_field_name
@@ -609,18 +565,18 @@ class DatasetWFSView(CheckModelPermissionsMixin, WFSView):
             if not isinstance(field, GeometryField):
                 continue
 
-            if field.name == table_schema.main_geometry_field.db_name:
-                # Don't add the mainGeometry field from the current table
-                # if it's a relation to another table
-                if related_main_geometry is not None:
-                    continue
-                else:
-                    geometry_fields.insert(0, field)
+            if (
+                field.name == table_schema.main_geometry_field.db_name
+                and related_main_geometry is None
+            ):
+                # Only add the mainGeometry field from the current table
+                # if it's not a relation to another table
+                geometry_fields.insert(0, field)
             else:
                 geometry_fields.append(field)
 
         # Add the related mainGeometry to the front
-        if related_main_geometry is not None:
+        if related_main_geometry:
             geometry_fields.insert(0, related_main_geometry)
 
         return geometry_fields
@@ -628,12 +584,9 @@ class DatasetWFSView(CheckModelPermissionsMixin, WFSView):
     def _get_related_main_geometry_field(
         self, model, table_schema: DatasetTableSchema
     ) -> RelatedMainGeometry | None:
-        """Resolve a relation-backed ``mainGeometry`` into a synthetic descriptor.
-
-        Amsterdam Schema can point ``mainGeometry`` at a relation instead of at
-        a local geometry field. This method converts that schema concept into a
-        geometry descriptor that the WFS layer can handle like a regular main
-        geometry candidate.
+        """
+        This creates RelatedMainGeometry as a replacement for GeometryField,
+        with the correct attributes to be used by django-gisserver.
         """
 
         if not table_schema.has_main_geometry:
@@ -648,14 +601,14 @@ class DatasetWFSView(CheckModelPermissionsMixin, WFSView):
         relation_field = model._meta.get_field(main_geometry_field.python_name)
         related_model = relation_field.related_model
         related_geometry_field = related_model._meta.get_field(related_main_geometry.python_name)
+        model_attribute = f"{main_geometry_field.python_name}.{related_main_geometry.python_name}"
 
         # Mirror the related geometry field metadata so FeatureType can treat it
         # like a regular main geometry candidate.
         return RelatedMainGeometry(
             name=related_main_geometry.python_name,
-            model_attribute=(
-                f"{main_geometry_field.python_name}.{related_main_geometry.python_name}"
-            ),
+            model_attribute=model_attribute,
+            annotation_source=model_attribute.replace(".", "__"),
             relative_model_attribute=related_main_geometry.python_name,
             srid=related_geometry_field.srid,
             verbose_name=related_geometry_field.verbose_name,
