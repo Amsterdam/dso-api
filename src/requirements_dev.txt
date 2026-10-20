@@ -33,7 +33,7 @@ azure-core==1.41.0
     #   msrest
 azure-core-tracing-opentelemetry==1.0.0b13
     # via azure-monitor-opentelemetry
-azure-identity==1.25.3
+azure-identity==1.26.0
     # via
     #   -r requirements.in
     #   azure-monitor-opentelemetry-exporter
@@ -45,7 +45,7 @@ bandit==1.9.4
     # via -r requirements.in
 beautifulsoup4==4.15.0
     # via -r requirements.in
-black==26.10.0
+black==26.10.1
     # via -r requirements_dev.in
 build==1.5.0
     # via
@@ -53,7 +53,7 @@ build==1.5.0
     #   pip-tools
 cachebox==5.2.3
     # via deepdiff
-cachetools==7.2.0
+cachetools==7.2.2
     # via -r requirements.in
 certifi==2026.4.22
     # via
@@ -140,7 +140,7 @@ django-healthchecks==1.5.0
     # via -r requirements.in
 django-vectortiles==1.0.2
     # via -r requirements.in
-djangorestframework==3.18.1
+djangorestframework==3.18.3
     # via
     #   -r requirements.in
     #   djangorestframework-csv
@@ -234,7 +234,7 @@ mapbox-vector-tile==2.2.0
     # via -r requirements.in
 mappyfile==1.2.0
     # via amsterdam-schema-tools
-markdown==3.11
+markdown==3.11.1
     # via -r requirements.in
 markdown-it-py==4.2.0
     # via rich
@@ -267,7 +267,7 @@ mypy-extensions==1.1.0
     # via black
 nodeenv==1.10.0
     # via pre-commit
-numpy==2.5.3
+numpy==2.5.4
     # via
     #   -r requirements.in
     #   shapely
@@ -392,7 +392,7 @@ pause==0.3
     # via datadiensten-apikeyclient
 pg-grant==0.4.0
     # via amsterdam-schema-tools
-pip-tools==7.6.1
+pip-tools==7.6.2
     # via -r requirements_dev.in
 platformdirs==4.9.6
     # via
@@ -404,7 +404,7 @@ pluggy==1.6.0
     #   pytest-cov
 ply==3.11
     # via jsonpath-rw
-pre-commit==4.6.2
+pre-commit==4.7.0
     # via -r requirements_dev.in
 protobuf==6.33.6
     # via mapbox-vector-tile
@@ -527,7 +527,7 @@ rpds-py==0.30.0
     # via
     #   jsonschema
     #   referencing
-ruff==0.16.10
+ruff==0.17.1
     # via -r requirements_dev.in
 shapely==2.1.2
     # via
@@ -557,7 +557,7 @@ termcolor==3.3.0
     # via
     #   -r requirements_dev.in
     #   pytest-sugar
-tomli==2.4.1
+tomli==2.5.0
     # via -r requirements_dev.in
 typing-extensions==4.15.0
     # via
