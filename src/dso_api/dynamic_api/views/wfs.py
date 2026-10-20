@@ -81,11 +81,14 @@ class RelatedMainGeometry:
 
     name: str
     model_attribute: str
-    annotation_source: str
     relative_model_attribute: str
     srid: int
     verbose_name: str
     abstract: str
+
+    @property
+    def annotation_source(self) -> str:
+        return self.model_attribute.replace(".", "__")
 
 
 class AuthenticatedFeatureType(FeatureType):
@@ -608,7 +611,6 @@ class DatasetWFSView(CheckModelPermissionsMixin, WFSView):
         return RelatedMainGeometry(
             name=related_main_geometry.python_name,
             model_attribute=model_attribute,
-            annotation_source=model_attribute.replace(".", "__"),
             relative_model_attribute=related_main_geometry.python_name,
             srid=related_geometry_field.srid,
             verbose_name=related_geometry_field.verbose_name,
