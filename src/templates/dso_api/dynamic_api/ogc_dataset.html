@@ -1,0 +1,32 @@
+{% extends "dso_api/dynamic_api/docs/base.html" %}{% load dso_api_tags %}
+
+{% block title %}OGC record collection {{ ogc_title }}{% endblock %}
+
+{% block breadcrumb %}
+    <li><a href="/v1/ogc/">OGC endpoints</a></li>
+    <li class="active"><a href=".">{{ ogc_title }}</a></li>
+{% endblock %}
+
+{% block content %}
+  <main>
+    <h1>{{ ogc_title }} OGC {% if version != "default" %}({{version}}){% endif %}</h1>
+
+      <h2>Gebruik van deze dataset</h2>
+      {% if tilejson_url %}
+        <p>Voeg deze TileJSON URL toe aan uw GIS applicatie:</p>
+        <blockquote>
+          <a href="{{ tilejson_url }}"><samp>{{ base_url }}{{ tilejson_url }}</samp></a>
+        </blockquote>
+      {% endif %}
+      <p>Of voeg de volgende urls toe aan uw GIS applicatie:</p>
+      <ul>
+      {% for table in tables %}
+        <li><code>{{ base_url }}{{ path }}{{ table }}/{z}/{x}/{y}.pbf</code></li>
+      {% endfor %}
+      </ul>
+      <p>Voor de gebruikshandleiding, zie <a href='/v1/docs/generic/gis.html'>Datasets laden in GIS-pakketten</a>.</p>
+
+      <h2>Andere ontsluitingsvormen</h2>
+      <p>Deze dataset is ook beschikbaar als:</p>
+    </main>
+{% endblock %}

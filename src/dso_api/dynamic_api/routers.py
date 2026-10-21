@@ -50,8 +50,11 @@ from .views import (
     DatasetDocView,
     DatasetMVTSingleView,
     DatasetMVTView,
+    DatasetOGCIndexView,
     DatasetTileJSONView,
     DatasetWFSView,
+    OGCRecordsCollectionDetailView,
+    OGCRecordsCollectionView,
     viewset_factory,
 )
 
@@ -116,6 +119,7 @@ class DynamicRouter(NestedDefaultRouter):
         self._index_urls = []
         self._mvt_urls = []
         self._wfs_urls = []
+        self._ogc_urls = []
 
     def get_api_root_view(self, api_urls=None):
         """Show the OpenAPI specification as root view."""
@@ -165,6 +169,7 @@ class DynamicRouter(NestedDefaultRouter):
                 self._index_urls,
                 self._mvt_urls,
                 self._wfs_urls,
+                self._ogc_urls,
             )
         )
 
@@ -204,9 +209,10 @@ class DynamicRouter(NestedDefaultRouter):
         # Sub Index views for sub paths of datasets
         index_urls = self._build_index_views(api_datasets)
 
-        # mvt and wfs views
+        # mvt, wfs and ogc views
         mvt_urls = self._build_mvt_views(api_datasets)
         wfs_urls = self._build_wfs_views(api_datasets)
+        ogc_urls = self._build_ogc_views(api_datasets)
 
         # Atomically copy the new viewset registrations
         self.registry = self.static_routes + dataset_routes
@@ -215,6 +221,7 @@ class DynamicRouter(NestedDefaultRouter):
         self._index_urls = index_urls
         self._mvt_urls = mvt_urls
         self._wfs_urls = wfs_urls
+        self._ogc_urls = ogc_urls
 
         # invalidate the urls cache
         if hasattr(self, "_urls"):
@@ -552,6 +559,46 @@ class DynamicRouter(NestedDefaultRouter):
 
         return results
 
+    def _build_ogc_views(self, datasets: Iterable[Dataset]) -> list[URLPattern]:
+        """Build the mvt views per dataset"""
+        results = []
+        for dataset in datasets:
+            dataset_id = dataset.schema.id  # not dataset.name which is mangled.
+            results.append(
+                path(
+                    "/ogc",
+                    DatasetOGCIndexView.as_view(),  # hier ook een html template van aanmaken
+                    name="ogc",
+                )
+            ),
+            results.append(
+                path(
+                    "/ogc/records",
+                    DatasetOGCIndexView.as_view(),  # hier ook een html template van aanmaken
+                    name="ogc-records",
+                )
+            ),
+            results.append(
+                path(
+                    "/ogc/records/collections",
+                    OGCRecordsCollectionView.as_view(),
+                    name="ogc-records-list",
+                )
+            )
+            results.append(
+                path(
+                    f"/ogc/records/collections/{dataset.path}",
+                    OGCRecordsCollectionDetailView.as_view(),
+                    name="ogc-records-detail",
+                    kwargs={
+                        "dataset_name": dataset_id,
+                        "dataset_version": DEFAULT,
+                    },
+                )
+            )
+
+        return results
+
     def _build_wfs_views(self, datasets: Iterable[Dataset]) -> list[URLPattern]:
         """Build the wfs views per dataset"""
         results = []
@@ -679,6 +726,7 @@ class DynamicRouter(NestedDefaultRouter):
         self._openapi_urls.clear()
         self._mvt_urls.clear()
         self._wfs_urls.clear()
+        self._ogc_urls.clear()
         self._index_urls.clear()
         if hasattr(self, "_urls"):
             del self._urls

@@ -37,6 +37,7 @@ def get_patterns(router_urls):
         path("/docs/searchindex.json", search_index),
         re_path(r"/mvt/?$", views.DatasetMVTIndexView.as_view(), name="mvt-index"),
         re_path(r"/wfs/?$", views.DatasetWFSIndexView.as_view(), name="wfs-index"),
+        re_path(r"/ogc/?$", views.DatasetOGCIndexView.as_view(), name="ogc-index"),
         path("", include(router_urls), name="api-root"),
         # Swagger, OpenAPI and OAuth2 login logic.
         path("/oauth2-redirect.html", views.oauth2_redirect, name="oauth2-redirect"),
