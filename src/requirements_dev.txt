@@ -98,7 +98,7 @@ deepdiff==9.1.0
     # via amsterdam-schema-tools
 defusedxml==0.7.1
     # via django-gisserver
-distlib==0.4.0
+distlib==0.4.4
     # via virtualenv
 django==5.2.18
     # via
@@ -375,7 +375,7 @@ orjson==3.12.0
     #   -r requirements.in
     #   amsterdam-schema-tools
     #   django-gisserver
-packaging==26.2
+packaging==26.3
     # via
     #   black
     #   build
@@ -383,6 +383,7 @@ packaging==26.2
     #   opentelemetry-instrumentation
     #   opentelemetry-instrumentation-flask
     #   pytest
+    #   virtualenv
     #   wheel
 pathable==0.6.0
     # via jsonschema-path
@@ -592,7 +593,7 @@ uwsgi-readiness-check==0.2.0
     # via -r requirements.in
 uwsgitop==0.12
     # via -r requirements.in
-virtualenv==21.7.13
+virtualenv==21.14.9
     # via pre-commit
 webcolors==25.10.0
     # via jsonschema
