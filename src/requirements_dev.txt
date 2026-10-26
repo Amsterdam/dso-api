@@ -593,7 +593,7 @@ uwsgi-readiness-check==0.2.0
     # via -r requirements.in
 uwsgitop==0.12
     # via -r requirements.in
-virtualenv==21.14.9
+virtualenv==21.14.13
     # via pre-commit
 webcolors==25.10.0
     # via jsonschema
