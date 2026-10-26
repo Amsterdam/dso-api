@@ -156,7 +156,7 @@ factory-boy==3.3.3
     # via amsterdam-schema-tools
 faker==40.15.0
     # via factory-boy
-filelock==3.29.0
+filelock==4.2.1
     # via
     #   python-discovery
     #   virtualenv
