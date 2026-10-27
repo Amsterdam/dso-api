@@ -51,6 +51,7 @@ from .views import (
     DatasetMVTSingleView,
     DatasetMVTView,
     DatasetOGCIndexView,
+    DatasetOGCRecordsIndexView,
     DatasetTileJSONView,
     DatasetWFSView,
     OGCRecordsCollectionDetailView,
@@ -560,21 +561,21 @@ class DynamicRouter(NestedDefaultRouter):
         return results
 
     def _build_ogc_views(self, datasets: Iterable[Dataset]) -> list[URLPattern]:
-        """Build the mvt views per dataset"""
+        """Build the ogc views per dataset"""
         results = []
         for dataset in datasets:
             dataset_id = dataset.schema.id  # not dataset.name which is mangled.
             results.append(
                 path(
                     "/ogc",
-                    DatasetOGCIndexView.as_view(),  # hier ook een html template van aanmaken
+                    DatasetOGCIndexView.as_view(),
                     name="ogc",
                 )
             ),
             results.append(
                 path(
                     "/ogc/records",
-                    DatasetOGCIndexView.as_view(),  # hier ook een html template van aanmaken
+                    DatasetOGCRecordsIndexView.as_view(),
                     name="ogc-records",
                 )
             ),

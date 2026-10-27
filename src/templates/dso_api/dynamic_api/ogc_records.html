@@ -1,0 +1,27 @@
+
+{% extends "dso_api/dynamic_api/docs/base.html" %}{% load i18n static dso_api_tags %}
+
+{% block breadcrumb %}
+    <li><a href="/v1/ogc/records">OGC Records</a></li>
+{% endblock %}
+
+{% block content %}
+<blockquote style="border-color: #ec0101; margin-top: 1rem;">
+    <p>
+      OGC Records worden gebruikt om datasets en de bijbehorende datasetversies volgens de OGC specificatie
+      op een gestandaardiseerde manier beschikbaar te stellen. Iedere DSO-dataset wordt ontsloten als een
+      record collection, met metadata over deze dataset uit het Amsterdam Schema en de beschikbare datasetversies.
+      Iedere datasetversie wordt vervolgens beschreven door een afzonderlijk OGC-record met de bijbehorende
+      metadata en links naar de relevante WFS- en WMS-services. Hierdoor kunnen kaartviewers zoals NL3D en
+      Geosquare deze datasets en datasetversies op een uniforme manier ontdekken en de bijbehorende geografische
+      gegevens raadplegen.
+    </p>
+</blockquote>
+
+  <h2>Record collections</h2>
+  <p>
+    Een record collection van een dataset bevat metadata zoals een identificatie, titel, beschrijving en links
+    naar de bijbehorende records (datasetversies). Voor de OGC Records API documentatie, zie <a href='https://docs.ogc.org/is/20-004r1/20-004r1.html'>OGC API - Records.</a>
+    Voor een overzicht van bestaande record collections met metadata uit het schema, zie <a href="{{ collection_url }}">{{ collection_url }}.</a>
+  </p>
+{% endblock %}

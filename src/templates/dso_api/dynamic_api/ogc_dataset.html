@@ -1,32 +1,31 @@
 {% extends "dso_api/dynamic_api/docs/base.html" %}{% load dso_api_tags %}
 
-{% block title %}OGC record collection {{ ogc_title }}{% endblock %}
 
 {% block breadcrumb %}
-    <li><a href="/v1/ogc/">OGC endpoints</a></li>
-    <li class="active"><a href=".">{{ ogc_title }}</a></li>
+    <li><a href="/v1/ogc">OGC endpoints</a></li>
 {% endblock %}
 
+
 {% block content %}
+<blockquote style="border-color: #ec0101; margin-top: 1rem;">
+    <p>
+      Het Open Geospatial Consortium (OGC) is een internationale organisatie die open standaarden ontwikkelt
+      voor het uitwisselen, publiceren en opvragen van geografische informatie. Deze standaarden zorgen ervoor
+      dat verschillende systemen en applicaties op een uniforme manier met ruimtelijke gegevens kunnen werken.
+      De OGC API-standaarden maken het mogelijk om geografische gegevens en bijbehorende metadata via web-API's
+      beschikbaar te stellen en te gebruiken.
+    </p>
+
+    <p>
+      De Records API wordt gebruikt om gegevensbronnen te ontdekken met metadata uit het Amsterdam Schema.
+    </p>
+</blockquote>
   <main>
-    <h1>{{ ogc_title }} OGC {% if version != "default" %}({{version}}){% endif %}</h1>
+      <h2>OGC Endpoints</h2>
+        <dl class="row">
+          {% if records_url %}<dt class="col-xs-2">Records</dt><dd><a href="{{ records_url }}">{{ records_url }}</a></dd>{% endif %}
+          {% if features_url %}<dt class="col-xs-2">Features</dt><dd>{{ features_url }}</dd>{% endif %}
+        </dl>
 
-      <h2>Gebruik van deze dataset</h2>
-      {% if tilejson_url %}
-        <p>Voeg deze TileJSON URL toe aan uw GIS applicatie:</p>
-        <blockquote>
-          <a href="{{ tilejson_url }}"><samp>{{ base_url }}{{ tilejson_url }}</samp></a>
-        </blockquote>
-      {% endif %}
-      <p>Of voeg de volgende urls toe aan uw GIS applicatie:</p>
-      <ul>
-      {% for table in tables %}
-        <li><code>{{ base_url }}{{ path }}{{ table }}/{z}/{x}/{y}.pbf</code></li>
-      {% endfor %}
-      </ul>
-      <p>Voor de gebruikshandleiding, zie <a href='/v1/docs/generic/gis.html'>Datasets laden in GIS-pakketten</a>.</p>
-
-      <h2>Andere ontsluitingsvormen</h2>
-      <p>Deze dataset is ook beschikbaar als:</p>
     </main>
 {% endblock %}
