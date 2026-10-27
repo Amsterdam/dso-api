@@ -209,6 +209,14 @@ class DatasetDocView(TemplateView):
                     if ds.has_geometry_fields
                     else None
                 ),
+                "ogc_url": (
+                    reverse(
+                        "dynamic_api:ogc-records-detail",
+                        kwargs={"dataset_name": ds_schema.id},
+                    )
+                    if ds.has_geometry_fields
+                    else None
+                ),
                 "oauth_client_id_entra": settings.OAUTH_CLIENT_ID_ENTRA,
                 "oauth_authority_entra": settings.OAUTH_AUTHORITY_ENTRA,
             }
