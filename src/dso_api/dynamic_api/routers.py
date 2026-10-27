@@ -593,7 +593,6 @@ class DynamicRouter(NestedDefaultRouter):
                     name="ogc-records-detail",
                     kwargs={
                         "dataset_name": dataset_id,
-                        "dataset_version": DEFAULT,
                     },
                 )
             )
