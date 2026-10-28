@@ -44,7 +44,7 @@ def test_reload_delete(router, bommen_dataset):
     bommen_dataset.delete()
     router.reload()
     router_urls = [p.name for p in router.urls]
-    assert router_urls == ["api-root"]
+    assert router_urls == ["api-root", "ogc-records-list"]
 
     with pytest.raises(NoReverseMatch):
         assert reverse("dynamic_api:bommen-bommen-list")
