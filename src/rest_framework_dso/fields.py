@@ -601,6 +601,10 @@ class DSOGeometryField(GeometryField):
 class DSOURLField(serializers.URLField):
     """Ensure the URL is properly encoded"""
 
+    # Characters that have a meaning in the path/query (RFC 3986), and are left as-is.
+    # This keeps "?a=1&b=2" intact, and avoids double encoding of "%20" into "%2520".
+    SAFE_CHARS = "/?:@!$&'()*+,;=%"
+
     def to_representation(self, value):
         try:
             bits = urlsplit(value)
@@ -608,7 +612,13 @@ class DSOURLField(serializers.URLField):
             return value
         else:
             return urlunsplit(
-                (bits.scheme, bits.netloc, quote(bits.path), quote(bits.query), bits.fragment)
+                (
+                    bits.scheme,
+                    bits.netloc,
+                    quote(bits.path, safe=self.SAFE_CHARS),
+                    quote(bits.query, safe=self.SAFE_CHARS),
+                    bits.fragment,
+                )
             )
 
 

@@ -4,8 +4,39 @@ from rest_framework.exceptions import ValidationError
 from rest_framework_dso.fields import (
     ALLOW_ALL_FIELDS_TO_DISPLAY,
     DENY_SUB_FIELDS_TO_DISPLAY,
+    DSOURLField,
     FieldsToDisplay,
 )
+
+
+@pytest.mark.parametrize(
+    ["value", "expected"],
+    [
+        # Spaces are encoded
+        (
+            "https://host.domain/file space.extension",
+            "https://host.domain/file%20space.extension",
+        ),
+        ("https://host.domain/?q=a b", "https://host.domain/?q=a%20b"),
+        # Query string separators are kept intact
+        (
+            "https://data.amsterdam.nl/data/geozoek?lagen=veilov-oovoalg&zoom=10",
+            "https://data.amsterdam.nl/data/geozoek?lagen=veilov-oovoalg&zoom=10",
+        ),
+        (
+            "https://host.domain/wms?SERVICE=WMS&REQUEST=GetCapabilities",
+            "https://host.domain/wms?SERVICE=WMS&REQUEST=GetCapabilities",
+        ),
+        # Already encoded values are not encoded twice
+        (
+            "https://host.domain/file%20space?q=a%26b",
+            "https://host.domain/file%20space?q=a%26b",
+        ),
+    ],
+)
+def test_dso_url_field(value, expected):
+    """Prove that DSOURLField encodes the URL, without breaking the query string."""
+    assert DSOURLField().to_representation(value) == expected
 
 
 class TestFieldsToDisplay:
