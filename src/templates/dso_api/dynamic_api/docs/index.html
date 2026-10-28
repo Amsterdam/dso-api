@@ -26,6 +26,7 @@
 <ul>
   <li><a href="generic/rest/index.html">REST-API's</a> voor backend applicaties, JavaScript en mobiele-appontwikkelaars.</li>
   <li><a href="generic/gis/index.html">WFS/MVT kaartlagen</a> voor GIS-professionals.</li>
+  <li>OGC records.</li>
   <li>CSV exports.</li>
   <li>GeoJSON exports.</li>
   <li>Bulk exports in ZIP-formaat per dataset.</li>
@@ -83,6 +84,7 @@
           {% if ds.has_geometry_fields %}
             <a href="{% url 'dynamic_api:wfs' dataset_name=ds.id %}">WFS</a>,
             <a href="{% url 'dynamic_api:mvt' dataset_name=ds.id %}">MVT</a>,
+            <a href="{% url 'dynamic_api:ogc-records-detail' dataset_name=ds.id %}">OGC</a>,
           {% endif %}
           <a href="{{ ds.docs_url }}">Documentatie</a>
       </dd>

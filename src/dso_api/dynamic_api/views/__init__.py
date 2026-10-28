@@ -5,6 +5,12 @@ from .doc import DatasetDocView, DocsIndexView
 from .index import APIIndexView
 from .mvt import DatasetMVTIndexView, DatasetMVTSingleView, DatasetMVTView, DatasetTileJSONView
 from .oauth import oauth2_redirect
+from .ogc import (
+    OGCIndexView,
+    OGCRecordsCollectionDetailView,
+    OGCRecordsCollectionView,
+    OGCRecordsIndexView,
+)
 from .wfs import DatasetWFSIndexView, DatasetWFSView
 
 __all__ = (
@@ -17,6 +23,10 @@ __all__ = (
     "DatasetTileJSONView",
     "DatasetWFSView",
     "DatasetWFSIndexView",
+    "OGCIndexView",
+    "OGCRecordsIndexView",
+    "OGCRecordsCollectionView",
+    "OGCRecordsCollectionDetailView",
     "DocsIndexView",
     "oauth2_redirect",
     "viewset_factory",
