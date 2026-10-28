@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 class OGCIndexView(TemplateView):
     """Overview of available OGC endpoints."""
 
-    template_name = "dso_api/dynamic_api/ogc_dataset.html"
+    template_name = "dso_api/dynamic_api/ogc_index.html"
     name = "OGC endpoints"
     api_type = "OGC"
 
