@@ -10,7 +10,7 @@ from dso_api.dynamic_api.datasets import get_active_datasets
 logger = logging.getLogger(__name__)
 
 
-class DatasetOGCIndexView(TemplateView):
+class OGCIndexView(TemplateView):
     """Overview of available OGC endpoints."""
 
     template_name = "dso_api/dynamic_api/ogc_dataset.html"
@@ -22,12 +22,11 @@ class DatasetOGCIndexView(TemplateView):
 
         base = self.request.build_absolute_uri("/").rstrip("/")
         context["records_url"] = f"{base}/v1/ogc/records"
-        context["features_url"] = f"{base}/v1/ogc/features"
 
         return context
 
 
-class DatasetOGCRecordsIndexView(TemplateView):
+class OGCRecordsIndexView(TemplateView):
     """Overview of OGC Records endpoints."""
 
     template_name = "dso_api/dynamic_api/ogc_records.html"

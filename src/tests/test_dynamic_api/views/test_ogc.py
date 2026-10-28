@@ -2,19 +2,21 @@ import pytest
 
 
 @pytest.mark.django_db
-class TestDatasetOGCIndexView:
+class TestOGCIndexView:
     def test_ogc_index_view(self, api_client):
         ogc_url = "/v1/ogc"
         response = api_client.get(ogc_url)
         assert response.status_code == 200, response.content
+        assert b"/v1/ogc/records" in response.content
 
 
 @pytest.mark.django_db
-class TestDatasetOGCRecordsIndexView:
+class TestOGCRecordsIndexView:
     def test_ogc_records_view(self, api_client, afval_container):
         ogc_url = "/v1/ogc/records"
         response = api_client.get(ogc_url)
         assert response.status_code == 200, response.content
+        assert b"/v1/ogc/records/collections" in response.content
 
 
 @pytest.mark.django_db
@@ -22,7 +24,10 @@ class TestOGCRecordsCollectionView:
     def test_ogc_collection_view(self, api_client, afval_container):
         ogc_url = "/v1/ogc/records/collections"
         response = api_client.get(ogc_url)
+        json = response.json()
         assert response.status_code == 200, response.content
+        assert len(json["collections"]) == 1
+        assert json["collections"][0]["id"] == "afvalwegingen"
 
 
 @pytest.mark.django_db
