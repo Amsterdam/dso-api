@@ -4,14 +4,20 @@ from django.db import connection
 from django.urls import path
 from rest_framework import generics, viewsets
 from rest_framework.exceptions import ErrorDetail, ValidationError
+from rest_framework.renderers import JSONRenderer
 from rest_framework.routers import SimpleRouter
 
+from dso_api import middleware
 from rest_framework_dso import views
-from rest_framework_dso.renderers import HALJSONRenderer
+from rest_framework_dso.renderers import CSVRenderer, HALJSONRenderer, RendererMixin
 from tests.utils import read_response, read_response_json, read_response_partial
 
 from .models import Location, Movie
 from .serializers import LocationSerializer, MovieSerializer
+
+
+class NonStreamingJSONRenderer(RendererMixin, JSONRenderer):
+    pass
 
 
 class MovieDetailAPIView(views.DSOViewMixin, generics.RetrieveAPIView):
@@ -22,6 +28,13 @@ class MovieDetailAPIView(views.DSOViewMixin, generics.RetrieveAPIView):
 class MovieListAPIView(views.DSOViewMixin, generics.ListAPIView):
     serializer_class = MovieSerializer
     queryset = Movie.objects.all()
+
+
+class MovieCSVListAPIView(views.DSOViewMixin, generics.ListAPIView):
+    serializer_class = MovieSerializer
+    queryset = Movie.objects.all()
+    renderer_classes = [CSVRenderer]
+    dataset_id = "movies"
 
 
 class MovieViewSet(views.DSOViewMixin, viewsets.ReadOnlyModelViewSet):
@@ -40,12 +53,45 @@ router.register("v1/viewset/movies", MovieViewSet, basename="viewset-movies")
 urlpatterns = [
     path("v1/locations", LocationListAPIView.as_view(), name="locations-list"),
     path("v1/movies", MovieListAPIView.as_view(), name="movies-list"),
+    path("v1/movies-csv", MovieCSVListAPIView.as_view(), name="movies-csv-list"),
     path("v1/movies/<pk>", MovieDetailAPIView.as_view(), name="movies-detail"),
 ] + router.get_urls()
 
 handler500 = views.server_error
 
 pytestmark = [pytest.mark.urls(__name__)]  # enable for all tests in this file
+
+
+class FakeUwsgi:
+    def __init__(self):
+        self.calls = []
+
+    def set_user_harakiri(self, seconds):
+        self.calls.append(seconds)
+
+
+@pytest.mark.parametrize("raises", [False, True])
+def test_harakiri_starts_before_request_handler(settings, monkeypatch, raises):
+    fake_uwsgi = FakeUwsgi()
+    monkeypatch.setattr(middleware, "_uwsgi", fake_uwsgi)
+    settings.UWSGI_HARAKIRI_DEFAULT = 120
+    request = object()
+    response = object()
+
+    def get_response(received_request):
+        assert received_request is request
+        assert fake_uwsgi.calls == [120]
+        if raises:
+            raise RuntimeError("handler failed")
+        return response
+
+    handler = middleware.HarakiriMiddleware(get_response)
+    if raises:
+        with pytest.raises(RuntimeError, match="handler failed"):
+            handler(request)
+    else:
+        assert handler(request) is response
+    assert fake_uwsgi.calls == [120]
 
 
 @pytest.mark.django_db
@@ -216,6 +262,64 @@ class TestExpand:
             "page": {"number": 1, "size": 20},
         }
         assert response["Content-Type"] == "application/hal+json"
+
+    @pytest.mark.parametrize("url", ["/v1/movies-csv", "/v1/movies"])
+    @pytest.mark.parametrize("dataset_id", [None, "movies", "benkagg"])
+    @pytest.mark.parametrize("exempt_datasets", [[], ["benkagg"], ["benkagg", "movies"]])
+    def test_streaming_exempts_configured_datasets_from_uwsgi_harakiri(
+        self, api_client, movie, settings, monkeypatch, url, dataset_id, exempt_datasets
+    ):
+        fake_uwsgi = FakeUwsgi()
+        monkeypatch.setattr(views, "_uwsgi", fake_uwsgi)
+        monkeypatch.setattr(middleware, "_uwsgi", fake_uwsgi)
+        monkeypatch.setattr(MovieCSVListAPIView, "dataset_id", dataset_id)
+        monkeypatch.setattr(MovieListAPIView, "dataset_id", dataset_id, raising=False)
+        settings.UWSGI_HARAKIRI_DEFAULT = 180
+        settings.UWSGI_HARAKIRI_EXEMPT_DATASETS = exempt_datasets
+        expected_calls = [180, 0] if dataset_id in exempt_datasets else [180]
+
+        response = api_client.get(url)
+        assert response.streaming
+        assert fake_uwsgi.calls == expected_calls
+        read_response(response)
+
+        assert response.status_code == 200
+        assert fake_uwsgi.calls == expected_calls
+
+    @pytest.mark.parametrize("timeout", [0, 120])
+    @pytest.mark.parametrize("invalid_fields", [False, True])
+    @pytest.mark.parametrize("dataset_id", ["movies", "benkagg"])
+    def test_non_streaming_sets_uwsgi_harakiri(
+        self, api_client, movie, settings, monkeypatch, timeout, invalid_fields, dataset_id
+    ):
+        fake_uwsgi = FakeUwsgi()
+        monkeypatch.setattr(views, "_uwsgi", fake_uwsgi)
+        monkeypatch.setattr(middleware, "_uwsgi", fake_uwsgi)
+        monkeypatch.setattr(MovieListAPIView, "dataset_id", dataset_id, raising=False)
+        monkeypatch.setattr(MovieListAPIView, "renderer_classes", [NonStreamingJSONRenderer])
+        settings.UWSGI_HARAKIRI_DEFAULT = timeout
+        params = {"_fields": "unknown"} if invalid_fields else {}
+
+        response = api_client.get(
+            "/v1/movies",
+            data=params,
+            HTTP_ACCEPT="application/json",
+        )
+
+        assert not response.streaming
+        assert response.status_code == (400 if invalid_fields else 200)
+        assert fake_uwsgi.calls == [timeout]
+        read_response(response)
+
+    def test_non_streaming_without_uwsgi(self, api_client, movie, monkeypatch):
+        monkeypatch.setattr(views, "_uwsgi", None)
+        monkeypatch.setattr(middleware, "_uwsgi", None)
+
+        response = api_client.get("/v1/movies", HTTP_ACCEPT="text/html")
+
+        assert not response.streaming
+        assert response.status_code == 200
+        read_response(response)
 
     @pytest.mark.parametrize(
         "params",

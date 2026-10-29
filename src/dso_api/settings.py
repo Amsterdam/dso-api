@@ -46,6 +46,9 @@ OAUTH_DEFAULT_SCOPE = env.str("OAUTH_DEFAULT_SCOPE", None)
 OAUTH_CLIENT_ID = os.getenv("OAUTH_CLIENT_ID", "dso-api-open-api")
 OAUTH_CLIENT_ID_ENTRA = os.getenv("OAUTH_CLIENT_ID_ENTRA")
 
+# uWSGI settings
+UWSGI_HARAKIRI_DEFAULT = env.int("DSO_UWSGI_HARAKIRI_DEFAULT", default=180)
+UWSGI_HARAKIRI_EXEMPT_DATASETS = ["benkagg"]
 
 # -- Security
 
@@ -78,6 +81,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    "dso_api.middleware.HarakiriMiddleware",
     "django.middleware.gzip.GZipMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",

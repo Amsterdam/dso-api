@@ -2,6 +2,7 @@ import json
 import sys
 from inspect import isgeneratorfunction
 
+from django.conf import settings
 from django.http import HttpResponseNotFound, JsonResponse
 from django.utils.html import escape
 from gisserver.exceptions import ExternalValueError
@@ -19,6 +20,11 @@ from rest_framework_dso import crs, parsers
 from rest_framework_dso.exceptions import HumanReadableException, RemoteAPIException
 from rest_framework_dso.pagination import DSOPageNumberPagination
 from rest_framework_dso.response import StreamingResponse
+
+try:
+    import uwsgi as _uwsgi
+except ImportError:
+    _uwsgi = None
 
 W3HTMLREF = "https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.5.1"
 
@@ -370,6 +376,13 @@ class DSOViewMixin:
             except AttributeError:
                 pass
             response = response.accepted_renderer.finalize_response(response, renderer_context)
+
+        exempt_stream = (
+            response.streaming
+            and getattr(self, "dataset_id", None) in settings.UWSGI_HARAKIRI_EXEMPT_DATASETS
+        )
+        if _uwsgi is not None and exempt_stream:
+            _uwsgi.set_user_harakiri(0)
 
         return response
 
