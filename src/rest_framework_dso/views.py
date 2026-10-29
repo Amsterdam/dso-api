@@ -381,8 +381,8 @@ class DSOViewMixin:
             response.streaming
             and getattr(self, "dataset_id", None) in settings.UWSGI_HARAKIRI_EXEMPT_DATASETS
         )
-        if _uwsgi is not None and not exempt_stream:
-            _uwsgi.set_user_harakiri(settings.UWSGI_HARAKIRI_DEFAULT)
+        if _uwsgi is not None and exempt_stream:
+            _uwsgi.set_user_harakiri(0)
 
         return response
 
