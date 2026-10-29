@@ -1,5 +1,6 @@
 from importlib.metadata import version
 
+from django.conf import settings
 from django.http import HttpRequest
 from packaging.version import parse
 from schematools.contrib.django.models import Profile
@@ -7,6 +8,21 @@ from schematools.permissions import UserScopes
 from schematools.permissions.auth import RLA_SCOPE
 
 from dso_api.dbroles import DatabaseRoles
+
+try:
+    import uwsgi as _uwsgi
+except ImportError:
+    _uwsgi = None
+
+
+class HarakiriMiddleware:
+    def __init__(self, get_response):
+        self._get_response = get_response
+
+    def __call__(self, request: HttpRequest):
+        if _uwsgi is not None:
+            _uwsgi.set_user_harakiri(settings.UWSGI_HARAKIRI_DEFAULT)
+        return self._get_response(request)
 
 
 class AuthMiddleware:
