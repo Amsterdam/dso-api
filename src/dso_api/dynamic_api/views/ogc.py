@@ -191,7 +191,6 @@ class OGCRecordDetailView(APIView):
         record_url = f"{base}/v1/ogc/records/collections/{dataset_name}/{dataset_version}"
         record = []
 
-        # only some datasets will have a WFS url?
         wfs_url = (
             f"{base}/v1/wfs/{dataset_name}/{dataset_version}?service=WFS&request=GetCapabilities"
         )
