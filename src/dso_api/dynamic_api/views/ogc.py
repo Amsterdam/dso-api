@@ -110,13 +110,14 @@ class OGCRecordsCollectionDetailView(APIView):
                 self.build_record_collection(
                     ds=ds,
                     version=version,
+                    base=base,
                     collection_url=collection_url,
                 )
             )
 
         return Response({"records": records})
 
-    def build_record_collection(self, ds, version, collection_url):
+    def build_record_collection(self, ds, version, base, collection_url):
         """Handle missing attributes and ensure each OGC field has the expected datatype."""
         metadata = {
             "id": f"{ds.schema.id}_{version}",
@@ -136,6 +137,15 @@ class OGCRecordsCollectionDetailView(APIView):
                 },
             ],
         }
+
+        for version, _ in ds.schema.versions.items():
+            metadata["links"].append(
+                {
+                    "rel": f"{version}",
+                    "type": "application/json",
+                    "href": f"{base}/v1/ogc/records/collections/{ds.schema.id}/{version}",
+                }
+            )
 
         if ds.schema.get("dateCreated"):
             metadata["created"] = ds.schema.get("dateCreated")
@@ -158,3 +168,70 @@ class OGCRecordsCollectionDetailView(APIView):
             metadata["license"] = ds.schema.license
 
         return [metadata]
+
+
+class OGCRecordDetailView(APIView):
+    """An JSON page for a single OGC record (datasetversion)."""
+
+    renderer_classes = [JSONRenderer]
+    name = "Record"
+
+    def get_datasets(self):
+        return [
+            ds
+            for ds in get_active_datasets().db_enabled().order_by("name")
+            if ds.has_geometry_fields
+        ]
+
+    def get(self, request, *args, **kwargs):
+        base = request.build_absolute_uri("/").rstrip("/")
+        datasets = self.get_datasets()
+        dataset_name = self.kwargs.get("dataset_name")
+        dataset_version = self.kwargs.get("dataset_version")
+        record_url = f"{base}/v1/ogc/records/collections/{dataset_name}/{dataset_version}"
+        record = []
+
+        wfs_url = (
+            f"{base}/v1/wfs/{dataset_name}/{dataset_version}?service=WFS&request=GetCapabilities"
+        )
+
+        ds = next(
+            (dataset for dataset in datasets if str(dataset.schema.id) == str(dataset_name)),
+            None,
+        )
+
+        record.append(
+            self.build_record(
+                ds=ds,
+                version=dataset_version,
+                record_url=record_url,
+                wfs_url=wfs_url,
+            )
+        )
+
+        return Response({"record": record})
+
+    def build_record(self, ds, version, record_url, wfs_url):
+        """Handle missing attributes and ensure each OGC field has the expected datatype."""
+        metadata = {
+            "id": f"{ds.schema.id}_{version}",
+            "conformsTo": [],
+            "language": {"code": "nl", "name": "Dutch (Netherlands)"},
+            "links": [
+                {
+                    "rel": "self",
+                    "type": "application/json",
+                    "href": record_url,
+                },
+                {
+                    "rel": "WFS",
+                    "type": "application/json",
+                    "href": wfs_url,
+                },
+            ],
+        }
+
+        if ds.schema.get("dateCreated"):
+            metadata["created"] = ds.schema.get("dateCreated")
+
+        return metadata

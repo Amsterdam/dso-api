@@ -7,6 +7,7 @@ from .mvt import DatasetMVTIndexView, DatasetMVTSingleView, DatasetMVTView, Data
 from .oauth import oauth2_redirect
 from .ogc import (
     OGCIndexView,
+    OGCRecordDetailView,
     OGCRecordsCollectionDetailView,
     OGCRecordsCollectionView,
     OGCRecordsIndexView,
@@ -27,6 +28,7 @@ __all__ = (
     "OGCRecordsIndexView",
     "OGCRecordsCollectionView",
     "OGCRecordsCollectionDetailView",
+    "OGCRecordDetailView",
     "DocsIndexView",
     "oauth2_redirect",
     "viewset_factory",
