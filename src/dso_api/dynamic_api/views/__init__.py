@@ -9,6 +9,7 @@ from .ogc import (
     OGCIndexView,
     OGCRecordDetailView,
     OGCRecordsCollectionDetailView,
+    OGCRecordsCollectionItemsView,
     OGCRecordsCollectionView,
     OGCRecordsIndexView,
 )
@@ -28,6 +29,7 @@ __all__ = (
     "OGCRecordsIndexView",
     "OGCRecordsCollectionView",
     "OGCRecordsCollectionDetailView",
+    "OGCRecordsCollectionItemsView",
     "OGCRecordDetailView",
     "DocsIndexView",
     "oauth2_redirect",

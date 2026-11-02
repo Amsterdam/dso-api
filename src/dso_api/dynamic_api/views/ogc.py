@@ -81,7 +81,7 @@ class OGCRecordsCollectionView(APIView):
 
 
 class OGCRecordsCollectionDetailView(APIView):
-    """An JSON page for a single OGC record collection (dataset)."""
+    """A JSON page for a single OGC record collection (dataset)."""
 
     renderer_classes = [JSONRenderer]
     name = "Records"
@@ -143,7 +143,7 @@ class OGCRecordsCollectionDetailView(APIView):
                 {
                     "rel": f"{version}",
                     "type": "application/json",
-                    "href": f"{base}/v1/ogc/records/collections/{ds.schema.id}/{version}",
+                    "href": f"{base}/v1/ogc/records/collections/{ds.schema.id}/items/{version}",
                 }
             )
 
@@ -170,8 +170,58 @@ class OGCRecordsCollectionDetailView(APIView):
         return [metadata]
 
 
+class OGCRecordsCollectionItemsView(APIView):
+    """Shows a JSON page with an overview of record collection items."""
+
+    renderer_classes = [JSONRenderer]
+    name = "Collection Items"
+
+    def get_datasets(self):
+        return [
+            ds
+            for ds in get_active_datasets().db_enabled().order_by("name")
+            if ds.has_geometry_fields
+        ]
+
+    def get(self, request, *args, **kwargs):
+        base = request.build_absolute_uri("/").rstrip("/")
+        datasets = self.get_datasets()
+        dataset_name = self.kwargs.get("dataset_name")
+
+        ds = next(
+            (dataset for dataset in datasets if str(dataset.schema.id) == str(dataset_name)),
+            None,
+        )
+
+        items = []
+
+        for version, _ in ds.schema.versions.items():
+            items.append(
+                {
+                    "id": f"{ds.schema.id}_{version}",
+                    "title": ds.schema.title or ds.name,
+                    "description": ds.schema.description or "",
+                    "links": [
+                        {
+                            "rel": "self",
+                            "type": "application/json",
+                            "href": (f"{base}/v1/ogc/records/collections/{ds.schema.id}/items"),
+                        },
+                        {
+                            "rel": f"{version}",
+                            "type": "application/json",
+                            "href": f"{base}/v1/ogc/records/collections/{ds.schema.id}/items"
+                            f"/{version}",
+                        },
+                    ],
+                }
+            )
+
+        return Response({"items": items})
+
+
 class OGCRecordDetailView(APIView):
-    """An JSON page for a single OGC record (datasetversion)."""
+    """A JSON page for a single OGC record (datasetversion)."""
 
     renderer_classes = [JSONRenderer]
     name = "Record"
@@ -188,7 +238,7 @@ class OGCRecordDetailView(APIView):
         datasets = self.get_datasets()
         dataset_name = self.kwargs.get("dataset_name")
         dataset_version = self.kwargs.get("dataset_version")
-        record_url = f"{base}/v1/ogc/records/collections/{dataset_name}/{dataset_version}"
+        record_url = f"{base}/v1/ogc/records/collections/{dataset_name}/items/{dataset_version}"
         record = []
 
         wfs_url = (

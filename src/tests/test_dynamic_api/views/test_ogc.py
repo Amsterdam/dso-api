@@ -62,12 +62,12 @@ class TestOGCRecordsCollectionDetailView:
                         {
                             "rel": "v1",
                             "type": "application/json",
-                            "href": "http://testserver/v1/ogc/records/collections/afvalwegingen/v1",
+                            "href": "http://testserver/v1/ogc/records/collections/afvalwegingen/items/v1",
                         },
                         {
                             "rel": "v2",
                             "type": "application/json",
-                            "href": "http://testserver/v1/ogc/records/collections/afvalwegingen/v2",
+                            "href": "http://testserver/v1/ogc/records/collections/afvalwegingen/items/v2",
                         },
                     ],
                     "contacts": [
@@ -103,12 +103,12 @@ class TestOGCRecordsCollectionDetailView:
                         {
                             "rel": "v1",
                             "type": "application/json",
-                            "href": "http://testserver/v1/ogc/records/collections/afvalwegingen/v1",
+                            "href": "http://testserver/v1/ogc/records/collections/afvalwegingen/items/v1",
                         },
                         {
                             "rel": "v2",
                             "type": "application/json",
-                            "href": "http://testserver/v1/ogc/records/collections/afvalwegingen/v2",
+                            "href": "http://testserver/v1/ogc/records/collections/afvalwegingen/items/v2",
                         },
                     ],
                     "contacts": [
@@ -127,9 +127,21 @@ class TestOGCRecordsCollectionDetailView:
 
 
 @pytest.mark.django_db
+class TestOGCRecordsCollectionItemsView:
+    def test_ogc_items_view(self, api_client, afval_container):
+        ogc_url = "/v1/ogc/records/collections/afvalwegingen/items"
+        response = api_client.get(ogc_url)
+        json = response.json()
+        assert response.status_code == 200, response.content
+        assert len(json["items"]) == 2
+        assert json["items"][0]["id"] == "afvalwegingen_v1"
+        assert json["items"][1]["id"] == "afvalwegingen_v2"
+
+
+@pytest.mark.django_db
 class TestOGCRecordDetailView:
     def test_ogc_record_view(self, api_client, afval_container):
-        ogc_url = "/v1/ogc/records/collections/afvalwegingen/v1"
+        ogc_url = "/v1/ogc/records/collections/afvalwegingen/items/v1"
         response = api_client.get(ogc_url)
         assert response.status_code == 200, response.content
         assert response.data == {
@@ -142,7 +154,7 @@ class TestOGCRecordDetailView:
                         {
                             "rel": "self",
                             "type": "application/json",
-                            "href": "http://testserver/v1/ogc/records/collections/afvalwegingen/v1",
+                            "href": "http://testserver/v1/ogc/records/collections/afvalwegingen/items/v1",
                         },
                         {
                             "rel": "WFS",
