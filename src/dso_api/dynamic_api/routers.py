@@ -595,7 +595,7 @@ class DynamicRouter(NestedDefaultRouter):
             for version, _ in dataset.schema.versions.items():
                 results.append(
                     path(
-                        f"/ogc/records/collections/{dataset.path}/items/{version}",
+                        f"/ogc/records/collections/{dataset.path}/items/{dataset_id}_{version}",
                         OGCRecordDetailView.as_view(),
                         name="ogc-record",
                         kwargs={

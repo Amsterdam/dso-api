@@ -1,5 +1,6 @@
 import logging
 
+from django.utils.functional import cached_property
 from django.views.generic import TemplateView
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
@@ -48,6 +49,7 @@ class OGCRecordsCollectionView(APIView):
     renderer_classes = [JSONRenderer]
     name = "Record Collections"
 
+    @cached_property
     def get_datasets(self):
         return [
             ds
@@ -57,7 +59,7 @@ class OGCRecordsCollectionView(APIView):
 
     def get(self, request, *args, **kwargs):
         base = request.build_absolute_uri("/").rstrip("/")
-        datasets = self.get_datasets()
+        datasets = self.get_datasets
 
         collections = []
 
@@ -86,6 +88,7 @@ class OGCRecordsCollectionDetailView(APIView):
     renderer_classes = [JSONRenderer]
     name = "Records"
 
+    @cached_property
     def get_datasets(self):
         return [
             ds
@@ -95,7 +98,7 @@ class OGCRecordsCollectionDetailView(APIView):
 
     def get(self, request, *args, **kwargs):
         base = request.build_absolute_uri("/").rstrip("/")
-        datasets = self.get_datasets()
+        datasets = self.get_datasets
         dataset_name = self.kwargs.get("dataset_name")
         collection_url = f"{base}/v1/ogc/records/collections/{dataset_name}"
         records = []
@@ -143,7 +146,8 @@ class OGCRecordsCollectionDetailView(APIView):
                 {
                     "rel": f"{version}",
                     "type": "application/json",
-                    "href": f"{base}/v1/ogc/records/collections/{ds.schema.id}/items/{version}",
+                    "href": f"{base}/v1/ogc/records/collections/{ds.schema.id}/items"
+                    f"/{ds.schema.id}_{version}",
                 }
             )
 
@@ -176,6 +180,7 @@ class OGCRecordsCollectionItemsView(APIView):
     renderer_classes = [JSONRenderer]
     name = "Collection Items"
 
+    @cached_property
     def get_datasets(self):
         return [
             ds
@@ -185,7 +190,7 @@ class OGCRecordsCollectionItemsView(APIView):
 
     def get(self, request, *args, **kwargs):
         base = request.build_absolute_uri("/").rstrip("/")
-        datasets = self.get_datasets()
+        datasets = self.get_datasets
         dataset_name = self.kwargs.get("dataset_name")
 
         ds = next(
@@ -211,7 +216,7 @@ class OGCRecordsCollectionItemsView(APIView):
                             "rel": f"{version}",
                             "type": "application/json",
                             "href": f"{base}/v1/ogc/records/collections/{ds.schema.id}/items"
-                            f"/{version}",
+                            f"/{ds.schema.id}_{version}",
                         },
                     ],
                 }
@@ -226,6 +231,7 @@ class OGCRecordDetailView(APIView):
     renderer_classes = [JSONRenderer]
     name = "Record"
 
+    @cached_property
     def get_datasets(self):
         return [
             ds
@@ -235,11 +241,13 @@ class OGCRecordDetailView(APIView):
 
     def get(self, request, *args, **kwargs):
         base = request.build_absolute_uri("/").rstrip("/")
-        datasets = self.get_datasets()
+        datasets = self.get_datasets
         dataset_name = self.kwargs.get("dataset_name")
         dataset_version = self.kwargs.get("dataset_version")
-        record_url = f"{base}/v1/ogc/records/collections/{dataset_name}/items/{dataset_version}"
-        record = []
+        record_url = (
+            f"{base}/v1/ogc/records/collections/{dataset_name}/items"
+            f"/{dataset_name}_{dataset_version}"
+        )
 
         wfs_url = (
             f"{base}/v1/wfs/{dataset_name}/{dataset_version}?service=WFS&request=GetCapabilities"
@@ -250,13 +258,11 @@ class OGCRecordDetailView(APIView):
             None,
         )
 
-        record.append(
-            self.build_record(
-                ds=ds,
-                version=dataset_version,
-                record_url=record_url,
-                wfs_url=wfs_url,
-            )
+        record = self.build_record(
+            ds=ds,
+            version=dataset_version,
+            record_url=record_url,
+            wfs_url=wfs_url,
         )
 
         return Response({"record": record})

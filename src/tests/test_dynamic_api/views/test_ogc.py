@@ -62,12 +62,12 @@ class TestOGCRecordsCollectionDetailView:
                         {
                             "rel": "v1",
                             "type": "application/json",
-                            "href": "http://testserver/v1/ogc/records/collections/afvalwegingen/items/v1",
+                            "href": "http://testserver/v1/ogc/records/collections/afvalwegingen/items/afvalwegingen_v1",
                         },
                         {
                             "rel": "v2",
                             "type": "application/json",
-                            "href": "http://testserver/v1/ogc/records/collections/afvalwegingen/items/v2",
+                            "href": "http://testserver/v1/ogc/records/collections/afvalwegingen/items/afvalwegingen_v2",
                         },
                     ],
                     "contacts": [
@@ -103,12 +103,12 @@ class TestOGCRecordsCollectionDetailView:
                         {
                             "rel": "v1",
                             "type": "application/json",
-                            "href": "http://testserver/v1/ogc/records/collections/afvalwegingen/items/v1",
+                            "href": "http://testserver/v1/ogc/records/collections/afvalwegingen/items/afvalwegingen_v1",
                         },
                         {
                             "rel": "v2",
                             "type": "application/json",
-                            "href": "http://testserver/v1/ogc/records/collections/afvalwegingen/items/v2",
+                            "href": "http://testserver/v1/ogc/records/collections/afvalwegingen/items/afvalwegingen_v2",
                         },
                     ],
                     "contacts": [
@@ -141,27 +141,25 @@ class TestOGCRecordsCollectionItemsView:
 @pytest.mark.django_db
 class TestOGCRecordDetailView:
     def test_ogc_record_view(self, api_client, afval_container):
-        ogc_url = "/v1/ogc/records/collections/afvalwegingen/items/v1"
+        ogc_url = "/v1/ogc/records/collections/afvalwegingen/items/afvalwegingen_v1"
         response = api_client.get(ogc_url)
         assert response.status_code == 200, response.content
         assert response.data == {
-            "record": [
-                {
-                    "id": "afvalwegingen_v1",
-                    "conformsTo": [],
-                    "language": {"code": "nl", "name": "Dutch (Netherlands)"},
-                    "links": [
-                        {
-                            "rel": "self",
-                            "type": "application/json",
-                            "href": "http://testserver/v1/ogc/records/collections/afvalwegingen/items/v1",
-                        },
-                        {
-                            "rel": "WFS",
-                            "type": "application/json",
-                            "href": "http://testserver/v1/wfs/afvalwegingen/v1?service=WFS&request=GetCapabilities",
-                        },
-                    ],
-                }
-            ],
+            "record": {
+                "id": "afvalwegingen_v1",
+                "conformsTo": [],
+                "language": {"code": "nl", "name": "Dutch (Netherlands)"},
+                "links": [
+                    {
+                        "rel": "self",
+                        "type": "application/json",
+                        "href": "http://testserver/v1/ogc/records/collections/afvalwegingen/items/afvalwegingen_v1",
+                    },
+                    {
+                        "rel": "WFS",
+                        "type": "application/json",
+                        "href": "http://testserver/v1/wfs/afvalwegingen/v1?service=WFS&request=GetCapabilities",
+                    },
+                ],
+            },
         }
