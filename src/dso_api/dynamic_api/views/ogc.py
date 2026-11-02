@@ -1,5 +1,6 @@
 import logging
 
+from django.utils.functional import cached_property
 from django.views.generic import TemplateView
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
@@ -48,6 +49,7 @@ class OGCRecordsCollectionView(APIView):
     renderer_classes = [JSONRenderer]
     name = "Record Collections"
 
+    @cached_property
     def get_datasets(self):
         return [
             ds
@@ -57,7 +59,7 @@ class OGCRecordsCollectionView(APIView):
 
     def get(self, request, *args, **kwargs):
         base = request.build_absolute_uri("/").rstrip("/")
-        datasets = self.get_datasets()
+        datasets = self.get_datasets
 
         collections = []
 
@@ -81,11 +83,12 @@ class OGCRecordsCollectionView(APIView):
 
 
 class OGCRecordsCollectionDetailView(APIView):
-    """An JSON page for a single OGC record collection (dataset)."""
+    """A JSON page for a single OGC record collection (dataset)."""
 
     renderer_classes = [JSONRenderer]
     name = "Records"
 
+    @cached_property
     def get_datasets(self):
         return [
             ds
@@ -95,7 +98,7 @@ class OGCRecordsCollectionDetailView(APIView):
 
     def get(self, request, *args, **kwargs):
         base = request.build_absolute_uri("/").rstrip("/")
-        datasets = self.get_datasets()
+        datasets = self.get_datasets
         dataset_name = self.kwargs.get("dataset_name")
         collection_url = f"{base}/v1/ogc/records/collections/{dataset_name}"
         records = []
@@ -110,13 +113,14 @@ class OGCRecordsCollectionDetailView(APIView):
                 self.build_record_collection(
                     ds=ds,
                     version=version,
+                    base=base,
                     collection_url=collection_url,
                 )
             )
 
         return Response({"records": records})
 
-    def build_record_collection(self, ds, version, collection_url):
+    def build_record_collection(self, ds, version, base, collection_url):
         """Handle missing attributes and ensure each OGC field has the expected datatype."""
         metadata = {
             "id": f"{ds.schema.id}_{version}",
@@ -136,6 +140,16 @@ class OGCRecordsCollectionDetailView(APIView):
                 },
             ],
         }
+
+        for version, _ in ds.schema.versions.items():
+            metadata["links"].append(
+                {
+                    "rel": f"{version}",
+                    "type": "application/json",
+                    "href": f"{base}/v1/ogc/records/collections/{ds.schema.id}/items"
+                    f"/{ds.schema.id}_{version}",
+                }
+            )
 
         if ds.schema.get("dateCreated"):
             metadata["created"] = ds.schema.get("dateCreated")
@@ -158,3 +172,122 @@ class OGCRecordsCollectionDetailView(APIView):
             metadata["license"] = ds.schema.license
 
         return [metadata]
+
+
+class OGCRecordsCollectionItemsView(APIView):
+    """Shows a JSON page with an overview of record collection items."""
+
+    renderer_classes = [JSONRenderer]
+    name = "Collection Items"
+
+    @cached_property
+    def get_datasets(self):
+        return [
+            ds
+            for ds in get_active_datasets().db_enabled().order_by("name")
+            if ds.has_geometry_fields
+        ]
+
+    def get(self, request, *args, **kwargs):
+        base = request.build_absolute_uri("/").rstrip("/")
+        datasets = self.get_datasets
+        dataset_name = self.kwargs.get("dataset_name")
+
+        ds = next(
+            (dataset for dataset in datasets if str(dataset.schema.id) == str(dataset_name)),
+            None,
+        )
+
+        items = []
+
+        for version, _ in ds.schema.versions.items():
+            items.append(
+                {
+                    "id": f"{ds.schema.id}_{version}",
+                    "title": ds.schema.title or ds.name,
+                    "description": ds.schema.description or "",
+                    "links": [
+                        {
+                            "rel": "self",
+                            "type": "application/json",
+                            "href": (f"{base}/v1/ogc/records/collections/{ds.schema.id}/items"),
+                        },
+                        {
+                            "rel": f"{version}",
+                            "type": "application/json",
+                            "href": f"{base}/v1/ogc/records/collections/{ds.schema.id}/items"
+                            f"/{ds.schema.id}_{version}",
+                        },
+                    ],
+                }
+            )
+
+        return Response({"items": items})
+
+
+class OGCRecordDetailView(APIView):
+    """A JSON page for a single OGC record (datasetversion)."""
+
+    renderer_classes = [JSONRenderer]
+    name = "Record"
+
+    @cached_property
+    def get_datasets(self):
+        return [
+            ds
+            for ds in get_active_datasets().db_enabled().order_by("name")
+            if ds.has_geometry_fields
+        ]
+
+    def get(self, request, *args, **kwargs):
+        base = request.build_absolute_uri("/").rstrip("/")
+        datasets = self.get_datasets
+        dataset_name = self.kwargs.get("dataset_name")
+        dataset_version = self.kwargs.get("dataset_version")
+        record_url = (
+            f"{base}/v1/ogc/records/collections/{dataset_name}/items"
+            f"/{dataset_name}_{dataset_version}"
+        )
+
+        wfs_url = (
+            f"{base}/v1/wfs/{dataset_name}/{dataset_version}?service=WFS&request=GetCapabilities"
+        )
+
+        ds = next(
+            (dataset for dataset in datasets if str(dataset.schema.id) == str(dataset_name)),
+            None,
+        )
+
+        record = self.build_record(
+            ds=ds,
+            version=dataset_version,
+            record_url=record_url,
+            wfs_url=wfs_url,
+        )
+
+        return Response({"record": record})
+
+    def build_record(self, ds, version, record_url, wfs_url):
+        """Handle missing attributes and ensure each OGC field has the expected datatype."""
+        metadata = {
+            "id": f"{ds.schema.id}_{version}",
+            "conformsTo": [],
+            "language": {"code": "nl", "name": "Dutch (Netherlands)"},
+            "links": [
+                {
+                    "rel": "self",
+                    "type": "application/json",
+                    "href": record_url,
+                },
+                {
+                    "rel": "WFS",
+                    "type": "application/json",
+                    "href": wfs_url,
+                },
+            ],
+        }
+
+        if ds.schema.get("dateCreated"):
+            metadata["created"] = ds.schema.get("dateCreated")
+
+        return metadata

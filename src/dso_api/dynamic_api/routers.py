@@ -52,7 +52,9 @@ from .views import (
     DatasetMVTView,
     DatasetTileJSONView,
     DatasetWFSView,
+    OGCRecordDetailView,
     OGCRecordsCollectionDetailView,
+    OGCRecordsCollectionItemsView,
     OGCRecordsCollectionView,
     viewset_factory,
 )
@@ -580,6 +582,28 @@ class DynamicRouter(NestedDefaultRouter):
                     },
                 )
             )
+            results.append(
+                path(
+                    f"/ogc/records/collections/{dataset.path}/items",
+                    OGCRecordsCollectionItemsView.as_view(),
+                    name="ogc-collections-items",
+                    kwargs={
+                        "dataset_name": dataset_id,
+                    },
+                )
+            )
+            for version, _ in dataset.schema.versions.items():
+                results.append(
+                    path(
+                        f"/ogc/records/collections/{dataset.path}/items/{dataset_id}_{version}",
+                        OGCRecordDetailView.as_view(),
+                        name="ogc-record",
+                        kwargs={
+                            "dataset_name": dataset_id,
+                            "dataset_version": version,
+                        },
+                    )
+                )
 
         return results
 
