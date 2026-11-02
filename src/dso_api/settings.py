@@ -48,7 +48,14 @@ OAUTH_CLIENT_ID_ENTRA = os.getenv("OAUTH_CLIENT_ID_ENTRA")
 
 # uWSGI settings
 UWSGI_HARAKIRI_DEFAULT = env.int("DSO_UWSGI_HARAKIRI_DEFAULT", default=180)
-UWSGI_HARAKIRI_EXEMPT_DATASETS = ["benkagg"]
+UWSGI_HARAKIRI_EXEMPT_DATASETS = [
+    "benkagg",
+    "brk2",
+    "gebieden",
+    "meetbouten",
+    "monumenten",
+    "nap",
+]  # These are the datasets used in the drawing tool on data.amsterdam.nl
 
 # -- Security
 
