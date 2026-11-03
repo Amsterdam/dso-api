@@ -101,14 +101,14 @@ MVT) kun je de volgende optie toevoegen aan de URL:
 
 Gebruik deze URL in QGIS, of een ander GIS-pakket.
 
-Als voorbeeld: de BAG feature type *buurt* een relatie met een
+Als voorbeeld: de BAG feature type *panden* een relatie met een
 *stadsdeel*. Deze kan op beide manieren geconfigureerd worden in een
 GIS-pakket:
 
   - `https://api.data.amsterdam.nl/v1/wfs/bag/?embed=stadsdeel` levert
-    een [stadsdelen met platgeslagen dot-notate](/v1/wfs/bag/?embed=stadsdeel&SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=buurt&COUNT=5).
+    een [stadsdelen met platgeslagen dot-notate](/v1/wfs/bag/?embed=stadsdeel&SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=panden&COUNT=5).
   - `https://api.data.amsterdam.nl/v1/wfs/bag/?expand=stadsdeel` levert
-    een [stadsdelen als complex feature](/v1/wfs/bag/?expand=stadsdeel&SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=buurt&COUNT=5).
+    een [stadsdelen als complex feature](/v1/wfs/bag/?expand=stadsdeel&SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=panden&COUNT=5).
 
 Deze parameters kunnen gecombineerd worden met de `OUTPUTFORMAT`
 parameter, zodat het export formaat ook geneste relaties bevat.
