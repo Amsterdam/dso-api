@@ -267,7 +267,7 @@ numpy==2.5.4
     # via
     #   -r requirements.in
     #   shapely
-oauthlib==4.0.0
+oauthlib==4.0.1
     # via requests-oauthlib
 openapi-schema-validator==0.9.0
     # via openapi-spec-validator
