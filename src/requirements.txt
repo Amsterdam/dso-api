@@ -55,13 +55,13 @@ azure-identity==1.27.0 \
     # via
     #   -r requirements.in
     #   azure-monitor-opentelemetry-exporter
-azure-monitor-opentelemetry==1.8.11 \
-    --hash=sha256:034a9d7ccc0c944986963ad2a5f4da11d669538ae797f7f4edad803ca8e9127d \
-    --hash=sha256:606e41ded61f330634f997b6378671168c10e0a7fcf4dfd1238235bc17df05f4
+azure-monitor-opentelemetry==1.8.12 \
+    --hash=sha256:37e4a71b8b2626417a54c5aa1448a26ccdbdee1082f80233e338817b3b62e624 \
+    --hash=sha256:f90fd05a2bb57a5c94a35886d675aa47f26af32c5c79441eae27e65c0a39b9d7
     # via -r requirements.in
-azure-monitor-opentelemetry-exporter==1.0.0b58 \
-    --hash=sha256:5152d75bd9780fef02fcc9550e0323ba3f661a8fcba017ea04b027151ae0932e \
-    --hash=sha256:cf036f7a99515d4e6626f3c33e5ac1ae633731882239542353e1f4a17285e9fc
+azure-monitor-opentelemetry-exporter==1.0.0b59 \
+    --hash=sha256:0dfaec6b1aada54a4c8f4572fd1e1da67609459caf418298b5d91b4c67c0282e \
+    --hash=sha256:e831b74132fb899e640cddbb340f0fbfe11937f788715ce3f0acd120c8e91227
     # via azure-monitor-opentelemetry
 bandit==1.9.4 \
     --hash=sha256:b589e5de2afe70bd4d53fa0c1da6199f4085af666fde00e8a034f152a52cd628 \
@@ -189,9 +189,9 @@ cachebox==5.2.3 \
     --hash=sha256:fb0bdcd9e28686e3b91d5210c843542858f0f10de151181aee27a7978fe4992e \
     --hash=sha256:fdb74294bdc33e39e26606919a9b2229038d5fac0edb80c9056683c08584d4a9
     # via deepdiff
-cachetools==7.2.7 \
-    --hash=sha256:88e6b53373a96786d20894fed9ce623ae5b73cbc07421b7a73098db088be69ae \
-    --hash=sha256:e2154c809ce9e1247120258c36821467597b5663d44c3255a9790785f23c2b1e
+cachetools==7.3.0 \
+    --hash=sha256:2105787c94619bde7072624fec0fe7b8a08bb7bf6c757c318f8925573c6f07c9 \
+    --hash=sha256:3f63fc208410f0c3a3b37883c4903ecdacd6f0b259134e6d2e82debd5b2e01de
     # via -r requirements.in
 certifi==2026.10.23 \
     --hash=sha256:a9895e6e2758b371e0545e321a3a8fd1fcfd9829ada8824a936dfb16aaaf36cd \
@@ -730,9 +730,9 @@ django-filter==26.2 \
     --hash=sha256:df8f737841d6359df00b84dda9b5ab59067fe60292091f1bdae1e3e6281cedb0 \
     --hash=sha256:fd5cc83995fbe9f5f07fb5dcda16fde0f04de1ecf8ef82628b6c0ec921b751af
     # via djangorestframework-gis
-django-gisserver==2.5.0 \
-    --hash=sha256:694131b66014138bef3526e7573ecd5c14fffc7525fe607f222c5b931db2b731 \
-    --hash=sha256:e3f42fc28e105fa673b8750eca96ec18b76251d8596e61359bb405b3a9bbe2e5
+django-gisserver==2.6.0 \
+    --hash=sha256:5ab2780972a9f567a0fbf0b204eb0cad7817ab9b22111494122e97aaeb15c3e9 \
+    --hash=sha256:d552a75def66d2accbffdb45162d04e04e09e61c93bb7982a86c16c85beba85d
     # via
     #   -r requirements.in
     #   amsterdam-schema-tools
@@ -1123,9 +1123,9 @@ mappyfile==1.2.0 \
     --hash=sha256:0b875a35035f6fc712b153b134de27bdcbb42f732a5a05801c9bead7a123fa72 \
     --hash=sha256:62698b7c4d10662948912f9466ea2cfa4ddf94038a20a7cd91e00e40641d7bb9
     # via amsterdam-schema-tools
-markdown==3.11.2 \
-    --hash=sha256:87bf5d90f2d2882e2c02fcda182c2800456b985bff38913867c49706481514b0 \
-    --hash=sha256:f80390747a2a0ff2ba54da074ce4f862f72a6685f608cd2637b646a6d83993f5
+markdown==3.11.3 \
+    --hash=sha256:81eb91631dc97ad1efbc76019ef0f80fe90ca49ddf81546752d79989c3bfff3e \
+    --hash=sha256:e1a31a112232504d753e5c01bb8c2de90d3f0ba986b063e10770cf7695b09e73
     # via -r requirements.in
 markdown-it-py==4.2.0 \
     --hash=sha256:04a21681d6fbb623de53f6f364d352309d4094dd4194040a10fd51833e418d49 \
