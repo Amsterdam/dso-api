@@ -37,9 +37,9 @@ azure-identity==1.27.0
     # via
     #   -r requirements.in
     #   azure-monitor-opentelemetry-exporter
-azure-monitor-opentelemetry==1.8.11
+azure-monitor-opentelemetry==1.8.12
     # via -r requirements.in
-azure-monitor-opentelemetry-exporter==1.0.0b58
+azure-monitor-opentelemetry-exporter==1.0.0b59
     # via azure-monitor-opentelemetry
 bandit==1.9.4
     # via -r requirements.in
@@ -53,7 +53,7 @@ build==1.6.1
     #   pip-tools
 cachebox==5.2.3
     # via deepdiff
-cachetools==7.2.7
+cachetools==7.3.0
     # via -r requirements.in
 certifi==2026.10.23
     # via
@@ -132,7 +132,7 @@ django-extensions==4.1
     # via -r requirements_dev.in
 django-filter==26.2
     # via djangorestframework-gis
-django-gisserver==2.5.0
+django-gisserver==2.6.0
     # via
     #   -r requirements.in
     #   amsterdam-schema-tools
@@ -230,7 +230,7 @@ mapbox-vector-tile==2.2.0
     # via -r requirements.in
 mappyfile==1.2.0
     # via amsterdam-schema-tools
-markdown==3.11.2
+markdown==3.11.3
     # via -r requirements.in
 markdown-it-py==4.2.0
     # via rich
@@ -533,7 +533,7 @@ rpds-py==2026.9.1
     # via
     #   jsonschema
     #   referencing
-ruff==0.17.3
+ruff==0.17.4
     # via -r requirements_dev.in
 shapely==2.1.2
     # via
