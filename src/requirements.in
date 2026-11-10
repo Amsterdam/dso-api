@@ -1,4 +1,4 @@
-Django == 5.2.18
+Django == 5.2.19
 django-environ == 0.14.0
 django-cors-headers == 4.9.0
 django-healthchecks == 1.6.0
