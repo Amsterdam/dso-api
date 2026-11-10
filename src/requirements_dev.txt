@@ -4,7 +4,7 @@
 #
 #    pip-compile --output-file=requirements_dev.txt requirements_dev.in
 #
-amsterdam-schema-tools[django]==9.14.6
+amsterdam-schema-tools[django]==9.14.7
     # via -r requirements.in
 annotated-types==0.8.0
     # via pydantic
@@ -474,7 +474,7 @@ pytest-django==4.14.0
     # via -r requirements.in
 pytest-sugar==1.1.1
     # via -r requirements_dev.in
-python-dateutil==2.9.0.post0
+python-dateutil==3.0.0
     # via
     #   amsterdam-schema-tools
     #   arrow
@@ -584,7 +584,9 @@ typing-inspection==0.4.4
     #   pydantic
     #   pydantic-settings
 tzdata==2026.5
-    # via arrow
+    # via
+    #   arrow
+    #   python-dateutil
 uri-template==1.3.0
     # via jsonschema
 uritemplate==4.2.0
