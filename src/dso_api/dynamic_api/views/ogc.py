@@ -127,7 +127,7 @@ class OGCRecordsCollectionDetailView(APIView):
             "conformsTo": [],
             "type": "Collection",
             "itemType": "catalog",
-            "title": ds.schema.title or ds.schema.name,
+            "title": ds.schema.title or getattr(ds.schema, "name", None),
             "description": ds.schema.description or "",
             "language": {"code": "nl", "name": "Dutch (Netherlands)"},
             "rights": list(ds.schema.auth),
@@ -154,7 +154,7 @@ class OGCRecordsCollectionDetailView(APIView):
         if ds.schema.get("dateCreated"):
             metadata["created"] = ds.schema.get("dateCreated")
 
-        if ds.schema.get("contactPoint"):
+        if getattr(ds.schema, "contactPoint", None) is not None:
             metadata["contacts"] = list(ds.schema.contactPoint)
         else:
             metadata["contacts"] = [{"name": "Datapunt", "email": "datapunt@amsterdam.nl"}]
