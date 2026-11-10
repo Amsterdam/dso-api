@@ -100,7 +100,7 @@ defusedxml==0.7.1
     # via django-gisserver
 distlib==0.4.4
     # via virtualenv
-django==5.2.18
+django==5.2.19
     # via
     #   -r requirements.in
     #   amsterdam-schema-tools
