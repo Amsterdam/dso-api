@@ -88,6 +88,7 @@ ignore = [
     "RET507", # superfluous-else-continue
     "RET508", # superfluous-else-break
     "S607", # subprocess partial path
+    "S603", # subprocess with shell=False for security reasons
 ]
 
 [tool.ruff.lint.flake8-comprehensions]
