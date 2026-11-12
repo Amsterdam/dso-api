@@ -1,0 +1,20 @@
+name: OGC Records API Validation
+permissions:
+  contents: read
+  pull-requests: write
+
+on:
+  pull_request:
+    branches:
+    - main
+    - master
+  workflow_dispatch:
+
+jobs:
+  validate-ogc-records:
+    name: Validate OGC API Records
+    runs-on: ubuntu-latest
+    env:
+      OGC_BASE_URL: https://api.data.amsterdam.nl/v1/ogc/records #${{ vars.OGC_BASE_URL }}
+      OGC_CHECKER_VERSION: latest
+    run: python scripts/validate_ogc_records.py
