@@ -23,8 +23,24 @@ class OGCIndexView(TemplateView):
 
         base = self.request.build_absolute_uri("/").rstrip("/")
         context["records_url"] = f"{base}/v1/ogc/records"
+        context["conformance_url"] = f"{base}/v1/ogc/records/conformance"
 
         return context
+
+
+class OGCConformanceView(APIView):
+    """Overview of conformance of the OGC endpoint."""
+
+    renderer_classes = [JSONRenderer]
+
+    def get(self, request, *args, **kwargs):
+
+        conformance_list = [
+            "http://www.opengis.net/spec/ogcapi-records-1/1.0/conf/json",
+            "http://www.opengis.net/spec/ogcapi-features-1/1.0/conf/core",
+        ]
+
+        return Response({"conformsTo": conformance_list})
 
 
 class OGCRecordsIndexView(TemplateView):
@@ -99,8 +115,9 @@ class OGCRecordsCollectionDetailView(APIView):
     def get(self, request, *args, **kwargs):
         base = request.build_absolute_uri("/").rstrip("/")
         datasets = self.get_datasets
+        dataset_path = self.kwargs.get("dataset_path")
         dataset_name = self.kwargs.get("dataset_name")
-        collection_url = f"{base}/v1/ogc/records/collections/{dataset_name}"
+        collection_url = f"{base}/v1/ogc/records/collections/{dataset_path}"
         records = []
 
         ds = next(
@@ -118,7 +135,7 @@ class OGCRecordsCollectionDetailView(APIView):
                 )
             )
 
-        return Response({"records": records})
+        return Response({"records": records}, content_type="application/ogc-catalog+json")
 
     def build_record_collection(self, ds, version, base, collection_url):
         """Handle missing attributes and ensure each OGC field has the expected datatype."""
@@ -146,7 +163,7 @@ class OGCRecordsCollectionDetailView(APIView):
                 {
                     "rel": f"{version}",
                     "type": "application/json",
-                    "href": f"{base}/v1/ogc/records/collections/{ds.schema.id}/items"
+                    "href": f"{base}/v1/ogc/records/collections/{ds.path}/items"
                     f"/{ds.schema.id}_{version}",
                 }
             )
@@ -210,12 +227,12 @@ class OGCRecordsCollectionItemsView(APIView):
                         {
                             "rel": "self",
                             "type": "application/json",
-                            "href": (f"{base}/v1/ogc/records/collections/{ds.schema.id}/items"),
+                            "href": (f"{base}/v1/ogc/records/collections/{ds.path}/items"),
                         },
                         {
                             "rel": f"{version}",
                             "type": "application/json",
-                            "href": f"{base}/v1/ogc/records/collections/{ds.schema.id}/items"
+                            "href": f"{base}/v1/ogc/records/collections/{ds.path}/items"
                             f"/{ds.schema.id}_{version}",
                         },
                     ],
@@ -243,9 +260,10 @@ class OGCRecordDetailView(APIView):
         base = request.build_absolute_uri("/").rstrip("/")
         datasets = self.get_datasets
         dataset_name = self.kwargs.get("dataset_name")
+        dataset_path = self.kwargs.get("dataset_path")
         dataset_version = self.kwargs.get("dataset_version")
         record_url = (
-            f"{base}/v1/ogc/records/collections/{dataset_name}/items"
+            f"{base}/v1/ogc/records/collections/{dataset_path}/items"
             f"/{dataset_name}_{dataset_version}"
         )
 

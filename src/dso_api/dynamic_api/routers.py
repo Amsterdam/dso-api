@@ -579,6 +579,7 @@ class DynamicRouter(NestedDefaultRouter):
                     name="ogc-records-detail",
                     kwargs={
                         "dataset_name": dataset_id,
+                        "dataset_path": dataset.path,
                     },
                 )
             )
@@ -600,6 +601,7 @@ class DynamicRouter(NestedDefaultRouter):
                         name="ogc-record",
                         kwargs={
                             "dataset_name": dataset_id,
+                            "dataset_path": dataset.path,
                             "dataset_version": version,
                         },
                     )
