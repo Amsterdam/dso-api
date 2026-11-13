@@ -546,7 +546,7 @@ six==1.17.0
     #   python-dateutil
     #   rfc3339-validator
     #   zaproxy
-soupsieve==3.0.4
+soupsieve==4.0
     # via beautifulsoup4
 sqlalchemy==2.0.55
     # via
