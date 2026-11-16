@@ -189,9 +189,9 @@ cachebox==5.2.3 \
     --hash=sha256:fb0bdcd9e28686e3b91d5210c843542858f0f10de151181aee27a7978fe4992e \
     --hash=sha256:fdb74294bdc33e39e26606919a9b2229038d5fac0edb80c9056683c08584d4a9
     # via deepdiff
-cachetools==7.3.0 \
-    --hash=sha256:2105787c94619bde7072624fec0fe7b8a08bb7bf6c757c318f8925573c6f07c9 \
-    --hash=sha256:3f63fc208410f0c3a3b37883c4903ecdacd6f0b259134e6d2e82debd5b2e01de
+cachetools==8.0.0 \
+    --hash=sha256:5af562e5078f0086771a1e3832a9c3dbf5d336b6e2794a2c12a64680a4c9087d \
+    --hash=sha256:5ed01bd676800d51f0025605e4fd8ad0891550513e7b0a4c3da478463764e5c3
     # via -r requirements.in
 certifi==2026.10.23 \
     --hash=sha256:a9895e6e2758b371e0545e321a3a8fd1fcfd9829ada8824a936dfb16aaaf36cd \
