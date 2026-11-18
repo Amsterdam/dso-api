@@ -25,9 +25,6 @@ jobs:
     - name: Start container
       run: docker compose -f "docker-compose.yml" up -d --build
 
-    - name: Install schema-tools
-      run: docker compose exec web pip install -e /tmp/schema-tools/
-
     - name: Import schemas
       run: docker compose exec web python manage.py import_schemas --schema=tests/files/ogc_datasets
 
