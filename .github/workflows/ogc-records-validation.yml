@@ -15,6 +15,31 @@ jobs:
     name: Validate OGC API Records
     runs-on: ubuntu-latest
     env:
-      OGC_BASE_URL: https://api.data.amsterdam.nl/v1/ogc/records #${{ vars.OGC_BASE_URL }}
+      INITIALIZE_DB: true
+      OGC_BASE_URL: http://localhost:8090/v1/ogc/records #${{ vars.OGC_BASE_URL }}
       OGC_CHECKER_VERSION: latest
-    run: python scripts/validate_ogc_records.py
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v1
+
+    - name: Start container
+      run: docker compose -f "docker-compose.yml" up -d --build
+
+    - name: Import schemas
+      run: docker compose exec web python manage.py import_schemas --schema=tests/files/ogc_datasets
+
+    - name: Create tables
+      run: docker compose exec web python manage.py import_schemas --schema=tests/files/ogc_datasets --create-tables
+
+    - name: Create mock data
+      run: docker compose exec web python manage.py create_mock_data --size 20 --exclude None
+
+    - name: Restart container
+      run: docker compose -f "docker-compose.yml" restart
+
+    - name: Run ogc validation
+      run: python scripts/validate_ogc_records.py
+
+    - name: Stop container
+      if: always()
+      run: docker compose -f "docker-compose.yml" down

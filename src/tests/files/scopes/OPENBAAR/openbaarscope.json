@@ -1,0 +1,11 @@
+{
+    "name": "OPENBAARscope",
+    "id": "OPENBAAR",
+    "accessPackages": {
+        "production": "EM4W-DATA-schemascope-p-scope_openbaar",
+        "nonProduction": "EM4W-DATA-schemascope-ot-scope_openbaar"
+    },
+    "owner": {
+        "$ref": "publishers/OPENBAAR"
+    }
+}

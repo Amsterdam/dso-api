@@ -6,7 +6,7 @@ import requests
 
 BASE_URL = os.getenv(
     "OGC_BASE_URL",
-    "https://api.data.amsterdam.nl/v1/ogc/records",
+    "http://localhost:8090/v1/ogc/records",
 ).rstrip("/")
 
 CHECKER_VERSION = os.getenv("OGC_CHECKER_VERSION", "latest")
