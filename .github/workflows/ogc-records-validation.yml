@@ -25,6 +25,12 @@ jobs:
     - name: Start container
       run: docker compose -f "docker-compose.yml" up -d --build
 
+    - name: Make migrations
+      run: docker compose exec web python manage.py makemigrations
+
+    - name: Migrate
+      run: docker compose exec web python manage.py migrate
+
     - name: Import schemas
       run: docker compose exec web python manage.py import_schemas --schema=tests/files/ogc_datasets
 
