@@ -135,7 +135,7 @@ class OGCRecordsCollectionDetailView(APIView):
                 )
             )
 
-        return Response({"records": records}, content_type="application/ogc-catalog+json")
+        return Response({"records": records})
 
     def build_record_collection(self, ds, version, base, collection_url):
         """Handle missing attributes and ensure each OGC field has the expected datatype."""

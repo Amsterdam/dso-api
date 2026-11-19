@@ -15,9 +15,8 @@ jobs:
     name: Validate OGC API Records
     runs-on: ubuntu-latest
     env:
-      INITIALIZE_DB: true
-      OGC_BASE_URL: http://localhost:8090/v1/ogc/records #${{ vars.OGC_BASE_URL }}
-      OGC_CHECKER_VERSION: latest
+      INITIALIZE_DB: false
+      OGC_BASE_URL: http://localhost:8090/v1/ogc/records
     steps:
     - name: Checkout
       uses: actions/checkout@v1
@@ -31,7 +30,7 @@ jobs:
     - name: Migrate
       run: docker compose exec web python manage.py migrate
 
-    - name: Import schemas
+    - name: Import schemas from files
       run: docker compose exec web python manage.py import_schemas --schema=tests/files/ogc_datasets
 
     - name: Create tables

@@ -1,3 +1,4 @@
+import operator
 import os
 import subprocess
 import sys
@@ -8,8 +9,6 @@ BASE_URL = os.getenv(
     "OGC_BASE_URL",
     "http://localhost:8090/v1/ogc/records",
 ).rstrip("/")
-
-CHECKER_VERSION = os.getenv("OGC_CHECKER_VERSION", "latest")
 
 TIMEOUT = 15
 
@@ -28,32 +27,24 @@ def get_json(url):
     return response.json()
 
 
-def get_self_links(document, rel=None) -> list:
-    """Return links, optionally filtered by relation."""
-    links = document.get("links", [])
+def get_paths(document: dict, comparison, rel="self") -> str:
+    """Return self paths"""
+    document_links = document.get("links", [])
+    self_path = ""
 
-    if not isinstance(links, list):
-        return []
+    if not isinstance(document_links, list):
+        return self_path
 
-    return [
-        link
-        for link in links
-        if isinstance(link, dict)
-        and isinstance(link.get("href"), str)
-        and (rel is None or link.get("rel") == rel)
-    ]
-
-
-def get_record_paths(links, rel=None) -> list:
-    """Return record links, exclude self link."""
-
-    return [
-        link.get("href")
-        for link in links
-        if isinstance(link, dict)
-        and isinstance(link.get("href"), str)
-        and (rel is None or link.get("rel") != rel)
-    ]
+    return next(
+        (
+            link.get("href")
+            for link in document_links
+            if isinstance(link, dict)
+            and isinstance(link.get("href"), str)
+            and comparison(link.get("rel"), rel)
+        ),
+        None,
+    )
 
 
 def discover_collections():
@@ -66,45 +57,44 @@ def discover_collections():
     if not isinstance(collections, list):
         raise ValueError("Invalid collections response.")
 
-    paths = []
+    collection_paths = []
 
     for collection in collections:
         if not isinstance(collection, dict):
             continue
 
-        # Try to use the self links.
-        links = collection.get("links")
-        self_path = links[0].get("href")
+        # Try to use paths to self
+        self_path = get_paths(collection, operator.eq)
 
-        if not isinstance(self_path, str) or not self_path:
-            print(f"[WARN] Collection has no valid path: {collection}")
-            continue
+        collection_paths.append(self_path)
 
-        paths.append(self_path)
-
-    if not paths:
+    if not collection_paths:
         raise ValueError("No collections discovered.")
 
-    print(f"Discovered {len(paths)} collections.")
+    print(f"Discovered {len(collection_paths)} collections.")
 
-    return paths
+    return collection_paths
 
 
 def discover_records(collection_path):
     """Discover individual record endpoints."""
     collection = get_json(collection_path)
     records = collection.get("records")
-
+    record_paths = []
     if not isinstance(records, list):
         raise ValueError("Invalid records response.")
 
-    record_links = records[0].get("links", [])
+    for record in records:
+        if not isinstance(record, dict):
+            continue
 
-    # Exclude self path
-    record_paths = get_record_paths(record_links, "self")
+        # Use record paths
+        record_path = get_paths(record, operator.ne)
+
+        record_paths.append(record_path)
 
     if not record_paths:
-        raise ValueError(f"No records paths found for {collection_path}")
+        raise ValueError(f"No record paths found for {collection_path}")
 
     return record_paths
 
@@ -117,7 +107,7 @@ def validate_endpoint(url, endpoint_type):
         [
             "npx",
             "--yes",
-            f"@geonovum/ogc-checker@{CHECKER_VERSION}",
+            "@geonovum/ogc-checker@latest",
             "validate",
             "--standard",
             "ogc-api-records",

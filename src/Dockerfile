@@ -41,5 +41,5 @@ EXPOSE 8000
 USER root
 RUN usermod --uid 1001 dsoapi
 
-USER root
+USER dsoapi
 CMD ["uwsgi"]
