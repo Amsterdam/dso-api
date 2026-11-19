@@ -4,9 +4,9 @@
 #
 #    pip-compile --generate-hashes --no-index --output-file=requirements.txt requirements.in
 #
-amsterdam-schema-tools[django]==9.14.6 \
-    --hash=sha256:7ac7d34d3dadd8a6a278141d4d8e2e5d92c1993db9b1e9cafa7aef6d6bab1bf2 \
-    --hash=sha256:fff188a07b64238d3c42596713203905aa223cb09d421af404348d903b726a56
+amsterdam-schema-tools[django]==9.14.8 \
+    --hash=sha256:18484d43fdbb3e469a17c10ee7f1a4ea8f3695d62675b43e5d0a7db360727a57 \
+    --hash=sha256:c1f25f0becf924040a7bfb7f3d17d97367d746b263d23f2374a4b1708c3deea8
     # via -r requirements.in
 annotated-types==0.8.0 \
     --hash=sha256:13b2beaad985e05e2d6407ee4c4f35590b11f8d693a258a561055cac8f64cab7 \
@@ -1985,9 +1985,9 @@ pytest-django==4.14.0 \
     --hash=sha256:26787dd3f422cfbab8f55b80a776e2edea7a11092cb74e960bef1312515708ef \
     --hash=sha256:c533b08d89cc675efcd5398eea270b34547e35f9a3608e2c9748dd88428ea187
     # via -r requirements.in
-python-dateutil==2.9.0.post0 \
-    --hash=sha256:37dd54208da7e1cd875388217d5e00ebd4179249f90fb72437e91a35459a0ad3 \
-    --hash=sha256:a8b2bc7bffae282281c8140a97d3aa9c14da0b136dfe83f850eea9a5f7470427
+python-dateutil==3.0.0 \
+    --hash=sha256:3c79630202e4152c6add678446984236efe4f57e84d8e892aab0637bab82e9fd \
+    --hash=sha256:7ebcb3c29a92f3ceafe79a7a48a5c45677e9e004bbeec5742ac0bbb00560b7a2
     # via
     #   amsterdam-schema-tools
     #   arrow

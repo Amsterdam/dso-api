@@ -1,0 +1,50 @@
+name: OGC Records API Validation
+permissions:
+  contents: read
+  pull-requests: write
+
+on:
+  pull_request:
+    branches:
+    - main
+    - master
+  workflow_dispatch:
+
+jobs:
+  validate-ogc-records:
+    name: Validate OGC API Records
+    runs-on: ubuntu-latest
+    env:
+      INITIALIZE_DB: true
+      OGC_BASE_URL: http://localhost:8090/v1/ogc/records
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v1
+
+    - name: Start container
+      run: docker compose -f "docker-compose.yml" up -d --build
+
+    - name: Make migrations
+      run: docker compose exec web python manage.py makemigrations
+
+    - name: Migrate
+      run: docker compose exec web python manage.py migrate
+
+    - name: Import schemas from files
+      run: docker compose exec web python manage.py import_schemas --schema=tests/files/ogc_datasets
+
+    - name: Create tables
+      run: docker compose exec web python manage.py import_schemas --schema=tests/files/ogc_datasets --create-tables
+
+    - name: Create mock data
+      run: docker compose exec web python manage.py create_mock_data --size 20 --exclude None
+
+    - name: Restart container
+      run: docker compose -f "docker-compose.yml" restart
+
+    - name: Run ogc validation
+      run: python scripts/validate_ogc_records.py
+
+    - name: Stop container
+      if: always()
+      run: docker compose -f "docker-compose.yml" down
