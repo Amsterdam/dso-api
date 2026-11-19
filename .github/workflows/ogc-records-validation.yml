@@ -15,7 +15,7 @@ jobs:
     name: Validate OGC API Records
     runs-on: ubuntu-latest
     env:
-      INITIALIZE_DB: false
+      INITIALIZE_DB: true
       OGC_BASE_URL: http://localhost:8090/v1/ogc/records
     steps:
     - name: Checkout
