@@ -2,6 +2,7 @@ import operator
 import os
 import subprocess
 import sys
+import traceback
 
 import requests
 
@@ -158,6 +159,7 @@ def main():
             records = discover_records(collection_url)
             print(f"Discovered {len(records)} records in {collection_url}")
         except (requests.RequestException, ValueError) as exc:
+            traceback.print_exc()
             print(f"[FAIL] Could not discover records: {exc}")
             results["records"]["failed"] += 1
             continue
