@@ -23,7 +23,10 @@ RUN apt update && apt install --no-install-recommends -y \
     libproj25 \
     libpq5 \
     media-types \
-    netcat-openbsd
+    netcat-openbsd \
+    && curl -fsSL https://deb.nodesource.com/setup_24.x | bash - \
+    && apt install --no-install-recommends -y nodejs \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy python build artifacts from builder image
 COPY --from=builder /usr/local/bin/ /usr/local/bin/

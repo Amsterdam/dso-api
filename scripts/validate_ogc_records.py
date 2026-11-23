@@ -8,7 +8,7 @@ import requests
 
 BASE_URL = os.getenv(
     "OGC_BASE_URL",
-    "http://localhost:8090/v1/ogc/records",
+    "http://localhost:8000/v1/ogc/records",
 ).rstrip("/")
 
 TIMEOUT = 15

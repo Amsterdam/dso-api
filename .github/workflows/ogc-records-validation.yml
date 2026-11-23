@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       INITIALIZE_DB: true
-      OGC_BASE_URL: http://localhost:8090/v1/ogc/records
+      OGC_BASE_URL: http://localhost:8000/v1/ogc/records
     steps:
     - name: Checkout
       uses: actions/checkout@v1
@@ -43,7 +43,7 @@ jobs:
       run: docker compose -f "docker-compose.yml" restart
 
     - name: Run ogc validation
-      run: python scripts/validate_ogc_records.py
+      run: docker compose exec web python scripts/validate_ogc_records.py
 
     - name: Stop container
       if: always()

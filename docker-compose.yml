@@ -65,6 +65,7 @@ services:
       DATASETS_EXCLUDE: "${DATASETS_EXCLUDE}"
     volumes:
       - ./src:/app
+      - ./scripts:/app/scripts
       - ./docs/build/html:/docs-static
       - "../amsterdam-schema/datasets:/tmp/datasets"
       - "../amsterdam-schema/publishers:/tmp/publishers"
