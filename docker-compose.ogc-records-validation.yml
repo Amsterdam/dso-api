@@ -1,5 +1,7 @@
 services:
   web:
+    environment:
+      INITIALIZE_DYNAMIC_VIEWSETS: "true"
     volumes:
       - dsoapi-home:/home/dsoapi
 
