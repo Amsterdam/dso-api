@@ -52,9 +52,7 @@ jobs:
             echo "Ready to run validation script..."
             exit 0
           fi
-
-          echo "Container did not restart yet ($i/60)"
-          sleep 5
+          sleep 2
         done
 
         echo "Container restart failed"
