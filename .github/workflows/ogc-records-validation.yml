@@ -47,14 +47,14 @@ jobs:
       run: |
         echo "Waiting for restart..."
 
-        for i in {1..60}; do
+        for i in {1..120}; do
           if curl -sSf "http://localhost:8000/v1/ogc/records" > /dev/null; then
             echo "Ready to run validation script..."
             exit 0
           fi
 
           echo "Container did not restart yet ($i/60)"
-          sleep 2
+          sleep 5
         done
 
         echo "Container restart failed"
