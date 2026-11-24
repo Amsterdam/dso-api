@@ -17,6 +17,7 @@ jobs:
     env:
       INITIALIZE_DB: true
       OGC_BASE_URL: http://localhost:8000/v1/ogc/records
+      DJANGO_SETTINGS_MODULE: tests.settings
     steps:
     - name: Checkout
       uses: actions/checkout@v1
@@ -43,7 +44,7 @@ jobs:
       run: docker compose -f "docker-compose.yml" restart
 
     - name: Run ogc validation
-      run: docker compose exec web env DJANGO_SETTINGS_MODULE=tests.settings python scripts/validate_ogc_records.py
+      run: docker compose exec -e DJANGO_SETTINGS_MODULE=tests.settings web python scripts/validate_ogc_records.py
 
     - name: Stop container
       if: always()
