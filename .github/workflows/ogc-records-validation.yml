@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       INITIALIZE_DB: true
-      OGC_BASE_URL: http://localhost:8000/v1/ogc/records
+      OGC_BASE_URL: http://web:8000/v1/ogc/records
       DJANGO_SETTINGS_MODULE: tests.settings
     steps:
     - name: Checkout
@@ -47,7 +47,7 @@ jobs:
       run: |
         echo "Waiting for restart..."
 
-        for i in {1..120}; do
+        for i in {1..30}; do
           if curl -sSf "http://localhost:8000/v1/ogc/records" > /dev/null; then
             echo "Ready to run validation script..."
             exit 0
