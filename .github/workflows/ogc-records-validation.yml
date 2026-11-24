@@ -1,0 +1,69 @@
+name: OGC Records API Validation
+permissions:
+  contents: read
+  pull-requests: write
+
+on:
+  pull_request:
+    branches:
+    - main
+    - master
+  workflow_dispatch:
+
+jobs:
+  validate-ogc-records:
+    name: Validate OGC API Records
+    runs-on: ubuntu-latest
+    env:
+      INITIALIZE_DB: true
+      OGC_BASE_URL: http://web:8000/v1/ogc/records
+      DJANGO_SETTINGS_MODULE: tests.settings
+      INITIALIZE_DYNAMIC_VIEWSETS: true
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v1
+
+    - name: Start container
+      run: docker compose -f "docker-compose.yml" -f "docker-compose.ogc-records-validation.yml" up -d --build
+
+    - name: Make migrations
+      run: docker compose exec web python manage.py makemigrations
+
+    - name: Migrate
+      run: docker compose exec web python manage.py migrate
+
+    - name: Import schemas from files
+      run: docker compose exec web python manage.py import_schemas --schema=tests/files/ogc_datasets
+
+    - name: Create tables
+      run: docker compose exec web python manage.py import_schemas --schema=tests/files/ogc_datasets --create-tables
+
+    - name: Create mock data
+      run: docker compose exec web python manage.py create_mock_data --size 20 --exclude None
+
+    - name: Restart container
+      run: docker compose -f "docker-compose.yml" restart web
+
+    - name: Wait for restart
+      run: |
+        echo "Waiting for restart..."
+
+        for i in {1..30}; do
+          if curl -sSf "http://localhost:8090/v1/ogc/records" > /dev/null; then
+            echo "Ready to run validation script..."
+            exit 0
+          fi
+          sleep 2
+        done
+
+        echo "Container restart failed"
+        docker compose ps -a
+        docker compose logs --tail=100
+        exit 1
+
+    - name: Run ogc validation
+      run: docker compose exec -e DJANGO_SETTINGS_MODULE=tests.settings -e OGC_BASE_URL=http://web:8000/v1/ogc/records web python scripts/validate_ogc_records.py
+
+    - name: Stop container
+      if: always()
+      run: docker compose -f "docker-compose.yml" down

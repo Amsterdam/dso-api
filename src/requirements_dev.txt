@@ -4,7 +4,7 @@
 #
 #    pip-compile --no-index --output-file=requirements_dev.txt requirements_dev.in
 #
-amsterdam-schema-tools[django]==9.14.6
+amsterdam-schema-tools[django]==9.14.8
     # via -r requirements.in
 annotated-types==0.8.0
     # via pydantic
@@ -474,7 +474,7 @@ pytest-django==4.14.0
     # via -r requirements.in
 pytest-sugar==1.1.1
     # via -r requirements_dev.in
-python-dateutil==2.9.0.post0
+python-dateutil==3.0.0
     # via
     #   amsterdam-schema-tools
     #   arrow

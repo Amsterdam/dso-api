@@ -41,6 +41,7 @@ services:
       CONFIDENTIAL_BULK_ENDPOINT: "${CONFIDENTIAL_BULK_ENDPOINT:-https://api.data-o.azure.amsterdam.nl/buk-data-fp-mdw}"
       DATABASE_URL: "${DATABASE_URL:-postgresql://postgres:insecure@database/dataservices}"
       DJANGO_LOG_LEVEL: "${DJANGO_LOG_LEVEL:-INFO}"
+      DJANGO_SETTINGS_MODULE: "${DJANGO_SETTINGS_MODULE:-dso_api.settings}"
       DSO_API_LOG_LEVEL: "${DSO_API_LOG_LEVEL:-INFO}"
       DSO_API_AUDIT_LOG_LEVEL: "${DSO_API_AUDIT_LOG_LEVEL:-INFO}"
       AZURE_APPI_AUDIT_CONNECTION_STRING: "${AZURE_APPI_AUDIT_CONNECTION_STRING}"
@@ -65,6 +66,7 @@ services:
       DATASETS_EXCLUDE: "${DATASETS_EXCLUDE}"
     volumes:
       - ./src:/app
+      - ./scripts:/app/scripts
       - ./docs/build/html:/docs-static
       - "../amsterdam-schema/datasets:/tmp/datasets"
       - "../amsterdam-schema/publishers:/tmp/publishers"
