@@ -42,27 +42,8 @@ jobs:
     - name: Restart container
       run: docker compose -f "docker-compose.yml" restart
 
-    - name: Wait for restart
-      run: |
-        echo "Waiting for restart..."
-
-        for i in {1..60}; do
-          if curl -sSf "http://localhost:8000/v1/ogc/records" > /dev/null; then
-            echo "Ready to run validation script..."
-            exit 0
-          fi
-
-          echo "Container did not restart yet ($i/60)"
-          sleep 2
-        done
-
-        echo "Container restart failed"
-        docker compose ps -a
-        docker compose logs --tail=100
-        exit 1
-
     - name: Run ogc validation
-      run: docker compose exec web python scripts/validate_ogc_records.py
+      run: docker compose exec web env DJANGO_SETTINGS_MODULE=tests.settings python scripts/validate_ogc_records.py
 
     - name: Stop container
       if: always()
