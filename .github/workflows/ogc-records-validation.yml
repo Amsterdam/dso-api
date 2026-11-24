@@ -18,6 +18,7 @@ jobs:
       INITIALIZE_DB: true
       OGC_BASE_URL: http://web:8000/v1/ogc/records
       DJANGO_SETTINGS_MODULE: tests.settings
+      INITIALIZE_DYNAMIC_VIEWSETS: true
     steps:
     - name: Checkout
       uses: actions/checkout@v1

@@ -50,7 +50,7 @@ DATAPUNT_AUTHZ = {
 PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
 
 # Make sure the router is empty on start
-INITIALIZE_DYNAMIC_VIEWSETS = False
+INITIALIZE_DYNAMIC_VIEWSETS = env.bool("INITIALIZE_DYNAMIC_VIEWSETS", False)
 
 # Clear DATASETS_LIST or DATASETS_EXCLUDE to prevent tests from failing caused
 # by an environment variable
