@@ -61,7 +61,7 @@ jobs:
         exit 1
 
     - name: Run ogc validation
-      run: docker compose exec -e DJANGO_SETTINGS_MODULE=tests.settings web python scripts/validate_ogc_records.py
+      run: docker compose exec -e DJANGO_SETTINGS_MODULE=tests.settings -e OGC_BASE_URL=http://web:8000/v1/ogc/records web python scripts/validate_ogc_records.py
 
     - name: Stop container
       if: always()
