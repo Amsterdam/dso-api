@@ -52,6 +52,10 @@ def discover_collections():
     """Discover all collection endpoints."""
     print("\nDiscovering collections...")
 
+    print(f"\nTry BASE_URL: {BASE_URL}")
+    response = session.get(BASE_URL, timeout=TIMEOUT)
+    response.raise_for_status()
+
     document = get_json(f"{BASE_URL}/collections")
     collections = document.get("collections")
 
