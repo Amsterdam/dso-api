@@ -41,7 +41,7 @@ jobs:
       run: docker compose exec web python manage.py create_mock_data --size 20 --exclude None
 
     - name: Restart container
-      run: docker compose -f "docker-compose.yml" restart
+      run: docker compose -f "docker-compose.yml" restart web
 
     - name: Wait for restart
       run: |
