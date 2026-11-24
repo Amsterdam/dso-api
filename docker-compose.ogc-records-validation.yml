@@ -1,0 +1,12 @@
+services:
+  web:
+    volumes:
+      - dsoapi-home:/home/dsoapi
+
+volumes:
+  dsoapi-home:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+      o: uid=1001,gid=1001
