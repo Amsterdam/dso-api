@@ -7,7 +7,8 @@ Part of that means that the API follows the HAL-JSON style.
 
 # Requirements
 
-* Python >= 3.9
+* Python >= 3.14
+* [uv](https://docs.astral.sh/uv/getting-started/installation/)
 * Recommended: Docker/Docker Compose
 
 # Installation
@@ -21,12 +22,17 @@ Run docker compose:
 
 Navigate to `localhost:8090`.
 
+The Dockerfile and build context are at the repository root. To build the
+production image directly, run `docker build -t dso-api .` from there.
+Python project metadata and the uv lockfile are also at the repository root;
+application code remains in `src/`.
+
 By default a collection of example datasets is loaded, and a local database is setup and initialized.
 This behaviour can be changed with environment variables as described below.
 
 Running tests inside the container can be done as follows:
 ```
-    docker compose exec web pytest <file/dir>
+    docker compose exec web uv run --no-sync pytest <file/dir>
 ```
 
 ### Environment
@@ -88,6 +94,10 @@ Note: this currently does not work with pytest in the container. It does work fr
 or through `curl`.
 
 ## Without Docker Compose
+Install uv, then run `make install` from the repository root. This creates the virtualenv and
+installs the locked dependencies and pre-commit hooks. Use `uv run` to run Python
+commands, `make format` for Ruff formatting, and `make lint` to check lint and formatting.
+
 See the instructions at: <https://dso-api.readthedocs.io/en/latest/howto/install.html>
 
 These instructions can also be found in the ``dev-docs/source/howto/install.rst`` file.

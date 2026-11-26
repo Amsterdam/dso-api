@@ -11,11 +11,11 @@
             "pathMappings": [
                 {
                     "localRoot": "${workspaceFolder}/src",
-                    "remoteRoot": "/app"
+                    "remoteRoot": "/app/src"
                 },
                 {
-                    "localRoot": "~/.pyenv/versions/3.14.1/envs/dso/lib/python3.14/site-packages/",
-                    "remoteRoot": "/usr/local/lib/python3.14/site-packages"
+                    "localRoot": "${workspaceFolder}/.venv/lib/python3.14/site-packages/",
+                    "remoteRoot": "/opt/venv/lib/python3.14/site-packages"
                 }
             ]
         }

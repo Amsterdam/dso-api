@@ -1,0 +1,207 @@
+[project]
+name = "dso-api"
+version = "0.1"
+description = "DSO API"
+readme = {text = "Dynamic API based on Amsterdam Schema according to DSO requirements", content-type = "text/plain"}
+authors = [{name = "Amsterdam Datapunt", email = "datapunt@amsterdam.nl"}]
+license = "MPL-2.0"
+requires-python = ">=3.14,<4.0"
+dependencies = [
+    "Django==5.2.19",
+    "django-environ==0.14.0",
+    "django-cors-headers==4.9.0",
+    "django-healthchecks==1.6.0",
+    "django-gisserver==2.6.0",
+    "django-vectortiles==1.0.2",
+    "djangorestframework==3.18.3",
+    "djangorestframework-csv==3.0.2",
+    "djangorestframework-gis==1.3.0",
+    "amsterdam-schema-tools[django]==9.14.6",
+    "azure-identity==1.27.0",
+    "azure-monitor-opentelemetry==1.8.12",
+    "beautifulsoup4==4.15.0",
+    "cachetools==7.3.0",
+    "datadiensten-apikeyclient==0.7.7",
+    "datapunt-authorization-django==3.1.0",
+    "drf-spectacular==0.30.0",
+    "jsonschema==4.26.0",
+    "lru_dict==1.4.1",
+    "Markdown==3.11.3",
+    "msal==1.39.0",
+    "more-ds==0.0.6",
+    "more-itertools==11.1.0",
+    "numpy==2.5.4",
+    "openapi-spec-validator==0.9.0",
+    # Version should match with opentelemetry subdependency:
+    "opentelemetry-api==1.45.2",
+    "opentelemetry-instrumentation-psycopg==0.66b2",
+    "orjson==3.13.0",
+    "psycopg==3.3.6",
+    "pygments==2.21.0",
+    "pyproj==3.8.0",
+    "python-json-logger==4.2.0",
+    "python-string-utils==1.0.0",
+    "requests==2.34.2",
+    "shapely==2.1.2",
+    "urllib3==2.8.0",
+    "urllib3-mock==0.3.3",
+    "uwsgi==2.0.31",
+    "whitenoise==6.12.0",
+    "zipp==4.1.2",
+    # Monitoring
+    "uwsgitop==0.12",
+    "uwsgi-readiness-check==0.2.0",
+    # Testing
+    "bandit==1.9.4",
+    "cryptography>=50.0.2",
+    "django-coverage-plugin==3.2.2",
+    "flake8==7.5.0",
+    "flake8-blind-except==0.2.1",
+    "flake8-colors==0.1.9",
+    "flake8-debugger==4.1.2",
+    "flake8-raise==0.0.5",
+    "mapbox-vector-tile==2.2.0",
+    "pytest==9.2.0",
+    "pytest-django==4.14.0",
+    "pytest-cov==7.1.0",
+    "python-owasp-zap-v2.4==0.1.0",
+]
+
+[project.urls]
+Homepage = "https://api.data.amsterdam.nl/v1"
+
+[dependency-groups]
+dev = [
+    "ruff==0.17.4",
+    "pytest-sugar==1.1.1",
+    "termcolor==3.3.0",
+    "pre-commit==4.7.0",
+    "django-debug-toolbar==8.0.0",
+    "django-extensions==4.1",
+    "tomli==2.5.0",
+    "debugpy==1.8.22",
+]
+docs = [
+    "Sphinx>=8.1.3",
+    "sphinx-rtd-theme>=3.0.1",
+    "sphinxcontrib-django==2.5",
+]
+
+[build-system]
+requires = ["uv_build>=0.12.3,<0.14.0"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-root = "src"
+module-name = ["dso_api", "rest_framework_dso", "devtools"]
+source-include = ["src/templates/**", "src/manage.py", "src/initialize_db.sh", "src/get_imds_db_token.sh"]
+
+# ==== pytest ====
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "tests.settings"
+minversion = "6.0"
+django_find_project = false
+pythonpath = "src"
+testpaths = ["src/tests"]
+addopts = [
+    "--nomigrations",
+    "--reuse-db",
+    "--ds=tests.settings",
+    "--cov",
+    "--cov-fail-under=91",
+]
+norecursedirs = ["node_modules", ".tox", ".git"]
+filterwarnings = [
+    "once::DeprecationWarning",
+    "once::PendingDeprecationWarning",
+    "ignore:Model '.*' was already registered. Reloading models is not advised.*:RuntimeWarning"
+]
+
+# ==== Coverage ====
+[tool.coverage.run]
+branch = true
+source = ["dso_api", "rest_framework_dso", "devtools"]
+omit = ["*/migrations/*.py", "*/tests/*", "*/settings.py"]
+plugins = ["django_coverage_plugin"]
+
+[tool.coverage.report]
+fail_under = 91
+exclude_also = [
+    "if settings.DEBUG:",
+    'if "debug_toolbar" in settings.INSTALLED_APPS:',
+    "raise NotImplementedError",
+    "logger",
+    "warnings.warn",
+    "def __getstate__"
+]
+
+# ==== ruff ====
+[tool.ruff]
+line-length = 99
+target-version = "py314"
+
+[tool.ruff.lint]
+select = [
+    "F", # pyflakes
+    "E", # pycodestyle errors
+    "W", # pycodestyle warnings
+    "I", # isort
+    "B", # flake8-bugbear
+    "C90", # mccabe
+    "BLE", # flake8-blind-except
+    "C4", # flake8-comprehensions
+    "DTZ", # flake8-datetimez
+    "T10", # flake8-debugger
+    "DJ", # flake8-django
+    "ISC", # flake8-implicit-str-concat
+    "G", # flake8-logging-format
+    "PIE", # flake8-pie
+    "PGH", # pygrep-hooks
+    "RET", # flake8-return (partially)
+    # "PT",  # flake8-pytest-style
+    # "TCH",  # flake8-type-checking (moves import to `if typing.TYPE_CHECKING`)
+    # "ERA",  # eradicate (commented out code)
+    # "TRY",  # tryceratops
+    "SIM", # flake8-simplify
+    "TID", # flake8-tidy-imports
+    "INT", # flake8-gettext
+    "FLY", # flynt (fixes unneeded static string joins)
+    "UP", # pyupgrade
+    "S", # security (bugbear)
+    "RUF010", # ruff: fix f"{str(..)}" usage
+    "RUF013", # ruff: fix annotations for =None arguments
+]
+ignore = [
+    "S311", # allow random.randint()
+    "DJ001", # allow models.CharField(null=True)
+    "SIM105", # enforcing contextlib.suppress() instead of try..catch
+    "RET501", # unnecessary-return-none
+    "RET505", # superfluous-else-return
+    "RET505", # superfluous-else-return
+    "RET506", # superfluous-else-raise
+    "RET507", # superfluous-else-continue
+    "RET508", # superfluous-else-break
+    "S607", # subprocess partial path
+]
+
+[tool.ruff.lint.flake8-comprehensions]
+allow-dict-calls-with-keyword-arguments = true
+
+[tool.ruff.lint.flake8-gettext]
+extend-function-names = ["gettext_lazy", "ngettext_lazy", "pgettext", "pgettext_lazy", "npgettext", "npgettext_lazy"]
+
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+"django.utils.timezone.make_aware".msg = "There is no need for make_aware(), pass tzinfo directly."
+
+[tool.ruff.lint.isort]
+known-first-party = ["dso_api", "rest_framework_dso", "tests"]
+known-third-party = ["gisserver", "schematools"]
+#required-imports = ["from __future__ import annotations"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+[tool.ruff.lint.per-file-ignores]
+"**/migrations/*.py" = ["E501"]  # line too long
+"**/tests/settings.py" = ["F405"]  # allow unknown variables via import from *
+"**/tests/**/*.py" = ["DJ008", "S101", "S105", "S106", "S314", "S320", "S608"]  # allow asserts, hardcoded passwords, lxml parsing, SQL injection

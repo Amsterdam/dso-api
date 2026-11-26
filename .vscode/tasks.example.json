@@ -21,7 +21,7 @@
 			"dockerRun": {
 				"volumes": [
 					{
-						"containerPath": "/app",
+						"containerPath": "/app/src",
 						"localPath": "${workspaceFolder}/src"
 					}
 				]
