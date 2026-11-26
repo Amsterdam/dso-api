@@ -5,17 +5,21 @@
 
 version: 2
 updates:
-  - package-ecosystem: "pip" # See documentation for possible values
-    directory: "/src" # Location of package manifests
+  - package-ecosystem: "uv" # See documentation for possible values
+    directory: "/" # Location of package manifests
     schedule:
       interval: "weekly"
     groups:
-      pip-minor-and-patch:
+      uv-minor-and-patch:
         applies-to: version-updates
         update-types:
         - "minor"
         - "patch"
   - package-ecosystem: "docker" # See documentation for possible values
-    directory: "/src" # Location of package manifests
+    directory: "/" # Location of package manifests
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "github-actions"
+    directory: "/"
     schedule:
       interval: "weekly"
