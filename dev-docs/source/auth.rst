@@ -178,7 +178,7 @@ you can use the `maketoken` management command, which generates
 a test token for the provided scope(s).
 
 This requires DSO-API to be installed in the current virtualenv
-(``cd src && pip install -e .``) and the test JWKS to be in the environment.
+(``cd src && uv sync``) and the test JWKS to be in the environment.
 After setting the latter and getting a token with
 ::
 

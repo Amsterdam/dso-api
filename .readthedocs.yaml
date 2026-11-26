@@ -9,12 +9,14 @@ build:
   os: ubuntu-24.04
   apt_packages:
     # To allow running autodoc
-    - libgdal20
-    - libproj13
+    - libgdal34
+    - libproj25
   tools:
-    python: "3.11"
+    python: "3.14"
 
 python:
-   install:
-   - requirements: src/requirements.txt
-   - requirements: dev-docs/requirements.txt
+  install:
+    - method: uv
+      command: sync
+      groups:
+        - docs

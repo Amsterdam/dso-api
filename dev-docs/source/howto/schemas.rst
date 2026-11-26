@@ -19,7 +19,7 @@ variable to `/tmp/datasets`.
 
 In the running web container you can then run the import::
 
-    docker compose exec web python manage.py import_schemas --execute [--create-tables] [--create-views]
+    docker compose exec web uv run src/manage.py import_schemas --execute [--create-tables] [--create-views]
 
 
 Using a local version of schema-tools
@@ -30,11 +30,13 @@ respective checked out repositories, schema-tools is mapped to /tmp/schema-tools
 in the web container. This is obviously only needed if you are working with an
 unreleased version of schema-tools.
 
-To ensure we use that version of schema-tools, you need to comment it out or remove it
-from the requirements. Set your `USER` to `root` in DSO's Dockerfile, and rebuild.
-Then run pip install in the container::
+Register the local checkout as an editable uv dependency::
 
-    docker compose exec web pip install -e /tmp/schema-tools
+    docker compose exec -u root web uv add --editable /tmp/schema-tools
+
+uv updates the container's ``pyproject.toml`` and ``uv.lock`` and installs the
+local checkout. Subsequent ``uv run`` commands keep using this local source.
+Rebuild and recreate the container to restore the repository's locked dependencies.
 
 .. note:: After installing schema-tools, you will have a lot of __pycache__ folders in your
 schema-tools repo. These will need to be cleaned up before building a distribution.
