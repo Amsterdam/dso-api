@@ -192,7 +192,8 @@ def test_pagination_links(drf_request, movie):
 
 @pytest.mark.django_db
 @pytest.mark.parametrize(
-    "fields", ["name", "-category_id,-date_added"]  # both options give the same output
+    "fields",
+    ["name", "-category_id,-date_added"],  # both options give the same output
 )
 def test_fields_limit_works(api_rf, movie, fields):
     """Prove that serializer can limit output fields."""

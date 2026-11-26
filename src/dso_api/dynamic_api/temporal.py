@@ -62,7 +62,7 @@ class TemporalTableQuery:
         else:
             # See if a filter is made on a specific version
             version_field = table_schema.temporal.identifier_field  # e.g. "volgnummer"
-            version_value = query.get(version_field.name, None)
+            version_value = query.get(version_field.name)
             if not version_value and pk is not None and "." in pk:
                 version_value = pk.split(".")[1]
             if version_value:

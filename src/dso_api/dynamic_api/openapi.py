@@ -190,7 +190,8 @@ def get_openapi_view(dataset, version: str | None = None, response_format: str =
     versions = {
         "default": {
             "url": urljoin(
-                settings.DATAPUNT_API_URL, f"/v1/{dataset.path}"  # to preserve hostname
+                settings.DATAPUNT_API_URL,
+                f"/v1/{dataset.path}",  # to preserve hostname
             ),
             "status": default_version.status.name,
             "endSupportDate": (
@@ -208,14 +209,14 @@ def get_openapi_view(dataset, version: str | None = None, response_format: str =
         }
     }
     for vmajor, vschema in dataset_schema.versions.items():
-
         # Skip versions with API disabled
         if not vschema.enable_api:
             continue
         paths = {to_snake_case(t.id): t.status.value for t in vschema.tables}
         versions[f"{vmajor}"] = {
             "url": urljoin(
-                settings.DATAPUNT_API_URL, f"/v1/{dataset.path}/{vmajor}"  # to preserve hostname
+                settings.DATAPUNT_API_URL,
+                f"/v1/{dataset.path}/{vmajor}",  # to preserve hostname
             ),
             "status": vschema.status.name,
             "endSupportDate": (
