@@ -31,6 +31,9 @@ carefully, especially when changing minor or major versions.
 Use ``make format`` to apply Ruff lint fixes and formatting, and ``make lint``
 to check both. Black is no longer used.
 
+Run ``uv run ty check`` for type diagnostics. The ty pre-commit hook displays
+warnings without failing on type diagnostics.
+
 To build the documentation locally, install its dependency group with
 ``uv sync --locked --group docs`` and run
 ``uv run --group docs sphinx-build dev-docs/source dev-docs/build/html``.
