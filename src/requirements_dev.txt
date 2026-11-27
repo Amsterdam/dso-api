@@ -132,7 +132,7 @@ django-extensions==4.1
     # via -r requirements_dev.in
 django-filter==26.2
     # via djangorestframework-gis
-django-gisserver==2.6.0.dev1
+django-gisserver==2.7.0
     # via
     #   -r requirements.in
     #   amsterdam-schema-tools
