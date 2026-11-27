@@ -34,6 +34,8 @@ OpenAPI Validation
 
 The ``test-openapi-spec`` workflow loads the schemas in ``schemas/data`` and
 validates the generated BAG OpenAPI document with Spectral.
+It supplies ``src/jwks_test.json`` through ``PUB_JWKS`` so authentication can
+initialize without production keys.
 Referenced table fixtures must define a status, matching their dataset version.
 ``docker-compose.test-openapi-spec.yml`` supplies a test-only OAuth authorization
 URL so the document can be validated without configuring an identity provider.
