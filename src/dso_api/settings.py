@@ -559,6 +559,7 @@ CONFIDENTIAL_EXPORT_BASE_URI = env.str(
 
 # Setting for django-gisserver, disabling this makes WFS much faster
 GISSERVER_CAPABILITIES_BOUNDING_BOX = False
+GISSERVER_CAPABILITIES_DEFAULT_BBOX = (4.50, 52.10, 5.30, 52.60)
 GISSERVER_COUNT_NUMBER_MATCHED = 0  # 0 = no counting, 1 = all pages, 2 = only first page
 
 APPEND_SLASH = False
