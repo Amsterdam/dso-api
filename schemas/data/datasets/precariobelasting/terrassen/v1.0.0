@@ -2,6 +2,7 @@
   "id": "terrassen",
   "title": "Precariobelasting terrassen per belastinggebied, per jaar, seizoen en per m2",
   "type": "table",
+  "status": "stable",
   "version": "1.0.0",
   "schema": {
     "$schema": "http://json-schema.org/draft-07/schema#",

@@ -20,9 +20,9 @@ services:
 
   web:
     build:
-      context: src/
+      context: .
       args:
-        PIP_REQUIREMENTS: requirements_dev.txt
+        UV_SYNC_ARGS: "--all-groups"
     ports:
       - "8090:8000"
     links:
@@ -64,7 +64,7 @@ services:
       DATASETS_LIST: "${DATASETS_LIST}"
       DATASETS_EXCLUDE: "${DATASETS_EXCLUDE}"
     volumes:
-      - ./src:/app
+      - ./src:/app/src
       - ./docs/build/html:/docs-static
       - "../amsterdam-schema/datasets:/tmp/datasets"
       - "../amsterdam-schema/publishers:/tmp/publishers"
@@ -74,4 +74,4 @@ services:
       - "../authorization_django:/tmp/authorization_django"
       - "../django-gisserver:/tmp/django-gisserver"
     command: >
-      /bin/bash -c "sh /app/initialize_db.sh && uwsgi --py-auto-reload=1 --enable-threads --lazy-apps --buffer-size=65535"
+      /bin/bash -c "(cd /app/src && sh initialize_db.sh) && uwsgi --py-auto-reload=1 --enable-threads --lazy-apps --buffer-size=65535"

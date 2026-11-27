@@ -22,7 +22,9 @@ jobs:
       uses: actions/checkout@v1
 
     - name: Start containers
-      run: docker compose -f "docker-compose.yml" -f "docker-compose.test-openapi-spec.yml" up -d --build
+      run: |
+        export PUB_JWKS="$(cat src/jwks_test.json)"
+        docker compose -f "docker-compose.yml" -f "docker-compose.test-openapi-spec.yml" up -d --build
       env:
         SCHEMA_URL: "http://schemas/datasets/"
 
@@ -37,7 +39,7 @@ jobs:
         docker compose logs web
 
         # Grab openapi yaml for bag dataset
-        docker compose exec web curl 'http://web:8000/v1/bag/openapi.yaml'  > ./spectral/openapi.yaml
+        docker compose exec -T web curl --fail --silent --show-error 'http://web:8000/v1/bag/openapi.yaml' > ./spectral/openapi.yaml
 
     - name: Run spectral tests
       run: docker run -v ./spectral:/mnt/spectral stoplight/spectral lint /mnt/spectral/openapi.yaml --ruleset /mnt/spectral/.spectral.yaml

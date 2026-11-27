@@ -114,7 +114,7 @@ class NestedViewSetMixin:
         if parents_query_dict:
             try:
                 return queryset.filter(**parents_query_dict)
-            except (ValueError, ValidationError):
+            except ValueError, ValidationError:
                 raise Http404 from None
         else:
             return queryset

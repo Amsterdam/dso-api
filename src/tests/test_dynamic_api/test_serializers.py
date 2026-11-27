@@ -87,7 +87,7 @@ class TestDynamicSerializer:
             f"id {id(embedded_field.related_model)} vs "
             f"id {id(afval_cluster_model)} "
             f"(creation counter {embedded_field.related_model.CREATION_COUNTER}"
-            f" vs {afval_cluster_model.CREATION_COUNTER})",
+            f" vs {afval_cluster_model.CREATION_COUNTER})"
         )
         assert embedded_field.serializer_class.__name__ == ClusterSerializer.__name__
 

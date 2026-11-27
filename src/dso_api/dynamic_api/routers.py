@@ -461,7 +461,6 @@ class DynamicRouter(NestedDefaultRouter):
                 )
             )
             for version, vschema in dataset.schema.versions.items():
-
                 # Skip versions with API disabled
                 if not vschema.enable_api:
                     continue
@@ -497,6 +496,7 @@ class DynamicRouter(NestedDefaultRouter):
         results = []
         for dataset in datasets:
             dataset_id = dataset.schema.id  # not dataset.name which is mangled.
+
             results.append(
                 path(
                     f"/mvt/{dataset.path}/",
@@ -504,7 +504,7 @@ class DynamicRouter(NestedDefaultRouter):
                     name="mvt-slash",
                     kwargs={"dataset_name": dataset_id, "dataset_version": DEFAULT},
                 )
-            ),
+            )
             results.append(
                 path(
                     f"/mvt/{dataset.path}",
@@ -523,7 +523,7 @@ class DynamicRouter(NestedDefaultRouter):
                     name="mvt-tilejson",
                     kwargs={"dataset_name": dataset_id, "dataset_version": DEFAULT},
                 )
-            ),
+            )
             results.append(
                 path(
                     f"/mvt/{dataset.path}/<table_name>/<int:z>/<int:x>/<int:y>.pbf",
@@ -622,7 +622,7 @@ class DynamicRouter(NestedDefaultRouter):
                         "dataset_version": DEFAULT,
                     },
                 )
-            ),
+            )
             results.append(
                 path(
                     f"/wfs/{dataset.path}",

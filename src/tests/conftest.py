@@ -85,9 +85,9 @@ def router():
     """
     from dso_api.dynamic_api.urls import router
 
-    assert (
-        not router.registry or router.registry == router.static_routes
-    ), "DynamicRouter already has URL patterns before test starts!"
+    assert not router.registry or router.registry == router.static_routes, (
+        "DynamicRouter already has URL patterns before test starts!"
+    )
 
     yield router
 

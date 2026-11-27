@@ -9,22 +9,21 @@ database running in a Docker container with an empty database.
 Requirements
 ------------
 
-* Python >= 3.9
+* Python >= 3.14
+* `uv <https://docs.astral.sh/uv/getting-started/installation/>`_
 * Recommended: Docker / docker-compose
 
 Preparation
 -----------
 
-For local development, create a virtualenv::
+Install uv using the instructions linked above, then install the tools::
 
-    python3 -m venv venv
-    source venv/bin/activate
-
-Install the tools::
-
-    pip install -U wheel pip
+    make install
     cd src
-    make install  # installs src/requirements_dev.txt
+
+Run ``make install`` from the repository root. uv creates ``.venv`` there
+and installs the dependencies from the root ``uv.lock``.
+Run Python commands with ``uv run``; activating the virtualenv is not required.
 
 Database Setup
 --------------
@@ -76,15 +75,15 @@ Completing the Setup
 Install static files::
 
     export DSO_STATIC_DIR="$HOME/dso_static"
-    ./manage.py collectstatic
+    uv run manage.py collectstatic
 
 Create database tables::
 
-    ./manage.py migrate
+    uv run manage.py migrate
 
 Import schemas::
 
-    ./manage.py import_schemas
+    uv run manage.py import_schemas
 
 
 Run the server
@@ -101,7 +100,7 @@ Then start DSO-API:
 
 ::
 
-    ./manage.py runserver localhost:8000
+    uv run manage.py runserver localhost:8000
 
 The API can now be accessed at: http://localhost:8000.
 

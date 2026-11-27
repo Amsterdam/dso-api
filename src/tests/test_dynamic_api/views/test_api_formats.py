@@ -42,9 +42,11 @@ class TestFormats:
         "csv": (
             as_is,
             "text/csv; charset=utf-8",
-            b"id,clusterId,serienummer,eigenaarNaam,datumCreatie,datumLeegmaken,geometry\r\n"
-            b"1,c1,foobar-123,Dataservices,2021-01-03,2021-01-03T12:13:14,SRID=28992;"
-            b"POINT (121389 487369)\r\n",
+            (
+                b"id,clusterId,serienummer,eigenaarNaam,datumCreatie,datumLeegmaken,geometry\r\n"
+                b"1,c1,foobar-123,Dataservices,2021-01-03,2021-01-03T12:13:14,SRID=28992;"
+                b"POINT (121389 487369)\r\n"
+            ),
         ),
         "geojson": (
             orjson.loads,
@@ -165,7 +167,7 @@ class TestFormats:
                     # TODO we may want to always output _pageSize.
                     "href": "http://testserver/v1/afvalwegingen/containers?_format=json"
                     + "".join(
-                        sorted([f"&{page_size_param}={self.PAGE_SIZE}", f"&page={page_num+1}"])
+                        sorted([f"&{page_size_param}={self.PAGE_SIZE}", f"&page={page_num + 1}"])
                     )
                 },
                 "self": {
@@ -217,7 +219,7 @@ class TestFormats:
                     "type": "application/geo+json",
                     "title": "next page",
                     "href": "http://testserver/v1/afvalwegingen/containers"
-                    f"?_format=geojson&_pageSize=4&page={page_num+1}",
+                    f"?_format=geojson&_pageSize=4&page={page_num + 1}",
                 },
             ],
         }
@@ -442,8 +444,10 @@ class TestFormats:
         assert response.status_code == 200
         response_data = [row.decode("utf-8") for row in response.streaming_content]
         assert response_data == [
-            "Identificatie,Volgnummer,Registratiedatum,Opgemaaktenaam,Begingeldigheid,"
-            "Eindgeldigheid,Ligtingemeenteidentificatie,Geometrie\r\n"
+            (
+                "Identificatie,Volgnummer,Registratiedatum,Opgemaaktenaam,Begingeldigheid,"
+                "Eindgeldigheid,Ligtingemeenteidentificatie,Geometrie\r\n"
+            )
         ]
 
     def test_csv_exclude_fields_without_header(
@@ -536,9 +540,11 @@ class TestFormats:
         "csv": (
             as_is,
             "text/csv; charset=utf-8",
-            b"id,clusterId,serienummer,eigenaarNaam,datumCreatie,datumLeegmaken,geometry\r\n"
-            b"1,c1,foobar-123,Dataservices,2021-01-03,2021-01-03T12:13:14,SRID=28992"
-            b";POINT (121389 487369)\r\n",
+            (
+                b"id,clusterId,serienummer,eigenaarNaam,datumCreatie,datumLeegmaken,geometry\r\n"
+                b"1,c1,foobar-123,Dataservices,2021-01-03,2021-01-03T12:13:14,SRID=28992"
+                b";POINT (121389 487369)\r\n"
+            ),
         ),
         "geojson": (
             orjson.loads,
@@ -645,8 +651,10 @@ class TestFormats:
         assert response.status_code == 200
         response_data = [row.decode("utf-8") for row in response.streaming_content]
         assert response_data == [
-            "identificatie,volgnummer,registratiedatum,opgemaakteNaam,beginGeldigheid,"
-            "eindGeldigheid,ligtInGemeenteIdentificatie,geometrie\r\n"
+            (
+                "identificatie,volgnummer,registratiedatum,opgemaakteNaam,beginGeldigheid,"
+                "eindGeldigheid,ligtInGemeenteIdentificatie,geometrie\r\n"
+            )
         ]
 
     def test_csv_exclude_include_400(self, api_client, gebieden_dataset, filled_router):

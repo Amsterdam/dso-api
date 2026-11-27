@@ -590,7 +590,7 @@ class DSOSerializer(ExpandableSerializer, serializers.Serializer):
             try:
                 # Resolve dotted sources (e.g. "betreft_bag_pand.geometrie") through DRF.
                 geo_value = get_attribute(instance, field.source_attrs)
-            except (AttributeError, KeyError):
+            except AttributeError, KeyError:
                 # Nullable intermediate relation; treat as no geometry for this item.
                 geo_value = None
             if geo_value is not None and field.source not in seen_geometry_fields:
@@ -615,7 +615,7 @@ class DSOSerializer(ExpandableSerializer, serializers.Serializer):
             try:
                 # Resolve dotted sources (e.g. "betreft_bag_pand.geometrie") through DRF.
                 geo_value = get_attribute(instance, field.source_attrs)
-            except (AttributeError, KeyError):
+            except AttributeError, KeyError:
                 # Nullable intermediate relation; treat as no geometry for this item.
                 geo_value = None
             if geo_value is not None:

@@ -1,6 +1,7 @@
 {
   "id": "grootstedelijkeProjecten",
   "type": "table",
+  "status": "stable",
   "version": "1.0.0",
   "schema": {
     "$schema": "http://json-schema.org/draft-07/schema#",

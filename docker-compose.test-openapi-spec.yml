@@ -5,6 +5,7 @@ services:
       - schemas
     environment:
       SCHEMA_URL: "${SCHEMA_URL:-http://schemas/datasets/}"
+      OAUTH_URL: "https://example.com/oauth/authorize"
       DATASETS_LIST: "bag,brk_2,gebieden,sportparken,precariobelasting"
 
   schemas:

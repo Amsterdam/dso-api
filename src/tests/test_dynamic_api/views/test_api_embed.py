@@ -209,8 +209,7 @@ class TestEmbedTemporalTables:
                             "schema": ("https://schemas.data.amsterdam.nl/datasets/bag/panden/v1"),
                             "self": {
                                 "href": (
-                                    "http://testserver/v1/bag/panden/0363100012061164"
-                                    "?volgnummer=3"
+                                    "http://testserver/v1/bag/panden/0363100012061164?volgnummer=3"
                                 ),
                                 "identificatie": "0363100012061164",
                                 "title": "0363100012061164.3",

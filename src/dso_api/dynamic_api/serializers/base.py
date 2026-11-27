@@ -182,8 +182,7 @@ class DynamicListSerializer(DSOModelListSerializer):
         # (that is, records that not part of the current temporal slice).
         if cast(DynamicModel, model_field.related_model).is_temporal() and (
             # Tell whether the field returns many results (e.g. M2M).
-            model_field.many_to_many
-            or model_field.one_to_many
+            model_field.many_to_many or model_field.one_to_many
         ):
             request = self.context["request"]
             prefetch_queryset = filter_temporal_slice(request, prefetch_queryset)

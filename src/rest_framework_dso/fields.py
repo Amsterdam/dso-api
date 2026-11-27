@@ -115,8 +115,7 @@ class FieldsToDisplay:
         if self._includes and self._excludes:
             # Already validated before
             raise ValidationError(
-                "It's not possible to combine inclusions and exclusions"
-                " in the _fields parameter",
+                "It's not possible to combine inclusions and exclusions in the _fields parameter",
                 code="fields",
             )
 

@@ -84,7 +84,7 @@ A simplified diagram of the main project dependencies:
    :caption: HOW-TO:
 
    howto/install
-   howto/pip
+   howto/dependencies
    howto/testruns
    howto/schemas
    howto/openapi

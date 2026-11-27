@@ -21,8 +21,8 @@ jobs:
       fail-fast: false
       matrix:
         postgis_version:
-        - 14-3.2
         - 17-3.5
+        - 18-3.7
     env:
       INITIALIZE_DB: false
       POSTGIS_VERSION: ${{ matrix.postgis_version }}
@@ -35,7 +35,14 @@ jobs:
       run: docker compose -f "docker-compose.yml" up -d --build
 
     - name: Run tests
-      run: docker compose exec -T web pytest -v --ds=tests.settings --show-capture=no --cov --cov-report=term:skip-covered --cov-config=.coveragerc
+      run: docker compose exec -u root -T web uv run --no-sync pytest -v --ds=tests.settings --show-capture=no --cov --cov-report=term:skip-covered
+
+    - name: Build package
+      run: docker compose exec -T web uv build --out-dir /tmp/dist
+
+    - name: Log on failure
+      if: failure()
+      run: docker compose logs web
 
     - name: Stop containers
       if: always()
