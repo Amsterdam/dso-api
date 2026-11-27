@@ -21,7 +21,7 @@ Markdown == 3.11.3
 msal == 1.39.0
 more-ds == 0.0.6
 more-itertools == 11.1.0
-numpy == 2.5.4
+numpy == 2.5.5
 openapi-spec-validator == 0.9.0
 # Version should match with opentelemetry subdependency:
 opentelemetry-api == 1.45.2
